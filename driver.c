@@ -5,9 +5,12 @@
 
 int main(int argc, char *argv[])
 {  
+  sc_MPI_Comm mpicomm;
   int mpiret = sc_MPI_Init(&argc, &argv);
-  sc_MPI_Comm mpicomm = sc_MPI_COMM_WORLD;  
   SC_CHECK_MPI(mpiret);
+  mpicomm = sc_MPI_COMM_WORLD;
+  PETSC_COMM_WORLD = mpicomm;
+  PetscInitialize(&argc,&argv,(char*)0,NULL);
 
   int proc_size;
   int proc_rank;
@@ -29,34 +32,55 @@ int main(int argc, char *argv[])
 #if (P4EST_DIM)==3
   if(proc_rank == 0)
     printf("[D4EST_INFO]: DIM = 3\n");
-  p4est_connectivity_t* conn = p8est_connectivity_new_unitcube();
 #else
   if(proc_rank == 0)
     printf("[D4EST_INFO]: DIM = 2\n");
-  p4est_connectivity_t* conn = p4est_connectivity_new_unitsquare();
 #endif
 
-  problem_help();
-  
-  p4est_t* p4est = p4est_new_ext
-    (
-     mpicomm,
-     conn,
-     pXest_input.min_quadrants,
-     pXest_input.min_level,
-     pXest_input.fill_uniform,
-     0,
-     NULL,
-     NULL
-    );
+  p4est_connectivity_t* conn = problem_build_conn();
+  p4est_t* p4est = problem_build_p4est
+                   (
+                    mpicomm,
+                    conn,
+                    pXest_input.min_quadrants,
+                    pXest_input.min_level,
+                    pXest_input.fill_uniform
+                   );
 
+  
+  p4est_geometry_t* p4est_geom = problem_build_geom(conn);
+
+  
+  /* start just-in-time dg-math */
+  dgmath_jit_dbase_t* dgmath_jit_dbase = dgmath_jit_dbase_init();
+
+  /* checkpoints not supported yet */
+  int load_from_checkpoint = 0;
+  
+  /* Solve Problem */
+  problem_init
+    (
+     argc,
+     argv,
+     p4est,
+     p4est_geom,
+     dgmath_jit_dbase,
+     proc_size,
+     mpicomm,
+     load_from_checkpoint
+    );
+  
+  dgmath_jit_dbase_destroy(dgmath_jit_dbase);
+  
   /* free pXest */
   p4est_destroy(p4est);
   p4est_connectivity_destroy(conn);
+
+  if(p4est_geom != NULL)
+    p4est_geometry_destroy (p4est_geom);
+
   sc_finalize ();
-
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-
+  PetscFinalize();
+  
   return 0;
 }

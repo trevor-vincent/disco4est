@@ -13,6 +13,8 @@ set(PETSC_BUNDLED_LIBRARIES
   ${PETSC_BUNDLED_PREFIX}/lib/libpetsc.a
   )
 
+
+
 macro(petsc_use_bundled)
   set(PETSC_PREFIX "${PETSC_BUNDLED_PREFIX}")
   set(PETSC_INCLUDE_DIRS "${PETSC_BUNDLED_PREFIX}/include")
@@ -58,9 +60,9 @@ message(STATUS "Use petsc library: ${PETSC_LIBRARIES}")
 
 macro(petsc_build)
   if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
-    set(petsc_config_args "--enable-debug")
+    set(petsc_config_args "--with-debugging=1")
   else("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
-    set(petsc_config_args "")
+    set(petsc_config_args "--with-debugging=0")
   endif("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
   ExternalProject_Add(petsc
     PREFIX    ${CMAKE_BINARY_DIR}/ThirdParty/petsc
@@ -74,7 +76,6 @@ macro(petsc_build)
     ${petsc_config_args}
     # --enable-mpi
     --with-shared-libraries=0
-    --with-debugging=0
     --prefix=${PETSC_BUNDLED_PREFIX}
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make MAKE_NP=${N}
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make install

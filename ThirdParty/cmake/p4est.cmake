@@ -97,7 +97,7 @@ macro(p4est_build)
   ExternalProject_Add(p4est
     PREFIX    ${CMAKE_BINARY_DIR}/ThirdParty/p4est
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/ThirdParty/p4est/
-    CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && ./bootstrap &&
+    CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && git submodule init && git submodule update && ./bootstrap &&
     ./configure
     "CC=${MPI_C_COMPILER}"
     # "F77=${MPI_Fortran_COMPILER}"

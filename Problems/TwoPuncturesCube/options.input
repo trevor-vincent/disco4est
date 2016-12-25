@@ -1,0 +1,27 @@
+;R = 1/(2*domain_size);
+
+[p4est]
+min_quadrants = -1
+min_level = 0
+fill_uniform = 1
+
+[amr]
+amr_levels = 30
+amr_inflation_size = 64
+initial_degree = 2
+percentile = 5
+gamma_h = 2.0
+gamma_p = 0.1
+
+[flux]
+ip_flux_penalty = 2.0
+
+[problem]
+hrefine_til_inview = 1
+domain_size = 5.0 
+use_Gauss_integ = 1
+deg_offset_for_Gauss_integ = 1
+
+[solver]
+krylov_type = cg
+; use: cg,gmres,etc NOT KSPCG
