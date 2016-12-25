@@ -13,7 +13,7 @@ set(CMAKE_MODULE_PATH
 # find_package(Git)
 
 find_package(BLAS)
-if(BLAS_Found==0)
+if(BLAS_FOUND==0)
   find_package(OpenBLAS REQUIRED)
 endif()
 find_package(LAPACK)

@@ -14,6 +14,7 @@ module purge;
 module load gcc/4.8.1;
 module load openmpi/gcc/1.8.3;
 module load openblas/1.13-singlethreaded;
+module load cmake/3.1.0
 cd ${1}
 
 time mpirun -np 8 ./${2}  2>&1 | tee disco4est.out
