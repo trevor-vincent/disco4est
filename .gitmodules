@@ -1,6 +1,8 @@
 [submodule "ThirdParty/petsc"]
 	path = ThirdParty/petsc
 	url = https://bitbucket.org/petsc/petsc
+	ignore = dirty
 [submodule "ThirdParty/p4est"]
 	path = ThirdParty/p4est
 	url = https://github.com/cburstedde/p4est
+	ignore = dirty
