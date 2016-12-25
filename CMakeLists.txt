@@ -11,8 +11,12 @@ set(CMAKE_MODULE_PATH
 )
 
 # find_package(Git)
-find_package(BLAS REQUIRED)
-find_package(LAPACK REQUIRED)
+
+find_package(BLAS)
+if(BLAS_Found==0)
+  find_package(OpenBLAS REQUIRED)
+endif()
+find_package(LAPACK)
 find_package(MPI REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(X11 REQUIRED)
