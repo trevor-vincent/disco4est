@@ -10,13 +10,18 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
 )
 
-# find_package(Git)
-
 find_package(BLAS)
-if(BLAS_FOUND==0)
+if(NOT BLAS_FOUND)
+  message("Cannot find BLAS, searching for OpenBlas")
   find_package(OpenBLAS REQUIRED)
+  if(OpenBLAS_FOUND)
+    message("Found OpenBLAS")
+  endif()
+else()
+  find_package(LAPACK REQUIRED)
 endif()
-find_package(LAPACK)
+
+
 find_package(MPI REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(X11 REQUIRED)
