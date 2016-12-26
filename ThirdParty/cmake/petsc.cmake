@@ -69,8 +69,8 @@ macro(petsc_build)
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/ThirdParty/petsc/
     CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc &&
     python configure
-    "CC=${MPI_C_COMPILER}"
-    "CXX=${MPI_CXX_COMPILER}"
+    # "CC=${MPI_C_COMPILER}"
+    # "CXX=${MPI_CXX_COMPILER}"
     # "F77=${MPI_Fortran_COMPILER}"
     # "CPPFLAGS=-I${LUA_INCLUDE_DIR} ${zlib_include}"
     # "LIBS=${lua_lib} ${zlib_lib}"
