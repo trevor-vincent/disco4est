@@ -6,3 +6,6 @@
 	path = ThirdParty/p4est
 	url = https://github.com/cburstedde/p4est
 	ignore = dirty
+[submodule "ThirdParty/zlib"]
+	path = ThirdParty/zlib
+	url = https://github.com/madler/zlib

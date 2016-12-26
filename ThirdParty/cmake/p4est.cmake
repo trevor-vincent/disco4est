@@ -88,7 +88,15 @@ include_directories(${P4EST_INCLUDE_DIRS})
 message(STATUS "Use p4est includes: ${P4EST_INCLUDE_DIRS}")
 message(STATUS "Use p4est library: ${P4EST_LIBRARIES}")
 
-macro(p4est_build)
+macro(p4est_build)  
+  foreach(dir ${ZLIB_INCLUDE_DIRS})
+    set(zlib_include "${zlib_include} -I${dir}")
+  endforeach()
+
+  foreach(lib ${ZLIB_LIBRARIES})
+    set(zlib_lib "${zlib_lib} ${lib}")
+  endforeach()
+
   if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
     set(p4est_config_args "--enable-debug")
   else("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
@@ -101,15 +109,16 @@ macro(p4est_build)
     ./configure
     "CC=${MPI_C_COMPILER}"
     # "F77=${MPI_Fortran_COMPILER}"
-    # "CPPFLAGS=-I${LUA_INCLUDE_DIR} ${zlib_include}"
-    # "LIBS=${lua_lib} ${zlib_lib}"
+    # "CPPFLAGS=-I ${zlib_include}"
+    # "LIBS=${zlib_lib}"
     ${p4est_config_args}
-    --enable-mpi --without-blas
+    --enable-mpi --disable-vtk-binary --without-blas
+    --enable-static=sc --without-zlib
     --prefix=${P4EST_BUNDLED_PREFIX}
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make -j${N}
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make install
   )
-  # add_dependencies(p4est p4est_bundled_libs)
+  add_dependencies(p4est p4est_bundled_libs)
   add_dependencies(build_bundled_libs p4est)
 endmacro()
 

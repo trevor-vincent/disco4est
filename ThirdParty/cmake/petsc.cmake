@@ -75,6 +75,12 @@ macro(petsc_build)
     # "LIBS=${lua_lib} ${zlib_lib}"
     ${petsc_config_args}
     # --enable-mpi
+    # --with-fc=gfortran
+    --with-x=0
+    --with-ssl=0
+    --download-openblas=yes
+    --download-openblas-make-options="USE_THREAD=0"
+    # --download-fblaslapack
     --with-shared-libraries=0
     --prefix=${PETSC_BUNDLED_PREFIX}
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make MAKE_NP=${N}

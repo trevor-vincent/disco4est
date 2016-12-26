@@ -10,21 +10,21 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
 )
 
-find_package(BLAS)
-if(NOT BLAS_FOUND)
-  message("Cannot find BLAS, searching for OpenBlas")
-  find_package(OpenBLAS REQUIRED)
-  if(OpenBLAS_FOUND)
-    message("Found OpenBLAS")
-  endif()
-else()
-  find_package(LAPACK REQUIRED)
-endif()
+# find_package(BLAS)
+# if(NOT BLAS_FOUND)
+#   message("Cannot find BLAS, searching for OpenBlas")
+#   find_package(OpenBLAS REQUIRED)
+#   if(OpenBLAS_FOUND)
+#     message("Found OpenBLAS")
+#   endif()
+# else()
+#   find_package(LAPACK REQUIRED)
+# endif()
 
-
+# find_package (Threads)
 find_package(MPI REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(X11 REQUIRED)
+# find_package(ZLIB REQUIRED)
+# find_package(X11 REQUIRED)
 # find_package(SSL REQUIRED)
 
 ##
@@ -48,7 +48,7 @@ include_directories(${CMAKE_SOURCE_DIR}/Operators)
 include_directories(${CMAKE_SOURCE_DIR}/Visualization)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${MPI_C_INCLUDE_PATH})
-include_directories(${OpenBLAS_INCLUDE_DIR})
+# include_directories(${OpenBLAS_INCLUDE_DIR})
 
 ##
 ## Add MPI compile flags for the whole project
@@ -97,7 +97,7 @@ SET (
   )
 
 
-
+# /home/tvincent/Dropbox/Research/Codes/disco4est/src_new_build/ThirdParty/petsc/install/lib/libfblas.a
 ##
 ## D8EST Library
 ##
@@ -107,10 +107,15 @@ add_library(d4est ${SRCS})
 add_dependencies(d8est build_bundled_libs)
 add_dependencies(d4est build_bundled_libs)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
 
 add_custom_target(build_bundled_libs)
+add_custom_target(p4est_bundled_libs)
+
+include(zlib)
+include_directories(${ZLIB_INCLUDE_DIRS})
+
 
 include(petsc)
 include(p4est)
@@ -119,18 +124,25 @@ subdirs(ThirdParty)
 
 SET (
   LIBS
-  ${ZLIB_LIBRARIES}
+  gfortran
+  # ${Threads_LIBRARIES}
+  # ${ZLIB_LIBRARIES}
   ${MPI_C_LIBRARIES}
   ${PETSC_LIBRARIES}
   ${P4EST_LIBRARIES}
-  ${LAPACK_LIBRARIES}
-  ${BLAS_LIBRARIES}
   ${MATH_LIB}
-  ${X11_LIBRARIES}
+  ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libopenblas.a
+  ${CMAKE_BINARY_DIR}/ThirdParty/zlib/install/lib/libz.a
+  # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libfblas.a
+  # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libflapack.a
+  # ${LAPACK_LIBRARIES}
+  # ${BLAS_LIBRARIES}
+
+  # ${X11_LIBRARIES}
   # ${SSL_LIBRARIES}
   # X11
-  crypto
-  ssl
+  # crypto
+  # ssl
   )
 
 # -llapack -lblas -lX11 -lssl -lcrypto -lm -L/usr/lib/openmpi/lib -L/usr/lib/gcc/x86_64-linux-gnu/5 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -lmpi_f90 -lmpi_f77 -lgfortran -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.9 -lgfortran -lm -lquadmath -lm -lmpi_cxx -lstdc++ -L/usr/lib/openmpi/lib -L/usr/lib/gcc/x86_64-linux-gnu/5 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu -ldl -lmpi -lhwloc -lgcc_s -lpthread -ldl 
