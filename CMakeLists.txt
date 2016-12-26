@@ -48,6 +48,7 @@ include_directories(${CMAKE_SOURCE_DIR}/Operators)
 include_directories(${CMAKE_SOURCE_DIR}/Visualization)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${MPI_C_INCLUDE_PATH})
+include_directories(${OpenBLAS_INCLUDE_DIR})
 
 ##
 ## Add MPI compile flags for the whole project
@@ -187,4 +188,4 @@ add_d4est_problem_3d(testcompactification_driver testcompactification.c TestComp
 # add_executable(testcompile2 driver.c ./Problems/TestCompile/testcompile.c)
 # target_link_libraries(testcompile2 d4est)
 # set_target_properties(testcompile2 PROPERTIES COMPILE_DEFINITIONS "DIM=2")
-include("${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/petsc/conf/PETScBuildInternal.cmake")
+# include("${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/petsc/conf/PETScBuildInternal.cmake")
