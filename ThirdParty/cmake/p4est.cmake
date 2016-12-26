@@ -6,93 +6,123 @@ ProcessorCount(N)
 # endif()
 
 #
-# Bundled petsc paths.
+# Bundled p4est paths.
 #
-set(PETSC_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/ThirdParty/petsc/install")
-set(PETSC_BUNDLED_LIBRARIES
-  ${PETSC_BUNDLED_PREFIX}/lib/libpetsc.a
+set(P4EST_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/ThirdParty/p4est/install")
+set(P4EST_BUNDLED_LIBRARIES
+  ${P4EST_BUNDLED_PREFIX}/lib/libp4est.a
+  ${P4EST_BUNDLED_PREFIX}/lib/libsc.a
   )
 
-
-
-macro(petsc_use_bundled)
-  set(PETSC_PREFIX "${PETSC_BUNDLED_PREFIX}")
-  set(PETSC_INCLUDE_DIRS "${PETSC_BUNDLED_PREFIX}/include")
-  set(PETSC_LIBRARIES "${PETSC_BUNDLED_LIBRARIES}")
-  set(ENABLE_BUNDLED_PETSC True)
+macro(p4est_use_bundled)
+  set(P4EST_PREFIX "${P4EST_BUNDLED_PREFIX}")
+  set(P4EST_INCLUDE_DIRS "${P4EST_BUNDLED_PREFIX}/include")
+  set(P4EST_LIBRARIES "${P4EST_BUNDLED_LIBRARIES}")
+  set(ENABLE_BUNDLED_P4EST True)
 endmacro()
 
-#
-# Check if there is a usable petsc at the given prefix path.
-#
-macro (petsc_try_prefix)
+macro(p4est_try_system)
+  find_path(P4EST_SC_INCLUDE_DIR sc.h PATH_SUFFIXES include)
+  find_library(P4EST_SC_LIB NAMES sc PATH_SUFFIXES lib)
 
-  if(PETSC_INCLUDE_DIRS AND PETSC_LIB)
-    # set(PETSC_INCLUDE_DIRS ${PETSC_PETSC_INCLUDE_DIR} ${PETSC_SC_INCLUDE_DIRS})
-    set(PETSC_LIBRARIES ${PETSC_LIB})
-    include_directories(${PETSC_INCLUDE_DIRS})
+  find_path(P4EST_P4EST_INCLUDE_DIR p4est.h PATH_SUFFIXES include)
+  find_library(P4EST_P4EST_LIB NAMES p4est PATH_SUFFIXES lib)
+
+  if(P4EST_P4EST_INCLUDE_DIRS AND P4EST_P4EST_LIB AND
+     P4EST_SC_INCLUDE_DIRS AND P4EST_SC_LIB)
+    message (STATUS "-- sc include: ${P4EST_SC_INCLUDE_DIR}, lib: ${P4EST_SC_LIB}")
+    message (STATUS "-- p4est include: ${P4EST_P4EST_INCLUDE_DIR}, lib: ${P4EST_P4EST_LIB}")
+    message (STATUS "Found a system-wide p4est.")
+    set(P4EST_INCLUDE_DIRS ${P4EST_P4EST_INCLUDE_DIR} ${P4EST_SC_INCLUDE_DIRS})
+    set(P4EST_LIBRARIES ${P4EST_P4EST_LIB} ${P4EST_SC_LIB})
   else()
-    message(FATAL_ERROR "Couldn't find petsc in '${PETSC_PREFIX}'")
+    message (FATAL_ERROR "Not found a system p4est")
+    #p4est_use_bundled()
   endif()
 endmacro()
 
 #
-# petsc options.
+# Check if there is a usable p4est at the given prefix path.
 #
-option(ENABLE_BUNDLED_PETSC "Enable building of the bundled petsc" ON)
-option(PETSC_PREFIX "Build with petsc at the given path" "")
+macro (p4est_try_prefix)
+  find_path(P4EST_SC_INCLUDE_DIR sc.h ${P4EST_PREFIX} NO_DEFAULT_PATH)
+  find_library(P4EST_SC_LIB sc ${P4EST_PREFIX} NO_DEFAULT_PATH)
+  find_path(P4EST_P4EST_INCLUDE_DIR p4est.h ${P4EST_PREFIX} NO_DEFAULT_PATH)
+  find_library(P4EST_P4EST_LIB p4est ${P4EST_PREFIX} NO_DEFAULT_PATH)
 
-if(PETSC_PREFIX AND ENABLE_BUNDLED_PETSC)
-  message(FATAL_ERROR "Options PETSC_PREFIX and ENABLE_BUNDLED_PETSC "
+
+  if(P4EST_P4EST_INCLUDE_DIRS AND P4EST_P4EST_LIB AND
+     P4EST_SC_INCLUDE_DIRS AND P4EST_SC_LIB)
+    set(P4EST_INCLUDE_DIRS ${P4EST_P4EST_INCLUDE_DIR} ${P4EST_SC_INCLUDE_DIRS})
+    set(P4EST_LIBRARIES ${P4EST_P4EST_LIB} ${P4EST_SC_LIB})
+    include_directories(${P4EST_INCLUDE_DIRS})
+  else()
+    message(FATAL_ERROR "Couldn't find p4est in '${P4EST_PREFIX}'")
+  endif()
+endmacro()
+
+#
+# p4est options.
+#
+option(ENABLE_BUNDLED_P4EST "Enable building of the bundled p4est" ON)
+option(P4EST_PREFIX "Build with p4est at the given path" "")
+
+if(P4EST_PREFIX AND ENABLE_BUNDLED_P4EST)
+  message(FATAL_ERROR "Options P4EST_PREFIX and ENABLE_BUNDLED_P4EST "
     "are not compatible with each other.")
 endif()
 
-if (PETSC_PREFIX)
-  petsc_try_prefix()
+if (P4EST_PREFIX)
+  # trying to build with specified p4est.
+  p4est_try_prefix()
+elseif (NOT ENABLE_BUNDLED_P4EST)
+  # trying to build with system p4est, macro can turn on
+  # building of p4est bundled with the server source.
+  p4est_try_system()
 else()
-  petsc_use_bundled()
+  p4est_use_bundled()
 endif()
 
-include_directories(${PETSC_INCLUDE_DIRS})
+include_directories(${P4EST_INCLUDE_DIRS})
 
-message(STATUS "Use petsc includes: ${PETSC_INCLUDE_DIRS}")
-message(STATUS "Use petsc library: ${PETSC_LIBRARIES}")
+message(STATUS "Use p4est includes: ${P4EST_INCLUDE_DIRS}")
+message(STATUS "Use p4est library: ${P4EST_LIBRARIES}")
 
-macro(petsc_build)
+macro(p4est_build)  
+  foreach(dir ${ZLIB_INCLUDE_DIRS})
+    set(zlib_include "${zlib_include} -I${dir}")
+  endforeach()
+
+  foreach(lib ${ZLIB_LIBRARIES})
+    set(zlib_lib "${zlib_lib} ${lib}")
+  endforeach()
+
   if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
-    set(petsc_config_args "--with-debugging=1")
+    set(p4est_config_args "--enable-debug")
   else("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
-    set(petsc_config_args "--with-debugging=0")
+    set(p4est_config_args "")
   endif("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
-  ExternalProject_Add(petsc
-    PREFIX    ${CMAKE_BINARY_DIR}/ThirdParty/petsc
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/ThirdParty/petsc/
-    CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc &&
-    python configure
+  ExternalProject_Add(p4est
+    PREFIX    ${CMAKE_BINARY_DIR}/ThirdParty/p4est
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/ThirdParty/p4est/
+    CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && git submodule init && git submodule update && ./bootstrap &&
+    ./configure
     "CC=${MPI_C_COMPILER}"
     "CXX=${MPI_CXX_COMPILER}"
     # "F77=${MPI_Fortran_COMPILER}"
-    # "CPPFLAGS=-I${LUA_INCLUDE_DIR} ${zlib_include}"
-    # "LIBS=${lua_lib} ${zlib_lib}"
-    ${petsc_config_args}
-    # --enable-mpi
-    # --with-fc=gfortran
-    --with-x=0
-    --with-ssl=0
-    --download-openblas=yes
-    --download-openblas-make-options=USE_THREAD=0
-    # --with-cc=icc
-    # --download-fblaslapack
-    --with-shared-libraries=0
-    --prefix=${PETSC_BUNDLED_PREFIX}
-    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make MAKE_NP=${N}
-    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make install
-    )
-    # add_dependencies(petsc petsc_bundled_libs)
-add_dependencies(build_bundled_libs petsc)
-
+    # "CPPFLAGS=-I ${zlib_include}"
+    # "LIBS=${zlib_lib}"
+    ${p4est_config_args}
+    --enable-mpi --disable-vtk-binary --without-blas
+    --enable-static=sc --without-zlib
+    --prefix=${P4EST_BUNDLED_PREFIX}
+    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make -j${N}
+    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make install
+  )
+  add_dependencies(p4est p4est_bundled_libs)
+  add_dependencies(build_bundled_libs p4est)
 endmacro()
 
-if (ENABLE_BUNDLED_PETSC)
-  petsc_build()
+if (ENABLE_BUNDLED_P4EST)
+  p4est_build()
 endif()

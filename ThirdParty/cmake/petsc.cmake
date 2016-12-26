@@ -69,7 +69,8 @@ macro(petsc_build)
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/ThirdParty/petsc/
     CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc &&
     python configure
-    # "CC=${MPI_C_COMPILER}"
+    "CC=${MPI_C_COMPILER}"
+    "CXX=${MPI_CXX_COMPILER}"
     # "F77=${MPI_Fortran_COMPILER}"
     # "CPPFLAGS=-I${LUA_INCLUDE_DIR} ${zlib_include}"
     # "LIBS=${lua_lib} ${zlib_lib}"
@@ -79,7 +80,8 @@ macro(petsc_build)
     --with-x=0
     --with-ssl=0
     --download-openblas=yes
-    --download-openblas-make-options="USE_THREAD=0"
+    --download-openblas-make-options=USE_THREAD=0
+    # --with-cc=icc
     # --download-fblaslapack
     --with-shared-libraries=0
     --prefix=${PETSC_BUNDLED_PREFIX}
