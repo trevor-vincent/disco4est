@@ -1578,16 +1578,16 @@ problem_init
     }
 
 
-    int checkpoint_period = 4;
+    int checkpoint_period = 3;
     if (level > 8)
       checkpoint_period = 1;
     
     if (level && level % checkpoint_period == 0){
-      char* p4est_filename = NULL;
-      D4EST_ASPRINTF(p4est_filename, "%s_%s_%d", "checkpoint","level", level);
-      element_data_copy_from_vec_to_storage(p4est, u);
-      p4est_save_ext(p4est_filename, p4est, 1, 1);
-      free(p4est_filename);
+      /* char* p4est_filename = NULL; */
+      /* D4EST_ASPRINTF(p4est_filename, "%s_%s_%d", "checkpoint","level", level); */
+      /* element_data_copy_from_vec_to_storage(p4est, u); */
+      /* p4est_save_ext(p4est_filename, p4est, 1, 1); */
+      /* free(p4est_filename); */
 
       sc_MPI_Barrier(sc_MPI_COMM_WORLD);
       char save_as1 [500];

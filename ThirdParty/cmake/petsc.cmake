@@ -13,8 +13,6 @@ set(PETSC_BUNDLED_LIBRARIES
   ${PETSC_BUNDLED_PREFIX}/lib/libpetsc.a
   )
 
-
-
 macro(petsc_use_bundled)
   set(PETSC_PREFIX "${PETSC_BUNDLED_PREFIX}")
   set(PETSC_INCLUDE_DIRS "${PETSC_BUNDLED_PREFIX}/include")

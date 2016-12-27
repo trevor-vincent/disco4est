@@ -572,7 +572,14 @@ problem_init
      /*    0,       /\* write no vector fields *\/ */
      /*    "non-constant-jacobian" */
      /*   ); */
-    
+  curved_element_data_init_node_vec
+    (
+     p4est,
+     u,
+     analytic_fcn,
+     dgmath_jit_dbase
+    );
+  
      p4est_vtk_write_file
        (p4est,
         p4est_geom,
@@ -595,14 +602,14 @@ problem_init
      
      krylov_petsc_params_t params = {input.krylov_type, 1, 0, NULL, NULL, NULL};
      
-     krylov_petsc_info_t info =
+     krylov_petsc_info_t info;
        krylov_petsc_solve
        (
         p4est,
         &prob_vecs,
         (void*)&prob_fcns,
         &ghost,
-        (void**)&ghost_data, 
+        (void**)&ghost_data,
         dgmath_jit_dbase,
         &dgeom,
         &params
@@ -627,8 +634,8 @@ problem_init
        );
 
 
-
      sc_array_t* vertex_u_sc = sc_array_new_data((void*)vertex_u, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants);
+     sc_array_t* vertex_u_analytic_sc = sc_array_new_data((void*)vertex_u_analytic, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants);
       
      p4est_vtk_context_t* vtk_ctx = p4est_vtk_context_new(p4est, "compact-sphere");
      p4est_vtk_context_set_geom(vtk_ctx, p4est_geom);
@@ -636,15 +643,19 @@ problem_init
 
      vtk_ctx = p4est_vtk_write_header(vtk_ctx);
 
-     vtk_ctx = p4est_vtk_write_point_dataf(vtk_ctx, 2, 0, "vertex_u",vertex_u_sc, "vertex_u_analytic",vertex_u_analytic_sc);
+     vtk_ctx = p4est_vtk_write_point_dataf(vtk_ctx, 2, 0, "vertex_u",vertex_u_sc, "vertex_u_analytic",vertex_u_analytic_sc,vtk_ctx);
 
      p4est_vtk_write_footer(vtk_ctx);
-     p4est_vtk_context_destroy(vtk_ctx);
+     /* p4est_vtk_context_destroy(vtk_ctx); */
+
+
+     sc_array_destroy(vertex_u_sc);
+     sc_array_destroy(vertex_u_analytic_sc);     
 
      P4EST_FREE(vertex_u);
      P4EST_FREE(vertex_u_analytic);
-                                 
 
+     
   curved_element_data_init_node_vec(p4est, u_analytic, analytic_fcn, dgmath_jit_dbase);    
   linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 

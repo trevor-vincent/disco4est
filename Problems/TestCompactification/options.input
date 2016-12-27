@@ -6,7 +6,7 @@ fill_uniform = 1
 [amr]
 num_unifrefs = 1
 num_randrefs = 0
-initial_degree = 2
+initial_degree = 4
 
 [flux]
 ip_flux_penalty = 2.0
