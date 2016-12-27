@@ -625,12 +625,20 @@ problem_init
         u_analytic,
         vertex_u_analytic
        );
-     
+
+
+
+     sc_array_t* vertex_u_sc = sc_array_new_data((void*)vertex_u, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants);
+      
      p4est_vtk_context_t* vtk_ctx = p4est_vtk_context_new(p4est, "compact-sphere");
      p4est_vtk_context_set_geom(vtk_ctx, p4est_geom);
      p4est_vtk_context_set_scale(vtk_ctx, .95);
+
      vtk_ctx = p4est_vtk_write_header(vtk_ctx);
-     p4est_vtk_write_point_dataf(vtk_ctx, 2, 0, vertex_u, "vertex_u", vertex_u_analytic, "vertex_u_analytic");
+
+     vtk_ctx = p4est_vtk_write_point_dataf(vtk_ctx, 2, 0, "vertex_u",vertex_u_sc, "vertex_u_analytic",vertex_u_analytic_sc);
+
+     p4est_vtk_write_footer(vtk_ctx);
      p4est_vtk_context_destroy(vtk_ctx);
 
      P4EST_FREE(vertex_u);

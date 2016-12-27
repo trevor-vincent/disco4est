@@ -65,11 +65,16 @@ macro(petsc_build)
     set(petsc_config_args "--with-debugging=0")
   endif("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
 
-
   set(blas_config_args "")
+  set(lapack_config_args "")
   if(USE_OPENBLAS)
     message("*****USING OPENBLAS*****")
-    set(blas_config_args "--with-blas-lib=${OPENBLAS_LIBRARIES}")
+    set(blas_config_args
+      "--with-blas-lib=${OPENBLAS_LIBRARIES}"
+      )
+    set(lapack_config_args
+      "--with-lapack-lib=${OPENBLAS_LIBRARIES}"
+      )    
     #--with-openblas=1 --with-openblas-dir=${OPENBLAS_ROOT} --with-openblas-include=${OPENBLAS_INCLUDE_DIR} --with-openblas-lib=${OPENBLAS_LIBRARIES}
   endif()
   if(DOWNLOAD_BLAS)
@@ -89,6 +94,7 @@ macro(petsc_build)
     # "LIBS=${lua_lib} ${zlib_lib}"
     ${petsc_config_args}
     ${blas_config_args}
+    ${lapack_config_args}
     # --enable-mpi
     # --with-fc=gfortran
     --with-x=0
