@@ -23,11 +23,11 @@ int pXest_input_handler
 )
 {
   pXest_input_t* pconfig = (pXest_input_t*)user;
-  if (util_match(section,"pXest",name,"min_quadrants")) {
+  if (util_match(section,"p4est",name,"min_quadrants")) {
     pconfig->min_quadrants = atoi(value);
-  } else if (util_match(section,"pXest",name, "min_level")) {
+  } else if (util_match(section,"p4est",name, "min_level")) {
     pconfig->min_level = atoi(value);
-  } else if (util_match(section,"pXest",name,"fill_uniform")) {
+  } else if (util_match(section,"p4est",name,"fill_uniform")) {
     pconfig->fill_uniform = atoi(value);
   } else {
     return 0;  /* unknown section/name, error */
@@ -37,6 +37,7 @@ int pXest_input_handler
 
 pXest_input_t
 pXest_input_parse(const char* input_file){
+
 
   sc_MPI_Comm mpicomm = sc_MPI_COMM_WORLD;  
   /* SC_CHECK_MPI(mpiret); */
@@ -52,7 +53,7 @@ pXest_input_parse(const char* input_file){
   pXest_input.fill_uniform = 1;
   
   if (ini_parse("options.input", pXest_input_handler, &pXest_input) < 0) {
-    mpi_abort("Can't load pXest input file");
+    mpi_abort("[D4EST_ERROR]: Can't load pXest input file");
   }
 
   if(
@@ -66,7 +67,8 @@ pXest_input_parse(const char* input_file){
       printf("[D4EST_WARNING]: Starting p4est with elements < processes\n");
     }
   }
-  
+
+  return pXest_input;
 }
 
 #endif

@@ -10,6 +10,15 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
 )
 
+if(USE_OPENBLAS)
+  include_directories(${OPENBLAS_INCLUDE_DIR})
+else()
+  find_package(BLAS REQUIRED)
+  find_package(LAPACK REQUIRED)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
+endif()
+
 # find_package(BLAS)
 # if(NOT BLAS_FOUND)
 #   message("Cannot find BLAS, searching for OpenBlas")
@@ -107,8 +116,7 @@ add_library(d4est ${SRCS})
 add_dependencies(d8est build_bundled_libs)
 add_dependencies(d4est build_bundled_libs)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
+
 
 add_custom_target(build_bundled_libs)
 add_custom_target(p4est_bundled_libs)
@@ -131,7 +139,7 @@ SET (
   ${PETSC_LIBRARIES}
   ${P4EST_LIBRARIES}
   ${MATH_LIB}
-  ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libopenblas.a
+  # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libopenblas.a
   ${CMAKE_BINARY_DIR}/ThirdParty/zlib/install/lib/libz.a
   # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libfblas.a
   # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libflapack.a
@@ -144,6 +152,27 @@ SET (
   # crypto
   # ssl
   )
+
+if(USE_OPENBLAS)
+  SET (
+    LIBS
+    ${LIBS}
+    ${OPENBLAS_LIBRARIES}
+  )
+endif()
+
+if(NOT USE_OPENBLAS AND NOT DOWNLOAD_BLAS)
+  SET (
+    LIBS
+    ${LIBS}
+    ${BLAS_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+  )
+endif()
+
+message("FUCK A DUCK LIBS = ${LIBS}")
+
+
 
 # -llapack -lblas -lX11 -lssl -lcrypto -lm -L/usr/lib/openmpi/lib -L/usr/lib/gcc/x86_64-linux-gnu/5 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -lmpi_f90 -lmpi_f77 -lgfortran -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.9 -lgfortran -lm -lquadmath -lm -lmpi_cxx -lstdc++ -L/usr/lib/openmpi/lib -L/usr/lib/gcc/x86_64-linux-gnu/5 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu -ldl -lmpi -lhwloc -lgcc_s -lpthread -ldl 
 

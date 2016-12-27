@@ -64,6 +64,16 @@ macro(petsc_build)
   else("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
     set(petsc_config_args "--with-debugging=0")
   endif("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
+
+
+  set(blas_config_args "")
+  if(USE_OPENBLAS)
+    set(blas_config_args "--with-openblas-dir=${OPENBLAS_ROOT}")
+  endif()
+  if(DOWNLOAD_BLAS)
+    set(blas_config_args "--download-openblas=yes --download-openblas-make-options=USE_THREAD=0")
+  endif()
+  
   ExternalProject_Add(petsc
     PREFIX    ${CMAKE_BINARY_DIR}/ThirdParty/petsc
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/ThirdParty/petsc/
@@ -75,12 +85,11 @@ macro(petsc_build)
     # "CPPFLAGS=-I${LUA_INCLUDE_DIR} ${zlib_include}"
     # "LIBS=${lua_lib} ${zlib_lib}"
     ${petsc_config_args}
+    ${blas_config_args}
     # --enable-mpi
     # --with-fc=gfortran
     --with-x=0
     --with-ssl=0
-    --download-openblas=yes
-    --download-openblas-make-options=USE_THREAD=0
     # --with-cc=icc
     # --download-fblaslapack
     --with-shared-libraries=0

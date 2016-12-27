@@ -107,14 +107,16 @@ macro(p4est_build)
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/ThirdParty/p4est/
     CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && git submodule init && git submodule update && ./bootstrap &&
     ./configure
-    "CC=${MPI_C_COMPILER}"
-    "CXX=${MPI_CXX_COMPILER}"
+    # "CC=${MPI_C_COMPILER}"
+    # "CXX=${MPI_CXX_COMPILER}"
     # "F77=${MPI_Fortran_COMPILER}"
     # "CPPFLAGS=-I ${zlib_include}"
     # "LIBS=${zlib_lib}"
     ${p4est_config_args}
-    --enable-mpi --disable-vtk-binary --without-blas
-    --enable-static=sc --without-zlib
+    --enable-mpi
+    --without-blas
+    # --enable-mpi --disable-vtk-binary --without-blas
+    # --enable-static=sc --without-zlib
     --prefix=${P4EST_BUNDLED_PREFIX}
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make -j${N}
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make install

@@ -729,20 +729,20 @@ problem_init
     printf("R = %.25f\n", R);
   }
   
-  if (!load_from_checkpoint){
-    p4est_partition_ext(p4est, 0, NULL);
-    p4est_balance_ext(p4est, P4EST_CONNECT_FACE, NULL, NULL);
-  }
+  /* if (!load_from_checkpoint){ */
+  p4est_partition_ext(p4est, 0, NULL);
+  p4est_balance_ext(p4est, P4EST_CONNECT_FACE, NULL, NULL);
+  /* } */
 
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   /* create space for storing the ghost data */
   element_data_t* ghost_data = P4EST_ALLOC (element_data_t,
                                             ghost->ghosts.elem_count);
 
-  if (!load_from_checkpoint){
+  /* if (!load_from_checkpoint){ */
     p4est_reset_data(p4est, sizeof(element_data_t), NULL, NULL);
     element_data_init(p4est, degree);
-  }
+  /* } */
   
   int local_nodes = element_data_get_local_nodes(p4est);
   double* Au = P4EST_ALLOC_ZERO(double, local_nodes);
@@ -1181,7 +1181,6 @@ problem_init
       free(p4est_filename);
     }
 
-
    
 
   }
@@ -1216,7 +1215,7 @@ problem_init
   linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
   
   char sol_save_as [500];
-  sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta2", P4EST_STRING, level);
+  sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta22", P4EST_STRING, level);
 
   hacked_p4est_vtk_write_all
     (p4est,

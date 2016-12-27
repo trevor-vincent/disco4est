@@ -37,6 +37,12 @@ int main(int argc, char *argv[])
     printf("[D4EST_INFO]: DIM = 2\n");
 #endif
 
+  if (proc_rank == 0){
+    printf("[D4EST_INFO]: mpisize = %d\n", proc_size);
+    printf("[D4EST_INFO]: min_quadrants = %d\n", pXest_input.min_quadrants);
+    printf("[D4EST_INFO]: min_level = %d\n", pXest_input.min_level);
+    printf("[D4EST_INFO]: fill_uniform = %d\n", pXest_input.fill_uniform);
+  }
   p4est_connectivity_t* conn = problem_build_conn();
   p4est_t* p4est = problem_build_p4est
                    (
