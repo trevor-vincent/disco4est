@@ -68,7 +68,7 @@ macro(petsc_build)
 
   set(blas_config_args "")
   if(USE_OPENBLAS)
-    set(blas_config_args "--with-openblas-dir=${OPENBLAS_ROOT}")
+    set(blas_config_args "--with-openblas=1 --with-openblas-dir=${OPENBLAS_ROOT}")
   endif()
   if(DOWNLOAD_BLAS)
     set(blas_config_args "--download-openblas=yes --download-openblas-make-options=USE_THREAD=0")
