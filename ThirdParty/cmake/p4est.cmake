@@ -107,8 +107,8 @@ macro(p4est_build)
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/ThirdParty/p4est/
     CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && git submodule init && git submodule update && ./bootstrap &&
     ./configure
-    # "CC=${MPI_C_COMPILER}"
-    # "CXX=${MPI_CXX_COMPILER}"
+    "CC=${MPI_C_COMPILER}"
+    "CXX=${MPI_CXX_COMPILER}"
     # "F77=${MPI_Fortran_COMPILER}"
     # "CPPFLAGS=-I ${zlib_include}"
     # "LIBS=${zlib_lib}"
