@@ -10,6 +10,15 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
 )
 
+if(SCINET)
+  set(USE_OPENBLAS ON)
+  set(OPENBLAS_DIR "/scinet/gpc/Libraries/OpenBLAS//singlethreaded/")
+  set(OPENBLAS_LIBRARIES
+    "/scinet/gpc/Libraries/OpenBLAS//singlethreaded/lib/libopenblas.a"
+    )
+  set(OPENBLAS_INCLUDE_DIR "/scinet/gpc/Libraries/OpenBLAS//singlethreaded/include")  
+endif()
+
 if(USE_OPENBLAS)
   include_directories(${OPENBLAS_INCLUDE_DIR})
 else()
