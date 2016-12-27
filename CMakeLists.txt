@@ -180,9 +180,6 @@ if(NOT USE_OPENBLAS AND NOT DOWNLOAD_BLAS)
   )
 endif()
 
-message("FUCK A DUCK LIBS = ${LIBS}")
-
-
 
 # -llapack -lblas -lX11 -lssl -lcrypto -lm -L/usr/lib/openmpi/lib -L/usr/lib/gcc/x86_64-linux-gnu/5 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -lmpi_f90 -lmpi_f77 -lgfortran -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.9 -lgfortran -lm -lquadmath -lm -lmpi_cxx -lstdc++ -L/usr/lib/openmpi/lib -L/usr/lib/gcc/x86_64-linux-gnu/5 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu -ldl -lmpi -lhwloc -lgcc_s -lpthread -ldl 
 
