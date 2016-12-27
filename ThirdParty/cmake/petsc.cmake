@@ -69,13 +69,13 @@ macro(petsc_build)
   set(blas_config_args "")
   if(USE_OPENBLAS)
     message("*****USING OPENBLAS*****")
-    message("--with-openblas=1 --with-openblas-dir=${OPENBLAS_ROOT} --with-openblas-include=${OPENBLAS_INCLUDE_DIR} --with-openblas-lib=${OPENBLAS_LIBRARIES}")
-    set(blas_config_args "--with-openblas=1 --with-openblas-dir=${OPENBLAS_ROOT} --with-openblas-include=${OPENBLAS_INCLUDE_DIR} --with-openblas-lib=${OPENBLAS_LIBRARIES}")
+    set(blas_config_args "--with-openblas=1 --with-openblas-dir=${OPENBLAS_ROOT} --with-openblas-include=${OPENBLAS_INCLUDE_DIR} --with-openblas-lib=${OPENBLAS_LIBRARIES} --with-blas-lib=${OPENBLAS_LIBRARIES}")
   endif()
   if(DOWNLOAD_BLAS)
     set(blas_config_args "--download-openblas=yes --download-openblas-make-options=USE_THREAD=0")
   endif()
   
+  message("******blas_config_args =  ${blas_config_args}")
   ExternalProject_Add(petsc
     PREFIX    ${CMAKE_BINARY_DIR}/ThirdParty/petsc
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/ThirdParty/petsc/
