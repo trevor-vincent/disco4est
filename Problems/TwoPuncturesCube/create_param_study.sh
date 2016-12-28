@@ -89,7 +89,7 @@ do
 				#     break
 				# fi
 				# fi
- 				NEWDIR="cds_deg_${a}_perc_${b}_gamh_${c}_pen_${d}_hreftilinview_${e}_domsize_${f}_useGauss_1_Gaussoffset_${g}_AmrInfSize_${h}_Solver_cg_degmax_${i}"
+ 				NEWDIR="2pun_deg_${a}_perc_${b}_gamh_${c}_pen_${d}_hreftilinview_${e}_domsize_${f}_useGauss_1_Gaussoffset_${g}_AmrInfSize_${h}_Solver_cg_degmax_${i}"
 				mkdir $NEWDIR
 				cd $NEWDIR
 				SHORTNAME="2pun${a}${b}${c}${d}${e}${f}${g}${h}${i}"
