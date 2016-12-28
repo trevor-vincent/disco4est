@@ -60,7 +60,7 @@ arr5=( .01 .001 .1 ) #rho0_div_rhoc
 arr6=( 8 5 2 ) #domain size
 arr7=( 1 2 ) #Gauss offset
 arr8=( 64 128 256 )
-arr9=( 7 5 )
+arr9=( 7 )
 
 for a in "${arr1[@]}"
 do
