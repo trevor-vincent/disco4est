@@ -6,6 +6,7 @@ min_level = 0
 fill_uniform = 1
 
 [amr]
+degmax = 7
 amr_levels = 30
 amr_inflation_size = 64
 initial_degree = 2

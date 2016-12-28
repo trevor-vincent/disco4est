@@ -37,16 +37,16 @@ for i in $( ls -d */ ); do
     cd ..
 done
 
-$NOIDCOUNTER=0
-$IDCOUNTER=0
+$NOIDCOUNTER2=0
+$IDCOUNTER2=0
 for i in $( ls -d */ ); do  
     cd $i 
     if [ ! -e "job.id" ] 
     then 
-	((NOIDCOUNTER++))
+	((NOIDCOUNTER2++))
     else
-	((IDCOUNTER++))
+	((IDCOUNTER2++))
     fi 
     cd ..
 done
-echo "Folders with jobid = $IDCOUNTER, Folders without jobid = $NOIDCOUNTER"
+echo "Folders with jobid = $IDCOUNTER2, Folders without jobid = $NOIDCOUNTER2"

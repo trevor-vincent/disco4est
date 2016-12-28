@@ -875,7 +875,7 @@ problem_input
  const char* input_file
 )
 {
-  int num_of_options = 12;
+  int num_of_options = 13;
   
   problem_input_t input;
   input.degree = -1;
@@ -890,6 +890,7 @@ problem_input
   input.deg_offset_for_Gauss_integ = -1;
   input.amr_inflation_size = -1;
   input.hrefine_til_inview = -1;
+  input.krylov_type = "";
   input.count = 0;
   
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
