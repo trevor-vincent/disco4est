@@ -114,6 +114,7 @@ SET (
   Flux/sipg_flux_scalar_fcns.c
   Flux/sipg_flux_vector_fcns.c
   Visualization/hacked_p4est_vtk.c
+  Visualization/d4est_vtk.c
   )
 
 

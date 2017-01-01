@@ -2,7 +2,7 @@
 #define MULTIGRID_CHEBY_SMOOTHER_H 
 
 static void 
-multigrid_cheby_smoother
+multigrid_cheby_smoother_iterate
 (
  p4est_t* p4est,
  problem_data_t* vecs,
@@ -62,6 +62,56 @@ multigrid_cheby_smoother
   P4EST_FREE(p);
   /* P4EST_FREE(ghost_data); */
   /* p4est_ghost_destroy (ghost); */
+}
+
+void
+multigrid_cheby_smoother
+(
+ p4est_t* p4est,
+ problem_data_t* vecs,
+ weakeqn_ptrs_t* fcns,
+ p4est_ghost_t* ghost,
+ element_data_t* ghost_data,
+ double* r,
+ multigrid_data_t* mg_data,
+ int level
+)
+{
+  multigrid_cheby_params_t cheby_params;
+  
+  if (mg_data->cg_eigs_iter > 0 &&
+      mg_data->mg_state == DOWNV_PRE_SMOOTH
+      || mg_data->mg_state == PREV_PRE_SMOOTH){
+    
+      cg_eigs
+        (
+         p4est,
+         vecs,
+         fcns,
+         ghost,
+         ghost_data,
+         mg_data->dgmath_jit_dbase,
+         mg_data->cg_eigs_iter,
+         &mg_data->max_eigs[level]
+        );
+
+      mg_data->max_eigs[level] *= mg_data->max_eig_factor;
+  }
+  
+  cheby_params.lmin = mg_data->max_eigs[level]/mg_data->lmax_lmin_rat;
+  cheby_params.lmax = mg_data->max_eigs[level];
+  cheby_params.iter = mg_data->smooth_iter;
+  
+  multigrid_cheby_smoother_iterate
+    (
+     p4est,
+     vecs,
+     fcns,
+     ghost,
+     ghost_data,
+     r,
+     &cheby_params
+    );
 }
 
 #endif

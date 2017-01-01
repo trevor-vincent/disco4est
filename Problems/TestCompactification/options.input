@@ -15,7 +15,7 @@ ip_flux_penalty = 2.0
 gauss_integ_deg = 10
 R0 = 1
 R1 = 2
-R2 = 100
+R2 = 3
 Rinf = 100
 w = 100
 

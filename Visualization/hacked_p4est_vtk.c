@@ -20,7 +20,6 @@
   along with p4est; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
-
 #include <pXest.h>
 #include "hacked_p4est_vtk.h"
 #ifdef P4_TO_P8

@@ -6,12 +6,18 @@
 int main(int argc, char *argv[])
 {  
   sc_MPI_Comm mpicomm;
-  int mpiret = sc_MPI_Init(&argc, &argv);
-  SC_CHECK_MPI(mpiret);
-  mpicomm = sc_MPI_COMM_WORLD;
-  PETSC_COMM_WORLD = mpicomm;
-  PetscInitialize(&argc,&argv,(char*)0,NULL);
 
+  /* mpicomm = sc_MPI_COMM_WORLD; */
+  /* PETSC_COMM_WORLD = mpicomm; */
+  PetscInitialize(&argc,&argv,(char*)0,NULL);
+  /* sc_MPI_COMM_WORLD = PETSC_COMM_WORLD; */
+  mpicomm = PETSC_COMM_WORLD;
+  /* sc_MPI_COMM_WORLD = mpicomm; */
+  
+  /* int mpiret = sc_MPI_Init(&argc, &argv); */
+  /* SC_CHECK_MPI(mpiret); */
+
+  
   int proc_size;
   int proc_rank;
   MPI_Comm_size(mpicomm, &proc_size);
@@ -27,7 +33,7 @@ int main(int argc, char *argv[])
   if(proc_rank == 0)
     printf("[D4EST_INFO]: DEBUG MODE OFF\n");
   p4est_init(NULL, SC_LP_ERROR);
-#endif 
+#endif
 
 #if (P4EST_DIM)==3
   if(proc_rank == 0)
@@ -53,10 +59,7 @@ int main(int argc, char *argv[])
                     pXest_input.fill_uniform
                    );
 
-  
   p4est_geometry_t* p4est_geom = problem_build_geom(conn);
-
-  
   /* start just-in-time dg-math */
   dgmath_jit_dbase_t* dgmath_jit_dbase = dgmath_jit_dbase_init();
 
@@ -85,8 +88,8 @@ int main(int argc, char *argv[])
   if(p4est_geom != NULL)
     p4est_geometry_destroy (p4est_geom);
 
-  sc_finalize ();
+
   PetscFinalize();
-  
+  /* sc_finalize (); */
   return 0;
 }

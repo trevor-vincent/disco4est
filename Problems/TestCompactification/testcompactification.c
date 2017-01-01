@@ -17,12 +17,13 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_compact_sphere.h>
 #include <curved_poisson_debug_vecs.h>
+#include <d4est_vtk.h>
 #include <ini.h>
 #include "time.h"
 #include "util.h"
 
 double global_Rinf;
-
+double global_sigma;
 
 static int
 random_h_refine(p4est_t * p4est, p4est_topidx_t which_tree,
@@ -40,12 +41,12 @@ double analytic_fcn
  double z
 )
 {
-  /* int n = 3; */
-  /* double arg = -(x*x + y*y + z*z)/(sigma*sigma); */
-  /* double N = 1./sqrt(pow(2,n)*pow(sigma,2*n)*pow(M_PI,n)); */
-  /* return N*exp(arg); */
-  double r2 = x*x + y*y + z*z;
-  return global_Rinf*global_Rinf - r2;
+  int n = 3;
+  double arg = -(x*x + y*y + z*z)/(global_sigma*global_sigma);
+  double N = 1./sqrt(pow(2,n)*pow(global_sigma,2*n)*pow(M_PI,n));
+  return N*exp(arg);
+  /* double r2 = x*x + y*y + z*z; */
+  /* return global_Rinf*global_Rinf - r2; */
 }
 
 static
@@ -67,8 +68,8 @@ double f_fcn
  double z
 )
 {
-  return -6.;
-  /* return 2*analytic_fcn(x,y,z)*(2*x*x + 2*y*y + 2*z*z - 3*sigma*sigma)/(sigma*sigma*sigma*sigma);   */
+  /* return -6.; */
+  return 2*analytic_fcn(x,y,z)*(2*x*x + 2*y*y + 2*z*z - 3*global_sigma*global_sigma)/(global_sigma*global_sigma*global_sigma*global_sigma);
 }
 
 static int
@@ -386,6 +387,7 @@ problem_init
   int level;
   int degree = input.degree;         
   global_Rinf = input.Rinf;
+  global_sigma = input.R0;
   
   mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
   int world_rank, world_size;
@@ -580,11 +582,11 @@ problem_init
      dgmath_jit_dbase
     );
   
-     p4est_vtk_write_file
-       (p4est,
-        p4est_geom,
-        "compact-sphere"
-       );
+     /* p4est_vtk_write_file */
+     /*   (p4est, */
+     /*    p4est_geom, */
+     /*    "compact-sphere" */
+     /*   ); */
 
      problem_build_rhs
        (
@@ -602,7 +604,7 @@ problem_init
      
      krylov_petsc_params_t params = {input.krylov_type, 1, 0, NULL, NULL, NULL};
      
-     krylov_petsc_info_t info;
+     krylov_petsc_info_t info =
        krylov_petsc_solve
        (
         p4est,
@@ -615,48 +617,107 @@ problem_init
         &params
        );
 
-     double* vertex_u = P4EST_ALLOC(double, (P4EST_CHILDREN)*p4est->local_num_quadrants);
-     double* vertex_u_analytic = P4EST_ALLOC(double, (P4EST_CHILDREN)*p4est->local_num_quadrants);
-     curved_element_data_init_node_vec(p4est, u_analytic, analytic_fcn, dgmath_jit_dbase);
+     /* double* vertex_u = P4EST_ALLOC(double, (P4EST_CHILDREN)*p4est->local_num_quadrants); */
+     /* double* vertex_u_analytic = P4EST_ALLOC(double, (P4EST_CHILDREN)*p4est->local_num_quadrants); */
+     /* curved_element_data_init_node_vec(p4est, u_analytic, analytic_fcn, dgmath_jit_dbase); */
   
-     curved_element_data_store_nodal_vec_in_vertex_array
-       (
-        p4est,
-        u,
-        vertex_u
-       );
+     /* curved_element_data_store_nodal_vec_in_vertex_array */
+     /*   ( */
+     /*    p4est, */
+     /*    u, */
+     /*    vertex_u */
+     /*   ); */
 
-     curved_element_data_store_nodal_vec_in_vertex_array
-       (
-        p4est,
-        u_analytic,
-        vertex_u_analytic
-       );
+     /* curved_element_data_store_nodal_vec_in_vertex_array */
+     /*   ( */
+     /*    p4est, */
+     /*    u_analytic, */
+     /*    vertex_u_analytic */
+     /*   ); */
 
 
-     sc_array_t* vertex_u_sc = sc_array_new_data((void*)vertex_u, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants);
-     sc_array_t* vertex_u_analytic_sc = sc_array_new_data((void*)vertex_u_analytic, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants);
+     /* sc_array_t* vertex_u_sc = sc_array_new_data((void*)vertex_u, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants); */
+     /* sc_array_t* vertex_u_analytic_sc = sc_array_new_data((void*)vertex_u_analytic, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants); */
       
-     p4est_vtk_context_t* vtk_ctx = p4est_vtk_context_new(p4est, "compact-sphere");
-     p4est_vtk_context_set_geom(vtk_ctx, p4est_geom);
-     p4est_vtk_context_set_scale(vtk_ctx, .95);
+     /* d4est_vtk_context_t* vtk_ctx = d4est_vtk_context_new(p4est, "compact-sphere"); */
+     /* d4est_vtk_context_set_geom(vtk_ctx, p4est_geom); */
+     /* d4est_vtk_context_set_scale(vtk_ctx, .95); */
 
-     vtk_ctx = p4est_vtk_write_header(vtk_ctx);
+     /* vtk_ctx = d4est_vtk_write_header(vtk_ctx); */
 
-     vtk_ctx = p4est_vtk_write_point_dataf(vtk_ctx, 2, 0, "vertex_u",vertex_u_sc, "vertex_u_analytic",vertex_u_analytic_sc,vtk_ctx);
+     /* vtk_ctx = d4est_vtk_write_point_dataf(vtk_ctx, 2, 0, "vertex_u",vertex_u_sc, "vertex_u_analytic",vertex_u_analytic_sc,vtk_ctx); */
 
-     p4est_vtk_write_footer(vtk_ctx);
-     /* p4est_vtk_context_destroy(vtk_ctx); */
+     /* d4est_vtk_write_footer(vtk_ctx); */
+     /* /\* d4est_vtk_context_destroy(vtk_ctx); *\/ */
 
 
-     sc_array_destroy(vertex_u_sc);
-     sc_array_destroy(vertex_u_analytic_sc);     
+     /* sc_array_destroy(vertex_u_sc); */
+     /* sc_array_destroy(vertex_u_analytic_sc);      */
 
-     P4EST_FREE(vertex_u);
-     P4EST_FREE(vertex_u_analytic);
+     /* P4EST_FREE(vertex_u); */
+     /* P4EST_FREE(vertex_u_analytic); */
+
+
+     int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
+     int vtk_nodes = 0;
+     
+     int stride = 0;
+     for (p4est_topidx_t tt = p4est->first_local_tree;
+          tt <= p4est->last_local_tree;
+          ++tt)
+       {
+         p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+         sc_array_t* tquadrants = &tree->quadrants;
+         int Q = (p4est_locidx_t) tquadrants->elem_count;
+         for (int q = 0; q < Q; ++q) {
+           /* k++; */
+           p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+           curved_element_data_t* ed = quad->p.user_data;
+           deg_array[stride] = ed->deg;
+           vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
+           stride++;
+         }
+       }
+
+
+  /* for (int i = 0; i < p4est->local_num_quadrants; i++){ */
+  /*   printf("util_int_pow_int(deg_array[i], (P4EST_DIM)) = %d\n",util_int_pow_int(deg_array[i], (P4EST_DIM))); */
+  /*   printf("deg_array[i] = %d\n",deg_array[i]); */
+  /*   printf("(P4EST_DIM) = %d\n",(P4EST_DIM)); */
+  /* } */
+     
+
+
+     /* sc_array_t* u_sc = sc_array_new_data((void*)u, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants); */
+     /* sc_array_t* u_analytic_sc = sc_array_new_data((void*)u_analytic, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants); */
 
      
-  curved_element_data_init_node_vec(p4est, u_analytic, analytic_fcn, dgmath_jit_dbase);    
+  curved_element_data_init_node_vec(p4est, u_analytic, analytic_fcn, dgmath_jit_dbase);
+     
+  d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, "compact-sphere");
+  d4est_vtk_context_set_geom(vtk_ctx, p4est_geom);
+  d4est_vtk_context_set_scale(vtk_ctx, .99);
+  d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
+  vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);
+  vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx, 2, 0, "u",u, "u_analytic",u_analytic,vtk_ctx);
+  vtk_ctx = d4est_vtk_write_dg_cell_dataf
+            (
+             vtk_ctx,
+             1,
+             1,
+             1,
+             0,
+             1,
+             0,
+             0,
+             vtk_ctx
+            );
+ 
+  
+  d4est_vtk_write_footer(vtk_ctx);
+
+  P4EST_FREE(deg_array);
+
   linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
   double local_l2_norm_sqr =  curved_element_data_compute_l2_norm_sqr

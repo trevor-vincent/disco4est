@@ -37,6 +37,10 @@ dgmath_jit_dbase_t* dgmath_jit_dbase_init() {
   dgbase->dgmath_ref_Dij_1d_table = P4EST_ALLOC(double*, deg_max);
   dgbase->dgmath_LIFT_1d_table = P4EST_ALLOC(double*, deg_max);
   dgbase->dgmath_ref_xyz_nd_table = P4EST_ALLOC(double*, deg_max*(2)); /* 2-> DIM = 2 or 3  */
+
+  dgbase->dgmath_vtk_rst_2d_table = P4EST_ALLOC(double*, deg_max); /* 2-> DIM = 2 or 3  */
+  dgbase->dgmath_vtk_rst_3d_table = P4EST_ALLOC(double*, deg_max); /* 2-> DIM = 2 or 3  */
+
   dgbase->dgmath_ref_Gauss_xyz_nd_table = P4EST_ALLOC(double*, deg_max*(2)); /* 2-> DIM = 2 or 3  */
   dgbase->dgmath_FLIP_1d_table = P4EST_ALLOC(double*, deg_max);
   dgbase->dgmath_hp_prolong_1d_table = P4EST_ALLOC(double*, deg_max * deg_max);
@@ -58,7 +62,8 @@ dgmath_jit_dbase_t* dgmath_jit_dbase_init() {
   
   dgbase->dgmath_hp_restrict_interp_1d_table = P4EST_ALLOC(double*, deg_max * deg_max);
   dgbase->dgmath_p_restrict_interp_1d_table = P4EST_ALLOC(double*, deg_max * deg_max);
-
+  dgbase->dgmath_vtk_interp_1d_table = P4EST_ALLOC(double*, deg_max);
+  
   int i;
   for (i = 0; i < dgbase->dgmath_max_storage * dgbase->dgmath_max_storage; i++){
     dgbase->dgmath_hp_prolong_1d_table[i] = NULL;
@@ -78,12 +83,15 @@ dgmath_jit_dbase_t* dgmath_jit_dbase_init() {
     dgbase->dgmath_ref_GLL_to_GL_interp_trans_1d_table[i] = NULL;
     dgbase->dgmath_ref_GLL_to_GL_interp_trans_1d_inverse_table[i] = NULL;
     if (i < dgbase->dgmath_max_storage){
+      dgbase->dgmath_vtk_interp_1d_table[i] = NULL;
       dgbase->dgmath_ref_Mij_1d_table[i] = NULL;
       dgbase->dgmath_GLL_nodes_1d_table[i] = NULL;
       dgbase->dgmath_GLL_weights_1d_table[i] = NULL;
       dgbase->dgmath_GL_nodes_1d_table[i] = NULL;
       dgbase->dgmath_GL_weights_1d_table[i] = NULL;
       dgbase->dgmath_ref_invMij_1d_table[i] = NULL;
+      dgbase->dgmath_vtk_rst_3d_table[i] = NULL;
+      dgbase->dgmath_vtk_rst_2d_table[i] = NULL;
       dgbase->dgmath_ref_invVij_1d_table[i] = NULL;
       dgbase->dgmath_ref_invGaussVij_1d_table[i] = NULL;
       dgbase->dgmath_ref_Dij_1d_table[i] = NULL;
@@ -104,6 +112,8 @@ void dgmath_jit_dbase_destroy(dgmath_jit_dbase_t* dgbase) {
   int i;
   for (i = 0; i < dgbase->dgmath_max_storage; i++) {
     P4EST_FREE(dgbase->dgmath_ref_Mij_1d_table[i]);
+    P4EST_FREE(dgbase->dgmath_vtk_rst_3d_table[i]);
+    P4EST_FREE(dgbase->dgmath_vtk_rst_2d_table[i]);
     P4EST_FREE(dgbase->dgmath_GLL_nodes_1d_table[i]);
     P4EST_FREE(dgbase->dgmath_GLL_weights_1d_table[i]);
     P4EST_FREE(dgbase->dgmath_GL_nodes_1d_table[i]);
@@ -114,8 +124,12 @@ void dgmath_jit_dbase_destroy(dgmath_jit_dbase_t* dgbase) {
     P4EST_FREE(dgbase->dgmath_ref_Dij_1d_table[i]);
     P4EST_FREE(dgbase->dgmath_LIFT_1d_table[i]);
     P4EST_FREE(dgbase->dgmath_FLIP_1d_table[i]);
+    P4EST_FREE(dgbase->dgmath_vtk_interp_1d_table[i]);
   }
   P4EST_FREE(dgbase->dgmath_ref_Mij_1d_table);
+  P4EST_FREE(dgbase->dgmath_vtk_rst_3d_table);
+  P4EST_FREE(dgbase->dgmath_vtk_rst_2d_table);
+  P4EST_FREE(dgbase->dgmath_vtk_interp_1d_table);
   P4EST_FREE(dgbase->dgmath_GLL_nodes_1d_table);
   P4EST_FREE(dgbase->dgmath_GLL_weights_1d_table);
   P4EST_FREE(dgbase->dgmath_GL_nodes_1d_table);
@@ -4067,4 +4081,169 @@ int dgmath_corner_to_node
     return -1;
   }
 #endif
+}
+
+
+static void dgmath_build_vtk_interp_1d(double* vtk_interp_1d, int deg) {
+  memset(vtk_interp_1d, 0., sizeof(double) * (deg + 1) * (deg) * 2);
+  /* left corners */
+  for (int i = 0; i < deg; i++) {
+    for (int j = 0; j < deg + 1; j++) {
+      if (i == j)
+        vtk_interp_1d[i*(deg+1) + j] = 1.;
+    }
+  }
+
+  /* right corners */
+  int stride = (deg + 1) * deg;
+  for (int i = 0; i < deg; i++) {
+    for (int j = 0; j < deg + 1; j++) {
+      if (i + 1 == j)
+        vtk_interp_1d[stride + i*(deg+1) + j] = 1.;
+    }
+  }
+}
+
+static double* dgmath_fetch_vtk_interp_1d(dgmath_jit_dbase_t* dgmath_jit_dbase, int deg) {
+  if (dgmath_jit_dbase->dgmath_vtk_interp_1d_table[deg-1] != NULL) {
+    return dgmath_jit_dbase->dgmath_vtk_interp_1d_table[deg-1];
+  }
+  else {
+    int size = (deg) * (deg + 1) * 2;
+    dgmath_jit_dbase->dgmath_vtk_interp_1d_table[deg-1] = P4EST_ALLOC(double, size);
+    double* op = dgmath_jit_dbase->dgmath_vtk_interp_1d_table[deg-1];
+    dgmath_build_vtk_interp_1d(op, deg);
+    return op;
+  }
+}
+
+void dgmath_apply_vtk_interp
+(
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ double* in,
+ int dim,
+ int deg,
+ int c,
+ double* out
+){
+  mpi_assert((c < (1 << dim)));
+
+  double* vtk_interp_1d = dgmath_fetch_vtk_interp_1d(dgmath_jit_dbase, deg);
+  
+  int nodes_in = deg + 1;
+  int nodes_out = deg;
+
+  if (dim == 1)
+    linalg_matvec_plus_vec(1.0, &vtk_interp_1d[c * nodes_in * nodes_out], in,
+                           0., out, nodes_out, nodes_in);
+  else if (dim == 2) {
+    int cx = dgmath_is_child_left_or_right(c, 0);
+    int cy = dgmath_is_child_left_or_right(c, 1);
+    linalg_kron_A1A2x_NONSQR(out, &vtk_interp_1d[cx * nodes_in * nodes_out],
+                             &vtk_interp_1d[cy * nodes_in * nodes_out], in,
+                             nodes_out, nodes_in, nodes_out, nodes_in);
+  } else if (dim == 3) {
+    int cx = dgmath_is_child_left_or_right(c, 0);
+    int cy = dgmath_is_child_left_or_right(c, 1);
+    int cz = dgmath_is_child_left_or_right(c, 2);
+    linalg_kron_A1A2A3x_NONSQR(out, &vtk_interp_1d[cx * nodes_in * nodes_out],
+                               &vtk_interp_1d[cy * nodes_in * nodes_out],
+                               &vtk_interp_1d[cz * nodes_in * nodes_out], in,
+                               nodes_out, nodes_in, nodes_out, nodes_in, nodes_out, nodes_in);
+  } else {
+    mpi_abort("Dim = 1 or 2 or 3 in vtk_interp");
+  }
+}
+
+static void dgmath_build_vtk_rst
+(
+ dgmath_jit_dbase_t* dgbase,
+ double* vtk_rst,
+ int dim, int deg
+)
+{
+  int deg_dim = (dim == 2) ? deg*deg : deg*deg*deg;
+  double* temp = P4EST_ALLOC(double, deg_dim);
+  int children = (dim == 2) ? 4 : 8;
+  
+  for (int c = 0; c < children; c++){
+    for (int dir = 0; dir < dim; dir++){
+      double* rst = dgmath_fetch_xyz_nd(dgbase, dim, deg, dir);
+      dgmath_apply_vtk_interp(dgbase, rst, dim, deg, c, temp);
+      for (int n = 0; n < deg_dim; n++){
+        vtk_rst[dir + c*3 + n*children*3] = temp[n];
+      }
+    }
+  }  
+
+  /* if DIM is 2, zero out z coordinate */
+  if (dim == 2){
+    for (int c = 0; c < children; c++){
+      for (int n = 0; n < deg_dim; n++){
+        vtk_rst[2 + c*3 + n*children*3] = 0.;
+      }
+    }
+  }
+  P4EST_FREE(temp);
+}
+
+void dgmath_convert_nodal_to_vtk
+(
+ dgmath_jit_dbase_t* dgbase,
+ double* vec,
+ int dim,
+ int deg,
+ double* vtk_vec /* should be (chiildren)*(deg)^dim */
+)
+{
+  int deg_dim = (dim == 2) ? deg*deg : deg*deg*deg;
+  double* temp = P4EST_ALLOC(double, deg_dim);
+  int children = (dim == 2) ? 4 : 8;
+  
+  for (int c = 0; c < children; c++){
+    dgmath_apply_vtk_interp(dgbase, vec, dim, deg, c, temp);
+    for (int n = 0; n < deg_dim; n++){
+      vtk_vec[c + n*children] = temp[n];
+    }
+  }
+
+  P4EST_FREE(temp);
+}
+
+
+
+
+double* dgmath_fetch_vtk_rst
+(
+ dgmath_jit_dbase_t* dgbase,
+ int deg,
+ int dim
+)
+{
+  mpi_assert(deg < dgbase->dgmath_max_storage);
+
+  double* table_ptr = (dim==3) ? dgbase->dgmath_vtk_rst_3d_table[deg] : dgbase->dgmath_vtk_rst_2d_table[deg];
+  
+  if (table_ptr != NULL) {
+    return table_ptr;
+  }
+  else {
+    int children = (dim == 2) ? 4 : 8;
+    int deg_dim = (dim == 2) ? deg*deg : deg*deg*deg;
+    int size = 3*deg_dim*(children);
+
+    if (dim == 3){
+      dgbase->dgmath_vtk_rst_3d_table[deg] = P4EST_ALLOC(double, size);
+    }
+    else if (dim == 2){
+      dgbase->dgmath_vtk_rst_2d_table[deg] = P4EST_ALLOC(double, size);
+    }
+    else{
+      mpi_abort("[D4EST_ERROR]: Not a support dimension");
+    }
+    
+    double* op = (dim==3) ? dgbase->dgmath_vtk_rst_3d_table[deg] : dgbase->dgmath_vtk_rst_2d_table[deg];
+    dgmath_build_vtk_rst(dgbase, op, dim, deg);
+    return op;
+  }
 }

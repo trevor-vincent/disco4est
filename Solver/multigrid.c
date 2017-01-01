@@ -106,8 +106,8 @@ multigrid_vcycle
   p4est->user_pointer = (void*) mg_data;
 
   /* start and end levels of multigrid */
-  int endlevel = mg_data->num_of_levels - 1;
-  int startlevel = 0;
+  int toplevel = mg_data->num_of_levels - 1;
+  int bottomlevel = 0;
 
   double* max_eigs = mg_data->max_eigs;/* P4EST_ALLOC(double, mg_data->num_of_levels); */
   
@@ -120,26 +120,41 @@ multigrid_vcycle
   int total_nodes_on_surrogate_multigrid = 0;
   int total_elements_on_multigrid = 0;
   int total_nodes_on_multigrid = 0;
+
   
-  elements_on_level_of_multigrid[0] = p4est->local_num_quadrants;
-  nodes_on_level_of_multigrid[0] = vecs->local_nodes;
+  elements_on_level_of_multigrid[toplevel] = p4est->local_num_quadrants;
+  nodes_on_level_of_multigrid[toplevel] = vecs->local_nodes;
   
-  total_elements_on_multigrid += elements_on_level_of_multigrid[0];
-  total_nodes_on_multigrid += nodes_on_level_of_multigrid[0];
+  total_elements_on_multigrid += elements_on_level_of_multigrid[toplevel];
+  total_nodes_on_multigrid += nodes_on_level_of_multigrid[toplevel];
   
-  elements_on_level_of_surrogate_multigrid[0] = p4est->local_num_quadrants;
-  nodes_on_level_of_surrogate_multigrid[0] = nodes_on_level_of_multigrid[0];
+  elements_on_level_of_surrogate_multigrid[toplevel] = p4est->local_num_quadrants;
+  nodes_on_level_of_surrogate_multigrid[toplevel] = nodes_on_level_of_multigrid[toplevel];
   
-  total_elements_on_surrogate_multigrid += elements_on_level_of_surrogate_multigrid[0];
-  total_nodes_on_surrogate_multigrid += nodes_on_level_of_surrogate_multigrid[0];
+  total_elements_on_surrogate_multigrid += elements_on_level_of_surrogate_multigrid[toplevel];
+  total_nodes_on_surrogate_multigrid += nodes_on_level_of_surrogate_multigrid[toplevel];
 
   /* FIXME: REALLOCATE AS WE COARSEN */
-  multigrid_refine_data_t* coarse_grid_refinement = P4EST_ALLOC(multigrid_refine_data_t, (endlevel-startlevel)* p4est->local_num_quadrants);
+  multigrid_refine_data_t* coarse_grid_refinement = P4EST_ALLOC
+                                                    (
+                                                     multigrid_refine_data_t,
+                                                     (toplevel-bottomlevel) * p4est->local_num_quadrants
+                                                    );
   mg_data->coarse_grid_refinement = coarse_grid_refinement;
   
   /* initialize */
   mg_data->fine_nodes = total_nodes_on_multigrid;
   mg_data->coarse_nodes = total_nodes_on_multigrid;
+
+
+  if (mg_data->log_option == DEBUG){
+    printf("\n");
+    printf("[MULTIGRID_DEBUG]: BEFORE START \n");
+    printf("[MULTIGRID_DEBUG]: Elements on top level %d\n", elements_on_level_of_multigrid[toplevel]);
+    printf("[MULTIGRID_DEBUG]: Number of Levels %d\n", mg_data->num_of_levels);
+    printf("[MULTIGRID_DEBUG]: Nodes on top level %d\n", nodes_on_level_of_multigrid[toplevel]);
+    printf("\n");
+  }
 
   double* Ae_at0 = P4EST_ALLOC(double, total_nodes_on_multigrid);
   double* err_at0 = P4EST_ALLOC_ZERO(double, total_nodes_on_multigrid);
@@ -154,44 +169,21 @@ multigrid_vcycle
   double* u = vecs->u;
   
   problem_data_t vecs_for_cheby_smooth;
-  /* these shouldn't change */
-  vecs_for_cheby_smooth.scalar_flux_fcn_data = vecs->scalar_flux_fcn_data;
-  vecs_for_cheby_smooth.vector_flux_fcn_data = vecs->vector_flux_fcn_data;
-
+  problem_data_copy_ptrs(vecs, &vecs_for_cheby_smooth);
   problem_data_t vecs_for_cg_coarse_solve;
-  /* these shouldn't change */
-  vecs_for_cg_coarse_solve.scalar_flux_fcn_data = vecs->scalar_flux_fcn_data;
-  vecs_for_cg_coarse_solve.vector_flux_fcn_data = vecs->vector_flux_fcn_data;
-  
-  /* these shouldn't change */
-  multigrid_cheby_params_t cheby_params;    
-  if (mg_data->cg_eigs_iter > 0)
-    cg_eigs
-      (
-       p4est,
-       vecs,
-       fcns,
-       *ghost,
-       *ghost_data,
-       mg_data->dgmath_jit_dbase,
-       mg_data->cg_eigs_iter,
-       &max_eigs[endlevel]
-      );
-  
-  max_eigs[endlevel] *= mg_data->max_eig_factor;
-  cheby_params.lmin = max_eigs[endlevel]/mg_data->lmax_lmin_rat;
-  cheby_params.lmax = max_eigs[endlevel];
-  cheby_params.iter = mg_data->smooth_iter;
+  problem_data_copy_ptrs(vecs, &vecs_for_cg_coarse_solve);
 
   if (mg_data->log_option == DEBUG){
-    printf("[MULTIGRID_DEBUG]: level %d\n", 0);
+    printf("\n");
+    printf("[MULTIGRID_DEBUG]: level %d\n", toplevel);
     printf("[MULTIGRID_DEBUG]: PREV_PRE_SMOOTH \n");
-    printf("[MULTIGRID_DEBUG]: elements on level = %d \n", elements_on_level_of_multigrid[0]);
-    printf("[MULTIGRID_DEBUG]: nodes on level = %d \n", nodes_on_level_of_multigrid[0]);
-    printf("[MULTIGRID_DEBUG]: max_eigs[%d] = %f\n", endlevel, max_eigs[endlevel]);
-    printf("[MULTIGRID_DEBUG]: lmin = %f\n", cheby_params.lmin);
-    printf("[MULTIGRID_DEBUG]: lmax = %f\n", cheby_params.lmax);
-    printf("[MULTIGRID_DEBUG]: iter = %d\n", cheby_params.iter);    
+    printf("[MULTIGRID_DEBUG]: elements on level = %d \n", elements_on_level_of_multigrid[toplevel]);
+    printf("[MULTIGRID_DEBUG]: nodes on level = %d \n", nodes_on_level_of_multigrid[toplevel]);
+    printf("[MULTIGRID_DEBUG]: max_eigs[%d] = %f\n", toplevel, max_eigs[toplevel]);
+    /* printf("[MULTIGRID_DEBUG]: lmin = %f\n", cheby_params.lmin); */
+    /* printf("[MULTIGRID_DEBUG]: lmax = %f\n", cheby_params.lmax); */
+    /* printf("[MULTIGRID_DEBUG]: iter = %d\n", cheby_params.iter); */
+    printf("\n");
   }
   
   /* these will change */
@@ -205,7 +197,6 @@ multigrid_vcycle
   if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
     mg_data->mg_update_user_callback(p4est, level_start_fix_this_tho, &vecs_for_cheby_smooth);
   }
-
   
   multigrid_cheby_smoother
     (
@@ -215,7 +206,8 @@ multigrid_vcycle
      *ghost,
      *ghost_data,
      mg_data->res,
-     &cheby_params
+     mg_data,
+     toplevel
     );
 
 
@@ -233,21 +225,19 @@ multigrid_vcycle
 
   /* initialize stride */
   mg_data->stride = 0;
- 
-  if (mg_data->save_vtk_snapshot == 1){
-    char save_as [500];
-    sprintf(save_as, "multigrid_level_%d_preV", endlevel);
-    hp_amr_save_to_vtk
-      (
-       p4est,
-       save_as,
-       0
-      );
-  }   
-   
-  /* Going down the V */
-  for (level = endlevel; level > startlevel; --level){
 
+  if (mg_data->log_option == DEBUG){
+    printf("\n");
+    printf("[MULTIGRID_DEBUG]: stride before DOWN THE V %d\n", mg_data->stride);
+    printf("\n");
+  }
+
+  /* Going down the V */
+  for (level = toplevel; level > bottomlevel; --level){
+
+    int fine_level = level;
+    int coarse_level = level-1;
+    
     /* increments the stride */
     p4est_coarsen_ext (p4est,
                        0,
@@ -257,10 +247,6 @@ multigrid_vcycle
                        NULL
                       );
 
-
-
-    /* printf("stride after coarsen = %d\n", mg_data->stride); */
-   
     /* does not change the stride */
     element_data_init(p4est, -1);
 
@@ -271,33 +257,19 @@ multigrid_vcycle
 
     /* decrements the stride */
     total_elements_on_surrogate_multigrid += p4est->local_num_quadrants;
-    nodes_on_level_of_surrogate_multigrid[endlevel-level+1] = element_data_get_local_nodes(p4est);
-    total_nodes_on_surrogate_multigrid += nodes_on_level_of_surrogate_multigrid[endlevel-level+1];
-    elements_on_level_of_surrogate_multigrid[endlevel-level+1] = p4est->local_num_quadrants;
-    mg_data->stride -= elements_on_level_of_surrogate_multigrid[endlevel-level+1];
+    nodes_on_level_of_surrogate_multigrid[level-1] = element_data_get_local_nodes(p4est);
+    total_nodes_on_surrogate_multigrid += nodes_on_level_of_surrogate_multigrid[level-1];
+    elements_on_level_of_surrogate_multigrid[level-1] = p4est->local_num_quadrants;
+    mg_data->stride -= elements_on_level_of_surrogate_multigrid[level-1];
 
   if (mg_data->log_option == DEBUG){
-    printf("[MULTIGRID_DEBUG]: level %d\n", endlevel);
+    printf("\n");
     printf("[MULTIGRID_DEBUG]: DOWNV_POST_COARSEN \n");
-    printf("[MULTIGRID_DEBUG]: surrogate elements on level = %d \n", elements_on_level_of_surrogate_multigrid[endlevel-level+1]);
-    printf("[MULTIGRID_DEBUG]: surrogate nodes on level = %d \n", nodes_on_level_of_surrogate_multigrid[endlevel-level+1]);
-    /* printf("[MULTIGRID_DEBUG]: max_eigs[%d] = %f\n", endlevel, max_eigs[endlevel]); */
-    /* printf("[MULTIGRID_DEBUG]: lmin = %f\n", cheby_params.lmin); */
-    /* printf("[MULTIGRID_DEBUG]: lmax = %f\n", cheby_params.lmax); */
-    /* printf("[MULTIGRID_DEBUG]: iter = %f\n", cheby_params.iter);     */
+    printf("[MULTIGRID_DEBUG]: Surrogate level %d\n", level-1);
+    printf("[MULTIGRID_DEBUG]: surrogate elements on this level = %d \n", elements_on_level_of_surrogate_multigrid[level-1]);
+    printf("[MULTIGRID_DEBUG]: surrogate nodes on this level = %d \n", nodes_on_level_of_surrogate_multigrid[level-1]);
+    printf("\n");
   }
-
-    
-    if (mg_data->save_vtk_snapshot == 1){
-      char save_as1 [500];
-      sprintf(save_as1, "multigrid_level_%d_post_coarsen", level - 1);
-      hp_amr_save_to_vtk
-        (
-         p4est,
-         save_as1,
-         0
-        );
-    }
    
     /* does not change the stride */
     p4est_balance_ext (p4est, P4EST_CONNECT_FACE, NULL, multigrid_store_balance_changes);
@@ -317,37 +289,30 @@ multigrid_vcycle
     *ghost_data = P4EST_ALLOC (element_data_t,
                                (*ghost)->ghosts.elem_count);
     
-    elements_on_level_of_multigrid[endlevel-level+1] = p4est->local_num_quadrants;
-    total_elements_on_multigrid += elements_on_level_of_multigrid[endlevel-level+1];
-    nodes_on_level_of_multigrid[endlevel-level+1] = element_data_get_local_nodes(p4est);
-    total_nodes_on_multigrid += nodes_on_level_of_multigrid[endlevel-level+1];
+    elements_on_level_of_multigrid[level-1] = p4est->local_num_quadrants;
+    total_elements_on_multigrid += elements_on_level_of_multigrid[level-1];
+    nodes_on_level_of_multigrid[level-1] = element_data_get_local_nodes(p4est);
+    total_nodes_on_multigrid += nodes_on_level_of_multigrid[level-1];
 
-    mg_data->fine_nodes = nodes_on_level_of_multigrid[endlevel - level];
-    mg_data->coarse_nodes = nodes_on_level_of_multigrid[endlevel - level + 1];
+    mg_data->fine_nodes = nodes_on_level_of_multigrid[level];
+    mg_data->coarse_nodes = nodes_on_level_of_multigrid[level - 1];
 
     if (mg_data->log_option == DEBUG){
-      printf("[MULTIGRID_DEBUG]: level %d\n", endlevel);
+      printf("\n");
+      printf("[MULTIGRID_DEBUG]: Going from level %d to level %d\n", level, level - 1);
       printf("[MULTIGRID_DEBUG]: DOWNV_POST_BALANCE \n");
-      printf("[MULTIGRID_DEBUG]: elements on level = %d \n", elements_on_level_of_multigrid[endlevel-level+1]);
-      printf("[MULTIGRID_DEBUG]: nodes on level = %d \n", nodes_on_level_of_multigrid[endlevel-level+1]);
-      printf("[MULTIGRID_DEBUG]: fine nodes = %d \n", nodes_on_level_of_multigrid[endlevel-level]);
-      printf("[MULTIGRID_DEBUG]: coarse nodes = %d \n", nodes_on_level_of_multigrid[endlevel-level] - 1);
-      /* printf("[MULTIGRID_DEBUG]: max_eigs[%d] = %f\n", endlevel, max_eigs[endlevel]); */
+      printf("[MULTIGRID_DEBUG]: elements on level %d = %d \n", level, elements_on_level_of_multigrid[level]);
+      printf("[MULTIGRID_DEBUG]: nodes on level %d = %d \n", level, nodes_on_level_of_multigrid[level]);
+      printf("[MULTIGRID_DEBUG]: fine nodes = %d \n", nodes_on_level_of_multigrid[level]);
+      printf("[MULTIGRID_DEBUG]: coarse nodes = %d \n", nodes_on_level_of_multigrid[level - 1]);
+      printf("\n");
+      /* printf("[MULTIGRID_DEBUG]: max_eigs[%d] = %f\n", toplevel, max_eigs[toplevel]); */
       /* printf("[MULTIGRID_DEBUG]: lmin = %f\n", cheby_params.lmin); */
       /* printf("[MULTIGRID_DEBUG]: lmax = %f\n", cheby_params.lmax); */
       /* printf("[MULTIGRID_DEBUG]: iter = %f\n", cheby_params.iter);     */
     }
     
-    if (mg_data->save_vtk_snapshot == 1){
-      char save_as2 [500];
-      sprintf(save_as2, "multigrid_level_%d_post_balance", level - 1);
-      hp_amr_save_to_vtk
-        (
-         p4est,
-         save_as2,
-         0
-        );
-    }
+
     Ae_at0 = P4EST_REALLOC(Ae_at0, double, total_nodes_on_multigrid);
     err_at0 = P4EST_REALLOC(err_at0, double, total_nodes_on_multigrid);
     res_at0 = P4EST_REALLOC(res_at0, double, total_nodes_on_multigrid);
@@ -387,40 +352,14 @@ multigrid_vcycle
        mg_data->coarse_nodes
       );
     
-    /* double debug_res_after_restrict = linalg_vec_dot(&(mg_data->res)[mg_data->fine_nodes],  &(mg_data->res)[mg_data->fine_nodes], mg_data->coarse_nodes); */
-
-    /* printf("%d, debug_res_after_restrict = %.20f\n", level, debug_res_after_restrict); */
-    
-    /* PROBABLY CAN BE REMOVED */
-    element_data_init(p4est, -1);
-
     /* relax solution  */
-    if (level > startlevel + 1){
+    if (coarse_level > bottomlevel){
 
       
       vecs_for_cheby_smooth.Au = &mg_data->Ae[mg_data->fine_nodes];
       vecs_for_cheby_smooth.u = &mg_data->err[mg_data->fine_nodes];
       vecs_for_cheby_smooth.rhs = &(mg_data->res)[mg_data->fine_nodes];
       vecs_for_cheby_smooth.local_nodes = mg_data->coarse_nodes;
-      cheby_params.iter = mg_data->smooth_iter;
-      
-      if (mg_data->cg_eigs_iter > 0)
-        cg_eigs
-          (
-           p4est,
-           &vecs_for_cheby_smooth,
-           fcns,
-           *ghost,
-           *ghost_data,
-           mg_data->dgmath_jit_dbase,
-           mg_data->cg_eigs_iter,
-           &max_eigs[level - 1]
-          );
-
-      max_eigs[level - 1] *= mg_data->max_eig_factor;
-      cheby_params.lmin = max_eigs[level - 1]/mg_data->lmax_lmin_rat;
-      cheby_params.lmax = max_eigs[level - 1];
-      cheby_params.iter = mg_data->smooth_iter;
 
       mg_data->mg_state = DOWNV_PRE_SMOOTH;
       if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
@@ -428,12 +367,14 @@ multigrid_vcycle
       }
      
       if (mg_data->log_option == DEBUG){
-        printf("[MULTIGRID_DEBUG]: level %d\n", endlevel);
+        printf("\n");
+        printf("[MULTIGRID_DEBUG]: level %d\n", coarse_level);
         printf("[MULTIGRID_DEBUG]: PREV_PRE_SMOOTH \n");
-        printf("[MULTIGRID_DEBUG]: max_eig = %f\n", max_eigs[level - 1]);
-        printf("[MULTIGRID_DEBUG]: lmin = %f\n", cheby_params.lmin);
-        printf("[MULTIGRID_DEBUG]: lmax = %f\n", cheby_params.lmax);
-        printf("[MULTIGRID_DEBUG]: iter = %d\n", cheby_params.iter);    
+        printf("[MULTIGRID_DEBUG]: max_eig = %f\n", max_eigs[coarse_level]);
+        /* printf("[MULTIGRID_DEBUG]: lmin = %f\n", cheby_params.lmin); */
+        /* printf("[MULTIGRID_DEBUG]: lmax = %f\n", cheby_params.lmax); */
+        /* printf("[MULTIGRID_DEBUG]: iter = %d\n", cheby_params.iter); */
+        printf("\n");
       }
       
       multigrid_cheby_smoother
@@ -444,7 +385,8 @@ multigrid_vcycle
          *ghost,
          *ghost_data,
          &(mg_data->rres)[mg_data->fine_nodes],
-         &cheby_params
+         mg_data,
+         coarse_level
         );
 
       mg_data->mg_state = DOWNV_POST_SMOOTH;
@@ -453,9 +395,7 @@ multigrid_vcycle
       }
       
     }
-
     else{
-
       mg_data->mg_state = COARSE_PRE_SOLVE;
       if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
         mg_data->mg_update_user_callback(p4est, level, NULL);
@@ -485,40 +425,8 @@ multigrid_vcycle
           );
       }
       else {
-        vecs_for_cheby_smooth.Au = &mg_data->Ae[mg_data->fine_nodes];
-        vecs_for_cheby_smooth.u = &mg_data->err[mg_data->fine_nodes];
-        vecs_for_cheby_smooth.rhs = &(mg_data->res)[mg_data->fine_nodes];
-        vecs_for_cheby_smooth.local_nodes = mg_data->coarse_nodes;
-
-        if (mg_data->cg_eigs_iter > 0)
-          cg_eigs
-            (
-             p4est,
-             &vecs_for_cheby_smooth,
-             fcns,
-             *ghost,
-             *ghost_data,
-             mg_data->dgmath_jit_dbase,
-             mg_data->cg_eigs_iter,
-             &max_eigs[level - 1]
-            );
-
-        max_eigs[level - 1] *= mg_data->max_eig_factor;
-        cheby_params.lmin = max_eigs[level - 1]/mg_data->lmax_lmin_rat;
-        cheby_params.lmax = max_eigs[level - 1];
-        cheby_params.iter = mg_data->coarse_iter;
-        multigrid_cheby_smoother
-          (
-           p4est,
-           &vecs_for_cheby_smooth,
-           fcns,
-           *ghost,
-           *ghost_data,
-           &(mg_data->rres)[mg_data->fine_nodes],
-           &cheby_params
-          );
+        mpi_abort("Cheby Smoother not yet supported on coarse level");
       }
-
 
       mg_data->mg_state = COARSE_POST_SOLVE;
       if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
@@ -534,26 +442,28 @@ multigrid_vcycle
   }
 
    mg_data->stride = total_elements_on_surrogate_multigrid;
-   mg_data->stride -= elements_on_level_of_surrogate_multigrid[0]; /* subtract fine grid */
+   mg_data->stride -= elements_on_level_of_surrogate_multigrid[toplevel]; /* subtract fine grid */
   
   /* Going up the V */
-  for (level = startlevel; level < endlevel; ++level){
+  for (level = bottomlevel; level < toplevel; ++level){
 
+    int fine_level = level + 1;
+    int coarse_level = level;
 
     mg_data->mg_state = UPV_PRE_REFINE;
     if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
       mg_data->mg_update_user_callback(p4est, level, NULL);
     }
     
-    mg_data->fine_nodes = nodes_on_level_of_multigrid[endlevel-(level+1)];
-    mg_data->coarse_nodes = nodes_on_level_of_multigrid[endlevel-level];
+    mg_data->fine_nodes = nodes_on_level_of_multigrid[level+1];
+    mg_data->coarse_nodes = nodes_on_level_of_multigrid[level];
 
     mg_data->err -= mg_data->fine_nodes;
     mg_data->Ae -= mg_data->fine_nodes;
     mg_data->rres -= mg_data->fine_nodes;
     mg_data->res -= mg_data->fine_nodes;
     
-    mg_data->stride -= elements_on_level_of_surrogate_multigrid[endlevel-level];
+    mg_data->stride -= elements_on_level_of_surrogate_multigrid[level];
     mg_data->fine_stride = 0;
     mg_data->coarse_stride = 0;
     mg_data->temp_stride = 0;
@@ -576,53 +486,40 @@ multigrid_vcycle
     *ghost_data = P4EST_ALLOC (element_data_t,
                                (*ghost)->ghosts.elem_count);
     
-    if (mg_data->save_vtk_snapshot == 1){
-      char save_as3 [500];
-      sprintf(save_as3, "multigrid_level_%d_post_refine", level + 1);
-      hp_amr_save_to_vtk
-        (
-         p4est,
-         save_as3,
-         0
-        );
-    }
-
     /* decrements the stride */
-    mg_data->stride -= elements_on_level_of_surrogate_multigrid[endlevel - level];
+    mg_data->stride -= elements_on_level_of_surrogate_multigrid[level];
 
     /* PROBABLY NOT NEEDED */
     element_data_init(p4est, -1);    
     linalg_vec_axpy(1.0, mg_data->rres, mg_data->err, mg_data->fine_nodes);
 
     /* If the grid is not the finiest */
-    if(level != endlevel-1){
-
+    if(fine_level != toplevel){
       
       vecs_for_cheby_smooth.Au = mg_data->Ae;
       vecs_for_cheby_smooth.u = mg_data->err;
       vecs_for_cheby_smooth.rhs = mg_data->res;
       vecs_for_cheby_smooth.local_nodes = mg_data->fine_nodes;
 
+      /* if (mg_data->cg_eigs_iter > 0) */
+      /*   cg_eigs */
+      /*     ( */
+      /*      p4est, */
+      /*      &vecs_for_cheby_smooth, */
+      /*      fcns, */
+      /*      *ghost, */
+      /*      *ghost_data, */
+      /*      mg_data->dgmath_jit_dbase, */
+      /*      mg_data->cg_eigs_iter, */
+      /*      &max_eigs[level + 1] */
+      /*     ); */
 
-
-      if (mg_data->cg_eigs_iter > 0)
-        cg_eigs
-          (
-           p4est,
-           &vecs_for_cheby_smooth,
-           fcns,
-           *ghost,
-           *ghost_data,
-           mg_data->dgmath_jit_dbase,
-           mg_data->cg_eigs_iter,
-           &max_eigs[level + 1]
-          );
-
-      max_eigs[level+1] *= mg_data->max_eig_factor;
-      cheby_params.lmin = max_eigs[level + 1]/mg_data->lmax_lmin_rat;
-      cheby_params.lmax = max_eigs[level + 1];
-      cheby_params.iter = mg_data->smooth_iter;
-
+      /* max_eigs[level+1] *= mg_data->max_eig_factor; */
+      /* cheby_params.lmin = max_eigs[fine_level]/mg_data->lmax_lmin_rat; */
+      /* cheby_params.lmax = max_eigs[fine_level]; */
+      /* cheby_params.iter = mg_data->smooth_iter; */
+      
+      
       mg_data->mg_state = UPV_PRE_SMOOTH;
       if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
         mg_data->mg_update_user_callback(p4est, level, &vecs_for_cheby_smooth);
@@ -636,7 +533,9 @@ multigrid_vcycle
          *ghost,
          *ghost_data,
          mg_data->rres,
-         &cheby_params
+         mg_data,
+         /* &cheby_params, */
+         fine_level
         );
     }
 
@@ -649,23 +548,6 @@ multigrid_vcycle
       }
       linalg_vec_axpy(1.0, mg_data->err, u, mg_data->fine_nodes);
 
-      if (mg_data->cg_eigs_iter > 0)
-        cg_eigs
-          (
-           p4est,
-           vecs,
-           fcns,
-           *ghost,
-           *ghost_data,
-           mg_data->dgmath_jit_dbase,
-           mg_data->cg_eigs_iter,
-           &max_eigs[endlevel]
-          );
-
-      max_eigs[endlevel] *= mg_data->max_eig_factor;
-      cheby_params.lmin = max_eigs[endlevel]/mg_data->lmax_lmin_rat;
-      cheby_params.lmax = max_eigs[endlevel];
-      cheby_params.iter = mg_data->smooth_iter;
       multigrid_cheby_smoother
         (
          p4est,
@@ -674,7 +556,8 @@ multigrid_vcycle
          *ghost,
          *ghost_data,
          mg_data->res,
-         &cheby_params
+         mg_data,
+         toplevel
         );
       
       mg_data->vcycle_r2local = linalg_vec_dot(mg_data->res,

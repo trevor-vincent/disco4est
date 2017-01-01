@@ -1,5 +1,4 @@
 #include "problem_data.h"
-
 void
 problem_data_copy_ptrs
 (
