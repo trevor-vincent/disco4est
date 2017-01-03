@@ -21,6 +21,7 @@ typedef struct {
   
 } geometric_factors_t;
 
+
 typedef struct {
 
   /* identification */
@@ -33,6 +34,7 @@ typedef struct {
   int integ_stride;
   
   int tree;
+  int tree_quadid;
   p4est_qcoord_t q [(P4EST_DIM)];
   p4est_qcoord_t dq;
   
@@ -73,12 +75,30 @@ typedef struct {
   int deg;
   int deg_integ;
   
-  
+#ifndef NDEBUG
   /* useful flag for debugging */
   int debug_flag;
   int on_bdry;
+#endif
   
 } curved_element_data_t;
+
+typedef void
+(*curved_element_data_user_fcn_t)
+(
+ curved_element_data_t*,
+ void*
+);
+
+typedef struct {
+  
+  int local_nodes;
+  int local_sqr_nodes;
+  int local_sqr_trace_nodes;
+  int local_nodes_integ;
+  int local_sqr_nodes_invM;
+  
+} curved_element_data_local_sizes_t;
 
 void
 curved_element_data_init_node_vec
@@ -209,11 +229,7 @@ geometric_factors_reinit
 (
  p4est_t* p4est,
  geometric_factors_t* geometric_factors,
- int init_deg,
- int local_nodes,
- int local_nodes_integ,
- int local_sqr_nodes,
- int local_sqr_trace_nodes
+ curved_element_data_local_sizes_t local_sizes
 );
 
 void
@@ -447,5 +463,17 @@ curved_element_data_compute_surface_jacobian_and_normal_from_rst_xyz_interp_to_G
  int deg,
  dgmath_jit_dbase_t* dgmath_jit_dbase
 );
+
+void
+curved_element_data_init_new
+(
+ p4est_t* p4est,
+ geometric_factors_t* geometric_factors,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geometry,
+ curved_element_data_user_fcn_t user_fcn,
+ void* user_ctx
+);
+
 
 #endif

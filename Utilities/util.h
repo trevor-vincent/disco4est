@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-#ifdef D4EST_DEBUG
+#ifndef NDEBUG
 
 #define DEBUG_PRINT_INT(x) printf("%s = %d\n", #x, x)  
 #define DEBUG_PRINT_DBL(x) printf("%s = %.16f\n",#x, x)
@@ -105,11 +105,11 @@
 
 
 
-/* #ifdef D4EST_DEBUG */
+#ifndef NDEBUG
 #define mpi_assert(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
-/* #else */
-/* #define mpi_assert(c) D4EST_NOOP() */
-/* #endif */
+#else
+#define mpi_assert(c) D4EST_NOOP()
+#endif
 
 /* #define mpi_assert(expression)  \ */
 /* do { \ */

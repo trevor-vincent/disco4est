@@ -6,17 +6,8 @@
 int main(int argc, char *argv[])
 {  
   sc_MPI_Comm mpicomm;
-
-  /* mpicomm = sc_MPI_COMM_WORLD; */
-  /* PETSC_COMM_WORLD = mpicomm; */
   PetscInitialize(&argc,&argv,(char*)0,NULL);
-  /* sc_MPI_COMM_WORLD = PETSC_COMM_WORLD; */
   mpicomm = PETSC_COMM_WORLD;
-  /* sc_MPI_COMM_WORLD = mpicomm; */
-  
-  /* int mpiret = sc_MPI_Init(&argc, &argv); */
-  /* SC_CHECK_MPI(mpiret); */
-
   
   int proc_size;
   int proc_rank;
@@ -25,7 +16,7 @@ int main(int argc, char *argv[])
 
   pXest_input_t pXest_input = pXest_input_parse("options.input");
   
-#ifdef DEBUG
+#ifndef NDEBUG
   if(proc_rank == 0)
     printf("[D4EST_INFO]: DEBUG MODE ON\n");
   p4est_init(NULL, SC_LP_ALWAYS);
@@ -35,6 +26,14 @@ int main(int argc, char *argv[])
   p4est_init(NULL, SC_LP_ERROR);
 #endif
 
+#ifdef CURVED
+  if(proc_rank == 0)
+    printf("[D4EST_INFO]: Using CURVED infracstructure\n");
+#else
+  if(proc_rank == 0)
+    printf("[D4EST_INFO]: Using NON-CURVED infracstructure\n");  
+#endif
+  
 #if (P4EST_DIM)==3
   if(proc_rank == 0)
     printf("[D4EST_INFO]: DIM = 3\n");

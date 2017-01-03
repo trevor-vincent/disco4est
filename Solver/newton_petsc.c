@@ -232,7 +232,7 @@ void newton_petsc_solve
     PCSetType(pc,PCNONE);//CHKERRQ(ierr);
   }
 
-  KSPSetType(ksp, krylov_params->krylov_type);
+  KSPSetType(ksp, krylov_params->ksp_type);
   KSPSetFromOptions(ksp);
   
   /* END SET PRECONDITIONER */

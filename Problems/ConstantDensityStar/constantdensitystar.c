@@ -1072,7 +1072,7 @@ problem_init
     krylov_petsc_params_t params;
     params.user_defined_pc = 0;
     params.ksp_monitor = 0;
-    params.krylov_type = input.krylov_type;
+    params.ksp_type = input.ksp_type;
 
     newton_petsc_solve
       (
