@@ -4,7 +4,7 @@ min_level = 1
 fill_uniform = 1
 
 [amr]
-amr_levels = 10
+amr_levels = 1
 initial_degree = 2
 sigma = .25
 gamma_h = 10.0

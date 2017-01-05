@@ -79,9 +79,7 @@ multigrid_cheby_smoother
 {
   multigrid_cheby_params_t cheby_params;
   
-  if (mg_data->cg_eigs_iter > 0 &&
-      mg_data->mg_state == DOWNV_PRE_SMOOTH
-      || mg_data->mg_state == PREV_PRE_SMOOTH){
+  if (mg_data->solve_for_eigs){
     
       cg_eigs
         (
@@ -101,6 +99,10 @@ multigrid_cheby_smoother
   cheby_params.lmin = mg_data->max_eigs[level]/mg_data->lmax_lmin_rat;
   cheby_params.lmax = mg_data->max_eigs[level];
   cheby_params.iter = mg_data->smooth_iter;
+
+  if (mg_data->log_option == DEBUG){
+  printf("[MG_CHEBY_SMOOTHER]: Lev %d Max_eig %.25f Iter %d\n", level, mg_data->max_eigs[level], mg_data->smooth_iter);
+  }  
   
   multigrid_cheby_smoother_iterate
     (

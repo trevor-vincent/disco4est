@@ -694,8 +694,10 @@ problem_init
       begin = clock();
     }  
 
-      int num_of_levels = level+2;
-      int vcycle_iter = 3;
+
+    
+    int num_of_levels = (proc_size == 1) ? level + 3 : level+2;
+      int vcycle_iter = 1;
       double vcycle_rtol = 1e-3;
       double vcycle_atol = 0.;
       int smooth_iter = 15;
@@ -726,7 +728,7 @@ problem_init
          coarse_rtol,
          save_vtk_snapshot,
          perform_checksum,
-         RES_AND_EIG_LOG,
+         DEBUG,
          dgmath_jit_dbase
         );
 
@@ -874,9 +876,9 @@ problem_init
      3,
      0,  
      sol_save_as,
-     "psi",
+     "u",
      u_vertex,
-     "psi_analytic",
+     "u_analytic",
      u_analytic_vertex,
      "psi_error",
      u_error_vertex

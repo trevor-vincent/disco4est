@@ -116,6 +116,7 @@ typedef struct {
   int cg_eigs_iter;
   double max_eig_factor;
   int max_eig_reuse; // reuse same eigenvalues going up V (yes if you want MG-operator to be symmetric)
+  int solve_for_eigs;
   
   multigrid_log_option_t log_option;
   multigrid_coarse_solver_t coarse_solver_type;
