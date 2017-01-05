@@ -1,5 +1,5 @@
-#ifndef MULTIGRID_CHEBY_SMOOTHER_H
-#define MULTIGRID_CHEBY_SMOOTHER_H 
+#ifndef MULTIGRID_CHEBY_SMOOTHER_NEW_H
+#define MULTIGRID_CHEBY_SMOOTHER_NEW_H 
 
 static void 
 multigrid_cheby_smoother_iterate

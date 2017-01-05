@@ -121,7 +121,6 @@ multigrid_vcycle
   int total_elements_on_multigrid = 0;
   int total_nodes_on_multigrid = 0;
 
-  
   elements_on_level_of_multigrid[toplevel] = p4est->local_num_quadrants;
   nodes_on_level_of_multigrid[toplevel] = vecs->local_nodes;
   
@@ -146,20 +145,6 @@ multigrid_vcycle
   mg_data->fine_nodes = total_nodes_on_multigrid;
   mg_data->coarse_nodes = total_nodes_on_multigrid;
 
-
-  if (mg_data->log_option == DEBUG){
-    printf("\n");
-    printf("[MULTIGRID_DEBUG]: BEFORE START \n");
-    printf("[MULTIGRID_DEBUG]: Elements on top level %d\n", elements_on_level_of_multigrid[toplevel]);
-    printf("[MULTIGRID_DEBUG]: Number of Levels %d\n", mg_data->num_of_levels);
-    printf("[MULTIGRID_DEBUG]: Nodes on top level %d\n", nodes_on_level_of_multigrid[toplevel]);
-    printf("[MULTIGRID_DEBUG]: Total nodes on multigrid %d\n", total_nodes_on_multigrid);
-    printf("[MULTIGRID_DEBUG]: Total elements on multigrid %d\n", total_elements_on_multigrid);
-    printf("[MULTIGRID_DEBUG]: Fine nodes %d\n", mg_data->fine_nodes);
-    printf("[MULTIGRID_DEBUG]: Coarse nodes %d\n", mg_data->coarse_nodes);
-    printf("\n");
-  }
-
   double* Ae_at0 = P4EST_ALLOC(double, total_nodes_on_multigrid);
   double* err_at0 = P4EST_ALLOC_ZERO(double, total_nodes_on_multigrid);
   double* res_at0 = P4EST_ALLOC(double, total_nodes_on_multigrid);
@@ -177,57 +162,58 @@ multigrid_vcycle
   problem_data_t vecs_for_cg_coarse_solve;
   problem_data_copy_ptrs(vecs, &vecs_for_cg_coarse_solve);
 
-  if (mg_data->log_option == DEBUG){
-    printf("\n");
-    printf("[MULTIGRID_DEBUG]: level %d\n", toplevel);
-    printf("[MULTIGRID_DEBUG]: PREV_PRE_SMOOTH \n");
-    printf("[MULTIGRID_DEBUG]: elements on level = %d \n", elements_on_level_of_multigrid[toplevel]);
-    printf("[MULTIGRID_DEBUG]: nodes on level = %d \n", nodes_on_level_of_multigrid[toplevel]);
-    /* printf("[MULTIGRID_DEBUG]: max_eigs[%d] = %f\n", toplevel, max_eigs[toplevel]); */
+  multigrid_cg_params_t cg_params;
+  cg_params.iter = mg_data->coarse_iter;
+  cg_params.rtol = mg_data->coarse_rtol;
+  cg_params.mpi_rank = mg_data->mpi_rank;
 
-    DEBUG_PRINT_2ARR_DBL(vecs_for_cheby_smooth.u, vecs_for_cheby_smooth.rhs, vecs_for_cheby_smooth.local_nodes);
-
-    printf("\n");
-  }
   
-  /* these will change */
-  vecs_for_cheby_smooth.Au = vecs->Au;
-  vecs_for_cheby_smooth.u = vecs->u; 
-  vecs_for_cheby_smooth.rhs = vecs->rhs;
-  vecs_for_cheby_smooth.local_nodes = vecs->local_nodes;
-
   /* initialize error to zero */
-  linalg_fill_vec(mg_data->err, 0., mg_data->fine_nodes);
+  /* linalg_fill_vec(mg_data->err, 0., mg_data->fine_nodes); */
 
   /* initialize stride */
   mg_data->stride = 0;
 
-  if (mg_data->log_option == DEBUG){
-    printf("\n");
-    printf("[MULTIGRID_DEBUG]: level %d\n", toplevel);
-    printf("[MULTIGRID_DEBUG]: POSTV_PRE_SMOOTH \n");
-    printf("[MULTIGRID_DEBUG]: stride = %d\n", mg_data->stride);
-    DEBUG_PRINT_2ARR_DBL(vecs_for_cheby_smooth.u, vecs_for_cheby_smooth.rhs, vecs_for_cheby_smooth.local_nodes);
-    printf("\n");
-  }
 
-  /* Going down the V */
+  /**********************************************************/
+  /**********************************************************/
+  /******************* BEGIN GOING DOWN V *******************/
+  /**********************************************************/
+  /**********************************************************/
+
+  int stride_to_fine_data = 0;
   for (level = toplevel; level > bottomlevel; --level){
 
     int fine_level = level;
     int coarse_level = level-1;
 
-      multigrid_cheby_smoother
-        (
-         p4est,
-         &vecs_for_cheby_smooth,
-         fcns,
-         *ghost,
-         *ghost_data,
-         mg_data->rres,
-         mg_data,
-         fine_level
-        );
+    /* set initial guess for error */
+    linalg_fill_vec(mg_data->err, 0., nodes_on_level_of_multigrid[level]);//mg_data->fine_nodes);
+
+    if (level == toplevel){
+      vecs_for_cheby_smooth.Au = vecs->Au;
+      vecs_for_cheby_smooth.u = vecs->u; 
+      vecs_for_cheby_smooth.rhs = vecs->rhs;
+      vecs_for_cheby_smooth.local_nodes = vecs->local_nodes;
+    }
+    else{
+      vecs_for_cheby_smooth.Au = &Ae_at0[stride_to_fine_data];//mg_data->Ae;//[mg_data->fine_nodes];
+      vecs_for_cheby_smooth.u = &err_at0[stride_to_fine_data];//mg_data->err;//[mg_data->fine_nodes];
+      vecs_for_cheby_smooth.rhs = &res_at0[stride_to_fine_data];//mg_data->res;//)[mg_data->fine_nodes];
+      vecs_for_cheby_smooth.local_nodes = mg_data->coarse_nodes;
+    }
+    
+    multigrid_cheby_smoother
+      (
+       p4est,
+       &vecs_for_cheby_smooth,
+       fcns,
+       *ghost,
+       *ghost_data,
+       mg_data->rres,
+       mg_data,
+       fine_level
+      );
     
     /* increments the stride */
     p4est_coarsen_ext (p4est,
@@ -241,46 +227,19 @@ multigrid_vcycle
     /* p4est has changed, so update the element data, this does not change the stride */
     element_data_init(p4est, -1);
 
-    mg_data->mg_state = DOWNV_POST_COARSEN;
-    if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
-      mg_data->mg_update_user_callback(p4est, level, NULL);
-    }
-
-  if (mg_data->log_option == DEBUG){
-    printf("\n");
-    printf("[MULTIGRID_DEBUG]: level %d\n", level);
-    printf("[MULTIGRID_DEBUG]: DOWNV_POST_COARSEN_PRE_SURROGATE_INFO_UPDATE \n");
-    printf("[MULTIGRID_DEBUG]: stride = %d\n", mg_data->stride);
-    printf("\n");
-  }
-
     /* update surrogate info */
-    total_elements_on_surrogate_multigrid += p4est->local_num_quadrants;
     nodes_on_level_of_surrogate_multigrid[level-1] = element_data_get_local_nodes(p4est);
-    total_nodes_on_surrogate_multigrid += nodes_on_level_of_surrogate_multigrid[level-1];
     elements_on_level_of_surrogate_multigrid[level-1] = p4est->local_num_quadrants;
 
+    total_elements_on_surrogate_multigrid += elements_on_level_of_surrogate_multigrid[level-1];
+    total_nodes_on_surrogate_multigrid += nodes_on_level_of_surrogate_multigrid[level-1];
+        
     /* decrements the stride */
     mg_data->stride -= elements_on_level_of_surrogate_multigrid[level-1];
-
-  if (mg_data->log_option == DEBUG){
-    printf("\n");
-    printf("[MULTIGRID_DEBUG]: DOWNV_POST_COARSEN_POST_SURROGATE_INFO_UPDATE \n");
-    printf("[MULTIGRID_DEBUG]: Surrogate level %d\n", level-1);
-    printf("[MULTIGRID_DEBUG]: surrogate elements on this level = %d \n", elements_on_level_of_surrogate_multigrid[level-1]);
-    printf("[MULTIGRID_DEBUG]: surrogate nodes on this level = %d \n", nodes_on_level_of_surrogate_multigrid[level-1]);
-    printf("\n");
-  }
    
     /* does not change the stride */
     p4est_balance_ext (p4est, P4EST_CONNECT_FACE, NULL, multigrid_store_balance_changes);
     element_data_init(p4est, -1);
-
-
-    mg_data->mg_state = DOWNV_POST_BALANCE;
-    if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
-      mg_data->mg_update_user_callback(p4est, level, NULL);
-    }
 
     /* update ghost data */
     P4EST_FREE(*ghost_data);
@@ -298,18 +257,6 @@ multigrid_vcycle
     mg_data->fine_nodes = nodes_on_level_of_multigrid[level];
     mg_data->coarse_nodes = nodes_on_level_of_multigrid[level - 1];
 
-    if (mg_data->log_option == DEBUG){
-      printf("\n");
-      printf("[MULTIGRID_DEBUG]: Going from level %d to level %d\n", level, level - 1);
-      printf("[MULTIGRID_DEBUG]: DOWNV_POST_BALANCE \n");
-      printf("[MULTIGRID_DEBUG]: elements on level %d = %d \n", level, elements_on_level_of_multigrid[level]);
-      printf("[MULTIGRID_DEBUG]: nodes on level %d = %d \n", level, nodes_on_level_of_multigrid[level]);
-      printf("[MULTIGRID_DEBUG]: fine nodes = %d \n", nodes_on_level_of_multigrid[level]);
-      printf("[MULTIGRID_DEBUG]: coarse nodes = %d \n", nodes_on_level_of_multigrid[level - 1]);
-      printf("\n");
-    }
-    
-
     Ae_at0 = P4EST_REALLOC(Ae_at0, double, total_nodes_on_multigrid);
     err_at0 = P4EST_REALLOC(err_at0, double, total_nodes_on_multigrid);
     res_at0 = P4EST_REALLOC(res_at0, double, total_nodes_on_multigrid);
@@ -321,42 +268,14 @@ multigrid_vcycle
     mg_data->rres = &rres_at0[total_nodes_on_multigrid - mg_data->fine_nodes - mg_data->coarse_nodes];
 
     /* set initial guess for mg_data->error */
-    linalg_fill_vec(&mg_data->err[mg_data->fine_nodes], 0., mg_data->coarse_nodes);
+    /* linalg_fill_vec(&mg_data->err[mg_data->fine_nodes], 0., mg_data->coarse_nodes); */
 
-    if (mg_data->log_option == DEBUG){
-      printf("\n");
-      printf("[MULTIGRID_DEBUG]: Going from level %d to level %d\n", level, level - 1);
-      printf("[MULTIGRID_DEBUG]: DOWNV_POST_BALANCE_PRE_RESTRICTION \n");
-      printf("[MULTIGRID_DEBUG]: elements on level %d = %d \n", level, elements_on_level_of_multigrid[level]);
-      printf("[MULTIGRID_DEBUG]: nodes on level %d = %d \n", level, nodes_on_level_of_multigrid[level]);
-      printf("[MULTIGRID_DEBUG]: fine nodes = %d \n", nodes_on_level_of_multigrid[level]);
-      printf("[MULTIGRID_DEBUG]: coarse nodes = %d \n", nodes_on_level_of_multigrid[level - 1]);
-
-      printf("Fine vectors:");
-      DEBUG_PRINT_3ARR_DBL(mg_data->err,
-                           mg_data->res,
-                           mg_data->rres,
-                           mg_data->fine_nodes);
-      
-      printf("Coarse vectors:");
-      
-      double* err_coarse = &mg_data->err[mg_data->fine_nodes];
-      double* res_coarse = &mg_data->res[mg_data->fine_nodes];
-      double* rres_coarse = &mg_data->rres[mg_data->fine_nodes];
-
-      DEBUG_PRINT_ARR_DBL(err_coarse,
-                           /* res_coarse, */
-                           /* rres_coarse, */
-                           mg_data->coarse_nodes
-                          );
-    }
-
-    
     /* always zero these before restriction or prolongation */
     mg_data->coarse_stride = 0;
     mg_data->fine_stride = 0;
     mg_data->temp_stride = 0;
-    mg_data->intergrid_ptr = &(mg_data->rres)[0];
+    /* mg_data->intergrid_ptr = &(mg_data->rres)[0]; */
+    mg_data->intergrid_ptr = &rres_at0[stride_to_fine_data];//&(mg_data->rres)[0];
 
     p4est_iterate(
                   p4est,
@@ -373,37 +292,12 @@ multigrid_vcycle
 
     linalg_copy_1st_to_2nd
       (
-       &(mg_data->rres)[mg_data->fine_nodes],
-       &(mg_data->res)[mg_data->fine_nodes],
-       mg_data->coarse_nodes
+       /* &(mg_data->rres)[mg_data->fine_nodes], */
+       &(rres_at0)[stride_to_fine_data + mg_data->fine_nodes],
+       /* &(mg_data->res)[mg_data->fine_nodes], */
+       &(res_at0)[stride_to_fine_data + mg_data->fine_nodes],
+       nodes_on_level_of_multigrid[coarse_level]//mg_data->coarse_nodes
       );
-
-
-      if (mg_data->log_option == DEBUG){
-        printf("\n");
-        printf("[MULTIGRID_DEBUG]: level %d\n", coarse_level);
-        printf("[MULTIGRID_DEBUG]: PREV_PRE_SMOOTH \n");
-        printf("[MULTIGRID_DEBUG]: max_eig = %f\n", max_eigs[coarse_level]);
-
-        printf("Fine vectors:");
-        DEBUG_PRINT_3ARR_DBL(mg_data->err,
-                             mg_data->res,
-                             mg_data->rres,
-                             mg_data->fine_nodes);
-      
-        printf("Coarse vectors:");
-      
-      double* err_coarse = &mg_data->err[mg_data->fine_nodes];
-      double* res_coarse = &mg_data->res[mg_data->fine_nodes];
-      double* rres_coarse = &mg_data->rres[mg_data->fine_nodes];
-
-      DEBUG_PRINT_3ARR_DBL(err_coarse,
-                           res_coarse,
-                           rres_coarse,
-                           mg_data->coarse_nodes
-                          );
-
-      }
 
 
     mg_data->Ae += mg_data->fine_nodes;
@@ -411,23 +305,32 @@ multigrid_vcycle
     mg_data->res += mg_data->fine_nodes;
     mg_data->rres += mg_data->fine_nodes;
 
-   
-    vecs_for_cheby_smooth.Au = mg_data->Ae;//[mg_data->fine_nodes];
-    vecs_for_cheby_smooth.u = mg_data->err;//[mg_data->fine_nodes];
-    vecs_for_cheby_smooth.rhs = mg_data->res;//)[mg_data->fine_nodes];
-    vecs_for_cheby_smooth.local_nodes = mg_data->coarse_nodes;
-    
+    stride_to_fine_data += mg_data->fine_nodes;
   }
 
-  vecs_for_cg_coarse_solve.Au = mg_data->Ae;//[mg_data->fine_nodes];
-  vecs_for_cg_coarse_solve.u = mg_data->err;//[mg_data->fine_nodes];
-  vecs_for_cg_coarse_solve.rhs = mg_data->res;//)[mg_data->fine_nodes];
-  vecs_for_cg_coarse_solve.local_nodes = mg_data->coarse_nodes;
-        
-  multigrid_cg_params_t cg_params;
-  cg_params.iter = mg_data->coarse_iter;
-  cg_params.rtol = mg_data->coarse_rtol;
-  cg_params.mpi_rank = mg_data->mpi_rank;
+  /**********************************************************/
+  /**********************************************************/
+  /******************* END GOING DOWN V *********************/
+  /**********************************************************/
+  /**********************************************************/
+
+  
+
+  /**********************************************************/
+  /**********************************************************/
+  /******************* BEGIN COARSE SOLVE *******************/
+  /**********************************************************/
+  /**********************************************************/
+
+  /* set initial guess for error */
+  linalg_fill_vec(mg_data->err, 0., nodes_on_level_of_multigrid[bottomlevel]);
+  
+  /* vecs_for_cg_coarse_solve.Au = mg_data->Ae;//[mg_data->fine_nodes]; */
+  vecs_for_cg_coarse_solve.Au = &Ae_at0[stride_to_fine_data];//[mg_data->fine_nodes];
+  vecs_for_cg_coarse_solve.u = &err_at0[stride_to_fine_data];//mg_data->err;//[mg_data->fine_nodes];
+  vecs_for_cg_coarse_solve.rhs = &res_at0[stride_to_fine_data];//mg_data->res;//)[mg_data->fine_nodes];
+  vecs_for_cg_coarse_solve.local_nodes = nodes_on_level_of_multigrid[bottomlevel];
+
 
   multigrid_cg_coarse_solver
     (
@@ -437,10 +340,16 @@ multigrid_vcycle
      *ghost,
      *ghost_data,
      /* &(mg_data->rres[mg_data->fine_nodes]), */
-     mg_data->rres,//[mg_data->fine_nodes]),
+     &rres_at0[stride_to_fine_data],//[mg_data->fine_nodes]),
      &cg_params
     );
 
+  /**********************************************************/
+  /**********************************************************/
+  /******************* END COARSE SOLVE *********************/
+  /**********************************************************/
+  /**********************************************************/
+  
 
   /* Do not solve for the eigenvalues going up the V, reuse the ones from down the V */
   mg_data->solve_for_eigs = 0;
@@ -448,7 +357,11 @@ multigrid_vcycle
   mg_data->stride = total_elements_on_surrogate_multigrid;
   mg_data->stride -= elements_on_level_of_surrogate_multigrid[toplevel]; /* subtract fine grid */
   
-  /* Going up the V */
+  /**********************************************************/
+  /**********************************************************/
+  /******************* BEGIN GOING UP THE V *****************/
+  /**********************************************************/
+  /**********************************************************/
   for (level = bottomlevel; level < toplevel; ++level){
 
     int fine_level = level + 1;
@@ -466,12 +379,15 @@ multigrid_vcycle
     mg_data->Ae -= mg_data->fine_nodes;
     mg_data->rres -= mg_data->fine_nodes;
     mg_data->res -= mg_data->fine_nodes;
+    stride_to_fine_data -= mg_data->fine_nodes;
     
     mg_data->stride -= elements_on_level_of_surrogate_multigrid[level];
     mg_data->fine_stride = 0;
     mg_data->coarse_stride = 0;
     mg_data->temp_stride = 0;
-    linalg_copy_1st_to_2nd(&(mg_data->err)[mg_data->fine_nodes], &(mg_data->rres)[mg_data->fine_nodes], mg_data->coarse_nodes);
+    linalg_copy_1st_to_2nd(&err_at0[stride_to_fine_data + mg_data->fine_nodes],//&(mg_data->err)[mg_data->fine_nodes],
+                           &rres_at0[stride_to_fine_data + mg_data->fine_nodes],//&(mg_data->rres)[mg_data->fine_nodes],
+                           nodes_on_level_of_multigrid[coarse_level]);
 
     mg_data->intergrid_ptr = mg_data->rres;
     
@@ -577,6 +493,13 @@ multigrid_vcycle
     }
   }
 
+  /**********************************************************/
+  /**********************************************************/
+  /******************* END GOING UP THE V *******************/
+  /**********************************************************/
+  /**********************************************************/
+
+  
   /* P4EST_FREE(ghost_data); */
   P4EST_FREE(elements_on_level_of_multigrid);
   P4EST_FREE(nodes_on_level_of_multigrid);

@@ -695,9 +695,9 @@ problem_init
     }  
 
 
-    
+    //
     int num_of_levels = (proc_size == 1) ? level + 3 : level+2;
-      int vcycle_iter = 1;
+    int vcycle_iter = 3;
       double vcycle_rtol = 1e-3;
       double vcycle_atol = 0.;
       int smooth_iter = 15;
