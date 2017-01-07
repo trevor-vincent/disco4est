@@ -90,6 +90,7 @@ SET (
   Estimators/bi_estimator.c
   Estimators/bi_estimator_flux_fcns.c
   Geometry/d4est_geometry_compact_sphere.c
+  Geometry/d4est_geometry_sphere.c
   # Estimators/curved_bi_estimator.c
   # Estimators/curved_bi_estimator_flux_fcns.c
   Estimators/estimator_stats.c

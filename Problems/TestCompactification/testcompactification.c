@@ -15,7 +15,7 @@
 #include <matrix_sym_tester.h>
 #include <dg_norm.h>
 #include <d4est_geometry.h>
-#include <d4est_geometry_compact_sphere.h>
+#include <d4est_geometry_sphere.h>
 #include <curved_poisson_debug_vecs.h>
 #include <d4est_vtk.h>
 #include <ini.h>
@@ -361,7 +361,8 @@ problem_build_geom
   p4est_geometry_t* geom;
   problem_input_t input = problem_input("options.input");
 
-  geom = d4est_geometry_new_compact_sphere(conn, input.R2, input.R1, input.R0, input.w, input.Rinf);
+  /* geom = d4est_geometry_new_compact_sphere(conn, input.R2, input.R1, input.R0, input.w, input.Rinf); */
+  geom = d4est_geometry_new_sphere(conn, input.R2, input.R1, input.R0);
   
   return geom;  
 }
@@ -505,6 +506,7 @@ problem_init
                        NULL
                       );
 
+      p4est_partition(p4est, 0, NULL);
       p4est_balance_ext
         (
          p4est,
@@ -521,7 +523,7 @@ problem_init
     }
 
   }
-
+  
   curved_weakeqn_ptrs_t prob_fcns;
   prob_fcns.apply_lhs = curved_Gauss_poisson_apply_aij;
 
@@ -787,30 +789,35 @@ problem_init
   
           
      linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
-  d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, "compact-sphere");
-  d4est_vtk_context_set_geom(vtk_ctx, p4est_geom);
-  d4est_vtk_context_set_scale(vtk_ctx, .99);
-  d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
-  vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);
-  vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx, 3, 0, "u",u, "u_analytic",u_analytic,"error", error, vtk_ctx);
-  vtk_ctx = d4est_vtk_write_dg_cell_dataf
-            (
-             vtk_ctx,
-             1,
-             1,
-             1,
-             0,
-             1,
-             0,
-             0,
-             vtk_ctx
+
+     p4est_geometry_t* geom_vtk = d4est_geometry_new_sphere(p4est->connectivity, input.R1*2, input.R1, input.R0);
+     
+
+     d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, "compact-sphere");
+     d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
+     d4est_vtk_context_set_scale(vtk_ctx, .99);
+     d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
+     vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);
+     vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx, 3, 0, "u",u, "u_analytic",u_analytic,"error", error, vtk_ctx);
+     vtk_ctx = d4est_vtk_write_dg_cell_dataf
+               (
+                vtk_ctx,
+                1,
+                1,
+                1,
+                0,
+                1,
+                0,
+                0,
+                vtk_ctx
             );
- 
+
+
   
   d4est_vtk_write_footer(vtk_ctx);
   P4EST_FREE(deg_array);
   P4EST_FREE(error);
-
+  p4est_geometry_destroy(geom_vtk);
   
   linalg_vec_axpy(-1., u, u_analytic, local_nodes);
   /* linalg_copy_1st_to_2nd(u, error, local_nodes); */
