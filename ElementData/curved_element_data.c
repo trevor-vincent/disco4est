@@ -4057,6 +4057,212 @@ curved_element_data_print_element_data_debug
 
 
 /* void */
+/* curved_data_compute_dxyz_drst_on_mortar_using_volume_data */
+/* ( */
+/*  curved_element_data_t** e, */
+/*  int num_faces_side, */
+/*  int num_faces_mortar, */
+/*  int* deg_mortar, */
+/*  int face_side, */
+/*  double* n [(P4EST_DIM)], */
+/*  double* sj, */
+/*  p4est_geometry_t* geom, */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  int f_m, */
+/*  int f_p, */
+/*  int o, */
+/*  int is_f_p, */
+/*  int debug */
+/* ) */
+/* { */
+/*   if (debug) */
+/*     printf("normal calculation using volume data, is_f_p = %d\n", is_f_p); */
+  
+/*   p4est_qcoord_t q0 [(P4EST_HALF)][(P4EST_DIM)]; */
+  
+/*   for (int j = 0; j < (P4EST_HALF); j++){ */
+/*     int c = p4est_face_corners[face_side][j]; */
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*       int cd = dgmath_is_child_left_or_right(c, d); */
+/*       /\* p4est_qcoord_t dq = (num_faces_side == num_faces_mortar) ? e[0]->dq : (e[0]->dq/2); *\/ */
+/*       /\* q0[j][d] = e[0]->q[d] + cd*dq; *\/ */
+/*       q0[j][d] = e[0]->q[d] + cd*e[0]->dq; */
+/*     } */
+/*   } */
+/*   /\* Calculate the vectors that span the face */
+/*    * there will be one in 2-D and two in 3-d *\/ */
+
+/*   curved_element_data_compute_dxyz_drst */
+/*     ( */
+/*      dgmath_jit_dbase, */
+/*      elem_data->q, */
+/*      elem_data->dq, */
+/*      elem_data->tree, */
+/*      d4est_geometry, */
+/*      d4est_geometry->dxdr_method, */
+/*      elem_data->deg_integ, */
+/*      1, */
+/*      elem_data->xyz_rst_integ, */
+/*      elem_data->xyz_integ */
+/*     ); */
+
+/*   curved_element_data_compute_J_and_rst_xyz */
+/*     ( */
+/*      elem_data->xyz_rst_integ, */
+/*      elem_data->J_integ,  */
+/*      elem_data->rst_xyz_integ,  */
+/*      volume_nodes_integ */
+/*     ); */
+  
+/*   if (debug) */
+/*     for (int j = 0; j < (P4EST_HALF); j++) */
+/*       for (int d = 0; d < (P4EST_DIM); d++) */
+/*         printf("q0[%d][%d] = %d\n", j,d, q0[j][d]); */
+    
+  
+/*   p4est_qcoord_t dqa [((P4EST_DIM)-1)][(P4EST_DIM)]; */
+  
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*       for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){ */
+/*         dqa[dir][d] = (q0[(dir+1)][d] - q0[0][d]); */
+/*         if (num_faces_side != num_faces_mortar) */
+/*           dqa[dir][d] /= 2; */
+/*       } */
+/*     }     */
+
+
+/*     if (debug) */
+/*       for (int j = 0; j < (P4EST_DIM)-1; j++) */
+/*         for (int d = 0; d < (P4EST_DIM); d++) */
+/*           printf("dqa[%d][%d] = %d\n", j,d, dqa[j][d]); */
+    
+/*     p4est_qcoord_t dq0mf0 [(P4EST_DIM)]; */
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*       dq0mf0[d] = (q0[0][d] - e[0]->q[d])/2; */
+/*     } */
+    
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*         for (int c = 0; c < (P4EST_HALF); c++){ */
+/*           q0[c][d] = e[0]->q[d]; */
+/*           if (num_faces_side != num_faces_mortar) */
+/*             q0[c][d] += dq0mf0[d]; */
+/*           for (int dir = 0; dir < (P4EST_DIM) - 1; dir++){ */
+/*             int cd = dgmath_is_child_left_or_right(c, dir); */
+/*             q0[c][d] += cd*dqa[dir][d]; */
+/*           } */
+/*         } */
+/*     } */
+
+/*   if (debug) */
+/*     for (int j = 0; j < (P4EST_HALF); j++) */
+/*       for (int d = 0; d < (P4EST_DIM); d++) */
+/*         printf("q0[%d][%d] after correction = %d\n", j,d, q0[j][d]); */
+    
+    
+/*   p4est_qcoord_t mortar_dq = (num_faces_side == num_faces_mortar) ? e[0]->dq : e[0]->dq/2; */
+  
+/*   int face_mortar_nodal_stride = 0; */
+/*   for (int face_mortar = 0; face_mortar < num_faces_mortar; face_mortar++){ */
+  
+/*     int face_mortar_nodes = dgmath_get_nodes((P4EST_DIM) - 1, deg_mortar[face_mortar]); */
+  
+/*     double* xyz [3]; */
+/*     double* xyz_rst [3][3]; */
+/*     double* rst_xyz [3][3]; */
+
+/*     int volume_nodes = dgmath_get_nodes((P4EST_DIM), deg_mortar[face_mortar]); */
+
+/*     double* J = P4EST_ALLOC(double, volume_nodes); */
+/*     for (int i = 0; i < (P4EST_DIM); i++){ */
+/*       xyz[i] = P4EST_ALLOC(double, volume_nodes); */
+/*       for (int j = 0; j < (P4EST_DIM); j++) { */
+/*         xyz_rst[i][j] = P4EST_ALLOC(double, volume_nodes); */
+/*         rst_xyz[i][j] = P4EST_ALLOC(double, volume_nodes); */
+/*       } */
+/*     } */
+
+/*     p4est_qcoord_t q [3]; */
+/*     /\* if (num_faces_side == 1 && num_faces_mortar == (P4EST_HALF) && is_f_p == 1){ *\/ */
+/*     /\*   int face_mortar_oriented = dgmath_reorient_face_order((P4EST_DIM)-1, f_m, f_p, o, face_mortar);       *\/ */
+/*     /\*   q[0] = q0[face_mortar_oriented][0]; *\/ */
+/*     /\*   q[1] = q0[face_mortar_oriented][1]; *\/ */
+/*     /\*   q[2] = ((P4EST_DIM) == 3) ? q0[face_mortar_oriented][2] : 0; *\/ */
+/*     /\* } *\/ */
+/*     /\* else { *\/ */
+/*       q[0] = q0[face_mortar][0]; */
+/*       q[1] = q0[face_mortar][1]; */
+/*       q[2] = ((P4EST_DIM) == 3) ? q0[face_mortar][2] : 0; */
+/*     /\* } *\/ */
+    
+/*     test_curved_data_compute_xyz */
+/*       ( */
+/*        (P4EST_DIM), */
+/*        deg_mortar[face_mortar], */
+/*        e[0]->tree, */
+/*        q, */
+/*        mortar_dq, */
+/*        xyz, */
+/*        geom, */
+/*        dgmath_jit_dbase */
+/*       ); */
+  
+/*     test_curved_data_compute_dxdr */
+/*       ( */
+/*        xyz, */
+/*        xyz_rst, */
+/*        dgmath_jit_dbase, */
+/*        (P4EST_DIM), */
+/*        deg_mortar[face_mortar] */
+/*       ); */
+
+/*     test_curved_data_compute_jacobian */
+/*       ( */
+/*        xyz_rst, */
+/*        J, */
+/*        (P4EST_DIM), */
+/*        volume_nodes */
+/*       ); */
+    
+/*     test_curved_data_compute_drdx */
+/*       ( */
+/*        xyz, */
+/*        rst_xyz, */
+/*        xyz_rst, */
+/*        J, */
+/*        (P4EST_DIM), */
+/*        volume_nodes */
+/*       ); */
+
+/*     double* n_temp [3]; */
+/*     n_temp[0] = &n[0][face_mortar_nodal_stride]; */
+/*     n_temp[1] = &n[1][face_mortar_nodal_stride]; */
+/*     n_temp[2] = ((P4EST_DIM) == 3) ? &n[2][face_mortar_nodal_stride] : NULL; */
+    
+/*     test_curved_data_compute_surface_jacobian_and_normal_ver2 */
+/*       ( */
+/*        rst_xyz, */
+/*        J, */
+/*        n_temp, */
+/*        &sj[face_mortar_nodal_stride], */
+/*        (P4EST_DIM), */
+/*        face_side, */
+/*        deg_mortar[face_mortar], */
+/*        dgmath_jit_dbase */
+/*       ); */
+
+/*     for (int i = 0; i < (P4EST_DIM); i++){ */
+/*       P4EST_FREE(xyz[i]); */
+/*       for (int j = 0; j < (P4EST_DIM); j++) { */
+/*         P4EST_FREE(xyz_rst[i][j]); */
+/*         P4EST_FREE(rst_xyz[i][j]); */
+/*       } */
+/*     } */
+/*     P4EST_FREE(J); */
+/*     face_mortar_nodal_stride += dgmath_get_nodes((P4EST_DIM)-1, deg_mortar[face_mortar]); */
+/*   } */
+/* } */
+
+/* void */
 /* curved_element_data_map_rst_to_xyz */
 /* ( */
 /*  d4est_real_t* r [3], */

@@ -180,7 +180,10 @@ multigrid_vcycle
   /******************* BEGIN GOING DOWN V *******************/
   /**********************************************************/
   /**********************************************************/
-
+  printf("u sum before Vcycle = %.25f\n", linalg_vec_sum(vecs->u, vecs->local_nodes));
+  
+  /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
+  
   int stride_to_fine_data = 0;
   for (level = toplevel; level > bottomlevel; --level){
 
@@ -498,7 +501,8 @@ multigrid_vcycle
   /******************* END GOING UP THE V *******************/
   /**********************************************************/
   /**********************************************************/
-
+  printf("u sum after Vcycle = %.25f\n", linalg_vec_sum(vecs->u, vecs->local_nodes));
+  /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
   
   /* P4EST_FREE(ghost_data); */
   P4EST_FREE(elements_on_level_of_multigrid);
