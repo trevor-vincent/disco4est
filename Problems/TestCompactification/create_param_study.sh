@@ -58,13 +58,13 @@ ksp_monitor = 1
 EOF
 }
 
-arr1=(0 1 2 3) #num_unifrefs
+arr1=(0 1 2 ) #num_unifrefs
 arr2=( 2 100 ) #penalty flux
-arr3=( 8 15 18) #degR2
-arr4=( 8 15 18 ) #degR2integ
-arr5=( 4 8 15 ) #degR1
-arr6=( 4 8 15 ) #degR1integ
-arr7=( 2 3 4 5 ) #degR0
+arr3=( 8 15 ) #degR2
+arr4=( 8 15 ) #degR2integ
+arr5=( 4 8 ) #degR1
+arr6=( 4 8 ) #degR1integ
+arr7=( 2 5 ) #degR0
 arr8=( 50 ) #R1
 arr9=( 1000 10000000 10000000000 ) #R2
 
