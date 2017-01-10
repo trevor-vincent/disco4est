@@ -47,9 +47,11 @@ cg_eigs
  element_data_t* ghost_data,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  int imax,
- double* eig_max
+ double* eig_max,
+ int use_zero_vec_as_initial
 )
 {
+  
   /* debug("Conjugate Gradient Solver Begins"); */
 
   /* p4est_ghost_t* ghost; */
@@ -71,7 +73,7 @@ cg_eigs
   double beta = -1.;
   
   double* Au; 
-  double* u = P4EST_ALLOC_ZERO(double, vecs->local_nodes);
+
   double* rhs;
 
   double* d;
@@ -80,7 +82,14 @@ cg_eigs
   local_nodes = vecs->local_nodes;
   Au = vecs->Au;
   double* tmp = vecs->u;
-  vecs->u = u;
+  double* u;
+  /* if (use_zero_vec_as_initial){ */
+  /*   u = P4EST_ALLOC_ZERO(double, vecs->local_nodes); */
+  /*   vecs->u = u; */
+  /* } */
+  /* else{ */
+    u = vecs->u;
+  /* } */
   rhs = vecs->rhs; 
 
   double d_dot_Au;
@@ -124,14 +133,21 @@ cg_eigs
   double alpha_old, beta_old;
   double temp_max, temp_min;
 
+  /* util_print_matrix(u, vecs->local_nodes, 1, "u in cg_eigs",0); */
+  
   for (i = 0; i < imax; i++){
-
+    
   /* while ( iterate == 1) { */
 
     /* util_print_matrix( u, vecs->local_nodes, 1, "u = ", 0); */
     
     /* Au = A*d; */
     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase);
+
+    /* printf("i = %d, cg_eigs Au sum at i = %.25f\n",i, linalg_vec_sum(vecs->Au, vecs->local_nodes)); */
+    /* printf("cg_eigs u sum at i = %.25f\n", linalg_vec_sum(vecs->u, vecs->local_nodes)); */
+    /* printf("cg_eigs rhs sum at i = %.25f\n", linalg_vec_sum(vecs->rhs, vecs->local_nodes)); */
+    
     /* sc_MPI_Barrier(sc_MPI_COMM_WORLD); */
 
     d_dot_Au = linalg_vec_dot(d,Au,local_nodes);
@@ -188,17 +204,20 @@ cg_eigs
     /* *eig_min = temp_min; */
     *eig_max = temp_max;
   }
-
+  /* printf("current eigmax = %.25f\n", *eig_max); */
   }
 
   
     
 
   /* set back from d */
-  vecs->u = tmp;
+  vecs->u = u;
 
   P4EST_FREE(d);
-  P4EST_FREE(u);
+  /* if (use_zero_vec_as_initial){ */
+  /*   vecs->u = tmp; */
+  /*   P4EST_FREE(u); */
+  /* } */
   P4EST_FREE(r);
 
   /* p4est_ghost_destroy(ghost); */

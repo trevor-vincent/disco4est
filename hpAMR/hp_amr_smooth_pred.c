@@ -297,7 +297,7 @@ hp_amr_smooth_pred_set_refinement
   double eta2 = elem_data->local_estimator;
   double eta2_pred = elem_data->local_predictor;
   /* double eta2_avg = stats->mean; */
-
+  
   int is_marked = 
     smooth_pred_data->marker.mark_element_fcn
     (

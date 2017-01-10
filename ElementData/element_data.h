@@ -283,4 +283,23 @@ element_data_get_element_data
  int local_element_id
 );
 
+
+void
+element_data_get_level_range
+(
+ p4est_t* p4est,
+ int* min_level,
+ int* max_level
+);
+
+double
+element_data_compute_l2_norm_error_no_local
+(
+ p4est_t* p4est,
+ double* vec,
+ int nodes,
+ grid_fcn_t analytical_solution,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+);
+
 #endif

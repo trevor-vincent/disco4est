@@ -107,8 +107,8 @@ void* user_data
     linalg_vec_scale(surface_jacobian, MJe1, face_nodes);
     Nsqre1 += linalg_vec_dot(Je1, MJe1, face_nodes);
 
-#ifdef D4EST_DEBUG
-  /* printf("id, face, Je1MJe1 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je1, MJe1, face_nodes));   */
+#ifndef NDEBUG
+  /* printf("id, face, Je1MJe1 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je1, MJe1, face_nodes)); */
 #endif
     
     /* calculate Ne2_sqr term */
@@ -118,19 +118,24 @@ void* user_data
       linalg_vec_scale(surface_jacobian, MJe2, face_nodes);
       Nsqre2 += linalg_vec_dot(Je2, MJe2, face_nodes);
 
-#ifdef D4EST_DEBUG
-  /* printf("id, face, Je2MJe2 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je2, MJe2, face_nodes));   */
+#ifndef NDEBUG
+  /* printf("id, face, Je2MJe2 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je2, MJe2, face_nodes)); */
 #endif
       
     }
+
   }
 
   /* printf("Nsqre1 = %.20f\n", Nsqre1); */
   /* printf("Nsqre2 = %.20f\n", Nsqre2); */
+
+  /* printf("eta ||R|| term = %.25f\n", *eta); */
   
   *eta += Nsqre1;
   *eta += Nsqre2;
-
+  
+  /* printf("eta = ||R|| term + Nsqre1 + Nsqre2 = %.25f\n", *eta); */
+  
   /* take advantage of opportunity to compute max, sum and max error density */
   *bi_estimator_local_eta2 += (*eta);
   /* printf("eta =%.20f\n", *eta); */

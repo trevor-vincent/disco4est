@@ -1868,6 +1868,8 @@ element_data_print_callback
   printf("Quad ID = %d\n", elem_data->id);
   printf("Stride = %d\n", elem_data->stride);
   printf("Degree = %d\n", elem_data->deg);
+  printf("Estimator = %.25f\n", elem_data->local_estimator);
+  printf("Predictor = %.25f\n", elem_data->local_predictor);
   printf("**************\n");
 }
 
@@ -2759,4 +2761,53 @@ element_data_get_element_data
       }
     }  
   return NULL;
+}
+
+void
+element_data_get_level_range
+(
+ p4est_t* p4est,
+ int* min_level,
+ int* max_level
+)
+{
+
+  int level;
+  int min = P4EST_MAXLEVEL;
+  int max = -1;
+  
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        level = quad->level;
+        min = (level < min) ? level : min;
+        max = (level > max) ? level : max;
+      }
+    }  
+
+  *min_level = min;
+  *max_level = max;
+}
+
+double
+element_data_compute_l2_norm_error_no_local
+(
+ p4est_t* p4est,
+ double* vec,
+ int nodes,
+ grid_fcn_t analytical_solution,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+)
+{
+  double* vec_analytic = P4EST_ALLOC(double, nodes);
+  element_data_init_node_vec(p4est,vec_analytic,analytical_solution,dgmath_jit_dbase);
+  linalg_vec_axpy(-1., vec, vec_analytic, nodes);
+  double err = element_data_compute_l2_norm_sqr_no_local(p4est,vec_analytic,dgmath_jit_dbase);
+  return err;
 }

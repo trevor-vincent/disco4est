@@ -90,7 +90,8 @@ multigrid_cheby_smoother
          ghost_data,
          mg_data->dgmath_jit_dbase,
          mg_data->cg_eigs_iter,
-         &mg_data->max_eigs[level]
+         &mg_data->max_eigs[level],
+         mg_data->cg_eigs_use_zero_vec_as_initial
         );
 
       mg_data->max_eigs[level] *= mg_data->max_eig_factor;

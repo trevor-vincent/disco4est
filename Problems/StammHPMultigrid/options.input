@@ -1,6 +1,6 @@
 [p4est]
 min_quadrants = -1
-min_level = 1
+min_level = 0
 fill_uniform = 1
 
 [amr]
@@ -11,7 +11,7 @@ gamma_h = 10.0
 gamma_p = 0.1
 
 [flux]
-ip_flux_penalty = 2.0
+ip_flux_penalty = 10.0
 
 [problem]
 c2x = .5 

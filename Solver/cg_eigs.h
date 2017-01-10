@@ -15,8 +15,8 @@ cg_eigs
  element_data_t* ghost_data,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  int imax,
- double* eig_max
+ double* eig_max,
+ int use_zero_vec_as_initial
 );
-
 
 #endif

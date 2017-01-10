@@ -115,8 +115,8 @@ typedef struct {
   double R0;
   double R1;
   double R2;
-  double Rinf;
-  double w;
+  /* double Rinf; */
+  /* double w; */
   /* KSPType krylov_type; */
   
   int count;
@@ -174,16 +174,16 @@ int problem_input_handler
     pconfig->R2 = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"problem",name,"Rinf")) {
-    mpi_assert(pconfig->Rinf == -1);
-    pconfig->Rinf = atof(value);
-    pconfig->count += 1;
-  }
-  else if (util_match(section,"problem",name,"w")) {
-    mpi_assert(pconfig->w == -1);
-    pconfig->w = atof(value);
-    pconfig->count += 1;
-  }
+  /* else if (util_match(section,"problem",name,"Rinf")) { */
+    /* mpi_assert(pconfig->Rinf == -1); */
+    /* pconfig->Rinf = atof(value); */
+    /* pconfig->count += 1; */
+  /* } */
+  /* else if (util_match(section,"problem",name,"w")) { */
+    /* mpi_assert(pconfig->w == -1); */
+    /* pconfig->w = atof(value); */
+    /* pconfig->count += 1; */
+  /* } */
   else if (util_match(section,"problem",name,"deg_R0")) {
     mpi_assert(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
@@ -329,8 +329,8 @@ problem_input
   input.R2 = -1;
   input.R1 = -1;
   input.R0 = -1;
-  input.w = -1;
-  input.Rinf = -1;
+  /* input.w = -1; */
+  /* input.Rinf = -1; */
   input.num_randrefs = -1;
   input.deg_R0 = -1;
   input.deg_integ_R0 = -1;
@@ -456,7 +456,7 @@ problem_init
   
   int level;
   /* int degree = input.degree;          */
-  global_Rinf = input.Rinf;
+  /* global_Rinf = input.Rinf; */
   global_sigma = input.R0;
   
   mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);

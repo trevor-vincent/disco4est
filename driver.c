@@ -19,7 +19,8 @@ int main(int argc, char *argv[])
 #ifndef NDEBUG
   if(proc_rank == 0)
     printf("[D4EST_INFO]: DEBUG MODE ON\n");
-  p4est_init(NULL, SC_LP_ALWAYS);
+  /* p4est_init(NULL, SC_LP_ALWAYS); */
+  p4est_init(NULL, SC_LP_ERROR);
 #else
   if(proc_rank == 0)
     printf("[D4EST_INFO]: DEBUG MODE OFF\n");

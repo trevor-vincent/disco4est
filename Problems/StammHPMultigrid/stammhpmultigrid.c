@@ -410,13 +410,13 @@ problem_init
   ip_flux_params.ip_flux_penalty_prefactor = input.ip_flux_penalty;
   ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
 
-  penalty_calc_t bi_u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
-  penalty_calc_t bi_u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
-  penalty_calc_t bi_gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh;
+  /* penalty_calc_t bi_u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh; */
+  /* penalty_calc_t bi_u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh; */
+  /* penalty_calc_t bi_gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh; */
 
-  /* penalty_calc_t bi_u_penalty_fcn = houston_u_prefactor_max_p2_over_h; */
-  /* penalty_calc_t bi_u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_max_p2_over_h; */
-  /* penalty_calc_t bi_gradu_penalty_fcn = houston_gradu_prefactor_max_h_over_p; */
+  penalty_calc_t bi_u_penalty_fcn = houston_u_prefactor_maxp_minh;
+  penalty_calc_t bi_u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
+  penalty_calc_t bi_gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
   
   if (!load_from_checkpoint){
     p4est_partition_ext(p4est, 0, NULL);
@@ -454,12 +454,7 @@ problem_init
                                           );
   
   prob_vecs.scalar_flux_fcn_data = sipg_flux_scalar_dirichlet_fetch_fcns(boundary_fcn);
-
-
-  if (!load_from_checkpoint)
-    linalg_fill_vec(u, 1., prob_vecs.local_nodes);
-  else
-    element_data_copy_from_storage_to_vec(p4est, u);    
+  linalg_fill_vec(u, 100., prob_vecs.local_nodes);
   
   weakeqn_ptrs_t prob_fcns;
 
@@ -492,6 +487,10 @@ problem_init
      7,
      hp_amr_smooth_pred_get_sigaverage_marker(&sigma)
     );
+
+
+  hp_amr_scheme_t* scheme_uni = hp_amr_uniform();
+
   
   element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);    
   linalg_vec_axpy(-1., u, u_analytic, local_nodes);
@@ -562,7 +561,6 @@ problem_init
     
   for (level = 0; level < endlevel; ++level){
 
-    
     bi_estimator_compute
       (
        p4est,
@@ -652,11 +650,13 @@ problem_init
     P4EST_FREE(u_vertex);   
     P4EST_FREE(eta2_vertex);   
 
+    estimator_stats_print(&stats, world_rank);
+    
     hp_amr(p4est,
            dgmath_jit_dbase,
            &u,
            &stats,
-           scheme
+           (level > 1) ? scheme : scheme_uni
           );
     
     p4est_ghost_destroy(ghost);
@@ -694,22 +694,30 @@ problem_init
       begin = clock();
     }  
 
+    int min_level, max_level;
 
-    //
-    int num_of_levels = (proc_size == 1) ? level + 3 : level+2;
-    int vcycle_iter = 3;
-      double vcycle_rtol = 1e-3;
+    element_data_get_level_range(p4est, &min_level, &max_level);
+    printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
+
+    /* need to do a reduce on min,max_level before supporting multiple proc */
+    mpi_assert(proc_size == 1);
+    int num_of_levels = max_level + 1;
+    
+    int vcycle_iter = 0;
+      double vcycle_rtol = 1e-9;
       double vcycle_atol = 0.;
       int smooth_iter = 15;
       int cg_eigs_iter = 10;
-      double max_eig_factor = 1.1;
+      /* double max_eig_factor = 1.1; */
+      double max_eig_factor = 1.0;
       int max_eig_reuse = 1;
       double lmax_lmin_rat = 30.;
       int coarse_iter = 10000;
-      double coarse_rtol = 1e-8;
+      double coarse_rtol = 1e-10;
       int save_vtk_snapshot = 0;
       int perform_checksum = 0;
-  
+      int cg_eigs_use_zero_vec_as_initial = 0;
+      
       multigrid_data_t* mg_data
         = multigrid_data_init
         (
@@ -728,11 +736,25 @@ problem_init
          coarse_rtol,
          save_vtk_snapshot,
          perform_checksum,
-         DEBUG,
-         dgmath_jit_dbase
+         ERR_AND_EIG_LOG,
+         dgmath_jit_dbase,
+         cg_eigs_use_zero_vec_as_initial
         );
 
+      
+      
 
+      element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);
+      /* util_print_matrix(u_analytic, prob_vecs.local_nodes, 1, " u_analytic = ", 0); */
+
+      /* element_data_print(p4est); */
+
+      multigrid_data_set_analytical_solution
+        (
+         mg_data,
+         analytic_solution_fcn
+        );
+      
       multigrid_solve
         (
          p4est,
@@ -742,12 +764,13 @@ problem_init
          &ghost,
          &ghost_data
         );
-  
+
+      
   
       multigrid_data_destroy(mg_data);
 
       
-    element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);    
+
     linalg_vec_axpy(-1., u, u_analytic, local_nodes);
     
     /* dg norm should always have the boundary fcn set to zero */
@@ -891,6 +914,7 @@ problem_init
   P4EST_FREE(u_vertex);   
 
   hp_amr_smooth_pred_destroy(scheme);
+  hp_amr_uniform_destroy(scheme_uni);
   
   /* if (ghost) { */
   p4est_ghost_destroy (ghost);

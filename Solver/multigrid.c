@@ -33,17 +33,19 @@ multigrid_data_init
  int save_vtk_snapshot,
  int perform_checksum,
  multigrid_log_option_t log_option,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ int cg_eigs_use_zero_vec_as_initial
 )
 {
   multigrid_data_t* mg_data = P4EST_ALLOC(multigrid_data_t, 1);
   mg_data->max_eigs = P4EST_ALLOC(double, num_of_levels);
-  
+ 
   mg_data->user_defined_fields = 0;
   mg_data->mg_prolong_user_callback = NULL;
   mg_data->mg_restrict_user_callback = NULL;
   mg_data->mg_update_user_callback = NULL;
   mg_data->user_ctx = NULL;
+  mg_data->analytical_solution = NULL;
   
   mg_data->mpi_rank = mpi_rank;
   mg_data->num_of_levels = num_of_levels;
@@ -62,8 +64,18 @@ multigrid_data_init
   mg_data->perform_checksum = perform_checksum;
   mg_data->log_option = log_option;
   mg_data->dgmath_jit_dbase = dgmath_jit_dbase;
+  mg_data->cg_eigs_use_zero_vec_as_initial = cg_eigs_use_zero_vec_as_initial;
 
   return mg_data;
+}
+
+void
+multigrid_data_set_analytical_solution
+(
+ multigrid_data_t* mg_data,
+ grid_fcn_t analytical_solution
+){
+  mg_data->analytical_solution = analytical_solution;
 }
 
 void
@@ -179,9 +191,7 @@ multigrid_vcycle
   /**********************************************************/
   /******************* BEGIN GOING DOWN V *******************/
   /**********************************************************/
-  /**********************************************************/
-  printf("u sum before Vcycle = %.25f\n", linalg_vec_sum(vecs->u, vecs->local_nodes));
-  
+  /**********************************************************/  
   /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
   
   int stride_to_fine_data = 0;
@@ -217,6 +227,8 @@ multigrid_vcycle
        mg_data,
        fine_level
       );
+
+
     
     /* increments the stride */
     p4est_coarsen_ext (p4est,
@@ -280,6 +292,8 @@ multigrid_vcycle
     /* mg_data->intergrid_ptr = &(mg_data->rres)[0]; */
     mg_data->intergrid_ptr = &rres_at0[stride_to_fine_data];//&(mg_data->rres)[0];
 
+    /* util_print_matrix(&rres_at0[stride_to_fine_data], mg_data->fine_nodes, 1, "rres before restriction",0); */
+    
     p4est_iterate(
                   p4est,
                   NULL,
@@ -334,7 +348,6 @@ multigrid_vcycle
   vecs_for_cg_coarse_solve.rhs = &res_at0[stride_to_fine_data];//mg_data->res;//)[mg_data->fine_nodes];
   vecs_for_cg_coarse_solve.local_nodes = nodes_on_level_of_multigrid[bottomlevel];
 
-
   multigrid_cg_coarse_solver
     (
      p4est,
@@ -347,6 +360,8 @@ multigrid_vcycle
      &cg_params
     );
 
+  /* util_print_matrix(&rres_at0[stride_to_fine_data],mg_data->coarse_nodes,1,"rres coarse solve= ", 0); */
+  
   /**********************************************************/
   /**********************************************************/
   /******************* END COARSE SOLVE *********************/
@@ -501,8 +516,6 @@ multigrid_vcycle
   /******************* END GOING UP THE V *******************/
   /**********************************************************/
   /**********************************************************/
-  printf("u sum after Vcycle = %.25f\n", linalg_vec_sum(vecs->u, vecs->local_nodes));
-  /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
   
   /* P4EST_FREE(ghost_data); */
   P4EST_FREE(elements_on_level_of_multigrid);
@@ -566,23 +579,19 @@ multigrid_solve
    */
 
 
-  double* err = NULL;
-  double* u_analytic = NULL; 
+  /* double* err = NULL; */
+  /* double* u_analytic = NULL;  */
   double err_2_temp, err_2, old_err_2 = -1.;
   int v = 0;
   
   if (mg_data->log_option == ERR_LOG || mg_data->log_option == ERR_AND_EIG_LOG){
-    mpi_abort("Needs vecs->u_analytic_fcn to be fixed");
-    err = P4EST_ALLOC(double, vecs->local_nodes);
-    u_analytic = P4EST_ALLOC(double, vecs->local_nodes);
-    /* element_data_init_node_vec( */
-    /*                            p4est, */
-    /*                            u_analytic, */
-    /*                            vecs->u_analytic_fcn, */
-    /*                            mg_data->dgmath_jit_dbase */
-    /*                           ); */
-    linalg_vec_axpyeqz(-1., vecs->u, u_analytic, err, local_nodes);
-    err_2_temp = (element_data_compute_l2_norm_sqr_no_local(p4est, err, mg_data->dgmath_jit_dbase));
+
+    if (mg_data->analytical_solution == NULL){
+      mpi_abort("If log_option == ERR_LOG or ERR_AND_EIG_LOG, you must set the analytical solution");
+    }
+    
+    err_2_temp = (element_data_compute_l2_norm_error_no_local(p4est, vecs->u, vecs->local_nodes, mg_data->analytical_solution, mg_data->dgmath_jit_dbase));
+ 
     sc_reduce
       (
        &err_2_temp,
@@ -652,8 +661,13 @@ multigrid_solve
     /* print out error/residual diagnostics */
     if (mg_data->log_option == ERR_LOG || mg_data->log_option == ERR_AND_EIG_LOG)
       {
-        linalg_vec_axpyeqz(-1., vecs->u, u_analytic, err, local_nodes);
-        err_2_temp = (element_data_compute_l2_norm_sqr_no_local(p4est, err,mg_data->dgmath_jit_dbase));
+        if (mg_data->analytical_solution == NULL){
+          mpi_abort("If log_option == ERR_LOG or ERR_AND_EIG_LOG, you must set the analytical solution");
+        }
+        
+        /* linalg_vec_axpyeqz(-1., vecs->u, u_analytic, err, local_nodes); */
+        err_2_temp = (element_data_compute_l2_norm_error_no_local(p4est, vecs->u, vecs->local_nodes, mg_data->analytical_solution, mg_data->dgmath_jit_dbase));
+        
         sc_reduce
           (
            &err_2_temp,
@@ -665,7 +679,7 @@ multigrid_solve
            sc_MPI_COMM_WORLD
           );
         if (mg_data->mpi_rank == 0)
-          printf("[MG_SOLVER]: %d %.20f %.20f %f %f %f\n",v, sqrt(err_2), sqrt(r2_i_global), sqrt(err_2/old_err_2), sqrt(r2_i_global/old_r2_i_global), pow((r2_i_global/r2_0_global), 1./(v + 1)));
+          printf("[MG_SOLVER]: %d %.20f %.20f %f %f\n",v, sqrt(err_2), sqrt(r2_i_global), sqrt(err_2/old_err_2), sqrt(r2_i_global/old_r2_i_global));
         old_err_2 = err_2;
       }
     else {
@@ -688,10 +702,6 @@ multigrid_solve
     v++;
   }
   
-  if (mg_data->log_option == ERR_LOG || mg_data->log_option == ERR_AND_EIG_LOG){
-    P4EST_FREE(u_analytic);
-    P4EST_FREE(err);
-  }
 
   mg_data->final_vcycles = v;
   /* P4EST_FREE(mg_data->max_eigs); */
