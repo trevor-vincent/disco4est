@@ -69,6 +69,7 @@ typedef struct {
   /* storage for MPI transfers */
   double u_elem[MAX_NODES];
   double du_elem[(P4EST_DIM)][MAX_NODES];
+  double dudr_elem[(P4EST_DIM)][MAX_NODES];
   double q_elem[(P4EST_DIM)][MAX_NODES];
   
   /* nodal degree */
@@ -106,7 +107,8 @@ curved_element_data_init_node_vec
  p4est_t* p4est,
  double* node_vec,
  grid_fcn_t init_fcn,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ p4est_geometry_t* p4est_geom
 );
 
 void
@@ -424,7 +426,6 @@ curved_element_data_compute_mortar_normal_and_sj_using_face_data_at_Gauss_nodes_
  dgmath_jit_dbase_t* dgmath_jit_dbase
 );
 
-
 void
 curved_element_data_compute_dxyz_drst
 (
@@ -432,14 +433,12 @@ curved_element_data_compute_dxyz_drst
  p4est_qcoord_t q0 [(P4EST_DIM)],
  p4est_qcoord_t dq,
  int which_tree,
- d4est_geometry_t* d4est_geom,
- dxdr_method_t dxdr_method,
+ p4est_geometry_t* p4est_geom,
  int deg,
- int interp_to_Gauss,
+ int interp_to_Gauss, /* interp Lobatto values to Gauss values */
  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)],
- double* xyz [(P4EST_DIM)]
+ double* xyz_store [(P4EST_DIM)]
 );
-
 
 void
 curved_element_data_compute_surface_jacobian_and_normal_from_rst_xyz
@@ -475,5 +474,32 @@ curved_element_data_init_new
  void* user_ctx
 );
 
+
+void
+curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes
+(
+ double* dvec_drst_on_face_Gauss [(P4EST_DIM)], /* should be of mortar length, but not individually rotated */
+ curved_element_data_t** e,
+ int num_faces_side,
+ int num_faces_mortar,
+ int* deg_mortar_integ,
+ int face_side,
+ double* dvec_dxyz_on_face_Gauss [(P4EST_DIM)],
+ p4est_geometry_t* geom,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+);
+
+void
+curved_element_data_compute_xyz
+(
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ p4est_geometry_t* p4est_geometry,
+ int which_tree,
+ int deg,
+ quadrature_type_t type,
+ p4est_qcoord_t q [(P4EST_DIM)],
+ p4est_qcoord_t dq,
+ double* xyz [(P4EST_DIM)]
+);
 
 #endif

@@ -24,51 +24,51 @@ struct {
   /* int nonlin_deg; */
 } fofuv_data_t;
 
-static void
-element_data_init_callback
-(
- p4est_iter_volume_info_t * info,
- void *user_data
-)
-{
-  p4est_quadrant_t* q = info->quad;
-  p4est_topidx_t which_tree = info->treeid;
-  element_data_t* elem_data = (element_data_t *) q->p.user_data;
-  p4est_connectivity_t* pconnect = info->p4est->connectivity;
+/* static void */
+/* element_data_init_callback */
+/* ( */
+/*  p4est_iter_volume_info_t * info, */
+/*  void *user_data */
+/* ) */
+/* { */
+/*   p4est_quadrant_t* q = info->quad; */
+/*   p4est_topidx_t which_tree = info->treeid; */
+/*   element_data_t* elem_data = (element_data_t *) q->p.user_data; */
+/*   p4est_connectivity_t* pconnect = info->p4est->connectivity; */
   
-  p4est_qcoord_t dq;
+/*   p4est_qcoord_t dq; */
 
-  int* element_data_stride = ((int*)info->p4est->user_pointer);
-  int set_deg = *((int*)user_data);
-  /* if set_deg >= 0, use it as the degree of the element */
-  /* if set_deg == -1, keep the degree as is */
+/*   int* element_data_stride = ((int*)info->p4est->user_pointer); */
+/*   int set_deg = *((int*)user_data); */
+/*   /\* if set_deg >= 0, use it as the degree of the element *\/ */
+/*   /\* if set_deg == -1, keep the degree as is *\/ */
 
-  /* printf("deg, set_deg = %d,%d\n",elem_data->deg, set_deg); */
+/*   /\* printf("deg, set_deg = %d,%d\n",elem_data->deg, set_deg); *\/ */
   
-  if ( set_deg >= 0)
-    elem_data->deg = set_deg;
+/*   if ( set_deg >= 0) */
+/*     elem_data->deg = set_deg; */
 
-  elem_data->id = info->quadid;
-  elem_data->stride = *element_data_stride;
+/*   elem_data->id = info->quadid; */
+/*   elem_data->stride = *element_data_stride; */
 
-  dq = P4EST_QUADRANT_LEN(q->level);
-  p4est_qcoord_to_vertex(pconnect,
-                         which_tree,
-                         q->x,
-                         q->y,
-#if (P4EST_DIM)==3
-                         q->z,
-#endif
-                         elem_data->xyz_corner);
+/*   dq = P4EST_QUADRANT_LEN(q->level); */
+/*   p4est_qcoord_to_vertex(pconnect, */
+/*                          which_tree, */
+/*                          q->x, */
+/*                          q->y, */
+/* #if (P4EST_DIM)==3 */
+/*                          q->z, */
+/* #endif */
+/*                          elem_data->xyz_corner); */
 
-  elem_data->h = dq/(double)P4EST_ROOT_LEN;
-  elem_data->jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) ); 
-  elem_data->surface_jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) - 1);
-  *element_data_stride += dgmath_get_nodes( (P4EST_DIM) , elem_data->deg);
+/*   elem_data->h = dq/(double)P4EST_ROOT_LEN; */
+/*   elem_data->jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) );  */
+/*   elem_data->surface_jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) - 1); */
+/*   *element_data_stride += dgmath_get_nodes( (P4EST_DIM) , elem_data->deg); */
 
-  /* if (elem_data->stride == 0) */
-    /* dgmath_set_max_degree_used(elem_data->deg); */
-}
+/*   /\* if (elem_data->stride == 0) *\/ */
+/*     /\* dgmath_set_max_degree_used(elem_data->deg); *\/ */
+/* } */
 
 
 /* static void */
@@ -187,18 +187,18 @@ element_data_init_node_vec_callback
 #endif
                       );
 
-#ifndef NDEBUG
-    printf(" vec[stride + i], x, y, z = %f,%f,%f,%f",
-          vec[stride+i],
-          dgmath_rtox(x[i], xl, h),
-          dgmath_rtox(y[i], yl, h),
-#if (P4EST_DIM)==3
-          dgmath_rtox(z[i], zl, h)
-#else
-          1.
-#endif
-         );
-#endif
+/* #ifndef NDEBUG */
+    /* printf(" vec[stride + i], x, y, z = %f,%f,%f,%f\n", */
+          /* vec[stride+i], */
+          /* dgmath_rtox(x[i], xl, h), */
+          /* dgmath_rtox(y[i], yl, h), */
+/* #if (P4EST_DIM)==3 */
+          /* dgmath_rtox(z[i], zl, h) */
+/* #else */
+          /* 1. */
+/* #endif */
+         /* ); */
+/* #endif */
       }
 }
 
@@ -1835,24 +1835,117 @@ int element_data_get_local_matrix_nodes(p4est_t* p4est)
 void element_data_init
 (
  p4est_t* p4est,
- int deg
+ int set_deg
 )
 {
   int element_data_stride = 0;
-  void* tmpptr = p4est->user_pointer;
-  p4est->user_pointer = (void*)&element_data_stride;
+  int element_id_stride = 0;
   
-  p4est_iterate(p4est,
-		NULL,
-		(void*) &deg,
-		element_data_init_callback,
-		NULL,
-#if (P4EST_DIM)==3
-                 NULL,       
-#endif                
-		NULL);
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        element_data_t* ed = quad->p.user_data;
+        p4est_topidx_t which_tree = tt;
+        element_data_t* elem_data = (element_data_t *) quad->p.user_data;
+        p4est_connectivity_t* pconnect = p4est->connectivity;
+  
+        p4est_qcoord_t dq;
+        /* if set_deg >= 0, use it as the degree of the element */
+        /* if set_deg == -1, keep the degree as is */
 
-  p4est->user_pointer = tmpptr;
+        /* printf("deg, set_deg = %d,%d\n",elem_data->deg, set_deg); */
+  
+        if ( set_deg >= 0){
+          elem_data->deg = set_deg;
+        }
+        elem_data->id = element_id_stride;
+        elem_data->stride = element_data_stride;
+
+        dq = P4EST_QUADRANT_LEN(quad->level);
+        p4est_qcoord_to_vertex(pconnect,
+                               which_tree,
+                               quad->x,
+                               quad->y,
+#if (P4EST_DIM)==3
+                               quad->z,
+#endif
+                               elem_data->xyz_corner);
+
+        elem_data->h = dq/(double)P4EST_ROOT_LEN;
+        elem_data->jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) ); 
+        elem_data->surface_jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) - 1);
+        element_data_stride += dgmath_get_nodes( (P4EST_DIM) , elem_data->deg);
+        element_id_stride += 1;
+      }
+    }
+
+  
+}
+
+
+void element_data_init_ext
+(
+ p4est_t* p4est,
+ int set_deg,
+ int set_deg_integ
+)
+{
+int element_data_stride = 0;
+  int element_id_stride = 0;
+  
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        element_data_t* ed = quad->p.user_data;
+        p4est_topidx_t which_tree = tt;
+        element_data_t* elem_data = (element_data_t *) quad->p.user_data;
+        p4est_connectivity_t* pconnect = p4est->connectivity;
+  
+        p4est_qcoord_t dq;
+        /* if set_deg >= 0, use it as the degree of the element */
+        /* if set_deg == -1, keep the degree as is */
+
+        /* printf("deg, set_deg = %d,%d\n",elem_data->deg, set_deg); */
+  
+        if ( set_deg >= 0){
+          elem_data->deg = set_deg;
+        }
+        if (set_deg_integ >= 0){
+          elem_data->deg_integ = set_deg_integ;
+        }
+        elem_data->id = element_id_stride;
+        elem_data->stride = element_data_stride;
+
+        dq = P4EST_QUADRANT_LEN(quad->level);
+        p4est_qcoord_to_vertex(pconnect,
+                               which_tree,
+                               quad->x,
+                               quad->y,
+#if (P4EST_DIM)==3
+                               quad->z,
+#endif
+                               elem_data->xyz_corner);
+
+        elem_data->h = dq/(double)P4EST_ROOT_LEN;
+        elem_data->jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) ); 
+        elem_data->surface_jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) - 1);
+        element_data_stride += dgmath_get_nodes( (P4EST_DIM) , elem_data->deg);
+        element_id_stride += 1;
+      }
+    }
+
 }
 
 static void
@@ -1868,6 +1961,7 @@ element_data_print_callback
   printf("Quad ID = %d\n", elem_data->id);
   printf("Stride = %d\n", elem_data->stride);
   printf("Degree = %d\n", elem_data->deg);
+  printf("q = %d\n", elem_data->deg);
   printf("Estimator = %.25f\n", elem_data->local_estimator);
   printf("Predictor = %.25f\n", elem_data->local_predictor);
   printf("**************\n");
@@ -2811,3 +2905,67 @@ element_data_compute_l2_norm_error_no_local
   double err = element_data_compute_l2_norm_sqr_no_local(p4est,vec_analytic,dgmath_jit_dbase);
   return err;
 }
+
+
+/* void */
+/* element_data_init_new */
+/* ( */
+ 
+/* ) */
+/* { */
+/*   element_data_local_sizes_t local_sizes */
+/*     = element_data_compute_strides_and_sizes(p4est, */
+/*                                              dgmath_jit_dbase, */
+/*                                              user_fcn, */
+/*                                              user_ctx); */
+
+  
+/*   int element_data_stride = 0; */
+/*   int element_id_stride = 0; */
+  
+/*   for (p4est_topidx_t tt = p4est->first_local_tree; */
+/*        tt <= p4est->last_local_tree; */
+/*        ++tt) */
+/*     { */
+/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
+/*       sc_array_t* tquadrants = &tree->quadrants; */
+/*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
+/*       for (int q = 0; q < Q; ++q) { */
+/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
+/*         element_data_t* ed = quad->p.user_data; */
+/*         p4est_topidx_t which_tree = tt; */
+/*         element_data_t* elem_data = (element_data_t *) quad->p.user_data; */
+/*         p4est_connectivity_t* pconnect = p4est->connectivity; */
+  
+/*         p4est_qcoord_t dq; */
+/*         /\* if set_deg >= 0, use it as the degree of the element *\/ */
+/*         /\* if set_deg == -1, keep the degree as is *\/ */
+
+/*         /\* printf("deg, set_deg = %d,%d\n",elem_data->deg, set_deg); *\/ */
+  
+/*         if ( set_deg >= 0){ */
+/*           elem_data->deg = set_deg; */
+/*         } */
+/*         if (set_deg_integ >= 0){ */
+/*           elem_data->deg_integ = set_deg_integ; */
+/*         } */
+/*         elem_data->id = element_id_stride; */
+/*         elem_data->stride = element_data_stride; */
+
+/*         dq = P4EST_QUADRANT_LEN(quad->level); */
+/*         p4est_qcoord_to_vertex(pconnect, */
+/*                                which_tree, */
+/*                                quad->x, */
+/*                                quad->y, */
+/* #if (P4EST_DIM)==3 */
+/*                                quad->z, */
+/* #endif */
+/*                                elem_data->xyz_corner); */
+
+/*         elem_data->h = dq/(double)P4EST_ROOT_LEN; */
+/*         elem_data->jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) );  */
+/*         elem_data->surface_jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) - 1); */
+/*       } */
+/*     } */
+
+/* } */

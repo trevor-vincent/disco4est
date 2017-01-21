@@ -82,6 +82,7 @@ SET (
   Solver/newton_petsc.c
   Solver/cg_eigs.c
   Solver/matrix_sym_tester.c
+  Solver/multigrid_matrix_operator.c
   EllipticSystem/problem_data.c
   Utilities/util.c
   dGMath/dgmath.c
@@ -97,6 +98,7 @@ SET (
   # hpAMR/curved_hp_amr.c
   # hpAMR/curved_hp_amr_smooth_pred.c
   hpAMR/hp_amr.c
+  Solver/cg.c
   Operators/curved_poisson_operator.c
   Operators/poisson_operator.c
   Operators/poisson_debug_vecs.c
@@ -111,6 +113,7 @@ SET (
   Flux/curved_compute_flux.c
   Flux/curved_Gauss_central_flux_vector_fcns.c
   Flux/curved_Gauss_sipg_flux_scalar_fcns.c
+  Flux/curved_Gauss_sipg_flux_vector_fcns.c
   Flux/dg_norm.c
   Flux/sipg_flux_scalar_fcns.c
   Flux/sipg_flux_vector_fcns.c
@@ -272,6 +275,10 @@ endfunction()
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
 add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
+add_d4est_problem_2d(testmultigridmatrixop_driver testmultigridmatrixop.c TestMultigridMatrixOp)
+add_d4est_problem_3d(testcurvedipflux_driver testcurvedipflux.c TestCurvedIPFlux)
+add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
+add_d4est_problem_3d(testnoncurvedipfluxoncube_driver testnoncurvedipfluxoncube.c TestNonCurvedIPFluxOnCube)
 # add_d4est_problem_3d(twopuncturescube_driver twopuncturescube.c TwoPuncturesCube)
 add_d4est_curved_problem_3d(testcompactification_driver testcompactification.c TestCompactification)
 # add_d4est_problem_3d(testcompactification_driver testcompactification.c TestCompactification)

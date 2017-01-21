@@ -78,16 +78,10 @@ krylov_petsc_input
   input.ksp_atol = -1;
   input.ksp_rtol = -1;
   input.ksp_maxit = -1;
-
-  printf("ksp_view = %d\n", input.ksp_view);
-  printf("ksp_monitor = %d\n", input.ksp_monitor);
   
   if (ini_parse(input_file, krylov_petsc_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
   }
-  printf("ksp_view = %d\n", input.ksp_view);
-  printf("ksp_monitor = %d\n", input.ksp_monitor);
-
   
   printf("ksp_atol = %f\n", input.ksp_atol);
   
@@ -123,6 +117,9 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   vecs_for_aij.u = (double*)px;
   vecs_for_aij.Au = py;
 
+  DEBUG_PRINT_ARR_DBL(vecs_for_aij.u, vecs_for_aij.local_nodes);
+
+  
   if (kct->d4est_geom == NULL){
     ((weakeqn_ptrs_t*)(kct->fcns))->apply_lhs(p4est,
                                               ghost,
@@ -188,6 +185,7 @@ krylov_petsc_solve
   double* u = vecs->u;
   double* rhs = vecs->rhs;
 
+  DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes);
   
   KSPCreate(PETSC_COMM_WORLD,&ksp);  
   VecCreate(PETSC_COMM_WORLD,&x);//CHKERRQ(ierr);
@@ -196,7 +194,7 @@ krylov_petsc_solve
   VecDuplicate(x,&b);//CHKERRQ(ierr);
 
 
-  
+  printf("krylov_params.ksp_monitor = %d\n", krylov_params.ksp_monitor);
   if (krylov_params.ksp_monitor)
     PetscOptionsSetValue(NULL,"-ksp_monitor","");
   if (krylov_params.ksp_view)
@@ -210,8 +208,9 @@ krylov_petsc_solve
   snprintf (rtol_buf, sizeof(rtol_buf), "%.30f", krylov_params.ksp_rtol);
   snprintf (maxit_buf, sizeof(maxit_buf), "%d", krylov_params.ksp_maxit);
   
-  /* PetscOptionsSetValue(NULL,"-ksp_converged_reason",""); */
+  PetscOptionsSetValue(NULL,"-ksp_converged_reason","");
   PetscOptionsSetValue(NULL,"-ksp_atol",atol_buf);
+  PetscOptionsSetValue(NULL,"-ksp_initial_guess_nonzero","1");
   /* PetscOptionsSetValue(NULL,"-with-debugging","1"); */
   PetscOptionsSetValue(NULL,"-ksp_rtol", rtol_buf);
   PetscOptionsSetValue(NULL,"-ksp_max_it",maxit_buf);

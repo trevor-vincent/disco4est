@@ -1,5 +1,3 @@
-#define NDEBUG
-
 #include <pXest.h>
 #include <element_data.h>
 #include <problem_data.h>
@@ -108,6 +106,10 @@ void poisson_compute_q_elem(p4est_iter_volume_info_t * info, void *user_data)
 /* #endif */
   }
 
+  /* double* u_ptr = &element_data->u_elem[0]; */
+  /* DEBUG_PRINT_4ARR_DBL(u_elem, Si_u[0], Si_u[1], Si_u[2], vol_nodes); */
+  /* printf("jacobian = %.25f\n",jacobian); */
+
 #ifdef D4EST_DEBUG
   double* lifted_ustar_min_u [(P4EST_FACES)][(P4EST_DIM)];
   poisson_debug_vecs_t* debug_vecs
@@ -169,6 +171,22 @@ void poisson_compute_q_elem(p4est_iter_volume_info_t * info, void *user_data)
     /* util_print_matrix(element_data->q_elem[d], vol_nodes, 1, "q = ", 0); */
   }
 
+
+  /* DEBUG_PRINT_3ARR_DBL( */
+  /*                      (&element_data->q_elem[0][0]), */
+  /*                      (&element_data->q_elem[1][0]), */
+  /*                      (&element_data->q_elem[2][0]), */
+  /*                      vol_nodes */
+  /* ); */
+
+
+  /* DEBUG_PRINT_3ARR_DBL( */
+                       /* (&Si_u[0][0]), */
+                       /* (&Si_u[1][0]), */
+                       /* (&Si_u[2][0]), */
+                       /* vol_nodes */
+  /* ); */
+  
 #ifdef D4EST_DEBUG
   if (debug_vecs != NULL && element_data->id == debug_vecs->elem_id){
     poisson_debug_vecs_set_lifteduflux(lifted_ustar_min_u, debug_vecs, dgmath_jit_dbase);
@@ -287,6 +305,8 @@ void poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* user_data)
 
   /* Au *= -1 because matrix is negative definite! */
   linalg_vec_scale(-1., Au, vol_nodes);
+
+  /* DEBUG_PRINT_ARR_DBL(Au, vol_nodes); */
   
 #ifdef D4EST_DEBUG
   if (debug_vecs != NULL && element_data->id == debug_vecs->elem_id){

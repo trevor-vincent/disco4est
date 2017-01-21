@@ -33,6 +33,15 @@
     }                                           \
   } while(0)
 
+#define DEBUG_PRINT_ARR_DBL_SUM(a, n) do {                \
+    double sum = 0.;                                  \
+    for (int i = 0; i < n; i++) {                     \
+      sum += a[i];                                    \
+    }                                                 \
+    printf("%s = %.25f\n",#a, sum);                   \
+  } while(0)
+
+
 #define DEBUG_PRINT_ARR_INT(a, n) do {                \
     printf("%s = \n",#a);                       \
     for (int i = 0; i < n; i++) {               \

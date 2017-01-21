@@ -69,6 +69,9 @@ typedef struct {
 
   /* nodal degree */
   int deg;
+
+  /* degree for Gauss integration if needed for non-linear terms */
+  int deg_integ;
   
 } element_data_t;
 
@@ -301,5 +304,18 @@ element_data_compute_l2_norm_error_no_local
  grid_fcn_t analytical_solution,
  dgmath_jit_dbase_t* dgmath_jit_dbase
 );
+
+int element_data_get_local_matrix_nodes
+(
+ p4est_t* p4est
+);
+
+void element_data_init_ext
+(
+ p4est_t* p4est,
+ int set_deg,
+ int set_deg_integ
+);
+
 
 #endif

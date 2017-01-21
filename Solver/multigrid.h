@@ -44,18 +44,22 @@ typedef enum
 
 typedef enum
   {
-    PREV_PRE_SMOOTH,
-    PREV_POST_SMOOTH,
-    DOWNV_POST_COARSEN,
-    DOWNV_POST_BALANCE,
+    PRE_V,
     DOWNV_PRE_SMOOTH,
     DOWNV_POST_SMOOTH,
+    DOWNV_PRE_COARSEN,
+    DOWNV_POST_COARSEN,
+    DOWNV_PRE_BALANCE,
+    DOWNV_POST_BALANCE,
+    DOWNV_PRE_RESTRICTION,
+    DOWNV_POST_RESTRICTION,
     COARSE_PRE_SOLVE,
     COARSE_POST_SOLVE,
     UPV_PRE_REFINE,
+    UPV_POST_REFINE,
     UPV_PRE_SMOOTH,
-    POSTV_PRE_SMOOTH,
-    POSTV_POST_SMOOTH
+    UPV_POST_SMOOTH,
+    POST_V,
   } multigrid_state_t;
 
 
@@ -80,7 +84,10 @@ void
 (*multigrid_restrict_user_callback_fcn_t)
 (
  p4est_iter_volume_info_t*,
- void*
+ void*,
+ int*,
+ int,
+ int
 );
 
 typedef
@@ -133,8 +140,6 @@ typedef struct {
 
   /* If we are running a test problem with an analytical solution */
   grid_fcn_t analytical_solution;
-
-
   
   /* ******* INTERNAL PARAMETERS ******* */
   /* ******* no need to set these ******** */
@@ -144,13 +149,6 @@ typedef struct {
   /* eigenvalues on each level */
   double* max_eigs;
   int solve_for_eigs;
-  
-  /* multigrid vectors */
-  double* Ae;
-  double* err;
-  double* res;
-  double* rres;
-
   double* intergrid_ptr;
   
   /* To store mesh information for each level */

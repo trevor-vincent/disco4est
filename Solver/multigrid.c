@@ -38,7 +38,7 @@ multigrid_data_init
 )
 {
   multigrid_data_t* mg_data = P4EST_ALLOC(multigrid_data_t, 1);
-  mg_data->max_eigs = P4EST_ALLOC(double, num_of_levels);
+  mg_data->max_eigs = P4EST_ALLOC_ZERO(double, num_of_levels);
  
   mg_data->user_defined_fields = 0;
   mg_data->mg_prolong_user_callback = NULL;
@@ -103,6 +103,20 @@ multigrid_data_destroy(multigrid_data_t* mg_data)
 }
 
 static void
+multigrid_update_user_data
+(
+ p4est_t* p4est,
+ int level,
+ problem_data_t* vecs
+)
+{
+  multigrid_data_t* mg_data = p4est->user_pointer;
+  if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
+    mg_data->mg_update_user_callback(p4est, level, vecs);
+  }
+}
+
+static void
 multigrid_vcycle
 (
  p4est_t* p4est,
@@ -162,10 +176,10 @@ multigrid_vcycle
   double* res_at0 = P4EST_ALLOC(double, total_nodes_on_multigrid);
   double* rres_at0 = P4EST_ALLOC(double, total_nodes_on_multigrid);
 
-  mg_data->Ae = &(Ae_at0)[0];
-  mg_data->err = &(err_at0)[0];
-  mg_data->res = &(res_at0)[0];
-  mg_data->rres = &(rres_at0)[0];
+  /* mg_data->Ae = &(Ae_at0)[0]; */
+  /* mg_data->err = &(err_at0)[0]; */
+  /* mg_data->res = &(res_at0)[0]; */
+  /* mg_data->rres = &(rres_at0)[0]; */
   
   double* u = vecs->u;
   
@@ -200,8 +214,14 @@ multigrid_vcycle
     int fine_level = level;
     int coarse_level = level-1;
 
+    /**********************************************************/
+    /**********************************************************/
+    /******************* PRE SMOOTH ***************************/
+    /**********************************************************/
+    /**********************************************************/  
+    
     /* set initial guess for error */
-    linalg_fill_vec(mg_data->err, 0., nodes_on_level_of_multigrid[level]);//mg_data->fine_nodes);
+    linalg_fill_vec(&err_at0[stride_to_fine_data], 0., nodes_on_level_of_multigrid[level]);//mg_data->fine_nodes);
 
     if (level == toplevel){
       vecs_for_cheby_smooth.Au = vecs->Au;
@@ -213,8 +233,16 @@ multigrid_vcycle
       vecs_for_cheby_smooth.Au = &Ae_at0[stride_to_fine_data];//mg_data->Ae;//[mg_data->fine_nodes];
       vecs_for_cheby_smooth.u = &err_at0[stride_to_fine_data];//mg_data->err;//[mg_data->fine_nodes];
       vecs_for_cheby_smooth.rhs = &res_at0[stride_to_fine_data];//mg_data->res;//)[mg_data->fine_nodes];
-      vecs_for_cheby_smooth.local_nodes = mg_data->coarse_nodes;
+      vecs_for_cheby_smooth.local_nodes = nodes_on_level_of_multigrid[level];
     }
+
+    /**********************************************************/
+    /**********************************************************/
+    /******************* BEGIN SMOOTH *************************/
+    /**********************************************************/
+    /**********************************************************/  
+
+    mg_data->mg_state = DOWNV_PRE_SMOOTH; multigrid_update_user_data(p4est, level, &vecs_for_cheby_smooth);
     
     multigrid_cheby_smoother
       (
@@ -223,12 +251,27 @@ multigrid_vcycle
        fcns,
        *ghost,
        *ghost_data,
-       mg_data->rres,
+       &rres_at0[stride_to_fine_data],
        mg_data,
        fine_level
       );
 
+    mg_data->mg_state = DOWNV_POST_SMOOTH; multigrid_update_user_data(p4est, level, &vecs_for_cheby_smooth);
 
+    /**********************************************************/
+    /**********************************************************/
+    /********************* END SMOOTH *************************/
+    /**********************************************************/
+    /**********************************************************/  
+
+
+    /**********************************************************/
+    /**********************************************************/
+    /******************* BEGIN COARSEN ************************/
+    /**********************************************************/
+    /**********************************************************/  
+
+    mg_data->mg_state = DOWNV_PRE_COARSEN; multigrid_update_user_data(p4est, level, NULL);
     
     /* increments the stride */
     p4est_coarsen_ext (p4est,
@@ -239,6 +282,14 @@ multigrid_vcycle
                        NULL
                       );
 
+    mg_data->mg_state = DOWNV_POST_COARSEN; multigrid_update_user_data(p4est, level, NULL);
+
+    /**********************************************************/
+    /**********************************************************/
+    /******************* END COARSEN **************************/
+    /**********************************************************/
+    /**********************************************************/  
+    
     /* p4est has changed, so update the element data, this does not change the stride */
     element_data_init(p4est, -1);
 
@@ -251,9 +302,24 @@ multigrid_vcycle
         
     /* decrements the stride */
     mg_data->stride -= elements_on_level_of_surrogate_multigrid[level-1];
-   
+
+    /**********************************************************/
+    /**********************************************************/
+    /******************* BEGIN BALANCE ************************/
+    /**********************************************************/
+    /**********************************************************/  
+    mg_data->mg_state = DOWNV_PRE_BALANCE; multigrid_update_user_data(p4est, level, NULL);   
+    
     /* does not change the stride */
     p4est_balance_ext (p4est, P4EST_CONNECT_FACE, NULL, multigrid_store_balance_changes);
+
+    mg_data->mg_state = DOWNV_POST_BALANCE; multigrid_update_user_data(p4est, level, NULL);
+    /**********************************************************/
+    /**********************************************************/
+    /******************* END BALANCE **************************/
+    /**********************************************************/
+    /**********************************************************/  
+    
     element_data_init(p4est, -1);
 
     /* update ghost data */
@@ -277,22 +343,14 @@ multigrid_vcycle
     res_at0 = P4EST_REALLOC(res_at0, double, total_nodes_on_multigrid);
     rres_at0 = P4EST_REALLOC(rres_at0, double, total_nodes_on_multigrid);
 
-    mg_data->Ae = &Ae_at0[total_nodes_on_multigrid - mg_data->fine_nodes - mg_data->coarse_nodes];
-    mg_data->err = &err_at0[total_nodes_on_multigrid - mg_data->fine_nodes - mg_data->coarse_nodes];
-    mg_data->res = &res_at0[total_nodes_on_multigrid - mg_data->fine_nodes - mg_data->coarse_nodes];
-    mg_data->rres = &rres_at0[total_nodes_on_multigrid - mg_data->fine_nodes - mg_data->coarse_nodes];
-
-    /* set initial guess for mg_data->error */
-    /* linalg_fill_vec(&mg_data->err[mg_data->fine_nodes], 0., mg_data->coarse_nodes); */
 
     /* always zero these before restriction or prolongation */
     mg_data->coarse_stride = 0;
     mg_data->fine_stride = 0;
     mg_data->temp_stride = 0;
-    /* mg_data->intergrid_ptr = &(mg_data->rres)[0]; */
     mg_data->intergrid_ptr = &rres_at0[stride_to_fine_data];//&(mg_data->rres)[0];
 
-    /* util_print_matrix(&rres_at0[stride_to_fine_data], mg_data->fine_nodes, 1, "rres before restriction",0); */
+    mg_data->mg_state = DOWNV_PRE_RESTRICTION; multigrid_update_user_data(p4est, level, NULL);   
     
     p4est_iterate(
                   p4est,
@@ -305,22 +363,15 @@ multigrid_vcycle
 #endif
                   NULL
     );  
-    
+
+    mg_data->mg_state = DOWNV_POST_RESTRICTION; multigrid_update_user_data(p4est, level, NULL);   
 
     linalg_copy_1st_to_2nd
       (
-       /* &(mg_data->rres)[mg_data->fine_nodes], */
        &(rres_at0)[stride_to_fine_data + mg_data->fine_nodes],
-       /* &(mg_data->res)[mg_data->fine_nodes], */
        &(res_at0)[stride_to_fine_data + mg_data->fine_nodes],
        nodes_on_level_of_multigrid[coarse_level]//mg_data->coarse_nodes
       );
-
-
-    mg_data->Ae += mg_data->fine_nodes;
-    mg_data->err += mg_data->fine_nodes;
-    mg_data->res += mg_data->fine_nodes;
-    mg_data->rres += mg_data->fine_nodes;
 
     stride_to_fine_data += mg_data->fine_nodes;
   }
@@ -340,7 +391,7 @@ multigrid_vcycle
   /**********************************************************/
 
   /* set initial guess for error */
-  linalg_fill_vec(mg_data->err, 0., nodes_on_level_of_multigrid[bottomlevel]);
+  linalg_fill_vec(&err_at0[stride_to_fine_data], 0., nodes_on_level_of_multigrid[bottomlevel]);
   
   /* vecs_for_cg_coarse_solve.Au = mg_data->Ae;//[mg_data->fine_nodes]; */
   vecs_for_cg_coarse_solve.Au = &Ae_at0[stride_to_fine_data];//[mg_data->fine_nodes];
@@ -348,6 +399,9 @@ multigrid_vcycle
   vecs_for_cg_coarse_solve.rhs = &res_at0[stride_to_fine_data];//mg_data->res;//)[mg_data->fine_nodes];
   vecs_for_cg_coarse_solve.local_nodes = nodes_on_level_of_multigrid[bottomlevel];
 
+
+  mg_data->mg_state = COARSE_PRE_SOLVE; multigrid_update_user_data(p4est, level, &vecs_for_cg_coarse_solve);   
+  
   multigrid_cg_coarse_solver
     (
      p4est,
@@ -359,6 +413,8 @@ multigrid_vcycle
      &rres_at0[stride_to_fine_data],//[mg_data->fine_nodes]),
      &cg_params
     );
+
+  mg_data->mg_state = COARSE_POST_SOLVE; multigrid_update_user_data(p4est, level, &vecs_for_cg_coarse_solve);   
 
   /* util_print_matrix(&rres_at0[stride_to_fine_data],mg_data->coarse_nodes,1,"rres coarse solve= ", 0); */
   
@@ -385,29 +441,31 @@ multigrid_vcycle
     int fine_level = level + 1;
     int coarse_level = level;
 
-    mg_data->mg_state = UPV_PRE_REFINE;
-    if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
-      mg_data->mg_update_user_callback(p4est, level, NULL);
-    }
-    
+
     mg_data->fine_nodes = nodes_on_level_of_multigrid[level+1];
     mg_data->coarse_nodes = nodes_on_level_of_multigrid[level];
-
-    mg_data->err -= mg_data->fine_nodes;
-    mg_data->Ae -= mg_data->fine_nodes;
-    mg_data->rres -= mg_data->fine_nodes;
-    mg_data->res -= mg_data->fine_nodes;
     stride_to_fine_data -= mg_data->fine_nodes;
-    
     mg_data->stride -= elements_on_level_of_surrogate_multigrid[level];
     mg_data->fine_stride = 0;
     mg_data->coarse_stride = 0;
     mg_data->temp_stride = 0;
+
+    
     linalg_copy_1st_to_2nd(&err_at0[stride_to_fine_data + mg_data->fine_nodes],//&(mg_data->err)[mg_data->fine_nodes],
                            &rres_at0[stride_to_fine_data + mg_data->fine_nodes],//&(mg_data->rres)[mg_data->fine_nodes],
                            nodes_on_level_of_multigrid[coarse_level]);
 
-    mg_data->intergrid_ptr = mg_data->rres;
+    mg_data->intergrid_ptr = &rres_at0[stride_to_fine_data];/* mg_data->rres */;
+
+
+    /**********************************************************/
+    /**********************************************************/
+    /******************* BEGIN REFINE/PROLONGATION ************/
+    /**********************************************************/
+    /**********************************************************/
+
+    
+    mg_data->mg_state = UPV_PRE_REFINE; multigrid_update_user_data(p4est, level, NULL);   
     
     /* increments the stride */
     p4est_refine_ext(p4est,
@@ -418,6 +476,18 @@ multigrid_vcycle
                      multigrid_refine_and_apply_prolongation_replace
                     );
 
+
+    mg_data->mg_state = UPV_POST_REFINE; multigrid_update_user_data(p4est, level, NULL);   
+
+
+    /**********************************************************/
+    /**********************************************************/
+    /******************* END REFINE/PROLONGATION **************/
+    /**********************************************************/
+    /**********************************************************/
+
+
+    
     P4EST_FREE(*ghost_data);
     p4est_ghost_destroy (*ghost);
     *ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
@@ -427,90 +497,63 @@ multigrid_vcycle
     /* decrements the stride */
     mg_data->stride -= elements_on_level_of_surrogate_multigrid[level];
 
-    /* PROBABLY NOT NEEDED */
-    element_data_init(p4est, -1);    
-    linalg_vec_axpy(1.0, mg_data->rres, mg_data->err, mg_data->fine_nodes);
+    element_data_init(p4est, -1);
 
     /* If the grid is not the finiest */
     if(fine_level != toplevel){
-      
-      vecs_for_cheby_smooth.Au = mg_data->Ae;
-      vecs_for_cheby_smooth.u = mg_data->err;
-      vecs_for_cheby_smooth.rhs = mg_data->res;
+      vecs_for_cheby_smooth.Au = &Ae_at0[stride_to_fine_data];//mg_data->Ae;
+      vecs_for_cheby_smooth.u = &err_at0[stride_to_fine_data];//mg_data->err;
+      vecs_for_cheby_smooth.rhs = &res_at0[stride_to_fine_data];//mg_data->res;
       vecs_for_cheby_smooth.local_nodes = mg_data->fine_nodes;
-
-      /* if (mg_data->cg_eigs_iter > 0) */
-      /*   cg_eigs */
-      /*     ( */
-      /*      p4est, */
-      /*      &vecs_for_cheby_smooth, */
-      /*      fcns, */
-      /*      *ghost, */
-      /*      *ghost_data, */
-      /*      mg_data->dgmath_jit_dbase, */
-      /*      mg_data->cg_eigs_iter, */
-      /*      &max_eigs[level + 1] */
-      /*     ); */
-
-      /* max_eigs[level+1] *= mg_data->max_eig_factor; */
-      /* cheby_params.lmin = max_eigs[fine_level]/mg_data->lmax_lmin_rat; */
-      /* cheby_params.lmax = max_eigs[fine_level]; */
-      /* cheby_params.iter = mg_data->smooth_iter; */
-      
-      
-      mg_data->mg_state = UPV_PRE_SMOOTH;
-      if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
-        mg_data->mg_update_user_callback(p4est, level, &vecs_for_cheby_smooth);
-      }
-      
-      multigrid_cheby_smoother
-        (
-         p4est,
-         &vecs_for_cheby_smooth,
-         fcns,
-         *ghost,
-         *ghost_data,
-         mg_data->rres,
-         mg_data,
-         /* &cheby_params, */
-         fine_level
-        );
     }
-
-    /* Finest grid smooth */
-    else{
-      
-      mg_data->mg_state = POSTV_PRE_SMOOTH;
-      if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
-        mg_data->mg_update_user_callback(p4est, level, vecs);
-      }
-      linalg_vec_axpy(1.0, mg_data->err, u, mg_data->fine_nodes);
-
-      multigrid_cheby_smoother
-        (
-         p4est,
-         vecs,
-         fcns,
-         *ghost,
-         *ghost_data,
-         mg_data->res,
-         mg_data,
-         toplevel
-        );
-      
-      mg_data->vcycle_r2local = linalg_vec_dot(mg_data->res,
-                                               mg_data->res,
-                                               mg_data->fine_nodes);
-      /* p4est_ghost_destroy (ghost); */
-      mg_data->mg_state = POSTV_POST_SMOOTH;
-      if (mg_data->user_defined_fields && mg_data->mg_update_user_callback != NULL){
-        mg_data->mg_update_user_callback(p4est, level, NULL);
-      }
-
-      
+    else {
+      vecs_for_cheby_smooth.Au = vecs->Au;//&Ae_at0[stride_to_fine_data];//mg_data->Ae;
+      vecs_for_cheby_smooth.u = vecs->u;//&err_at0[stride_to_fine_data];//mg_data->err;
+      vecs_for_cheby_smooth.rhs = vecs->rhs;//&res_at0[stride_to_fine_data];//mg_data->res;
+      vecs_for_cheby_smooth.local_nodes = mg_data->fine_nodes;
     }
+     
+    linalg_vec_axpy(1.0, &rres_at0[stride_to_fine_data], vecs_for_cheby_smooth.u, mg_data->fine_nodes);
+
+
+
+    /**********************************************************/
+    /**********************************************************/
+    /******************* BEGIN SMOOTH *************************/
+    /**********************************************************/
+    /**********************************************************/
+    
+
+    mg_data->mg_state = UPV_PRE_SMOOTH; multigrid_update_user_data(p4est, level, &vecs_for_cheby_smooth);   
+    
+    multigrid_cheby_smoother
+      (
+       p4est,
+       &vecs_for_cheby_smooth,
+       fcns,
+       *ghost,
+       *ghost_data,
+       &rres_at0[stride_to_fine_data],//mg_data->rres,
+       mg_data,
+       fine_level
+      );
+
+    mg_data->mg_state = UPV_POST_SMOOTH; multigrid_update_user_data(p4est, level, &vecs_for_cheby_smooth);   
+
+
+    /**********************************************************/
+    /**********************************************************/
+    /******************* END SMOOTH ***************************/
+    /**********************************************************/
+    /**********************************************************/
+
+    
   }
-
+      
+  mg_data->vcycle_r2local = linalg_vec_dot(&rres_at0[stride_to_fine_data],
+                                           &rres_at0[stride_to_fine_data],
+                                           mg_data->fine_nodes);
+  
   /**********************************************************/
   /**********************************************************/
   /******************* END GOING UP THE V *******************/

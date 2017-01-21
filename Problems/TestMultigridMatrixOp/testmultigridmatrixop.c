@@ -1,4 +1,7 @@
 
+/* #define TEST_SYM  /\* Test if matrix is symmetric *\/ */
+/* #define NDEBUG /\* TURN DEBUG OFF/ON *\/ */
+
 #define NDEBUG
 #define _GNU_SOURCE
 
@@ -18,6 +21,7 @@
 #include <bi_estimator.h>
 #include <estimator_stats.h>
 #include <bi_estimator_flux_fcns.h>
+#include <multigrid_matrix_operator.h>
 #include <hp_amr.h>
 #include <multigrid.h>
 #include <hacked_p4est_vtk.h>
@@ -425,10 +429,8 @@ problem_init
   element_data_t* ghost_data = P4EST_ALLOC (element_data_t,
                                             ghost->ghosts.elem_count);
 
-  if (!load_from_checkpoint){
-    p4est_reset_data(p4est, sizeof(element_data_t), NULL, NULL);
-    element_data_init(p4est, degree);
-  }
+  p4est_reset_data(p4est, sizeof(element_data_t), NULL, NULL);
+  element_data_init_ext(p4est, degree, 10);
   
   int local_nodes = element_data_get_local_nodes(p4est);
   double* Au = P4EST_ALLOC_ZERO(double, local_nodes);
@@ -661,8 +663,9 @@ problem_init
 
     ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE);
     ghost_data = P4EST_ALLOC(element_data_t, ghost->ghosts.elem_count);
+
     
-    element_data_init(p4est, -1);
+    element_data_init_ext(p4est, -1, 10);
     local_nodes = element_data_get_local_nodes(p4est);
 
     Au = P4EST_REALLOC(Au, double, local_nodes);
@@ -713,7 +716,7 @@ problem_init
       double coarse_rtol = 1e-10;
       int save_vtk_snapshot = 0;
       int perform_checksum = 0;
-      int cg_eigs_use_zero_vec_as_initial = 0;
+      int cg_eigs_use_zero_vec_as_initial = 0;     
       
       multigrid_data_t* mg_data
         = multigrid_data_init
@@ -738,14 +741,38 @@ problem_init
          cg_eigs_use_zero_vec_as_initial
         );
 
-      
-      
+      multigrid_matrix_op_t* matrix_op
+        = multigrid_matrix_operator_init(mg_data,
+                                         p4est,
+                                         dgmath_jit_dbase);
 
+
+      multigrid_matrix_fofu_fofv_mass_operator_setup
+        (
+         p4est,
+         dgmath_jit_dbase,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         matrix_op
+        );
+
+      
       element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);
-      /* util_print_matrix(u_analytic, prob_vecs.local_nodes, 1, " u_analytic = ", 0); */
 
-      /* element_data_print(p4est); */
-
+      
+      /* multigrid_data_set_user_defined_fields */
+      /*   ( */
+      /*    mg_data, */
+      /*    NULL, */
+      /*    multigrid_matrix_operator_restriction_callback, */
+      /*    multigrid_matrix_operator_update_callback, */
+      /*    matrix_op */
+      /*   ); */
+      
       multigrid_data_set_analytical_solution
         (
          mg_data,
@@ -763,10 +790,9 @@ problem_init
         );
 
       
-  
+      multigrid_matrix_operator_destroy(matrix_op);
       multigrid_data_destroy(mg_data);
-
-      
+     
 
     linalg_vec_axpy(-1., u, u_analytic, local_nodes);
     

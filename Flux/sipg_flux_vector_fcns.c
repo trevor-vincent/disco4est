@@ -73,6 +73,10 @@ sipg_flux_vector_dirichlet
 
     /* get gradient on this face */
     dgmath_apply_slicer(dgmath_jit_dbase, du_m, (P4EST_DIM), f_m, e_m->deg, du_m_on_f_m);
+
+    /* if (dir == 0) */
+      /* DEBUG_PRINT_ARR_DBL(du_m_on_f_m, dgmath_get_nodes((P4EST_DIM)-1, e_m->deg)); */
+    
     dgmath_apply_slicer(dgmath_jit_dbase, e_m->q_elem[dir], (P4EST_DIM), f_m, e_m->deg, q_m_on_f_m);
     
     /* calculate qstar - q(-) */

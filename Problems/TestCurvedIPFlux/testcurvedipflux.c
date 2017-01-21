@@ -5,7 +5,7 @@
 #include <curved_element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <curved_Gauss_sipg_flux_scalar_fcns.h>
-#include <curved_Gauss_central_flux_vector_fcns.h>
+#include <curved_Gauss_sipg_flux_vector_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
 #include <problem_weakeqn_ptrs.h>
@@ -246,7 +246,7 @@ void problem_build_rhs
  void* user
 )
 {
-  central_flux_params_t* central_flux_params = user;
+  ip_flux_params_t* ip_flux_params = user;
   double* f = P4EST_ALLOC(double, prob_vecs->local_nodes);
   
   curved_element_data_init_node_vec
@@ -258,10 +258,10 @@ void problem_build_rhs
      d4est_geom->p4est_geom
     );
   
-    prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_central_flux_vector_dirichlet_fetch_fcns
+    prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
                                             (
                                              boundary_fcn,
-                                             central_flux_params
+                                             ip_flux_params
                                             );
     prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns
                                             (boundary_fcn);
@@ -302,10 +302,10 @@ void problem_build_rhs
   P4EST_FREE(u_eq_0);
 
 
-  prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_central_flux_vector_dirichlet_fetch_fcns
+  prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
                                           (
                                            zero_fcn,
-                                           central_flux_params
+                                           ip_flux_params
                                           );
   prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns
                                           (zero_fcn);
@@ -321,7 +321,7 @@ problem_input
  const char* input_file
 )
 {
-  int num_of_options = 14;
+  int num_of_options = 12;
   
   problem_input_t input;
   /* input.degree = -1; */
@@ -475,8 +475,9 @@ problem_init
   /* ip_flux_params.ip_flux_penalty_prefactor = atof(argv[6]); */
   /* ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh; */
   
-  central_flux_params_t central_flux_params;
-  central_flux_params.central_flux_penalty_prefactor = input.ip_flux_penalty;
+  ip_flux_params_t ip_flux_params;
+  ip_flux_params.ip_flux_penalty_prefactor = input.ip_flux_penalty;
+  ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   /* create space for storing the ghost data */
@@ -602,11 +603,20 @@ problem_init
     prob_vecs.local_nodes = local_nodes;
 
 
-    prob_vecs.curved_vector_flux_fcn_data = curved_Gauss_central_flux_vector_dirichlet_fetch_fcns
+    prob_vecs.curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
                                             (
                                              zero_fcn,
-                                             &central_flux_params
+                                             &ip_flux_params
                                             );
+
+    /* prob_vecs.curved_vector_flux_fcn_data = curved_Gauss_central_flux_vector_dirichlet_fetch_fcns */
+    /*                                         ( */
+    /*                                          zero_fcn, */
+    /*                                          &central_flux_params */
+    /*                                         ); */
+
+
+    
     prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns
                                             (zero_fcn);
 
@@ -683,7 +693,7 @@ problem_init
         ghost_data,
         dgmath_jit_dbase,
         &dgeom,
-        &central_flux_params
+        &ip_flux_params
        );
 
 
@@ -775,7 +785,10 @@ problem_init
   /*   printf("(P4EST_DIM) = %d\n",(P4EST_DIM)); */
   /* } */
      
-
+     curved_element_data_print_element_data_debug
+       (
+        p4est
+       );
 
      /* sc_array_t* u_sc = sc_array_new_data((void*)u, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants); */
      /* sc_array_t* u_analytic_sc = sc_array_new_data((void*)u_analytic, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants); */
