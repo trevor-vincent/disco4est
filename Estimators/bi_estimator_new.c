@@ -87,63 +87,7 @@ void* user_data
   double h = element_data->h;
 
   double* eta = &(element_data->local_estimator);
-
-  /* handle ||R||^2 * h^2/p^2 term */
-  *eta *= h*h/(deg*deg);
-
-  double* Je1;
-  double* Je2;
-  double* MJe1 = P4EST_ALLOC(double,face_nodes);
-  double* MJe2 = P4EST_ALLOC(double,face_nodes);
-
-  double Nsqre1 = 0.;
-  double Nsqre2 = 0.;
-
-  int f,d;
-  for (f = 0; f < faces; f++){
-    /* calculate Ne1_sqr term */
-    Je1 =  &(element_data->ustar_min_u[f*face_nodes]);
-    dgmath_apply_Mij(dgmath_jit_dbase, Je1, dim - 1, deg, MJe1);
-    linalg_vec_scale(surface_jacobian, MJe1, face_nodes);
-    Nsqre1 += linalg_vec_dot(Je1, MJe1, face_nodes);
-
-#ifndef NDEBUG
-    if (element_data->id == 1)
-      printf("id, face, Je1MJe1 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je1, MJe1, face_nodes));
-#endif
-    
-    /* calculate Ne2_sqr term */
-    for (d = 0; d < (P4EST_DIM); d++){
-      Je2 = &(element_data->qstar_min_q[d][f*face_nodes]);
-      dgmath_apply_Mij(dgmath_jit_dbase, Je2, dim - 1, deg, MJe2);
-      linalg_vec_scale(surface_jacobian, MJe2, face_nodes);
-      Nsqre2 += linalg_vec_dot(Je2, MJe2, face_nodes);
-
-#ifndef NDEBUG
-      if (element_data->id == 1)
-        printf("id, face, Je2MJe2 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je2, MJe2, face_nodes));
-#endif
-      
-    }
-
-  }
-
-  /* printf("Nsqre1 = %.20f\n", Nsqre1); */
-  /* printf("Nsqre2 = %.20f\n", Nsqre2); */
-
-  /* printf("eta ||R|| term = %.25f\n", *eta); */
-  
-  *eta += Nsqre1;
-  *eta += Nsqre2;
-  
-  /* printf("eta = ||R|| term + Nsqre1 + Nsqre2 = %.25f\n", *eta); */
-  
-  /* take advantage of opportunity to compute max, sum and max error density */
   *bi_estimator_local_eta2 += (*eta);
-  /* printf("eta =%.20f\n", *eta); */
-
-  P4EST_FREE(MJe1);
-  P4EST_FREE(MJe2);
 }
 
 static
@@ -256,6 +200,16 @@ bi_estimator_compute
   p4est_ghost_exchange_data(p4est,ghost,ghost_data);
 
   
+  p4est_iterate(p4est,
+  		NULL,
+  		(void*) &bi_estimator_user_data,
+  		bi_estimator_compute_callback,
+  		NULL,
+  #if (P4EST_DIM)==3
+                 NULL,
+#endif
+		NULL);
+
   
   flux_fcn_ptrs_t bi_estimator_flux_fcn_ptrs = bi_est_dirichlet_fetch_fcns(u_bndry_fcn,
                                                                         u_penalty_fcn,
@@ -277,16 +231,6 @@ bi_estimator_compute
 #endif
 		NULL);
 
-  p4est_iterate(p4est,
-  		NULL,
-  		(void*) &bi_estimator_user_data,
-  		bi_estimator_compute_callback,
-  		NULL,
-  #if (P4EST_DIM)==3
-                 NULL,
-#endif
-		NULL);
-
 
   /* printf("bi_estimator_local_eta2 after = %f\n", bi_estimator_local_eta2); */
   p4est_iterate(p4est,
@@ -300,7 +244,7 @@ bi_estimator_compute
 		NULL);
   
   p4est->user_pointer = tmpptr;
-  element_data_print_local_estimator(p4est);
+  /* element_data_print_local_estimator(p4est); */
   /* estimator_stats_t stats; */
   /* estimator_stats_compute(p4est,&stats); */
   /* return stats; */

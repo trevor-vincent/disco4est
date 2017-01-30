@@ -5,6 +5,9 @@
 #include "../GridFunctions/grid_functions.h"
 #include <d4est_geometry.h>
 
+typedef enum { DO_NOT_STORE_LOCALLY, STORE_LOCALLY } norm_storage_option_t;
+typedef enum { DIAM_APPROX, NO_DIAM_APPROX, DIAM_APPROX_CUBE} diam_compute_option_t;
+
 typedef struct {
 
   /* double* J; */
@@ -166,8 +169,10 @@ curved_element_data_compute_l2_norm_sqr
  p4est_t* p4est,
  double* nodal_vec,
  int local_nodes,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ norm_storage_option_t store_local
 );
+
 
 void
 curved_element_data_print_node_vec
@@ -502,4 +507,26 @@ curved_element_data_compute_xyz
  double* xyz [(P4EST_DIM)]
 );
 
+double
+curved_element_data_compute_diam
+(
+ double* xyz [(P4EST_DIM)],
+ int deg,
+ diam_compute_option_t option
+);
+
+void
+curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
+(
+ curved_element_data_t** e,
+ int num_faces_side,
+ int num_faces_mortar,
+ int* deg_mortar_integ,
+ int face,
+ double* drst_dxyz_on_mortar_Gauss [(P4EST_DIM)][(P4EST_DIM)],
+ double* sj_on_mortar_Gauss,
+ double* n_on_mortar_Gauss [(P4EST_DIM)],
+ p4est_geometry_t* p4est_geom,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+);
 #endif

@@ -430,7 +430,16 @@ serial_matrix_sym_tester
   }
 
   linalg_mat_transpose(a_mat, a_mat_trans, local_nodes);
-  
+
+
+  /* printf("sym_eps = %.25f\n", sym_eps); */
+  /* for (int i = 0; i < local_nodes*local_nodes; i++){ */
+    /* if (fabs(a_mat[i] - a_mat_trans[i]) > sym_eps){ */
+    /*   printf("a_mat[%d] = %.25f\n", i, a_mat[i]); */
+    /*   printf("a_mat_trans[%d] = %.25f\n", i, a_mat_trans[i]); */
+    /*   printf("fabs(a_mat[i] - a_mat_trans[i]) = %.25f\n", fabs(a_mat[i] - a_mat_trans[i])); */
+    /* } */
+  /* } */
   int compare = util_compare_vecs(a_mat, a_mat_trans, local_nodes*local_nodes, sym_eps);
 
   double biggest_err = -1.;

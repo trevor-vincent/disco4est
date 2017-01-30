@@ -47,18 +47,7 @@ curved_Gauss_sipg_flux_vector_dirichlet
   double* dudr_m_on_f_m_Gauss [(P4EST_DIM)];
   double* dudx_m_on_f_m_Gauss [(P4EST_DIM)];
   
-  /* double* xyz_on_f_m [(P4EST_DIM)]; */
   double* xyz_on_f_m_Gauss [(P4EST_DIM)];
-  
-  for (int i = 0; i < (P4EST_DIM); i++) {
-    q_m_on_f_m[i] = P4EST_ALLOC(double, face_nodes_m_Lobatto);
-    dudr_m_on_f_m[i] = P4EST_ALLOC(double, face_nodes_m_Lobatto);
-    dudr_m_on_f_m_Gauss[i] = P4EST_ALLOC(double, face_nodes_m_Gauss);
-    dudx_m_on_f_m_Gauss[i] = P4EST_ALLOC(double, face_nodes_m_Gauss);
-    q_m_on_f_m_Gauss[i] = P4EST_ALLOC(double, face_nodes_m_Gauss);
-    xyz_on_f_m_Gauss[i] = P4EST_ALLOC(double, face_nodes_m_Gauss);
-  }
-
   double* M_qstar_min_q_n = P4EST_ALLOC_ZERO(double, face_nodes_m_Lobatto);
   double* u_on_f_m_min_u_at_bndry_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
   double* sj_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
@@ -66,11 +55,19 @@ curved_Gauss_sipg_flux_vector_dirichlet
   double* n_on_f_m_Gauss [(P4EST_DIM)];
   double* sj_n_on_f_m_Gauss [(P4EST_DIM)];
 
-  for (int d = 0; d < (P4EST_DIM); d++){
+  for (int d = 0; d < (P4EST_DIM); d++) {
+    q_m_on_f_m[d] = P4EST_ALLOC(double, face_nodes_m_Lobatto);
+    dudr_m_on_f_m[d] = P4EST_ALLOC(double, face_nodes_m_Lobatto);
+    dudr_m_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
+    dudx_m_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
+    q_m_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
+    xyz_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     n_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     sj_n_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     qstar_min_q_Gauss[d] = P4EST_ALLOC_ZERO(double, face_nodes_m_Gauss);
   }
+
+  
 
   for (int d = 0; d < (P4EST_DIM); d++){
 
@@ -199,6 +196,8 @@ curved_Gauss_sipg_flux_vector_dirichlet
     
     for (int i = 0; i < face_nodes_m_Lobatto; i++){
       e_m->M_qstar_min_q_dot_n[f_m*face_nodes_m_Lobatto + i] += M_qstar_min_q_n[i];
+
+      /* printf("e_m->M_qstar_min_q_dot_n[f_m*face_nodes_m_Lobatto + i] = %.25f\n",e_m->M_qstar_min_q_dot_n[f_m*face_nodes_m_Lobatto + i]); */
     }
   }
 
@@ -556,7 +555,7 @@ curved_Gauss_sipg_flux_vector_interface
   curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes
     (
      dudr_p_on_f_p_mortar_Gauss, /* should be of mortar length, but not individually rotated */
-     e_p,
+     e_p_oriented,
      faces_p,
      faces_mortar,
      deg_mortar_Gauss,
@@ -566,8 +565,8 @@ curved_Gauss_sipg_flux_vector_interface
      dgmath_jit_dbase
     );
 
-  /* DEBUG_PRINT_3ARR_DBL(dudr_p_on_f_p_mortar_Gauss[0],dudr_p_on_f_p_mortar_Gauss[1],dudr_p_on_f_p_mortar_Gauss[2], total_nodes_mortar_Gauss); */
-/* DEBUG_PRINT_3ARR_DBL(dudx_p_on_f_p_mortar_Gauss[0],dudx_p_on_f_p_mortar_Gauss[1],dudx_p_on_f_p_mortar_Gauss[2], total_nodes_mortar_Gauss);   */
+ /*  DEBUG_PRINT_3ARR_DBL(dudr_p_on_f_p_mortar_Gauss[0],dudr_p_on_f_p_mortar_Gauss[1],dudr_p_on_f_p_mortar_Gauss[2], total_nodes_mortar_Gauss); */
+/* DEBUG_PRINT_3ARR_DBL(dudx_p_on_f_p_mortar_Gauss[0],dudx_p_on_f_p_mortar_Gauss[1],dudx_p_on_f_p_mortar_Gauss[2], total_nodes_mortar_Gauss); */
 
   curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes
     (
@@ -583,8 +582,8 @@ curved_Gauss_sipg_flux_vector_interface
     );
 
 
-  /* DEBUG_PRINT_3ARR_DBL(dudr_m_on_f_m_mortar_Gauss[0],dudr_m_on_f_m_mortar_Gauss[1],dudr_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss); */
-/* DEBUG_PRINT_3ARR_DBL(dudx_m_on_f_m_mortar_Gauss[0],dudx_m_on_f_m_mortar_Gauss[1],dudx_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss);   */
+/*   DEBUG_PRINT_3ARR_DBL(dudr_m_on_f_m_mortar_Gauss[0],dudr_m_on_f_m_mortar_Gauss[1],dudr_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss); */
+/* DEBUG_PRINT_3ARR_DBL(dudx_m_on_f_m_mortar_Gauss[0],dudx_m_on_f_m_mortar_Gauss[1],dudx_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss); */
 
   
   
@@ -642,6 +641,7 @@ curved_Gauss_sipg_flux_vector_interface
           qstar_min_q_mortar_Gauss[d][ks] -= sigma*n_on_f_m_mortar_Gauss[d][ks]*u_m_on_f_m_mortar_Gauss[ks];
           qstar_min_q_mortar_Gauss[d][ks] -= q_m_on_f_m_mortar_Gauss[d][ks];
           sj_n_on_f_m_mortar_Gauss[d][ks] = sj_on_f_m_mortar_Gauss[ks]*n_on_f_m_mortar_Gauss[d][ks];
+          /* printf("dudx_m, dudx_p, n, q, sj = %.25f, %.25f, %.25f, %.25f, %.25f\n", dudx_m_on_f_m_mortar_Gauss[d][ks], dudx_p_on_f_p_mortar_Gauss_reoriented[d][ks], n_on_f_m_mortar_Gauss[d][ks], q_m_on_f_m_mortar_Gauss[d][ks], sj_on_f_m_mortar_Gauss[ks]); */
         }        
       }
   

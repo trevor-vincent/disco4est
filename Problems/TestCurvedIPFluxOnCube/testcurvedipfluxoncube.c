@@ -12,11 +12,14 @@
 #include <central_flux_params.h>
 #include <curved_poisson_operator.h>
 #include <krylov_petsc.h>
+#include <estimator_stats.h>
 #include <matrix_sym_tester.h>
 #include <dg_norm.h>
 #include <d4est_geometry.h>
 #include <d4est_geometry_sphere.h>
 #include <curved_poisson_debug_vecs.h>
+#include <bi_estimator_flux_fcns.h>
+#include <curved_bi_estimator.h>
 #include <d4est_vtk.h>
 #include <ini.h>
 #include <cg.h>
@@ -174,7 +177,7 @@ void problem_build_rhs
      d4est_geom->p4est_geom
     );
 
-  DEBUG_PRINT_ARR_DBL(f, prob_vecs->local_nodes);
+  /* DEBUG_PRINT_ARR_DBL(f, prob_vecs->local_nodes); */
   
   prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
                                            (
@@ -280,6 +283,38 @@ problem_build_geom
   return geom;  
 }
 
+static
+void build_residual
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ curved_element_data_t* ghost_data,
+ problem_data_t* prob_vecs,
+ dgmath_jit_dbase_t* dgbase,
+ d4est_geometry_t* geom
+)
+{
+
+  prob_vecs->curved_scalar_flux_fcn_data.bndry_fcn = zero_fcn;
+  prob_vecs->curved_vector_flux_fcn_data.bndry_fcn = zero_fcn;
+  
+  /* return -Au */
+  curved_Gauss_poisson_apply_aij(
+                           p4est,
+                           ghost,
+                           ghost_data,
+                           prob_vecs,
+                           dgbase,
+                           geom
+  );
+  
+  /* return f */
+  linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
+
+  prob_vecs->curved_scalar_flux_fcn_data.bndry_fcn = boundary_fcn;
+  prob_vecs->curved_vector_flux_fcn_data.bndry_fcn = boundary_fcn;
+}
+
 p4est_t*
 problem_build_p4est
 (
@@ -333,6 +368,7 @@ problem_set_degrees
 {
   problem_input_t* input = user_ctx;
   elem_data->deg = rand()%5 + 1;
+  /* elem_data->deg = 4; */
   elem_data->deg_integ = elem_data->deg;
 }
 
@@ -456,6 +492,7 @@ problem_init
   
   curved_weakeqn_ptrs_t prob_fcns;
   prob_fcns.apply_lhs = curved_Gauss_poisson_apply_aij;
+  prob_fcns.build_residual = build_residual;
 
      
   geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
@@ -603,8 +640,6 @@ problem_init
   /*    analytic_fcn, */
   /*    dgmath_jit_dbase */
   /*   ); */
-
-
     
   /* p4est_vtk_write_file */
   /*   (p4est, */
@@ -634,13 +669,43 @@ problem_init
   
   prob_fcns.apply_lhs(p4est, ghost, ghost_data, &prob_vecs, dgmath_jit_dbase, &dgeom);
 
-  DEBUG_PRINT_2ARR_DBL(prob_vecs.Au, prob_vecs.rhs, prob_vecs.local_nodes);
+  /* DEBUG_PRINT_2ARR_DBL(prob_vecs.Au, prob_vecs.rhs, prob_vecs.local_nodes); */
 
   printf(
          "linalg_vec_sum Au, rhs = %.15f, %.15f\n",
          linalg_vec_sum(prob_vecs.Au, prob_vecs.local_nodes),
          linalg_vec_sum(prob_vecs.rhs, prob_vecs.local_nodes)
         );
+
+
+
+  penalty_calc_t bi_u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
+  penalty_calc_t bi_u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
+  penalty_calc_t bi_gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh;
+  
+  curved_bi_estimator_compute
+    (
+     p4est,
+     &prob_vecs,
+     &prob_fcns,
+     bi_u_penalty_fcn,
+     bi_u_dirichlet_penalty_fcn,
+     bi_gradu_penalty_fcn,
+     boundary_fcn,
+     ip_flux_params.ip_flux_penalty_prefactor,
+     ghost,
+     ghost_data,
+     dgmath_jit_dbase,
+     &dgeom
+    );
+
+  estimator_stats_t stats;
+  estimator_stats_compute(p4est, &stats, 1);
+
+  if(world_rank == 0)
+    estimator_stats_print(&stats, 0);
+
+
   
   /* DEBUG_PRINT_ARR_DBL(prob_vecs.rhs, prob_vecs.local_nodes); */
   /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.rhs, prob_vecs.local_nodes); */
@@ -813,7 +878,8 @@ problem_init
                                p4est,
                                u_analytic,
                                local_nodes,
-                               dgmath_jit_dbase
+                               dgmath_jit_dbase,
+                               DO_NOT_STORE_LOCALLY
                               );
 
   double local_nodes_dbl = (double)local_nodes;

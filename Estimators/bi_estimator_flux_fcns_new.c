@@ -68,15 +68,29 @@ bi_est_dirichlet
   double n [3];
   dgmath_get_normal(f_m, (P4EST_DIM), &n[0]);
 
+  double* Je2 = P4EST_ALLOC(double, face_nodes_m);
+  double* MJe2 = P4EST_ALLOC(double, face_nodes_m);
+
+  
   for (dir = 0; dir < (P4EST_DIM); dir++){
     /* calculate qstar - q(-) */
     for(i = 0; i < face_nodes_m; i++){
-      e_m->ustar_min_u[f_m*face_nodes_m + i] = 0.;
+      /* e_m->ustar_min_u[f_m*face_nodes_m + i] = 0.; */
+
+      
       /* printf("tmp[%d] = %f", tmp[i]); */
       /* the ||mu \del u|| term does not contribute at the boundary to eta2*/
-      e_m->qstar_min_q[dir][f_m*face_nodes_m + i] = n[dir]*(u_m_on_f_m[i] - tmp[i]);//
-      e_m->qstar_min_q[dir][f_m*face_nodes_m + i] *= prefactor;
+      /* e_m->qstar_min_q[dir][f_m*face_nodes_m + i] = n[dir]*(u_m_on_f_m[i] - tmp[i]);// */
+      Je2[i] = n[dir]*(u_m_on_f_m[i] - tmp[i]);//
+      /* e_m->qstar_min_q[dir][f_m*face_nodes_m + i] *= prefactor; */
+      Je2[i] *= prefactor;
     }
+
+
+    dgmath_apply_Mij(dgmath_jit_dbase, Je2, (P4EST_DIM)-1, e_m->deg, MJe2);
+    double Je2MJe2 = linalg_vec_dot(Je2, MJe2, face_nodes_m);
+    Je2MJe2 *= e_m->surface_jacobian;
+    e_m->local_estimator += Je2MJe2;
   }
 
   for (dir = 0; dir < (P4EST_DIM); dir++){
@@ -84,6 +98,8 @@ bi_est_dirichlet
   }
 
   P4EST_FREE(u_m_on_f_m);
+  P4EST_FREE(Je2);
+  P4EST_FREE(MJe2);
   P4EST_FREE(tmp);
 }
 
@@ -181,10 +197,15 @@ bi_est_interface
   double* u_p_on_f_p = P4EST_ALLOC(double, total_side_nodes_p);
   /* projections of f_m slices to max_deg space */
   double* u_m_on_f_m_mortar = P4EST_ALLOC(double, total_nodes_mortar);
-  double* du_m_on_f_m_mortar= P4EST_ALLOC(double, total_nodes_mortar); 
-  double* du_p_on_f_p_mortar= P4EST_ALLOC(double, total_nodes_mortar);
   double* u_p_on_f_p_mortar= P4EST_ALLOC(double, total_nodes_mortar);
 
+  double* du_m_on_f_m_mortar [(P4EST_DIM)];
+  double* du_p_on_f_p_mortar [(P4EST_DIM)];
+  for (int d = 0; d < (P4EST_DIM); d++){
+    du_m_on_f_m_mortar[d] = P4EST_ALLOC(double, total_nodes_mortar);
+    du_p_on_f_p_mortar[d] = P4EST_ALLOC(double, total_nodes_mortar);
+  }
+  
   double* qstar_min_q_mortar = P4EST_ALLOC(double, total_nodes_mortar);
 
   /* NOTE THE SUBTLE ALLOC_ZERO here, we want to zero out ustar_min_u_mortar because it's a dot product */
@@ -302,7 +323,7 @@ bi_est_interface
        du_m_on_f_m,
        faces_m,
        deg_m,
-       du_m_on_f_m_mortar,
+       du_m_on_f_m_mortar[d],
        faces_mortar,
        deg_mortar
       );
@@ -313,13 +334,14 @@ bi_est_interface
        du_p_on_f_p,
        faces_p,
        deg_p,
-       du_p_on_f_p_mortar,
+       du_p_on_f_p_mortar[d],
        faces_mortar,
        deg_mortar
       );
 
+  }
 
-    printf("e_m[0]->id = %d, e_p[0]->id = %d, f_m = %d, f_p = %d \n", e_m[0]->id, e_p[0]->id, f_m, f_p);
+    /* printf("e_m[0]->id = %d, e_p[0]->id = %d, f_m = %d, f_p = %d \n", e_m[0]->id, e_p[0]->id, f_m, f_p); */
    /* DEBUG_PRINT_ARR_DBL */
    /*    ( */
    /*     u_m_on_f_m, */
@@ -348,8 +370,11 @@ bi_est_interface
    /*    ); */
     
 
-
-    
+  double* Je1 = P4EST_ALLOC(double, total_nodes_mortar);
+  double* MJe1 = P4EST_ALLOC(double, total_nodes_mortar);
+  double* Je2 = P4EST_ALLOC(double, total_nodes_mortar);
+  double* MJe2 = P4EST_ALLOC(double, total_nodes_mortar);
+ 
     /* calculate symmetric interior penalty flux */
     int k;
     int f;
@@ -357,78 +382,95 @@ bi_est_interface
     for (f = 0; f < faces_mortar; f++){
       for (k = 0; k < nodes_mortar[f]; k++){
         int ks = k + stride;
-        qstar_min_q_mortar[ks] = n[dir]*u_m_on_f_m_mortar[ks];
-        qstar_min_q_mortar[ks] -= n[dir]*u_p_on_f_p_mortar[ks];
-        qstar_min_q_mortar[ks] *= u_prefactor_mortar[f];
-        ustar_min_u_mortar[ks] += gradu_prefactor_mortar[f]*n[dir]*(du_m_on_f_m_mortar[ks] - du_p_on_f_p_mortar[ks]);
-
+        Je1[ks] = 0.;
+        for (int d = 0; d < (P4EST_DIM); d++){
+        
+          Je2[d][ks] = n[d]*u_m_on_f_m_mortar[ks];
+          Je2[d][ks] -= n[d]*u_p_on_f_p_mortar[ks];
+          Je2[d][ks] *= u_prefactor_mortar[f];
+        
+          Je1[ks] += gradu_prefactor_mortar[f]
+                     *n[dir]*(du_m_on_f_m_mortar[d][ks] - du_p_on_f_p_mortar[d][ks]);
+        }
         /* printf("ustar_min_u_mortar[%d]\n", ks, ustar_min_u_mortar[ks]); */
         /* printf("qstar_min_q_mortar[%d]\n", ks, qstar_min_q_mortar[ks]); */
       }
       stride += nodes_mortar[f];
     }
 
-    printf("e_m[0]->surface_jacobian = %.25f\n", e_m[0]->surface_jacobian);
-    DEBUG_PRINT_ARR_DBL(ustar_min_u_mortar, total_nodes_mortar);
-    
-    /* project mortar data back onto the (-) side */
-    dgmath_project_mortar_onto_side
-      (
-       dgmath_jit_dbase,
-       qstar_min_q_mortar,
-       faces_mortar,
-       deg_mortar,
-       qstar_min_q_m,
-       faces_m,
-       deg_m
-      );
+    double sj_m = e_m[0]->surface_jacobian;
+    double sj_p = e_p[0]->surface_jacobian;
+    double sj_mortar = (sj_m < sj_p) ? sj_m : sj_p;
 
-    dgmath_project_mortar_onto_side
-      (
-       dgmath_jit_dbase,
-       ustar_min_u_mortar,
-       faces_mortar,
-       deg_mortar,
-       ustar_min_u_m,
-       faces_m,
-       deg_m
-      );  
-
-    /* copy result back to element */
+       
     stride = 0;
-    for (i = 0; i < faces_m; i++){
-      if(e_m_is_ghost[i] == 0){
-        linalg_copy_1st_to_2nd
-          (
-           &qstar_min_q_m[stride],
-           &(e_m[i]->qstar_min_q[dir][f_m*face_nodes_m[i]]),
-           face_nodes_m[i]
-          );
-        linalg_copy_1st_to_2nd
-          (
-           &ustar_min_u_m[stride],
-           &(e_m[i]->ustar_min_u[f_m*face_nodes_m[i]]),
-           face_nodes_m[i]
-          );
-      }
-      stride += face_nodes_m[i];                     
-    }
-  }
+    for (f = 0; f < faces_mortar; f++){
+      for (int d = 0; d < (P4EST_DIM); d++){
 
-  P4EST_FREE(u_p_on_f_p_mortar);
-  P4EST_FREE(du_p_on_f_p_mortar);
-  P4EST_FREE(du_m_on_f_m_mortar);
-  P4EST_FREE(u_m_on_f_m_mortar);
-  P4EST_FREE(u_p_on_f_p);
-  P4EST_FREE(du_p_on_f_p);
-  P4EST_FREE(du_m_on_f_m);
-  P4EST_FREE(u_m_on_f_m);
-  P4EST_FREE(du_p);
-  P4EST_FREE(du_m);
-  P4EST_FREE(qstar_min_q_m);
-  P4EST_FREE(ustar_min_u_m);
-  P4EST_FREE(qstar_min_q_mortar);
-  P4EST_FREE(ustar_min_u_mortar);
+         dgmath_apply_Mij(dgmath_jit_dbase,
+                         &Je2[d][stride],
+                         (P4EST_DIM)-1,
+                         deg_mortar[f],
+                         &MJe2[stride]);
+        
+        double Je2MJe2 = sj_mortar*linalg_vec_dot(&Je2[d][stride], &MJe2[stride], nodes_mortar[f]);
+
+        if(faces_m == (P4EST_HALF)){
+          e_m[f]->local_estimator += Je2MJe2;
+        }
+        else{
+          e_m[0]->local_estimator += Je2MJe2;
+        }
+      }
+      stride += nodes_mortar[f];
+    }
+
+
+    stride = 0;
+    for (f = 0; f < faces_mortar; f++){  
+
+      dgmath_apply_Mij(dgmath_jit_dbase,
+                       &Je1[stride],
+                       (P4EST_DIM)-1,
+                       deg_mortar[f],
+                       &MJe1[stride]);
+        
+      double Je1MJe1 = sj_mortar*linalg_vec_dot(&Je1[stride],
+                                                &MJe1[stride],
+                                                nodes_mortar[f]);
+
+
+
+      if(faces_m == (P4EST_HALF)){
+        e_m[f]->local_estimator += Je1MJe1;
+      }
+      else{
+        e_m[0]->local_estimator += Je1MJe1;
+      }
+      stride += nodes_mortar_Gauss[f];
+    }
+
+    for (int d = 0; d < (P4EST_DIM); d++){
+      P4EST_FREE(du_m_on_f_m_mortar[d]);
+      P4EST_FREE(du_p_on_f_p_mortar[d]);
+    }   
+    
+    P4EST_FREE(MJe2);
+    P4EST_FREE(Je2);
+    P4EST_FREE(MJe1);
+    P4EST_FREE(Je1);
+    P4EST_FREE(u_p_on_f_p_mortar);
+    P4EST_FREE(u_m_on_f_m_mortar);
+    P4EST_FREE(u_p_on_f_p);
+    P4EST_FREE(du_p_on_f_p);
+    P4EST_FREE(du_m_on_f_m);
+    P4EST_FREE(u_m_on_f_m);
+    P4EST_FREE(du_p);
+    P4EST_FREE(du_m);
+    P4EST_FREE(qstar_min_q_m);
+    P4EST_FREE(ustar_min_u_m);
+    P4EST_FREE(qstar_min_q_mortar);
+    P4EST_FREE(ustar_min_u_mortar);
 }
 
 flux_fcn_ptrs_t

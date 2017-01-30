@@ -317,5 +317,13 @@ void element_data_init_ext
  int set_deg_integ
 );
 
+int
+element_data_init_new
+(
+ p4est_t* p4est,
+ void(*user_fcn)(element_data_t*,void*),
+ /* element_data_user_fcn_t user_fcn, */
+ void* user_ctx
+);
 
 #endif

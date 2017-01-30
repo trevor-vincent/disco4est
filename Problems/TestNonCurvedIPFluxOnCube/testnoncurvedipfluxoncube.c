@@ -16,6 +16,8 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_sphere.h>
 #include <curved_poisson_debug_vecs.h>
+#include <bi_estimator.h>
+#include <bi_estimator_flux_fcns.h>
 #include <d4est_vtk.h>
 #include <ini.h>
 #include <cg.h>
@@ -147,6 +149,28 @@ int problem_input_handler
   return 1;
 }
 
+
+static
+void
+build_residual
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ element_data_t* ghost_data,
+ problem_data_t* prob_vecs,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+)
+{
+  prob_vecs->scalar_flux_fcn_data.bndry_fcn = zero_fcn;
+  prob_vecs->vector_flux_fcn_data.bndry_fcn = zero_fcn;
+  
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+  linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
+
+  prob_vecs->scalar_flux_fcn_data.bndry_fcn = boundary_fcn;
+  prob_vecs->vector_flux_fcn_data.bndry_fcn = boundary_fcn;
+}
+
 static
 void problem_build_rhs
 (
@@ -170,7 +194,7 @@ void problem_build_rhs
      dgbase
     );
 
-  DEBUG_PRINT_ARR_DBL(f, prob_vecs->local_nodes);
+  /* DEBUG_PRINT_ARR_DBL(f, prob_vecs->local_nodes); */
   
   prob_vecs->vector_flux_fcn_data = sipg_flux_vector_dirichlet_fetch_fcns
                                            (
@@ -314,15 +338,10 @@ problem_set_degrees
 )
 {
   problem_input_t* input = user_ctx;
-  /* if (elem_data->tree < 6){ */
-  elem_data->deg = input->deg;
-  elem_data->deg_integ = input->deg_Gauss;
-  /* } */
-  /* else { */
-    /* mpi_abort("There's only one tree so this shouldn't happen"); */
-  /* }  */
+  elem_data->deg = rand()%5 + 1;
+  /* elem_data->deg = 4; */
+  elem_data->deg_integ = elem_data->deg;
 }
-
 
 
 void
@@ -439,11 +458,14 @@ problem_init
 
       
   }
-
+  element_data_init_new(p4est,
+                        problem_set_degrees,
+                        NULL);
   
   
   weakeqn_ptrs_t prob_fcns;
   prob_fcns.apply_lhs = poisson_apply_aij;
+  prob_fcns.build_residual = build_residual;
 
      
   /* geometric_factors_t* geometric_factors = geometric_factors_init(p4est); */
@@ -454,9 +476,9 @@ problem_init
   /* dgeom.interp_to_Gauss = 1; */
   /* dgeom.dxdr_method = INTERP_X_ON_LOBATTO;     */
   /* element_data_init(p4est, geometric_factors, dgmath_jit_dbase, &dgeom, degree, input.gauss_integ_deg); */
-  element_data_init_ext(p4est,
-                        input.deg,
-                        input.deg_Gauss);
+  /* element_data_init_ext(p4est, */
+                        /* input.deg, */
+                        /* input.deg_Gauss); */
 
 
 
@@ -609,6 +631,8 @@ problem_init
     );
 
 
+  
+  
   for (int i = 0; i < local_nodes; i++){
     u[i] = util_uniform_rand(14234232, 0., 1.);
   }
@@ -617,13 +641,41 @@ problem_init
 
   prob_fcns.apply_lhs(p4est, ghost, ghost_data, &prob_vecs, dgmath_jit_dbase);
 
-  DEBUG_PRINT_2ARR_DBL(prob_vecs.Au, prob_vecs.rhs, prob_vecs.local_nodes);
+  /* DEBUG_PRINT_2ARR_DBL(prob_vecs.Au, prob_vecs.rhs, prob_vecs.local_nodes); */
   
   printf(
          "linalg_vec_sum Au, rhs = %.15f, %.15f\n",
          linalg_vec_sum(prob_vecs.Au, prob_vecs.local_nodes),
          linalg_vec_sum(prob_vecs.rhs, prob_vecs.local_nodes)
         );
+
+
+
+ penalty_calc_t bi_u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
+  penalty_calc_t bi_u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
+  penalty_calc_t bi_gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh;
+  
+  bi_estimator_compute
+    (
+     p4est,
+     &prob_vecs,
+     &prob_fcns,
+     bi_u_penalty_fcn,
+     bi_u_dirichlet_penalty_fcn,
+     bi_gradu_penalty_fcn,
+     boundary_fcn,
+     ip_flux_params.ip_flux_penalty_prefactor,
+     ghost,
+     ghost_data,
+     dgmath_jit_dbase
+    );
+
+
+  estimator_stats_t stats;
+  estimator_stats_compute(p4est, &stats,0);
+
+  if(world_rank == 0)
+    estimator_stats_print(&stats, 0); 
   
   
   /* DEBUG_PRINT_ARR_DBL(prob_vecs.rhs, prob_vecs.local_nodes); */

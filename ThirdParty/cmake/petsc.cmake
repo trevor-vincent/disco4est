@@ -75,6 +75,19 @@ macro(petsc_build)
       )    
     #--with-openblas=1 --with-openblas-dir=${OPENBLAS_ROOT} --with-openblas-include=${OPENBLAS_INCLUDE_DIR} --with-openblas-lib=${OPENBLAS_LIBRARIES}
   endif()
+  
+  # if(UBUNTU)
+  #   message("*****USING OPENBLAS*****")
+  #   set(blas_config_args
+  #     "--with-blas-lib=${BLAS_LIBRARIES}"
+  #     )
+  #   set(lapack_config_args
+  #     "--with-lapack-lib=${LAPACK_LIBRARIES}"
+  #     )    
+  #   #--with-openblas=1 --with-openblas-dir=${OPENBLAS_ROOT} --with-openblas-include=${OPENBLAS_INCLUDE_DIR} --with-openblas-lib=${OPENBLAS_LIBRARIES}
+  # endif()
+
+  
   if(DOWNLOAD_BLAS)
     set(blas_config_args "--download-openblas=yes --download-openblas-make-options=USE_THREAD=0")
   endif()
@@ -108,7 +121,6 @@ macro(petsc_build)
 add_dependencies(build_bundled_libs petsc)
 
 endmacro()
-
 if (ENABLE_BUNDLED_PETSC)
   petsc_build()
 endif()

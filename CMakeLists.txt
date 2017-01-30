@@ -11,6 +11,19 @@ set(CMAKE_MODULE_PATH
 )
 
 
+if(UBUNTU)
+  # set(LAPACK_LIBRARIES "/home/tvincent/Dropbox/Research/Codes/lapack-3.7.0/build/lib/liblapack.a")
+  # set(BLAS_LIBRARIES "/home/tvincent/Dropbox/Research/Codes/lapack-3.7.0/build/lib/libblas.a")
+  set(USE_OPENBLAS ON)
+  set(OPENBLAS_DIR "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/")
+  set(OPENBLAS_ROOT "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/")
+  set(OPENBLAS_LIBRARIES
+    "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/libopenblas.a"
+    )
+  set(OPENBLAS_INCLUDE_DIR "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/lapack-netlib/LAPACKE/include/")  
+  
+endif()
+
 if(SCINET)
   set(USE_OPENBLAS ON)
   set(OPENBLAS_DIR "/scinet/gpc/Libraries/OpenBLAS/singlethreaded/")
@@ -23,11 +36,11 @@ endif()
 
 if(USE_OPENBLAS)
   include_directories(${OPENBLAS_INCLUDE_DIR})
-else()
-  find_package(BLAS REQUIRED)
-  find_package(LAPACK REQUIRED)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
+# else()
+  # find_package(BLAS REQUIRED)
+  # find_package(LAPACK REQUIRED)
+  # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
+  # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
 endif()
 
 # find_package(BLAS)
@@ -89,6 +102,8 @@ SET (
   GridFunctions/grid_functions.c
   LinearAlgebra/linalg.c
   Estimators/bi_estimator.c
+  Estimators/curved_bi_estimator.c
+  Estimators/curved_bi_estimator_flux_fcns.c
   Estimators/bi_estimator_flux_fcns.c
   Geometry/d4est_geometry_compact_sphere.c
   Geometry/d4est_geometry_sphere.c
@@ -114,6 +129,7 @@ SET (
   Flux/curved_Gauss_central_flux_vector_fcns.c
   Flux/curved_Gauss_sipg_flux_scalar_fcns.c
   Flux/curved_Gauss_sipg_flux_vector_fcns.c
+  Flux/curved_test_mortarjacobianterms_flux_fcns.c
   Flux/dg_norm.c
   Flux/sipg_flux_scalar_fcns.c
   Flux/sipg_flux_vector_fcns.c
@@ -150,20 +166,19 @@ subdirs(ThirdParty)
 
 SET (
   LIBS
-  gfortran
   # ${Threads_LIBRARIES}
   # ${ZLIB_LIBRARIES}
   ${MPI_C_LIBRARIES}
   ${PETSC_LIBRARIES}
   ${P4EST_LIBRARIES}
-  ${MATH_LIB}
+  m
+  dl
   # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libopenblas.a
   ${CMAKE_BINARY_DIR}/ThirdParty/zlib/install/lib/libz.a
   # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libfblas.a
-  # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libflapack.a
+  # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libflapack.a 
   # ${LAPACK_LIBRARIES}
   # ${BLAS_LIBRARIES}
-
   # ${X11_LIBRARIES}
   # ${SSL_LIBRARIES}
   # X11
@@ -176,6 +191,8 @@ if(USE_OPENBLAS)
     LIBS
     ${LIBS}
     ${OPENBLAS_LIBRARIES}
+    pthread
+    gfortran
   )
 endif()
 
@@ -185,16 +202,19 @@ if(NOT USE_OPENBLAS AND NOT DOWNLOAD_BLAS)
     ${LIBS}
     ${BLAS_LIBRARIES}
     ${LAPACK_LIBRARIES}
+    pthread
+    gfortran
   )
 endif()
 
+message("LIBS=${LIBS}")
 
 # -llapack -lblas -lX11 -lssl -lcrypto -lm -L/usr/lib/openmpi/lib -L/usr/lib/gcc/x86_64-linux-gnu/5 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -lmpi_f90 -lmpi_f77 -lgfortran -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.9 -lgfortran -lm -lquadmath -lm -lmpi_cxx -lstdc++ -L/usr/lib/openmpi/lib -L/usr/lib/gcc/x86_64-linux-gnu/5 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu -ldl -lmpi -lhwloc -lgcc_s -lpthread -ldl 
 
 
 
 
-find_library(MATH_LIB m)
+# find_library(MATH_LIB m)
 
 target_link_libraries(d4est ${LIBS})
 # set_target_properties(d4est PROPERTIES COMPILE_DEFINITIONS "DIM=2")
@@ -274,13 +294,14 @@ endfunction()
 # add_d4est_problem_3d(testcompile1 testcompile.c TestCompile)
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
-add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
-add_d4est_problem_2d(testmultigridmatrixop_driver testmultigridmatrixop.c TestMultigridMatrixOp)
-add_d4est_problem_3d(testcurvedipflux_driver testcurvedipflux.c TestCurvedIPFlux)
-add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
-add_d4est_problem_3d(testnoncurvedipfluxoncube_driver testnoncurvedipfluxoncube.c TestNonCurvedIPFluxOnCube)
+# add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
+# add_d4est_problem_2d(testmultigridmatrixop_driver testmultigridmatrixop.c TestMultigridMatrixOp)
+# add_d4est_problem_3d(testcurvedipflux_driver testcurvedipflux.c TestCurvedIPFlux)
+add_d4est_problem_3d(testmortarjacobianterms_driver testmortarjacobianterms.c TestMortarJacobianTerms)
+# add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
+# add_d4est_problem_3d(testnoncurvedipfluxoncube_driver testnoncurvedipfluxoncube.c TestNonCurvedIPFluxOnCube)
 # add_d4est_problem_3d(twopuncturescube_driver twopuncturescube.c TwoPuncturesCube)
-add_d4est_curved_problem_3d(testcompactification_driver testcompactification.c TestCompactification)
+# add_d4est_curved_problem_3d(testcompactification_driver testcompactification.c TestCompactification)
 # add_d4est_problem_3d(testcompactification_driver testcompactification.c TestCompactification)
 
 # add_executable(testcompile1 driver.c ./Problems/TestCompile/testcompile.c)

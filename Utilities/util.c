@@ -133,6 +133,7 @@ util_compare_vecs(double* a, double*b, int N, double eps){
   int i;
   for (i = 0; i < N; i++) {
     if(!util_compare_double(a[i],b[i],eps)){
+      /* printf("a[%d],b[%d],eps = %.25f,%.25f,%.25f\n", i,i, a[i], b[i], eps); */
       return 0;
     }
   }

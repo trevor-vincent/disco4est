@@ -757,13 +757,13 @@ curved_element_data_compute_diam
 (
  double* xyz [(P4EST_DIM)],
  int deg,
- int approx_diam
+ diam_compute_option_t option
 )
 {
   double diam = 0.;
     
   /* Use an approximate method to calculate diam: iterate through corners of element*/
-  if (approx_diam){
+  if (option == DIAM_APPROX || option == DIAM_APPROX_CUBE){
     for (int i = 0; i < (P4EST_CHILDREN); i++){
       for (int j = 0; j < (P4EST_CHILDREN); j++){
         int corner_node_i = dgmath_corner_to_node((P4EST_DIM), deg, i);
@@ -777,6 +777,11 @@ curved_element_data_compute_diam
         diam = (diam_temp > diam) ? diam_temp : diam;
       }
     }
+
+    if (option == DIAM_APPROX_CUBE){
+      diam *= 1./sqrt(3.);
+    }
+    
   }
   else {
     int volume_nodes = dgmath_get_nodes((P4EST_DIM), deg);
@@ -1175,7 +1180,7 @@ curved_element_data_init_new
         for (int face = 0; face < (P4EST_FACES); face++){
           elem_data->surface_area[face] = curved_element_data_compute_element_face_area(elem_data,dgmath_jit_dbase, d4est_geometry,face, elem_data->deg);
         }
-        elem_data->diam = curved_element_data_compute_diam(elem_data->xyz, elem_data->deg, 1);
+        elem_data->diam = curved_element_data_compute_diam(elem_data->xyz, elem_data->deg, DIAM_APPROX_CUBE);
         
         
       }
@@ -1411,14 +1416,14 @@ typedef struct {
 /*   return vTMv; */
 /* } */
 
-
 double
 curved_element_data_compute_l2_norm_sqr
 (
  p4est_t* p4est,
  double* nodal_vec,
  int local_nodes,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ norm_storage_option_t store_local
 )
 {
 
@@ -1444,7 +1449,14 @@ curved_element_data_compute_l2_norm_sqr
                                      (P4EST_DIM),
                                      &Mvec[ed->nodal_stride]
                                     );
-        l2_norm_sqr += linalg_vec_dot(&nodal_vec[ed->nodal_stride], &Mvec[ed->nodal_stride], volume_nodes);
+
+        double norm2 = linalg_vec_dot(&nodal_vec[ed->nodal_stride], &Mvec[ed->nodal_stride], volume_nodes);
+        
+        if (store_local == STORE_LOCALLY){
+          ed->local_estimator = norm2;
+        }
+        
+        l2_norm_sqr += norm2;
       }
     }
   P4EST_FREE(Mvec);
@@ -4124,19 +4136,20 @@ curved_element_data_print_element_data_debug
         printf("tree, tree_quadid = %d, %d\n", ed->tree, ed->tree_quadid);
 
         
-        
-
-
         int volume_nodes = dgmath_get_nodes( (P4EST_DIM), ed->deg );
+       
+        
 #if (P4EST_DIM)==2 
         printf("q = %d, %d, dq = %d\n", ed->q[0], ed->q[1], ed->dq);
         DEBUG_PRINT_2ARR_DBL(ed->xyz[0], ed->xyz[1], volume_nodes);
+        /* DEBUG_PRINT_3ARR_DBL(ed->xyz[0], ed->xyz[1], volume_nodes); */
 #elif (P4EST_DIM)==3
         printf("q = %d, %d, %d, dq = %d\n", ed->q[0], ed->q[1], ed->q[2], ed->dq);
         DEBUG_PRINT_3ARR_DBL(ed->xyz[0], ed->xyz[1], ed->xyz[2], volume_nodes);
 #else
         mpi_abort("DIM = 2 or 3");
 #endif
+        
 /* #else */
         /* mpi_abort("DEBUG flag must be set"); */
 /* #endif */
@@ -4144,22 +4157,23 @@ curved_element_data_print_element_data_debug
     }  
 }
 
-
 void
-curved_data_compute_dxyz_drst_Gauss_on_mortar_using_volume_data
+curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
 (
  curved_element_data_t** e,
  int num_faces_side,
  int num_faces_mortar,
  int* deg_mortar_integ,
  int face,
- double* drst_dxyz_on_face [(P4EST_DIM)][(P4EST_DIM)],
+ double* drst_dxyz_on_mortar_Gauss [(P4EST_DIM)][(P4EST_DIM)],
+ double* sj_on_mortar_Gauss,
+ double* n_on_mortar_Gauss [(P4EST_DIM)],
  p4est_geometry_t* p4est_geom,
  dgmath_jit_dbase_t* dgmath_jit_dbase
 )
 {
   double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)];
-  double* dxyz_drst_on_face [(P4EST_DIM)][(P4EST_DIM)];
+  double* dxyz_drst_on_face_Gauss [(P4EST_DIM)][(P4EST_DIM)];
   int max_deg = 0;
   for (int i = 0; i < num_faces_mortar; i++){
     max_deg = (deg_mortar_integ[i] > max_deg) ? deg_mortar_integ[i] : max_deg;
@@ -4169,8 +4183,13 @@ curved_data_compute_dxyz_drst_Gauss_on_mortar_using_volume_data
   for (int i = 0; i < (P4EST_DIM); i++)
     for (int j = 0; j < (P4EST_DIM); j++){
       dxyz_drst[i][j] = P4EST_ALLOC(double, volume_nodes_max);
-      dxyz_drst_on_face[i][j] = P4EST_ALLOC(double, face_nodes_max);
+      dxyz_drst_on_face_Gauss[i][j] = P4EST_ALLOC(double, face_nodes_max);
     }
+
+  double* temp = P4EST_ALLOC(double, volume_nodes_max);
+  double* J_on_face_Gauss = P4EST_ALLOC(double, face_nodes_max);
+
+
   
   p4est_qcoord_t q0 [(P4EST_HALF)][(P4EST_DIM)];
   
@@ -4181,94 +4200,133 @@ curved_data_compute_dxyz_drst_Gauss_on_mortar_using_volume_data
       q0[j][d] = e[0]->q[d] + cd*e[0]->dq;
     }
   }
-
-  /* Calculate the vectors that span the face 
-   * there will be one in 2-D and two in 3-d */
   
   p4est_qcoord_t dqa [((P4EST_DIM)-1)][(P4EST_DIM)];
   
-  for (int d = 0; d < (P4EST_DIM); d++){
-    for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){
-      dqa[dir][d] = (q0[(dir+1)][d] - q0[0][d]);
-      if (num_faces_side != num_faces_mortar)
-        dqa[dir][d] /= 2;
-    }
-  }
-
-  /* Correction when mortar subdomain has more elements than (-) side subdomain */
-  if (num_faces_side != num_faces_mortar){
     for (int d = 0; d < (P4EST_DIM); d++){
-      for (int c = 0; c < (P4EST_HALF); c++){
-        q0[c][d] = q0[0][d];
-        for (int dir = 0; dir < (P4EST_DIM) - 1; dir++){
-          int cd = dgmath_is_child_left_or_right(c, dir);
-          q0[c][d] += cd*dqa[dir][d];
-        }
+      for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){
+        dqa[dir][d] = (q0[(dir+1)][d] - q0[0][d]);
+        if (num_faces_side != num_faces_mortar)
+          dqa[dir][d] /= 2;
       }
+    }    
+
+    p4est_qcoord_t dq0mf0 [(P4EST_DIM)];
+    for (int d = 0; d < (P4EST_DIM); d++){
+      dq0mf0[d] = (q0[0][d] - e[0]->q[d])/2;
     }
-  }
-  
-  p4est_qcoord_t mortar_dq = (num_faces_side == num_faces_mortar) ? e[0]->dq : e[0]->dq/2;
-  
+    
+    for (int d = 0; d < (P4EST_DIM); d++){
+        for (int c = 0; c < (P4EST_HALF); c++){
+          q0[c][d] = e[0]->q[d];
+          if (num_faces_side != num_faces_mortar)
+            q0[c][d] += dq0mf0[d];
+          for (int dir = 0; dir < (P4EST_DIM) - 1; dir++){
+            int cd = dgmath_is_child_left_or_right(c, dir);
+            q0[c][d] += cd*dqa[dir][d];
+          }
+        }
+    }
+
+    p4est_qcoord_t q [(P4EST_DIM)];
+    p4est_qcoord_t mortar_dq = (num_faces_side == num_faces_mortar) ? e[0]->dq : e[0]->dq/2;
+ 
   int face_mortar_integ_stride = 0;
   for (int face_mortar = 0; face_mortar < num_faces_mortar; face_mortar++){
   
     int face_mortar_integ_nodes = dgmath_get_nodes((P4EST_DIM) - 1, deg_mortar_integ[face_mortar]);
     /* double* xyz [(P4EST_DIM)]; */
+    for (int d = 0; d < (P4EST_DIM); d++){
+      q[d] = q0[face_mortar][d];
+    }
 
     curved_element_data_compute_dxyz_drst
       (
        dgmath_jit_dbase,
-       q0[face_mortar],
+       q,
        mortar_dq,
        e[0]->tree,
        p4est_geom,
-       /* INTERP_X_ON_LOBATTO, */
        deg_mortar_integ[face_mortar],
        0,
        dxyz_drst,
-       (double* [(P4EST_DIM)]){NULL, NULL, NULL}
+       (double* [(P4EST_DIM)]){NULL, NULL
+#if (P4EST_DIM)==3
+           , NULL
+#endif
+           }
       );
 
+    double* drst_dxyz_on_face_Gauss[(P4EST_DIM)][(P4EST_DIM)];
     for (int i = 0; i < (P4EST_DIM); i++){
       for (int j = 0; j < (P4EST_DIM); j++){
         dgmath_apply_slicer(dgmath_jit_dbase,dxyz_drst[i][j],
                             (P4EST_DIM),
                             face,
                             deg_mortar_integ[face_mortar],
-                            dxyz_drst_on_face[i][j]);
-      }
-    }
+                            temp);
 
-    double* temp [(P4EST_DIM)][(P4EST_DIM)];
-    for (int i = 0; i < (P4EST_DIM); i++){
-      for (int j = 0; j < (P4EST_DIM); j++){
-        temp[i][j] = P4EST_ALLOC(double, face_mortar_integ_nodes);
-      }
-    }
-    curved_element_data_compute_drst_dxyz(dxyz_drst_on_face, temp, face_mortar_integ_nodes);
+        dgmath_interp_GLL_to_GL
+          (
+           dgmath_jit_dbase,
+           temp,
+           deg_mortar_integ[face_mortar],
+           deg_mortar_integ[face_mortar],
+           dxyz_drst_on_face_Gauss[i][j],
+           (P4EST_DIM)-1
+          );
 
-    for (int i = 0; i < (P4EST_DIM); i++){
-      for (int j = 0; j < (P4EST_DIM); j++){
-        dgmath_interp_GLL_to_GL(
-                                dgmath_jit_dbase,
-                                temp[i][j],
-                                deg_mortar_integ[face_mortar],
-                                deg_mortar_integ[face_mortar],
-                                &drst_dxyz_on_face[i][j][face_mortar_integ_stride],
-                                (P4EST_DIM)-1
-                               );
-        P4EST_FREE(temp[i][j]);
+        drst_dxyz_on_face_Gauss[i][j] = &drst_dxyz_on_mortar_Gauss[i][j][face_mortar_integ_stride];
       }
     }
+    
+    if (sj_on_mortar_Gauss != NULL){
+      curved_element_data_compute_J_and_rst_xyz(dxyz_drst_on_face_Gauss, J_on_face_Gauss, drst_dxyz_on_face_Gauss, face_mortar_integ_nodes);
+
+      int i0 = -1; 
+      if (face == 0 || face == 1){
+        i0 = 0;
+      }
+      else if (face == 2 || face == 3){
+        i0 = 1;
+      }
+      else if (face == 4 || face == 5){
+        i0 = 2;
+      }
+      else {
+        mpi_abort("face must be < 6\n");
+      }
+      double sgn = (face == 0 || face == 2 || face == 4) ? -1. : 1.;
+      for (int i = 0; i < face_mortar_integ_nodes; i++){
+        sj_on_mortar_Gauss[face_mortar_integ_stride + i] = 0.;
+        int is = face_mortar_integ_stride + i;
+        for (int d = 0; d < (P4EST_DIM); d++){
+          n_on_mortar_Gauss[d][is] = sgn*drst_dxyz_on_face_Gauss[i0][d][i]*J_on_face_Gauss[i];
+          sj_on_mortar_Gauss[is] += n_on_mortar_Gauss[d][is]*n_on_mortar_Gauss[d][is];
+        }
+        sj_on_mortar_Gauss[is] = sqrt(sj_on_mortar_Gauss[is]);
+        for (int d = 0; d < (P4EST_DIM); d++)
+          n_on_mortar_Gauss[d][is] /= sj_on_mortar_Gauss[is];
+      }  
+    }
+    else {
+      curved_element_data_compute_drst_dxyz(dxyz_drst_on_face_Gauss,
+                                          drst_dxyz_on_face_Gauss,
+                                          face_mortar_integ_nodes);
+
+    }
+    
     face_mortar_integ_stride += dgmath_get_nodes((P4EST_DIM)-1, deg_mortar_integ[face_mortar]);
   }
 
-  for (int i = 0; i < (P4EST_DIM); i++)
-    for (int j = 0; j < (P4EST_DIM); j++)
-      P4EST_FREE(dxyz_drst[i][j]);
+  P4EST_FREE(temp);
+  P4EST_FREE(J_on_face_Gauss);
 
-  
+  for (int i = 0; i < (P4EST_DIM); i++)
+    for (int j = 0; j < (P4EST_DIM); j++){
+      P4EST_FREE(dxyz_drst[i][j]);
+      P4EST_FREE(dxyz_drst_on_face_Gauss[i][j]);
+    }
 }
 
 void
@@ -4297,7 +4355,7 @@ curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes
     }
   }
   
-  curved_data_compute_dxyz_drst_Gauss_on_mortar_using_volume_data
+  curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
     (
      e,
      num_faces_side,
@@ -4305,6 +4363,12 @@ curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes
      deg_mortar_integ,
      face_side,
      drst_dxyz_on_face_Gauss,
+     NULL,
+     (double* [(P4EST_DIM)]){NULL, NULL
+#if (P4EST_DIM)==3
+         , NULL
+#endif
+         },     
      geom,
      dgmath_jit_dbase
     );
@@ -4315,6 +4379,7 @@ curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes
         dvec_dxyz_on_face_Gauss[j][k] = 0.;
         for (int i = 0; i < (P4EST_DIM); i++){
           dvec_dxyz_on_face_Gauss[j][k] += drst_dxyz_on_face_Gauss[i][j][k]*dvec_drst_on_face_Gauss[i][k];
+          /* printf("drst_dxyz_on_face_Gauss[i][j][k] = %.25f, dvec_drst_on_face_Gauss[i][k] = %.25f\n",drst_dxyz_on_face_Gauss[i][j][k],dvec_drst_on_face_Gauss[i][k]); */
       }
     }    
   }
@@ -4663,3 +4728,34 @@ curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes
 /*   P4EST_FREE(y); */
 /*   P4EST_FREE(x); */
 /* } */
+
+
+static void
+curved_element_data_print_local_estimator_callback
+(
+ p4est_iter_volume_info_t* info,
+ void* user_data
+)
+{
+  p4est_quadrant_t* q = info->quad;
+  curved_element_data_t* elem_data = (curved_element_data_t*) q->p.user_data;
+  printf("Quad %d: Local estimator %.20f, p = %d\n", elem_data->id, elem_data->local_estimator, elem_data->deg);
+}
+
+
+void
+curved_element_data_print_local_estimator
+(
+ p4est_t* p4est
+)
+{
+  p4est_iterate(p4est,
+		NULL,
+		NULL,
+		curved_element_data_print_local_estimator_callback,
+		NULL,
+#if (P4EST_DIM)==3
+                NULL,       
+#endif                
+		NULL);
+}

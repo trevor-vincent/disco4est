@@ -164,6 +164,7 @@ curved_Gauss_central_flux_vector_dirichlet
     
     for (int i = 0; i < face_nodes_m_Lobatto; i++){
       e_m->M_qstar_min_q_dot_n[f_m*face_nodes_m_Lobatto + i] += M_qstar_min_q_n[i];
+      /* printf("e_m->M_qstar_min_q_dot_n[f_m*face_nodes_m_Lobatto + i] = %.25f\n", e_m->M_qstar_min_q_dot_n[f_m*face_nodes_m_Lobatto + i]); */
     }
   }
 

@@ -105,7 +105,19 @@
     }                                                                   \
   } while(0)
 
+
+
+#define DEBUG_PRINT_9ARR_DBL(a, b, c, d, e, f, g, h, j, n) do {          \
+    printf("%s, %s, %s, %s %s %s %s %s %s= \n",#a, #b, #c, #d, #e, #f, #g, #h, #j); \
+    for (int i = 0; i < n; i++) {                                       \
+      printf("%.16f %.16f %.16f %.16f %.16f %.16f %.16f %.16f %.16f\n",a[i], b[i], c[i], d[i], e[i], f[i], g[i], h[i], j[i]); \
+    }                                                                   \
+  } while(0)
+
+
 #endif
+
+
 
 #define D4EST_NOOP()                                                            \
   do                                                                           \

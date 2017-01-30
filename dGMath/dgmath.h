@@ -203,6 +203,14 @@ void dgmath_convert_nodal_to_vtk
  double* vtk_vec /* should be (chiildren)*(deg)^dim */
 );
 
-
+double dgmath_Gauss_quadrature
+(
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ double* u,
+ double* v,
+ double* jac_GL,
+ int deg_GL,
+ int dim
+);
 
 #endif

@@ -35,22 +35,42 @@ curved_bi_estimator_init
   
   int dim = (P4EST_DIM);
   int deg = elem_data->deg;
-  int i;
+  int volume_nodes_Lobatto = dgmath_get_nodes(dim,deg);
+  int face_nodes_Lobatto = dgmath_get_nodes(dim-1,deg);
+  int volume_nodes_Gauss = dgmath_get_nodes(dim, elem_data->deg_integ);
+  /* int face_nodes_Gauss = dgmath_get_nodes(dim-1, elem_data->deg_integ); */
+  
+  linalg_copy_1st_to_2nd
+    (
+     &(problem_data->u[elem_data->nodal_stride]),
+     &(elem_data->u_elem)[0],
+     volume_nodes_Lobatto
+    );
+  
+  double* u_prolonged = P4EST_ALLOC(double, volume_nodes_Gauss);
+  double* du_di_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
+  
+  for (int i = 0; i < (P4EST_DIM); i++){
 
-  int volume_nodes = dgmath_get_nodes(dim,deg);
-  linalg_copy_1st_to_2nd( &(problem_data->u[elem_data->nodal_stride]), &(elem_data->u_elem)[0], volume_nodes);
-
-  double* du_di = P4EST_ALLOC(double, volume_nodes);
-  int j,k;
-  for (i = 0; i < (P4EST_DIM); i++){
-    dgmath_apply_Dij(dgmath_jit_dbase, &(problem_data->u[elem_data->nodal_stride]), dim, deg, i, du_di);
-    for (j = 0; j < (P4EST_DIM); j++){
-      for (k = 0; k < volume_nodes; k++){
-        /* elem_data->du_elem[j][k] += elem_data->rst_xyz[i][j][k]*du_di[k]; */
-      }
-    }
+    /* PROLONG u here first, then take derivative, then interpolate to Gauss, this is most consistent */
+    dgmath_apply_p_prolong(dgmath_jit_dbase, &(problem_data->u[elem_data->nodal_stride]), deg, (P4EST_DIM), elem_data->deg_integ, u_prolonged);
+    
+    dgmath_apply_Dij(dgmath_jit_dbase, u_prolonged, dim, elem_data->deg_integ, i, &elem_data->dudr_elem[i][0]);
+  /*   dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &elem_data->dudr_elem[i][0], elem_data->deg_integ, elem_data->deg_integ, du_di_Gauss, (P4EST_DIM)); */
+    
+  /*   for (int j = 0; j < (P4EST_DIM); j++){ */
+  /*     for (int k = 0; k < volume_nodes_Gauss; k++){ */
+  /*       elem_data->du_elem[j][k] += elem_data->rst_xyz_integ[i][j][k]*du_di_Gauss[k]; */
+  /*     } */
+  /*   }     */
   }
-  P4EST_FREE(du_di);
+
+  /* double* tmp_ptr = &elem_data->dudr_elem[0][0]; */
+  /* DEBUG_PRINT_ARR_DBL(tmp_ptr, dgmath_get_nodes((P4EST_DIM),elem_data->deg_integ)); */
+
+  
+  P4EST_FREE(u_prolonged);
+  P4EST_FREE(du_di_Gauss);
 }
 
 static
@@ -70,6 +90,9 @@ void* user_data
   double h = element_data->diam;
   *eta2 *= h*h/(deg*deg);
 
+
+  /* DEBUG_PRINT_DBL(*eta2); */
+  
   debug_eta2_after_res_calc += *eta2;
 }
 
@@ -101,7 +124,7 @@ curved_bi_estimator_compute
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
- p4est_geometry_t* geom
+ d4est_geometry_t* geom
 )
 {
   /* double curved_bi_estimator_local_eta2 = 0.; */
@@ -115,18 +138,22 @@ curved_bi_estimator_compute
      dgmath_jit_dbase,
      geom
     );
- 
+
+
+  
+  /* DEBUG_PRINT_ARR_DBL(vecs->Au, vecs->local_nodes); */
+ /* x */
   /* double check = */
-    curved_element_data_compute_l2_norm_sqr
+  curved_element_data_compute_l2_norm_sqr
     (
      p4est,
      vecs->Au,
-     dgmath_jit_dbase
+     vecs->local_nodes,
+     dgmath_jit_dbase,
+     STORE_LOCALLY
     );
+  curved_element_data_print_local_estimator(p4est);
 
-  /* printf("check = %.20f\n", check); */
-  
-  /* /\* curved_element_data_t* ghost *\/_data; */
   curved_bi_estimator_user_data_t curved_bi_estimator_user_data;
   curved_bi_estimator_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
   curved_bi_estimator_user_data.problem_data = vecs;
@@ -216,6 +243,7 @@ curved_bi_estimator_compute
   /* P4EST_FREE(ghost_data); */
 
   /* printf("local eta2 = %.25f\n",curved_bi_estimator_local_eta2); */
-  
+  curved_element_data_print_local_estimator(p4est);
+
   /* return curved_bi_estimator_local_eta2; */
 }

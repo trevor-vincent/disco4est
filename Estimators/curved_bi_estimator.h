@@ -18,7 +18,7 @@ curved_bi_estimator_compute
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
- p4est_geometry_t* geom
+ d4est_geometry_t* geom
 );
 
 #endif

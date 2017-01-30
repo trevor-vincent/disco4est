@@ -4211,6 +4211,65 @@ void dgmath_convert_nodal_to_vtk
 }
 
 
+/* Computes \sum w_i u_i v_i */
+double dgmath_Gauss_quadrature
+(
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ double* u,
+ double* v,
+ double* jac_GL,
+ int deg_GL,
+ int dim
+)
+{
+  mpi_assert(u != NULL);
+  int volume_nodes_GL = dgmath_get_nodes(dim, deg_GL);
+  double* integ_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_GL);
+  double* wuv = P4EST_ALLOC(double, volume_nodes_GL);
+  double wdotuv = 0.;
+
+  if (dim == 3){
+    if (v != NULL){
+      linalg_kron_vec_o_vec_o_vec_dot_xy(integ_weights, u, v, deg_GL + 1, wuv);
+    }
+    else {
+      linalg_kron_vec_o_vec_o_vec_dot_x(integ_weights, u, deg_GL + 1, wuv);
+    }
+  }
+  else if (dim == 2){
+    if (v != NULL){
+      linalg_kron_vec_o_vec_dot_xy(integ_weights, u, v, deg_GL + 1, wuv);
+    }
+    else {
+      linalg_kron_vec_o_vec_dot_x(integ_weights, u, deg_GL + 1, wuv);
+    }
+  }
+  else if (dim == 1){
+    if (v != NULL){
+      linalg_kron_vec_dot_xy(integ_weights, u, v, deg_GL + 1, wuv);
+    }
+    else {
+      linalg_kron_vec_dot_x(integ_weights, u, deg_GL + 1, wuv);
+    }
+  }
+  else {
+    mpi_abort("dim must be 1,2,3");
+  }
+
+  if (jac_GL == NULL){
+    for (int i = 0; i < volume_nodes_GL; i++){
+      wdotuv += wuv[i];
+    }
+  }
+  else {
+    for (int i = 0; i < volume_nodes_GL; i++){
+      wdotuv += jac_GL[i]*wuv[i];
+    }
+  }
+  P4EST_FREE(wuv);
+
+  return wdotuv;
+}
 
 
 double* dgmath_fetch_vtk_rst

@@ -71,16 +71,25 @@ void curved_Gauss_poisson_init_vecs
   /* DEBUG_PRINT_2ARR_DBL(u_array, u_elem, volume_nodes_Lobatto); */
   
   /* double* du_di = P4EST_ALLOC(double, volume_nodes_Gauss); */
-  double* u_prolonged = P4EST_ALLOC(double, volume_nodes_Gauss);
+  double* du_di_prolonged = P4EST_ALLOC(double, volume_nodes_Gauss);
   double* du_di_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
   
   for (i = 0; i < (P4EST_DIM); i++){
 
     /* PROLONG u here first, then take derivative, then interpolate to Gauss, this is most consistent */
-    dgmath_apply_p_prolong(dgmath_jit_dbase, &(problem_data->u[elem_data->nodal_stride]), deg, (P4EST_DIM), elem_data->deg_integ, u_prolonged);
+    /* dgmath_apply_p_prolong(dgmath_jit_dbase, &(problem_data->u[elem_data->nodal_stride]), deg, (P4EST_DIM), elem_data->deg_integ, u_prolonged); */
     
-    dgmath_apply_Dij(dgmath_jit_dbase, u_prolonged, dim, elem_data->deg_integ, i, &elem_data->dudr_elem[i][0]);
-    dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &elem_data->dudr_elem[i][0], elem_data->deg_integ, elem_data->deg_integ, du_di_Gauss, (P4EST_DIM));
+    /* dgmath_apply_Dij(dgmath_jit_dbase, u_prolonged, dim, elem_data->deg_integ, i, &elem_data->dudr_elem[i][0]); */
+    /* dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &elem_data->dudr_elem[i][0], elem_data->deg_integ, elem_data->deg_integ, du_di_Gauss, (P4EST_DIM)); */
+
+    /* dgmath_apply_p_prolong(dgmath_jit_dbase, &(problem_data->u[elem_data->nodal_stride]), deg, (P4EST_DIM), elem_data->deg_integ, u_prolonged); */
+    dgmath_apply_Dij(dgmath_jit_dbase, &(problem_data->u[elem_data->nodal_stride]), dim, elem_data->deg, i, &elem_data->dudr_elem[i][0]);
+    
+    dgmath_apply_p_prolong(dgmath_jit_dbase, &elem_data->dudr_elem[i][0], deg, (P4EST_DIM), elem_data->deg_integ, du_di_prolonged);
+
+    dgmath_interp_GLL_to_GL(dgmath_jit_dbase, du_di_prolonged, elem_data->deg_integ, elem_data->deg_integ, du_di_Gauss, (P4EST_DIM));
+
+
     
     for (j = 0; j < (P4EST_DIM); j++){
       for (k = 0; k < volume_nodes_Gauss; k++){
@@ -89,11 +98,11 @@ void curved_Gauss_poisson_init_vecs
     }    
   }
 
-  double* tmp_ptr = &elem_data->dudr_elem[0][0];
+  /* double* tmp_ptr = &elem_data->dudr_elem[0][0]; */
   /* DEBUG_PRINT_ARR_DBL(tmp_ptr, dgmath_get_nodes((P4EST_DIM),elem_data->deg_integ)); */
 
   
-  P4EST_FREE(u_prolonged);
+  P4EST_FREE(du_di_prolonged);
   P4EST_FREE(du_di_Gauss);
 }
 
@@ -269,6 +278,8 @@ void curved_Gauss_poisson_compute_q_elem
     }
   }
 
+  /* DEBUG_PRINT_3ARR_DBL(element_data->q_elem[0],element_data->q_elem[1], element_data->q_elem[2], volume_nodes_Lobatto); */
+  
   /* for (int d = 0; d < (P4EST_DIM); d++){ */
   /*   for (int i = 0; i < volume_nodes_Lobatto; i++) { */
   /*     for (int f = 0; f < faces; f++){ */
@@ -466,7 +477,7 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
 
 
 
-
+  /* DEBUG_PRINT_ARR_DBL(Mdq, volume_nodes_Lobatto); */
 
   /* double* Minv_Mqstar_min_q_dot_n = P4EST_ALLOC(double, face_nodes_Lobatto); */
 
@@ -488,6 +499,9 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
                       f,
                       lifted_qstar_min_q[f]);
 
+    /* double* tmp = &element_data->M_qstar_min_q_dot_n[f*face_nodes_Lobatto]; */
+    /* DEBUG_PRINT_ARR_DBL(tmp, face_nodes_Lobatto); */
+    
     /* dgmath_apply_LIFT( */
     /*                   dgmath_jit_dbase, */
     /*                   Minv_Mqstar_min_q_dot_n, */

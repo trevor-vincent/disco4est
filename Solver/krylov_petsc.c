@@ -117,7 +117,7 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   vecs_for_aij.u = (double*)px;
   vecs_for_aij.Au = py;
 
-  DEBUG_PRINT_ARR_DBL(vecs_for_aij.u, vecs_for_aij.local_nodes);
+  /* DEBUG_PRINT_ARR_DBL(vecs_for_aij.u, vecs_for_aij.local_nodes); */
 
   
   if (kct->d4est_geom == NULL){
@@ -185,7 +185,7 @@ krylov_petsc_solve
   double* u = vecs->u;
   double* rhs = vecs->rhs;
 
-  DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes);
+  /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
   
   KSPCreate(PETSC_COMM_WORLD,&ksp);  
   VecCreate(PETSC_COMM_WORLD,&x);//CHKERRQ(ierr);

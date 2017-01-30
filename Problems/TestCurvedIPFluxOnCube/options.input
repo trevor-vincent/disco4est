@@ -4,7 +4,7 @@ min_level = 0
 fill_uniform = 1
 
 [amr]
-num_randrefs = 1
+num_randrefs = 0
 num_unifrefs = 2
 deg = 2
 deg_Gauss = 2
