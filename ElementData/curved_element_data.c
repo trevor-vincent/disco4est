@@ -1894,11 +1894,26 @@ curved_element_data_compute_mortar_normal_and_sj_using_face_data
  double* sj,
  d4est_geometry_t* d4est_geom,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* xyz [(P4EST_DIM)]
+ double* xyz_storage [(P4EST_DIM)]
 )
 {
 
-  mpi_abort_if(xyz[0] == NULL && dxdr_method == INTERP_X_ON_LOBATTO, "Can't interp xyz without storage for xyz");
+  double* xyz [(P4EST_DIM)];
+  if (xyz_storage[0] != NULL){
+    for (int d = 0; d < (P4EST_DIM); d++){
+      xyz[d] = xyz_storage[d];
+    }
+  }
+  else {
+    int total_face_mortar_nodes = 0;
+    for (int face_mortar = 0; face_mortar < num_faces_mortar; face_mortar++){
+      total_face_mortar_nodes += dgmath_get_nodes((P4EST_DIM) - 1, deg_mortar[face_mortar]);
+    }
+    for (int d = 0; d < (P4EST_DIM); d++){
+      xyz[d] = P4EST_ALLOC(double, total_face_mortar_nodes);
+    }
+  }
+
   /* Calculate the four "0" corners of 
    * the mortar faces. In the case that
    * there is only one mortar face, these
@@ -2079,6 +2094,13 @@ curved_element_data_compute_mortar_normal_and_sj_using_face_data
     }
     P4EST_FREE(tmp);
   }
+
+  if (xyz_storage[0] == NULL){
+    for (int d = 0; d < (P4EST_DIM); d++){
+      P4EST_FREE(xyz[d]);
+    }
+  }
+  
 }
 
 /* void */

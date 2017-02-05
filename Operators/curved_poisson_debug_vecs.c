@@ -195,7 +195,6 @@ curved_poisson_debug_vecs_print
  curved_poisson_debug_vecs_t* debug_vecs
 )
 {
-#ifdef D4EST_DEBUG
   printf("** Debug Info for Element %d **\n", debug_vecs->elem_id);
   
   DEBUG_PRINT_2ARR_DBL(debug_vecs->Mdu[0],
@@ -241,7 +240,6 @@ curved_poisson_debug_vecs_print
   DEBUG_PRINT_ARR_DBL(debug_vecs->Mdivq, (dgmath_get_nodes((P4EST_DIM),debug_vecs->deg)));
 
   DEBUG_PRINT_ARR_DBL(debug_vecs->Au, (dgmath_get_nodes((P4EST_DIM),debug_vecs->deg)));
-#endif
 }
 
 
@@ -252,7 +250,6 @@ curved_poisson_debug_vecs_2print
  curved_poisson_debug_vecs_t* debug_vecs2
 )
 {
-#ifdef D4EST_DEBUG
   mpi_assert(debug_vecs1->deg == debug_vecs2->deg);
   printf("** Debug Info for Element %d and Element %d**\n", debug_vecs1->elem_id, debug_vecs2->elem_id);
 
@@ -324,7 +321,6 @@ curved_poisson_debug_vecs_2print
    
   DEBUG_PRINT_2ARR_DBL(debug_vecs1->Mdivq, debug_vecs2->Mdivq, (dgmath_get_nodes((P4EST_DIM),debug_vecs1->deg)));
   DEBUG_PRINT_2ARR_DBL(debug_vecs1->Au, debug_vecs2->Au, (dgmath_get_nodes((P4EST_DIM),debug_vecs1->deg)));
-#endif
 }
 
 
@@ -337,7 +333,6 @@ curved_poisson_debug_vecs_2print_1node
  int n2
 )
 {
-#ifdef D4EST_DEBUG
   mpi_assert(debug_vecs1->deg == debug_vecs2->deg);
   printf("** Debug Info for Element %d, Node %d and Element %d, Node %d **\n", debug_vecs1->elem_id, n1, debug_vecs2->elem_id, n2);
 
@@ -410,6 +405,5 @@ curved_poisson_debug_vecs_2print_1node
    
   DEBUG_PRINT_2DBL(debug_vecs1->Mdivq[n1], debug_vecs2->Mdivq[n2]);
   DEBUG_PRINT_2DBL(debug_vecs1->Au[n1], debug_vecs2->Au[n2]);
-#endif
 }
 

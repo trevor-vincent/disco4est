@@ -4,23 +4,24 @@ min_level = 0
 fill_uniform = 1
 
 [amr]
-num_unifrefs = 1
+num_unifrefs = 2
 num_randrefs = 0
 
 [flux]
 ip_flux_penalty = 2.0
+use_ip_flux = 0
 
 [problem]
-deg_R2 = 3
-deg_integ_R2 = 3
-deg_R1 = 3
-deg_integ_R1 = 3
-deg_R0 = 3
-deg_integ_R0 = 3
+deg_R2 = 2
+deg_integ_R2 = 2
+deg_R1 = 2
+deg_integ_R1 = 2
+deg_R0 = 2
+deg_integ_R0 = 2
 
-R0 = 1
-R1 = 2
-R2 = 3
+R0 = .33333333333333333333333333333333
+R1 = .66666666666666666666666666666666
+R2 = 1
 
 [solver]
 ksp_type = gmres

@@ -211,7 +211,7 @@ void problem_build_rhs
   
   linalg_vec_scale(-1., prob_vecs->rhs, prob_vecs->local_nodes);
 
-  /* DEBUG_PRINT_2ARR_DBL(f,prob_vecs->rhs, prob_vecs->local_nodes); */
+
   
   int local_nodes = prob_vecs->local_nodes;
   double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
@@ -233,6 +233,9 @@ void problem_build_rhs
   prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns
                                            (zero_fcn);
 
+
+  /* DEBUG_PRINT_2ARR_DBL(f,prob_vecs->rhs, prob_vecs->local_nodes); */
+  
   P4EST_FREE(f);
 }
 
@@ -367,8 +370,10 @@ problem_set_degrees
 )
 {
   problem_input_t* input = user_ctx;
+  /* elem_data->deg = input->deg;//rand()%5 + 1; */
   elem_data->deg = rand()%5 + 1;
   /* elem_data->deg = 4; */
+  /* elem_data->deg_integ = input->deg_Gauss;//elem_data->deg; */
   elem_data->deg_integ = elem_data->deg;
 }
 

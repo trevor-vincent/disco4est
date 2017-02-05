@@ -59,4 +59,16 @@ double identity_fcn
  void* user
 );
 
+
+double
+sinpix_fcn
+(
+ double x,
+ double y
+#if (P4EST_DIM)==3
+ ,  
+ double z
+#endif
+);
+
 #endif

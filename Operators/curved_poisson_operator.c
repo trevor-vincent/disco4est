@@ -14,10 +14,9 @@ typedef struct {
   
   dgmath_jit_dbase_t* dgmath_jit_dbase;
   problem_data_t* problem_data;
-#if D4EST_DEBUG
+#ifndef NDEBUG
   curved_poisson_debug_vecs_t* debug_vecs;
 #endif
-    
 } curved_Gauss_poisson_user_data_t;
 
 /* static */
@@ -58,7 +57,7 @@ void curved_Gauss_poisson_init_vecs
      &(elem_data->u_elem)[0],
      volume_nodes_Lobatto
     );
-
+  /*  */
   linalg_fill_vec
     (
      &(elem_data->du_elem[0][0]),
@@ -90,7 +89,6 @@ void curved_Gauss_poisson_init_vecs
     dgmath_interp_GLL_to_GL(dgmath_jit_dbase, du_di_prolonged, elem_data->deg_integ, elem_data->deg_integ, du_di_Gauss, (P4EST_DIM));
 
 
-    
     for (j = 0; j < (P4EST_DIM); j++){
       for (k = 0; k < volume_nodes_Gauss; k++){
         elem_data->du_elem[j][k] += elem_data->rst_xyz_integ[i][j][k]*du_di_Gauss[k];
@@ -263,6 +261,7 @@ void curved_Gauss_poisson_compute_q_elem
     for (int i = 0; i < volume_nodes_Lobatto; i++) {
       for (int f = 0; f < faces; f++){
         Mq[d][i] += lifted_ustar_min_u[f][d][i];
+        /* printf("lifted_ustar_min_u[%d][%d][%d] = %.25f\n", f,d,i, lifted_ustar_min_u[f][d][i]); */
       }
     }
   }
@@ -312,7 +311,7 @@ void curved_Gauss_poisson_compute_q_elem
   
   /* P4EST_FREE(testinvMq); */
   
-#ifdef D4EST_DEBUG
+#ifndef NDEBUG
   curved_poisson_debug_vecs_t* debug_vecs = (curved_poisson_debug_vecs_t*)curved_Gauss_poisson_user_data->debug_vecs;
   if(debug_vecs != NULL && debug_vecs->elem_id == element_data->id){
   curved_poisson_debug_vecs_set_Mdu(Si_u, debug_vecs, dgmath_jit_dbase);
@@ -518,7 +517,7 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
     /*                              element_data->deg, */
     /*                              element_data->J_integ, */
     /*                              element_data->deg_integ, */
-    /*                              (P4EST_DIM), */
+                                 /* (P4EST_DIM), */
     /*                              M_lifted_qstar_min_q[f] */
     /* );     */
   }
@@ -552,10 +551,13 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
   /* Au *= -1 because Au matrix is negative definite before this! */
   linalg_vec_scale(-1., Au, volume_nodes_Lobatto);
 
+  /* printf("volume_nodes_Lobatto = %d\n", volume_nodes_Lobatto); */
+  /* printf("element_data->deg = %d\n", element_data->deg); */
+  /* printf("element_data->deg_integ = %d\n", element_data->deg_integ); */
   /* DEBUG_PRINT_ARR_DBL(Au, volume_nodes_Lobatto); */
 
   
-#ifdef D4EST_DEBUG
+#ifndef NDEBUG
   curved_poisson_debug_vecs_t* debug_vecs = (curved_poisson_debug_vecs_t*)curved_Gauss_poisson_user_data->debug_vecs;
 
   if (debug_vecs != NULL && debug_vecs->elem_id == element_data->id){
@@ -676,7 +678,7 @@ curved_Gauss_poisson_apply_aij
   curved_Gauss_poisson_user_data_t curved_Gauss_poisson_user_data;
   curved_Gauss_poisson_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
   curved_Gauss_poisson_user_data.problem_data = prob_vecs;
- #if D4EST_DEBUG
+#ifndef NDEBUG
   curved_Gauss_poisson_user_data.debug_vecs = NULL;
 #endif
   
@@ -762,7 +764,7 @@ curved_Gauss_poisson_apply_aij
 
 
 curved_poisson_debug_vecs_t*
-curved_Gauss_poisson_apply_aij_debug
+curved_poisson_apply_aij_debug
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -778,14 +780,12 @@ curved_Gauss_poisson_apply_aij_debug
   curved_Gauss_poisson_user_data.problem_data = prob_vecs;
 
 
-#ifdef D4EST_DEBUG
   curved_Gauss_poisson_user_data.debug_vecs = curved_poisson_debug_vecs_init
                                             (
                                              p4est,
                                              local_element_id
                                             ); 
   mpi_assert(curved_Gauss_poisson_user_data.debug_vecs != NULL);
-#endif
   
   curved_compute_flux_user_data_t curved_compute_flux_user_data;
   curved_compute_flux_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
@@ -867,9 +867,5 @@ curved_Gauss_poisson_apply_aij_debug
 		NULL);
   p4est->user_pointer = tmpptr;
 
-#if D4EST_DEBUG
   return curved_Gauss_poisson_user_data.debug_vecs;
-#else
-  return NULL;
-#endif
 }

@@ -24,7 +24,7 @@ curved_Gauss_sipg_flux_scalar_dirichlet
   int face_nodes_m_Gauss = dgmath_get_nodes( (P4EST_DIM) - 1, e_m->deg_integ);
 
 
-  double* xyz_on_f_m_Gauss [(P4EST_DIM)];
+  double* xyz_on_f_m [(P4EST_DIM)];
   double* n_on_f_m_Gauss [(P4EST_DIM)];
   double* sj_n_on_f_m_Gauss [(P4EST_DIM)];
   
@@ -32,13 +32,26 @@ curved_Gauss_sipg_flux_scalar_dirichlet
   double* u_m_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
   double* sj_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
   double* ustar_min_u_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
+  double* ustar_min_u_on_f_m_Lobatto = P4EST_ALLOC(double, face_nodes_m_Lobatto);
 
   for (int i = 0; i < (P4EST_DIM); i++) {
     /* xyz_on_f_m[i] = P4EST_ALLOC(double, face_nodes_m_Lobatto);     */
     /* xyz_on_f_m[i] = P4EST_ALLOC(double, face_nodes_m_Gauss);     */
-    xyz_on_f_m_Gauss[i] = P4EST_ALLOC(double, face_nodes_m_Gauss);    
+    xyz_on_f_m[i] = P4EST_ALLOC(double, face_nodes_m_Gauss);    
     n_on_f_m_Gauss[i] = P4EST_ALLOC(double, face_nodes_m_Gauss);    
     sj_n_on_f_m_Gauss[i] = P4EST_ALLOC(double, face_nodes_m_Gauss);    
+  }
+
+
+  for (int d = 0; d < (P4EST_DIM); d++){
+
+    dgmath_apply_slicer(dgmath_jit_dbase,
+                        e_m->xyz[d],
+                        (P4EST_DIM),
+                        f_m,
+                        e_m->deg,
+                        xyz_on_f_m[d]);
+
   }
   
 
@@ -55,31 +68,37 @@ curved_Gauss_sipg_flux_scalar_dirichlet
      sj_on_f_m_Gauss,
      geom,
      dgmath_jit_dbase,
-     xyz_on_f_m_Gauss
+     (double* [(P4EST_DIM)]){NULL, NULL
+#if (P4EST_DIM)==3
+         , NULL
+#endif
+         }
     );
   
   dgmath_apply_slicer(dgmath_jit_dbase, e_m->u_elem, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
-  dgmath_interp_GLL_to_GL
-    (
-     dgmath_jit_dbase,
-     u_m_on_f_m,
-     e_m->deg,
-     e_m->deg_integ,
-     u_m_on_f_m_Gauss,
-     (P4EST_DIM)-1
-    );
   
-  for (int i = 0; i < face_nodes_m_Gauss; i++){
-    ustar_min_u_on_f_m_Gauss[i] = u_at_bndry(xyz_on_f_m_Gauss[0][i],
-                                             xyz_on_f_m_Gauss[1][i]
+  for (int i = 0; i < face_nodes_m_Lobatto; i++){
+    ustar_min_u_on_f_m_Lobatto[i] = u_at_bndry(xyz_on_f_m[0][i],
+                                               xyz_on_f_m[1][i]
 #if (P4EST_DIM)==3
-                                             ,
-                                             xyz_on_f_m_Gauss[2][i]
+                                               ,
+                                               xyz_on_f_m[2][i]
 #endif                          
-                                            ) - u_m_on_f_m_Gauss[i]; 
+                                              ) - u_m_on_f_m[i]; 
   }
 
 
+  dgmath_interp_GLL_to_GL
+    (
+     dgmath_jit_dbase,
+     ustar_min_u_on_f_m_Lobatto,
+     e_m->deg,
+     e_m->deg_integ,
+     ustar_min_u_on_f_m_Gauss,
+     (P4EST_DIM)-1
+    );
+
+  
   
   for (int d = 0; d < (P4EST_DIM); d++){
     for (int i = 0; i < face_nodes_m_Gauss; i++){
@@ -98,15 +117,20 @@ curved_Gauss_sipg_flux_scalar_dirichlet
        &e_m->M_ustar_min_u_n[d][f_m*face_nodes_m_Lobatto]
       );
   }
+
+  /* double* flux = &e_m->M_ustar_min_u_n[0][f_m*face_nodes_m_Lobatto]; */
+  /* DEBUG_PRINT_ARR_DBL(flux, face_nodes_m_Lobatto); */
+
   
   for (int dir = 0; dir < (P4EST_DIM); dir++){
     /* P4EST_FREE(xyz_on_f_m[dir]); */
-    P4EST_FREE(xyz_on_f_m_Gauss[dir]);
+    P4EST_FREE(xyz_on_f_m[dir]);
     P4EST_FREE(n_on_f_m_Gauss[dir]);
     P4EST_FREE(sj_n_on_f_m_Gauss[dir]);
   }
 
   P4EST_FREE(ustar_min_u_on_f_m_Gauss);
+  P4EST_FREE(ustar_min_u_on_f_m_Lobatto);
   P4EST_FREE(sj_on_f_m_Gauss);
   P4EST_FREE(u_m_on_f_m_Gauss);
   P4EST_FREE(u_m_on_f_m);

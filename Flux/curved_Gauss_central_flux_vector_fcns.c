@@ -491,6 +491,7 @@ curved_Gauss_central_flux_vector_interface
      tmpxyz
     );
   D4EST_FREE_DIM_VEC(tmpxyz);
+
   
     /* calculate symmetric interior penalty flux */
     stride = 0;

@@ -47,30 +47,40 @@ curved_Gauss_sipg_flux_vector_dirichlet
   double* dudr_m_on_f_m_Gauss [(P4EST_DIM)];
   double* dudx_m_on_f_m_Gauss [(P4EST_DIM)];
   
-  double* xyz_on_f_m_Gauss [(P4EST_DIM)];
+  double* xyz_on_f_m [(P4EST_DIM)];
   double* M_qstar_min_q_n = P4EST_ALLOC_ZERO(double, face_nodes_m_Lobatto);
   double* u_on_f_m_min_u_at_bndry_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
+  double* u_on_f_m_min_u_at_bndry_Lobatto = P4EST_ALLOC(double, face_nodes_m_Lobatto);
   double* sj_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
   double* qstar_min_q_Gauss [(P4EST_DIM)];
   double* n_on_f_m_Gauss [(P4EST_DIM)];
   double* sj_n_on_f_m_Gauss [(P4EST_DIM)];
 
+
+  double* drst_dxyz_Gauss [(P4EST_DIM)][(P4EST_DIM)];
+  D4EST_ALLOC_DBYD_MAT(drst_dxyz_Gauss, face_nodes_m_Gauss);
+  
   for (int d = 0; d < (P4EST_DIM); d++) {
+    xyz_on_f_m[d] = P4EST_ALLOC(double, face_nodes_m_Lobatto);
     q_m_on_f_m[d] = P4EST_ALLOC(double, face_nodes_m_Lobatto);
     dudr_m_on_f_m[d] = P4EST_ALLOC(double, face_nodes_m_Lobatto);
     dudr_m_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     dudx_m_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     q_m_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
-    xyz_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     n_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     sj_n_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     qstar_min_q_Gauss[d] = P4EST_ALLOC_ZERO(double, face_nodes_m_Gauss);
   }
 
-  
-
   for (int d = 0; d < (P4EST_DIM); d++){
 
+    dgmath_apply_slicer(dgmath_jit_dbase,
+                        e_m->xyz[d],
+                        (P4EST_DIM),
+                        f_m,
+                        e_m->deg,
+                        xyz_on_f_m[d]);
+    
     dgmath_apply_slicer
       (
        dgmath_jit_dbase,
@@ -112,65 +122,81 @@ curved_Gauss_sipg_flux_vector_dirichlet
      );
    
   }
-  
-  curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes
-    (
-     dudr_m_on_f_m_Gauss, /* should be of mortar length, but not individually rotated */
+
+
+ curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
+   (
      &e_m,
      1,
      1,
      &e_m->deg_integ,
      f_m,
-     dudx_m_on_f_m_Gauss,
+     drst_dxyz_Gauss,
+     sj_on_f_m_Gauss,
+     n_on_f_m_Gauss,
      geom->p4est_geom,
      dgmath_jit_dbase
     );
 
+  
+  /* curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes */
+  /*   ( */
+  /*    dudr_m_on_f_m_Gauss, /\* should be of mortar length, but not individually rotated *\/ */
+  /*    &e_m, */
+  /*    1, */
+  /*    1, */
+  /*    &e_m->deg_integ, */
+  /*    f_m, */
+  /*    dudx_m_on_f_m_Gauss, */
+  /*    geom->p4est_geom, */
+  /*    dgmath_jit_dbase */
+  /*   ); */
+
   /* DEBUG_PRINT_ARR_DBL(dudr_m_on_f_m_Gauss[0], dgmath_get_nodes((P4EST_DIM-1), e_m->deg_integ)); */
   /* DEBUG_PRINT_ARR_DBL(dudx_m_on_f_m_Gauss[0], dgmath_get_nodes((P4EST_DIM-1), e_m->deg_integ)); */
 
-
   
   dgmath_apply_slicer(dgmath_jit_dbase, e_m->u_elem, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
+  for (int d = 0; d < (P4EST_DIM); d++){
+      linalg_fill_vec
+      (
+       dudx_m_on_f_m_Gauss[d],
+       0.0,
+       face_nodes_m_Gauss
+      );
+  }
+  
+  for (int j = 0; j < (P4EST_DIM); j++){
+    for (int i = 0; i < (P4EST_DIM); i++){   
+      for (int k = 0; k < face_nodes_m_Gauss; k++){
+        dudx_m_on_f_m_Gauss[j][k] += drst_dxyz_Gauss[i][j][k]*dudr_m_on_f_m_Gauss[i][k];
+      }
+    }
+  }
+
+  for (int i = 0; i < face_nodes_m_Lobatto; i++){
+    u_on_f_m_min_u_at_bndry_Lobatto[i] = u_m_on_f_m[i]
+                                         - u_at_bndry
+                                         (
+                                          xyz_on_f_m[0][i],
+                                          xyz_on_f_m[1][i]
+#if (P4EST_DIM)==3
+                                          ,
+                                          xyz_on_f_m[2][i]
+#endif
+                                         );
+  }
+
   dgmath_interp_GLL_to_GL
     (
      dgmath_jit_dbase,
-     u_m_on_f_m,
+     u_on_f_m_min_u_at_bndry_Lobatto,
      e_m->deg,
      e_m->deg_integ,
-     u_m_on_f_m_Gauss,
+     u_on_f_m_min_u_at_bndry_Gauss,
      (P4EST_DIM)-1
     );
-
-  curved_element_data_compute_mortar_normal_and_sj_using_face_data
-    (
-     &e_m,
-     1,
-     1,
-     &e_m->deg_integ,
-     f_m,
-     geom->dxdr_method,
-     1,
-     n_on_f_m_Gauss,
-     sj_on_f_m_Gauss,
-     geom,
-     dgmath_jit_dbase,
-     xyz_on_f_m_Gauss
-    );
-
-  /* get boundary values on this face */
-  for (int i = 0; i < face_nodes_m_Gauss; i++){
-    u_on_f_m_min_u_at_bndry_Gauss[i] = u_m_on_f_m_Gauss[i]
-                                 - u_at_bndry
-                                 (
-                                  xyz_on_f_m_Gauss[0][i],
-                                  xyz_on_f_m_Gauss[1][i]
-#if (P4EST_DIM)==3
-                                  ,
-                                  xyz_on_f_m_Gauss[2][i]
-#endif
-                                 );
-  }
+  
   
   for(int i = 0; i < face_nodes_m_Gauss; i++){
     for (int d = 0; d < (P4EST_DIM); d++){
@@ -209,19 +235,21 @@ curved_Gauss_sipg_flux_vector_dirichlet
     P4EST_FREE(dudr_m_on_f_m[i]);
     P4EST_FREE(dudr_m_on_f_m_Gauss[i]);
     P4EST_FREE(dudx_m_on_f_m_Gauss[i]);
-    /* P4EST_FREE(xyz_on_f_m[i]); */
-    P4EST_FREE(xyz_on_f_m_Gauss[i]);
+    P4EST_FREE(xyz_on_f_m[i]);
     P4EST_FREE(qstar_min_q_Gauss[i]);
   }
 
   P4EST_FREE(sj_on_f_m_Gauss);
   P4EST_FREE(u_on_f_m_min_u_at_bndry_Gauss);
+  P4EST_FREE(u_on_f_m_min_u_at_bndry_Lobatto);
   P4EST_FREE(M_qstar_min_q_n);
   
   for (int d = 0; d < (P4EST_DIM); d++){
     P4EST_FREE(n_on_f_m_Gauss[d]);
     P4EST_FREE(sj_n_on_f_m_Gauss[d]);
   }
+  D4EST_FREE_DBYD_MAT(drst_dxyz_Gauss);
+  
 }
 
 static void
@@ -259,10 +287,10 @@ curved_Gauss_sipg_flux_vector_interface
   int nodes_mortar_Lobatto [(P4EST_HALF)];
   int deg_mortar_Gauss [(P4EST_HALF)];
   int deg_mortar_Lobatto [(P4EST_HALF)];
+  int deg_p_Lobatto_porder [(P4EST_HALF)];
   int faces_mortar = (faces_m > faces_p) ? faces_m : faces_p;
   double penalty_mortar [(P4EST_HALF)];
 
-  
   curved_element_data_t* e_p_oriented [(P4EST_HALF)];
   curved_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
   
@@ -285,6 +313,7 @@ curved_Gauss_sipg_flux_vector_interface
   int total_side_nodes_p_Gauss = 0;
   for (int i = 0; i < faces_p; i++){
     deg_p_Lobatto[i] = e_p_oriented[i]->deg;
+    deg_p_Lobatto_porder[i] = e_p[i]->deg;
     /* deg_p_Gauss[i] = e_p_oriented[i]->deg_integ; */
 
     face_nodes_p_Lobatto[i] = dgmath_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
@@ -319,6 +348,18 @@ curved_Gauss_sipg_flux_vector_interface
       
     }
 
+  int deg_mortar_Gauss_porder [(P4EST_HALF)];
+  int nodes_mortar_Gauss_porder [(P4EST_HALF)];
+  
+  for(int i = 0; i < faces_mortar; i++){
+    int inew = i;
+    if (faces_mortar == (P4EST_HALF)){
+      inew = dgmath_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, i);
+    }
+    deg_mortar_Gauss_porder[inew] = deg_mortar_Gauss[i];
+    nodes_mortar_Gauss_porder[inew] = nodes_mortar_Gauss[i];
+  }
+
   /* slices of scalar/vector fields of (-) onto f_m and (+) onto f_p */
   double* u_m_on_f_m = P4EST_ALLOC(double, total_side_nodes_m_Lobatto);
   double* u_p_on_f_p = P4EST_ALLOC(double, total_side_nodes_p_Lobatto);
@@ -335,30 +376,37 @@ curved_Gauss_sipg_flux_vector_interface
   double* u_m_on_f_m_mortar_Gauss = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
   double* u_p_on_f_p_mortar = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
   double* u_p_on_f_p_mortar_Gauss = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
-  double* dudr_p_on_f_p [(P4EST_DIM)];
+  double* dudr_p_on_f_p_porder [(P4EST_DIM)];
   double* dudr_m_on_f_m [(P4EST_DIM)];
-  double* dudr_p_on_f_p_mortar [(P4EST_DIM)];
+  double* dudr_p_on_f_p_mortar_porder [(P4EST_DIM)];
   double* dudr_m_on_f_m_mortar [(P4EST_DIM)];
-  double* dudr_p_on_f_p_mortar_Gauss [(P4EST_DIM)];
+  double* dudr_p_on_f_p_mortar_Gauss_porder [(P4EST_DIM)];
   double* dudr_m_on_f_m_mortar_Gauss [(P4EST_DIM)];
-  double* dudx_p_on_f_p_mortar_Gauss [(P4EST_DIM)];
+  double* dudx_p_on_f_p_mortar_Gauss_porder [(P4EST_DIM)];
   double* dudx_m_on_f_m_mortar_Gauss [(P4EST_DIM)];
-  double* dudx_p_on_f_p_mortar_Gauss_reoriented [(P4EST_DIM)];
+  double* dudx_p_on_f_p_mortar_Gauss [(P4EST_DIM)];
   double* q_m_on_f_m_mortar [(P4EST_DIM)];
   double* q_m_on_f_m_mortar_Gauss [(P4EST_DIM)];
 
-  for (int i = 0; i < (P4EST_DIM); i++){
-    dudr_p_on_f_p[i] = P4EST_ALLOC(double, total_side_nodes_p_Lobatto);
-    dudr_p_on_f_p_mortar[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
-    dudr_p_on_f_p_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
-    dudx_p_on_f_p_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+  double* drst_dxyz_m_on_mortar_Gauss [(P4EST_DIM)][(P4EST_DIM)];
+  double* drst_dxyz_p_on_mortar_Gauss_porder [(P4EST_DIM)][(P4EST_DIM)];
+  D4EST_ALLOC_DBYD_MAT(drst_dxyz_m_on_mortar_Gauss, total_nodes_mortar_Gauss);
+  D4EST_ALLOC_DBYD_MAT(drst_dxyz_p_on_mortar_Gauss_porder, total_nodes_mortar_Gauss);
 
+  
+  for (int i = 0; i < (P4EST_DIM); i++){
+    dudr_p_on_f_p_porder[i] = P4EST_ALLOC(double, total_side_nodes_p_Lobatto);
+    dudr_p_on_f_p_mortar_porder[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+    dudr_p_on_f_p_mortar_Gauss_porder[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+    dudx_p_on_f_p_mortar_Gauss_porder[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+    dudx_p_on_f_p_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+    
     dudr_m_on_f_m[i] = P4EST_ALLOC(double, total_side_nodes_m_Lobatto);
     dudr_m_on_f_m_mortar[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
     dudr_m_on_f_m_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
     dudx_m_on_f_m_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
 
-    dudx_p_on_f_p_mortar_Gauss_reoriented[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+
     q_m_on_f_m_mortar[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
     q_m_on_f_m_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
   }
@@ -454,7 +502,7 @@ curved_Gauss_sipg_flux_vector_interface
     dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &u_m_on_f_m_mortar[stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &u_m_on_f_m_mortar_Gauss[stride], (P4EST_DIM)-1);
     dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &u_p_on_f_p_mortar[stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &u_p_on_f_p_mortar_Gauss[stride], (P4EST_DIM)-1);
     stride += nodes_mortar_Gauss[f];
-  }
+   }
 
   
   /* For each component of the vector */
@@ -491,33 +539,32 @@ curved_Gauss_sipg_flux_vector_interface
    * and project on the (+)-side faces and project q onto the (+)-side faces */
     stride = 0;
     for (int i = 0; i < faces_p; i++){
-
-      dgmath_apply_slicer
-        (
-         dgmath_jit_dbase,
-         &e_p_oriented[i]->dudr_elem[d][0],
-         (P4EST_DIM),
-         f_p,
-         e_p_oriented[i]->deg,
-         &dudr_p_on_f_p[d][stride]
-        );
-   
-
-      stride += face_nodes_p_Lobatto[i];
+      for (int d = 0; d < (P4EST_DIM); d++){
+        dgmath_apply_slicer
+          (
+           dgmath_jit_dbase,
+           &e_p[i]->dudr_elem[d][0],
+           (P4EST_DIM),
+           f_p,
+           e_p[i]->deg,
+           &dudr_p_on_f_p_porder[d][stride]
+          );
+      }
+      stride += dgmath_get_nodes((P4EST_DIM)-1, e_p[i]->deg);
     }
-
 
 
     dgmath_project_side_onto_mortar_space
       (
        dgmath_jit_dbase,
-       dudr_p_on_f_p[d],
+       dudr_p_on_f_p_porder[d],
        faces_p,
-       deg_p_Lobatto,
-       dudr_p_on_f_p_mortar[d],
+       deg_p_Lobatto_porder,
+       dudr_p_on_f_p_mortar_porder[d],
        faces_mortar,
-       deg_mortar_Gauss
+       deg_mortar_Gauss_porder
       );
+  
 
     dgmath_project_side_onto_mortar_space
       (
@@ -546,88 +593,135 @@ curved_Gauss_sipg_flux_vector_interface
     stride = 0;
     for (int f = 0; f < faces_mortar; f++){
       dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &q_m_on_f_m_mortar[d][stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &q_m_on_f_m_mortar_Gauss[d][stride], (P4EST_DIM)-1);
-      dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &dudr_p_on_f_p_mortar[d][stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &dudr_p_on_f_p_mortar_Gauss[d][stride], (P4EST_DIM)-1);
       dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &dudr_m_on_f_m_mortar[d][stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &dudr_m_on_f_m_mortar_Gauss[d][stride], (P4EST_DIM)-1);
       stride += nodes_mortar_Gauss[f];
-    }   
-  }
+    }
 
-  curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes
-    (
-     dudr_p_on_f_p_mortar_Gauss, /* should be of mortar length, but not individually rotated */
-     e_p_oriented,
-     faces_p,
-     faces_mortar,
-     deg_mortar_Gauss,
-     f_p,
-     dudx_p_on_f_p_mortar_Gauss,
-     geom->p4est_geom,
-     dgmath_jit_dbase
-    );
-
- /*  DEBUG_PRINT_3ARR_DBL(dudr_p_on_f_p_mortar_Gauss[0],dudr_p_on_f_p_mortar_Gauss[1],dudr_p_on_f_p_mortar_Gauss[2], total_nodes_mortar_Gauss); */
-/* DEBUG_PRINT_3ARR_DBL(dudx_p_on_f_p_mortar_Gauss[0],dudx_p_on_f_p_mortar_Gauss[1],dudx_p_on_f_p_mortar_Gauss[2], total_nodes_mortar_Gauss); */
-
-  curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes
-    (
-     dudr_m_on_f_m_mortar_Gauss, /* should be of mortar length, but not individually rotated */
-     e_m,
-     faces_m,
-     faces_mortar,
-     deg_mortar_Gauss,
-     f_m,
-     dudx_m_on_f_m_mortar_Gauss,
-     geom->p4est_geom,
-     dgmath_jit_dbase
-    );
-
-
-/*   DEBUG_PRINT_3ARR_DBL(dudr_m_on_f_m_mortar_Gauss[0],dudr_m_on_f_m_mortar_Gauss[1],dudr_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss); */
-/* DEBUG_PRINT_3ARR_DBL(dudx_m_on_f_m_mortar_Gauss[0],dudx_m_on_f_m_mortar_Gauss[1],dudx_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss); */
-
-  
-  
-  for(int d = 0; d < (P4EST_DIM); d++){
     stride = 0;
     for (int f = 0; f < faces_mortar; f++){
-      dgmath_reorient_face_data
-        (
-         dgmath_jit_dbase,
-         &dudx_p_on_f_p_mortar_Gauss[d][stride],
-         ((P4EST_DIM) - 1),
-         deg_mortar_Gauss[f],
-         orientation,
-         f_m,
-         f_p,
-         &dudx_p_on_f_p_mortar_Gauss_reoriented[d][stride]
-        );      
-      stride += nodes_mortar_Gauss[f];
-    }   
+      for (int d = 0; d < (P4EST_DIM); d++){
+        dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &dudr_p_on_f_p_mortar_porder[d][stride], deg_mortar_Gauss_porder[f], deg_mortar_Gauss_porder[f], &dudr_p_on_f_p_mortar_Gauss_porder[d][stride], (P4EST_DIM)-1);
+      }
+      stride += nodes_mortar_Gauss_porder[f];
+    }
   }
 
-  
-  
-  
-  double* tmpxyz [(P4EST_DIM)];
-  D4EST_ALLOC_DIM_VEC(tmpxyz,total_nodes_mortar_Gauss);
-  curved_element_data_compute_mortar_normal_and_sj_using_face_data
+
+ curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
     (
      e_m,
      faces_m,
      faces_mortar,
      &deg_mortar_Gauss[0],
      f_m,
-     geom->dxdr_method,
-     1,
-     n_on_f_m_mortar_Gauss,
+     drst_dxyz_m_on_mortar_Gauss,
      sj_on_f_m_mortar_Gauss,
-     geom,
-     dgmath_jit_dbase,
-     tmpxyz
+     n_on_f_m_mortar_Gauss,
+     geom->p4est_geom,
+     dgmath_jit_dbase
     );
-  D4EST_FREE_DIM_VEC(tmpxyz);
+
+  curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
+    (
+     e_p,
+     faces_p,
+     faces_mortar,
+     &deg_mortar_Gauss_porder[0], 
+     f_p,
+     drst_dxyz_p_on_mortar_Gauss_porder,
+     NULL,
+     (double* [(P4EST_DIM)]){NULL, NULL
+#if (P4EST_DIM)==3
+         , NULL
+#endif
+         },
+     geom->p4est_geom,
+     dgmath_jit_dbase
+    );
+
+  for (int d = 0; d < (P4EST_DIM); d++){
+    linalg_fill_vec
+      (
+       dudx_m_on_f_m_mortar_Gauss[d],
+       0.0,
+       total_nodes_mortar_Gauss
+      );
+
+
+    linalg_fill_vec
+      (
+       dudx_p_on_f_p_mortar_Gauss_porder[d],
+       0.0,
+       total_nodes_mortar_Gauss
+      );
+  }
+  
+  for (int j = 0; j < (P4EST_DIM); j++){
+    for (int i = 0; i < (P4EST_DIM); i++){   
+      for (int k = 0; k < total_nodes_mortar_Gauss; k++){
+        dudx_m_on_f_m_mortar_Gauss[j][k] +=
+          drst_dxyz_m_on_mortar_Gauss[i][j][k]*dudr_m_on_f_m_mortar_Gauss[i][k];
+        dudx_p_on_f_p_mortar_Gauss_porder[j][k] += drst_dxyz_p_on_mortar_Gauss_porder[i][j][k]*dudr_p_on_f_p_mortar_Gauss_porder[i][k];
+      }
+    }    
+  }
+  
+  int face_mortar_stride = 0;
+  for (int face = 0; face < faces_mortar; face++){
+    int face_p = face;
+    if (faces_mortar == (P4EST_HALF))
+      face_p = dgmath_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, face);
+
+    int oriented_face_mortar_stride = 0;
+    for (int b = 0; b < face_p; b++){
+      oriented_face_mortar_stride += dgmath_get_nodes((P4EST_DIM)-1, deg_mortar_Gauss_porder[b]);
+    }
+
+
+    for (int d = 0; d < (P4EST_DIM); d++){
+      dgmath_reorient_face_data
+        (
+         dgmath_jit_dbase,
+         &dudx_p_on_f_p_mortar_Gauss_porder[d][oriented_face_mortar_stride],
+         (P4EST_DIM)-1,
+         deg_mortar_Gauss[face],
+         orientation,
+         f_m,
+         f_p,
+         &dudx_p_on_f_p_mortar_Gauss[d][face_mortar_stride]
+        );
+    }
+    
+    face_mortar_stride += dgmath_get_nodes((P4EST_DIM)-1, deg_mortar_Gauss[face]);
+  }
+
+  
+  
+  
+  /* double* tmpxyz [(P4EST_DIM)]; */
+  /* D4EST_ALLOC_DIM_VEC(tmpxyz,total_nodes_mortar_Gauss); */
+  /* curved_element_data_compute_mortar_normal_and_sj_using_face_data */
+  /*   ( */
+  /*    e_m, */
+  /*    faces_m, */
+  /*    faces_mortar, */
+  /*    &deg_mortar_Gauss[0], */
+  /*    f_m, */
+  /*    geom->dxdr_method, */
+  /*    1, */
+  /*    n_on_f_m_mortar_Gauss, */
+  /*    sj_on_f_m_mortar_Gauss, */
+  /*    geom, */
+  /*    dgmath_jit_dbase, */
+  /*    tmpxyz */
+  /*   ); */
+  /* D4EST_FREE_DIM_VEC(tmpxyz); */
   
     /* calculate symmetric interior penalty flux */
+  /* if ((e_m[0]->id == 0 && e_p[0]->id == 1) || (e_m[0]->id == 1 && e_p[0]->id == 0)){ */
+  /*   printf("e_m[0]->id = %d, e_p[0]->id = %d, f_m = %d, f_p = %d\n", e_m[0]->id, e_p[0]->id, f_m, f_p); */
+  /* } */
+
     stride = 0;
     int stride_Lobatto = 0;
     for (int f = 0; f < faces_mortar; f++){
@@ -636,11 +730,17 @@ curved_Gauss_sipg_flux_vector_interface
         double sigma = penalty_mortar[f];
         
         for (int d = 0; d < (P4EST_DIM); d++){
-          qstar_min_q_mortar_Gauss[d][ks] = .5*(dudx_p_on_f_p_mortar_Gauss_reoriented[d][ks] + dudx_m_on_f_m_mortar_Gauss[d][ks]);
+          qstar_min_q_mortar_Gauss[d][ks] = .5*(dudx_p_on_f_p_mortar_Gauss[d][ks] + dudx_m_on_f_m_mortar_Gauss[d][ks]);
           qstar_min_q_mortar_Gauss[d][ks] -= -sigma*n_on_f_m_mortar_Gauss[d][ks]*u_p_on_f_p_mortar_Gauss[ks];
           qstar_min_q_mortar_Gauss[d][ks] -= sigma*n_on_f_m_mortar_Gauss[d][ks]*u_m_on_f_m_mortar_Gauss[ks];
+
+          /* if ((e_m[0]->id == 0 && e_p[0]->id == 1) || (e_m[0]->id == 1 && e_p[0]->id == 0)){ */
+          /*   printf("qstar_min_q_mortar_Gauss[%d][%d] = %.25f\n",d,ks, qstar_min_q_mortar_Gauss[d][ks]); */
+          /* } */
+          
           qstar_min_q_mortar_Gauss[d][ks] -= q_m_on_f_m_mortar_Gauss[d][ks];
           sj_n_on_f_m_mortar_Gauss[d][ks] = sj_on_f_m_mortar_Gauss[ks]*n_on_f_m_mortar_Gauss[d][ks];
+
           /* printf("dudx_m, dudx_p, n, q, sj = %.25f, %.25f, %.25f, %.25f, %.25f\n", dudx_m_on_f_m_mortar_Gauss[d][ks], dudx_p_on_f_p_mortar_Gauss_reoriented[d][ks], n_on_f_m_mortar_Gauss[d][ks], q_m_on_f_m_mortar_Gauss[d][ks], sj_on_f_m_mortar_Gauss[ks]); */
         }        
       }
@@ -712,23 +812,24 @@ curved_Gauss_sipg_flux_vector_interface
     P4EST_FREE(q_m_on_f_m[i]);
   }
 
+
+  D4EST_FREE_DBYD_MAT(drst_dxyz_m_on_mortar_Gauss);
+  D4EST_FREE_DBYD_MAT(drst_dxyz_p_on_mortar_Gauss_porder);
+  
   P4EST_FREE(u_m_on_f_m_mortar);
   P4EST_FREE(u_m_on_f_m_mortar_Gauss);
   P4EST_FREE(u_p_on_f_p_mortar);
   P4EST_FREE(u_p_on_f_p_mortar_Gauss);
   for (int i = 0; i < (P4EST_DIM); i++){   
-    P4EST_FREE(dudr_p_on_f_p[i]);
-    P4EST_FREE(dudr_p_on_f_p_mortar[i]);
-    P4EST_FREE(dudr_p_on_f_p_mortar_Gauss[i]);
+    P4EST_FREE(dudr_p_on_f_p_porder[i]);
+    P4EST_FREE(dudr_p_on_f_p_mortar_porder[i]);
+    P4EST_FREE(dudr_p_on_f_p_mortar_Gauss_porder[i]);
+    P4EST_FREE(dudx_p_on_f_p_mortar_Gauss_porder[i]);
     P4EST_FREE(dudx_p_on_f_p_mortar_Gauss[i]);
-    P4EST_FREE(dudx_p_on_f_p_mortar_Gauss_reoriented[i]);
-
     P4EST_FREE(dudr_m_on_f_m[i]);
     P4EST_FREE(dudr_m_on_f_m_mortar[i]);
     P4EST_FREE(dudr_m_on_f_m_mortar_Gauss[i]);
     P4EST_FREE(dudx_m_on_f_m_mortar_Gauss[i]);
-    
-
     P4EST_FREE(q_m_on_f_m_mortar[i]);
     P4EST_FREE(q_m_on_f_m_mortar_Gauss[i]);
   }

@@ -6,6 +6,7 @@
 #include <sipg_flux_vector_fcns.h>
 #include <curved_Gauss_sipg_flux_scalar_fcns.h>
 #include <curved_Gauss_sipg_flux_vector_fcns.h>
+#include <curved_Gauss_central_flux_vector_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
 #include <problem_weakeqn_ptrs.h>
@@ -16,6 +17,7 @@
 #include <dg_norm.h>
 #include <d4est_geometry.h>
 #include <d4est_geometry_sphere.h>
+#include <d4est_geometry_disk.h>
 #include <curved_poisson_debug_vecs.h>
 #include <d4est_vtk.h>
 #include <ini.h>
@@ -37,15 +39,21 @@ static
 double analytic_fcn
 (
  double x,
- double y,
+ double y
+ #if (P4EST_DIM)==3
+ ,
  double z
+#endif
 )
 {
   /* int n = 3; */
   /* double arg = -(x*x + y*y + z*z)/(global_sigma*global_sigma); */
   /* double N = 1./sqrt(pow(2,n)*pow(global_sigma,2*n)*pow(M_PI,n)); */
   /* return N*exp(arg); */
-  double r2 = x*x + y*y + z*z;
+  double r2 = x*x + y*y;
+#if (P4EST_DIM)==3
+ r2 += z*z;
+#endif 
   return global_Rinf*global_Rinf - r2;
 }
 
@@ -53,28 +61,44 @@ static
 double boundary_fcn
 (
  double x,
- double y,
+ double y
+#if (P4EST_DIM)==3
+ ,
  double z
+#endif
 )
 {
   /* double r2 = x*x + y*y + z*z; */
   /* printf("boundary_fcn(x,y,z) = %.25f, r2 = %.25f, global_Rinf = %.25f\n ", analytic_fcn(x,y,z), r2, global_Rinf);  */
   /* return analytic_fcn(x,y,z); */
-  return zero_fcn(x,y,z);
+  return zero_fcn(x,y
+#if (P4EST_DIM)==3
+                  ,z
+#endif
+                  );
 }
 
 static
 double f_fcn
 (
  double x,
- double y,
+ double y
+#if (P4EST_DIM)==3
+ ,
  double z
+#endif
 )
 {
+
+#if (P4EST_DIM)==3
   return -6.;
+#else
+  return -4;
+#endif
   /* return 2*analytic_fcn(x,y,z)*(2*x*x + 2*y*y + 2*z*z - 3*global_sigma*global_sigma)/(global_sigma*global_sigma*global_sigma*global_sigma); */
 }
 
+ 
 static int
 refine_function
 (
@@ -95,9 +119,15 @@ problem_help()
 p4est_connectivity_t*
 problem_build_conn()
 {
-  mpi_assert((P4EST_DIM)==3);
+  /* mpi_assert((P4EST_DIM)==3); */
   p4est_connectivity_t* conn;
+
+#if (P4EST_DIM)==3
   conn = p8est_connectivity_new_sphere();
+#endif
+#if (P4EST_DIM)==2
+  conn = p4est_connectivity_new_disk();
+#endif
   return conn;
 }
 
@@ -113,14 +143,16 @@ typedef struct {
   int deg_integ_R1;
   int deg_R2;
   int deg_integ_R2;
-  
+
+  int use_ip_flux;
   double ip_flux_penalty;
+
   double R0;
   double R1;
   double R2;
   /* double Rinf; */
   /* double w; */
-  /* KSPType krylov_type; */
+  KSPType krylov_type;
   
   int count;
   
@@ -145,6 +177,11 @@ int problem_input_handler
   else if (util_match(section,"amr",name,"num_randrefs")) {
     mpi_assert(pconfig->num_randrefs == -1);
     pconfig->num_randrefs = atoi(value);
+    pconfig->count += 1;
+  }
+  else if (util_match(section,"flux",name,"use_ip_flux")) {
+    mpi_assert(pconfig->use_ip_flux == -1);
+    pconfig->use_ip_flux = atoi(value);
     pconfig->count += 1;
   }
   /* else if (util_match(section,"amr",name, "initial_degree")) { */
@@ -217,19 +254,19 @@ int problem_input_handler
     pconfig->deg_integ_R2 = atoi(value);
     pconfig->count += 1;
   }  
-  /* else if (util_match(section,"solver",name,"krylov_type")) { */
-  /*   mpi_assert(pconfig->krylov_type = ""); */
-  /*   if (strcmp("cg", value) == 0){ */
-  /*     pconfig->krylov_type = KSPCG; */
-  /*   } */
-  /*   else if (strcmp("gmres", value) == 0){ */
-  /*     pconfig->krylov_type = KSPGMRES; */
-  /*   } */
-  /*   else { */
-  /*     mpi_abort("not a support KSP solver type"); */
-  /*   } */
-  /*   pconfig->count += 1; */
-  /* }     */
+  else if (util_match(section,"solver",name,"krylov_type")) {
+    mpi_assert(pconfig->krylov_type = "");
+    if (strcmp("cg", value) == 0){
+      pconfig->krylov_type = KSPCG;
+    }
+    else if (strcmp("gmres", value) == 0){
+      pconfig->krylov_type = KSPGMRES;
+    }
+    else {
+      mpi_abort("not a support KSP solver type");
+    }
+    pconfig->count += 1;
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -261,13 +298,13 @@ void problem_build_rhs
      d4est_geom->p4est_geom
     );
   
-    prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
-                                            (
-                                             boundary_fcn,
-                                             ip_flux_params
-                                            );
-    prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns
-                                            (boundary_fcn);
+    /* prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns */
+    /*                                         ( */
+    /*                                          boundary_fcn, */
+    /*                                          ip_flux_params */
+    /*                                         ); */
+    /* prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns */
+    /*                                         (boundary_fcn); */
 
 
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -305,13 +342,13 @@ void problem_build_rhs
   P4EST_FREE(u_eq_0);
 
 
-  prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
-                                          (
-                                           zero_fcn,
-                                           ip_flux_params
-                                          );
-  prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns
-                                          (zero_fcn);
+  /* prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns */
+  /*                                         ( */
+  /*                                          zero_fcn, */
+  /*                                          ip_flux_params */
+  /*                                         ); */
+  /* prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns */
+  /*                                         (zero_fcn); */
 
   P4EST_FREE(f);
 }
@@ -324,7 +361,7 @@ problem_input
  const char* input_file
 )
 {
-  int num_of_options = 12;
+  int num_of_options = 13;
   
   problem_input_t input;
   /* input.degree = -1; */
@@ -333,6 +370,7 @@ problem_input
   input.R2 = -1;
   input.R1 = -1;
   input.R0 = -1;
+  input.use_ip_flux = -1;
   /* input.w = -1; */
   /* input.Rinf = -1; */
   input.num_randrefs = -1;
@@ -343,7 +381,7 @@ problem_input
   input.deg_R2 = -1;
   input.deg_integ_R2 = -1;
   /* input.gauss_integ_deg = -1; */
-  /* input.krylov_type = ""; */
+  input.krylov_type = "";
   
   input.count = 0;
   
@@ -361,13 +399,19 @@ problem_build_geom
  p4est_connectivity_t* conn
 )
 {
-  mpi_assert((P4EST_DIM)==3);
+  /* mpi_assert((P4EST_DIM)==3); */
   p4est_geometry_t* geom;
   problem_input_t input = problem_input("options.input");
 
   /* geom = d4est_geometry_new_compact_sphere(conn, input.R2, input.R1, input.R0, input.w, input.Rinf); */
+#if (P4EST_DIM)==3
   geom = d4est_geometry_new_sphere(conn, input.R2, input.R1, input.R0);
-  printf("input.R2 = %.25f\n", input.R2);
+#endif
+#if (P4EST_DIM)==2
+  geom = d4est_geometry_new_disk(conn, input.R1, input.R2);
+#endif
+  
+  /* printf("input.R2 = %.25f\n", input.R2); */
 
   
   return geom;  
@@ -483,7 +527,10 @@ problem_init
   ip_flux_params_t ip_flux_params;
   ip_flux_params.ip_flux_penalty_prefactor = input.ip_flux_penalty;
   ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
-      
+
+  central_flux_params_t central_flux_params;
+  central_flux_params.central_flux_penalty_prefactor = input.ip_flux_penalty;
+  
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   /* create space for storing the ghost data */
   curved_element_data_t* ghost_data = P4EST_ALLOC (curved_element_data_t,
@@ -608,18 +655,22 @@ problem_init
     prob_vecs.local_nodes = local_nodes;
 
 
-    prob_vecs.curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
-                                            (
-                                             zero_fcn,
-                                             &ip_flux_params
-                                            );
-
-    /* prob_vecs.curved_vector_flux_fcn_data = curved_Gauss_central_flux_vector_dirichlet_fetch_fcns */
-    /*                                         ( */
-    /*                                          zero_fcn, */
-    /*                                          &central_flux_params */
-    /*                                         ); */
-
+    if (input.use_ip_flux){
+      printf("Using ip flux\n");
+      prob_vecs.curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
+                                              (
+                                               zero_fcn,
+                                               &ip_flux_params
+                                              );
+    }
+    else{
+      printf("Using central flux\n");
+      prob_vecs.curved_vector_flux_fcn_data = curved_Gauss_central_flux_vector_dirichlet_fetch_fcns
+                                              (
+                                               zero_fcn,
+                                               &central_flux_params
+                                              );
+    }
 
     
     prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns
@@ -719,21 +770,21 @@ problem_init
      
      /* krylov_petsc_params_t params = {input.krylov_type, 1, 0, NULL, NULL, NULL}; */
      
-     /* krylov_petsc_info_t info = */
-     /*   krylov_petsc_solve */
-     /*   ( */
-     /*    p4est, */
-     /*    &prob_vecs, */
-     /*    (void*)&prob_fcns, */
-     /*    &ghost, */
-     /*    (void**)&ghost_data, */
-     /*    dgmath_jit_dbase, */
-     /*    &dgeom, */
-     /*    NULL, */
-     /*    NULL, */
-     /*    NULL */
-     /*    /\* &params *\/ */
-     /*   ); */
+     krylov_petsc_info_t info =
+       krylov_petsc_solve
+       (
+        p4est,
+        &prob_vecs,
+        (void*)&prob_fcns,
+        &ghost,
+        (void**)&ghost_data,
+        dgmath_jit_dbase,
+        &dgeom,
+        NULL,
+        NULL,
+        NULL
+        /* &params */
+       );
 
      /* double* vertex_u = P4EST_ALLOC(double, (P4EST_CHILDREN)*p4est->local_num_quadrants); */
      /* double* vertex_u_analytic = P4EST_ALLOC(double, (P4EST_CHILDREN)*p4est->local_num_quadrants); */
@@ -812,61 +863,94 @@ problem_init
      /* sc_array_t* u_sc = sc_array_new_data((void*)u, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants); */
      /* sc_array_t* u_analytic_sc = sc_array_new_data((void*)u_analytic, sizeof(double), (P4EST_CHILDREN)*p4est->local_num_quadrants); */
 
-     double* error = P4EST_ALLOC(double, local_nodes);
+     /* double* error = P4EST_ALLOC(double, local_nodes); */
 
      curved_element_data_init_node_vec(p4est, u_analytic, analytic_fcn, dgmath_jit_dbase, p4est_geom);
 
-     for (int i = 0; i < local_nodes; i++){
-       error[i] = fabs(error[i]);
-     }
+     /* for (int i = 0; i < local_nodes; i++){ */
+     /*   error[i] = fabs(error[i]); */
+     /* } */
   
           
-     linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
+     /* linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes); */
 
+     /* printf("Number of elements = %d\n", p4est->local_num_quadrants); */
+     /* printf("Number of nodes = %d\n", prob_vecs.local_nodes); */
+     
+
+    /*  double* AU_1 = P4EST_ALLOC(double, prob_vecs.local_nodes); */
+    /*  for (int i = 0; i < prob_vecs.local_nodes; i++) */
+    /*    prob_vecs.u[i] = (i == 2) ? 1. : 0.; */
+     
+    /*  prob_vecs.Au = AU_1; */
+    /*  curved_poisson_debug_vecs_t* debug_vecs_1 = curved_poisson_apply_aij_debug(p4est, ghost, ghost_data, &prob_vecs, dgmath_jit_dbase, &dgeom, 0); */
+
+    /*  /\* for (int i = 0; i < prob_vecs.local_nodes; i++) *\/ */
+    /*  /\*   prob_vecs.u[i] = (i == 0) ? 1. : 0.; *\/ */
+    /*  /\* curved_poisson_debug_vecs_t* debug_vecs_2 = curved_poisson_apply_aij_debug(p4est, ghost, ghost_data, &prob_vecs, dgmath_jit_dbase, &dgeom, 0); *\/ */
+    /* curved_poisson_debug_vecs_t* debug_vecs_2 = curved_poisson_apply_aij_debug(p4est, ghost, ghost_data, &prob_vecs, dgmath_jit_dbase, &dgeom, 1); */
+     
+
+    /*  DEBUG_PRINT_ARR_DBL(AU_1, prob_vecs.local_nodes); */
+     
+    /*  curved_poisson_debug_vecs_print(debug_vecs_1); */
+    /*  curved_poisson_debug_vecs_print(debug_vecs_2); */
+    /*  curved_poisson_debug_vecs_destroy(debug_vecs_1); */
+    /*  curved_poisson_debug_vecs_destroy(debug_vecs_2); */
+     
+    /*  P4EST_FREE(AU_1); */
+
+
+
+     
+     /* P4EST_FREE(u1); */
+    /* curved_Gauss_poisson_apply_aij(p4est, ghost, ghost_data, &prob_vecs, dgmath_jit_dbase, &dgeom); */
+    /* DEBUG_PRINT_2ARR_DBL(prob_vecs.u, prob_vecs.Au, prob_vecs.local_nodes); */
+
+     
   /*    p4est_geometry_t* geom_vtk = d4est_geometry_new_sphere(p4est->connectivity, input.R2, input.R1, input.R0); */
      
 
-  /*    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, "compact-sphere"); */
-  /*    d4est_vtk_context_set_geom(vtk_ctx, geom_vtk); */
-  /*    d4est_vtk_context_set_scale(vtk_ctx, .99); */
-  /*    d4est_vtk_context_set_deg_array(vtk_ctx, deg_array); */
-  /*    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase); */
-  /*    vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx, 3, 0, "u",u, "u_analytic",u_analytic,"error", error, vtk_ctx); */
-  /*    vtk_ctx = d4est_vtk_write_dg_cell_dataf */
-  /*              ( */
-  /*               vtk_ctx, */
-  /*               1, */
-  /*               1, */
-  /*               1, */
-  /*               0, */
-  /*               1, */
-  /*               0, */
-  /*               0, */
-  /*               vtk_ctx */
-  /*           ); */
+     d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, "testcurvedipflux");
+     d4est_vtk_context_set_geom(vtk_ctx, p4est_geom);
+     d4est_vtk_context_set_scale(vtk_ctx, .99);
+     d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
+     vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);
+     /* vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx, 3, 0, "u",u, "u_analytic",u_analytic,"error", error, vtk_ctx); */
+     vtk_ctx = d4est_vtk_write_dg_cell_dataf
+               (
+                vtk_ctx,
+                1,
+                1,
+                1,
+                0,
+                1,
+                0,
+                0,
+                vtk_ctx
+            );
 
 
   
-  /* d4est_vtk_write_footer(vtk_ctx); */
-  /* P4EST_FREE(deg_array); */
+  d4est_vtk_write_footer(vtk_ctx);
+  P4EST_FREE(deg_array);
   /* P4EST_FREE(error); */
-  /* p4est_geometry_destroy(geom_vtk); */
   
-  linalg_vec_axpy(-1., u, u_analytic, local_nodes);
-  /* linalg_copy_1st_to_2nd(u, error, local_nodes); */
   /* linalg_vec_axpy(-1., u, u_analytic, local_nodes); */
+  /* linalg_copy_1st_to_2nd(u, error, local_nodes); */
+  linalg_vec_axpy(-1., u, u_analytic, local_nodes);
   
-  serial_matrix_sym_tester
-    (
-     p4est,
-     &prob_vecs, /* only needed for # of nodes */
-     (void*)&prob_fcns,
-     .0000000001,
-     dgmath_jit_dbase,
-     1, /* is it curved */
-     0, /* should we print */
-     &dgeom
-    );
+  /* serial_matrix_sym_tester */
+  /*   ( */
+  /*    p4est, */
+  /*    &prob_vecs, /\* only needed for # of nodes *\/ */
+  /*    (void*)&prob_fcns, */
+  /*    .0000000001, */
+  /*    dgmath_jit_dbase, */
+  /*    1, /\* is it curved *\/ */
+  /*    0, /\* should we print *\/ */
+  /*    &dgeom */
+  /*   ); */
 
   
   

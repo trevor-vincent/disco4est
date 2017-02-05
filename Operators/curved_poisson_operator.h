@@ -14,8 +14,9 @@ curved_Gauss_poisson_apply_aij
  d4est_geometry_t* geom
 );
 
+
 curved_poisson_debug_vecs_t*
-curved_Gauss_poisson_apply_aij_debug
+curved_poisson_apply_aij_debug
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,

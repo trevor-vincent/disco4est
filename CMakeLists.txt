@@ -107,6 +107,7 @@ SET (
   Estimators/bi_estimator_flux_fcns.c
   Geometry/d4est_geometry_compact_sphere.c
   Geometry/d4est_geometry_sphere.c
+  Geometry/d4est_geometry_disk.c
   # Estimators/curved_bi_estimator.c
   # Estimators/curved_bi_estimator_flux_fcns.c
   Estimators/estimator_stats.c
@@ -297,8 +298,10 @@ endfunction()
 # add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
 # add_d4est_problem_2d(testmultigridmatrixop_driver testmultigridmatrixop.c TestMultigridMatrixOp)
 # add_d4est_problem_3d(testcurvedipflux_driver testcurvedipflux.c TestCurvedIPFlux)
-add_d4est_problem_3d(testmortarjacobianterms_driver testmortarjacobianterms.c TestMortarJacobianTerms)
-# add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
+add_d4est_problem_2d(testcurvedipflux_driver testcurvedipflux.c TestCurvedIPFlux)
+# add_d4est_problem_3d(testmortarjacobianterms_driver testmortarjacobianterms.c TestMortarJacobianTerms)
+# add_d4est_problem_2d(testmortarjacobianterms_driver testmortarjacobianterms.c TestMortarJacobianTerms)
+add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
 # add_d4est_problem_3d(testnoncurvedipfluxoncube_driver testnoncurvedipfluxoncube.c TestNonCurvedIPFluxOnCube)
 # add_d4est_problem_3d(twopuncturescube_driver twopuncturescube.c TwoPuncturesCube)
 # add_d4est_curved_problem_3d(testcompactification_driver testcompactification.c TestCompactification)
