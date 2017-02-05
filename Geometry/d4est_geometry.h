@@ -8,6 +8,8 @@ typedef enum {INTERP_X_ON_LOBATTO, COMPUTE_DX_ON_LOBATTO, COMPUTE_DX_ON_GAUSS} d
 typedef struct{
 
   p4est_geometry_t* p4est_geom;
+
+  /* if the analytic derivatives are known */
   void(*dxdr)(p4est_geometry_t * geom,
               p4est_topidx_t which_tree,
               const double rst[(P4EST_DIM)], // \in [-1,1] such as GL or GLL points
@@ -17,7 +19,7 @@ typedef struct{
 
 
 
-
+  /* if the analytic derivatives are known */
   void(*dxdr_face)(
                    p4est_geometry_t * geom,
                    p4est_topidx_t which_tree,
@@ -28,7 +30,7 @@ typedef struct{
   );
 
   
-  int interp_to_Gauss;
+  /* int interp_to_Gauss; */
   dxdr_method_t dxdr_method;
   
 } d4est_geometry_t;
