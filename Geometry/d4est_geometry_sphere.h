@@ -4,13 +4,7 @@
 #include <pXest.h>
 #include <p8est_geometry.h>
 
-/* This file was automatically generated.  Do not edit! */
-p8est_geometry_t *d4est_geometry_new_sphere
-(
- p4est_connectivity_t* conn,
- double R2,
- double R1,
- double R0
-);
+void d4est_geometry_compactified_sphere_new(const char *input_file,d4est_geometry_t *d4est_geom);
+void d4est_geometry_sphere_new(const char *input_file,d4est_geometry_t *d4est_geom);
 
 #endif

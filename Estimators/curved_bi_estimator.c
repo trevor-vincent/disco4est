@@ -43,7 +43,7 @@ curved_bi_estimator_init
   linalg_copy_1st_to_2nd
     (
      &(problem_data->u[elem_data->nodal_stride]),
-     &(elem_data->u_elem)[0],
+     &(elem_data->u_storage)[0],
      volume_nodes_Lobatto
     );
   

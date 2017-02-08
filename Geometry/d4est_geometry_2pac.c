@@ -1,13 +1,254 @@
+#include <d4est_geometry.h>
 #include <d4est_geometry_2pac.h>
-#include <d4est_geometry_pizza_half.h>
+#include <ini.h>
+#include <util.h>
 
+#undef P4_TO_P8
 
-typedef struct{
+typedef struct {
 
-  double radius;
-  double base_height_half;
+  double R0;
+  double R1;
+  int count;
+  
+} d4est_geometry_2pac_input_t;
 
-} tupac_attr_t;
+static
+int d4est_geometry_2pac_input_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_geometry_2pac_input_t* pconfig = (d4est_geometry_2pac_input_t*)user;
+  if (util_match_couple(section,"geometry",name,"R0")) {
+    mpi_assert(pconfig->R0 == -1);
+    pconfig->R0 = atof(value);
+    pconfig->count += 1;
+  }
+  else if (util_match_couple(section,"geometry",name,"R1")) {
+    mpi_assert(pconfig->R1 == -1);
+    pconfig->R1 = atof(value);
+    pconfig->count += 1;
+  }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+d4est_geometry_2pac_input_t
+d4est_geometry_2pac_input
+(
+ const char* input_file
+)
+{
+  int num_of_options = 2;
+  
+  d4est_geometry_2pac_input_t input;
+  input.count = 0;
+  input.R0 = -1;
+  input.R1 = -1;
+  
+  if (ini_parse(input_file, d4est_geometry_2pac_input_handler, &input) < 0) {
+    mpi_abort("Can't load input file");
+  }
+
+  mpi_assert(input.count == num_of_options);
+  return input;
+}
+
+static
+p4est_connectivity_t *
+p4est_connectivity_new_2pac_aligned (void)
+{
+  const p4est_topidx_t num_vertices = 6;
+  const p4est_topidx_t num_trees = 2;
+  const p4est_topidx_t num_ctt = 0;
+  /* const double        vertices[6 * 3] = { */
+  /*   0, 0, 0, */
+  /*   1, 0, 0, */
+  /*   0, 1, 0, */
+  /*   1, 1, 0, */
+  /*   2, 0, 0, */
+  /*   2, 1, 0, */
+  /* }; */
+  const double        vertices[6 * 3] = {
+    -1., -1., 0,
+    0., -.5, 0,
+    -1., 1, 0,
+    0., .5, 0,
+    1, -1, 0,
+    1, 1, 0,
+  }; 
+  const p4est_topidx_t tree_to_vertex[5 * 4] = {
+    0, 1, 2, 3,
+    1, 4, 3, 5,
+  };
+  const p4est_topidx_t tree_to_tree[5 * 4] = {
+    0, 1, 0, 0,
+    0, 1, 1, 1,
+  };
+  const int8_t        tree_to_face[5 * 4] = {
+    0, 0, 2, 3,
+    1, 1, 2, 3,
+  };
+  
+#if (P4EST_DIM)==2
+  return p4est_connectivity_new_copy (num_vertices, num_trees, 0,
+                                      vertices, tree_to_vertex,
+                                      tree_to_tree, tree_to_face,
+                                      NULL, &num_ctt, NULL, NULL);
+#else
+  mpi_abort("[ERROR]: 2pac geometry only supports DIM=2");
+  return NULL;
+#endif
+  
+}
+
+static
+p4est_connectivity_t *
+p4est_connectivity_new_2pac_aligned_CUBE (void)
+{
+  const p4est_topidx_t num_vertices = 6;
+  const p4est_topidx_t num_trees = 2;
+  const p4est_topidx_t num_ctt = 0;
+  /* const double        vertices[6 * 3] = { */
+  /*   0, 0, 0, */
+  /*   1, 0, 0, */
+  /*   0, 1, 0, */
+  /*   1, 1, 0, */
+  /*   2, 0, 0, */
+  /*   2, 1, 0, */
+  /* }; */
+  const double        vertices[6 * 3] = {
+    -1., -1., 0,
+    0.6, -1, 0,
+    -1., 1, 0,
+    0.6, 1, 0,
+    1, -1, 0,
+    1, 1, 0,
+  }; 
+  const p4est_topidx_t tree_to_vertex[5 * 4] = {
+    0, 1, 2, 3,
+    1, 4, 3, 5,
+  };
+  const p4est_topidx_t tree_to_tree[5 * 4] = {
+    0, 1, 0, 0,
+    0, 1, 1, 1,
+  };
+  const int8_t        tree_to_face[5 * 4] = {
+    0, 0, 2, 3,
+    1, 1, 2, 3,
+  };
+
+  
+#if (P4EST_DIM)==2
+  return p4est_connectivity_new_copy (num_vertices, num_trees, 0,
+                                      vertices, tree_to_vertex,
+                                      tree_to_tree, tree_to_face,
+                                      NULL, &num_ctt, NULL, NULL);
+#else
+  mpi_abort("[ERROR]: 2pac geometry only supports DIM=2");
+  return NULL;
+#endif
+}
+
+static
+p4est_connectivity_t *
+p4est_connectivity_new_2pac_nonaligned (void)
+{
+ const p4est_topidx_t num_vertices = 6;
+  const p4est_topidx_t num_trees = 2;
+  const p4est_topidx_t num_ctt = 0;
+  /* const double        vertices[6 * 3] = { */
+  /*   0, 0, 0, */
+  /*   1, 0, 0, */
+  /*   0, 1, 0, */
+  /*   1, 1, 0, */
+  /*   2, 0, 0, */
+  /*   2, 1, 0, */
+  /* }; */
+  const double        vertices[6 * 3] = {
+    -1., -1., 0,
+    0., -.5, 0,
+    -1., 1, 0,
+    0., .5, 0,
+    1, -1, 0,
+    1, 1, 0,
+  }; 
+  const p4est_topidx_t tree_to_vertex[5 * 4] = {
+    0, 1, 2, 3,
+    3, 1, 5, 4,
+  };
+  const p4est_topidx_t tree_to_tree[5 * 4] = {
+    0, 1, 0, 0,
+    1, 1, 0, 1,
+  };
+  const int8_t        tree_to_face[5 * 4] = {
+    0, 6, 2, 3,
+    0, 1, 5, 3,
+  };
+
+#if (P4EST_DIM)==2
+  return p4est_connectivity_new_copy (num_vertices, num_trees, 0,
+                                      vertices, tree_to_vertex,
+                                      tree_to_tree, tree_to_face,
+                                      NULL, &num_ctt, NULL, NULL);
+#else
+  mpi_abort("[ERROR]: 2pac geometry only supports DIM=2");
+  return NULL;
+#endif
+}
+
+static
+p4est_connectivity_t *
+p4est_connectivity_new_2pac_nonaligned_CUBE (void)
+{
+ const p4est_topidx_t num_vertices = 6;
+  const p4est_topidx_t num_trees = 2;
+  const p4est_topidx_t num_ctt = 0;
+  /* const double        vertices[6 * 3] = { */
+  /*   0, 0, 0, */
+  /*   1, 0, 0, */
+  /*   0, 1, 0, */
+  /*   1, 1, 0, */
+  /*   2, 0, 0, */
+  /*   2, 1, 0, */
+  /* }; */
+  const double        vertices[6 * 3] = {
+    -1., -1., 0,
+    0., -1, 0,
+    -1., 1, 0,
+    0., 1, 0,
+    1, -1, 0,
+    1, 1, 0,
+  }; 
+  const p4est_topidx_t tree_to_vertex[5 * 4] = {
+    0, 1, 2, 3,
+    3, 1, 5, 4,
+  };
+  const p4est_topidx_t tree_to_tree[5 * 4] = {
+    0, 1, 0, 0,
+    1, 1, 0, 1,
+  };
+  const int8_t        tree_to_face[5 * 4] = {
+    0, 6, 2, 3,
+    0, 1, 5, 3,
+  };
+
+#if (P4EST_DIM)==2
+  return p4est_connectivity_new_copy (num_vertices, num_trees, 0,
+                                      vertices, tree_to_vertex,
+                                      tree_to_tree, tree_to_face,
+                                      NULL, &num_ctt, NULL, NULL);
+#else
+  mpi_abort("[ERROR]: 2pac geometry only supports DIM=2");
+  return NULL;
+#endif
+}
 
 
 static
@@ -25,16 +266,18 @@ void d4est_geometry_2pac_aligned_linear_map
 
 static
 void
-d4est_geometry_2pac_aligned_map_cube_to_slab(
-                    double xref,
-                    double yref,
-                    double cmin,
-                    double cmax,
-                    double emin,
-                    double emax,
-                    double* x,
-                    double* y
-){
+d4est_geometry_2pac_aligned_map_cube_to_slab
+(
+ double xref,
+ double yref,
+ double cmin,
+ double cmax,
+ double emin,
+ double emax,
+ double* x,
+ double* y
+)
+{
   double xbar, ybar;
     /* map x from [0,1] to [emin, emax] */
   d4est_geometry_2pac_aligned_linear_map(xref, 0., 1., emin, emax, &xbar);
@@ -344,47 +587,6 @@ d4est_geometry_2pac_aligned_X_squares(p4est_geometry_t * geom,
   xyz[2] = 0.;
 }
 
-/* static void  */
-/* d4est_geometry_2pac_aligned_X */
-/* ( */
-/*  p4est_geometry_t * geom, */
-/*  p4est_topidx_t which_tree, */
-/*  const double rst[3], */
-/*  double xyz[3] */
-/* ) */
-/* { */
-/*   double* radii = (double*)geom->user; */
-  
-/*   double R0 = radii[0]; */
-/*   double R1 = radii[1]; */
-  
-/*   double xref = rst[0]; */
-/*   double yref = rst[1]; */
-/*   double x,y; */
-
-/*   if (which_tree == 0){ */
-/*     /\* left *\/ */
-/*     d4est_geometry_2pac_aligned_map_cube_to_slab(xref, yref, 1., 0., -R1, -R0/sqrt(2), &x, &y); */
-/*     y *= -1; */
-/*     x += R0/sqrt(2); */
-/*     /\* printf("x,y = %f, %f\n", x,y); *\/ */
-/*   } */
-/*   else if (which_tree == 1){ */
-/*     /\* right *\/ */
-/*     d4est_geometry_2pac_aligned_map_cube_to_slab(xref, yref, 0, 1, R0/sqrt(2), R1, &x, &y); */
-/*     x -= R0/sqrt(2); */
-/*     /\* printf("x,y = %f, %f\n", x,y); *\/ */
-/*   } */
-/*   else{ */
-/*     SC_ABORT_NOT_REACHED(); */
-/*   } */
-/*   xyz[0] = x; */
-/*   xyz[1] = y; */
-/*   xyz[2] = 0.; */
-/* } */
-
-
-
 static void
 d4est_geometry_2pac_aligned_destroy
 (
@@ -396,67 +598,83 @@ d4est_geometry_2pac_aligned_destroy
 }
 
 
-p4est_geometry_t*
-d4est_geometry_new_2pac_aligned
+void
+d4est_geometry_2pac_aligned_new
 (
- p4est_connectivity_t * conn,
- double R0,
- double R1
+ const char* input_file,
+ d4est_geometry_t* d4est_geom
 )
 {
+  d4est_geometry_2pac_input_t input = d4est_geometry_2pac_input(input_file);
   p4est_geometry_t* tupac_aligned_geometry = P4EST_ALLOC(p4est_geometry_t,1);
-
+  p4est_connectivity_t* conn = p4est_connectivity_new_2pac_aligned();
+  
   double* radii = P4EST_ALLOC(double, 2);
-  radii[0] = R0;
-  radii[1] = R1;
+  radii[0] = input.R0;
+  radii[1] = input.R1;
     
   tupac_aligned_geometry->user = (void*)radii;
   tupac_aligned_geometry->destroy = d4est_geometry_2pac_aligned_destroy;
   tupac_aligned_geometry->X = d4est_geometry_2pac_aligned_X;
 
-  return tupac_aligned_geometry;
+  d4est_geom->p4est_conn = conn;
+  d4est_geom->p4est_geom = tupac_aligned_geometry;
+  printf("[GEOMETRY_INFO]: NAME = 2pac_aligned\n");
+  printf("[GEOMETRY_INFO]: R0 = %.25f\n", radii[0]);
+  printf("[GEOMETRY_INFO]: R1 = %.25f\n", radii[1]);
 }
 
-p4est_geometry_t*
-d4est_geometry_new_2pac_aligned_traps
+void
+d4est_geometry_2pac_aligned_traps_new
 (
- p4est_connectivity_t * conn,
- double R0,
- double R1
+ const char* input_file,
+ d4est_geometry_t* d4est_geom
 )
 {
+  d4est_geometry_2pac_input_t input = d4est_geometry_2pac_input(input_file);
   p4est_geometry_t* tupac_aligned_geometry = P4EST_ALLOC(p4est_geometry_t,1);
+  p4est_connectivity_t* conn = p4est_connectivity_new_2pac_aligned();
 
   double* radii = P4EST_ALLOC(double, 2);
-  radii[0] = R0;
-  radii[1] = R1;
+  radii[0] = input.R0;
+  radii[1] = input.R1;
     
   tupac_aligned_geometry->user = (void*)radii;
   tupac_aligned_geometry->destroy = d4est_geometry_2pac_aligned_destroy;
   tupac_aligned_geometry->X = d4est_geometry_2pac_aligned_X_traps;
 
-  return tupac_aligned_geometry;
+  d4est_geom->p4est_conn = conn;
+  d4est_geom->p4est_geom = tupac_aligned_geometry;
+  printf("[GEOMETRY_INFO]: NAME = 2pac_aligned\n");
+  printf("[GEOMETRY_INFO]: R0 = %.25f\n", radii[0]);
+  printf("[GEOMETRY_INFO]: R1 = %.25f\n", radii[1]);
 }
 
-p4est_geometry_t*
-d4est_geometry_new_2pac_aligned_squares
+void
+d4est_geometry_2pac_aligned_squares_new
 (
- p4est_connectivity_t * conn,
- double R0,
- double R1
+ const char* input_file,
+ d4est_geometry_t* d4est_geom
 )
 {
+  d4est_geometry_2pac_input_t input = d4est_geometry_2pac_input(input_file);
   p4est_geometry_t* tupac_aligned_geometry = P4EST_ALLOC(p4est_geometry_t,1);
+  p4est_connectivity_t* conn = p4est_connectivity_new_2pac_aligned();
 
   double* radii = P4EST_ALLOC(double, 2);
-  radii[0] = R0;
-  radii[1] = R1;
+  radii[0] = input.R0;
+  radii[1] = input.R1;
     
   tupac_aligned_geometry->user = (void*)radii;
   tupac_aligned_geometry->destroy = d4est_geometry_2pac_aligned_destroy;
   tupac_aligned_geometry->X = d4est_geometry_2pac_aligned_X_squares;
 
-  return tupac_aligned_geometry;
+  d4est_geom->p4est_geom = tupac_aligned_geometry;
+  d4est_geom->p4est_conn = conn;
+  
+  printf("[GEOMETRY_INFO]: NAME = 2pac_aligned_squares\n");
+  printf("[GEOMETRY_INFO]: R0 = %.25f\n", radii[0]);
+  printf("[GEOMETRY_INFO]: R1 = %.25f\n", radii[1]);
 }
 
 //
@@ -509,7 +727,6 @@ d4est_geometry_2pac_nonaligned_X(p4est_geometry_t * geom,
   double yref = rst[1];
   double x,y;
   
-
   if (which_tree == 0){
     /* left */
     d4est_geometry_2pac_nonaligned_map_cube_to_slab(xref, yref, 1., 0., -R0, 0., &x, &y);
@@ -540,21 +757,28 @@ d4est_geometry_2pac_nonaligned_destroy
 }
 
 
-p4est_geometry_t*
-d4est_geometry_new_2pac_nonaligned
+void
+d4est_geometry_2pac_nonaligned_new
 (
- p4est_connectivity_t * conn,
- double R0
+ const char* input_file,
+ d4est_geometry_t* d4est_geom
 )
 {
-  p4est_geometry_t * tupac_nonaligned_geometry = P4EST_ALLOC(p4est_geometry_t,1);
-
+  mpi_assert((P4EST_DIM)==2);
+  d4est_geometry_2pac_input_t input = d4est_geometry_2pac_input(input_file);
+  p4est_geometry_t* tupac_nonaligned_geometry = P4EST_ALLOC(p4est_geometry_t,1);
+  p4est_connectivity_t* conn = p4est_connectivity_new_2pac_nonaligned();
   double* R0p = P4EST_ALLOC(double, 1);
-  *R0p = R0;
+  *R0p = input.R0;
                 
   tupac_nonaligned_geometry->user = (void*)R0p;
   tupac_nonaligned_geometry->destroy = d4est_geometry_2pac_nonaligned_destroy;
   tupac_nonaligned_geometry->X = d4est_geometry_2pac_nonaligned_X;
-
-  return tupac_nonaligned_geometry;
+  
+  d4est_geom->p4est_geom = tupac_nonaligned_geometry;
+  d4est_geom->p4est_conn = conn;
+  printf("[GEOMETRY_INFO]: NAME = 2pac_nonaligned\n");
+  printf("[GEOMETRY_INFO]: R0 = %.25f\n", R0p[0]);
 }
+
+

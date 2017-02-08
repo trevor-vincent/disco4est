@@ -118,27 +118,27 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match(section,"amr",name,"num_unifrefs")) {
+  if (util_match_couple(section,"amr",name,"num_unifrefs")) {
     mpi_assert(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"amr",name,"num_randrefs")) {
+  else if (util_match_couple(section,"amr",name,"num_randrefs")) {
     mpi_assert(pconfig->num_randrefs == -1);
     pconfig->num_randrefs = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"amr",name,"deg_Gauss")){
+  else if (util_match_couple(section,"amr",name,"deg_Gauss")){
     mpi_assert(pconfig->deg_Gauss == -1);
     pconfig->deg_Gauss = atoi(value);
     pconfig->count += 1;    
   }
-  else if (util_match(section,"amr",name,"deg")){
+  else if (util_match_couple(section,"amr",name,"deg")){
     mpi_assert(pconfig->deg == -1);
     pconfig->deg = atoi(value);
     pconfig->count += 1;    
   }
-  else if (util_match(section,"flux",name,"ip_flux_penalty")) {
+  else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     mpi_assert(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;

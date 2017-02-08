@@ -70,7 +70,7 @@ typedef struct {
   double local_predictor;
   
   /* storage for MPI transfers */
-  double u_elem[MAX_NODES];
+  double u_storage[MAX_NODES];
   double du_elem[(P4EST_DIM)][MAX_NODES];
   double dudr_elem[(P4EST_DIM)][MAX_NODES];
   double q_elem[(P4EST_DIM)][MAX_NODES];
@@ -529,4 +529,11 @@ curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
  p4est_geometry_t* p4est_geom,
  dgmath_jit_dbase_t* dgmath_jit_dbase
 );
+
+void
+curved_element_data_print_local_estimator
+(
+ p4est_t* p4est
+);
+
 #endif

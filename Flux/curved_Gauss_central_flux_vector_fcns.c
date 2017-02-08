@@ -99,7 +99,7 @@ curved_Gauss_central_flux_vector_dirichlet
     
   }
 
-  dgmath_apply_slicer(dgmath_jit_dbase, e_m->u_elem, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
+  dgmath_apply_slicer(dgmath_jit_dbase, e_m->u_storage, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
   dgmath_interp_GLL_to_GL
     (
      dgmath_jit_dbase,
@@ -324,7 +324,7 @@ curved_Gauss_central_flux_vector_interface
     dgmath_apply_slicer
       (
        dgmath_jit_dbase,
-       &(e_m[i]->u_elem[0]),
+       &(e_m[i]->u_storage[0]),
        (P4EST_DIM),
        f_m,
        e_m[i]->deg,
@@ -339,7 +339,7 @@ curved_Gauss_central_flux_vector_interface
     dgmath_apply_slicer
       (
        dgmath_jit_dbase,
-       &(e_p_oriented[i]->u_elem[0]),
+       &(e_p_oriented[i]->u_storage[0]),
        (P4EST_DIM),
        f_p,
        e_p_oriented[i]->deg,

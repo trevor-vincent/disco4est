@@ -299,42 +299,42 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match(section,"amr",name,"amr_levels")) {
+  if (util_match_couple(section,"amr",name,"amr_levels")) {
     mpi_assert(pconfig->endlevel == -1);
     pconfig->endlevel = atoi(value);
     pconfig->count += 1;
-  } else if (util_match(section,"amr",name, "initial_degree")) {
+  } else if (util_match_couple(section,"amr",name, "initial_degree")) {
     mpi_assert(pconfig->degree == -1);
     pconfig->degree = atoi(value);
     pconfig->count += 1;
-  } else if (util_match(section,"amr",name,"sigma")) {
+  } else if (util_match_couple(section,"amr",name,"sigma")) {
     mpi_assert(pconfig->sigma == -1);
     pconfig->sigma = atof(value);
     pconfig->count += 1;
-  } else if (util_match(section,"amr",name,"gamma_h")) {
+  } else if (util_match_couple(section,"amr",name,"gamma_h")) {
     mpi_assert(pconfig->gamma_h == -1);
     pconfig->gamma_h = atof(value);
     pconfig->count += 1;
-  } else if (util_match(section,"amr",name,"gamma_p")) {
+  } else if (util_match_couple(section,"amr",name,"gamma_p")) {
     mpi_assert(pconfig->gamma_p == -1);
     pconfig->gamma_p = atof(value);
     pconfig->count += 1;
-  } else if (util_match(section,"flux",name,"ip_flux_penalty")) {
+  } else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     mpi_assert(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } 
-  else if (util_match(section,"problem",name,"c2x")) {
+  else if (util_match_couple(section,"problem",name,"c2x")) {
     mpi_assert(pconfig->c2x == -1);
     pconfig->c2x = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"problem",name,"c2y")) {
+  else if (util_match_couple(section,"problem",name,"c2y")) {
     mpi_assert(pconfig->c2y == -1);
     pconfig->c2y = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"problem",name,"c2z")) {
+  else if (util_match_couple(section,"problem",name,"c2z")) {
     mpi_assert(pconfig->c2z == -1);
     pconfig->c2z = atof(value);
     pconfig->count += 1;

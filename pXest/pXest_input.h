@@ -23,11 +23,11 @@ int pXest_input_handler
 )
 {
   pXest_input_t* pconfig = (pXest_input_t*)user;
-  if (util_match(section,"p4est",name,"min_quadrants")) {
+  if (util_match_couple(section,"p4est",name,"min_quadrants")) {
     pconfig->min_quadrants = atoi(value);
-  } else if (util_match(section,"p4est",name, "min_level")) {
+  } else if (util_match_couple(section,"p4est",name, "min_level")) {
     pconfig->min_level = atoi(value);
-  } else if (util_match(section,"p4est",name,"fill_uniform")) {
+  } else if (util_match_couple(section,"p4est",name,"fill_uniform")) {
     pconfig->fill_uniform = atoi(value);
   } else {
     return 0;  /* unknown section/name, error */

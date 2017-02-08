@@ -146,87 +146,87 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match(section,"amr",name,"num_unifrefs")) {
+  if (util_match_couple(section,"amr",name,"num_unifrefs")) {
     mpi_assert(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"amr",name,"num_randrefs")) {
+  else if (util_match_couple(section,"amr",name,"num_randrefs")) {
     mpi_assert(pconfig->num_randrefs == -1);
     pconfig->num_randrefs = atoi(value);
     pconfig->count += 1;
   }
-  /* else if (util_match(section,"amr",name, "initial_degree")) { */
+  /* else if (util_match_couple(section,"amr",name, "initial_degree")) { */
     /* mpi_assert(pconfig->degree == -1); */
     /* pconfig->degree = atoi(value); */
     /* pconfig->count += 1; */
   /* } */
-  else if (util_match(section,"flux",name,"ip_flux_penalty")) {
+  else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     mpi_assert(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } 
-  /* else if (util_match(section,"problem",name,"gauss_integ_deg")) { */
+  /* else if (util_match_couple(section,"problem",name,"gauss_integ_deg")) { */
   /*   mpi_assert(pconfig->gauss_integ_deg == -1); */
   /*   pconfig->gauss_integ_deg = atoi(value); */
   /*   pconfig->count += 1; */
   /* } */
-  else if (util_match(section,"problem",name,"R0")) {
+  else if (util_match_couple(section,"problem",name,"R0")) {
     mpi_assert(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"problem",name,"R1")) {
+  else if (util_match_couple(section,"problem",name,"R1")) {
     mpi_assert(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"problem",name,"R2")) {
+  else if (util_match_couple(section,"problem",name,"R2")) {
     mpi_assert(pconfig->R2 == -1);
     pconfig->R2 = atof(value);
     pconfig->count += 1;
   }
-  /* else if (util_match(section,"problem",name,"Rinf")) { */
+  /* else if (util_match_couple(section,"problem",name,"Rinf")) { */
     /* mpi_assert(pconfig->Rinf == -1); */
     /* pconfig->Rinf = atof(value); */
     /* pconfig->count += 1; */
   /* } */
-  /* else if (util_match(section,"problem",name,"w")) { */
+  /* else if (util_match_couple(section,"problem",name,"w")) { */
     /* mpi_assert(pconfig->w == -1); */
     /* pconfig->w = atof(value); */
     /* pconfig->count += 1; */
   /* } */
-  else if (util_match(section,"problem",name,"deg_R0")) {
+  else if (util_match_couple(section,"problem",name,"deg_R0")) {
     mpi_assert(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"problem",name,"deg_integ_R0")) {
+  else if (util_match_couple(section,"problem",name,"deg_integ_R0")) {
     mpi_assert(pconfig->deg_integ_R0 == -1);
     pconfig->deg_integ_R0 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"problem",name,"deg_R1")) {
+  else if (util_match_couple(section,"problem",name,"deg_R1")) {
     mpi_assert(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"problem",name,"deg_integ_R1")) {
+  else if (util_match_couple(section,"problem",name,"deg_integ_R1")) {
     mpi_assert(pconfig->deg_integ_R1 == -1);
     pconfig->deg_integ_R1 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"problem",name,"deg_R2")) {
+  else if (util_match_couple(section,"problem",name,"deg_R2")) {
     mpi_assert(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"problem",name,"deg_integ_R2")) {
+  else if (util_match_couple(section,"problem",name,"deg_integ_R2")) {
     mpi_assert(pconfig->deg_integ_R2 == -1);
     pconfig->deg_integ_R2 = atoi(value);
     pconfig->count += 1;
   }  
-  /* else if (util_match(section,"solver",name,"krylov_type")) { */
+  /* else if (util_match_couple(section,"solver",name,"krylov_type")) { */
   /*   mpi_assert(pconfig->krylov_type = ""); */
   /*   if (strcmp("cg", value) == 0){ */
   /*     pconfig->krylov_type = KSPCG; */

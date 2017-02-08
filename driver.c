@@ -1,6 +1,7 @@
 #include "./pXest/pXest.h"
 #include "./pXest/pXest_input.h"
 #include "./Problems/problem.h"
+#include "./Geometry/d4est_geometry.h"
  #include <petscsnes.h>
 
 int main(int argc, char *argv[])
@@ -14,7 +15,7 @@ int main(int argc, char *argv[])
   MPI_Comm_size(mpicomm, &proc_size);
   MPI_Comm_rank(mpicomm, &proc_rank);
 
-  pXest_input_t pXest_input = pXest_input_parse("options.input");
+
   
 #ifndef NDEBUG
   if(proc_rank == 0)
@@ -43,23 +44,28 @@ int main(int argc, char *argv[])
     printf("[D4EST_INFO]: DIM = 2\n");
 #endif
 
+ 
+  d4est_geometry_t* d4est_geom = d4est_geometry_new("options.input");
+  /* p4est_connectivity_t* conn = problem_build_conn(); */
+
+  pXest_input_t pXest_input = pXest_input_parse("options.input");
+  p4est_t* p4est = problem_build_p4est
+                   (
+                    mpicomm,
+                    d4est_geom->p4est_conn,
+                    pXest_input.min_quadrants,
+                    pXest_input.min_level,
+                    pXest_input.fill_uniform
+                   );
+
   if (proc_rank == 0){
     printf("[D4EST_INFO]: mpisize = %d\n", proc_size);
     printf("[D4EST_INFO]: min_quadrants = %d\n", pXest_input.min_quadrants);
     printf("[D4EST_INFO]: min_level = %d\n", pXest_input.min_level);
     printf("[D4EST_INFO]: fill_uniform = %d\n", pXest_input.fill_uniform);
   }
-  p4est_connectivity_t* conn = problem_build_conn();
-  p4est_t* p4est = problem_build_p4est
-                   (
-                    mpicomm,
-                    conn,
-                    pXest_input.min_quadrants,
-                    pXest_input.min_level,
-                    pXest_input.fill_uniform
-                   );
 
-  p4est_geometry_t* p4est_geom = problem_build_geom(conn);
+  
   /* start just-in-time dg-math */
   dgmath_jit_dbase_t* dgmath_jit_dbase = dgmath_jit_dbase_init();
 
@@ -69,24 +75,19 @@ int main(int argc, char *argv[])
   /* Solve Problem */
   problem_init
     (
-     argc,
-     argv,
+     "options.input",
      p4est,
-     p4est_geom,
+     d4est_geom,
      dgmath_jit_dbase,
      proc_size,
-     mpicomm,
-     load_from_checkpoint
+     mpicomm
     );
   
   dgmath_jit_dbase_destroy(dgmath_jit_dbase);
   
   /* free pXest */
   p4est_destroy(p4est);
-  p4est_connectivity_destroy(conn);
-
-  if(p4est_geom != NULL)
-    p4est_geometry_destroy (p4est_geom);
+  d4est_geometry_destroy(d4est_geom);
 
 
   PetscFinalize();

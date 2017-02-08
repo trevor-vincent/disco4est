@@ -551,56 +551,56 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match(section,"amr",name,"amr_levels")) {
+  if (util_match_couple(section,"amr",name,"amr_levels")) {
     mpi_assert(pconfig->endlevel == -1);
     pconfig->endlevel = atoi(value);
     pconfig->count += 1;
-  } else if (util_match(section,"amr",name, "initial_degree")) {
+  } else if (util_match_couple(section,"amr",name, "initial_degree")) {
     mpi_assert(pconfig->degree == -1);
     pconfig->degree = atoi(value);
     pconfig->count += 1;
-  } else if (util_match(section,"amr",name,"percentile")) {
+  } else if (util_match_couple(section,"amr",name,"percentile")) {
     mpi_assert(pconfig->percentile == -1);
     pconfig->percentile = atoi(value);
     pconfig->count += 1;
-  } else if (util_match(section,"amr",name,"degmax")) {
+  } else if (util_match_couple(section,"amr",name,"degmax")) {
     mpi_assert(pconfig->degmax == -1);
     pconfig->degmax = atoi(value);
     pconfig->count += 1;
-  } else if (util_match(section,"amr",name,"gamma_h")) {
+  } else if (util_match_couple(section,"amr",name,"gamma_h")) {
     mpi_assert(pconfig->gamma_h == -1);
     pconfig->gamma_h = atof(value);
     pconfig->count += 1;
-  } else if (util_match(section,"amr",name,"gamma_p")) {
+  } else if (util_match_couple(section,"amr",name,"gamma_p")) {
     mpi_assert(pconfig->gamma_p == -1);
     pconfig->gamma_p = atof(value);
     pconfig->count += 1;
-  } else if (util_match(section,"flux",name,"ip_flux_penalty")) {
+  } else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     mpi_assert(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
-  } else if (util_match(section,"problem",name,"rho0_div_rhoc")) {
+  } else if (util_match_couple(section,"problem",name,"rho0_div_rhoc")) {
     mpi_assert(pconfig->rho0_div_rhoc == -1);
     pconfig->rho0_div_rhoc = atof(value);
     pconfig->count += 1;
-  } else if (util_match(section,"problem",name,"domain_size")) {
+  } else if (util_match_couple(section,"problem",name,"domain_size")) {
     mpi_assert(pconfig->domain_size == -1);
     pconfig->domain_size = atof(value);
     pconfig->count += 1;
-  } else if (util_match(section,"problem",name,"use_Gauss_integ")) {
+  } else if (util_match_couple(section,"problem",name,"use_Gauss_integ")) {
     mpi_assert(pconfig->use_Gauss_integ == -1);
     pconfig->use_Gauss_integ = atoi(value);
     pconfig->count += 1;
-  } else if (util_match(section,"problem",name,"deg_offset_for_Gauss_integ")) {
+  } else if (util_match_couple(section,"problem",name,"deg_offset_for_Gauss_integ")) {
     mpi_assert(pconfig->deg_offset_for_Gauss_integ == -1);
     pconfig->deg_offset_for_Gauss_integ = atoi(value);
     pconfig->count += 1;
-  } else if (util_match(section,"amr",name,"amr_inflation_size")) {
+  } else if (util_match_couple(section,"amr",name,"amr_inflation_size")) {
     mpi_assert(pconfig->amr_inflation_size == -1);
     pconfig->amr_inflation_size = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"solver",name,"krylov_type")) {
+  else if (util_match_couple(section,"solver",name,"krylov_type")) {
     if (strcmp("cg", value) == 0){
       pconfig->krylov_type = KSPCG;
     }

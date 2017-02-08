@@ -1,5 +1,63 @@
 #include <d4est_geometry_disk.h>
+#include <ini.h>
 #include <util.h>
+
+
+typedef struct {
+
+  double R0;
+  double R1;
+  int count;
+  
+} d4est_geometry_disk_input_t;
+
+static
+int d4est_geometry_disk_input_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_geometry_disk_input_t* pconfig = (d4est_geometry_disk_input_t*)user;
+  if (util_match_couple(section,"geometry",name,"R0")) {
+    mpi_assert(pconfig->R0 == -1);
+    pconfig->R0 = atof(value);
+    pconfig->count += 1;
+  }
+  else if (util_match_couple(section,"geometry",name,"R1")) {
+    mpi_assert(pconfig->R1 == -1);
+    pconfig->R1 = atof(value);
+    pconfig->count += 1;
+  }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+d4est_geometry_disk_input_t
+d4est_geometry_disk_input
+(
+ const char* input_file
+)
+{
+  int num_of_options = 2;
+  
+  d4est_geometry_disk_input_t input;
+  input.count = 0;
+  input.R0 = -1;
+  input.R1 = -1;
+  
+  if (ini_parse(input_file, d4est_geometry_disk_input_handler, &input) < 0) {
+    mpi_abort("Can't load input file");
+  }
+
+  mpi_assert(input.count == num_of_options);
+  return input;
+}
+
 
 static
 void d4est_geometry_disk_linear_map
@@ -95,51 +153,33 @@ d4est_geometry_disk_destroy
 }
 
 
-p4est_geometry_t*
-d4est_geometry_new_disk
+void
+d4est_geometry_disk_new
 (
- p4est_connectivity_t * conn,
- double R0,
- double R1
+ const char* input_file,
+ d4est_geometry_t* d4est_geom
 )
 {
+  mpi_assert((P4EST_DIM)==2);
+  d4est_geometry_disk_input_t input = d4est_geometry_disk_input(input_file);
   p4est_geometry_t *disk_geometry = P4EST_ALLOC(p4est_geometry_t,1);
-
+  p4est_connectivity_t* conn = NULL;
+#ifndef P4_TO_P8
+  conn = p4est_connectivity_new_disk();
+#endif
   double* radii = P4EST_ALLOC(double, 2);
-  radii[0] = R0;
-  radii[1] = R1;
+  radii[0] = input.R0;
+  radii[1] = input.R1;
   
   disk_geometry->user = (void*)radii;
   disk_geometry->destroy = d4est_geometry_disk_destroy;
   disk_geometry->X = d4est_geometry_disk_X;
 
-  return disk_geometry;
+  d4est_geom->p4est_geom = disk_geometry;
+  d4est_geom->p4est_conn = conn;
+  
+  printf("[GEOMETRY_INFO]: NAME = disk\n");
+  printf("[GEOMETRY_INFO]: R0 = %.25f\n", radii[0]);
+  printf("[GEOMETRY_INFO]: R1 = %.25f\n", radii[1]);
 }
 
-void 
-d4est_geometry_disk_dxdr
-(
- p4est_geometry_t * geom,
- p4est_topidx_t which_tree,
- const double rst[(P4EST_DIM)], // \in [-1,1] such as GL or GLL points
- double dxyz_drst[(P4EST_DIM)][(P4EST_DIM)],
- p4est_qcoord_t q0 [(P4EST_DIM)],
- p4est_qcoord_t dq
-)
-{
-  mpi_abort("dxdr not done yet");
-}
-
-void 
-d4est_geometry_disk_dxdr_face
-(
- p4est_geometry_t * geom,
- p4est_topidx_t which_tree,
- const double rs[(P4EST_DIM)-1], // \in [-1,1] such as GL or GLL points
- double dxyz_drs[(P4EST_DIM)][(P4EST_DIM)-1],
- p4est_qcoord_t q0 [(P4EST_DIM)],
- p4est_qcoord_t dqa [(P4EST_DIM)-1][(P4EST_DIM)]
-)
-{
-  mpi_abort("dxdr not done yet");
-}

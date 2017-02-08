@@ -267,12 +267,18 @@ int util_does_file_exist(const char *filename);
 void
 util_print_matrix_for_mathematica(double* mat, int n, int m, const char* name);
 
-int util_match
+int util_match_couple
 (
  const char* section1,
  const char* section2,
  const char* name1,
  const char* name2
+);
+
+int util_match
+(
+ const char* str1,
+ const char* str2
 );
 
 #endif

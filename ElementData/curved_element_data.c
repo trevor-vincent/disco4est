@@ -494,13 +494,7 @@ curved_element_data_init_callback
   double* MJac = P4EST_ALLOC(double, volume_nodes_integ);
   elem_data->volume = 0;
   double* integ_weights = NULL;
-  if (d4est_geometry->interp_to_Gauss == 1){
-    integ_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, elem_data->deg_integ);
-  }
-  else {
-    mpi_abort("Please pick Gauss or Lobatto integration");
-  }
-
+  integ_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, elem_data->deg_integ);
   /* DEBUG_PRINT_ARR_DBL(elem_data->J_integ, volume_nodes_integ); */
   
 #if (P4EST_DIM)==3
@@ -1513,7 +1507,7 @@ curved_element_data_copy_from_vec_to_storage_callback
   linalg_copy_1st_to_2nd
     (
      &u[*stride],
-     &(curved_element_data->u_elem)[0],
+     &(curved_element_data->u_storage)[0],
      volume_nodes
     );
 
@@ -1561,7 +1555,7 @@ curved_element_data_copy_from_storage_to_vec_callback
   
   linalg_copy_1st_to_2nd
     (
-     &(curved_element_data->u_elem)[0],
+     &(curved_element_data->u_storage)[0],
      &u[*stride],
      volume_nodes
     );

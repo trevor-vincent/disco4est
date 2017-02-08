@@ -156,7 +156,7 @@ curved_Gauss_sipg_flux_vector_dirichlet
   /* DEBUG_PRINT_ARR_DBL(dudx_m_on_f_m_Gauss[0], dgmath_get_nodes((P4EST_DIM-1), e_m->deg_integ)); */
 
   
-  dgmath_apply_slicer(dgmath_jit_dbase, e_m->u_elem, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
+  dgmath_apply_slicer(dgmath_jit_dbase, e_m->u_storage, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
   for (int d = 0; d < (P4EST_DIM); d++){
       linalg_fill_vec
       (
@@ -435,7 +435,7 @@ curved_Gauss_sipg_flux_vector_interface
     dgmath_apply_slicer
       (
        dgmath_jit_dbase,
-       &(e_m[i]->u_elem[0]),
+       &(e_m[i]->u_storage[0]),
        (P4EST_DIM),
        f_m,
        e_m[i]->deg,
@@ -450,7 +450,7 @@ curved_Gauss_sipg_flux_vector_interface
     dgmath_apply_slicer
       (
        dgmath_jit_dbase,
-       &(e_p_oriented[i]->u_elem[0]),
+       &(e_p_oriented[i]->u_storage[0]),
        (P4EST_DIM),
        f_p,
        e_p_oriented[i]->deg,

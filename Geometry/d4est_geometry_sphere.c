@@ -1,4 +1,71 @@
+#include <d4est_geometry.h>
 #include <d4est_geometry_sphere.h>
+#include <ini.h>
+#include <p8est_connectivity.h>
+#include <util.h>
+
+typedef struct {
+
+  double R0;
+  double R1;
+  double R2;
+  int count;
+  
+} d4est_geometry_sphere_input_t;
+
+static
+int d4est_geometry_sphere_input_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_geometry_sphere_input_t* pconfig = (d4est_geometry_sphere_input_t*)user;
+  if (util_match_couple(section,"geometry",name,"R0")) {
+    mpi_assert(pconfig->R0 == -1);
+    pconfig->R0 = atof(value);
+    pconfig->count += 1;
+  }
+  else if (util_match_couple(section,"geometry",name,"R1")) {
+    mpi_assert(pconfig->R1 == -1);
+    pconfig->R1 = atof(value);
+    pconfig->count += 1;
+  }
+  else if (util_match_couple(section,"geometry",name,"R2")) {
+    mpi_assert(pconfig->R2 == -1);
+    pconfig->R2 = atof(value);
+    pconfig->count += 1;
+  }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+d4est_geometry_sphere_input_t
+d4est_geometry_sphere_input
+(
+ const char* input_file
+)
+{
+  int num_of_options = 3;
+  
+  d4est_geometry_sphere_input_t input;
+  input.count = 0;
+  input.R0 = -1;
+  input.R1 = -1;
+  input.R2 = -1;
+  
+  if (ini_parse(input_file, d4est_geometry_sphere_input_handler, &input) < 0) {
+    mpi_abort("Can't load input file");
+  }
+
+  mpi_assert(input.count == num_of_options);
+  return input;
+}
+
 
 typedef struct
 {
@@ -269,82 +336,93 @@ d4est_geometry_compactified_sphere_X(p8est_geometry_t * geom,
 }
 
 
-p8est_geometry_t*
-d4est_geometry_new_sphere
+void
+d4est_geometry_sphere_new
 (
- p4est_connectivity_t* conn,
- double R2,
- double R1,
- double R0
+ const char* input_file,
+ d4est_geometry_t* d4est_geom
 )
 {
+  d4est_geometry_sphere_input_t input = d4est_geometry_sphere_input(input_file);
   p8est_geometry_t* sphere_geom = P4EST_ALLOC(p8est_geometry_t, 1);
-
+  p4est_connectivity_t* conn = p8est_connectivity_new_sphere();
+  
   d4est_geometry_sphere_attr_t* sphere_attrs = P4EST_ALLOC(d4est_geometry_sphere_attr_t, 1);
   
-  sphere_attrs->R2 = R2;
-  sphere_attrs->R1 = R1;
-  sphere_attrs->R0 = R0;
+  sphere_attrs->R2 = input.R2;
+  sphere_attrs->R1 = input.R1;
+  sphere_attrs->R0 = input.R0;
   sphere_attrs->conn = conn;
   
   /* variables useful for the outer shell */
-  sphere_attrs->R2byR1 = R2 / R1;
-  sphere_attrs->R1sqrbyR2 = R1 * R1 / R2;
-  sphere_attrs->R1log = log (R2 / R1);
+  sphere_attrs->R2byR1 = input.R2 / input.R1;
+  sphere_attrs->R1sqrbyR2 = input.R1 * input.R1 / input.R2;
+  sphere_attrs->R1log = log ( input.R2 / input.R1);
 
   /* variables useful for the inner shell */
-  sphere_attrs->R1byR0 = R1 / R0;
-  sphere_attrs->R0sqrbyR1 = R0 * R0 / R1;
-  sphere_attrs->R0log = log (R1 / R0);
+  sphere_attrs->R1byR0 = input.R1 / input.R0;
+  sphere_attrs->R0sqrbyR1 = input.R0 * input.R0 / input.R1;
+  sphere_attrs->R0log = log ( input.R1 / input.R0);
 
   /* variables useful for the center cube */
-  sphere_attrs->Clength = R0 / sqrt (3.);
-  sphere_attrs->CdetJ = pow (R0 / sqrt (3.), 3.);
+  sphere_attrs->Clength = input.R0 / sqrt (3.);
+  sphere_attrs->CdetJ = pow ( input.R0 / sqrt (3.), 3.);
 
-  sphere_geom->name = "d4est_geometry_sphere";
+  sphere_geom->name = "sphere";
   sphere_geom->user = sphere_attrs;
   sphere_geom->X = d4est_geometry_sphere_X;
   sphere_geom->destroy = d4est_geometry_sphere_destroy;
   
-  return sphere_geom;
+  d4est_geom->p4est_geom = sphere_geom;
+  d4est_geom->p4est_conn = conn;
+
+  printf("[GEOMETRY_INFO]: NAME = sphere\n");
+  printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
+  printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
+  printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
 }
 
-p8est_geometry_t*
-d4est_geometry_new_compactified_sphere
+void
+d4est_geometry_compactified_sphere_new
 (
- p4est_connectivity_t* conn,
- double R2,
- double R1,
- double R0
+ const char* input_file,
+ d4est_geometry_t* d4est_geom
 )
 {
+  d4est_geometry_sphere_input_t input = d4est_geometry_sphere_input(input_file);
   p8est_geometry_t* sphere_geom = P4EST_ALLOC(p8est_geometry_t, 1);
-
+  p4est_connectivity_t* conn = p8est_connectivity_new_sphere();
   d4est_geometry_sphere_attr_t* sphere_attrs = P4EST_ALLOC(d4est_geometry_sphere_attr_t, 1);
   
-  sphere_attrs->R2 = R2;
-  sphere_attrs->R1 = R1;
-  sphere_attrs->R0 = R0;
+  sphere_attrs->R2 = input.R2;
+  sphere_attrs->R1 = input.R1;
+  sphere_attrs->R0 = input.R0;
   sphere_attrs->conn = conn;
   
   /* variables useful for the outer shell */
-  sphere_attrs->R2byR1 = R2 / R1;
-  sphere_attrs->R1sqrbyR2 = R1 * R1 / R2;
-  sphere_attrs->R1log = log (R2 / R1);
+  sphere_attrs->R2byR1 = input.R2 / input.R1;
+  sphere_attrs->R1sqrbyR2 = input.R1 * input.R1 / input.R2;
+  sphere_attrs->R1log = log ( input.R2 / input.R1);
 
   /* variables useful for the inner shell */
-  sphere_attrs->R1byR0 = R1 / R0;
-  sphere_attrs->R0sqrbyR1 = R0 * R0 / R1;
-  sphere_attrs->R0log = log (R1 / R0);
+  sphere_attrs->R1byR0 = input.R1 / input.R0;
+  sphere_attrs->R0sqrbyR1 = input.R0 * input.R0 / input.R1;
+  sphere_attrs->R0log = log ( input.R1 / input.R0);
 
   /* variables useful for the center cube */
-  sphere_attrs->Clength = R0 / sqrt (3.);
-  sphere_attrs->CdetJ = pow (R0 / sqrt (3.), 3.);
+  sphere_attrs->Clength = input.R0 / sqrt (3.);
+  sphere_attrs->CdetJ = pow ( input.R0 / sqrt (3.), 3.);
 
-  sphere_geom->name = "d4est_geometry_compactified_sphere";
+  sphere_geom->name = "compact_sphere";
   sphere_geom->user = sphere_attrs;
   sphere_geom->X = d4est_geometry_compactified_sphere_X;
   sphere_geom->destroy = d4est_geometry_sphere_destroy;
   
-  return sphere_geom;
+  d4est_geom->p4est_geom = sphere_geom;
+  d4est_geom->p4est_conn = conn;
+
+  printf("[GEOMETRY_INFO]: NAME = compact_sphere\n");
+  printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
+  printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
+  printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
 }

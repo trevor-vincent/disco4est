@@ -17,32 +17,32 @@ int krylov_petsc_input_handler
 )
 {
   krylov_petsc_params_t* pconfig = (krylov_petsc_params_t*)user;
-  if (util_match(section,"solver",name,"ksp_atol")) {
+  if (util_match_couple(section,"solver",name,"ksp_atol")) {
     mpi_assert(pconfig->ksp_atol == -1);
     pconfig->ksp_atol = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"solver",name,"ksp_rtol")) {
+  else if (util_match_couple(section,"solver",name,"ksp_rtol")) {
     mpi_assert(pconfig->ksp_rtol == -1);
     pconfig->ksp_rtol = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"solver",name,"ksp_maxit")) {
+  else if (util_match_couple(section,"solver",name,"ksp_maxit")) {
     mpi_assert(pconfig->ksp_maxit == -1);
     pconfig->ksp_maxit = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"solver",name,"ksp_view")) {
+  else if (util_match_couple(section,"solver",name,"ksp_view")) {
     mpi_assert(pconfig->ksp_view == -1);
     pconfig->ksp_view = atoi(value);
     pconfig->count += 1;
   }  
-  else if (util_match(section,"solver",name,"ksp_monitor")) {
+  else if (util_match_couple(section,"solver",name,"ksp_monitor")) {
     mpi_assert(pconfig->ksp_monitor == -1);
     pconfig->ksp_monitor = atoi(value);
     pconfig->count += 1;
   }    
-  else if (util_match(section,"solver",name,"ksp_type")) {
+  else if (util_match_couple(section,"solver",name,"ksp_type")) {
     mpi_assert(pconfig->ksp_type = "");
     if (strcmp("cg", value) == 0){
       pconfig->ksp_type = KSPCG;

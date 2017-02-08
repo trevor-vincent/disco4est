@@ -32,33 +32,54 @@ static
 double analytic_fcn
 (
  double x,
- double y,
+ double y
+#if (P4EST_DIM)==3
+ ,
  double z
+#endif
 )
 {
-  return sin(pi*x)*sin(pi*y)*sin(pi*z);
+#if (P4EST_DIM)==3
+ return sin(pi*x)*sin(pi*y)*sin(pi*z);
+#else
+ return sin(pi*x)*sin(pi*y);
+#endif
 }
 
 static
 double boundary_fcn
 (
  double x,
- double y,
+ double y
+#if (P4EST_DIM)==3
+ ,
  double z
+#endif
 )
 {
-  return analytic_fcn(x,y,z);
+  return analytic_fcn(x,y
+#if (P4EST_DIM)==3
+    ,z
+#endif
+    );
 }
 
 static
 double f_fcn
 (
  double x,
- double y,
+ double y
+#if (P4EST_DIM)==3
+ ,
  double z
+#endif
 )
 {
+#if (P4EST_DIM)==3
   return -3*pi*pi*sin(pi*x)*sin(pi*y)*sin(pi*z);
+#else
+  return -2*pi*pi*sin(pi*x)*sin(pi*y);
+#endif
 }
 
 static int
@@ -121,27 +142,27 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match(section,"amr",name,"num_unifrefs")) {
+  if (util_match_couple(section,"amr",name,"num_unifrefs")) {
     mpi_assert(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"amr",name,"num_randrefs")) {
+  else if (util_match_couple(section,"amr",name,"num_randrefs")) {
     mpi_assert(pconfig->num_randrefs == -1);
     pconfig->num_randrefs = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match(section,"amr",name,"deg_Gauss")){
+  else if (util_match_couple(section,"amr",name,"deg_Gauss")){
     mpi_assert(pconfig->deg_Gauss == -1);
     pconfig->deg_Gauss = atoi(value);
     pconfig->count += 1;    
   }
-  else if (util_match(section,"amr",name,"deg")){
+  else if (util_match_couple(section,"amr",name,"deg")){
     mpi_assert(pconfig->deg == -1);
     pconfig->deg = atoi(value);
     pconfig->count += 1;    
   }
-  else if (util_match(section,"flux",name,"ip_flux_penalty")) {
+  else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     mpi_assert(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
@@ -382,18 +403,16 @@ problem_set_degrees
 void
 problem_init
 (
- int argc,
- char* argv [],
+ const char* input_file,
  p4est_t* p4est,
- p4est_geometry_t* p4est_geom,
+ d4est_geometry_t* d4est_geom,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  int proc_size,
- sc_MPI_Comm mpicomm,
- int load_from_checkpoint
+ sc_MPI_Comm mpicomm
 )
 {
 
-  problem_input_t input = problem_input("options.input");
+  problem_input_t input = problem_input(input_file);
   
   int level;
   /* int degree = input.degree;          */
@@ -502,16 +521,12 @@ problem_init
      
   geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
 
-
-  d4est_geometry_t dgeom;
-  dgeom.p4est_geom = p4est_geom;
-  dgeom.interp_to_Gauss = 1;
-  dgeom.dxdr_method = INTERP_X_ON_LOBATTO;    
-  /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, &dgeom, degree, input.gauss_integ_deg); */
+  d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
+  /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
   curved_element_data_init_new(p4est,
                                geometric_factors,
                                dgmath_jit_dbase,
-                               &dgeom,
+                               d4est_geom,
                                problem_set_degrees,
                                (void*)&input);
 
@@ -545,7 +560,7 @@ problem_init
   /*     ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE); */
   /*     ghost_data = P4EST_ALLOC(curved_element_data_t, ghost->ghosts.elem_count); */
 
-  /*   curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, &dgeom, degree, input.gauss_integ_deg); */
+  /*   curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
 
       
   /* } */
@@ -553,7 +568,7 @@ problem_init
   /* curved_element_data_init(p4est, */
   /*                          geometric_factors, */
   /*                          dgmath_jit_dbase, */
-  /*                          &dgeom, degree, */
+  /*                          d4est_geom, degree, */
   /*                          degree_Gauss_diff[0], */
   /*                          GAUSS_INTEG); */
 
@@ -622,7 +637,7 @@ problem_init
   /*    dgmath_jit_dbase, */
   /*    1, /\* is it curved *\/ */
   /*    3, /\* should we print *\/ */
-  /*    &dgeom */
+  /*    d4est_geom */
   /*   ); */
 
   /* p4est_vtk_write_all */
@@ -661,7 +676,7 @@ problem_init
      ghost,
      ghost_data,
      dgmath_jit_dbase,
-     &dgeom,
+     d4est_geom,
      &ip_flux_params
     );
 
@@ -672,7 +687,7 @@ problem_init
   
   /* linalg_fill_vec(u, 1., local_nodes); */
   
-  prob_fcns.apply_lhs(p4est, ghost, ghost_data, &prob_vecs, dgmath_jit_dbase, &dgeom);
+  prob_fcns.apply_lhs(p4est, ghost, ghost_data, &prob_vecs, dgmath_jit_dbase, d4est_geom);
 
   /* DEBUG_PRINT_2ARR_DBL(prob_vecs.Au, prob_vecs.rhs, prob_vecs.local_nodes); */
 
@@ -701,7 +716,7 @@ problem_init
      ghost,
      ghost_data,
      dgmath_jit_dbase,
-     &dgeom
+     d4est_geom
     );
 
   estimator_stats_t stats;
@@ -729,7 +744,7 @@ problem_init
   /*    &ghost, */
   /*    (void**)&ghost_data, */
   /*    dgmath_jit_dbase, */
-  /*    &dgeom, */
+  /*    d4est_geom, */
   /*    NULL, */
   /*    NULL, */
   /*    NULL */
@@ -750,7 +765,7 @@ problem_init
     /*    &prob_vecs, */
     /*    &prob_fcns, */
     /*    dgmath_jit_dbase, */
-    /*    &dgeom, */
+    /*    d4est_geom, */
     /*    ghost, */
     /*    ghost_data, */
     /*    &cg_params */
@@ -834,7 +849,7 @@ problem_init
 
   double* error = P4EST_ALLOC(double, local_nodes);
 
-  curved_element_data_init_node_vec(p4est, u_analytic, analytic_fcn, dgmath_jit_dbase, p4est_geom);
+  curved_element_data_init_node_vec(p4est, u_analytic, analytic_fcn, dgmath_jit_dbase, d4est_geom->p4est_geom);
 
   for (int i = 0; i < local_nodes; i++){
     error[i] = fabs(error[i]);
@@ -843,7 +858,7 @@ problem_init
           
   linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
 
-  p4est_geometry_t* geom_vtk = p4est_geom;
+  p4est_geometry_t* geom_vtk = d4est_geom->p4est_geom;
      
 
   d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, "compact-sphere");

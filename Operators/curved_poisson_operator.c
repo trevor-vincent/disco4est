@@ -54,7 +54,7 @@ void curved_Gauss_poisson_init_vecs
   linalg_copy_1st_to_2nd
     (
      &(problem_data->u[elem_data->nodal_stride]),
-     &(elem_data->u_elem)[0],
+     &(elem_data->u_storage)[0],
      volume_nodes_Lobatto
     );
   /*  */
@@ -66,7 +66,7 @@ void curved_Gauss_poisson_init_vecs
     );
 
   double* u_array =&(problem_data->u[elem_data->nodal_stride]);
-  double* u_elem = &(elem_data->u_elem)[0];
+  double* u_elem = &(elem_data->u_storage)[0];
   /* DEBUG_PRINT_2ARR_DBL(u_array, u_elem, volume_nodes_Lobatto); */
   
   /* double* du_di = P4EST_ALLOC(double, volume_nodes_Gauss); */
@@ -121,7 +121,7 @@ void curved_Gauss_poisson_init_vecs
 /*   int faces = 2*dim; */
 /*   int face_nodes_Gauss = dgmath_get_nodes(dim-1, elem_data->deg_integ); */
 /*   int volume_nodes_Gauss = dgmath_get_nodes(dim, elem_data->deg_integ); */
-/*   /\* double* u_elem = element_data->u_elem; *\/ */
+/*   /\* double* u_elem = element_data->u_storage; *\/ */
 /*   double* vol_tmp = P4EST_ALLOC(double, volume_nodes_Gauss); */
 /*   double* Si_u [(P4EST_DIM)]; */
 /*   int i; */
@@ -175,7 +175,7 @@ void curved_Gauss_poisson_compute_q_elem
   int face_nodes_Lobatto = dgmath_get_nodes(dim-1,element_data->deg);
   /* int volume_nodes_Gauss = dgmath_get_nodes(dim,element_data->deg_integ); */
   int volume_nodes_Lobatto = dgmath_get_nodes(dim,element_data->deg);
-  /* double* u_elem = element_data->u_elem; */
+  /* double* u_elem = element_data->u_storage; */
 
   double* Si_u [(P4EST_DIM)];
   double* Mq [(P4EST_DIM)];
@@ -215,7 +215,7 @@ void curved_Gauss_poisson_compute_q_elem
   }
 
 
-  double* u_ptr = &element_data->u_elem[0];
+  double* u_ptr = &element_data->u_storage[0];
   /* DEBUG_PRINT_4ARR_DBL(u_ptr, Si_u[0], Si_u[1], Si_u[2],volume_nodes_Lobatto); */
   /* DEBUG_PRINT_3ARR_DBL(element_data->u, element_data->J_integ, Si_u[0], volume_nodes_Lobatto); */
 
@@ -315,7 +315,7 @@ void curved_Gauss_poisson_compute_q_elem
   curved_poisson_debug_vecs_t* debug_vecs = (curved_poisson_debug_vecs_t*)curved_Gauss_poisson_user_data->debug_vecs;
   if(debug_vecs != NULL && debug_vecs->elem_id == element_data->id){
   curved_poisson_debug_vecs_set_Mdu(Si_u, debug_vecs, dgmath_jit_dbase);
-  curved_poisson_debug_vecs_set_u(&element_data->u_elem[0], debug_vecs, dgmath_jit_dbase);
+  curved_poisson_debug_vecs_set_u(&element_data->u_storage[0], debug_vecs, dgmath_jit_dbase);
 
 
     double* qptrs [(P4EST_DIM)];

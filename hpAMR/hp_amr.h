@@ -5,6 +5,30 @@
 #include "../dGMath/dgmath.h"
 #include "../Estimators/estimator_stats.h"
 
+
+/**
+ * @file   hp_amr.c
+ * @author Trevor Vincent <tvincent@cita.utoronto.ca>
+ * @date   Mon Nov  2 01:08:28 2015
+ * 
+ * @brief  Here are the rules for the refinement_log
+ * array :
+ *
+ * This is the interface for running hp-amr loops.
+ * 
+ * Suppose the element currently has degree p, then:
+ *
+ * if refinement_log[i] = p' with p' < 0
+ * then we h-refine in element i with the absolute
+ * value of p as the degree of the parent
+ * and children octants
+ *
+ * if refinement_log[i] = p' with p' > 0 then we
+ * p-refine if p' > p and we p-coarsen if p' < p
+ * We do nothing if p' = p.
+ *
+ */
+
 typedef struct {
 
   void (*post_balance_callback) (p4est_t*, void*);
@@ -15,7 +39,6 @@ typedef struct {
   void* hp_amr_scheme_data;
 
 } hp_amr_scheme_t;
-
 
 typedef struct {
   
@@ -39,37 +62,8 @@ hp_amr
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double** data_to_hp_refine,
  estimator_stats_t* stats,
- hp_amr_scheme_t* scheme
-);
-
-void
-hp_amr_store_balance_changes
-(
- p4est_t * p4est,
- p4est_topidx_t which_tree,
- int num_outgoing,
- p4est_quadrant_t * outgoing[],
- int num_incoming,
- p4est_quadrant_t * incoming[]
-);
-
-void
-hp_amr_set_deg_on_refine
-(
- p4est_t* p4est,
- p4est_topidx_t which_tree,
- int num_outgoing,
- p4est_quadrant_t* outgoing[],
- int num_incoming,
- p4est_quadrant_t* incoming[]
-);
-
-void
-hp_amr_save_to_vtk
-(
- p4est_t* p4est,
- char* filename,
- int save_local_est
+ hp_amr_scheme_t* scheme,
+ int curved
 );
 
 

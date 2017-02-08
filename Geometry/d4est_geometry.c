@@ -1,17 +1,22 @@
-#include "d4est_geometry.h"
-
+#include <util.h>
+#include <ini.h>
+#include <d4est_geometry.h>
+#include <d4est_geometry_sphere.h>
+#include <d4est_geometry_trap.h>
+#include <d4est_geometry_disk.h>
+#include <d4est_geometry_pizza_half.h>
+#include <d4est_geometry_2pac.h>
 
 typedef struct {
 
-  int print_info;
-  const char* name;
+  char* name;
   int count;
   
 } d4est_geometry_input_t;
 
 
 static
-int problem_input_handler
+int d4est_geometry_input_handler
 (
  void* user,
  const char* section,
@@ -20,14 +25,9 @@ int problem_input_handler
 )
 {
   d4est_geometry_input_t* pconfig = (d4est_geometry_input_t*)user;
-  if (util_match(section,"geometry",name,"print_info")) {
-    mpi_assert(pconfig->num_unifrefs == -1);
-    pconfig->print_info = atoi(value);
-    pconfig->count += 1;
-  }
-  else if (util_match(section,"geometry",name,"name")) {
-    mpi_assert(pconfig->namer == NULL);
-    pconfig->name = value;
+  if (util_match_couple(section,"geometry",name,"name")) {
+    mpi_assert(pconfig->name == NULL);
+    D4EST_ASPRINTF(pconfig->name,"%s",value);
     pconfig->count += 1;
   }
   else {
@@ -37,19 +37,18 @@ int problem_input_handler
 }
 
 d4est_geometry_input_t
-problem_input
+d4est_geometry_input
 (
  const char* input_file
 )
 {
-  int num_of_options = 2;
+  int num_of_options = 1;
   
   d4est_geometry_input_t input;
   input.count = 0;
-  input.print_info = -1;
   input.name = NULL;
   
-  if (ini_parse(input_file, problem_input_handler, &input) < 0) {
+  if (ini_parse(input_file, d4est_geometry_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
   }
 
@@ -61,9 +60,133 @@ problem_input
 d4est_geometry_t*
 d4est_geometry_new(const char* input_file){
 
-  d4est_geometry_input_t input = problem_input(input_file);
+  d4est_geometry_input_t input = d4est_geometry_input(input_file);
+  d4est_geometry_t* d4est_geom = P4EST_ALLOC(d4est_geometry_t, 1);
   
-  if (util_match(section,"geometry")) {
+  if (util_match(input.name,"sphere")) {
+    d4est_geometry_sphere_new(input_file, d4est_geom);
+  }
+  else if (util_match(input.name,"compact_sphere")) {
+    d4est_geometry_compactified_sphere_new(input_file, d4est_geom);
+  }
+  else if (util_match(input.name,"disk")) {
+    d4est_geometry_disk_new(input_file, d4est_geom);
+  }
+  /* These are for debugging purposes */
+  else if (util_match(input.name,"2pac_aligned")) {
+    d4est_geometry_2pac_aligned_new(input_file, d4est_geom);
+  }
+  else if (util_match(input.name,"2pac_nonaligned")) {
+    d4est_geometry_2pac_nonaligned_new(input_file, d4est_geom);
+  }
+  else if (util_match(input.name,"2pac_aligned_traps")) {
+    d4est_geometry_2pac_aligned_traps_new(input_file, d4est_geom);
+  }    
+  else if (util_match(input.name,"2pac_aligned_squares")) {
+    d4est_geometry_2pac_aligned_squares_new(input_file, d4est_geom);
+  }
+  else if (util_match(input.name,"trapezoid")) {
+    d4est_geometry_trap_new(input_file, d4est_geom);
+  }
+  else if (util_match(input.name,"pizza_half")) {
+    d4est_geometry_pizza_half_new(input_file, d4est_geom);
+  }
+  else {
+    printf("[ERROR]: You tried to use %s geometry\n", input.name);
+    mpi_abort("[ERROR]: this geometry is currently not supported");
+  }
+
+  free(input.name);
+  return d4est_geom;
+}
+
+void
+d4est_geometry_destroy(d4est_geometry_t* d4est_geom){
+  p4est_connectivity_destroy(d4est_geom->p4est_conn);
+  p4est_geometry_destroy (d4est_geom->p4est_geom);
+  P4EST_FREE(d4est_geom);
+}
+
+
+/* p4est_connectivity_t* */
+/* problem_build_conn() */
+/* {   */
+/*   p4est_connectivity_t* conn; */
+/* #if (P4EST_DIM)==2    */
+/* #if defined DISK */
+/*   conn = p4est_connectivity_new_disk(); */
+/* #elif defined SQUARE */
+/*   conn = p4est_connectivity_new_unitsquare(); */
+/* #elif defined TUPAC_ALIGNED */
+/*   conn = p4est_connectivity_new_2pac_aligned(); */
+/* #elif defined TUPAC_ALIGNED_CUBE */
+/*   conn = p4est_connectivity_new_2pac_aligned_CUBE(); */
+/* #elif defined TUPAC_NONALIGNED */
+/*   conn = p4est_connectivity_new_2pac_nonaligned(); */
+/* #elif defined TUPAC_NONALIGNED_CUBE */
+/*   conn = p4est_connectivity_new_2pac_nonaligned_CUBE(); */
+/* #elif defined TRAP */
+/*   conn = p4est_connectivity_new_trap(); */
+/* #elif defined RECTANGLE */
+/*   conn = p4est_connectivity_new_unitsquare(); */
+/* #elif defined PIZZA_HALF */
+/*   conn = p4est_connectivity_new_unitsquare();   */
+/* #else */
+/*   mpi_abort("Pick a 2d connectivity and geometry"); */
+/* #endif */
+/* #endif */
+
+/* #if (P4EST_DIM)==3 */
+/* #if defined SPHERE */
+/*   conn = p8est_connectivity_new_sphere(); */
+/* #elif defined CUBE */
+/*   conn = p8est_connectivity_new_unitcube(); */
+/* #else */
+/*   mpi_abort("Pick a 3d connectivity and geometry"); */
+/* #endif */
+/* #endif */
+/*   return conn; */
+/* } */
+
+/* p4est_geometry_t* */
+/* problem_build_geom */
+/* ( */
+/*  p4est_connectivity_t* conn */
+/* ) */
+/* { */
+/*   p4est_geometry_t* geom; */
+/*   /\* double x0 = -1.; *\/ */
+/*   /\* double x1 = 1.; *\/ */
+/*   /\* double y0 = 0.; *\/ */
+/*   /\* double y1 = 2.; *\/ */
 
   
-}
+/* #if (P4EST_DIM)==2    */
+/* #if defined DISK */
+/*   printf("hi from disk!"); */
+/*   geom = d4est_geometry_new_disk(conn, R*.5, R); */
+/* #elif defined SQUARE */
+/*   geom = p4est_geometry_new_connectivity(conn); */
+/* #elif defined RECTANGLE */
+/*   geom = d4est_geometry_new_rectangle(conn, x0, x1, y0, y1); */
+/* #elif defined TUPAC_ALIGNED */
+/*   /\* geom = p4est_geometry_new_connectivity(conn); *\/ */
+/*   /\* geom = p4est_geometry_new_connectivity(conn); *\/ */
+/*   geom = d4est_geometry_new_2pac_aligned(conn, R*.5, R); */
+/*   /\* geom = d4est_geometry_new_2pac_aligned_traps(conn, R*.5, R); *\/ */
+/*   /\* geom = d4est_geometry_new_2pac_aligned_squares(conn, R*.5, R); *\/ */
+/* #elif defined TUPAC_ALIGNED_CUBE */
+/*   geom = p4est_geometry_new_connectivity(conn); */
+/* #elif defined TUPAC_NONALIGNED */
+/*   geom = p4est_geometry_new_connectivity(conn); */
+/* #elif defined TUPAC_NONALIGNED_CUBE */
+/*   geom = p4est_geometry_new_connectivity(conn); */
+/* #elif defined TRAP */
+/*   geom = p4est_geometry_new_connectivity(conn); */
+/* #elif defined PIZZA_HALF */
+/*   printf("hi from pizza half\n"); */
+/*   geom = d4est_geometry_new_pizza_half(conn, R*.5, R); */
+/* #else */
+/*   mpi_abort("Pick a 2d connectivity and geometry"); */
+/* #endif */
+/* #endif */

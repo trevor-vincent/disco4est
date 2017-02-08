@@ -8,6 +8,7 @@ typedef enum {INTERP_X_ON_LOBATTO, COMPUTE_DX_ON_LOBATTO, COMPUTE_DX_ON_GAUSS} d
 typedef struct{
 
   p4est_geometry_t* p4est_geom;
+  p4est_connectivity_t* p4est_conn;
 
   /* if the analytic derivatives are known */
   void(*dxdr)(p4est_geometry_t * geom,
@@ -34,5 +35,10 @@ typedef struct{
   dxdr_method_t dxdr_method;
   
 } d4est_geometry_t;
+
+/* This file was automatically generated.  Do not edit! */
+void d4est_geometry_destroy(d4est_geometry_t *d4est_geom);
+d4est_geometry_t *d4est_geometry_new(const char *input_file);
+
 
 #endif

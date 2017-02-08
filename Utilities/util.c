@@ -525,7 +525,7 @@ int util_does_file_exist(const char *filename) {
   return result == 0;
 }
 
-int util_match
+int util_match_couple
 (
  const char* section1,
  const char* section2,
@@ -534,4 +534,14 @@ int util_match
 )
 {
   return (strcmp(section1, section2) == 0 && strcmp(name1, name2) == 0);
+}
+
+
+int util_match
+(
+ const char* str1,
+ const char* str2
+)
+{
+  return (strcmp(str1, str2) == 0);
 }

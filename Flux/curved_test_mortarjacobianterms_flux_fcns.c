@@ -35,7 +35,7 @@ void curved_test_mortarjacobianterms_init_vecs
   linalg_copy_1st_to_2nd
     (
      &(test_data->u[elem_data->nodal_stride]),
-     &(elem_data->u_elem)[0],
+     &(elem_data->u_storage)[0],
      volume_nodes_Lobatto
     );
   
@@ -274,7 +274,7 @@ curved_test_mortarjacobianterms_interface
       dgmath_apply_slicer
         (
          dgmath_jit_dbase,
-         &e_m[i]->u_elem[0],
+         &e_m[i]->u_storage[0],
          (P4EST_DIM),
          f_m,
          e_m[i]->deg,
@@ -308,7 +308,7 @@ curved_test_mortarjacobianterms_interface
       dgmath_apply_slicer
         (
          dgmath_jit_dbase,
-         &e_p[i]->u_elem[0],
+         &e_p[i]->u_storage[0],
          (P4EST_DIM),
          f_p,
          e_p[i]->deg,
