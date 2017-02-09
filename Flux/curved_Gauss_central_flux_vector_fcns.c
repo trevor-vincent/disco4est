@@ -32,18 +32,19 @@ curved_Gauss_central_flux_vector_dirichlet
   double* q_m_on_f_m [(P4EST_DIM)];
   double* q_m_on_f_m_Gauss [(P4EST_DIM)];
   /* double* xyz_on_f_m [(P4EST_DIM)]; */
-  double* xyz_on_f_m_Gauss [(P4EST_DIM)];
-  
+  /* double* xyz_on_f_m_Gauss [(P4EST_DIM)]; */
+  double* xyz_on_f_m [(P4EST_DIM)];
   for (int i = 0; i < (P4EST_DIM); i++) {
     q_m_on_f_m[i] = P4EST_ALLOC(double, face_nodes_m_Lobatto);
     q_m_on_f_m_Gauss[i] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     /* xyz_on_f_m[i] = P4EST_ALLOC(double, face_nodes_m_Lobatto); */
-    /* xyz_on_f_m[i] = P4EST_ALLOC(double, face_nodes_m_Gauss); */
-    xyz_on_f_m_Gauss[i] = P4EST_ALLOC(double, face_nodes_m_Gauss);
+    xyz_on_f_m[i] = P4EST_ALLOC(double, face_nodes_m_Lobatto);
+    /* xyz_on_f_m_Gauss[i] = P4EST_ALLOC(double, face_nodes_m_Gauss); */
   }
 
   double* M_qstar_min_q_n = P4EST_ALLOC_ZERO(double, face_nodes_m_Lobatto);
   double* u_on_f_m_min_u_at_bndry_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
+  double* u_on_f_m_min_u_at_bndry_Lobatto = P4EST_ALLOC(double, face_nodes_m_Lobatto);
   double* sj_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
   double* qstar_min_q_Gauss [(P4EST_DIM)];
   double* n_on_f_m_Gauss [(P4EST_DIM)];
@@ -56,15 +57,12 @@ curved_Gauss_central_flux_vector_dirichlet
   }
 
   for (int d = 0; d < (P4EST_DIM); d++){
-    /* dgmath_apply_slicer */
-    /*   ( */
-    /*    dgmath_jit_dbase, */
-    /*    e_m->xyz_Lobatto_integ[d], */
-    /*    (P4EST_DIM), */
-    /*    f_m, */
-    /*    e_m->deg_integ, */
-    /*    xyz_on_f_m[d] */
-    /*   ); */
+    dgmath_apply_slicer(dgmath_jit_dbase,
+                        e_m->xyz[d],
+                        (P4EST_DIM),
+                        f_m,
+                        e_m->deg,
+                        xyz_on_f_m[d]);
     
     /* dgmath_interp_GLL_to_GL */
     /*   ( */
@@ -123,22 +121,43 @@ curved_Gauss_central_flux_vector_dirichlet
      sj_on_f_m_Gauss,
      geom,
      dgmath_jit_dbase,
-     xyz_on_f_m_Gauss
-    );
-
-  /* get boundary values on this face */
-  for (int i = 0; i < face_nodes_m_Gauss; i++){
-    u_on_f_m_min_u_at_bndry_Gauss[i] = u_m_on_f_m_Gauss[i]
-                                 - u_at_bndry
-                                 (
-                                  xyz_on_f_m_Gauss[0][i],
-                                  xyz_on_f_m_Gauss[1][i]
+     (double* [(P4EST_DIM)]){NULL, NULL
 #if (P4EST_DIM)==3
-                                  ,
-                                  xyz_on_f_m_Gauss[2][i]
+         , NULL
 #endif
-                                 );
+         }
+    );
+  /* get boundary values on this face */
+  for (int i = 0; i < face_nodes_m_Lobatto; i++){
+    u_on_f_m_min_u_at_bndry_Lobatto[i] = u_m_on_f_m[i]
+                                         - u_at_bndry
+                                         (
+                                          xyz_on_f_m[0][i],
+                                          xyz_on_f_m[1][i]
+#if (P4EST_DIM)==3
+                                          ,
+                                          xyz_on_f_m[2][i]
+#endif
+                                         );
+
+    /* printf("u_at_bndry = %.25f\n", u_at_bndry(xyz_on_f_m[0][i], xyz_on_f_m[1][i] */
+/* #if (P4EST_DIM)==3 */
+                                              /* , xyz_on_f_m[2][i] */
+/* #endif */
+                                             /* )); */
   }
+  
+  dgmath_interp_GLL_to_GL
+    (
+     dgmath_jit_dbase,
+     u_on_f_m_min_u_at_bndry_Lobatto,
+     e_m->deg,
+     e_m->deg_integ,
+     u_on_f_m_min_u_at_bndry_Gauss,
+     (P4EST_DIM)-1
+    );
+  
+  
   
   for(int i = 0; i < face_nodes_m_Gauss; i++){
     for (int d = 0; d < (P4EST_DIM); d++){
@@ -173,13 +192,14 @@ curved_Gauss_central_flux_vector_dirichlet
   for (int i = 0; i < (P4EST_DIM); i++) {
     P4EST_FREE(q_m_on_f_m[i]);
     P4EST_FREE(q_m_on_f_m_Gauss[i]);
-    /* P4EST_FREE(xyz_on_f_m[i]); */
-    P4EST_FREE(xyz_on_f_m_Gauss[i]);
+    P4EST_FREE(xyz_on_f_m[i]);
+    /* P4EST_FREE(xyz_on_f_m_Gauss[i]); */
     P4EST_FREE(qstar_min_q_Gauss[i]);
   }
 
   P4EST_FREE(sj_on_f_m_Gauss);
   P4EST_FREE(u_on_f_m_min_u_at_bndry_Gauss);
+  P4EST_FREE(u_on_f_m_min_u_at_bndry_Lobatto);
   P4EST_FREE(M_qstar_min_q_n);
   
   for (int d = 0; d < (P4EST_DIM); d++){

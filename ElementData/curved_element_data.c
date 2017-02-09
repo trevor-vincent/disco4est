@@ -1420,7 +1420,6 @@ curved_element_data_compute_l2_norm_sqr
  norm_storage_option_t store_local
 )
 {
-
   double* Mvec = P4EST_ALLOC(double, local_nodes);
   double l2_norm_sqr = 0.;  
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -1443,7 +1442,12 @@ curved_element_data_compute_l2_norm_sqr
                                      (P4EST_DIM),
                                      &Mvec[ed->nodal_stride]
                                     );
+        double* tmp1 = &nodal_vec[ed->nodal_stride];
+        double* tmp2 = &Mvec[ed->nodal_stride];
+        DEBUG_PRINT_2ARR_DBL(tmp1,tmp2, volume_nodes);
+          
 
+        
         double norm2 = linalg_vec_dot(&nodal_vec[ed->nodal_stride], &Mvec[ed->nodal_stride], volume_nodes);
         
         if (store_local == STORE_LOCALLY){

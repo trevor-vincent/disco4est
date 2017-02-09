@@ -39,6 +39,7 @@ typedef struct{
 /* This file was automatically generated.  Do not edit! */
 void d4est_geometry_destroy(d4est_geometry_t *d4est_geom);
 d4est_geometry_t *d4est_geometry_new(const char *input_file);
+d4est_geometry_input_t d4est_geometry_input(const char *input_file);
 
 
 #endif

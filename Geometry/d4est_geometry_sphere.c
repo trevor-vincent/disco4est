@@ -88,48 +88,6 @@ d4est_geometry_sphere_destroy
   P4EST_FREE(geom);
 }
 
-static void
-d4est_geometry_octree_to_vertex (p8est_geometry_t * geom,
-                               p4est_topidx_t which_tree,
-                               const double abc[3], double xyz[3])
-{
-  d4est_geometry_sphere_attr_t *sphere_att = (d4est_geometry_sphere_attr_t *) geom->user;
-  p4est_connectivity_t *connectivity = (p4est_connectivity_t *) sphere_att->conn;
-  const p4est_topidx_t *tree_to_vertex = connectivity->tree_to_vertex;
-  const double       *v = connectivity->vertices;
-  double              eta_x, eta_y, eta_z = 0.;
-  int                 j, k;
-  p4est_topidx_t      vt[P4EST_CHILDREN];
-
-  /* retrieve corners of the tree */
-  for (k = 0; k < P4EST_CHILDREN; ++k) {
-    vt[k] = tree_to_vertex[which_tree * P4EST_CHILDREN + k];
-  }
-
-  /* these are reference coordinates in [0, 1]**d */
-  eta_x = abc[0];
-  eta_y = abc[1];
-  eta_z = abc[2];
-
-  /* bi/trilinear transformation */
-  for (j = 0; j < 3; ++j) {
-    /* *INDENT-OFF* */
-    xyz[j] =
-           ((1. - eta_z) * ((1. - eta_y) * ((1. - eta_x) * v[3 * vt[0] + j] +
-                                                  eta_x  * v[3 * vt[1] + j]) +
-                                  eta_y  * ((1. - eta_x) * v[3 * vt[2] + j] +
-                                                  eta_x  * v[3 * vt[3] + j]))
-#ifdef P4_TO_P8
-            +     eta_z  * ((1. - eta_y) * ((1. - eta_x) * v[3 * vt[4] + j] +
-                                                  eta_x  * v[3 * vt[5] + j]) +
-                                  eta_y  * ((1. - eta_x) * v[3 * vt[6] + j] +
-                                                  eta_x  * v[3 * vt[7] + j]))
-#endif
-           );
-    /* *INDENT-ON* */
-  }
-}
-
 
 static void
 d4est_geometry_sphere_X(p8est_geometry_t * geom,
