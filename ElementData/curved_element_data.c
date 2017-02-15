@@ -190,7 +190,7 @@ geometric_factors_init
   geometric_factors->xyz_rst_Lobatto_integ = NULL;
   /* geometric_factors->rst_xyz = NULL; */
   geometric_factors->rst_xyz_integ = NULL;
-  geometric_factors->invM = NULL;
+  /* geometric_factors->invM = NULL; */
   /* geometric_factors->invMface = NULL; */
 
   return geometric_factors;
@@ -213,7 +213,7 @@ geometric_factors_reinit
   int local_nodes_integ = local_sizes.local_nodes_integ;
   int local_sqr_nodes = local_sizes.local_sqr_nodes;
   int local_sqr_trace_nodes = local_sizes.local_sqr_trace_nodes;
-  int local_sqr_nodes_invM = local_sizes.local_sqr_nodes_invM;
+  /* int local_sqr_nodes_invM = local_sizes.local_sqr_nodes_invM; */
     
   int vector_nodes = local_nodes*(P4EST_DIM); 
   /* int matrix_nodes = local_nodes*(P4EST_DIM)*(P4EST_DIM); */
@@ -229,7 +229,7 @@ geometric_factors_reinit
   geometric_factors->xyz_rst_integ = P4EST_REALLOC(geometric_factors->xyz_rst_integ,double,matrix_nodes_integ);
   geometric_factors->xyz_rst_Lobatto_integ = P4EST_REALLOC(geometric_factors->xyz_rst_Lobatto_integ,double,matrix_nodes_integ);
   geometric_factors->rst_xyz_integ = P4EST_REALLOC(geometric_factors->rst_xyz_integ,double,matrix_nodes_integ);
-  geometric_factors->invM = P4EST_REALLOC(geometric_factors->invM, double, local_sqr_nodes_invM);
+  /* geometric_factors->invM = P4EST_REALLOC(geometric_factors->invM, double, local_sqr_nodes_invM); */
   /* geometric_factors->invMface = P4EST_REALLOC(geometric_factors->invMface, double, local_sqr_trace_nodes); */
 
 }
@@ -249,7 +249,7 @@ geometric_factors_destroy
   P4EST_FREE(geometric_factors->xyz_rst_Lobatto_integ);
   /* P4EST_FREE(geometric_factors->rst_xyz); */
   P4EST_FREE(geometric_factors->rst_xyz_integ);
-  P4EST_FREE(geometric_factors->invM);
+  /* P4EST_FREE(geometric_factors->invM); */
   /* P4EST_FREE(geometric_factors->invMface); */
   P4EST_FREE(geometric_factors);
 }
@@ -479,16 +479,16 @@ curved_element_data_init_callback
   /* if(elem_data->deg == elem_data->deg_integ) */
     /* elem_data->invM == NULL; */
   /* else{ */
-  elem_data->invM = &geometric_factors->invM[ctx->sqr_nodal_stride];
-  dgmath_compute_curvedInverseGaussMass
-    (
-     dgmath_jit_dbase,
-     elem_data->deg,
-     elem_data->deg_integ,
-     (P4EST_DIM),
-     elem_data->J_integ,
-     elem_data->invM
-    );
+  /* elem_data->invM = &geometric_factors->invM[ctx->sqr_nodal_stride]; */
+  /* dgmath_compute_curvedInverseGaussMass */
+  /*   ( */
+  /*    dgmath_jit_dbase, */
+  /*    elem_data->deg, */
+  /*    elem_data->deg_integ, */
+  /*    (P4EST_DIM), */
+  /*    elem_data->J_integ, */
+  /*    elem_data->invM */
+  /*   ); */
   /* } */
   int face_nodes = dgmath_get_nodes((P4EST_DIM)-1, elem_data->deg);  
   double* MJac = P4EST_ALLOC(double, volume_nodes_integ);
@@ -943,7 +943,7 @@ curved_element_data_compute_strides_and_sizes
   int local_sqr_nodes = 0;
   int local_sqr_trace_nodes = 0;
   int local_nodes_integ = 0;
-  int local_sqr_nodes_invM = 0;
+  /* int local_sqr_nodes_invM = 0; */
 
   /* strides */
   int sqr_nodal_stride = 0;
@@ -991,9 +991,9 @@ curved_element_data_compute_strides_and_sizes
         local_sqr_trace_nodes += (P4EST_FACES)*face_nodes*face_nodes;
         local_nodes_integ += dgmath_get_nodes((P4EST_DIM), elem_data->deg_integ);
 
-        if (elem_data->deg < elem_data->deg_integ){
-          local_sqr_nodes_invM += nodes*nodes;
-        }
+        /* if (elem_data->deg < elem_data->deg_integ){ */
+          /* local_sqr_nodes_invM += nodes*nodes; */
+        /* } */
         
         sqr_nodal_stride += nodes*nodes;
         sqr_trace_stride += face_nodes*face_nodes*(P4EST_FACES);
@@ -1008,7 +1008,7 @@ curved_element_data_compute_strides_and_sizes
   local_sizes.local_sqr_nodes = local_sqr_nodes;
   local_sizes.local_sqr_trace_nodes = local_sqr_trace_nodes;
   local_sizes.local_nodes_integ = local_nodes_integ;
-  local_sizes.local_sqr_nodes_invM = local_sqr_nodes_invM;
+  /* local_sizes.local_sqr_nodes_invM = local_sqr_nodes_invM; */
   return local_sizes;
   
 }
@@ -1077,7 +1077,7 @@ curved_element_data_init_new
      /* local_sizes.local_sqr_trace_nodes */
     );
 
-  int invM_stride = 0;
+  /* int invM_stride = 0; */
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)
@@ -1147,21 +1147,21 @@ curved_element_data_init_new
            volume_nodes_integ
           );
         
-        if(elem_data->deg == elem_data->deg_integ)
-          elem_data->invM == NULL;
-        else{
-          elem_data->invM = &geometric_factors->invM[invM_stride];
-          dgmath_compute_curvedInverseGaussMass
-            (
-             dgmath_jit_dbase,
-             elem_data->deg,
-             elem_data->deg_integ,
-             (P4EST_DIM),
-             elem_data->J_integ,
-             elem_data->invM
-            );
-          invM_stride += volume_nodes*volume_nodes;
-        }
+        /* if(elem_data->deg == elem_data->deg_integ) */
+        /*   elem_data->invM == NULL; */
+        /* else{ */
+        /*   elem_data->invM = &geometric_factors->invM[invM_stride]; */
+        /*   dgmath_compute_curvedInverseGaussMass */
+        /*     ( */
+        /*      dgmath_jit_dbase, */
+        /*      elem_data->deg, */
+        /*      elem_data->deg_integ, */
+        /*      (P4EST_DIM), */
+        /*      elem_data->J_integ, */
+        /*      elem_data->invM */
+        /*     ); */
+        /*   invM_stride += volume_nodes*volume_nodes; */
+        /* } */
         
         elem_data->volume
           = curved_element_data_compute_element_volume

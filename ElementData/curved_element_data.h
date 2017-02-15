@@ -19,7 +19,7 @@ typedef struct {
   double* xyz_rst_Lobatto_integ;
   /* double* rst_xyz; */
   double* rst_xyz_integ;
-  double* invM;
+  /* double* invM; */
   /* double* invMface; */
   
 } geometric_factors_t;
@@ -51,7 +51,7 @@ typedef struct {
   /* geometric factors */
   /* double* J; /\* Jacobian *\/ */
   double* J_integ; /* Jacobian */
-  double* invM;
+  /* double* invM; */
   /* double* invMface [P4EST_FACES]; */
   double* xyz [(P4EST_DIM)]; /* collocation points on physical grid */
   double* xyz_integ [(P4EST_DIM)]; /* collocation points on physical grid */
@@ -100,7 +100,7 @@ typedef struct {
   int local_sqr_nodes;
   int local_sqr_trace_nodes;
   int local_nodes_integ;
-  int local_sqr_nodes_invM;
+  /* int local_sqr_nodes_invM; */
   
 } curved_element_data_local_sizes_t;
 
