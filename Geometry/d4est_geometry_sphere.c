@@ -100,7 +100,7 @@ d4est_geometry_sphere_X(p8est_geometry_t * geom,
   double              abc[3];
 
   /* transform from the reference cube into vertex space */
-  d4est_geometry_octree_to_vertex (geom, which_tree, rst, abc);
+  d4est_geometry_octree_to_vertex (sphere->conn, which_tree, rst, abc);
 
   /* assert that input points are in the expected range */
   P4EST_ASSERT (0 <= which_tree && which_tree < 13);
@@ -198,7 +198,7 @@ d4est_geometry_compactified_sphere_X(p8est_geometry_t * geom,
   double              abc[3];
 
   /* transform from the reference cube into vertex space */
-  d4est_geometry_octree_to_vertex (geom, which_tree, rst, abc);
+  d4est_geometry_octree_to_vertex (sphere->conn, which_tree, rst, abc);
 
   /* assert that input points are in the expected range */
   P4EST_ASSERT (0 <= which_tree && which_tree < 13);

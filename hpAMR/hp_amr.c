@@ -75,6 +75,70 @@ hp_amr_refine_callback
   }  
 }
 
+static int
+hp_amr_curved_refine_callback
+(
+ p4est_t * p4est,
+ p4est_topidx_t which_tree,
+ p4est_quadrant_t * quadrant
+)
+{
+  hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
+  curved_element_data_t* elem_data = (curved_element_data_t*) quadrant->p.user_data;
+  dgmath_jit_dbase_t* dgmath_jit_dbase = hp_amr_data->dgmath_jit_dbase;
+  
+  int* refinement_log = hp_amr_data->refinement_log;
+  int* refinement_log_stride = &hp_amr_data->refinement_log_stride;
+  
+  /* h-refine */
+  if (refinement_log[*refinement_log_stride] < 0){
+    (*refinement_log_stride)++;
+    hp_amr_data->elements_marked_for_hrefine += 1;
+    /* printf("Element will be refined, rank=%d, id=%d, estimator=%.25f\n", p4est->mpirank, elem_data->id, elem_data->local_estimator); */
+    return 1;
+  }
+
+  /* p-refine, p-coarsen or do nothing */
+  else {
+    int degH = elem_data->deg;
+    int degh = refinement_log[*refinement_log_stride];
+    int volume_nodes = dgmath_get_nodes((P4EST_DIM), degh);
+    
+    double* temp_data = P4EST_ALLOC(double, volume_nodes);
+    
+    if (elem_data->deg < degh){
+      hp_amr_data->elements_marked_for_prefine += 1;
+      dgmath_apply_p_prolong
+        (
+         dgmath_jit_dbase,
+         &elem_data->u_storage[0],
+         degH,
+         (P4EST_DIM),
+         degh,
+         temp_data        
+        );
+      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_storage[0], volume_nodes);
+    }
+    else if (elem_data->deg > degh){
+      dgmath_apply_p_restrict
+        (
+         dgmath_jit_dbase,
+         &elem_data->u_storage[0],
+         degH,
+         (P4EST_DIM),
+         degh,
+         temp_data
+        );
+      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_storage[0], volume_nodes);
+    }     
+
+    elem_data->deg = degh;
+    P4EST_FREE(temp_data);
+    (*refinement_log_stride)++;
+    return 0;
+  }  
+}
+
 
 /** 
  * Assumes iter_volume will impose a refinement criterion
@@ -146,16 +210,28 @@ hp_amr
 
   
   /* interpolate solution and refine mesh */
-  p4est_refine_ext
-    (
-     p4est,
-     0,
-     -1,
-     hp_amr_refine_callback,
-     NULL,
-     hp_amr_data.refine_replace_callback_fcn_ptr
-    );
-
+  if (!curved){
+    p4est_refine_ext
+      (
+       p4est,
+       0,
+       -1,
+       hp_amr_refine_callback,
+       NULL,
+       hp_amr_data.refine_replace_callback_fcn_ptr
+      );
+  }
+  else {
+    p4est_refine_ext
+      (
+       p4est,
+       0,
+       -1,
+       hp_amr_curved_refine_callback,
+       NULL,
+       hp_amr_data.refine_replace_callback_fcn_ptr
+      );
+  }
   /* 2-1 balance mesh */
   p4est_balance_ext
     (

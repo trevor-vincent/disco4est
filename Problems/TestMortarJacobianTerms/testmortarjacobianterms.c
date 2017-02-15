@@ -364,29 +364,6 @@ problem_input
   return input;
 }
 
-p4est_geometry_t*
-problem_build_geom
-(
- p4est_connectivity_t* conn
-)
-{
-  /* mpi_assert((P4EST_DIM)==3); */
-  p4est_geometry_t* geom;
-  problem_input_t input = problem_input("options.input");
-
-  /* geom = d4est_geometry_new_compact_sphere(conn, input.R2, input.R1, input.R0, input.w, input.Rinf); */
-#if (P4EST_DIM)==3
-  geom = d4est_geometry_new_sphere(conn, input.R2, input.R1, input.R0);
-#endif
-#if (P4EST_DIM)==2
-  geom = d4est_geometry_new_disk(conn, input.R1, input.R2);
-#endif
-  
-  /* printf("input.R2 = %.25f\n", input.R2); */
-
-  
-  return geom;  
-}
 
 p4est_t*
 problem_build_p4est
@@ -488,14 +465,12 @@ problem_set_degrees
 void
 problem_init
 (
- int argc,
- char* argv [],
+ const char* input_file,
  p4est_t* p4est,
- p4est_geometry_t* p4est_geom,
+ d4est_geometry_t* d4est_geom,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  int proc_size,
- sc_MPI_Comm mpicomm,
- int load_from_checkpoint
+ sc_MPI_Comm mpicomm
 )
 {
 
@@ -578,16 +553,17 @@ problem_init
      
     geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
 
-
-    d4est_geometry_t dgeom;
-    dgeom.p4est_geom = p4est_geom;
-    dgeom.interp_to_Gauss = 1;
-    dgeom.dxdr_method = INTERP_X_ON_LOBATTO;    
-    /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, &dgeom, degree, input.gauss_integ_deg); */
+    d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
+    
+    /* d4est_geometry_t dgeom; */
+    /* dgeom.p4est_geom = p4est_geom; */
+    /* dgeom.interp_to_Gauss = 1; */
+    /* dgeom.dxdr_method = INTERP_X_ON_LOBATTO;     */
+    /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
     curved_element_data_init_new(p4est,
                              geometric_factors,
                              dgmath_jit_dbase,
-                             &dgeom,
+                             d4est_geom,
                              problem_set_degrees,
                                  (void*)&input);
 
@@ -622,7 +598,7 @@ problem_init
     curved_element_data_init_new(p4est,
                              geometric_factors,
                              dgmath_jit_dbase,
-                             &dgeom,
+                             d4est_geom,
                              problem_set_degrees,
                                  (void*)&input);
 
@@ -631,7 +607,7 @@ problem_init
    
   local_nodes = curved_element_data_get_local_nodes(p4est);
   double* u = P4EST_ALLOC(double, local_nodes);
-  curved_element_data_init_node_vec(p4est, u, sinpix_fcn, dgmath_jit_dbase, dgeom.p4est_geom);
+  curved_element_data_init_node_vec(p4est, u, sinpix_fcn, dgmath_jit_dbase, d4est_geom->p4est_geom);
     
   test_mortarjacobianterms_data_t test_data;
   test_data.u = u;
@@ -654,7 +630,7 @@ problem_init
     
     curved_compute_flux_user_data_t curved_compute_flux_user_data;
     curved_compute_flux_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
-    curved_compute_flux_user_data.geom = &dgeom;
+    curved_compute_flux_user_data.geom = d4est_geom;
     curved_compute_flux_user_data.flux_fcn_ptrs = &ffp;
     p4est->user_pointer = &curved_compute_flux_user_data;
   

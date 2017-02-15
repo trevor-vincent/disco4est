@@ -2,6 +2,7 @@
 #include <ini.h>
 #include <d4est_geometry.h>
 #include <d4est_geometry_sphere.h>
+#include <d4est_geometry_shell.h>
 #include <d4est_geometry_trap.h>
 #include <d4est_geometry_disk.h>
 #include <d4est_geometry_pizza_half.h>
@@ -69,6 +70,12 @@ d4est_geometry_new(const char* input_file){
   else if (util_match(input.name,"compact_sphere")) {
     d4est_geometry_compactified_sphere_new(input_file, d4est_geom);
   }
+  else if (util_match(input.name,"shell")) {
+    d4est_geometry_shell_new(input_file, d4est_geom);
+  }
+  else if (util_match(input.name,"compact_shell")) {
+    d4est_geometry_compactified_shell_new(input_file, d4est_geom);
+  }
   else if (util_match(input.name,"disk")) {
     d4est_geometry_disk_new(input_file, d4est_geom);
   }
@@ -107,13 +114,11 @@ d4est_geometry_destroy(d4est_geometry_t* d4est_geom){
   P4EST_FREE(d4est_geom);
 }
 
-static void
-d4est_geometry_octree_to_vertex (p8est_geometry_t * geom,
-                               p4est_topidx_t which_tree,
-                               const double abc[3], double xyz[3])
+void
+d4est_geometry_octree_to_vertex (p8est_connectivity_t *connectivity,
+                                 p4est_topidx_t which_tree,
+                                 const double abc[3], double xyz[3])
 {
-  d4est_geometry_sphere_attr_t *sphere_att = (d4est_geometry_sphere_attr_t *) geom->user;
-  p4est_connectivity_t *connectivity = (p4est_connectivity_t *) sphere_att->conn;
   const p4est_topidx_t *tree_to_vertex = connectivity->tree_to_vertex;
   const double       *v = connectivity->vertices;
   double              eta_x, eta_y, eta_z = 0.;
@@ -230,3 +235,4 @@ d4est_geometry_octree_to_vertex (p8est_geometry_t * geom,
 /*   mpi_abort("Pick a 2d connectivity and geometry"); */
 /* #endif */
 /* #endif */
+/* This file was automatically generated.  Do not edit! */

@@ -106,6 +106,7 @@ SET (
   Estimators/curved_bi_estimator_flux_fcns.c
   Estimators/bi_estimator_flux_fcns.c
   Geometry/d4est_geometry_sphere.c
+  Geometry/d4est_geometry_shell.c
   Geometry/d4est_geometry_disk.c
   Geometry/d4est_geometry_2pac.c
   Geometry/d4est_geometry_pizza_half.c
@@ -119,6 +120,7 @@ SET (
   hpAMR/hp_amr.c
   Solver/cg.c
   Operators/curved_poisson_operator.c
+  Operators/curved_poisson_operator_primal.c
   Operators/poisson_operator.c
   Operators/poisson_debug_vecs.c
   Operators/curved_poisson_debug_vecs.c
@@ -134,6 +136,7 @@ SET (
   Flux/curved_Gauss_central_flux_vector_fcns.c
   Flux/curved_Gauss_sipg_flux_scalar_fcns.c
   Flux/curved_Gauss_sipg_flux_vector_fcns.c
+  Flux/curved_Gauss_primal_sipg_flux_fcns.c
   Flux/curved_test_mortarjacobianterms_flux_fcns.c
   Flux/dg_norm.c
   Flux/sipg_flux_scalar_fcns.c
@@ -302,11 +305,15 @@ endfunction()
 # add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
 # add_d4est_problem_2d(testmultigridmatrixop_driver testmultigridmatrixop.c TestMultigridMatrixOp)
 # add_d4est_problem_3d(testcurvedipflux_driver testcurvedipflux.c TestCurvedIPFlux)
-add_d4est_problem_2d(testcurvedipflux_driver_2d testcurvedipflux.c TestCurvedIPFlux)
-add_d4est_problem_3d(testcurvedipflux_driver_3d testcurvedipflux.c TestCurvedIPFlux)
-# add_d4est_problem_3d(testmortarjacobianterms_driver testmortarjacobianterms.c TestMortarJacobianTerms)
-# add_d4est_problem_2d(testmortarjacobianterms_driver testmortarjacobianterms.c TestMortarJacobianTerms)
-add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
+# add_d4est_problem_2d(testcurvedipflux_driver_2d testcurvedipflux.c TestCurvedIPFlux)
+add_d4est_problem_2d(testcurvedprimal_driver_2d testcurvedprimal.c TestCurvedPrimal)
+add_d4est_problem_3d(testcurvedprimal_driver_3d testcurvedprimal.c TestCurvedPrimal)
+# add_d4est_problem_3d(testcurvedipflux_driver_3d testcurvedipflux.c TestCurvedIPFlux)
+# add_d4est_problem_3d(testcurvedshell_driver_3d testcurvedshell.c TestCurvedShell)
+# add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)
+add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
+add_d4est_problem_2d(testmortarjacobianterms_driver_2d testmortarjacobianterms.c TestMortarJacobianTerms)
+# add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
 # add_d4est_problem_2d(testcurvedipfluxoncube2d_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
 # add_d4est_problem_3d(testnoncurvedipfluxoncube_driver testnoncurvedipfluxoncube.c TestNonCurvedIPFluxOnCube)
 # add_d4est_problem_3d(twopuncturescube_driver twopuncturescube.c TwoPuncturesCube)

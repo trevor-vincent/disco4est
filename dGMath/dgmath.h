@@ -95,13 +95,9 @@ typedef struct {
 typedef enum {GAUSS, LOBATTO} quadrature_type_t; 
 
 /* This file was automatically generated.  Do not edit! */
-double* dgmath_fetch_vtk_rst
-(
- dgmath_jit_dbase_t* dgbase,
- int deg,
- int dim
-);
-void dgmath_compute_vtk_vertex_vector(dgmath_jit_dbase_t *dgbase,double *vec,int dim,int deg,double *vtk_vec);
+double *dgmath_fetch_vtk_rst(dgmath_jit_dbase_t *dgbase,int deg,int dim);
+double dgmath_Gauss_quadrature(dgmath_jit_dbase_t *dgmath_jit_dbase,double *u,double *v,double *jac_GL,int deg_GL,int dim);
+void dgmath_convert_nodal_to_vtk(dgmath_jit_dbase_t *dgbase,double *vec,int dim,int deg,double *vtk_vec);
 void dgmath_apply_vtk_interp(dgmath_jit_dbase_t *dgmath_jit_dbase,double *in,int dim,int deg,int c,double *out);
 int dgmath_corner_to_node(int dim,int deg,int corner);
 dgmath_rst_t dgmath_get_rst_points(dgmath_jit_dbase_t *dgmath_jit_dbase,int deg,int dim,quadrature_type_t type);
@@ -137,8 +133,6 @@ void dgmath_build_hp_restrict_1d_aux(int degh,int degH,double *hp_prolong_matrix
 void dgmath_build_p_prolong_1d_inverse(dgmath_jit_dbase_t *dgbase,double *p_prolong_1d_inverse,int degH,int degh);
 void dgmath_hp_apply_nd_prolong_transpose_with_ptr(double *uH,int degH,double *uh,int degh,int dim,int c,double *hp_prolong_transpose_matrix_1d);
 void dgmath_build_p_prolong_1d(dgmath_jit_dbase_t *dgbase,double *p_prolong_1d,int degH,int degh);
-void dgmath_apply_Dij_transpose(dgmath_jit_dbase_t *dgbase,double *in,int dim,int deg,int dir,double *out);
-void dgmath_apply_Dij(dgmath_jit_dbase_t *dgbase,double *in,int dim,int deg,int dir,double *out);
 void dgmath_apply_GaussDij(dgmath_jit_dbase_t *dgbase,double *in,int dim,int deg_Lobatto,int deg_Gauss,int dir,double *out);
 double *dgmath_fetch_GaussDij_1d(dgmath_jit_dbase_t *dgbase,int deg_Lobatto,int deg_Gauss);
 void dgmath_apply_invMij(dgmath_jit_dbase_t *dgbase,double *in,int dim,int deg,double *out);
@@ -167,6 +161,9 @@ void dgmath_apply_p_prolong(dgmath_jit_dbase_t *dgbase,double *in,int degH,int d
 double *dgmath_fetch_p_prolong_transpose_1d(dgmath_jit_dbase_t *dgbase,int degH,int degh);
 double *dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase_t *dgbase,int deg);
 void dgmath_apply_curvedLobattoMass(dgmath_jit_dbase_t *dgmath_jit_dbase,double *in,int deg_Lobatto,double *jac_Lobatto_integ,int deg_Lobatto_integ,int dim,double *out);
+void dgmath_apply_Dij_transpose(dgmath_jit_dbase_t *dgbase,double *in,int dim,int deg,int dir,double *out);
+void dgmath_apply_Dij(dgmath_jit_dbase_t *dgbase,double *in,int dim,int deg,int dir,double *out);
+void dgmath_apply_curvedGaussStiff(dgmath_jit_dbase_t *dgmath_jit_dbase,double *in,int deg_Lobatto,double *jac_Gauss,double *rst_xyz[(P4EST_DIM)][(P4EST_DIM)],int deg_Gauss,int dim,double *out);
 double *dgmath_fetch_GL_weights_1d(dgmath_jit_dbase_t *dgbase,int deg);
 void dgmath_apply_curvedGaussMass(dgmath_jit_dbase_t *dgmath_jit_dbase,double *in,int deg_Lobatto,double *jac_Gauss,int deg_Gauss,int dim,double *out);
 void dgmath_interp_GLL_to_GL(dgmath_jit_dbase_t *dgmath_jit_dbase,double *u_Lobatto_in,int deg_Lobatto,int deg_Gauss,double *u_Gauss_out,int dim);
@@ -193,24 +190,5 @@ int dgmath_is_child_left_or_right(int c,int dir);
 int dgmath_get_nodes(int dim,int deg);
 void dgmath_jit_dbase_destroy(dgmath_jit_dbase_t *dgbase);
 dgmath_jit_dbase_t *dgmath_jit_dbase_init();
-
-void dgmath_convert_nodal_to_vtk
-(
- dgmath_jit_dbase_t* dgbase,
- double* vec,
- int dim,
- int deg,
- double* vtk_vec /* should be (chiildren)*(deg)^dim */
-);
-
-double dgmath_Gauss_quadrature
-(
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* u,
- double* v,
- double* jac_GL,
- int deg_GL,
- int dim
-);
 
 #endif

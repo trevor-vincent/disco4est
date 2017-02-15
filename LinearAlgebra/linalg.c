@@ -84,6 +84,17 @@ linalg_kron_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_size, do
 }
 
 void
+linalg_kron_vec_o_vec_dot_wxyz (double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vecvec_dot_wxyz)
+{
+  for (int i = 0; i < vec_size; i++)
+    for (int k = 0; k < vec_size; k++){
+      int stride = k + i * vec_size;
+      vecvec_dot_wxyz[stride] = vec[i] * vec[k] * w[stride] * x[stride] * y[stride] * z[stride];
+    }
+}
+
+
+void
 linalg_kron_oneover_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, int vec_size, double* vecvec_dot_xy)
 {
   for (int i = 0; i < vec_size; i++)
@@ -98,6 +109,15 @@ linalg_kron_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* 
 {
   for (int i = 0; i < vec_size; i++){
       vec_dot_xy[i] = vec[i] * x[i] * y[i];
+  }
+}
+
+
+void
+linalg_kron_vec_dot_wxyz (double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vec_dot_wxyz)
+{
+  for (int i = 0; i < vec_size; i++){
+      vec_dot_wxyz[i] = vec[i] * w[i] * x[i] * y[i] * z[i];
   }
 }
 
@@ -130,6 +150,28 @@ linalg_kron_vec_o_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_si
       vecvecvec_dot_xy[(n + m * b_rows)] = vec[m] * vec[i] * vec[k] * x[(n + m * b_rows)] * y[(n + m * b_rows)];
     }
 }
+
+void
+linalg_kron_vec_o_vec_o_vec_dot_wxyz(double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vecvecvec_dot_wxyz)
+{
+  int b_rows = vec_size*vec_size;
+  
+  for (int m = 0; m < vec_size; m++)
+   for (int i = 0; i < vec_size; i++)
+    for (int k = 0; k < vec_size; k++){
+      int n = k + i * vec_size;
+      vecvecvec_dot_wxyz[(n + m * b_rows)] =
+        vec[m]
+        * vec[i]
+        * vec[k]
+        * w[(n + m * b_rows)]
+        * x[(n + m * b_rows)]
+        * y[(n + m * b_rows)]
+        * z[(n + m * b_rows)]
+        ;
+    }
+}
+
 
 void
 linalg_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, int vec_size, double* vecvecvec_dot_xy)

@@ -1893,6 +1893,62 @@ d4est_vtk_write_cell_scalar (d4est_vtk_context_t * cont,
   return cont;
 }
 
+
+/* d4est_vtk_context_t * */
+/* d4est_vtk_write_point_vector (d4est_vtk_context_t * cont, */
+/*                               const char *vector_name, sc_array_t * values) */
+/* { */
+/* #ifdef D4EST_VTK_DEBUG */
+/*   printf("[D4EST_VTK]: Starting d4est_vtk_write_binary (cont->vtufile, \n"); */
+/* #endif */
+/*   P4EST_ASSERT (cont != NULL && cont->writing); */
+
+/*   SC_ABORT (P4EST_STRING "_vtk_write_point_vector not implemented"); */
+/* } */
+
+d4est_vtk_context_t *
+d4est_vtk_write_dg_cell_scalar (d4est_vtk_context_t * cont,
+                             const char *scalar_name, double* values)
+{
+#ifdef D4EST_VTK_DEBUG
+  printf("[D4EST_VTK]: Starting d4est_vtk_write_cell_scalar \n");
+#endif
+  const p4est_locidx_t Ncells = cont->p4est->local_num_quadrants;
+  p4est_locidx_t      il;
+#ifndef D4EST_VTK_ASCII
+  int                 retval;
+  D4EST_VTK_FLOAT_TYPE *float_data;
+#endif
+
+  P4EST_ASSERT (cont != NULL && cont->writing);
+
+  /* Write cell data. */
+  fprintf (cont->vtufile, "        <DataArray type=\"%s\" Name=\"%s\""
+           " format=\"%s\">\n",
+           D4EST_VTK_FLOAT_NAME, scalar_name, D4EST_VTK_FORMAT_STRING);
+
+  for (il = 0; il < Ncells; ++il) {
+    fprintf (cont->vtufile,
+#ifdef D4EST_VTK_DOUBLES
+             "     %24.16e\n",
+#else
+             "          %16.8e\n",
+#endif
+             values[il]);
+  }
+
+  fprintf (cont->vtufile, "        </DataArray>\n");
+
+  if (ferror (cont->vtufile)) {
+    P4EST_LERROR (P4EST_STRING "_vtk: Error writing cell scalar file\n");
+    d4est_vtk_context_destroy (cont);
+    return NULL;
+  }
+
+  return cont;
+}
+
+
 d4est_vtk_context_t *
 d4est_vtk_write_cell_vector (d4est_vtk_context_t * cont,
                              const char *vector_name, sc_array_t * values)
@@ -1988,7 +2044,7 @@ d4est_vtk_write_dg_cell_datav (d4est_vtk_context_t * cont,
   const p4est_locidx_t Ncells = cont->num_cells;
   char                cell_scalars[BUFSIZ], cell_vectors[BUFSIZ];
   const char         *name, **names;
-  sc_array_t        **values;
+  double        **values;
   size_t              num_quads, zz;
   sc_array_t         *quadrants;
   p4est_quadrant_t   *quad;
@@ -2004,7 +2060,7 @@ d4est_vtk_write_dg_cell_datav (d4est_vtk_context_t * cont,
   P4EST_ASSERT (cont != NULL && cont->writing);
   P4EST_ASSERT (wrap_rank >= 0);
 
-  values = P4EST_ALLOC (sc_array_t *, num_cell_scalars + num_cell_vectors);
+  values = P4EST_ALLOC (double *, num_cell_scalars + num_cell_vectors);
   names = P4EST_ALLOC (const char *, num_cell_scalars + num_cell_vectors);
 
   /* Gather cell data. */
@@ -2017,16 +2073,16 @@ d4est_vtk_write_dg_cell_datav (d4est_vtk_context_t * cont,
     SC_CHECK_ABORT (retval > 0,
                     P4EST_STRING "_vtk: Error collecting cell scalars");
     scalar_strlen += retval;
-    values[all] = va_arg (ap, sc_array_t *);
+    values[all] = va_arg (ap, double *);
 
     /* Validate input. */
-    SC_CHECK_ABORT (values[all]->elem_size == sizeof (double),
-                    P4EST_STRING
-                    "_vtk: Error: incorrect cell scalar data type; scalar data must contain doubles.");
-    SC_CHECK_ABORT (values[all]->elem_count ==
-                    (size_t) cont->p4est->local_num_quadrants,
-                    P4EST_STRING
-                    "_vtk: Error: incorrect cell scalar data count; scalar data must contain exactly p4est->local_num_quadrants doubles.");
+    /* SC_CHECK_ABORT (values[all]->elem_size == sizeof (double), */
+    /*                 P4EST_STRING */
+    /*                 "_vtk: Error: incorrect cell scalar data type; scalar data must contain doubles."); */
+    /* SC_CHECK_ABORT (values[all]->elem_count == */
+    /*                 (size_t) cont->p4est->local_num_quadrants, */
+    /*                 P4EST_STRING */
+    /*                 "_vtk: Error: incorrect cell scalar data count; scalar data must contain exactly p4est->local_num_quadrants doubles."); */
   }
 
   vector_strlen = 0;
@@ -2038,16 +2094,8 @@ d4est_vtk_write_dg_cell_datav (d4est_vtk_context_t * cont,
     SC_CHECK_ABORT (retval > 0,
                     P4EST_STRING "_vtk: Error collecting cell vectors");
     vector_strlen += retval;
-    values[all] = va_arg (ap, sc_array_t *);
+    values[all] = va_arg (ap, double *);
 
-    /* Validate input. */
-    SC_CHECK_ABORT (values[all]->elem_size == sizeof (double),
-                    P4EST_STRING
-                    "_vtk: Error: incorrect cell vector data type; vector data must contain doubles.");
-    SC_CHECK_ABORT (values[all]->elem_count ==
-                    3 * (size_t) cont->p4est->local_num_quadrants,
-                    P4EST_STRING
-                    "_vtk: Error: incorrect cell vector data count; vector data must contain exactly 3*p4est->local_num_quadrants doubles.");
   }
 
   /* Check for pointer variable marking the end of variable data input. */
@@ -2191,15 +2239,15 @@ d4est_vtk_write_dg_cell_datav (d4est_vtk_context_t * cont,
 
   all = 0;
   for (i = 0; i < num_cell_scalars; ++all, ++i) {
-    cont = d4est_vtk_write_cell_scalar (cont, names[all], values[all]);
+    cont = d4est_vtk_write_dg_cell_scalar (cont, names[all], values[all]);
     SC_CHECK_ABORT (cont != NULL,
                     P4EST_STRING "_vtk: Error writing cell scalars");
   }
 
   for (i = 0; i < num_cell_vectors; ++all, ++i) {
-    cont = d4est_vtk_write_cell_vector (cont, names[all], values[all]);
-    SC_CHECK_ABORT (cont != NULL,
-                    P4EST_STRING "_vtk: Error writing cell vectors");
+    /* cont = d4est_vtk_write_cell_vector (cont, names[all], values[all]); */
+    /* SC_CHECK_ABORT (cont != NULL, */
+                    /* P4EST_STRING "_vtk: Error writing cell vectors"); */
   }
 
   fprintf (cont->vtufile, "      </CellData>\n");
@@ -2285,10 +2333,15 @@ d4est_vtk_write_dg_cell_dataf (d4est_vtk_context_t * cont,
   P4EST_ASSERT (num_cell_scalars >= 0 && num_cell_vectors >= 0);
 
   va_start (ap, num_cell_vectors);
-  cont = d4est_vtk_write_dg_cell_datav (cont,
-                                     write_tree, write_level,
-                                        write_rank, wrap_rank, write_deg,
-                                     num_cell_scalars, num_cell_vectors, ap);
+  cont = d4est_vtk_write_dg_cell_datav(cont,
+                                       write_tree,
+                                       write_level,
+                                       write_rank,
+                                       wrap_rank,
+                                       write_deg,
+                                       num_cell_scalars,
+                                       num_cell_vectors,
+                                       ap);
   va_end (ap);
 
   return cont;

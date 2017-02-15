@@ -1,0 +1,28 @@
+[p4est]
+min_quadrants = -1
+min_level = 0
+fill_uniform = 1
+
+[amr]
+num_of_amr_levels = 5
+
+[flux]
+ip_flux_penalty = 2.0
+
+[problem]
+deg = 2
+deg_integ = 3
+
+[geometry]
+name = compact_sphere
+R0 = 10
+R1 = 100
+R2 = 100000
+
+[solver]
+ksp_type = gmres
+ksp_atol = 1e-20
+ksp_rtol = 1e-10
+ksp_maxit = 10000
+ksp_view = 1
+ksp_monitor = 1

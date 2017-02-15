@@ -1142,8 +1142,8 @@ curved_element_data_init_new
         curved_element_data_compute_J_and_rst_xyz
           (
            elem_data->xyz_rst_integ,
-           elem_data->J_integ, 
-           elem_data->rst_xyz_integ, 
+           elem_data->J_integ,
+           elem_data->rst_xyz_integ,
            volume_nodes_integ
           );
         
@@ -1172,7 +1172,7 @@ curved_element_data_init_new
           );
         
         for (int face = 0; face < (P4EST_FACES); face++){
-          elem_data->surface_area[face] = curved_element_data_compute_element_face_area(elem_data,dgmath_jit_dbase, d4est_geometry,face, elem_data->deg);
+          elem_data->surface_area[face] = curved_element_data_compute_element_face_area(elem_data,dgmath_jit_dbase, d4est_geometry,face, elem_data->deg_integ);
         }
         elem_data->diam = curved_element_data_compute_diam(elem_data->xyz, elem_data->deg, DIAM_APPROX_CUBE);
         
@@ -1442,11 +1442,6 @@ curved_element_data_compute_l2_norm_sqr
                                      (P4EST_DIM),
                                      &Mvec[ed->nodal_stride]
                                     );
-        double* tmp1 = &nodal_vec[ed->nodal_stride];
-        double* tmp2 = &Mvec[ed->nodal_stride];
-        DEBUG_PRINT_2ARR_DBL(tmp1,tmp2, volume_nodes);
-          
-
         
         double norm2 = linalg_vec_dot(&nodal_vec[ed->nodal_stride], &Mvec[ed->nodal_stride], volume_nodes);
         
