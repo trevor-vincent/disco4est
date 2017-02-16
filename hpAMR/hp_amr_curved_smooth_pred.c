@@ -35,13 +35,13 @@ hp_amr_curved_smooth_pred_print
     }
 }
 
+
 hp_amr_scheme_t*
 hp_amr_curved_smooth_pred_init
 (
  p4est_t* p4est,
- gamma_params_t (*gamma_fcn) (curved_element_data_t*),
  int max_degree,
- smooth_pred_marker_t marker
+ curved_smooth_pred_marker_t marker
 )
 {
   mpi_assert((max_degree < (MAX_DEGREE)-1));
@@ -49,7 +49,6 @@ hp_amr_curved_smooth_pred_init
   hp_amr_scheme_t* scheme = P4EST_ALLOC(hp_amr_scheme_t, 1);
   hp_amr_curved_smooth_pred_data_t* smooth_pred_data;
   smooth_pred_data = P4EST_ALLOC(hp_amr_curved_smooth_pred_data_t, 1);
-  smooth_pred_data->gamma_fcn = gamma_fcn;
   smooth_pred_data->max_degree = max_degree;
   smooth_pred_data->marker = marker;
   smooth_pred_data->predictors = NULL; 
@@ -162,97 +161,97 @@ hp_amr_curved_smooth_pred_destroy(hp_amr_scheme_t* scheme){
   P4EST_FREE(scheme);
 }
 
-void
-hp_amr_curved_smooth_pred_set_marker
-(
- hp_amr_scheme_t* scheme,
- smooth_pred_marker_t marker
-)
-{
-  hp_amr_curved_smooth_pred_data_t* smooth_pred_data =
-    (hp_amr_curved_smooth_pred_data_t*)scheme->hp_amr_scheme_data;
-  smooth_pred_data->marker = marker;
+/* void */
+/* hp_amr_curved_smooth_pred_set_marker */
+/* ( */
+/*  hp_amr_scheme_t* scheme, */
+/*  smooth_pred_marker_t marker */
+/* ) */
+/* { */
+/*   hp_amr_curved_smooth_pred_data_t* smooth_pred_data = */
+/*     (hp_amr_curved_smooth_pred_data_t*)scheme->hp_amr_scheme_data; */
+/*   smooth_pred_data->marker = marker; */
 
-  if (strcmp(marker.type,"percentile") == 0){
-    printf("[HP_AMR_CURVED_SMOOTH_PRED]: Using marker percentile marker with percentile = %d\n", *(int*)marker.user);
-  }
-  else if (strcmp(marker.type,"sig_average") == 0){
-    printf("[HP_AMR_CURVED_SMOOTH_PRED]: Using marker sigaverage marker with sigma = %f\n", *(double*)marker.user);
-  }
-  else{
-    mpi_abort("[D4EST_ERROR]: Marker type not supported");
-  }
-}
+/*   if (strcmp(marker.type,"percentile") == 0){ */
+/*     printf("[HP_AMR_CURVED_SMOOTH_PRED]: Using marker percentile marker with percentile = %d\n", *(int*)marker.user); */
+/*   } */
+/*   else if (strcmp(marker.type,"sig_average") == 0){ */
+/*     printf("[HP_AMR_CURVED_SMOOTH_PRED]: Using marker sigaverage marker with sigma = %f\n", *(double*)marker.user); */
+/*   } */
+/*   else{ */
+/*     mpi_abort("[D4EST_ERROR]: Marker type not supported"); */
+/*   } */
+/* } */
 
-static int
-hp_amr_curved_smooth_pred_percentile_mark_element
-(
- double eta2,
- estimator_stats_t* stats,
- void* marker_user
-)
-{
-  double eta2_percentile
-    = estimator_stats_get_percentile(stats, *(int*)marker_user);
-  return (eta2 >= eta2_percentile);
-}
+/* static int */
+/* hp_amr_curved_smooth_pred_percentile_mark_element */
+/* ( */
+/*  double eta2, */
+/*  estimator_stats_t* stats, */
+/*  void* marker_user */
+/* ) */
+/* { */
+/*   double eta2_percentile */
+/*     = estimator_stats_get_percentile(stats, *(int*)marker_user); */
+/*   return (eta2 >= eta2_percentile); */
+/* } */
 
-static int
-hp_amr_curved_smooth_pred_sigaverage_mark_element
-(
- double eta2,
- estimator_stats_t* stats,
- void* marker_user
-)
-{
-  double eta2_avg = stats->mean;
-  double sigma = *(double*)marker_user;
-  return (eta2 >= sigma * eta2_avg);
-}
+/* static int */
+/* hp_amr_curved_smooth_pred_sigaverage_mark_element */
+/* ( */
+/*  double eta2, */
+/*  estimator_stats_t* stats, */
+/*  void* marker_user */
+/* ) */
+/* { */
+/*   double eta2_avg = stats->mean; */
+/*   double sigma = *(double*)marker_user; */
+/*   return (eta2 >= sigma * eta2_avg); */
+/* } */
 
-smooth_pred_marker_t
-hp_amr_curved_smooth_pred_get_percentile_marker
-(
- int* percentile
-){
-  mpi_assert(*percentile == 5 ||
-             *percentile == 10 ||
-             *percentile == 15 ||
-             *percentile == 20 ||
-             *percentile == 25
-            );
-  smooth_pred_marker_t marker;
-  marker.user = (void*)percentile;
-  marker.mark_element_fcn = hp_amr_curved_smooth_pred_percentile_mark_element;
-  marker.type = "percentile";
-  return marker;
-}
-
-
-smooth_pred_marker_t
-hp_amr_curved_smooth_pred_get_NULL_marker
-(
-){
-  smooth_pred_marker_t marker;
-  marker.user = NULL;
-  marker.mark_element_fcn = NULL;
-  marker.type = "NULL";
-  return marker;
-}
+/* smooth_pred_marker_t */
+/* hp_amr_curved_smooth_pred_get_percentile_marker */
+/* ( */
+/*  int* percentile */
+/* ){ */
+/*   mpi_assert(*percentile == 5 || */
+/*              *percentile == 10 || */
+/*              *percentile == 15 || */
+/*              *percentile == 20 || */
+/*              *percentile == 25 */
+/*             ); */
+/*   smooth_pred_marker_t marker; */
+/*   marker.user = (void*)percentile; */
+/*   marker.mark_element_fcn = hp_amr_curved_smooth_pred_percentile_mark_element; */
+/*   marker.type = "percentile"; */
+/*   return marker; */
+/* } */
 
 
-smooth_pred_marker_t
-hp_amr_curved_smooth_pred_get_sigaverage_marker
-(
- double* sigma
-){
-  mpi_assert(!(*sigma < 0.));
-  smooth_pred_marker_t marker;
-  marker.user = (void*)sigma;
-  marker.mark_element_fcn = hp_amr_curved_smooth_pred_sigaverage_mark_element;
-  marker.type = "sig_average";  
-  return marker;
-}
+/* smooth_pred_marker_t */
+/* hp_amr_curved_smooth_pred_get_NULL_marker */
+/* ( */
+/* ){ */
+/*   smooth_pred_marker_t marker; */
+/*   marker.user = NULL; */
+/*   marker.mark_element_fcn = NULL; */
+/*   marker.type = "NULL"; */
+/*   return marker; */
+/* } */
+
+
+/* smooth_pred_marker_t */
+/* hp_amr_curved_smooth_pred_get_sigaverage_marker */
+/* ( */
+/*  double* sigma */
+/* ){ */
+/*   mpi_assert(!(*sigma < 0.)); */
+/*   smooth_pred_marker_t marker; */
+/*   marker.user = (void*)sigma; */
+/*   marker.mark_element_fcn = hp_amr_curved_smooth_pred_sigaverage_mark_element; */
+/*   marker.type = "sig_average";   */
+/*   return marker; */
+/* } */
 
 
 void
@@ -270,27 +269,28 @@ hp_amr_curved_smooth_pred_set_refinement
   double eta2 = elem_data->local_estimator;
   double eta2_pred = elem_data->local_predictor;
   /* double eta2_avg = stats->mean; */
+
+  gamma_params_t gamma_hpn =
+    smooth_pred_data->marker.set_element_gamma_fcn(elem_data, smooth_pred_data->marker.user);
   
   int is_marked = 
     smooth_pred_data->marker.mark_element_fcn
     (
      eta2,
      stats,
+     elem_data,
      smooth_pred_data->marker.user
     );
-
-  gamma_params_t gamma_hpn
-    = smooth_pred_data->gamma_fcn(elem_data);
 
   
   if (is_marked){
     /* it's smooth! -> p-refine*/
     if (eta2 <= elem_data->local_predictor && elem_data->deg < smooth_pred_data->max_degree){
-      hp_amr_data->refinement_log[info->quadid] = util_min_int(elem_data->deg + 1, smooth_pred_data->max_degree);
+      hp_amr_data->refinement_log[elem_data->id] = util_min_int(elem_data->deg + 1, smooth_pred_data->max_degree);
       eta2_pred = gamma_hpn.gamma_p*eta2;
     }
     else {
-      hp_amr_data->refinement_log[info->quadid] = -elem_data->deg;
+      hp_amr_data->refinement_log[elem_data->id] = -elem_data->deg;
       /* if (smooth_pred_data->norm_type == DG_NORM) */
         eta2_pred = gamma_hpn.gamma_h*eta2*util_dbl_pow_int(.5, 2*(elem_data->deg))*(ONE_OVER_CHILDREN);
       /* else if (smooth_pred_data->norm_type == L2_NORM) */
@@ -302,7 +302,7 @@ hp_amr_curved_smooth_pred_set_refinement
   /* do not refine */
   else {
     eta2_pred = gamma_hpn.gamma_n*eta2_pred;
-    hp_amr_data->refinement_log[info->quadid] = elem_data->deg;
+    hp_amr_data->refinement_log[elem_data->id] = elem_data->deg;
   }
   
   elem_data->local_predictor = eta2_pred;
@@ -333,7 +333,7 @@ hp_amr_curved_smooth_pred_balance_replace_callback (
   int degH = parent_data->deg;
 
   gamma_params_t gamma_hpn
-    = smooth_pred_data->gamma_fcn(parent_data);
+    = smooth_pred_data->marker.set_element_gamma_fcn(parent_data, smooth_pred_data->marker.user);
   
   for (i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;

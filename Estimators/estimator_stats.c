@@ -15,10 +15,15 @@ void estimator_stats_compute(p4est_t* p4est, estimator_stats_t* stats, int curve
   
   double total = 0.;
   int k = 0;
+  int tc = 0;
+  stats->num_of_trees_local = 0;
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
-       ++tt)
+       ++tt, ++tc)
     {
+      stats->num_of_trees_local += 1;
+      stats->estimator_for_local_tree[tc] = 0.;
+      stats->tree_local_to_global[tc] = tt;
       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
       sc_array_t* tquadrants = &tree->quadrants;
       int Q = (p4est_locidx_t) tquadrants->elem_count;
@@ -29,6 +34,7 @@ void estimator_stats_compute(p4est_t* p4est, estimator_stats_t* stats, int curve
         else{
           eta2[k] = (((element_data_t*)(quad->p.user_data))->local_estimator);
         }
+        stats->estimator_for_local_tree[tc] += eta2[k];
         total += eta2[k];
       }
     }
@@ -116,8 +122,7 @@ estimator_stats_get_percentile
 }
 
 
-void estimator_stats_print(estimator_stats_t* stats, int mpi_rank){
-  if (mpi_rank == 0){
+void estimator_stats_print(estimator_stats_t* stats){
     printf("sample_size = %d\n", stats->sample_size);   
     printf("mean = %.25f\n", stats->mean);
     printf("std = %.25f\n", stats->std);
@@ -134,7 +139,9 @@ void estimator_stats_print(estimator_stats_t* stats, int mpi_rank){
     printf("num_bins_freedman = %d\n", stats->num_bins_freedman);
     printf("bins_size_scot = %.25f\n", stats->bin_size_scott);
     printf("bins_size_freedman = %.25f\n", stats->bin_size_freedman);
-  }
+    for (int i = 0; i < stats->num_of_trees_local; i++){
+      printf("total eta2 in local tree %d = %.25f\n", stats->tree_local_to_global[i], stats->estimator_for_local_tree[i]);
+    }
 }
 
 void estimator_stats_write_to_file

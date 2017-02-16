@@ -273,7 +273,8 @@ void curved_Gauss_poisson_compute_q_elem
       dgmath_apply_curvedInverseGaussMass(dgmath_jit_dbase, Mq[i], element_data->deg, element_data->J_integ, element_data->deg_integ, (P4EST_DIM), element_data->q_elem[i]);
     }
     else {
-      linalg_matvec_plus_vec(1., element_data->invM, Mq[i], 0., element_data->q_elem[i], volume_nodes_Lobatto, volume_nodes_Lobatto);
+      mpi_abort("invM is deprecated");
+      /* linalg_matvec_plus_vec(1., element_data->invM, Mq[i], 0., element_data->q_elem[i], volume_nodes_Lobatto, volume_nodes_Lobatto); */
     }
   }
 

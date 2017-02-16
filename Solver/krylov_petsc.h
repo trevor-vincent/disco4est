@@ -31,20 +31,8 @@ typedef struct {
   
 } krylov_petsc_params_t;
 
-krylov_petsc_info_t
-krylov_petsc_solve
-(
- p4est_t* p4est,
- problem_data_t* vecs,
- void* fcns,
- p4est_ghost_t** ghost,
- void** ghost_data, 
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- d4est_geometry_t* d4est_geom,
- krylov_pc_create_fcn_t pc_create,
- krylov_pc_destroy_fcn_t pc_destroy,
- void* pc_data
- /* krylov_petsc_params_t* krylov_params */
-);
+/* This file was automatically generated.  Do not edit! */
+krylov_petsc_info_t krylov_petsc_solve(p4est_t *p4est,problem_data_t *vecs,void *fcns,p4est_ghost_t **ghost,void **ghost_data,dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geom,krylov_pc_create_fcn_t pc_create,krylov_pc_destroy_fcn_t pc_destroy,void *pc_data);
+krylov_petsc_params_t krylov_petsc_input(const char *input_file);
 
 #endif

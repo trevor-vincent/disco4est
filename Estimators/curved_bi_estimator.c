@@ -90,9 +90,7 @@ void* user_data
   double h = element_data->diam;
   *eta2 *= h*h/(deg*deg);
 
-
-  /* DEBUG_PRINT_DBL(*eta2); */
-  
+  /* DEBUG_PRINT_DBL(*eta2); */  
   debug_eta2_after_res_calc += *eta2;
 }
 
@@ -152,7 +150,7 @@ curved_bi_estimator_compute
      dgmath_jit_dbase,
      STORE_LOCALLY
     );
-  curved_element_data_print_local_estimator(p4est);
+  /* curved_element_data_print_local_estimator(p4est); */
 
   curved_bi_estimator_user_data_t curved_bi_estimator_user_data;
   curved_bi_estimator_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
@@ -243,7 +241,7 @@ curved_bi_estimator_compute
   /* P4EST_FREE(ghost_data); */
 
   /* printf("local eta2 = %.25f\n",curved_bi_estimator_local_eta2); */
-  curved_element_data_print_local_estimator(p4est);
+  /* curved_element_data_print_local_estimator(p4est); */
 
   /* return curved_bi_estimator_local_eta2; */
 }

@@ -2,8 +2,13 @@
 #define ESTIMATOR_STATS_H 
 
 #include <pXest.h>
+#define MAX_TREES 50
 
 typedef struct {
+  double estimator_for_local_tree [MAX_TREES];
+  int tree_local_to_global [MAX_TREES];
+  int num_of_trees_local;
+
   double total;
   double mean;
   double std;
@@ -30,8 +35,9 @@ typedef struct {
 
 /* This file was automatically generated.  Do not edit! */
 void estimator_stats_write_to_file(p4est_t *p4est,estimator_stats_t *stats,const char *file_name_stats,const char *file_name_estimator_prefix,int curved,int mpi_rank,int print_gnuplot);
-void estimator_stats_print(estimator_stats_t *stats,int mpi_rank);
+void estimator_stats_print(estimator_stats_t *stats);
 double estimator_stats_get_percentile(estimator_stats_t *stats,int percentile);
 void estimator_stats_compute(p4est_t *p4est,estimator_stats_t *stats,int curved);
+
 
 #endif

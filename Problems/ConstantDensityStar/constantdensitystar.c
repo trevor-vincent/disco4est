@@ -653,14 +653,12 @@ problem_input
 void
 problem_init
 (
- int argc,
- char* argv [],
+ const char* input_file,
  p4est_t* p4est,
- p4est_geometry_t* p4est_geom,
+ d4est_geometry_t* d4est_geom,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  int proc_size,
- sc_MPI_Comm mpicomm,
- int load_from_checkpoint
+ sc_MPI_Comm mpicomm
 )
 {
   mpi_assert((P4EST_DIM) == 3);
@@ -669,7 +667,7 @@ problem_init
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);
 
-  problem_input_t input = problem_input("options.input");
+  problem_input_t input = problem_input(input_file);
   
   int level;
   int endlevel = input.endlevel;
@@ -765,10 +763,10 @@ problem_init
   prob_vecs.scalar_flux_fcn_data = sipg_flux_scalar_dirichlet_fetch_fcns(boundary_fcn);
 
 
-  if (!load_from_checkpoint)
+  /* if (!load_from_checkpoint) */
     linalg_fill_vec(u, 1., prob_vecs.local_nodes);
-  else
-    element_data_copy_from_storage_to_vec(p4est, u);
+  /* else */
+    /* element_data_copy_from_storage_to_vec(p4est, u); */
 
   weakeqn_ptrs_t prob_fcns;
   problem_ctx_t prob_ctx;
@@ -784,9 +782,9 @@ problem_init
     prob_fcns.build_residual = build_residual;
   }
   
-  if(load_from_checkpoint){
+  /* if(load_from_checkpoint){ */
 
-    mpi_abort("load from checkpoint not working yet");
+    /* mpi_abort("load from checkpoint not working yet"); */
     
     /* printf("PRE-PARTITION and BALANCE FOR CHECKPOINT LOAD\n"); */
     
@@ -839,7 +837,7 @@ problem_init
     /*                                   boundary_fcn, */
     /*                                   &ip_flux_params */
     /*                                  ); */
-  }
+  /* } */
 
 
   /* hp_amr_smooth_pred_data_t* smooth_pred_data = hp_amr_smooth_pred_init */
@@ -954,7 +952,7 @@ problem_init
     estimator_stats_compute(p4est, &stats,0);
 
     if(world_rank == 0)
-      estimator_stats_print(&stats, 0);
+      estimator_stats_print(&stats);
 
     local_eta2 = stats.total;
         
@@ -1037,12 +1035,14 @@ problem_init
                                     hp_amr_smooth_pred_get_percentile_marker(&percentile)
                                    );
     }
-     
+
+    int curved = 0;
     hp_amr(p4est,
            dgmath_jit_dbase,
            &u,
            &stats,
-           scheme
+           scheme,
+           curved
           );        
     
     p4est_ghost_destroy(ghost);
@@ -1069,11 +1069,14 @@ problem_init
       begin = clock();
     }  
 
-    krylov_petsc_params_t params;
-    params.user_defined_pc = 0;
-    params.ksp_monitor = 0;
-    params.ksp_type = input.ksp_type;
+    /* krylov_petsc_params_t params; */
+    /* params.user_defined_pc = 0; */
+    /* params.ksp_monitor = 0; */
+    /* params.ksp_type = input.ksp_type; */
 
+  krylov_petsc_params_t krylov_params = krylov_petsc_input(input_file);
+
+    
     newton_petsc_solve
       (
        p4est,
@@ -1082,7 +1085,7 @@ problem_init
        &ghost,
        &ghost_data,
        dgmath_jit_dbase,
-       &params
+       &krylov_params
       );
     
     element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, dgmath_jit_dbase);    

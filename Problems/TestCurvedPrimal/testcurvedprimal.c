@@ -5,7 +5,6 @@
 #include <curved_element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <curved_Gauss_primal_sipg_flux_fcns.h>
-#include <curved_Gauss_central_flux_vector_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
 #include <problem_weakeqn_ptrs.h>

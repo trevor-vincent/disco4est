@@ -1284,6 +1284,20 @@ d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, dgmath_jit_dbase_t* dgmat
              D4EST_VTK_FLOAT_NAME, D4EST_VTK_FORMAT_STRING);
     fprintf (cont->pvtufile, "    </PPoints>\n");
 
+
+
+    fprintf (cont->pvtufile, "    <PCells>\n");
+    fprintf (cont->pvtufile, "      <PDataArray type=\"%s\" Name=\"connectivity\""
+             " NumberOfComponents=\"1\" format=\"%s\"/>\n",
+             "Int32", D4EST_VTK_FORMAT_STRING);
+    fprintf (cont->pvtufile, "      <PDataArray type=\"%s\" Name=\"offsets\""
+             " NumberOfComponents=\"1\" format=\"%s\"/>\n",
+             "Int32", D4EST_VTK_FORMAT_STRING);
+    fprintf (cont->pvtufile, "      <PDataArray type=\"%s\" Name=\"types\""
+             " NumberOfComponents=\"1\" format=\"%s\"/>\n",
+             "UInt8", D4EST_VTK_FORMAT_STRING);
+    fprintf (cont->pvtufile, "    </PCells>\n");
+    
     if (ferror (cont->pvtufile)) {
       P4EST_LERROR (P4EST_STRING "_vtk: Error writing parallel header\n");
       d4est_vtk_context_destroy (cont);
@@ -1910,16 +1924,6 @@ d4est_vtk_context_t *
 d4est_vtk_write_dg_cell_scalar (d4est_vtk_context_t * cont,
                              const char *scalar_name, double* values)
 {
-#ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_write_cell_scalar \n");
-#endif
-  const p4est_locidx_t Ncells = cont->p4est->local_num_quadrants;
-  p4est_locidx_t      il;
-#ifndef D4EST_VTK_ASCII
-  int                 retval;
-  D4EST_VTK_FLOAT_TYPE *float_data;
-#endif
-
   P4EST_ASSERT (cont != NULL && cont->writing);
 
   /* Write cell data. */
@@ -1927,16 +1931,40 @@ d4est_vtk_write_dg_cell_scalar (d4est_vtk_context_t * cont,
            " format=\"%s\">\n",
            D4EST_VTK_FLOAT_NAME, scalar_name, D4EST_VTK_FORMAT_STRING);
 
-  for (il = 0; il < Ncells; ++il) {
-    fprintf (cont->vtufile,
+  /* for (il = 0; il < Ncells; ++il) { */
+  sc_array_t         *trees = cont->p4est->trees;
+  p4est_tree_t       *tree;
+  const p4est_topidx_t first_local_tree = cont->p4est->first_local_tree;
+  const p4est_topidx_t last_local_tree = cont->p4est->last_local_tree;
+  const p4est_locidx_t Ncells = cont->num_cells;
+  size_t              num_quads, zz;
+  sc_array_t         *quadrants;
+  p4est_quadrant_t   *quad;
+  p4est_topidx_t      jt;
+  p4est_locidx_t      il;
+  p4est_locidx_t sk;
+  p4est_locidx_t tc;
+  
+  for (tc = 0, il = 0, sk = 1, jt = first_local_tree; jt <= last_local_tree; ++jt) {
+    tree = p4est_tree_array_index (trees, jt);
+    quadrants = &tree->quadrants;
+    num_quads = quadrants->elem_count;
+    for (zz = 0; zz < num_quads; ++zz, ++sk, ++il) {
+      int num_cells_in_element = util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
+      for (int ec = 0; ec < num_cells_in_element; ec++, tc++){
+        fprintf (cont->vtufile,
 #ifdef D4EST_VTK_DOUBLES
-             "     %24.16e\n",
+                 "     %24.16e\n",
 #else
-             "          %16.8e\n",
+                 "          %16.8e\n",
 #endif
-             values[il]);
+                 values[il]);
+      }
+    }
   }
 
+  printf("tc = %d, Ncells = %d\n", tc, Ncells);
+  
   fprintf (cont->vtufile, "        </DataArray>\n");
 
   if (ferror (cont->vtufile)) {
@@ -2600,6 +2628,10 @@ d4est_vtk_write_dg_point_datav (d4est_vtk_context_t * cont,
 
     return NULL;
   }
+
+
+
+  
 
   /* Only have the root write to the parallel vtk file */
   if (mpirank == 0) {

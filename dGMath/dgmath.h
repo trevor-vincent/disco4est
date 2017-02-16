@@ -4,7 +4,7 @@
 #include "../pXest/pXest.h"
 #include "../GridFunctions/grid_functions.h"
 
-#define MAX_DEGREE 8
+#define MAX_DEGREE 20
 #if (P4EST_DIM) == 3
 #define MAX_NODES (MAX_DEGREE + 1) * (MAX_DEGREE + 1) * (MAX_DEGREE + 1)
 #else

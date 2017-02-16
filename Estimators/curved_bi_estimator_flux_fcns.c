@@ -131,10 +131,10 @@ curved_bi_est_dirichlet
                                              (P4EST_DIM)-1);
     
     e_m->local_estimator += Je2MJe2;
-    if (e_m->id == 1){
-      printf("element id = %d, f = %d, Je2MJe2 = %.25f\n", e_m->id, f_m, Je2MJe2);
+    /* if (e_m->id == 1){ */
+      /* printf("element id = %d, f = %d, Je2MJe2 = %.25f\n", e_m->id, f_m, Je2MJe2); */
       /* printf("element id = %d, f = %d, Je1MJe1 = %.25f\n", e_m->id, f_m, 0.); */
-    }
+    /* } */
   }
 
 

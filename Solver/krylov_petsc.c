@@ -61,7 +61,6 @@ int krylov_petsc_input_handler
   return 1;
 }
 
-static
 krylov_petsc_params_t
 krylov_petsc_input
 (

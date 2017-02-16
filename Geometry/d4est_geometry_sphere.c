@@ -3,6 +3,7 @@
 #include <ini.h>
 #include <p8est_connectivity.h>
 #include <util.h>
+#include <petscsnes.h>
 
 typedef struct {
 
@@ -67,16 +68,6 @@ d4est_geometry_sphere_input
 }
 
 
-typedef struct
-{
-  double R2, R1, R0;
-  double R2byR1, R1sqrbyR2, R1log;
-  double R1byR0, R0sqrbyR1, R0log;
-  double Clength, CdetJ;
-
-  p4est_connectivity_t* conn;
-  
-} d4est_geometry_sphere_attr_t;
 
 static void
 d4est_geometry_sphere_destroy
@@ -334,10 +325,16 @@ d4est_geometry_sphere_new
   d4est_geom->p4est_geom = sphere_geom;
   d4est_geom->p4est_conn = conn;
 
-  printf("[GEOMETRY_INFO]: NAME = sphere\n");
-  printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
-  printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
-  printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
+  sc_MPI_Comm mpicomm = PETSC_COMM_WORLD;  
+  int proc_rank;
+  MPI_Comm_rank(mpicomm, &proc_rank);
+
+  if (proc_rank == 0){
+    printf("[GEOMETRY_INFO]: NAME = sphere\n");
+    printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
+    printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
+    printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
+  }
 }
 
 void
@@ -379,8 +376,14 @@ d4est_geometry_compactified_sphere_new
   d4est_geom->p4est_geom = sphere_geom;
   d4est_geom->p4est_conn = conn;
 
-  printf("[GEOMETRY_INFO]: NAME = compact_sphere\n");
-  printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
-  printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
-  printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
+  sc_MPI_Comm mpicomm = PETSC_COMM_WORLD;  
+  int proc_rank;
+  MPI_Comm_rank(mpicomm, &proc_rank);
+
+  if (proc_rank == 0){
+    printf("[GEOMETRY_INFO]: NAME = compact_sphere\n");
+    printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
+    printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
+    printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
+  }
 }

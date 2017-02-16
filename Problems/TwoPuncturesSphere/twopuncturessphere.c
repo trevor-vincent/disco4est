@@ -4,14 +4,11 @@
 #include <linalg.h>
 #include <curved_element_data.h>
 #include <sipg_flux_vector_fcns.h>
-#include <curved_Gauss_sipg_flux_scalar_fcns.h>
-#include <curved_Gauss_sipg_flux_vector_fcns.h>
-#include <curved_Gauss_central_flux_vector_fcns.h>
+#include <curved_Gauss_primal_sipg_flux_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
 #include <problem_weakeqn_ptrs.h>
 #include <central_flux_params.h>
-#include <curved_poisson_operator.h>
 #include <curved_bi_estimator.h>
 #include <krylov_petsc.h>
 #include <matrix_sym_tester.h>
@@ -25,10 +22,12 @@
 #include <d4est_vtk.h>
 #include <bi_estimator_flux_fcns.h>
 #include <ini.h>
+#include <curved_poisson_operator_primal.h>
+#include <curved_Gauss_central_flux_vector_fcns.h>
 #include "time.h"
 #include "util.h"
 
-
+/* soon to be in the input files */
 #define NUM_PUNCTURES 2
 static const double pi = 3.1415926535897932384626433832795;
 static const double puncture_eps = 0.00000000001;// .000000000001;
@@ -36,6 +35,7 @@ static double xyz_bh [NUM_PUNCTURES][3];
 static double P_bh [NUM_PUNCTURES][3];
 static double S_bh [NUM_PUNCTURES][3];
 static double M_bh [NUM_PUNCTURES];
+
 
 static
 double levi_civita(int a, int b, int c)
@@ -72,13 +72,37 @@ double kronecker(int a, int b)
 }
 
 static
+int
+amr_mark_element(double eta2,
+                 estimator_stats_t* stats,
+                 curved_element_data_t* elem_data,
+                 void* user
+                )
+{
+
+  if (elem_data->tree == 12){
+    double eta2_percentile
+      = estimator_stats_get_percentile(stats, 5);
+    return (eta2 >= eta2_percentile);
+  }
+  else {
+    return 0;
+  }
+}
+
+static
 gamma_params_t
-gamma_setter(curved_element_data_t* elem_data)
+amr_set_element_gamma
+(
+ curved_element_data_t* elem_data,
+ void* user
+)
 {
   gamma_params_t gamma_hpn;
-  gamma_hpn.gamma_h = 0.;
-  gamma_hpn.gamma_p = 0.;
-  gamma_hpn.gamma_n = 0.;
+  gamma_hpn.gamma_h = 0;
+  gamma_hpn.gamma_p = 0;
+  gamma_hpn.gamma_n = 0;
+
   return gamma_hpn;
 }
 
@@ -120,7 +144,7 @@ double compute_confAij
   double nvec[NUM_PUNCTURES][3];
   double confAij = 0.;
   
-  /* initialize and check if (x,y,z) is a puncture point */
+  /* initialize and check if (x,y,z) is a puncture point*/
   int n;
   for (n = 0; n < NUM_PUNCTURES; n++){
     double dxn = (x - xyz_bh[n][0]);
@@ -220,7 +244,7 @@ build_residual
  d4est_geometry_t* d4est_geom
 )
 {
-  curved_Gauss_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);  
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
 
   double* M_neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -261,11 +285,34 @@ build_residual
   P4EST_FREE(M_neg_1o8_K2_psi_neg7_vec); 
 }
 
+static int
+uni_refine_function
+(
+ p4est_t * p4est,
+ p4est_topidx_t which_tree,
+ p4est_quadrant_t *quadrant
+)
+{
+  /* if (which_tree != 12) */
+  return 1;
+  /* else */
+    /* return 0; */
+}
+
+
+
 typedef struct {
 
+  int num_unifrefs;
   int num_of_amr_levels;
-  int deg;
-  int deg_integ;
+
+  int deg_R0;
+  int deg_integ_R0;
+  int deg_R1;
+  int deg_integ_R1;
+  int deg_R2;
+  int deg_integ_R2;
+
   double ip_flux_penalty;
   int count;
   
@@ -287,19 +334,44 @@ int problem_input_handler
     pconfig->num_of_amr_levels = atoi(value);
     pconfig->count += 1;
   }
+  else if (util_match_couple(section,"amr",name,"num_unifrefs")) {
+    mpi_assert(pconfig->num_unifrefs == -1);
+    pconfig->num_unifrefs = atoi(value);
+    pconfig->count += 1;
+  }
   else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     mpi_assert(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } 
-  else if (util_match_couple(section,"problem",name,"deg")) {
-    mpi_assert(pconfig->deg == -1);
-    pconfig->deg = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_R0")) {
+    mpi_assert(pconfig->deg_R0 == -1);
+    pconfig->deg_R0 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ")) {
-    mpi_assert(pconfig->deg_integ == -1);
-    pconfig->deg_integ = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_integ_R0")) {
+    mpi_assert(pconfig->deg_integ_R0 == -1);
+    pconfig->deg_integ_R0 = atoi(value);
+    pconfig->count += 1;
+  }
+  else if (util_match_couple(section,"problem",name,"deg_R1")) {
+    mpi_assert(pconfig->deg_R1 == -1);
+    pconfig->deg_R1 = atoi(value);
+    pconfig->count += 1;
+  }
+  else if (util_match_couple(section,"problem",name,"deg_integ_R1")) {
+    mpi_assert(pconfig->deg_integ_R1 == -1);
+    pconfig->deg_integ_R1 = atoi(value);
+    pconfig->count += 1;
+  }
+  else if (util_match_couple(section,"problem",name,"deg_R2")) {
+    mpi_assert(pconfig->deg_R2 == -1);
+    pconfig->deg_R2 = atoi(value);
+    pconfig->count += 1;
+  }
+  else if (util_match_couple(section,"problem",name,"deg_integ_R2")) {
+    mpi_assert(pconfig->deg_integ_R2 == -1);
+    pconfig->deg_integ_R2 = atoi(value);
     pconfig->count += 1;
   }  
 
@@ -317,13 +389,18 @@ problem_input
  const char* input_file
 )
 {
-  int num_of_options = 4;
+  int num_of_options = 9;
   
   problem_input_t input;
+  input.num_unifrefs = -1;
   input.num_of_amr_levels = -1;
   input.ip_flux_penalty = -1;
-  input.deg = -1;
-  input.deg_integ = -1;
+  input.deg_R0 = -1;
+  input.deg_integ_R0 = -1;
+  input.deg_R1 = -1;
+  input.deg_integ_R1 = -1;
+  input.deg_R2 = -1;
+  input.deg_integ_R2 = -1; 
   
   input.count = 0;
   
@@ -411,11 +488,22 @@ problem_set_degrees
 )
 {
   problem_input_t* input = user_ctx;
-  elem_data->deg = input->deg;
-  elem_data->deg_integ = input->deg_integ;
+  /* outer shell */
+  if (elem_data->tree < 6){
+    elem_data->deg = input->deg_R2;
+    elem_data->deg_integ = input->deg_integ_R2;
+  }
+  /* inner shell */
+  else if(elem_data->tree < 12){
+    elem_data->deg = input->deg_R1;
+    elem_data->deg_integ = input->deg_integ_R1;
+  }
+  /* center cube */
+  else {
+    elem_data->deg = input->deg_R0;
+    elem_data->deg_integ = input->deg_integ_R0;
+  } 
 }
-
-
 
 void
 problem_init
@@ -501,12 +589,100 @@ problem_init
   prob_vecs.local_nodes = local_nodes;
 
   curved_weakeqn_ptrs_t prob_fcns;
-  /* prob_fcns.apply_lhs = curved_Gauss_poisson_apply_aij; */
   prob_fcns.build_residual = build_residual;
      
   geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
 
+  printf("[D4EST_INFO]: Initial number of elements = %d\n", p4est->local_num_quadrants);
+  
 
+  for (level = 0; level < input.num_unifrefs; ++level){
+
+    if (world_rank == 0)
+      printf("[D4EST_INFO]: UNIFORM REFINEMENT LEVEL %d\n", level);
+    
+      p4est_refine_ext(p4est,
+                       0,
+                       -1,
+                       uni_refine_function,
+                       NULL,
+                       NULL
+                      );
+
+      p4est_partition(p4est, 0, NULL);
+      p4est_balance_ext
+        (
+         p4est,
+         P4EST_CONNECT_FACE,
+         NULL,
+         NULL
+        );
+
+      p4est_ghost_destroy(ghost);
+      P4EST_FREE(ghost_data);
+
+      ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE);
+      ghost_data = P4EST_ALLOC(curved_element_data_t, ghost->ghosts.elem_count);
+
+
+
+
+      curved_element_data_init_new(p4est,
+                                   geometric_factors,
+                                   dgmath_jit_dbase,
+                                   d4est_geom,
+                                   problem_set_degrees,
+                                   (void*)&input);
+
+
+
+
+    
+      local_nodes = curved_element_data_get_local_nodes(p4est);
+
+      Au = P4EST_REALLOC(Au, double, local_nodes);
+      u = P4EST_REALLOC(u, double, local_nodes);
+      rhs = P4EST_REALLOC(rhs, double, local_nodes);
+      prob_vecs.Au = Au;
+      prob_vecs.u = u;
+      prob_vecs.rhs = rhs;
+      prob_vecs.local_nodes = local_nodes;
+
+      prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+                                              (zero_fcn,&ip_flux_params);
+
+
+
+      linalg_fill_vec(prob_vecs.u, 0., local_nodes);   
+      curved_bi_estimator_compute
+        (
+         p4est,
+         &prob_vecs,
+         &prob_fcns,
+         bi_u_penalty_fcn,
+         bi_u_dirichlet_penalty_fcn,
+         bi_gradu_penalty_fcn,
+         zero_fcn,
+         ip_flux_params.ip_flux_penalty_prefactor,
+         ghost,
+         ghost_data,
+         dgmath_jit_dbase,
+         d4est_geom
+        );
+    
+      estimator_stats_t stats;
+      estimator_stats_compute(p4est, &stats,1);
+
+      /* if(world_rank == 0) */
+      estimator_stats_print(&stats);
+      
+
+
+  }
+
+
+
+  
   d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
   /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
   curved_element_data_init_new(p4est,
@@ -532,26 +708,21 @@ problem_init
     prob_vecs.rhs = rhs;
     prob_vecs.local_nodes = local_nodes;
 
+    prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+                                             (zero_fcn,&ip_flux_params);    
 
-    prob_vecs.curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
-                                            (
-                                             zero_fcn,
-                                             &ip_flux_params
-                                            );
+    curved_smooth_pred_marker_t amr_marker;
+    amr_marker.user = (void*)&input;
+    amr_marker.mark_element_fcn = amr_mark_element;
+    amr_marker.set_element_gamma_fcn = amr_set_element_gamma;
+    amr_marker.name = "puncture_marker";
 
-    prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns
-                                            (zero_fcn);
-
-    
-
-    int percentile = 5;
     hp_amr_scheme_t* scheme =
       hp_amr_curved_smooth_pred_init
       (
        p4est,
-       gamma_setter,
        (MAX_DEGREE)-2,
-       hp_amr_curved_smooth_pred_get_percentile_marker(&percentile)
+       amr_marker
       );
 
 
@@ -559,6 +730,9 @@ problem_init
 
     
   for (level = 0; level < input.num_of_amr_levels; ++level){
+
+    if (world_rank == 0)
+      printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level);
     
     linalg_fill_vec(prob_vecs.u, 0., local_nodes);   
     curved_bi_estimator_compute
@@ -578,17 +752,17 @@ problem_init
       );
     
     estimator_stats_t stats;
-    estimator_stats_compute(p4est, &stats,0);
+    estimator_stats_compute(p4est, &stats,1);
 
-    if(world_rank == 0)
-      estimator_stats_print(&stats, 0);
+    /* if(world_rank == 0) */
+      estimator_stats_print(&stats);
 
     double local_eta2 = stats.total;
     printf("local_eta2 = %.25f\n", local_eta2);
 
     
     int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
-    int* eta_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
+    double* eta_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
     int vtk_nodes = 0;
      
     int stride = 0;
@@ -610,34 +784,40 @@ problem_init
         }
       }
 
-  p4est_geometry_t* geom_vtk = d4est_geom->p4est_geom;
-  d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, "compact-sphere");
-  d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
-  d4est_vtk_context_set_scale(vtk_ctx, .99);
-  d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
-  vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);
-  vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx, 1, 0, "u",u, vtk_ctx);
-  vtk_ctx = d4est_vtk_write_dg_cell_dataf
-            (
-             vtk_ctx,
-             1,
-             1,
-             1,
-             0,
-             1,
-             1,
-             0,
-             "eta",
-             eta_array,
-             vtk_ctx
-            );
+
+    double R0 = ((d4est_geometry_sphere_attr_t*)(d4est_geom->p4est_geom->user))->R0;
+    printf("R0 = %.f\n", R0);
+    
+    p4est_connectivity_t* conn_vtk = p8est_connectivity_new_sphere();
+    p4est_geometry_t* geom_vtk = p8est_geometry_new_sphere(conn_vtk, R0*3, R0*2, R0);
+    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, "puncture-sphere");
+    d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
+    d4est_vtk_context_set_scale(vtk_ctx, .99);
+    d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
+    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);
+    vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx, 1, 0, "u",u, vtk_ctx);
+    vtk_ctx = d4est_vtk_write_dg_cell_dataf
+              (
+               vtk_ctx,
+               1,
+               1,
+               1,
+               0,
+               1,
+               1,
+               0,
+               "eta",
+               eta_array,
+               vtk_ctx
+              );
 
 
   
   d4est_vtk_write_footer(vtk_ctx);
   P4EST_FREE(deg_array);
   P4EST_FREE(eta_array);
-
+  p8est_connectivity_destroy(conn_vtk);
+  p8est_geometry_destroy(geom_vtk);
     
     
     hp_amr(p4est,

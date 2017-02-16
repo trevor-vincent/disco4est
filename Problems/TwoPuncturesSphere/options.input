@@ -1,23 +1,28 @@
 [p4est]
 min_quadrants = -1
-min_level = 0
+min_level = 1
 fill_uniform = 1
 
 [amr]
-num_of_amr_levels = 5
+num_unifrefs = 2
+num_of_amr_levels = 0
 
 [flux]
 ip_flux_penalty = 2.0
 
 [problem]
-deg = 2
-deg_integ = 3
+deg_R2 = 2
+deg_integ_R2 = 2
+deg_R1 = 2
+deg_integ_R1 = 2
+deg_R0 = 2
+deg_integ_R0 = 2
 
 [geometry]
 name = compact_sphere
 R0 = 10
 R1 = 100
-R2 = 100000
+R2 = 1000
 
 [solver]
 ksp_type = gmres
