@@ -936,13 +936,13 @@ problem_init
        dgmath_jit_dbase
       );
     
-    estimator_stats_t stats;
-    estimator_stats_compute(p4est, &stats,0);
+    estimator_stats_t* stats = P4EST_ALLOC(estimator_stats_t, 1);
+    estimator_stats_compute(p4est, stats,0);
 
     if(world_rank == 0)
-      estimator_stats_print(&stats);
+      estimator_stats_print(stats);
 
-    local_eta2 = stats.total;
+    local_eta2 = stats->total;
         
     element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, dgmath_jit_dbase);    
 
@@ -1032,7 +1032,8 @@ problem_init
            scheme,
            curved
           );        
-    
+
+    P4EST_FREE(stats);
     p4est_ghost_destroy(ghost);
     P4EST_FREE(ghost_data);
 

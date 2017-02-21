@@ -155,7 +155,7 @@ hp_amr
  p4est_t* p4est,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double** data_to_hp_refine,
- estimator_stats_t* stats,
+ estimator_stats_t** stats,
  hp_amr_scheme_t* scheme,
  int curved
 )

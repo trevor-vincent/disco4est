@@ -49,7 +49,7 @@ typedef struct {
   dgmath_jit_dbase_t* dgmath_jit_dbase;  
   p4est_replace_t refine_replace_callback_fcn_ptr;
   p4est_replace_t balance_replace_callback_fcn_ptr;
-  estimator_stats_t* estimator_stats;
+  estimator_stats_t** estimator_stats;
   int elements_marked_for_hrefine;
   int elements_marked_for_prefine;
   
@@ -61,7 +61,7 @@ hp_amr
  p4est_t* p4est,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double** data_to_hp_refine,
- estimator_stats_t* stats,
+ estimator_stats_t** stats,
  hp_amr_scheme_t* scheme,
  int curved
 );

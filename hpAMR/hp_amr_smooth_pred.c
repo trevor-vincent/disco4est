@@ -292,7 +292,7 @@ hp_amr_smooth_pred_set_refinement
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) info->p4est->user_pointer;
   hp_amr_smooth_pred_data_t* smooth_pred_data = (hp_amr_smooth_pred_data_t*) (hp_amr_data->hp_amr_scheme_data);
   element_data_t* elem_data = (element_data_t*) info->quad->p.user_data;
-  estimator_stats_t* stats = hp_amr_data->estimator_stats;
+  estimator_stats_t** stats = hp_amr_data->estimator_stats;
   
   double eta2 = elem_data->local_estimator;
   double eta2_pred = elem_data->local_predictor;
@@ -302,7 +302,7 @@ hp_amr_smooth_pred_set_refinement
     smooth_pred_data->marker.mark_element_fcn
     (
      eta2,
-     stats,
+     *stats,
      smooth_pred_data->marker.user
     );
   

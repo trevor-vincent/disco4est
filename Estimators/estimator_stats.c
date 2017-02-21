@@ -8,22 +8,18 @@
 #include <float.h>
 #include <string.h>
 #include <math.h>
+#include <sc_reduce.h>
 
 void estimator_stats_compute(p4est_t* p4est, estimator_stats_t* stats, int curved){
 
   double* eta2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
   
-  double total = 0.;
+  double total_eta2 = 0.;
   int k = 0;
-  int tc = 0;
-  stats->num_of_trees_local = 0;
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
-       ++tt, ++tc)
+       ++tt)
     {
-      stats->num_of_trees_local += 1;
-      stats->estimator_for_local_tree[tc] = 0.;
-      stats->tree_local_to_global[tc] = tt;
       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
       sc_array_t* tquadrants = &tree->quadrants;
       int Q = (p4est_locidx_t) tquadrants->elem_count;
@@ -34,29 +30,86 @@ void estimator_stats_compute(p4est_t* p4est, estimator_stats_t* stats, int curve
         else{
           eta2[k] = (((element_data_t*)(quad->p.user_data))->local_estimator);
         }
-        stats->estimator_for_local_tree[tc] += eta2[k];
-        total += eta2[k];
+        total_eta2 += eta2[k];
       }
     }
 
-  util_sort_double(eta2, p4est->local_num_quadrants);
+  stats->tree = -1;
+  stats->mpirank = p4est->mpirank;
+  estimator_stats_compute_stats
+    (
+     stats,
+     eta2,
+     p4est->local_num_quadrants,
+     total_eta2
+    );
+  
+  P4EST_FREE(eta2);
+}
 
-  /* if (p4est->mpirank == 0) */
-    /* util_print_matrix(eta2, p4est->local_num_quadrants, 1, "eta2 = ", 0); */
-  /* check that assumptions hold for the below calculations */
-  /* mpi_assert(p4est->local_num_quadrants >= (P4EST_CHILDREN) && eta2[1] >= eta2[0] && eta2[2] >= eta2[1]); */
-  double max = eta2[p4est->local_num_quadrants-1];
-  double min = eta2[0];
+double estimator_stats_compute_per_tree(p4est_t* p4est, estimator_stats_t** stats, int curved){
+
+  double* eta2 = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
+  double local_eta2 = 0.;
   
-  stats->total = total;
-  stats->mean = total/(double)p4est->local_num_quadrants;
-  stats->median = util_compute_median(eta2, p4est->local_num_quadrants);
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      double total_eta2_per_tree = 0.;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        if(curved)
+          eta2[q] = (((curved_element_data_t*)(quad->p.user_data))->local_estimator);
+        else{
+          mpi_abort("Soon to be deprecated\n");
+        }
+        total_eta2_per_tree += eta2[q];
+        local_eta2 += eta2[q];
+      }
+
+      stats[tt]->tree = tt;
+      stats[tt]->mpirank = p4est->mpirank;
+      estimator_stats_compute_stats
+        (
+         stats[tt],
+         eta2,
+         Q,
+         total_eta2_per_tree
+        );
+
+    }
+  
+  P4EST_FREE(eta2);
+  return local_eta2;
+}
+
+
+void
+estimator_stats_compute_stats
+(
+ estimator_stats_t* stats,
+ double* eta2,
+ int sample_size,
+ double total_eta2
+)
+{
+  util_sort_double(eta2, sample_size);
+
+  if (sample_size > 0){
+
+  stats->total = total_eta2;
+  stats->mean = total_eta2/(double)sample_size;
+  /* stats->median = util_compute_median(eta2, sample_size); */
   stats->std = 0.;
-  stats->max = max;
-  stats->min = min;
-  stats->sample_size = p4est->local_num_quadrants;
+  stats->max = eta2[sample_size-1];
+  stats->min = eta2[0];
+  stats->sample_size = sample_size;
   
-  for (int i = 0; i < p4est->local_num_quadrants; i++){
+  for (int i = 0; i < sample_size; i++){
     stats->std += (eta2[i] - stats->mean)*(eta2[i] - stats->mean);
   }
   if (stats->sample_size != 1)
@@ -64,39 +117,91 @@ void estimator_stats_compute(p4est_t* p4est, estimator_stats_t* stats, int curve
   else
     stats->std = 0.;
   stats->std = sqrt(stats->std);
-  stats->bin_size_scott = 3.5*stats->std*(1./pow(stats->sample_size,1./3.));
-  stats->num_bins_scott = round((stats->max - stats->min)/stats->bin_size_scott);
+  /* stats->bin_size_scott = 3.5*stats->std*(1./pow(stats->sample_size,1./3.)); */
+  /* stats->num_bins_scott = round((stats->max - stats->min)/stats->bin_size_scott); */
 
-  stats->p5 =  eta2[(int)(((double)p4est->local_num_quadrants)*.95)];
-  stats->p10 = eta2[(int)(((double)p4est->local_num_quadrants)*.9)];
-  stats->p15 = eta2[(int)(((double)p4est->local_num_quadrants)*.85)];
-  stats->p20 = eta2[(int)(((double)p4est->local_num_quadrants)*.8)];
-    
-  /* if even */
-  if (stats->sample_size != 1){
-    
-    if (stats->sample_size % 2 == 0){
-      stats->Q1 = util_compute_median(&eta2[0], stats->sample_size/2);
-      stats->Q3 = util_compute_median(&eta2[stats->sample_size/2], stats->sample_size/2);
-      stats->IQR = stats->Q3 - stats->Q1;
-      stats->bin_size_freedman = (2.*stats->IQR)/pow((double)stats->sample_size, 1./3.);
-    }
-    else {
-      stats->Q1 = util_compute_median(&eta2[0], (stats->sample_size-1)/2);
-      stats->Q3 = util_compute_median(&eta2[(stats->sample_size+1)/2], stats->sample_size/2);
-      stats->IQR = stats->Q3 - stats->Q1;
-      stats->bin_size_freedman = (2.*stats->IQR)/pow((double)stats->sample_size, 1./3.);
-    }
-    stats->num_bins_freedman = round((stats->max - stats->min)/stats->bin_size_freedman);
+  stats->p5 =  eta2[(int)(((double)sample_size)*.95)];
+  stats->p10 = eta2[(int)(((double)sample_size)*.9)];
+  stats->p15 = eta2[(int)(((double)sample_size)*.85)];
+  stats->p20 = eta2[(int)(((double)sample_size)*.8)];
+  stats->p25 = eta2[(int)(((double)sample_size)*.75)];
+  
   }
   else {
-    stats->Q1 = 0.;
-    stats->Q3 = 0.;
-    stats->IQR = 0.;
-    stats->bin_size_freedman = 0.;
+    stats->total = 0;
+    stats->mean = -1;
+    stats->max = -1;
+    stats->min = -1;
+    stats->std = -1;
+    stats->p5 = -1;
+    stats->p10 = -1;
+    stats->p15 = -1;
+    stats->p20 = -1;
   }
-  P4EST_FREE(eta2);
+  /* if even */
+  /* if (stats->sample_size != 1){ */
+    
+  /*   if (stats->sample_size % 2 == 0){ */
+  /*     stats->Q1 = util_compute_median(&eta2[0], stats->sample_size/2); */
+  /*     stats->Q3 = util_compute_median(&eta2[stats->sample_size/2], stats->sample_size/2); */
+  /*     stats->IQR = stats->Q3 - stats->Q1; */
+  /*     stats->bin_size_freedman = (2.*stats->IQR)/pow((double)stats->sample_size, 1./3.); */
+  /*   } */
+  /*   else { */
+  /*     stats->Q1 = util_compute_median(&eta2[0], (stats->sample_size-1)/2); */
+  /*     stats->Q3 = util_compute_median(&eta2[(stats->sample_size+1)/2], stats->sample_size/2); */
+  /*     stats->IQR = stats->Q3 - stats->Q1; */
+  /*     stats->bin_size_freedman = (2.*stats->IQR)/pow((double)stats->sample_size, 1./3.); */
+  /*   } */
+  /*   stats->num_bins_freedman = round((stats->max - stats->min)/stats->bin_size_freedman); */
+  /* } */
+  /* else { */
+  /*   stats->Q1 = 0.; */
+  /*   stats->Q3 = 0.; */
+  /*   stats->IQR = 0.; */
+  /*   stats->bin_size_freedman = 0.; */
+  /* } */
 }
+
+void
+estimator_stats_compute_max_percentiles_across_proc
+(
+ estimator_stats_t** stats,
+ int num_trees
+){
+  mpi_assert(num_trees < MAX_TREES);
+  double local_percentiles [MAX_TREES*5];
+  double global_percentile_maxes [MAX_TREES*5];
+
+  for (int i = 0; i < num_trees; i++){
+    local_percentiles[i*5 + 0] = stats[i]->p5;
+    local_percentiles[i*5 + 1] = stats[i]->p10;
+    local_percentiles[i*5 + 2] = stats[i]->p15;
+    local_percentiles[i*5 + 3] = stats[i]->p20;
+    local_percentiles[i*5 + 4] = stats[i]->p25;
+  }
+    
+  sc_allreduce
+    (
+     &local_percentiles,
+     &global_percentile_maxes,
+     num_trees*5,
+     sc_MPI_DOUBLE,
+     sc_MPI_MAX,
+     sc_MPI_COMM_WORLD
+    );
+
+
+  for (int i = 0; i < num_trees; i++){
+    stats[i]->p5 = global_percentile_maxes[i*5 + 0];
+    stats[i]->p10 = global_percentile_maxes[i*5 + 1];
+    stats[i]->p15 = global_percentile_maxes[i*5 + 2];
+    stats[i]->p20 = global_percentile_maxes[i*5 + 3];
+    stats[i]->p25 = global_percentile_maxes[i*5 + 4];
+  }
+  
+}
+
 
 double
 estimator_stats_get_percentile
@@ -114,7 +219,7 @@ estimator_stats_get_percentile
     else if (percentile == 20)
       return stats->p20;
     else if (percentile == 25)
-      return stats->Q3;
+      return stats->p25;
     else{
       mpi_abort("[D4EST_ERROR]: Not a supported percentile");
       return -1;
@@ -123,25 +228,29 @@ estimator_stats_get_percentile
 
 
 void estimator_stats_print(estimator_stats_t* stats){
-    printf("sample_size = %d\n", stats->sample_size);   
-    printf("mean = %.25f\n", stats->mean);
-    printf("std = %.25f\n", stats->std);
-    printf("max = %.25f\n", stats->max);
-    printf("min = %.25f\n", stats->min);
-    printf("Q1 = %.25f\n", stats->Q1);
-    printf("Q3 = %.25f\n", stats->Q3);
-    printf("p5 = %.25f\n", stats->p5);
-    printf("p10 = %.25f\n", stats->p10);
-    printf("p15 = %.25f\n", stats->p15);
-    printf("p20 = %.25f\n", stats->p20);
-    printf("IQR = %.25f\n", stats->IQR);
-    printf("num_bins_scott = %d\n", stats->num_bins_scott);
-    printf("num_bins_freedman = %d\n", stats->num_bins_freedman);
-    printf("bins_size_scot = %.25f\n", stats->bin_size_scott);
-    printf("bins_size_freedman = %.25f\n", stats->bin_size_freedman);
-    for (int i = 0; i < stats->num_of_trees_local; i++){
-      printf("total eta2 in local tree %d = %.25f\n", stats->tree_local_to_global[i], stats->estimator_for_local_tree[i]);
-    }
+  printf("mpirank = %d\n", stats->mpirank);
+  if(stats->tree == -1){
+    printf("tree = ALL TREES\n");
+  }
+  else {
+    printf("tree = %d\n", stats->tree);
+  }
+  printf("sample_size = %d\n", stats->sample_size);   
+  printf("mean = %.25f\n", stats->mean);
+  printf("std = %.25f\n", stats->std);
+  printf("max = %.25f\n", stats->max);
+  printf("min = %.25f\n", stats->min);
+  /* printf("Q1 = %.25f\n", stats->Q1); */
+  /* printf("Q3 = %.25f\n", stats->Q3); */
+  printf("p5 = %.25f\n", stats->p5);
+  printf("p10 = %.25f\n", stats->p10);
+  printf("p15 = %.25f\n", stats->p15);
+  printf("p20 = %.25f\n", stats->p20);
+  /* printf("IQR = %.25f\n", stats->IQR); */
+  /* printf("num_bins_scott = %d\n", stats->num_bins_scott); */
+  /* printf("num_bins_freedman = %d\n", stats->num_bins_freedman); */
+  /* printf("bins_size_scot = %.25f\n", stats->bin_size_scott); */
+  /* printf("bins_size_freedman = %.25f\n", stats->bin_size_freedman); */
 }
 
 void estimator_stats_write_to_file
@@ -169,13 +278,13 @@ void estimator_stats_write_to_file
     fprintf(f,"p10 = %.25f\n", stats->p10);
     fprintf(f,"p15 = %.25f\n", stats->p15);
     fprintf(f,"p20 = %.25f\n", stats->p20);
-    fprintf(f,"Q1 = %.25f\n", stats->Q1);
-    fprintf(f,"Q3 = %.25f\n", stats->Q3); 
-    fprintf(f,"IQR = %.25f\n", stats->IQR);
-    fprintf(f,"num_bins_scott = %d\n", stats->num_bins_scott);
-    fprintf(f,"num_bins_freedman = %d\n", stats->num_bins_freedman);
-    fprintf(f,"bins_size_scot = %.25f\n", stats->bin_size_scott);
-    fprintf(f,"bins_size_freedman = %.25f\n", stats->bin_size_freedman);
+    /* fprintf(f,"Q1 = %.25f\n", stats->Q1); */
+    /* fprintf(f,"Q3 = %.25f\n", stats->Q3);  */
+    /* fprintf(f,"IQR = %.25f\n", stats->IQR); */
+    /* fprintf(f,"num_bins_scott = %d\n", stats->num_bins_scott); */
+    /* fprintf(f,"num_bins_freedman = %d\n", stats->num_bins_freedman); */
+    /* fprintf(f,"bins_size_scot = %.25f\n", stats->bin_size_scott); */
+    /* fprintf(f,"bins_size_freedman = %.25f\n", stats->bin_size_freedman); */
     fclose(f);
 
     
@@ -190,10 +299,10 @@ void estimator_stats_write_to_file
       free(gnuplot_freedman_save_as);
       
       fprintf(file_freedman,"reset \n");
-      fprintf(file_freedman,"n=%d #number of intervals\n",stats->num_bins_freedman);
+      /* fprintf(file_freedman,"n=%d #number of intervals\n",stats->num_bins_freedman); */
       fprintf(file_freedman,"max=%.25f #max value\n",stats->max);
       fprintf(file_freedman,"min=%.25f #min value\n",stats->min);
-      fprintf(file_freedman,"width=%.25f #interval width\n",stats->bin_size_freedman);
+      /* fprintf(file_freedman,"width=%.25f #interval width\n",stats->bin_size_freedman); */
       fprintf(file_freedman,"#function used to map a value to the intervals\n");
       fprintf(file_freedman,"hist(x,width)=width*floor(x/width)+width/2.0\n");
       fprintf(file_freedman,"set term png #output terminal and file\n");
@@ -223,10 +332,10 @@ void estimator_stats_write_to_file
       free(gnuplot_scott_save_as);
       
       fprintf(file_scott,"reset \n");
-      fprintf(file_scott,"n=%d #number of intervals\n",stats->num_bins_scott);
+      /* fprintf(file_scott,"n=%d #number of intervals\n",stats->num_bins_scott); */
       fprintf(file_scott,"max=%.25f #max value\n",stats->max);
       fprintf(file_scott,"min=%.25f #min value\n",stats->min);
-      fprintf(file_scott,"width=%.25f #interval width\n",stats->bin_size_scott);
+      /* fprintf(file_scott,"width=%.25f #interval width\n",stats->bin_size_scott); */
       fprintf(file_scott,"#function used to map a value to the intervals\n");
       fprintf(file_scott,"hist(x,width)=width*floor(x/width)+width/2.0\n");
       fprintf(file_scott,"set term png #output terminal and file\n");

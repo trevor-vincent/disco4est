@@ -75,18 +75,19 @@ double kronecker(int a, int b)
 
 static
 int
-amr_mark_element(
-                 p4est_t* p4est,
-                 double eta2,
-                 estimator_stats_t* stats,
-                 curved_element_data_t* elem_data,
-                 void* user
-                )
+amr_mark_element
+(
+ p4est_t* p4est,
+ double eta2,
+ estimator_stats_t** stats,
+ curved_element_data_t* elem_data,
+ void* user
+)
 {
-
+  int tree = elem_data->tree;
   /* if (elem_data->tree == 12){ */
     double eta2_percentile
-      = estimator_stats_get_percentile(stats, 5);
+      = estimator_stats_get_percentile(stats[tree], 5);
     return (eta2 >= eta2_percentile);
   /* } */
   /* else { */
@@ -99,6 +100,8 @@ gamma_params_t
 amr_set_element_gamma
 (
  p4est_t* p4est,
+ double eta2,
+ estimator_stats_t** stats,
  curved_element_data_t* elem_data,
  void* user
 )
@@ -954,14 +957,25 @@ problem_init
        dgmath_jit_dbase,
        d4est_geom
       );
+
     
-    estimator_stats_t stats;
-    estimator_stats_compute(p4est, &stats,1);
+    estimator_stats_t* stats [13];
+    for (int i = 0; i < 13; i++){
+      stats[i] = P4EST_ALLOC(estimator_stats_t, 1);
+    }
+    
+    double local_eta2 = estimator_stats_compute_per_tree(p4est, &stats[0],1);
 
-    /* if(world_rank == 0) */
-      estimator_stats_print(&stats);
-
-    double local_eta2 = stats.total;
+    /* estimator_stats_compute_max_percentiles_across_proc */
+    /*   ( */
+    /*    stats, */
+    /*    13 */
+    /*   ); */
+    
+    for (int i = 0; i < 13; i++){
+      estimator_stats_print(stats[i]);
+    }
+    
     printf("local_eta2 = %.25f\n", local_eta2);
 
     
@@ -1038,10 +1052,14 @@ problem_init
     hp_amr(p4est,
            dgmath_jit_dbase,
            &u,
-           &stats,
+           &stats[0],
            scheme,
            1
           );        
+
+    for (int i = 0; i < 13; i++){
+      P4EST_FREE(stats[i]);
+    }
     
     p4est_ghost_destroy(ghost);
     P4EST_FREE(ghost_data);

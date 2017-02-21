@@ -341,7 +341,7 @@ int
 amr_mark_element(
                  p4est_t* p4est,
                  double eta2,
-                 estimator_stats_t* stats,
+                 estimator_stats_t** stats,
                  curved_element_data_t* elem_data,
                  void* user
                 )
@@ -349,12 +349,12 @@ amr_mark_element(
   problem_input_t* input = user;
   if (p4est->local_num_quadrants*p4est->mpisize < input->amr_inflation_size){
     double eta2_percentile
-      = estimator_stats_get_percentile(stats,25);
+      = estimator_stats_get_percentile(*stats,25);
     return (eta2 >= eta2_percentile);
   }
   else{
     double eta2_percentile
-      = estimator_stats_get_percentile(stats,input->percentile);
+      = estimator_stats_get_percentile(*stats,input->percentile);
     return (eta2 >= eta2_percentile);
   }
 }
@@ -364,6 +364,8 @@ gamma_params_t
 amr_set_element_gamma
 (
  p4est_t* p4est,
+ double eta2,
+ estimator_stats_t** stats,
  curved_element_data_t* elem_data,
  void* user
 )
@@ -833,13 +835,13 @@ problem_init
        d4est_geom
       );
     
-    estimator_stats_t stats;
-    estimator_stats_compute(p4est, &stats,1);
+    estimator_stats_t* stats = P4EST_ALLOC(estimator_stats_t, 1);
+    estimator_stats_compute(p4est, stats,1);
 
     if(world_rank == 0)
-      estimator_stats_print(&stats);
+      estimator_stats_print(stats);
 
-    local_eta2 = stats.total;
+    local_eta2 = stats->total;
         
     curved_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, dgmath_jit_dbase, d4est_geom->p4est_geom);    
     linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
@@ -858,7 +860,8 @@ problem_init
            scheme,
            curved
           );        
-    
+
+    P4EST_FREE(stats);
     p4est_ghost_destroy(ghost);
     P4EST_FREE(ghost_data);
 

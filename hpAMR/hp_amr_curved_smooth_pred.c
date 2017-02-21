@@ -264,14 +264,21 @@ hp_amr_curved_smooth_pred_set_refinement
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) info->p4est->user_pointer;
   hp_amr_curved_smooth_pred_data_t* smooth_pred_data = (hp_amr_curved_smooth_pred_data_t*) (hp_amr_data->hp_amr_scheme_data);
   curved_element_data_t* elem_data = (curved_element_data_t*) info->quad->p.user_data;
-  estimator_stats_t* stats = hp_amr_data->estimator_stats;
+  estimator_stats_t** stats = hp_amr_data->estimator_stats;
   
   double eta2 = elem_data->local_estimator;
   double eta2_pred = elem_data->local_predictor;
   /* double eta2_avg = stats->mean; */
 
   gamma_params_t gamma_hpn =
-    smooth_pred_data->marker.set_element_gamma_fcn(info->p4est,elem_data, smooth_pred_data->marker.user);
+    smooth_pred_data->marker.set_element_gamma_fcn
+    (
+     info->p4est,
+     eta2,
+     stats,
+     elem_data,
+     smooth_pred_data->marker.user
+    );
   
   int is_marked = 
     smooth_pred_data->marker.mark_element_fcn
@@ -325,7 +332,7 @@ hp_amr_curved_smooth_pred_balance_replace_callback (
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
   dgmath_jit_dbase_t* dgmath_jit_dbase = hp_amr_data->dgmath_jit_dbase;
   hp_amr_curved_smooth_pred_data_t* smooth_pred_data = (hp_amr_curved_smooth_pred_data_t*) (hp_amr_data->hp_amr_scheme_data);
-  
+  estimator_stats_t** stats = hp_amr_data->estimator_stats;
   curved_element_data_t* parent_data = (curved_element_data_t*) outgoing[0]->p.user_data;
   curved_element_data_t* child_data;
   int i;
@@ -334,7 +341,7 @@ hp_amr_curved_smooth_pred_balance_replace_callback (
   int degH = parent_data->deg;
 
   gamma_params_t gamma_hpn
-    = smooth_pred_data->marker.set_element_gamma_fcn(p4est,parent_data, smooth_pred_data->marker.user);
+    = smooth_pred_data->marker.set_element_gamma_fcn(p4est,parent_data->local_estimator, stats, parent_data, smooth_pred_data->marker.user);
   
   for (i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;
