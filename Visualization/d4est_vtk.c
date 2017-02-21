@@ -48,7 +48,7 @@ static const int    d4est_vtk_write_level = 1;
 static const int    d4est_vtk_write_rank = 1;
 static const int    d4est_vtk_wrap_rank = 0;
 
-#define D4EST_VTK_DEBUG
+/* #define D4EST_VTK_DEBUG */
 
 /** Write a cell scalar field to the VTU file.
  *
@@ -1037,8 +1037,8 @@ d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, dgmath_jit_dbase_t* dgmat
   
   cont->num_corners = Ncorners = P4EST_CHILDREN * Ncells;
 
-  printf("cont->num_corners = %d\n",cont->num_corners);
-  printf("Ncells = %d\n\n",Ncells);
+  /* printf("cont->num_corners = %d\n",cont->num_corners); */
+  /* printf("Ncells = %d\n\n",Ncells); */
   
   if (scale < 1. || !conti) {
     /* when we scale the quadrants we need each corner separately */
@@ -1963,7 +1963,7 @@ d4est_vtk_write_dg_cell_scalar (d4est_vtk_context_t * cont,
     }
   }
 
-  printf("tc = %d, Ncells = %d\n", tc, Ncells);
+  /* printf("tc = %d, Ncells = %d\n", tc, Ncells); */
   
   fprintf (cont->vtufile, "        </DataArray>\n");
 

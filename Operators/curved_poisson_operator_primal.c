@@ -33,8 +33,8 @@ void curved_poisson_operator_primal_init_vecs
   int dim = (P4EST_DIM);
   int deg = elem_data->deg;
   int volume_nodes_Lobatto = dgmath_get_nodes(dim,deg);
-  int face_nodes_Lobatto = dgmath_get_nodes(dim-1,deg);
-  int volume_nodes_Gauss = dgmath_get_nodes(dim, elem_data->deg_integ);
+  /* int face_nodes_Lobatto = dgmath_get_nodes(dim-1,deg); */
+  /* int volume_nodes_Gauss = dgmath_get_nodes(dim, elem_data->deg_integ); */
   
   elem_data->Au_elem = &(problem_data->Au[elem_data->nodal_stride]);
   
@@ -43,13 +43,6 @@ void curved_poisson_operator_primal_init_vecs
      &(problem_data->u[elem_data->nodal_stride]),
      &(elem_data->u_storage)[0],
      volume_nodes_Lobatto
-    );
-
-  linalg_fill_vec
-    (
-     &(elem_data->du_elem[0][0]),
-     0.0,
-     (P4EST_DIM)*(MAX_NODES)
     );
 
   linalg_fill_vec

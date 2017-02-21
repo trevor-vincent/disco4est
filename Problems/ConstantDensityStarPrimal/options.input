@@ -14,7 +14,6 @@ percentile = 5
 gamma_h = 2.0
 gamma_p = 0.1
 
-
 [flux]
 ip_flux_penalty = 2.0
 
@@ -22,15 +21,22 @@ ip_flux_penalty = 2.0
 rho0_div_rhoc = .01
 domain_size = 5.0 
 use_Gauss_integ = 1
-deg_offset_for_Gauss_integ = 1
+deg_offset_for_nonlinear_integ = 1
 
 [solver]
 ksp_type = cg
-ksp_atol = 1e-20
-ksp_rtol = 1e-10
-ksp_maxit = 10000
+ksp_atol = 1e-50
+ksp_rtol = 1e-5
+ksp_max_it = 10000
 ksp_view = 1
 ksp_monitor = 1
+ksp_user_defined_pc = 0
+snes_rtol = 1e-5
+snes_atol = 1e-50
+snes_max_funcs = 10000000000000
+snes_monitor = 1
+snes_linesearch_order = 3
+snes_linesearch_monitor = 1
 
 [geometry]
 name = cube

@@ -4,8 +4,8 @@ min_level = 1
 fill_uniform = 1
 
 [amr]
-num_unifrefs = 2
-num_of_amr_levels = 0
+num_unifrefs = 1
+num_of_amr_levels = 1
 
 [flux]
 ip_flux_penalty = 2.0
@@ -25,9 +25,16 @@ R1 = 100
 R2 = 1000
 
 [solver]
-ksp_type = gmres
+ksp_type = cg
 ksp_atol = 1e-20
 ksp_rtol = 1e-10
-ksp_maxit = 10000
+ksp_max_it = 10000
 ksp_view = 1
+ksp_user_defined_pc = 0
 ksp_monitor = 1
+snes_rtol = 1e-5
+snes_atol = 1e-50
+snes_max_funcs = 10000000000000
+snes_monitor = 1
+snes_linesearch_order = 3
+snes_linesearch_monitor = 1

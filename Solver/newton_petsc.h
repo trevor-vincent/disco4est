@@ -10,10 +10,11 @@ typedef struct {
 
   p4est_t* p4est;
   problem_data_t* vecs;
-  weakeqn_ptrs_t* fcns;
+  void* fcns;
   p4est_ghost_t* ghost;
-  element_data_t* ghost_data;
+  void* ghost_data;
   dgmath_jit_dbase_t* dgmath_jit_dbase;
+  d4est_geometry_t* d4est_geom;
   
 } newton_petsc_ctx_t;
 
@@ -23,11 +24,15 @@ void newton_petsc_solve
 (
  p4est_t* p4est,
  problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
+ void* fcns,
  p4est_ghost_t** ghost,
- element_data_t** ghost_data, 
+ void** ghost_data, 
  dgmath_jit_dbase_t* dgmath_jit_dbase,
- krylov_petsc_params_t* krylov_params
+ d4est_geometry_t* d4est_geom,
+ const char* input_file,
+ krylov_pc_create_fcn_t pc_create,
+ krylov_pc_destroy_fcn_t pc_destroy,
+ void* pc_data
 );
 
 #endif

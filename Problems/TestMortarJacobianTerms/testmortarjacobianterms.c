@@ -547,8 +547,8 @@ problem_init
 
   }
   
-  curved_weakeqn_ptrs_t prob_fcns;
-  prob_fcns.apply_lhs = curved_Gauss_poisson_apply_aij;
+  /* curved_weakeqn_ptrs_t prob_fcns; */
+  /* prob_fcns.apply_lhs = curved_Gauss_poisson_apply_aij; */
 
      
     geometric_factors_t* geometric_factors = geometric_factors_init(p4est);

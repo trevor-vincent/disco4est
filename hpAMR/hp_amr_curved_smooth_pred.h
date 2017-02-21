@@ -20,6 +20,7 @@ typedef struct {
 
   int (*mark_element_fcn)
   (
+   p4est_t*,
    double, /* eta2 */
    estimator_stats_t*,
    curved_element_data_t*,
@@ -28,6 +29,7 @@ typedef struct {
   
   gamma_params_t (*set_element_gamma_fcn)
   (
+   p4est_t*,
    curved_element_data_t*,
    void* /* user ptr */
   );

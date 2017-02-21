@@ -319,7 +319,7 @@ bi_est_interface
       );
 
 
-    printf("e_m[0]->id = %d, e_p[0]->id = %d, f_m = %d, f_p = %d \n", e_m[0]->id, e_p[0]->id, f_m, f_p);
+    /* printf("e_m[0]->id = %d, e_p[0]->id = %d, f_m = %d, f_p = %d \n", e_m[0]->id, e_p[0]->id, f_m, f_p); */
    /* DEBUG_PRINT_ARR_DBL */
    /*    ( */
    /*     u_m_on_f_m, */
@@ -368,8 +368,8 @@ bi_est_interface
       stride += nodes_mortar[f];
     }
 
-    printf("e_m[0]->surface_jacobian = %.25f\n", e_m[0]->surface_jacobian);
-    DEBUG_PRINT_ARR_DBL(ustar_min_u_mortar, total_nodes_mortar);
+    /* printf("e_m[0]->surface_jacobian = %.25f\n", e_m[0]->surface_jacobian); */
+    /* DEBUG_PRINT_ARR_DBL(ustar_min_u_mortar, total_nodes_mortar); */
     
     /* project mortar data back onto the (-) side */
     dgmath_project_mortar_onto_side

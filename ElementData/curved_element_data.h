@@ -4,6 +4,7 @@
 #include "../dGMath/dgmath.h"
 #include "../GridFunctions/grid_functions.h"
 #include <d4est_geometry.h>
+#include <ip_flux_aux.h>
 
 typedef enum { DO_NOT_STORE_LOCALLY, STORE_LOCALLY } norm_storage_option_t;
 typedef enum { DIAM_APPROX, NO_DIAM_APPROX, DIAM_APPROX_CUBE} diam_compute_option_t;
@@ -71,9 +72,9 @@ typedef struct {
   
   /* storage for MPI transfers */
   double u_storage[MAX_NODES];
-  double du_elem[(P4EST_DIM)][MAX_NODES];
+  /* double du_elem[(P4EST_DIM)][MAX_NODES]; */
   double dudr_elem[(P4EST_DIM)][MAX_NODES];
-  double q_elem[(P4EST_DIM)][MAX_NODES];
+  /* double q_elem[(P4EST_DIM)][MAX_NODES]; */
   
   /* nodal degree */
   int deg;
@@ -534,6 +535,19 @@ void
 curved_element_data_print_local_estimator
 (
  p4est_t* p4est
+);
+
+double
+curved_element_data_compute_dg_norm_sqr
+(
+ p4est_t* p4est,
+ double* nodal_vec,
+ int local_nodes,
+ ip_flux_params_t* ip_flux_params,
+ d4est_geometry_t* d4est_geom,
+ p4est_ghost_t* ghost,
+ void* ghost_data,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
 );
 
 #endif

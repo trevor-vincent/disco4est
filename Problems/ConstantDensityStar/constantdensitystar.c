@@ -600,18 +600,6 @@ int problem_input_handler
     pconfig->amr_inflation_size = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"solver",name,"krylov_type")) {
-    if (strcmp("cg", value) == 0){
-      pconfig->krylov_type = KSPCG;
-    }
-    else if (strcmp("gmres", value) == 0){
-      pconfig->krylov_type = KSPGMRES;
-    }
-    else {
-      mpi_abort("not a support KSP solver type");
-    }
-    pconfig->count += 1;
-  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -625,7 +613,7 @@ problem_input
  const char* input_file
 )
 {
-  int num_of_options = 13;
+  int num_of_options = 12;
   
   problem_input_t input;
   input.degree = -1;
@@ -1075,18 +1063,21 @@ problem_init
     /* params.ksp_type = input.ksp_type; */
 
   krylov_petsc_params_t krylov_params = krylov_petsc_input(input_file);
-
     
-    newton_petsc_solve
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       &ghost,
-       &ghost_data,
-       dgmath_jit_dbase,
-       &krylov_params
-      );
+  newton_petsc_solve
+    (
+     p4est,
+     &prob_vecs,
+     (void*)&prob_fcns,
+     &ghost,
+     (void**)&ghost_data,
+     dgmath_jit_dbase,
+     NULL,
+     input_file,
+     NULL,
+     NULL,
+     NULL
+    );
     
     element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, dgmath_jit_dbase);    
     linalg_vec_axpy(-1., u, u_analytic, local_nodes);

@@ -107,10 +107,10 @@ void* user_data
     linalg_vec_scale(surface_jacobian, MJe1, face_nodes);
     Nsqre1 += linalg_vec_dot(Je1, MJe1, face_nodes);
 
-#ifndef NDEBUG
-    if (element_data->id == 1)
-      printf("id, face, Je1MJe1 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je1, MJe1, face_nodes));
-#endif
+/* #ifndef NDEBUG */
+/*     if (element_data->id == 1) */
+/*       printf("id, face, Je1MJe1 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je1, MJe1, face_nodes)); */
+/* #endif */
     
     /* calculate Ne2_sqr term */
     for (d = 0; d < (P4EST_DIM); d++){
@@ -119,10 +119,10 @@ void* user_data
       linalg_vec_scale(surface_jacobian, MJe2, face_nodes);
       Nsqre2 += linalg_vec_dot(Je2, MJe2, face_nodes);
 
-#ifndef NDEBUG
-      if (element_data->id == 1)
-        printf("id, face, Je2MJe2 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je2, MJe2, face_nodes));
-#endif
+/* #ifndef NDEBUG */
+/*       if (element_data->id == 1) */
+/*         printf("id, face, Je2MJe2 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je2, MJe2, face_nodes)); */
+/* #endif */
       
     }
 
@@ -228,7 +228,7 @@ bi_estimator_compute
   /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
   
   element_data_compute_l2_norm_sqr(p4est,vecs->Au, dgmath_jit_dbase);
-  element_data_print_local_estimator(p4est);
+  /* element_data_print_local_estimator(p4est); */
   
 
   /* /\* element_data_t* ghost *\/_data; */
@@ -300,7 +300,7 @@ bi_estimator_compute
 		NULL);
   
   p4est->user_pointer = tmpptr;
-  element_data_print_local_estimator(p4est);
+  /* element_data_print_local_estimator(p4est); */
   /* estimator_stats_t stats; */
   /* estimator_stats_compute(p4est,&stats); */
   /* return stats; */

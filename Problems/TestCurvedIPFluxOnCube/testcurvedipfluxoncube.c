@@ -101,12 +101,6 @@ random_h_refine(p4est_t * p4est, p4est_topidx_t which_tree,
   return rand()%2;
 }
 
-
-void
-problem_help()
-{
-}
-
 p4est_connectivity_t*
 problem_build_conn()
 {

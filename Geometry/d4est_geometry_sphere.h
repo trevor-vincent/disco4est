@@ -19,4 +19,13 @@ typedef struct
 void d4est_geometry_compactified_sphere_new(const char *input_file,d4est_geometry_t *d4est_geom);
 void d4est_geometry_sphere_new(const char *input_file,d4est_geometry_t *d4est_geom);
 
+p8est_geometry_t*
+d4est_geometry_compactified_sphere_from_param
+(
+ double R0,
+ double R1,
+ double R2,
+ p8est_connectivity_t* conn
+);
+
 #endif

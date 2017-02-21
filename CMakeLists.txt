@@ -119,7 +119,8 @@ SET (
   # hpAMR/curved_hp_amr_smooth_pred.c
   hpAMR/hp_amr.c
   Solver/cg.c
-  Operators/curved_poisson_operator.c
+  Solver/jacobian_tester.c
+  # Operators/curved_poisson_operator.c
   Operators/curved_poisson_operator_primal.c
   Operators/poisson_operator.c
   Operators/poisson_debug_vecs.c
@@ -133,12 +134,13 @@ SET (
   Flux/central_flux_vector_fcns.c
   Flux/compute_flux.c
   Flux/curved_compute_flux.c
-  Flux/curved_Gauss_central_flux_vector_fcns.c
-  Flux/curved_Gauss_sipg_flux_scalar_fcns.c
-  Flux/curved_Gauss_sipg_flux_vector_fcns.c
+  # Flux/curved_Gauss_central_flux_vector_fcns.c
+  # Flux/curved_Gauss_sipg_flux_scalar_fcns.c
+  # Flux/curved_Gauss_sipg_flux_vector_fcns.c
   Flux/curved_Gauss_primal_sipg_flux_fcns.c
   Flux/curved_test_mortarjacobianterms_flux_fcns.c
   Flux/dg_norm.c
+  Flux/curved_dg_norm.c
   Flux/sipg_flux_scalar_fcns.c
   Flux/sipg_flux_vector_fcns.c
   Visualization/hacked_p4est_vtk.c
@@ -308,6 +310,8 @@ add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDe
 # add_d4est_problem_2d(testcurvedipflux_driver_2d testcurvedipflux.c TestCurvedIPFlux)
 add_d4est_problem_2d(testcurvedprimal_driver_2d testcurvedprimal.c TestCurvedPrimal)
 add_d4est_problem_3d(testcurvedprimal_driver_3d testcurvedprimal.c TestCurvedPrimal)
+add_d4est_problem_3d(testcubeprimal_driver_3d testcubeprimal.c TestCubePrimal)
+add_d4est_problem_3d(constantdensitystarprimal_driver constantdensitystarprimal.c ConstantDensityStarPrimal)
 # add_d4est_problem_3d(testcurvedipflux_driver_3d testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_3d(testcurvedshell_driver_3d testcurvedshell.c TestCurvedShell)
 add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)

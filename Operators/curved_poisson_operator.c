@@ -454,6 +454,7 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
   int i,j,k;
   for (i = 0; i < (P4EST_DIM); i++){
     for (j = 0; j < (P4EST_DIM); j++){
+      /* mpi_abort("q_elem no longer supported"); */
       dgmath_apply_Dij(dgmath_jit_dbase, &element_data->q_elem[i][0], dim, element_data->deg, j, dq);
       dgmath_interp_GLL_to_GL(dgmath_jit_dbase, dq, element_data->deg, element_data->deg_integ, dq_Gauss, (P4EST_DIM));
       for (k = 0; k < volume_nodes_Gauss; k++){

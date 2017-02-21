@@ -2,6 +2,9 @@
 #include "../GridFunctions/grid_functions.h"
 #include "../Utilities/util.h"
 #include "../LinearAlgebra/linalg.h"
+#include <curved_compute_flux.h>
+#include <curved_dg_norm.h>
+#include <ip_flux_aux.h>
 #include <d4est_geometry.h>
 
 typedef struct {
@@ -1454,6 +1457,152 @@ curved_element_data_compute_l2_norm_sqr
     }
   P4EST_FREE(Mvec);
   return l2_norm_sqr;
+}
+
+
+void
+curved_element_compute_derivative_on_Gauss
+(
+ double* vec,
+ double* rst_xyz_Gauss [(P4EST_DIM)][(P4EST_DIM)],
+ double* dvec [(P4EST_DIM)],
+ int deg_Lobatto,
+ int deg_Gauss,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+)
+{
+
+  int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss);
+  int volume_nodes_Lobatto = dgmath_get_nodes((P4EST_DIM), deg_Lobatto);
+
+  double* dvec_di_prolonged = P4EST_ALLOC(double, volume_nodes_Gauss);
+  double* dvec_di_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
+  double* dvec_di_Lobatto = P4EST_ALLOC(double, volume_nodes_Lobatto);
+  
+  for (int i = 0; i < (P4EST_DIM); i++){
+
+    dgmath_apply_Dij(dgmath_jit_dbase, vec, (P4EST_DIM), deg_Lobatto, i, dvec_di_Lobatto);
+    
+    dgmath_apply_p_prolong(dgmath_jit_dbase,
+                           dvec_di_Lobatto,
+                           deg_Lobatto,
+                           (P4EST_DIM),
+                           deg_Gauss,
+                           dvec_di_prolonged);
+
+    dgmath_interp_GLL_to_GL(dgmath_jit_dbase,
+                            dvec_di_prolonged,
+                            deg_Gauss,
+                            deg_Gauss,
+                            dvec_di_Gauss,
+                            (P4EST_DIM));
+
+
+    for (int j = 0; j < (P4EST_DIM); j++){
+      for (int k = 0; k < volume_nodes_Gauss; k++){
+       dvec[j][k] += rst_xyz_Gauss[i][j][k]*dvec_di_Gauss[k];
+      }
+    }
+  }
+
+  P4EST_FREE(dvec_di_prolonged);
+  P4EST_FREE(dvec_di_Gauss);
+  P4EST_FREE(dvec_di_Lobatto);
+}
+
+double
+curved_element_data_compute_dg_norm_sqr
+(
+ p4est_t* p4est,
+ double* nodal_vec,
+ int local_nodes,
+ ip_flux_params_t* ip_flux_params,
+ d4est_geometry_t* d4est_geom,
+ p4est_ghost_t* ghost,
+ void* ghost_data,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+)
+{
+  curved_element_data_copy_from_vec_to_storage
+    (
+     p4est,
+     nodal_vec
+    );
+  
+  double dg_norm_sqr = 0.;  
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        curved_element_data_t* ed = quad->p.user_data;
+        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), ed->deg_integ);
+        double* dnodal_vec [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(dnodal_vec, volume_nodes_Gauss);
+
+        curved_element_compute_derivative_on_Gauss
+          (
+           &nodal_vec[ed->nodal_stride],
+           ed->rst_xyz_integ,
+           dnodal_vec,
+           ed->deg,
+           ed->deg_integ,
+           dgmath_jit_dbase
+          );
+        
+        
+        for (int d = 0; d < (P4EST_DIM); d++)
+          {
+            dg_norm_sqr += dgmath_Gauss_quadrature
+                           (
+                            dgmath_jit_dbase,
+                            dnodal_vec[d],
+                            dnodal_vec[d],
+                            ed->J_integ,
+                            ed->deg_integ,
+                            (P4EST_DIM)
+                           );
+          }
+
+        D4EST_FREE_DIM_VEC(dnodal_vec);
+      }
+    }
+
+  curved_dg_norm_params_t curved_dg_params;
+  curved_dg_params.ip_flux_params = ip_flux_params;
+  curved_dg_params.dg_norm_face_term = 0.;
+  
+  curved_flux_fcn_ptrs_t flux_fcn_ptrs = curved_dg_norm_fetch_fcns(&curved_dg_params);
+
+  curved_compute_flux_user_data_t curved_compute_flux_user_data;
+  curved_compute_flux_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
+  curved_compute_flux_user_data.geom = d4est_geom;
+  curved_compute_flux_user_data.flux_fcn_ptrs = &flux_fcn_ptrs;
+  
+  void* tmpptr = p4est->user_pointer;
+  p4est->user_pointer = &curved_compute_flux_user_data;
+  
+  p4est_iterate(p4est,
+		ghost,
+		ghost_data,
+		NULL,
+		curved_compute_flux_on_local_elements,
+#if (P4EST_DIM)==3
+                NULL,
+#endif
+		NULL);
+
+  p4est->user_pointer = tmpptr;
+
+  printf("dg_norm_sqr before face term = %.25f\n", dg_norm_sqr);
+  
+  dg_norm_sqr += curved_dg_params.dg_norm_face_term;
+
+  printf("dg_norm_sqr after face term = %.25f\n", dg_norm_sqr);
+  return dg_norm_sqr;
 }
 
 void

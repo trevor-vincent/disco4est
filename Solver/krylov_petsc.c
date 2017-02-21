@@ -1,6 +1,6 @@
+#include <util.h>
 #include "../pXest/pXest.h"
 #include "../LinearAlgebra/linalg.h"
-#include "../Utilities/util.h"
 #include "../Solver/krylov_petsc.h"
 #include "petscsnes.h"
 #include <krylov_pc.h>
@@ -20,41 +20,52 @@ int krylov_petsc_input_handler
   if (util_match_couple(section,"solver",name,"ksp_atol")) {
     mpi_assert(pconfig->ksp_atol == -1);
     pconfig->ksp_atol = atof(value);
+    PetscOptionsSetValue(NULL,"-ksp_atol",value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"solver",name,"ksp_rtol")) {
     mpi_assert(pconfig->ksp_rtol == -1);
     pconfig->ksp_rtol = atof(value);
+    PetscOptionsSetValue(NULL,"-ksp_rtol",value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"solver",name,"ksp_maxit")) {
+  else if (util_match_couple(section,"solver",name,"ksp_max_it")) {
     mpi_assert(pconfig->ksp_maxit == -1);
     pconfig->ksp_maxit = atoi(value);
+    mpi_assert(atoi(value) > -1);
+    PetscOptionsSetValue(NULL,"-ksp_max_it",value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"solver",name,"ksp_view")) {
     mpi_assert(pconfig->ksp_view == -1);
     pconfig->ksp_view = atoi(value);
+    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    if (atoi(value) == 1){
+      PetscOptionsSetValue(NULL,"-ksp_view","");
+    }
     pconfig->count += 1;
   }  
   else if (util_match_couple(section,"solver",name,"ksp_monitor")) {
     mpi_assert(pconfig->ksp_monitor == -1);
     pconfig->ksp_monitor = atoi(value);
+    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    if (atoi(value) == 1){
+      PetscOptionsSetValue(NULL,"-ksp_monitor","");
+    }
     pconfig->count += 1;
   }    
   else if (util_match_couple(section,"solver",name,"ksp_type")) {
-    mpi_assert(pconfig->ksp_type = "");
-    if (strcmp("cg", value) == 0){
-      pconfig->ksp_type = KSPCG;
-    }
-    else if (strcmp("gmres", value) == 0){
-      pconfig->ksp_type = KSPGMRES;
-    }
-    else {
-      mpi_abort("not a support KSP solver type");
-    }
+    mpi_assert(pconfig->ksp_type[0] = '0');
+    snprintf (pconfig->ksp_type, sizeof(pconfig->ksp_type), "%s", value);
+    PetscOptionsSetValue(NULL,"-ksp_type",value);
     pconfig->count += 1;
-  }    
+  }
+  else if (util_match_couple(section,"solver",name,"ksp_user_defined_pc")) {
+    mpi_assert(pconfig->ksp_user_defined_pc = -1);
+    pconfig->ksp_user_defined_pc = atoi(value);
+    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    pconfig->count += 1;
+  }   
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -67,13 +78,14 @@ krylov_petsc_input
  const char* input_file
 )
 {
-  int num_of_options = 6;
+  int num_of_options = 7;
   
   krylov_petsc_params_t input;
   input.count = 0;
   input.ksp_view = -1;
+  input.ksp_user_defined_pc = -1;
   input.ksp_monitor = -1;
-  input.ksp_type = "";
+  input.ksp_type[0] = '0';
   input.ksp_atol = -1;
   input.ksp_rtol = -1;
   input.ksp_maxit = -1;
@@ -81,10 +93,18 @@ krylov_petsc_input
   if (ini_parse(input_file, krylov_petsc_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
   }
-  
-  printf("ksp_atol = %f\n", input.ksp_atol);
-  
-  mpi_assert(input.count == num_of_options);
+
+  printf("[D4EST_INFO]: ksp_view = %d\n", input.ksp_view);
+  printf("[D4EST_INFO]: ksp_user_defined_pc = %d\n", input.ksp_user_defined_pc);
+  printf("[D4EST_INFO]: ksp_monitor = %d\n", input.ksp_monitor);
+  printf("[D4EST_INFO]: ksp_type = %s\n", &input.ksp_type[0]);
+  printf("[D4EST_INFO]: ksp_atol = %.25f\n", input.ksp_atol);
+  printf("[D4EST_INFO]: ksp_rtol = %.25f\n", input.ksp_rtol);
+  printf("[D4EST_INFO]: ksp_maxit = %d\n", input.ksp_maxit);
+
+  if (input.count != num_of_options){
+    mpi_abort("[D4EST_ERROR]: input.count != num_of_options in krylov_petsc_params");
+  }
   return input;
 }
 
@@ -138,6 +158,7 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   ierr = VecRestoreArray( y, &py ); CHKERRQ(ierr);
   return ierr;
 }
+
 krylov_petsc_info_t
 krylov_petsc_solve
 (
@@ -148,19 +169,19 @@ krylov_petsc_solve
  void** ghost_data, 
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  d4est_geometry_t* d4est_geom,
+ const char* input_file,
  krylov_pc_create_fcn_t pc_create,
  krylov_pc_destroy_fcn_t pc_destroy,
  void* pc_data
- /* krylov_petsc_params_t* krylov_params */
 )
 {
 
-  krylov_petsc_params_t krylov_params = krylov_petsc_input("options.input");
+  krylov_petsc_params_t krylov_params = krylov_petsc_input(input_file);
   krylov_params.pc_create = (pc_create == NULL) ? NULL : pc_create;
   krylov_params.pc_destroy = (pc_destroy == NULL) ? NULL : pc_destroy;
   krylov_params.pc_data = pc_data;
   if (krylov_params.pc_create == NULL){
-    krylov_params.user_defined_pc = 0;
+    krylov_params.ksp_user_defined_pc = 0;
   }
   
   krylov_petsc_info_t info;
@@ -192,8 +213,6 @@ krylov_petsc_solve
   VecSetFromOptions(x);//CHKERRQ(ierr);
   VecDuplicate(x,&b);//CHKERRQ(ierr);
 
-
-  printf("krylov_params.ksp_monitor = %d\n", krylov_params.ksp_monitor);
   if (krylov_params.ksp_monitor)
     PetscOptionsSetValue(NULL,"-ksp_monitor","");
   if (krylov_params.ksp_view)
@@ -213,6 +232,7 @@ krylov_petsc_solve
   /* PetscOptionsSetValue(NULL,"-with-debugging","1"); */
   PetscOptionsSetValue(NULL,"-ksp_rtol", rtol_buf);
   PetscOptionsSetValue(NULL,"-ksp_max_it",maxit_buf);
+  PetscOptionsSetValue(NULL,"-ksp_type",krylov_params.ksp_type);
 
   /* printf("Atol = %.25f\n", krylov_params.ksp_atol); */
   /* printf("Rtol = %.25f\n", krylov_params.ksp_rtol); */
@@ -221,7 +241,7 @@ krylov_petsc_solve
   
   KSPGetPC(ksp,&pc);
   krylov_pc_t* kp = NULL;
-  if (krylov_params.user_defined_pc) {
+  if (krylov_params.ksp_user_defined_pc) {
     PCSetType(pc,PCSHELL);//CHKERRQ(ierr);
     kp = krylov_params.pc_create(&kct);
     PCShellSetApply(pc, krylov_petsc_pc_apply);//CHKERRQ(ierr);
@@ -232,7 +252,7 @@ krylov_petsc_solve
     PCSetType(pc,PCNONE);//CHKERRQ(ierr);
   }
 
-  KSPSetType(ksp, krylov_params.ksp_type);
+  /* KSPSetType(ksp, krylov_params.ksp_type); */
   KSPSetFromOptions(ksp);
 
   /* Create matrix-free shell for Aij */
@@ -260,7 +280,7 @@ krylov_petsc_solve
   
   KSPSolve(ksp,b,x);
 
-  if (krylov_params.user_defined_pc) {
+  if (krylov_params.ksp_user_defined_pc) {
     krylov_params.pc_destroy(kp);
   }
   

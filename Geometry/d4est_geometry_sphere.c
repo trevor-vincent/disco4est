@@ -1,3 +1,4 @@
+#include <pXest.h>
 #include <d4est_geometry.h>
 #include <d4est_geometry_sphere.h>
 #include <ini.h>
@@ -386,4 +387,43 @@ d4est_geometry_compactified_sphere_new
     printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
     printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
   }
+}
+/* typically only used for vtk output */
+p8est_geometry_t*
+d4est_geometry_compactified_sphere_from_param
+(
+ double R0,
+ double R1,
+ double R2,
+ p8est_connectivity_t* conn
+)
+{
+  p8est_geometry_t* sphere_geom = P4EST_ALLOC(p8est_geometry_t, 1);
+  d4est_geometry_sphere_attr_t* sphere_attrs = P4EST_ALLOC(d4est_geometry_sphere_attr_t, 1);
+  
+  sphere_attrs->R2 = R2;
+  sphere_attrs->R1 = R1;
+  sphere_attrs->R0 = R0;
+  sphere_attrs->conn = conn;
+  
+  /* variables useful for the outer shell */
+  sphere_attrs->R2byR1 = R2 / R1;
+  sphere_attrs->R1sqrbyR2 = R1 * R1 / R2;
+  sphere_attrs->R1log = log ( R2 / R1);
+
+  /* variables useful for the inner shell */
+  sphere_attrs->R1byR0 = R1 / R0;
+  sphere_attrs->R0sqrbyR1 = R0 * R0 / R1;
+   sphere_attrs->R0log = log ( R1 / R0);
+
+  /* variables useful for the center cube */
+  sphere_attrs->Clength = R0 / sqrt (3.);
+  sphere_attrs->CdetJ = pow ( R0 / sqrt (3.), 3.);
+
+  sphere_geom->name = "compact_sphere";
+  sphere_geom->user = sphere_attrs;
+  sphere_geom->X = d4est_geometry_compactified_sphere_X;
+  sphere_geom->destroy = d4est_geometry_sphere_destroy;
+  
+  return sphere_geom;
 }

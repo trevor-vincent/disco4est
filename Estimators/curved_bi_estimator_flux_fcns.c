@@ -648,9 +648,6 @@ curved_bi_est_interface
 
 
 
-  double* Je1_test_mortar = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
-  double* MJe1_test_mortar = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
-  double* Je1_test_mortar_Gauss = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
     /* calculate symmetric interior penalty flux */
     int k;
     int f;
@@ -663,7 +660,6 @@ curved_bi_est_interface
         ks = k + stride;
         sj_ks = sj_on_f_m_mortar_Gauss[ks];
         Je1[ks] = 0.;
-        Je1_test_mortar[ks] = 0.;
         for (int d = 0; d < (P4EST_DIM); d++){
           n_ks = n_on_f_m_mortar_Gauss[d][ks];        
           Je1[ks] += Je1_prefactor_mortar[f]*n_ks*
@@ -674,11 +670,6 @@ curved_bi_est_interface
           Je2[d][ks] = n_ks*u_m_on_f_m_mortar_Gauss[ks];
           Je2[d][ks] -= n_ks*u_p_on_f_p_mortar_Gauss[ks];
           Je2[d][ks] *= Je2_prefactor_mortar[f];
-
-          /* Je1_test_mortar[ks] += Je1_prefactor_mortar[f]*n_ks*dudx_div_dudr*(dudr_m_on_f_m_mortar[d][ks] - dudr_p_on_f_p_mortar[d][ks]); */
-          /* printf("Je2[%d][%d] = %.25f\n", d, ks, Je2[d][ks]); */
-          /* printf("n_ks = %.25f\n", n_ks); */
-          /* printf("Je1[%d] = %.25f\n", ks, Je1[ks]); */
           
         }
         /* printf("Je1_test = %.25f\n", Je1_test); */
@@ -687,28 +678,11 @@ curved_bi_est_interface
     }
 
 
-   /* stride = 0; */
-   /*  for (int f = 0; f < faces_mortar; f++){ */
-   /*    dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &Je1_test_mortar[stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &Je1_test_mortar_Gauss[stride], (P4EST_DIM)-1); */
-   /*    stride += nodes_mortar_Gauss[f]; */
-   /*  }    */
-
-   /*  DEBUG_PRINT_4ARR_DBL(Je1_test_mortar, Je1_test_mortar_Gauss, Je1, sj_on_f_m_mortar_Gauss, total_nodes_mortar_Gauss); */
-
     
     /* the contribution in every direction must be added up due to it being a vector norm */
     stride = 0;
     for (f = 0; f < faces_mortar; f++){
       for (int d = 0; d < (P4EST_DIM); d++){
-        /* dgmath_apply_curvedGaussMass_onGaussNodeVec( */
-        /*                              dgmath_jit_dbase, */
-        /*                              &Je2[d][stride], */
-        /*                              deg_mortar_Gauss[f], */
-        /*                              &sj_on_f_m_mortar_Gauss[stride], */
-        /*                              deg_mortar_Gauss[f], */
-        /*                              (P4EST_DIM)-1, */
-        /*                              &MJe2[stride] */
-        /*                             ); */
         
 
 
@@ -722,17 +696,13 @@ curved_bi_est_interface
         
 
         /* even if it's a ghost we can still add it to the ghosts estimator because we will not send it back! */
-        /* double Je2MJe2 = linalg_vec_dot(&Je2[d][stride], &MJe2[stride], nodes_mortar_Gauss[f]); */
-        /* DEBUG_PRINT_ARR_DBL(&Je2[d][stride], nodes_mortar_Gauss[f]); */
-        /* if(faces_m == (P4EST_HALF)){ */
-        /*   e_m[f]->local_estimator += Je2MJe2; */
-        /*   printf("element id = %d, f = %d, Je2MJe2 = %.25f\n", e_m[f]->id, f, Je2MJe2); */
-        /* } */
-        /* else{ */
-        /*   e_m[0]->local_estimator += Je2MJe2; */
-        /*   if (e_m[0]->id == 1) */
-        /*     printf("element id = %d, f = %d, Je2MJe2 = %.25f\n", e_m[0]->id, f_m, Je2MJe2); */
-        /* } */
+
+        if(faces_m == (P4EST_HALF)){
+          e_m[f]->local_estimator += Je2MJe2;
+        }
+        else{
+          e_m[0]->local_estimator += Je2MJe2;
+        }
       }
       stride += nodes_mortar_Gauss[f];
     }
@@ -775,26 +745,16 @@ curved_bi_est_interface
 
     
     /* even if it's a ghost we can still add it to the ghosts estimator because we will not send it back! */
-      /* if(faces_m == (P4EST_HALF)){ */
-      /*   e_m[f]->local_estimator += Je1MJe1; */
-      /*   printf("element id = %d, f = %d, Je1MJe1 = %.25f\n", e_m[f]->id, f, Je1MJe1); */
-      /* } */
-      /* else{ */
-      /*   e_m[0]->local_estimator += Je1MJe1; */
-      /*   if (e_m[0]->id == 1) */
-      /*     printf("element id = %d, f = %d, Je1MJe1 = %.25f\n", e_m[0]->id, f_m, Je1MJe1); */
-      /* } */
+      if(faces_m == (P4EST_HALF)){
+        e_m[f]->local_estimator += Je1MJe1;
+      }
+      else{
+        e_m[0]->local_estimator += Je1MJe1;
+      }
       stride += nodes_mortar_Gauss[f];
   }
 
 
-    P4EST_FREE(Je1_test_mortar);
-    P4EST_FREE(MJe1_test_mortar);
-    P4EST_FREE(Je1_test_mortar_Gauss);
-
-  
-  /* DEBUG_PRINT_ARR_DBL(Je1, total_nodes_mortar_Gauss); */
-  
   /* for (int f = 0; f < faces_m; f++){ */
     /* printf("eta2 on face %d = %.25f\n", f, e_m[f]->local_estimator); */
   /* } */

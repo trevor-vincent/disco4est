@@ -65,39 +65,65 @@ d4est_geometry_new(const char* input_file){
   d4est_geometry_t* d4est_geom = P4EST_ALLOC(d4est_geometry_t, 1);
   
   if (util_match(input.name,"sphere")) {
+    mpi_assert((P4EST_DIM)==3);
     d4est_geometry_sphere_new(input_file, d4est_geom);
   }
   else if (util_match(input.name,"compact_sphere")) {
+    mpi_assert((P4EST_DIM)==3);
     d4est_geometry_compactified_sphere_new(input_file, d4est_geom);
   }
   else if (util_match(input.name,"shell")) {
+    mpi_assert((P4EST_DIM)==3);
     d4est_geometry_shell_new(input_file, d4est_geom);
   }
   else if (util_match(input.name,"compact_shell")) {
+    mpi_assert((P4EST_DIM)==3);
     d4est_geometry_compactified_shell_new(input_file, d4est_geom);
   }
   else if (util_match(input.name,"disk")) {
+    mpi_assert((P4EST_DIM)==2);
     d4est_geometry_disk_new(input_file, d4est_geom);
   }
   /* These are for debugging purposes */
   else if (util_match(input.name,"2pac_aligned")) {
+    mpi_assert((P4EST_DIM)==2);
     d4est_geometry_2pac_aligned_new(input_file, d4est_geom);
   }
   else if (util_match(input.name,"2pac_nonaligned")) {
+    mpi_assert((P4EST_DIM)==2);
     d4est_geometry_2pac_nonaligned_new(input_file, d4est_geom);
   }
   else if (util_match(input.name,"2pac_aligned_traps")) {
+    mpi_assert((P4EST_DIM)==2);
     d4est_geometry_2pac_aligned_traps_new(input_file, d4est_geom);
   }    
   else if (util_match(input.name,"2pac_aligned_squares")) {
+    mpi_assert((P4EST_DIM)==2);
     d4est_geometry_2pac_aligned_squares_new(input_file, d4est_geom);
   }
   else if (util_match(input.name,"trapezoid")) {
+    mpi_assert((P4EST_DIM)==2);
     d4est_geometry_trap_new(input_file, d4est_geom);
   }
   else if (util_match(input.name,"pizza_half")) {
+    mpi_assert((P4EST_DIM)==2);
     d4est_geometry_pizza_half_new(input_file, d4est_geom);
   }
+  else if (util_match(input.name,"cube")){
+    mpi_assert((P4EST_DIM)==3);
+#if((P4EST_DIM)==3)
+    d4est_geom->p4est_conn = p8est_connectivity_new_unitcube();
+#endif
+    d4est_geom->p4est_geom = p4est_geometry_new_connectivity(d4est_geom->p4est_conn);
+  }
+  else if (util_match(input.name,"square")){
+    mpi_assert((P4EST_DIM)==2);
+#if((P4EST_DIM)==2)
+    d4est_geom->p4est_conn = p4est_connectivity_new_unitsquare();
+#endif
+    d4est_geom->p4est_geom = p4est_geometry_new_connectivity(d4est_geom->p4est_conn);
+  }
+  
   else {
     printf("[ERROR]: You tried to use %s geometry\n", input.name);
     mpi_abort("[ERROR]: this geometry is currently not supported");

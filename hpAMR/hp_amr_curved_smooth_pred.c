@@ -271,11 +271,12 @@ hp_amr_curved_smooth_pred_set_refinement
   /* double eta2_avg = stats->mean; */
 
   gamma_params_t gamma_hpn =
-    smooth_pred_data->marker.set_element_gamma_fcn(elem_data, smooth_pred_data->marker.user);
+    smooth_pred_data->marker.set_element_gamma_fcn(info->p4est,elem_data, smooth_pred_data->marker.user);
   
   int is_marked = 
     smooth_pred_data->marker.mark_element_fcn
     (
+     info->p4est,
      eta2,
      stats,
      elem_data,
@@ -333,7 +334,7 @@ hp_amr_curved_smooth_pred_balance_replace_callback (
   int degH = parent_data->deg;
 
   gamma_params_t gamma_hpn
-    = smooth_pred_data->marker.set_element_gamma_fcn(parent_data, smooth_pred_data->marker.user);
+    = smooth_pred_data->marker.set_element_gamma_fcn(p4est,parent_data, smooth_pred_data->marker.user);
   
   for (i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;
