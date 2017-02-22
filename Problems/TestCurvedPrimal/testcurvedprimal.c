@@ -632,7 +632,7 @@ problem_init
        .0000000001,
        dgmath_jit_dbase,
        1, /* is it curved */
-       3, /* should we print */
+       2, /* should we print */
        d4est_geom
       );
 

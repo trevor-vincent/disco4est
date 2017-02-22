@@ -550,4 +550,10 @@ curved_element_data_compute_dg_norm_sqr
  dgmath_jit_dbase_t* dgmath_jit_dbase
 );
 
+void
+curved_element_data_print_number_of_elements_per_tree
+(
+ p4est_t* p4est
+);
+
 #endif

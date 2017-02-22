@@ -2,7 +2,8 @@
 #define ESTIMATOR_STATS_H 
 
 #include <pXest.h>
-#define MAX_TREES 50
+#include <curved_element_data.h>
+#define MAX_BINS 50
 
 typedef struct {
 
@@ -48,5 +49,14 @@ estimator_stats_compute_max_percentiles_across_proc
  int num_trees
 );
 
+
+double
+estimator_stats_compute_per_bin
+(
+ p4est_t* p4est,
+ estimator_stats_t** stats,
+ int num_bins,
+ int(*in_bin)(curved_element_data_t*,int)
+);
 
 #endif

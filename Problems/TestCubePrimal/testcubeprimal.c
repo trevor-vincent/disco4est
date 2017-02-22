@@ -496,17 +496,32 @@ problem_init
     /* printf("Total volume = %.25f\n", total_volume); */
     /* printf("Theoretical volume = %.25f\n", (4./3.)*M_PI*pow((input.Rinf),3)); */
     
-    /* serial_matrix_sym_tester */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs, /\* only needed for # of nodes *\/ */
-    /*    (void*)&prob_fcns, */
-    /*    .0000000001, */
-    /*    dgmath_jit_dbase, */
-    /*    1, /\* is it curved *\/ */
-    /*    3, /\* should we print *\/ */
-    /*    d4est_geom */
-    /*   ); */
+    serial_matrix_sym_tester
+      (
+       p4est,
+       &prob_vecs, /* only needed for # of nodes */
+       (void*)&prob_fcns,
+       .0000000001,
+       dgmath_jit_dbase,
+       1, /* is it curved */
+       2, /* should we print */
+       d4est_geom
+      );
+
+
+    matrix_spd_tester_parallel
+      (
+       p4est,
+       &prob_vecs, 
+       &prob_fcns,
+       ghost,
+       ghost_data,
+       dgmath_jit_dbase,
+       d4est_geom,
+       1,
+       20
+      );
+    
 
      /* p4est_vtk_write_all */
      /*   (p4est, p4est_geom,     /\* we do not need to transform from the vertex space into physical space, so we do not need a p4est_geometry_t * pointer *\/ */

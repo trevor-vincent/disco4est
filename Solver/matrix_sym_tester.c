@@ -513,6 +513,8 @@ serial_matrix_sym_tester
   p4est_ghost_destroy (ghost);
 }
 
+
+
 /* void */
 /* parallel_matrix_sym_tester */
 /* ( */
@@ -660,176 +662,240 @@ serial_matrix_sym_tester
 /*   p4est_ghost_destroy (ghost); */
 /* } */
 
-/* int */
-/* matrix_sym_tester_parallel */
-/* ( */
-/*  p4est_t* p4est, */
-/*  problem_data_t* vecs, /\* only needed for # of nodes *\/ */
-/*  void* fcns, */
-/*  int mpi_rank, */
-/*  int num_tests, */
-/*  double sym_eps, */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
-/*  int curved, */
-/*  int test_PD, /\* test if positive definite *\/ */
-/*  int random, */
-/*  int normalize */
-/* ) */
-/* { */
+int
+matrix_sym_tester_parallel
+(
+ p4est_t* p4est,
+ problem_data_t* vecs, 
+ void* fcns,
+ p4est_ghost_t* ghost,
+ void* ghost_data,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom,
+ int print,
+ int num_tests,
+ double sym_eps
+)
+{
+  int tests = 0;
+  int tests_passed = 0;
+  int tests_failed = 0;
+  int local_nodes = vecs->local_nodes;
   
-/*   printf("\n ==== [MATRIX_SYM_TESTER_PARALLEL OPTIONS] ==== \n"); */
-/*   printf("[MATRIX_SYM_TESTER_PARALLEL]: Curved = %d\n", curved); */
-/*   printf("[MATRIX_SYM_TESTER_PARALLEL]: test_PD = %d\n", test_PD); */
-/*   printf("[MATRIX_SYM_TESTER_PARALLEL]: random = %d\n", random); */
-/*   printf("[MATRIX_SYM_TESTER_PARALLEL]: normalize = %d\n", normalize); */
+  for (int i = 0; i < local_nodes; i++){
+    if (tests > num_tests)
+      break;
+    for (int j = i; j < local_nodes; j++){
+      tests++;
+      double Aji, Aij;
+      matrix_sym_tester_parallel_aux
+        (
+         p4est,
+         vecs, 
+         fcns,
+         ghost,
+         ghost_data,
+         dgmath_jit_dbase,
+         d4est_geom,
+         i,
+         0,
+         j,
+         0,
+         &Aji,
+         &Aij
+        );
 
+      if (fabs(Aji - Aij) < sym_eps){
+        if (print && p4est->mpirank == 0){
+          printf("i = %d, j = %d, Aji = %.25f, Aij = %.25f = SYMMETRIC\n", i, j, Aji, Aij);
+        }
+        tests_passed++;
+      }
+      else {
+        if (print && p4est->mpirank == 0){
+          printf("i = %d, j = %d, Aji = %.25f, Aij = %.25f = NOT SYMMETRIC\n", i, j, Aji, Aij);
+        }
+        tests_failed++;
+      }
+      if (tests > num_tests)
+        break;
+    }
 
-/*   void* ghost_data; */
-/*   p4est_ghost_t *ghost;   */
-/*   ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE); */
+  }
 
-/*   if (curved) */
-/*     ghost_data = (void*)P4EST_ALLOC (curved_element_data_t, ghost->ghosts.elem_count); */
-/*   else */
-/*     ghost_data = (void*)P4EST_ALLOC (element_data_t, ghost->ghosts.elem_count); */
-    
-/*   double* tmp = vecs->u; */
+  if(print && p4est->mpirank == 0){
+    printf("Passed %d and Failed %d out of %d Tests\n", tests_passed, tests_failed, num_tests);
+  }
 
-/*   double* u = P4EST_ALLOC(double, vecs->local_nodes); */
-/*   double* v = P4EST_ALLOC(double, vecs->local_nodes); */
+  return (tests_failed == 0);
+}
 
-/*   int compare_dot = 1; */
-/*   double vTAu_local, vTAu_global; */
-/*   double uTAv_local, uTAv_global; */
+/* ghetto test of spd, just tests if diagonal is >0, which only means something if its <0 */
+int
+matrix_spd_tester_parallel
+(
+ p4est_t* p4est,
+ problem_data_t* vecs, 
+ void* fcns,
+ p4est_ghost_t* ghost,
+ void* ghost_data,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom,
+ int print,
+ int num_tests
+)
+{
+  int tests = 0;
+  int tests_passed = 0;
+  int tests_failed = 0;
+  int local_nodes = vecs->local_nodes;
+  
+  for (int i = 0; i < local_nodes; i++){
+    if (tests > num_tests)
+      break;
+    int j = i;
+    tests++;
+      double Aji, Aij;
+      matrix_sym_tester_parallel_aux
+        (
+         p4est,
+         vecs, 
+         fcns,
+         ghost,
+         ghost_data,
+         dgmath_jit_dbase,
+         d4est_geom,
+         i,
+         0,
+         j,
+         0,
+         &Aji,
+         &Aij
+        );
+
+      if (Aij > 0){
+        if (print && p4est->mpirank == 0){
+          printf("i = %d, j = %d, Aji = %.25f, Aij = %.25f = PD\n", i, j, Aji, Aij);
+        }
+        tests_passed++;
+      }
+      else {
+        if (print && p4est->mpirank == 0){
+          printf("i = %d, j = %d, Aji = %.25f, Aij = %.25f = NOT PD\n", i, j, Aji, Aij);
+        }
+        tests_failed++;
+      }
+  }
+
+  if(print && p4est->mpirank == 0){
+    printf("Passed %d and Failed %d out of %d Tests\n", tests_passed, tests_failed, num_tests);
+  }
+
+  return (tests_failed == 0);
+}
+
+void
+matrix_sym_tester_parallel_aux
+(
+ p4est_t* p4est,
+ problem_data_t* vecs, 
+ void* fcns,
+ p4est_ghost_t* ghost,
+ void* ghost_data,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom,
+ int i, /* local node on mpirank_i */
+ int mpirank_i,
+ int j, /* local node on mpirank_j */
+ int mpirank_j, 
+ double* Aji,
+ double* Aij
+)
+{
+  problem_data_t vecs_for_sym_test;
+  problem_data_copy_ptrs(vecs, &vecs_for_sym_test);
+  
+  double uj_A_ui_local; //Aji
+  double ui_A_uj_local; //Aij
+
+  double* ui = P4EST_ALLOC_ZERO(double, vecs->local_nodes);
+  double* ui0 = P4EST_ALLOC_ZERO(double, vecs->local_nodes);
+  double* uj = P4EST_ALLOC_ZERO(double, vecs->local_nodes);
+  double* uj0 = P4EST_ALLOC_ZERO(double, vecs->local_nodes);
+  double* A_ui = P4EST_ALLOC(double, vecs->local_nodes);
+  double* A_uj = P4EST_ALLOC(double, vecs->local_nodes);
 
   
-/*   /\* srand(time(NULL)); *\/ */
-/*   if(random) */
-/*     srand(134434); */
+  if (p4est->mpirank == mpirank_i){
+    mpi_assert(i < vecs->local_nodes);
+    ui[i] = 1.;
+  }
+  if (p4est->mpirank == mpirank_j){
+    mpi_assert(j < vecs->local_nodes);
+    uj[j] = 1.;
+  }
   
-/*   int i,j; */
-/*   for (i = 0; i < num_tests; i++){ */
+  vecs_for_sym_test.u = ui;
+  vecs_for_sym_test.u0 = ui0;
+  vecs_for_sym_test.Au = A_ui;
 
-/*     vTAu_global = 0.; */
-/*     uTAv_global = 0.; */
+  if (d4est_geom != NULL){
+    ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(
+                                              p4est,
+                                              ghost,
+                                              (curved_element_data_t*)ghost_data,
+                                              &vecs_for_sym_test,
+                                              dgmath_jit_dbase,
+                                              d4est_geom
+                                             );
+  }  
+  else{
+    ((weakeqn_ptrs_t*)fcns)->apply_lhs(
+                                       p4est,
+                                       ghost,
+                                       (element_data_t*)ghost_data,
+                                       &vecs_for_sym_test,
+                                       dgmath_jit_dbase
+                                      );
+  }
+  uj_A_ui_local = linalg_vec_dot(uj, A_ui, vecs->local_nodes);
+
+ 
     
-/*     /\* generate two random vectors *\/ */
-
-/*     if (random){ */
-/*       for (j = 0; j < vecs->local_nodes; j++) */
-/*         u[j] = (double)rand() / (double)RAND_MAX; */
-/*       for (j = 0; j < vecs->local_nodes; j++) */
-/*         v[j] = (double)rand() / (double)RAND_MAX; */
-/*     } */
-/*     else { */
-/*       double rand1 = 1.32*(i+1); */
-/*       double rand2 = 1.453*(i+1); */
-/*       linalg_fill_vec(u, rand1, vecs->local_nodes); */
-/*       linalg_fill_vec(v, rand2, vecs->local_nodes); */
-/*     } */
-
-/*     if (normalize){ */
-/*       linalg_vec_normalize(u, vecs->local_nodes); */
-/*       linalg_vec_normalize(v, vecs->local_nodes); */
-/*     } */
+  vecs_for_sym_test.u = uj;
+  vecs_for_sym_test.u0 = uj0;
+  vecs_for_sym_test.Au = A_uj;
     
+  if (d4est_geom != NULL)
+    ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, &vecs_for_sym_test, dgmath_jit_dbase, d4est_geom);
+  else
+    ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (element_data_t*)ghost_data, &vecs_for_sym_test, dgmath_jit_dbase);
     
-/*     vecs->u = u; */
-/*     /\* util_print_matrix(vecs->u, vecs->local_nodes, 1, "u = ", 0); *\/ */
+  ui_A_uj_local = linalg_vec_dot(ui, A_uj, vecs->local_nodes);
 
-/*     /\* printf(" u = {\n"); *\/ */
-/*     /\* for (i = 0; i < vecs->local_nodes; i++){ *\/ */
-/*     /\*   printf("%f, \n", vecs->u[i]); *\/ */
-/*     /\* } *\/ */
-/*     /\* printf("}\n"); *\/ */
+  double vAu_locals [2];
+  double vAu_globals [2] = {0,0};
+  vAu_locals[0] = uj_A_ui_local;
+  vAu_locals[1] = ui_A_uj_local;
 
-/*     /\* linalg_fill_vec(vecs->Au, 0., vecs->local_nodes); *\/ */
-    
-/*     double* Au = vecs->Au; */
-/*     if (curved) */
-/*       ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, vecs, dgmath_jit_dbase); */
-/*     else */
-/*       ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (element_data_t*)ghost_data, vecs, dgmath_jit_dbase); */
+  sc_reduce
+    (
+     &vAu_locals,
+     &vAu_globals,
+     2,
+     sc_MPI_DOUBLE,
+     sc_MPI_SUM,
+     0,
+     sc_MPI_COMM_WORLD
+    );
 
-/*     vTAu_local = linalg_vec_dot(v, Au, vecs->local_nodes); */
+  *Aji = vAu_globals[0];
+  *Aij = vAu_globals[1];
 
-/*     sc_reduce */
-/*       ( */
-/*        &vTAu_local, */
-/*        &vTAu_global, */
-/*        1, */
-/*        sc_MPI_DOUBLE, */
-/*        sc_MPI_SUM, */
-/*        0, */
-/*        sc_MPI_COMM_WORLD */
-/*       ); */
-    
-/*     vecs->u = v; */
-/*     double* Av = vecs->Au; */
-/*     if (curved) */
-/*       ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, vecs, dgmath_jit_dbase); */
-/*     else */
-/*       ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (element_data_t*)ghost_data, vecs, dgmath_jit_dbase); */
-/*     uTAv_local = linalg_vec_dot(u, Av, vecs->local_nodes); */
-
-    
-/*     /\* printf("\ni = %d\n", i); *\/ */
-/*     /\* int f; *\/ */
-/*     /\* for (f = 0; f < vecs->local_nodes; f++){ *\/ */
-/*     /\*   printf("u, Av, v = %f, %f, %f\n", u[f], Av[f], v[f]); *\/ */
-/*     /\* } *\/ */
-    
-/*     sc_reduce */
-/*       ( */
-/*        &uTAv_local, */
-/*        &uTAv_global, */
-/*        1, */
-/*        sc_MPI_DOUBLE, */
-/*        sc_MPI_SUM, */
-/*        0, */
-/*        sc_MPI_COMM_WORLD */
-/*       ); */
-
-/*    /\* printf(" v = {\n"); *\/ */
-/*    /\*  for (f = 0; f < vecs->local_nodes; f++){ *\/ */
-/*    /\*    printf("%f, \n", v[f]); *\/ */
-/*    /\*  } *\/ */
-/*    /\*  printf("}\n"); *\/ */
-    
-
-/*     if (mpi_rank == 0){ */
-/*       compare_dot *= (fabs(uTAv_global - vTAu_global) < sym_eps); */
-/*       printf("[MATRIX_SYM_TESTER]: %.20f %.20f %d\n", uTAv_global, vTAu_global, (fabs(uTAv_global - vTAu_global) < sym_eps)); */
-/*       if (test_PD == 1){ */
-/*         compare_dot *= (uTAv_global > 0); */
-/*         compare_dot *= (vTAu_global > 0); */
-/*       } */
-/*     } */
-/*     /\* sc_MPI_Barrier(sc_MPI_COMM_WORLD); *\/ */
-/*   } */
-
-/*   if (mpi_rank == 0){ */
-/*     if (test_PD == 1){ */
-/*       if (compare_dot == 1) */
-/*         printf("[MATRIX_SYM_TESTER]: SPD TEST PASSED\n"); */
-/*       else */
-/*         printf("[MATRIX_SYM_TESTER]: SPD TEST FAILED\n"); */
-/*     } */
-/*     else{ */
-/*       if (compare_dot == 1) */
-/*         printf("[MATRIX_SYM_TESTER]: SYM TEST PASSED\n"); */
-/*       else */
-/*         printf("[MATRIX_SYM_TESTER]: SYM TEST FAILED\n"); */
-/*     } */
-/*   } */
-  
-/*   vecs->u = tmp; */
-  
-/*   P4EST_FREE(u); */
-/*   P4EST_FREE(v); */
-/*   /\* P4EST_FREE(Au); *\/ */
-/*   P4EST_FREE(ghost_data); */
-/*   p4est_ghost_destroy (ghost); */
-
-/*   return compare_dot; */
-/* } */
+  P4EST_FREE(ui);
+  P4EST_FREE(ui0);
+  P4EST_FREE(uj);
+  P4EST_FREE(uj0);
+  P4EST_FREE(A_ui);
+  P4EST_FREE(A_uj);
+}

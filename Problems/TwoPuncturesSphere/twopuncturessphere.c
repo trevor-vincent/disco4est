@@ -84,11 +84,26 @@ amr_mark_element
  void* user
 )
 {
-  int tree = elem_data->tree;
+  int elem_bin;
+
+  /* outer shell */
+  if (elem_data->tree < 6){
+    elem_bin = 0;
+  }
+  /* inner shell */
+  else if(elem_data->tree < 12){
+    elem_bin = 1;
+  }
+  /* center cube */
+  else {
+    elem_bin = 2;
+  }
+ 
   /* if (elem_data->tree == 12){ */
-    double eta2_percentile
-      = estimator_stats_get_percentile(stats[tree], 5);
-    return (eta2 >= eta2_percentile);
+  double eta2_percentile
+    = estimator_stats_get_percentile(stats[elem_bin], 5);
+    
+  return (eta2 >= eta2_percentile);
   /* } */
   /* else { */
     /* return 0; */
@@ -325,7 +340,7 @@ void apply_jac
           );
       }
     }
-
+  
   linalg_vec_axpy(1.0, M_plus_7o8_K2_psi_neg8_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
   P4EST_FREE(M_plus_7o8_K2_psi_neg8_of_u0_u_vec);
 }
@@ -577,6 +592,34 @@ problem_load_p4est_from_checkpoint
                 NULL,
                 conn);
 }
+
+
+int
+in_bin_fcn
+(
+ curved_element_data_t* elem_data,
+ int bin
+)
+{
+  int elem_bin;
+
+  /* outer shell */
+  if (elem_data->tree < 6){
+    elem_bin = 0;
+  }
+  /* inner shell */
+  else if(elem_data->tree < 12){
+    elem_bin = 1;
+  }
+  /* center cube */
+  else {
+    elem_bin = 2;
+  }
+
+  return (elem_bin == bin);
+}
+
+
 
 void
 problem_set_degrees
@@ -959,22 +1002,30 @@ problem_init
       );
 
     
-    estimator_stats_t* stats [13];
-    for (int i = 0; i < 13; i++){
+    estimator_stats_t* stats [3];
+    for (int i = 0; i < 3; i++){
       stats[i] = P4EST_ALLOC(estimator_stats_t, 1);
     }
     
-    double local_eta2 = estimator_stats_compute_per_tree(p4est, &stats[0],1);
+    double local_eta2 = estimator_stats_compute_per_bin
+                        (
+                         p4est,
+                         &stats[0],
+                         3,
+                         in_bin_fcn
+                        );
 
-    /* estimator_stats_compute_max_percentiles_across_proc */
-    /*   ( */
-    /*    stats, */
-    /*    13 */
-    /*   ); */
+    curved_element_data_print_number_of_elements_per_tree(p4est);
     
-    for (int i = 0; i < 13; i++){
+    estimator_stats_compute_max_percentiles_across_proc
+      (
+       stats,
+       3
+      );
+    
+    for (int i = 0; i < 3; i++){
       estimator_stats_print(stats[i]);
-    }
+    }   
     
     printf("local_eta2 = %.25f\n", local_eta2);
 
@@ -1057,7 +1108,7 @@ problem_init
            1
           );        
 
-    for (int i = 0; i < 13; i++){
+    for (int i = 0; i < 3; i++){
       P4EST_FREE(stats[i]);
     }
     
@@ -1119,7 +1170,35 @@ problem_init
        NULL
       );
 
-    linalg_vec_axpy(-1., u, u_prev, local_nodes);
+    /* matrix_spd_tester_parallel */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs,  */
+    /*    &prob_fcns, */
+    /*    ghost, */
+    /*    ghost_data, */
+    /*    dgmath_jit_dbase, */
+    /*    d4est_geom, */
+    /*    1, */
+    /*    20 */
+    /*   ); */
+
+    /* matrix_sym_tester_parallel */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs,  */
+    /*    &prob_fcns, */
+    /*    ghost, */
+    /*    ghost_data, */
+    /*    dgmath_jit_dbase, */
+    /*    d4est_geom, */
+    /*    1, */
+    /*    20, */
+    /*    .000000001 */
+    /*   );  */
+
+    printf("u sum = %.25f\n", linalg_vec_sum(prob_vecs.u, prob_vecs.local_nodes));
+    linalg_vec_axpy(-1., prob_vecs.u, u_prev, local_nodes);
 
     double local_l2_norm_sqr = curved_element_data_compute_l2_norm_sqr
                                 (
@@ -1150,7 +1229,6 @@ problem_init
        0,
        sc_MPI_COMM_WORLD
       );
-
 
     double global_l2_norm_sqr = global_reduce[0];
     double global_nodes_dbl = global_reduce[1];

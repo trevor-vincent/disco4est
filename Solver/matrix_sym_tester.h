@@ -3,19 +3,26 @@
 
 #include <problem_data.h>
 #include <problem_weakeqn_ptrs.h>
-
+/* This file was automatically generated.  Do not edit! */
 void
-serial_matrix_sym_tester
+matrix_sym_tester_parallel_aux
 (
  p4est_t* p4est,
- problem_data_t* vecs, /* only needed for # of nodes */
+ problem_data_t* vecs, 
  void* fcns,
- double sym_eps,
+ p4est_ghost_t* ghost,
+ void* ghost_data,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
- int curved,
- int print,
- d4est_geometry_t* geom
+ d4est_geometry_t* d4est_geom,
+ int i, /* local node on mpirank_i */
+ int mpirank_i,
+ int j, /* local node on mpirank_j */
+ int mpirank_j, 
+ double* Aji,
+ double* Aij
 );
+int matrix_sym_tester_parallel(p4est_t *p4est,problem_data_t *vecs,void *fcns,p4est_ghost_t *ghost,void *ghost_data,dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geom,int print,int num_tests,double sym_eps);
+void serial_matrix_sym_tester(p4est_t *p4est,problem_data_t *vecs,void *fcns,double sym_eps,dgmath_jit_dbase_t *dgmath_jit_dbase,int curved,int print,d4est_geometry_t *geom);
 
 /* void */
 /* parallel_matrix_sym_tester */
@@ -45,5 +52,17 @@ serial_matrix_sym_tester
 /*  int normalize */
 /* ); */
 
-
+int
+matrix_spd_tester_parallel
+(
+ p4est_t* p4est,
+ problem_data_t* vecs, 
+ void* fcns,
+ p4est_ghost_t* ghost,
+ void* ghost_data,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom,
+ int print,
+ int num_tests
+);
 #endif

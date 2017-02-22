@@ -47,6 +47,57 @@ void estimator_stats_compute(p4est_t* p4est, estimator_stats_t* stats, int curve
   P4EST_FREE(eta2);
 }
 
+double
+estimator_stats_compute_per_bin
+(
+ p4est_t* p4est,
+ estimator_stats_t** stats,
+ int num_bins,
+ int(*in_bin)(curved_element_data_t*,int)
+)
+{
+  double* eta2 = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
+  double local_eta2 = 0.;
+
+  for (int b = 0; b < num_bins; b++){
+    double total_eta2_per_bin = 0.;
+    int bsize = 0;
+    
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt)
+      {
+        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+        sc_array_t* tquadrants = &tree->quadrants;
+        int Q = (p4est_locidx_t) tquadrants->elem_count;
+
+        for (int q = 0; q < Q; ++q) {
+          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+          if(in_bin((curved_element_data_t*)(quad->p.user_data),b)){
+            eta2[bsize] = (((curved_element_data_t*)(quad->p.user_data))->local_estimator);
+            total_eta2_per_bin += eta2[bsize];
+            local_eta2 += eta2[bsize];
+            bsize++;
+          }
+        }
+
+        stats[b]->tree = -1;
+        stats[b]->mpirank = p4est->mpirank;
+        estimator_stats_compute_stats
+          (
+           stats[b],
+           eta2,
+           bsize,
+           total_eta2_per_bin
+          );
+
+      }
+  }
+  
+  P4EST_FREE(eta2);
+  return local_eta2;
+}
+
 double estimator_stats_compute_per_tree(p4est_t* p4est, estimator_stats_t** stats, int curved){
 
   double* eta2 = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
@@ -167,13 +218,13 @@ void
 estimator_stats_compute_max_percentiles_across_proc
 (
  estimator_stats_t** stats,
- int num_trees
+ int num_bins
 ){
-  mpi_assert(num_trees < MAX_TREES);
-  double local_percentiles [MAX_TREES*5];
-  double global_percentile_maxes [MAX_TREES*5];
+  mpi_assert(num_bins < MAX_BINS);
+  double local_percentiles [MAX_BINS*5];
+  double global_percentile_maxes [MAX_BINS*5];
 
-  for (int i = 0; i < num_trees; i++){
+  for (int i = 0; i < num_bins; i++){
     local_percentiles[i*5 + 0] = stats[i]->p5;
     local_percentiles[i*5 + 1] = stats[i]->p10;
     local_percentiles[i*5 + 2] = stats[i]->p15;
@@ -185,14 +236,14 @@ estimator_stats_compute_max_percentiles_across_proc
     (
      &local_percentiles,
      &global_percentile_maxes,
-     num_trees*5,
+     num_bins*5,
      sc_MPI_DOUBLE,
      sc_MPI_MAX,
      sc_MPI_COMM_WORLD
     );
 
 
-  for (int i = 0; i < num_trees; i++){
+  for (int i = 0; i < num_bins; i++){
     stats[i]->p5 = global_percentile_maxes[i*5 + 0];
     stats[i]->p10 = global_percentile_maxes[i*5 + 1];
     stats[i]->p15 = global_percentile_maxes[i*5 + 2];

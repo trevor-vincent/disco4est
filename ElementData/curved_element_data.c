@@ -6,6 +6,7 @@
 #include <curved_dg_norm.h>
 #include <ip_flux_aux.h>
 #include <d4est_geometry.h>
+#include <sc_reduce.h>
 
 typedef struct {
   grid_fcn_t init_fcn;
@@ -4922,4 +4923,46 @@ curved_element_data_print_local_estimator
                 NULL,       
 #endif                
 		NULL);
+}
+
+
+void
+curved_element_data_print_number_of_elements_per_tree
+(
+ p4est_t* p4est
+)
+{
+  int num_trees = p4est->connectivity->num_trees;
+  int* elements_per_tree_local = P4EST_ALLOC_ZERO(int, num_trees);
+  int* elements_per_tree_global = P4EST_ALLOC_ZERO(int, num_trees);
+
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      elements_per_tree_local[tt] = Q;
+    }
+
+    sc_reduce
+      (
+       &elements_per_tree_local[0],
+       &elements_per_tree_global[0],
+       num_trees,
+       sc_MPI_INT,
+       sc_MPI_SUM,
+       0,
+       sc_MPI_COMM_WORLD
+      );
+
+    if (p4est->mpirank == 0){
+      for (int i = 0; i < num_trees; i++){
+        printf(" Tree %d: Number of Elements = %d\n", i, elements_per_tree_global[i]);
+      }
+    }    
+  
+  P4EST_FREE(elements_per_tree_local);
+  P4EST_FREE(elements_per_tree_global);
 }
