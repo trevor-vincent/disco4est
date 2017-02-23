@@ -840,8 +840,7 @@ problem_init
      
   geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
 
-  printf("[D4EST_INFO]: Initial number of elements = %d\n", p4est->local_num_quadrants);
-  
+  /* printf("[D4EST_INFO]: Initial number of elements = %d\n", p4est->local_num_quadrants); */
 
   for (level = 0; level < input.num_unifrefs; ++level){
 
@@ -933,7 +932,7 @@ problem_init
   }
 
 
-  linalg_fill_vec(prob_vecs.u, 0., local_nodes);
+  /* linalg_fill_vec(prob_vecs.u, 0., local_nodes); */
 
   
   d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
@@ -975,7 +974,7 @@ problem_init
        amr_marker
       );
 
-    linalg_fill_vec(prob_vecs.u, 0., prob_vecs.local_nodes);
+    linalg_fill_vec(prob_vecs.u, 0.001, prob_vecs.local_nodes);
     
 
     
@@ -1031,7 +1030,7 @@ problem_init
     
 
     double R0 = ((d4est_geometry_sphere_attr_t*)(d4est_geom->p4est_geom->user))->R0;
-    printf("R0 = %.f\n", R0);
+    /* printf("R0 = %.f\n", R0); */
 
    /*  d4est_geometry_t* d4est_geom_vtk = d4est_geometry */
   /*   p4est_connectivity_t* conn_vtk = p8est_connectivity_new_sphere(); */

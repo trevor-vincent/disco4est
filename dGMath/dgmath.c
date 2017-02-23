@@ -1263,7 +1263,7 @@ void dgmath_apply_fofufofvlilj_Gaussnodes
 #if (P4EST_DIM)==3
                                    xyz_Gauss[2][i],
 #endif
-                                   u_Gauss[i],
+                                   (u != NULL) ? u_Gauss[i] : 0,
                                    fofu_ctx);
     }
     if (v != NULL || fofv_fcn != identity_fcn){
@@ -1272,7 +1272,7 @@ void dgmath_apply_fofufofvlilj_Gaussnodes
 #if (P4EST_DIM)==3
                                    xyz_Gauss[2][i],
 #endif
-                                   v_Gauss[i],
+                                   (v != NULL) ? v_Gauss[i] : 0,
                                    fofv_ctx);
     }
   }

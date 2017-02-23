@@ -223,6 +223,63 @@ void apply_helmholtz
 }
 
 
+/* static */
+/* void apply_helmholtz */
+/* ( */
+/*  p4est_t* p4est, */
+/*  p4est_ghost_t* ghost, */
+/*  curved_element_data_t* ghost_data, */
+/*  problem_data_t* prob_vecs, */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  d4est_geometry_t* d4est_geom */
+/* ) */
+/* {   */
+/*   curved_poisson_operator_primal_apply_aij(p4est, */
+/*                                            ghost, */
+/*                                            ghost_data, */
+/*                                            prob_vecs, */
+/*                                            dgmath_jit_dbase, */
+/*                                            d4est_geom); */
+  
+/*   double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes); */
+
+/*   for (p4est_topidx_t tt = p4est->first_local_tree; */
+/*        tt <= p4est->last_local_tree; */
+/*        ++tt) */
+/*     { */
+/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
+/*       sc_array_t* tquadrants = &tree->quadrants; */
+/*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
+/*       for (int q = 0; q < Q; ++q) { */
+/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
+/*         curved_element_data_t* ed = quad->p.user_data;         */
+/*         dgmath_apply_fofufofvlilj_Gaussnodes */
+/*           ( */
+/*            dgmath_jit_dbase, */
+/*            &prob_vecs->u[ed->nodal_stride], */
+/*            NULL, */
+/*            NULL, */
+/*            ed->deg, */
+/*            ed->J_integ, */
+/*            ed->xyz_integ, */
+/*            ed->deg_integ, */
+/*            (P4EST_DIM), */
+/*            &M_helmf_u[ed->nodal_stride], */
+/*            helmholtz_fcn, */
+/*            NULL, */
+/*            NULL, */
+/*            NULL */
+/*           ); */
+/*       } */
+/*     } */
+  
+/*   linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes); */
+/*   P4EST_FREE(M_helmf_u); */
+/* } */
+
+
+
+
 static
 void problem_build_rhs
 (
@@ -568,31 +625,31 @@ problem_init
     /* printf("Total volume = %.25f\n", total_volume); */
     /* printf("Theoretical volume = %.25f\n", (4./3.)*M_PI*pow((input.Rinf),3)); */
     
-    serial_matrix_sym_tester
-      (
-       p4est,
-       &prob_vecs, /* only needed for # of nodes */
-       (void*)&prob_fcns,
-       .0000000001,
-       dgmath_jit_dbase,
-       1, /* is it curved */
-       2, /* should we print */
-       d4est_geom
-      );
+    /* serial_matrix_sym_tester */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, /\* only needed for # of nodes *\/ */
+    /*    (void*)&prob_fcns, */
+    /*    .0000000001, */
+    /*    dgmath_jit_dbase, */
+    /*    1, /\* is it curved *\/ */
+    /*    2, /\* should we print *\/ */
+    /*    d4est_geom */
+    /*   ); */
 
 
-    matrix_spd_tester_parallel
-      (
-       p4est,
-       &prob_vecs, 
-       &prob_fcns,
-       ghost,
-       ghost_data,
-       dgmath_jit_dbase,
-       d4est_geom,
-       1,
-       20
-      );
+    /* matrix_spd_tester_parallel */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs,  */
+    /*    &prob_fcns, */
+    /*    ghost, */
+    /*    ghost_data, */
+    /*    dgmath_jit_dbase, */
+    /*    d4est_geom, */
+    /*    1, */
+    /*    20 */
+    /*   ); */
     
 
      /* p4est_vtk_write_all */
