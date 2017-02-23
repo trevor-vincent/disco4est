@@ -277,7 +277,7 @@ void newton_petsc_solve
   VecSetFromOptions(x);//CHKERRQ(ierr);
   VecDuplicate(x,&r);//CHKERRQ(ierr);
   /* VecGetArray(x,&u_temp); */
-  krylov_petsc_params_t krylov_params = krylov_petsc_input(input_file);
+  krylov_petsc_params_t krylov_params = krylov_petsc_input(p4est, input_file);
   krylov_params.pc_create = (pc_create == NULL) ? NULL : pc_create;
   krylov_params.pc_destroy = (pc_destroy == NULL) ? NULL : pc_destroy;
   krylov_params.pc_data = pc_data;

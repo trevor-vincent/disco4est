@@ -75,6 +75,7 @@ int krylov_petsc_input_handler
 krylov_petsc_params_t
 krylov_petsc_input
 (
+ p4est_t* p4est,
  const char* input_file
 )
 {
@@ -93,15 +94,16 @@ krylov_petsc_input
   if (ini_parse(input_file, krylov_petsc_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
   }
-
-  printf("[D4EST_INFO]: ksp_view = %d\n", input.ksp_view);
-  printf("[D4EST_INFO]: ksp_user_defined_pc = %d\n", input.ksp_user_defined_pc);
-  printf("[D4EST_INFO]: ksp_monitor = %d\n", input.ksp_monitor);
-  printf("[D4EST_INFO]: ksp_type = %s\n", &input.ksp_type[0]);
-  printf("[D4EST_INFO]: ksp_atol = %.25f\n", input.ksp_atol);
-  printf("[D4EST_INFO]: ksp_rtol = %.25f\n", input.ksp_rtol);
-  printf("[D4EST_INFO]: ksp_maxit = %d\n", input.ksp_maxit);
-
+  
+  if(p4est->mpirank == 0){
+    printf("[D4EST_INFO]: ksp_view = %d\n", input.ksp_view);
+    printf("[D4EST_INFO]: ksp_user_defined_pc = %d\n", input.ksp_user_defined_pc);
+    printf("[D4EST_INFO]: ksp_monitor = %d\n", input.ksp_monitor);
+    printf("[D4EST_INFO]: ksp_type = %s\n", &input.ksp_type[0]);
+    printf("[D4EST_INFO]: ksp_atol = %.25f\n", input.ksp_atol);
+    printf("[D4EST_INFO]: ksp_rtol = %.25f\n", input.ksp_rtol);
+    printf("[D4EST_INFO]: ksp_maxit = %d\n", input.ksp_maxit);
+  }
   if (input.count != num_of_options){
     mpi_abort("[D4EST_ERROR]: input.count != num_of_options in krylov_petsc_params");
   }
@@ -176,7 +178,7 @@ krylov_petsc_solve
 )
 {
 
-  krylov_petsc_params_t krylov_params = krylov_petsc_input(input_file);
+  krylov_petsc_params_t krylov_params = krylov_petsc_input(p4est,input_file);
   krylov_params.pc_create = (pc_create == NULL) ? NULL : pc_create;
   krylov_params.pc_destroy = (pc_destroy == NULL) ? NULL : pc_destroy;
   krylov_params.pc_data = pc_data;

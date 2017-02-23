@@ -49,6 +49,12 @@ krylov_petsc_solve
  krylov_pc_destroy_fcn_t pc_destroy,
  void* pc_data
 );
-krylov_petsc_params_t krylov_petsc_input(const char *input_file);
+
+krylov_petsc_params_t
+krylov_petsc_input
+(
+ p4est_t* p4est,
+ const char* input_file
+);
 
 #endif

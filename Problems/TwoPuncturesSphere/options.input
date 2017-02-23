@@ -1,6 +1,6 @@
 [p4est]
 min_quadrants = -1
-min_level = 1
+min_level = 2
 fill_uniform = 1
 
 [amr]
@@ -13,26 +13,26 @@ ip_flux_penalty = 2.0
 [problem]
 deg_R2 = 2
 deg_integ_R2 = 2
-deg_R1 = 14
-deg_integ_R1 = 14
-deg_R0 = 7
-deg_integ_R0 = 7
+deg_R1 = 2
+deg_integ_R1 = 2
+deg_R0 = 2
+deg_integ_R0 = 2
 
 [geometry]
 name = compact_sphere
-R0 = 100
-R1 = 100000
-R2 = 10000000
+R0 = 10
+R1 = 100
+R2 = 10000
 
 [solver]
 ksp_type = gmres
 ksp_atol = 1e-50
-ksp_rtol = 1e-3
-ksp_max_it = 5
+ksp_rtol = 1e-5
+ksp_max_it = 25
 ksp_view = 1
 ksp_user_defined_pc = 0
 ksp_monitor = 1
-snes_rtol = 1e-3
+snes_rtol = 1e-5
 snes_atol = 1e-50
 snes_max_funcs = 10000000000000
 snes_monitor = 1

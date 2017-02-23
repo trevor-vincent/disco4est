@@ -4,8 +4,6 @@
 #include "../LinearAlgebra/linalg.h"
 #include "../Flux/curved_Gauss_primal_sipg_flux_fcns.h"
 
-/* #define DEALIASING */
-
 static void
 curved_Gauss_primal_sipg_flux_dirichlet
 (
@@ -17,9 +15,6 @@ curved_Gauss_primal_sipg_flux_dirichlet
  void* params
 )
 {
-
-  /* int deg_face_Gauss_integ = e_m->deg_integ; */
-  
   ip_flux_params_t* ip_params = (ip_flux_params_t*) params;
   double sipg_flux_penalty_prefactor = ip_params->ip_flux_penalty_prefactor;
   penalty_calc_t sipg_flux_penalty_calculate_fcn = ip_params->ip_flux_penalty_calculate_fcn;
@@ -312,7 +307,6 @@ curved_Gauss_primal_sipg_flux_dirichlet
   P4EST_FREE(term3_Gauss);
   P4EST_FREE(VT_w_term3_Lobatto);
   P4EST_FREE(lifted_VT_w_term3_Lobatto);
-  
 }
 
 static void

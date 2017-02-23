@@ -1022,37 +1022,13 @@ problem_init
        stats,
        3
       );
-    
-    for (int i = 0; i < 3; i++){
-      estimator_stats_print(stats[i]);
-    }   
-    
-    printf("local_eta2 = %.25f\n", local_eta2);
 
+    if (world_rank == 0){
+      for (int i = 0; i < 3; i++){
+        estimator_stats_print(stats[i]);
+      }
+    }
     
-    /* int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants); */
-    /* double* eta_array = P4EST_ALLOC(double, p4est->local_num_quadrants); */
-    /* int vtk_nodes = 0; */
-     
-    /* int stride = 0; */
-    /* for (p4est_topidx_t tt = p4est->first_local_tree; */
-    /*      tt <= p4est->last_local_tree; */
-    /*      ++tt) */
-    /*   { */
-    /*     p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-    /*     sc_array_t* tquadrants = &tree->quadrants; */
-    /*     int Q = (p4est_locidx_t) tquadrants->elem_count; */
-    /*     for (int q = 0; q < Q; ++q) { */
-    /*       /\* k++; *\/ */
-    /*       p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-    /*       curved_element_data_t* ed = quad->p.user_data; */
-    /*       deg_array[stride] = ed->deg; */
-    /*       eta_array[stride] = ed->local_estimator; */
-    /*       vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN); */
-    /*       stride++; */
-    /*     } */
-    /*   } */
-
 
     double R0 = ((d4est_geometry_sphere_attr_t*)(d4est_geom->p4est_geom->user))->R0;
     printf("R0 = %.f\n", R0);
@@ -1197,7 +1173,6 @@ problem_init
     /*    .000000001 */
     /*   );  */
 
-    printf("u sum = %.25f\n", linalg_vec_sum(prob_vecs.u, prob_vecs.local_nodes));
     linalg_vec_axpy(-1., prob_vecs.u, u_prev, local_nodes);
 
     double local_l2_norm_sqr = curved_element_data_compute_l2_norm_sqr

@@ -1063,7 +1063,7 @@ problem_init
     /* params.ksp_monitor = 0; */
     /* params.ksp_type = input.ksp_type; */
 
-  krylov_petsc_params_t krylov_params = krylov_petsc_input(input_file);
+    /* krylov_petsc_params_t krylov_params = krylov_petsc_input(p4est,input_file); */
     
   newton_petsc_solve
     (
