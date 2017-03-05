@@ -4334,7 +4334,8 @@ curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
  double* sj_on_mortar_Gauss,
  double* n_on_mortar_Gauss [(P4EST_DIM)],
  p4est_geometry_t* p4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ double* j_div_sj_mortar_Gauss
 )
 {
   double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)];
@@ -4470,6 +4471,8 @@ curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
           sj_on_mortar_Gauss[is] += n_on_mortar_Gauss[d][is]*n_on_mortar_Gauss[d][is];
         }
         sj_on_mortar_Gauss[is] = sqrt(sj_on_mortar_Gauss[is]);
+        if (j_div_sj_mortar_Gauss != NULL)
+          j_div_sj_mortar_Gauss[is] = J_on_face_Gauss[i]/sj_on_mortar_Gauss[is];
         for (int d = 0; d < (P4EST_DIM); d++)
           n_on_mortar_Gauss[d][is] /= sj_on_mortar_Gauss[is];
       }  
@@ -4535,7 +4538,8 @@ curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes
 #endif
          },     
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     NULL
     );
 
 

@@ -479,7 +479,8 @@ curved_bi_est_interface
      sj_on_f_m_mortar_Gauss,
      n_on_f_m_mortar_Gauss,
      geom->p4est_geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     NULL
     );
 
   curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
@@ -497,7 +498,8 @@ curved_bi_est_interface
 #endif
          },
      geom->p4est_geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     NULL
     );
 
   

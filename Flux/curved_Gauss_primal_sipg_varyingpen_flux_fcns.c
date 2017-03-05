@@ -398,14 +398,14 @@ curved_Gauss_primal_sipg_flux_interface
       nodes_mortar_Lobatto[i+j] = dgmath_get_nodes( (P4EST_DIM) - 1, deg_mortar_Lobatto[i+j] );     
       total_nodes_mortar_Gauss += nodes_mortar_Gauss[i+j];
       total_nodes_mortar_Lobatto += nodes_mortar_Lobatto[i+j];
-      penalty_mortar[i+j] = sipg_flux_penalty_calculate_fcn
-                            (
-                             e_m[i]->deg,
-                             (e_m[i]->volume/e_m[i]->surface_area[f_m]),
-                             e_p_oriented[j]->deg,
-                             (e_p_oriented[j]->volume/e_p_oriented[j]->surface_area[f_p]),
-                             sipg_flux_penalty_prefactor
-                            );
+      /* penalty_mortar[i+j] = sipg_flux_penalty_calculate_fcn */
+      /*                       ( */
+      /*                        e_m[i]->deg, */
+      /*                        (e_m[i]->volume/e_m[i]->surface_area[f_m]), */
+      /*                        e_p[j]->deg, */
+      /*                        (e_p_oriented[j]->volume/e_p_oriented[j]->surface_area[f_p]), */
+      /*                        sipg_flux_penalty_prefactor */
+      /*                       ); */
       
     }
 
@@ -672,6 +672,10 @@ curved_Gauss_primal_sipg_flux_interface
      NULL
     );
 
+
+
+  
+
   for (int d = 0; d < (P4EST_DIM); d++){
     linalg_fill_vec
       (
@@ -733,8 +737,18 @@ curved_Gauss_primal_sipg_flux_interface
   for (int f = 0; f < faces_mortar; f++){
     for (int k = 0; k < nodes_mortar_Gauss[f]; k++){
       int ks = k + stride;
-      double sigma = penalty_mortar[f];
 
+      double sigma = sipg_flux_penalty_calculate_fcn
+                     (
+                      e_m[f]->deg,
+                      j_div_sj_m_mortar_Gauss[ks],
+                      e_p_oriented[f]->deg,
+                      j_div_sj_p_mortar_Gauss_reoriented[ks],
+                      sipg_flux_penalty_prefactor
+                     );
+
+
+      
       term1_mortar_Gauss[ks] = 0.;
       for (int d = 0; d < (P4EST_DIM); d++){
         term1_mortar_Gauss[ks] += -1.*sj_on_f_m_mortar_Gauss[ks]

@@ -26,52 +26,14 @@
 #include <curved_poisson_operator_primal.h>
 #include <curved_Gauss_central_flux_vector_fcns.h>
 #include <jacobian_tester.h>
+#include "./twopuncturesfcns.h"
+#include "./twopuncturesfcns_cactus.h"
 #include "time.h"
 #include "util.h"
 
 /* soon to be in the input files */
-#define NUM_PUNCTURES 2
 static const double pi = 3.1415926535897932384626433832795;
-static const double puncture_eps = 0.00000000001;// .000000000001;
-static double xyz_bh [NUM_PUNCTURES][3];
-static double P_bh [NUM_PUNCTURES][3];
-static double S_bh [NUM_PUNCTURES][3];
-static double M_bh [NUM_PUNCTURES];
 
-
-static
-double levi_civita(int a, int b, int c)
-{
-  double eps;
-  if( ( ( a == 0 )&&( b == 1 )&&( c == 2 ) ) ||
-      ( ( a == 1 )&&( b == 2 )&&( c == 0 ) ) ||
-      ( ( a == 2 )&&( b == 0 )&&( c == 1 ) ) ) {
-    eps = 1.;
-  } else
-    if( ( ( a == 1 )&&( b == 0 )&&( c == 2 ) ) ||
-        ( ( a == 0 )&&( b == 2 )&&( c == 1 ) ) ||
-        ( ( a == 2 )&&( b == 1 )&&( c == 0 ) ) ) {
-      eps = -1.;
-    } else {
-      eps = 0.;
-    }
-  return eps;
-}
-
-static
-double kronecker(int a, int b)
-{
-  /* printf("a = %d\n", a); */
-  /* printf("b = %d\n", b); */
-  /* printf("a == b = %d\n", (a==b)); */
-  
-  if (a != b)
-    return 0.0;
-  else
-    return 1.0;
-
-  /* return (double)(a==b); */
-}
 
 static
 int
@@ -102,8 +64,11 @@ amr_mark_element
   /* if (elem_data->tree == 12){ */
   double eta2_percentile
     = estimator_stats_get_percentile(stats[elem_bin], 5);
-    
-  return (eta2 >= eta2_percentile);
+
+  /* if (elem_data->tree == 12) */
+    return (eta2 >= eta2_percentile);
+  /* else */
+    /* return 0; */
   /* } */
   /* else { */
     /* return 0; */
@@ -155,248 +120,7 @@ amr_set_element_gamma
 /*   return 1. + u + sumn_mn_o_2rn; */
 /* } */
 
-static
-double compute_confAij
-(
- int i,
- int j,
- double x,
- double y,
- double z
-)
-{
-  double nvec[NUM_PUNCTURES][3];
-  double confAij = 0.;
-  
-  /* initialize and check if (x,y,z) is a puncture point*/
-  int n;
-  for (n = 0; n < NUM_PUNCTURES; n++){
-    double dxn = (x - xyz_bh[n][0]);
-    double dyn = (y - xyz_bh[n][1]);
-    double dzn = (z - xyz_bh[n][2]);
-    double rn = sqrt(dxn*dxn + dyn*dyn + dzn*dzn);
-    if (rn == 0.)
-      rn += puncture_eps;
-    nvec[n][0] = (x - xyz_bh[n][0])/rn;
-    nvec[n][1] = (y - xyz_bh[n][1])/rn;
-    nvec[n][2] = (z - xyz_bh[n][2])/rn;
 
-    double lcikl_dot_Sk_dot_nln_times_njn = 0.;
-    double lcjkl_dot_Sk_dot_nln_times_nin = 0.;
-    double Pn_dot_nvec = 0.;
-    
-    int k,l;
-    for (k = 0; k < 3; k++){
-      Pn_dot_nvec += P_bh[n][k]*nvec[n][k];
-      for (l = 0; l < 3; l++){
-        lcikl_dot_Sk_dot_nln_times_njn += (levi_civita(i,k,l))*S_bh[n][k]*nvec[n][l]*nvec[n][j];
-        lcjkl_dot_Sk_dot_nln_times_nin += (levi_civita(j,k,l))*S_bh[n][k]*nvec[n][l]*nvec[n][i];
-      }
-    }
-
-    double a = nvec[n][i]*P_bh[n][j] + nvec[n][j]*P_bh[n][i] - (kronecker(i,j) - nvec[n][i]*nvec[n][j])*Pn_dot_nvec;
-    double b = lcikl_dot_Sk_dot_nln_times_njn + lcjkl_dot_Sk_dot_nln_times_nin;
-
-    confAij += (1./(rn*rn))*(a + (2./rn)*b);
-  }
-
-  confAij *= 3./2.;
-  return confAij;
-}
-
-static
-double compute_confAij_sqr
-(
- double x,
- double y,
- double z
-)
-{
-  double confAij;
-  double confAij_sqr = 0.;
-  int i,j;
-  for (i = 0; i < 3; i++)
-    for (j = 0; j < 3; j++){
-      confAij = compute_confAij(i,j,x,y,z);
-      confAij_sqr += confAij*confAij;
-    }
-  return confAij_sqr;
-}
-
-
-static
-double neg_1o8_K2_psi_neg7
-(
- double x,
- double y,
- double z,
- double u,
- void* user
-)
-{
-  double sumn_mn_o_2rn = 0.;
-  double dxn, dyn, dzn, r;
-  int n;
-  for (n = 0; n < NUM_PUNCTURES; n++){
-    dxn = x - xyz_bh[n][0];
-    dyn = y - xyz_bh[n][1];
-    dzn = z - xyz_bh[n][2];
-    r = sqrt(dxn*dxn + dyn*dyn + dzn*dzn);
-    sumn_mn_o_2rn += M_bh[n]/(2.*r);
-  }
-
-  double psi_0 = 1. + u + sumn_mn_o_2rn;
-  double confAij_sqr = compute_confAij_sqr(x,y,z);
-
-  if (r > puncture_eps)
-    return (-1./8.)*confAij_sqr/(psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0);
-  else{
-    printf("DUCK FUCKERS!!\n");
-    return 0.;
-  }
-  /* return (1000./8.)*confAij_sqr/(psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0); */
-}
-
-
-static
-double plus_7o8_K2_psi_neg8
-(
- double x,
- double y,
- double z,
- double u,
- void* user
-)
-{
-  double sumn_mn_o_2rn = 0.;
-  double dxn, dyn, dzn, r;
-  int n;
-  for (n = 0; n < NUM_PUNCTURES; n++){
-    dxn = x - xyz_bh[n][0];
-    dyn = y - xyz_bh[n][1];
-    dzn = z - xyz_bh[n][2];
-    r = sqrt(dxn*dxn + dyn*dyn + dzn*dzn);
-    sumn_mn_o_2rn += M_bh[n]/(2.*r);
-  }
-
-  double psi_0 = 1. + u + sumn_mn_o_2rn;
-  double confAij_sqr = compute_confAij_sqr(x,y,z);
-
-  if (r > puncture_eps)
-    return (7./8.)*confAij_sqr/(psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0);
-  else{
-    printf("DUCK FUCKERS!!\n");
-    return 0.;
-  }
-}
-
-
-static
-void apply_jac
-(
- p4est_t* p4est,
- p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
- problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- d4est_geometry_t* d4est_geom
-)
-{  
-  curved_poisson_operator_primal_apply_aij(p4est,
-                                           ghost,
-                                           ghost_data,
-                                           prob_vecs,
-                                           dgmath_jit_dbase,
-                                           d4est_geom);
-  
-  double* M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
-
-  for (p4est_topidx_t tt = p4est->first_local_tree;
-       tt <= p4est->last_local_tree;
-       ++tt)
-    {
-      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-      sc_array_t* tquadrants = &tree->quadrants;
-      int Q = (p4est_locidx_t) tquadrants->elem_count;
-      for (int q = 0; q < Q; ++q) {
-        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;        
-        dgmath_apply_fofufofvlilj_Gaussnodes
-          (
-           dgmath_jit_dbase,
-           &prob_vecs->u[ed->nodal_stride],
-           &prob_vecs->u0[ed->nodal_stride],
-           NULL,
-           ed->deg,
-           ed->J_integ,
-           ed->xyz_integ,
-           ed->deg_integ,
-           (P4EST_DIM),
-           &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
-           plus_7o8_K2_psi_neg8,
-           NULL,
-           NULL,
-           NULL
-          );
-      }
-    }
-  
-  linalg_vec_axpy(1.0, M_plus_7o8_K2_psi_neg8_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
-  P4EST_FREE(M_plus_7o8_K2_psi_neg8_of_u0_u_vec);
-}
-
-static
-void
-build_residual
-(
- p4est_t* p4est,
- p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
- problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- d4est_geometry_t* d4est_geom
-)
-{
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
-
-  double* M_neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
- 
-  for (p4est_topidx_t tt = p4est->first_local_tree;
-       tt <= p4est->last_local_tree;
-       ++tt)
-    {
-      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-      sc_array_t* tquadrants = &tree->quadrants;
-      int Q = (p4est_locidx_t) tquadrants->elem_count;
-      for (int q = 0; q < Q; ++q) {
-        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;        
-        dgmath_apply_fofufofvlj_Gaussnodes
-          (
-           dgmath_jit_dbase,
-           &prob_vecs->u[ed->nodal_stride],
-           NULL,
-           ed->deg,
-           ed->J_integ,
-           ed->xyz_integ,
-           ed->deg_integ,
-           (P4EST_DIM),
-           &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
-           neg_1o8_K2_psi_neg7,
-           NULL,
-           NULL,
-           NULL
-          );
-      }
-    }
-
-  linalg_vec_axpy(1.0,
-                  M_neg_1o8_K2_psi_neg7_vec,
-                  prob_vecs->Au,
-                  prob_vecs->local_nodes);
-
-  P4EST_FREE(M_neg_1o8_K2_psi_neg7_vec); 
-}
 
 static int
 uni_refine_function
@@ -425,8 +149,9 @@ typedef struct {
   int deg_integ_R1;
   int deg_R2;
   int deg_integ_R2;
-
+  int deg_offset_for_nonlinear_integ;
   double ip_flux_penalty;
+  int use_cactus;
   int count;
   
 } problem_input_t;
@@ -462,6 +187,11 @@ int problem_input_handler
     pconfig->deg_R0 = atoi(value);
     pconfig->count += 1;
   }
+  else if (util_match_couple(section,"problem",name,"use_cactus")) {
+    mpi_assert(pconfig->use_cactus == -1);
+    pconfig->use_cactus = atoi(value);
+    pconfig->count += 1;
+  }
   else if (util_match_couple(section,"problem",name,"deg_integ_R0")) {
     mpi_assert(pconfig->deg_integ_R0 == -1);
     pconfig->deg_integ_R0 = atoi(value);
@@ -487,6 +217,11 @@ int problem_input_handler
     pconfig->deg_integ_R2 = atoi(value);
     pconfig->count += 1;
   }  
+  else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_integ")) {
+    mpi_assert(pconfig->deg_offset_for_nonlinear_integ == -1);
+    pconfig->deg_offset_for_nonlinear_integ = atoi(value);
+    pconfig->count += 1;
+  }  
 
   else {
     return 0;  /* unknown section/name, error */
@@ -502,18 +237,20 @@ problem_input
  const char* input_file
 )
 {
-  int num_of_options = 9;
+  int num_of_options = 11;
   
   problem_input_t input;
   input.num_unifrefs = -1;
   input.num_of_amr_levels = -1;
   input.ip_flux_penalty = -1;
+  input.use_cactus = -1;
   input.deg_R0 = -1;
   input.deg_integ_R0 = -1;
   input.deg_R1 = -1;
   input.deg_integ_R1 = -1;
   input.deg_R2 = -1;
   input.deg_integ_R2 = -1; 
+  input.deg_offset_for_nonlinear_integ = -1;
   
   input.count = 0;
   
@@ -761,34 +498,7 @@ problem_init
  sc_MPI_Comm mpicomm
 )
 {
-  double M = 1.;
-  
-  M_bh[0] = .5*M;
-  M_bh[1] = .5*M;
 
-  xyz_bh[0][0] = -3*M;
-  xyz_bh[0][1] = 0.;
-  xyz_bh[0][2] = 0.;
-
-  xyz_bh[1][0] = 3*M;
-  xyz_bh[1][1] = 0;
-  xyz_bh[1][2] = 0;
-
-  P_bh[0][0] = 0.;
-  P_bh[0][1] = -0.2*M;
-  P_bh[0][2] = 0.;
-
-  P_bh[1][0] = 0.;
-  P_bh[1][1] = 0.2*M;
-  P_bh[1][2] = 0.;
-
-  S_bh[0][0] = 0.;
-  S_bh[0][1] = 0.;
-  S_bh[0][2] = 0.;
-  
-  S_bh[1][0] = 0.;
-  S_bh[1][1] = 0.;
-  S_bh[1][2] = 0.;
 
   problem_input_t input = problem_input(input_file);
   
@@ -827,6 +537,13 @@ problem_init
 
 
   /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
+  twopunctures_params_t tp_params;
+  init_random_puncture_data(p4est, &tp_params, input.deg_offset_for_nonlinear_integ);
+  /* init_S_puncture_data(p4est, &tp_params, input.deg_offset_for_nonlinear_integ); */
+
+  twopunctures_cactus_params_t tp_cactus_params;
+  init_cactus_puncture_data(&tp_cactus_params, input.deg_offset_for_nonlinear_integ);
+
   
   problem_data_t prob_vecs;
   prob_vecs.rhs = rhs;
@@ -834,10 +551,28 @@ problem_init
   prob_vecs.u = u;
   prob_vecs.local_nodes = local_nodes;
 
+  prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+                                          (zero_fcn,&ip_flux_params);
+
+  if(input.use_cactus){
+    prob_vecs.user = &tp_cactus_params;
+  }
+  else {
+    prob_vecs.user = &tp_params;
+  }
+
   curved_weakeqn_ptrs_t prob_fcns;
-  prob_fcns.build_residual = build_residual;
-  prob_fcns.apply_lhs = apply_jac;
-     
+
+
+  if(input.use_cactus){
+    prob_fcns.build_residual = build_residual_cactus;
+    prob_fcns.apply_lhs = apply_jac_cactus;
+  }
+  else {
+    prob_fcns.build_residual = build_residual;
+    prob_fcns.apply_lhs = apply_jac;
+  }
+  
   geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
 
   /* printf("[D4EST_INFO]: Initial number of elements = %d\n", p4est->local_num_quadrants); */
@@ -895,12 +630,6 @@ problem_init
       prob_vecs.u = u;
       prob_vecs.rhs = rhs;
       prob_vecs.local_nodes = local_nodes;
-
-      prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
-                                              (zero_fcn,&ip_flux_params);
-
-
-
       
       /* curved_bi_estimator_compute */
       /*   ( */
@@ -957,9 +686,6 @@ problem_init
     prob_vecs.rhs = rhs;
     prob_vecs.local_nodes = local_nodes;
 
-    prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
-                                             (zero_fcn,&ip_flux_params);    
-
     curved_smooth_pred_marker_t amr_marker;
     amr_marker.user = (void*)&input;
     amr_marker.mark_element_fcn = amr_mark_element;
@@ -974,7 +700,8 @@ problem_init
        amr_marker
       );
 
-    linalg_fill_vec(prob_vecs.u, 0.001, prob_vecs.local_nodes);
+    /* linalg_fill_vec(prob_vecs.u, 0.001, prob_vecs.local_nodes); */
+    linalg_fill_vec(prob_vecs.u, 0, prob_vecs.local_nodes);
     
 
     

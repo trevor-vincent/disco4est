@@ -1109,32 +1109,66 @@ void dgmath_compute_prolong_matrix
 void dgmath_compute_PT_mat_P
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* in_mat, /* dimensions of the degH space (degH+1)^DIM x (degH+1)^DIM */
+ double* mat, /* dimensions of the degh space \sumi(deghi+1)^DIM x \sumi(deghi+1)^DIM */
  int degH,
  int dim,
  int* degh,
  int children,
- double* out_mat /* dimensions of the degH space: (degH+1)^DIM x (degH+1)^DIM */
+ double* PT_mat_P /* dimensions of the degH space: (degH+1)^DIM x (degH+1)^DIM */
 )
 {
-  int volume_nodes_h = 0;
-  for (int i = 0; i < children; i++){
-    volume_nodes_h += dgmath_get_nodes(dim, degh[i]);
-  }
-  int volume_nodes_H = dgmath_get_nodes(dim, degH);
+  int volume_nodes_h [P4EST_CHILDREN];
+  int total_volume_nodes_h = 0;
+  int max_volume_nodes_h = -1;
   
-  double* promat = P4EST_ALLOC(double, volume_nodes_h*volume_nodes_H);
-  double* in_mat_x_promat = P4EST_ALLOC(double, volume_nodes_h*volume_nodes_H);
-  double* proTmat = P4EST_ALLOC(double, volume_nodes_h*volume_nodes_H);
+  for (int i = 0; i < children; i++){
+    volume_nodes_h[i] = dgmath_get_nodes(dim, degh[i]);
+    total_volume_nodes_h += volume_nodes_h[i];
+    max_volume_nodes_h = (volume_nodes_h[i] > max_volume_nodes_h) ? volume_nodes_h[i] : max_volume_nodes_h;
+  }
 
-  dgmath_compute_prolong_matrix(dgmath_jit_dbase, degH, dim, degh, children, promat);
-  linalg_mat_transpose_nonsqr(promat, proTmat, volume_nodes_h, volume_nodes_H);
-  linalg_mat_multiply(in_mat, promat, in_mat_x_promat, volume_nodes_h, volume_nodes_h, volume_nodes_H);
-  linalg_mat_multiply(proTmat, in_mat_x_promat, out_mat, volume_nodes_H, volume_nodes_h, volume_nodes_H);
+  int volume_nodes_H = dgmath_get_nodes(dim, degH);
 
-  P4EST_FREE(in_mat_x_promat);
-  P4EST_FREE(promat);
-  P4EST_FREE(proTmat);
+  linalg_fill_vec(PT_mat_P, 0., volume_nodes_H*volume_nodes_H);
+  /* DEBUG_PRINT_ARR_DBL(PT_mat_P, volume_nodes_H*volume_nodes_H); */
+
+  /* printf("total_volume_nodes_h*volume_nodes_H = %d\n",total_volume_nodes_h*volume_nodes_H); */
+  /* printf("volume_nodes_H*volume_nodes_H = %d\n",volume_nodes_H*volume_nodes_H); */
+  
+  double* P = P4EST_ALLOC(double, total_volume_nodes_h*volume_nodes_H);
+  double* PT = P4EST_ALLOC(double, total_volume_nodes_h*volume_nodes_H);
+
+
+  
+  double* mat_P_i = P4EST_ALLOC(double, max_volume_nodes_h*volume_nodes_H);
+  double* PT_mat_P_i = P4EST_ALLOC(double, max_volume_nodes_h*volume_nodes_H);
+
+
+  
+  dgmath_compute_prolong_matrix(dgmath_jit_dbase, degH, dim, degh, children, P);
+  linalg_mat_transpose_nonsqr(P, PT, total_volume_nodes_h, volume_nodes_H);
+
+  int stride_mat = 0;
+  int stride_P = 0;
+  for (int i = 0; i < children; i++){
+    linalg_mat_multiply(&mat[stride_mat],
+                        &P[stride_P],
+                        mat_P_i,
+                        volume_nodes_h[i],
+                        volume_nodes_h[i],
+                        volume_nodes_H);
+    
+    linalg_mat_multiply(&PT[stride_P], mat_P_i, PT_mat_P_i, volume_nodes_H, volume_nodes_h[i], volume_nodes_H);
+    linalg_vec_axpy(1., PT_mat_P_i, PT_mat_P, volume_nodes_H*volume_nodes_H);
+    
+    stride_mat += volume_nodes_h[i]*volume_nodes_h[i];
+    stride_P += volume_nodes_h[i]*volume_nodes_H;
+  }
+
+  P4EST_FREE(PT_mat_P_i);
+  P4EST_FREE(mat_P_i);
+  P4EST_FREE(PT);
+  P4EST_FREE(P);
 }
 
 void dgmath_form_fofufofvlilj_matrix_Gaussnodes
@@ -1182,7 +1216,7 @@ void dgmath_form_fofufofvlilj_matrix_Gaussnodes
 #if (P4EST_DIM)==3
                                    xyz_Gauss[2][i],
 #endif
-                                   u_Gauss[i],
+                                   (u != NULL) ? u_Gauss[i] : 0,
                                    fofu_ctx);
     }
     if (v != NULL || fofv_fcn != identity_fcn){
@@ -1191,7 +1225,7 @@ void dgmath_form_fofufofvlilj_matrix_Gaussnodes
 #if (P4EST_DIM)==3
                                    xyz_Gauss[2][i],
 #endif
-                                   v_Gauss[i],
+                                   (v != NULL) ? v_Gauss[i] : 0,
                                    fofv_ctx);
     }
   }

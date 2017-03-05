@@ -382,6 +382,7 @@ hp_amr_smooth_pred_balance_replace_callback (
   for (i = 0; i < (P4EST_CHILDREN); i++){
     child_data = (element_data_t*) incoming[i]->p.user_data;
     child_data->deg = parent_data->deg;
+    /* printf("child_data->deg = %d\n", child_data->deg); */
     child_data->local_predictor = (ONE_OVER_CHILDREN)*smooth_pred_data->gamma_h*util_dbl_pow_int(.5, 2*(h_pow))*parent_data->local_predictor;
     linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_storage[0], volume_nodes);
   }
@@ -406,6 +407,7 @@ hp_amr_smooth_pred_refine_replace_callback (
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
   dgmath_jit_dbase_t* dgmath_jit_dbase = hp_amr_data->dgmath_jit_dbase;
   /* hp_amr_smooth_pred_data_t* smooth_pred_data = (hp_amr_smooth_pred_data_t*) (hp_amr_data->hp_amr_scheme_data); */
+
   
   element_data_t* parent_data = (element_data_t*) outgoing[0]->p.user_data;
   element_data_t* child_data;
@@ -442,6 +444,7 @@ hp_amr_smooth_pred_refine_replace_callback (
   for (i = 0; i < (P4EST_CHILDREN); i++){
     child_data = (element_data_t*) incoming[i]->p.user_data;
     child_data->deg = parent_data->deg;
+    /* printf("child_data->deg = %d\n", child_data->deg); */
     child_data->local_predictor = parent_data->local_predictor;
     linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_storage[0], volume_nodes);
   }

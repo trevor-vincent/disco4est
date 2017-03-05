@@ -10,7 +10,8 @@ multigrid_matrix_operator_init
 (
  multigrid_data_t* mg_data,
  p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ void* user
 )
 {
   multigrid_matrix_op_t* matrix_op = P4EST_ALLOC(multigrid_matrix_op_t, 1);
@@ -25,13 +26,20 @@ multigrid_matrix_operator_init
   matrix_op->coarse_matrix_nodes = -1;
   matrix_op->fine_matrix_stride = -1;
   matrix_op->coarse_matrix_stride = -1;
-  matrix_op->matrix = NULL;
+  matrix_op->matrix = matrix_op->matrix_at0;
+  matrix_op->user = user;
+
+  mg_data->user_defined_fields = 1;
+  mg_data->mg_prolong_user_callback = NULL;
+  mg_data->mg_restrict_user_callback = multigrid_matrix_operator_restriction_callback;
+  mg_data->mg_update_user_callback = multigrid_matrix_operator_update_callback;
+  mg_data->user_ctx = matrix_op;
   
   return matrix_op;
 }
 
 void
-multigrid_matrix_fofu_fofv_mass_operator_setup
+multigrid_matrix_fofu_fofv_mass_operator_setup_deg_integ_eq_deg
 (
  p4est_t* p4est,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
@@ -58,13 +66,13 @@ multigrid_matrix_fofu_fofv_mass_operator_setup
         element_data_t* ed = quad->p.user_data;
         int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
         int matrix_volume_nodes = volume_nodes*volume_nodes;
-        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), ed->deg_integ);
+        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), ed->deg);
 
         double* jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
         linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);
 
-        double* r_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), ed->deg_integ, 0);
-        double* s_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), ed->deg_integ, 1);
+        double* r_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), ed->deg, 0);
+        double* s_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), ed->deg, 1);
         double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
         double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
         dgmath_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
@@ -72,7 +80,7 @@ multigrid_matrix_fofu_fofv_mass_operator_setup
 
 
 #if (P4EST_DIM)==3        
-        double* t_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), ed->deg_integ, 2);
+        double* t_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), ed->deg, 2);
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
         dgmath_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
 #endif
@@ -91,7 +99,7 @@ multigrid_matrix_fofu_fofv_mass_operator_setup
            ed->deg,
            xyz_Gauss,
            jac_Gauss,
-           ed->deg_integ,
+           ed->deg,
            (P4EST_DIM),
            &matrix_op->matrix_at0[matrix_nodal_stride],
            fofu_fcn,
@@ -171,7 +179,8 @@ multigrid_matrix_operator_update_callback
   multigrid_matrix_op_t* matrix_op = mg_data->user_ctx;
   
   if(mg_data->mg_state == PRE_V){
-    matrix_op->total_matrix_nodes_on_multigrid = 0;
+    matrix_op->matrix_nodes_on_level[level] = element_data_get_local_matrix_nodes(p4est);
+    matrix_op->total_matrix_nodes_on_multigrid = matrix_op->matrix_nodes_on_level[level];
     matrix_op->stride_to_fine_matrix_data = 0;
   }
 
@@ -184,8 +193,8 @@ multigrid_matrix_operator_update_callback
     vecs->user = matrix_op;
   }
   else if(mg_data->mg_state == DOWNV_POST_BALANCE){
-    matrix_op->matrix_nodes_on_level[level] = element_data_get_local_matrix_nodes(p4est);
-    matrix_op->total_matrix_nodes_on_multigrid += matrix_op->matrix_nodes_on_level[level];
+    matrix_op->matrix_nodes_on_level[level-1] = element_data_get_local_matrix_nodes(p4est);
+    matrix_op->total_matrix_nodes_on_multigrid += matrix_op->matrix_nodes_on_level[level-1];
     matrix_op->matrix_at0 = P4EST_REALLOC
                             (
                              matrix_op->matrix_at0,

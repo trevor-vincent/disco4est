@@ -775,3 +775,21 @@ linalg_vec_sum
   }
   return sum;
 }
+
+
+double
+linalg_vec1_trans_mat_vec2
+(
+ double* vec1,
+ double* mat,
+ double* vec2,
+ int N
+)
+{
+
+  double *mat_vec2 = (double *) malloc (sizeof (double) * N);
+  linalg_matvec_plus_vec(1., mat, vec2, 0., mat_vec2, N, N);                      
+  double dot = linalg_vec_dot(vec1, mat_vec2, N);
+  free(mat_vec2);
+  return dot;
+}

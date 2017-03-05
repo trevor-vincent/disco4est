@@ -110,13 +110,16 @@ macro(p4est_build)
     "CC=${MPI_C_COMPILER}"
     "CXX=${MPI_CXX_COMPILER}"
     # "F77=${MPI_Fortran_COMPILER}"
-    # "CPPFLAGS=-I ${zlib_include}"
+    # "CPPFLAGS=-fPIC"
+    # "LDFLAGS=-fPIC"
     # "LIBS=${zlib_lib}"
     ${p4est_config_args}
     --enable-mpi
     --without-blas
     # --enable-mpi --disable-vtk-binary --without-blas
-    # --enable-static=sc --without-zlib
+    # --enable-static
+    # --disable-shared
+    # --without-zlib
     --prefix=${P4EST_BUNDLED_PREFIX}
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make -j${N}
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make install

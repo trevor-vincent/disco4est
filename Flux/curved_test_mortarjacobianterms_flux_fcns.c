@@ -95,7 +95,8 @@ curved_test_mortarjacobianterms_dirichlet
      sjvol_on_f_m_Gauss,
      nvol_on_f_m_Gauss,
      geom->p4est_geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     NULL
     );
 
   /* DEBUG_PRINT_2ARR_DBL(sj_on_f_m_Gauss, */
@@ -414,7 +415,8 @@ curved_test_mortarjacobianterms_interface
      sjvol_m_on_f_m_mortar_Gauss,
      nvol_m_on_f_m_mortar_Gauss,
      geom->p4est_geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     NULL
     );
 
 
@@ -433,7 +435,8 @@ curved_test_mortarjacobianterms_interface
      sjvol_p_on_f_p_mortar_Gauss,
      nvol_p_on_f_p_mortar_Gauss,
      geom->p4est_geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     NULL
     );
 
   

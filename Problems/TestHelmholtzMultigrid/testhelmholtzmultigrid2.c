@@ -1,7 +1,3 @@
-
-#define NDEBUG
-#define _GNU_SOURCE
-
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
@@ -23,12 +19,34 @@
 #include <hacked_p4est_vtk.h>
 #include <dg_norm.h>
 #include <ini.h>
+#include <krylov_petsc.h>
+#include <multigrid_matrix_operator.h>
 #include "time.h"
 
-static const double pi = 3.1415926535897932384626433832795;
-static double c2x;// = .5;
-static double c2y;// = .5;
-static double c2z;// = .5;
+double pi = 3.1415926535897932384626433832795;
+
+static int
+random_h_refine(p4est_t * p4est, p4est_topidx_t which_tree,
+                 p4est_quadrant_t * quadrant)
+{
+  /* curved_element_data_t* data = (curved_element_data_t*) quadrant->p.user_data; */
+  return rand()%2;
+}
+
+
+static
+double helmholtz_fcn
+(
+ double x,
+ double y,
+ double z,
+ double u,
+ void* user
+)
+{
+  return 2*x*y*z;
+}
+
 
 static
 double analytic_solution_fcn
@@ -41,22 +59,10 @@ double analytic_solution_fcn
 #endif
 )
 {
-  double xp = x - c2x;
-  double yp = y - c2y;
 #if (P4EST_DIM)==3
-  double zp = z - c2z;
-#endif
-  double rp = sqrt(xp*xp
-                   + yp*yp
-#if (P4EST_DIM)==3
-                   + zp*zp
-#endif   
-                  );
-
-#if (P4EST_DIM)==2  
-  return x*(1.-x)*y*(1.-y)*util_dbl_pow_int(rp, 3);
+ return sin(pi*x)*sin(pi*y)*sin(pi*z);
 #else
-  return x*(1.-x)*y*(1.-y)*z*(1.-z)*util_dbl_pow_int(rp, 3);
+ return sin(pi*x)*sin(pi*y);
 #endif
 }
 
@@ -70,21 +76,14 @@ double boundary_fcn
  double z
 #endif
 )
-
 {
-  return 0.;
+  return zero_fcn(x,y
+#if (P4EST_DIM)==3
+    ,z
+#endif
+    );
 }
 
-
-/**
- * returns - \nabla \cdot (1 + .5\sin(|\nabla|^2)) \nabla u
- *
- * @param x
- * @param (P4EST_DIM)
- * @param endif
- *
- * @return
- */
 static
 double f_fcn
 (
@@ -96,189 +95,35 @@ double f_fcn
 #endif
 )
 {
-  #if (P4EST_DIM)==2
-  if (x == c2x && y == c2y){
-    return 0.;
-  }
-
-  else
-    return ((util_dbl_pow_int(c2x,2) + util_dbl_pow_int(c2y,2) - 2*c2x*x + util_dbl_pow_int(x,2) - 2*c2y*y + util_dbl_pow_int(y,2))*(-2*util_dbl_pow_int(c2x,2)*x - 6*c2y*x - 2*util_dbl_pow_int(c2y,2)*x + 4*c2x*util_dbl_pow_int(x,2) + 2*util_dbl_pow_int(c2x,2)*util_dbl_pow_int(x,2) + 6*c2y*util_dbl_pow_int(x,2) +
-       2*util_dbl_pow_int(c2y,2)*util_dbl_pow_int(x,2) - 2*util_dbl_pow_int(x,3) - 4*c2x*util_dbl_pow_int(x,3) + 2*util_dbl_pow_int(x,4) - 6*c2x*y - 2*util_dbl_pow_int(c2x,2)*y - 2*util_dbl_pow_int(c2y,2)*y + 21*x*y + 16*c2x*x*y + 16*c2y*x*y - 29*util_dbl_pow_int(x,2)*y -
-       16*c2y*util_dbl_pow_int(x,2)*y + 6*c2x*util_dbl_pow_int(y,2) + 2*util_dbl_pow_int(c2x,2)*util_dbl_pow_int(y,2) + 4*c2y*util_dbl_pow_int(y,2) + 2*util_dbl_pow_int(c2y,2)*util_dbl_pow_int(y,2) - 29*x*util_dbl_pow_int(y,2) - 16*c2x*x*util_dbl_pow_int(y,2) + 37*util_dbl_pow_int(x,2)*util_dbl_pow_int(y,2) -
-                                                                                                                          2*util_dbl_pow_int(y,3) - 4*c2y*util_dbl_pow_int(y,3) + 2*util_dbl_pow_int(y,4)))/sqrt(util_dbl_pow_int(-c2x + x,2) + util_dbl_pow_int(-c2y + y,2));
-
+#if (P4EST_DIM)==3
+  double u = sin(pi*x)*sin(pi*y)*sin(pi*z);
+  return 3*pi*pi*u + helmholtz_fcn(x,y,z,0,NULL)*u;
 #else
-  if (x == c2x && y == c2y && z == c2z){
-    return 0.;
-  }
-  else{
-    return (-2*(1 - x)*x*(1 - y)*y*util_dbl_pow_int(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2),2) + 
-     9*(1 - x)*x*(1 - y)*y*(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*(1 - z)*
-     z + 6*(1 - x)*(-c2x + x)*(1 - y)*y*
-     (util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*(1 - z)*z - 
-     6*x*(-c2x + x)*(1 - y)*y*(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*
-     (1 - z)*z + 6*(1 - x)*x*(1 - y)*(-c2y + y)*
-     (util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*(1 - z)*z - 
-     6*(1 - x)*x*y*(-c2y + y)*(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*
-     (1 - z)*z - 2*(1 - x)*x*util_dbl_pow_int(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2),
-                                              2)*(1 - z)*z - 2*(1 - y)*y*util_dbl_pow_int(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + 
-                                                                                          util_dbl_pow_int(c2z - z,2),2)*(1 - z)*z - 
-     3*util_dbl_pow_int(c2x - x,2)*(-1 + x)*x*(-1 + y)*y*(-1 + z)*z - 
-     3*(-1 + x)*x*util_dbl_pow_int(c2y - y,2)*(-1 + y)*y*(-1 + z)*z - 
-     3*(-1 + x)*x*(-1 + y)*y*util_dbl_pow_int(c2z - z,2)*(-1 + z)*z + 
-     6*(1 - x)*x*(1 - y)*y*(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*(1 - z)*
-     (-c2z + z) - 6*(1 - x)*x*(1 - y)*y*
-     (util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*z*(-c2z + z))/
-      sqrt(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2));
-  }
+  double u = sin(pi*x)*sin(pi*y);
+  return 2*pi*pi*u + helmholtz_fcn(x,y,z,0,NULL)*u;
 #endif
-}
-
-static
-void problem_build_rhs
-(
- p4est_t* p4est,
- problem_data_t* prob_vecs,
- weakeqn_ptrs_t* prob_fcns,
- p4est_ghost_t* ghost,
- element_data_t* ghost_data,
- dgmath_jit_dbase_t* dgbase
-)
-{
-  prob_vecs->scalar_flux_fcn_data.bndry_fcn = boundary_fcn;
-  prob_vecs->vector_flux_fcn_data.bndry_fcn = boundary_fcn;
-
-  double* f = P4EST_ALLOC(double, prob_vecs->local_nodes);
-  element_data_init_node_vec
-    (
-     p4est,
-     f,
-     f_fcn,
-     dgbase
-    );
-  
-  element_data_apply_Mij_on_vec
-    (
-     p4est,
-     f,
-     prob_vecs->rhs,
-     dgbase
-    );
-  
-  linalg_vec_scale(-1., prob_vecs->rhs, prob_vecs->local_nodes);
-
-  /* DEBUG_PRINT_ARR_DBL(prob_vecs->rhs, prob_vecs->local_nodes); */
-  
-  int local_nodes = prob_vecs->local_nodes;
-  double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
-  double* tmp = prob_vecs->u;
-  
-  prob_vecs->u = u_eq_0;
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgbase);
-  linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
-
-  /* DEBUG_PRINT_ARR_DBL(prob_vecs->Au, prob_vecs->local_nodes); */
-  
-  prob_vecs->u = tmp;
-  P4EST_FREE(u_eq_0);
-  P4EST_FREE(f);
-
-  prob_vecs->scalar_flux_fcn_data.bndry_fcn = zero_fcn;
-  prob_vecs->vector_flux_fcn_data.bndry_fcn = zero_fcn;
-}
-
-static
-void
-build_residual
-(
- p4est_t* p4est,
- p4est_ghost_t* ghost,
- element_data_t* ghost_data,
- problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
-)
-{
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
-  linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
 }
  
-p4est_connectivity_t*
-problem_build_conn()
-{
-#if (P4EST_DIM)==3
-  return p8est_connectivity_new_unitcube();
-#elif (P4EST_DIM)==2
-  return p4est_connectivity_new_unitsquare();
-#else
-  mpi_abort("[D4EST_ERROR]: Dim not supported");
-#endif
-
-}
-
-p4est_geometry_t*
-problem_build_geom
+static int
+refine_function
 (
- p4est_connectivity_t* conn
+ p4est_t * p4est,
+ p4est_topidx_t which_tree,
+ p4est_quadrant_t *quadrant
 )
 {
-  return NULL;
-}
-
-p4est_t*
-problem_build_p4est
-(
- sc_MPI_Comm mpicomm,
- p4est_connectivity_t* conn,
- p4est_locidx_t min_quadrants,
- int min_level, 
- int fill_uniform
-)
-{
-  return p4est_new_ext
-    (
-     mpicomm,
-     conn,
-     min_quadrants,
-     min_level,
-     fill_uniform,
-     sizeof(element_data_t),
-     NULL,
-     NULL
-    );
-}
-
-p4est_t*
-problem_load_p4est_from_checkpoint
-(
- const char* filename,
- sc_MPI_Comm mpicomm,
- p4est_connectivity_t** conn
-){
-  int autopartition = 1;
-  int load_data = 1;
-  int broadcasthead = 0;
-  
-  return p4est_load_ext (filename,
-                mpicomm,
-                sizeof(element_data_t),
-                load_data,
-                autopartition,
-                broadcasthead,
-                NULL,
-                conn);
+  return 1;
 }
 
 typedef struct {
 
+  double ip_flux_penalty;
+  int deg;
   int endlevel;
   int degree;
   double gamma_h;
   double gamma_p;
   double sigma;
-  double c2x;
-  double c2y;
-  double c2z;
-  double ip_flux_penalty;
   
   int count;
   
@@ -320,26 +165,360 @@ int problem_input_handler
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } 
-  else if (util_match_couple(section,"problem",name,"c2x")) {
-    mpi_assert(pconfig->c2x == -1);
-    pconfig->c2x = atof(value);
-    pconfig->count += 1;
-  }
-  else if (util_match_couple(section,"problem",name,"c2y")) {
-    mpi_assert(pconfig->c2y == -1);
-    pconfig->c2y = atof(value);
-    pconfig->count += 1;
-  }
-  else if (util_match_couple(section,"problem",name,"c2z")) {
-    mpi_assert(pconfig->c2z == -1);
-    pconfig->c2z = atof(value);
-    pconfig->count += 1;
-  }  
   else {
     return 0;  /* unknown section/name, error */
   }
   return 1;
 }
+
+
+
+static
+void apply_helmholtz_matrix_2
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ element_data_t* ghost_data,
+ problem_data_t* prob_vecs,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+)
+{  
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+
+  /* printf("Quadrants = %d\n", p4est->local_num_quadrants); */
+  
+  double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes);
+  int matrix_stride = 0;
+
+  /* int local_matrix_nodes = element_data_get_local_matrix_nodes(p4est); */
+
+  /* DEBUG_PRINT_ARR_DBL(((multigrid_matrix_op_t*)prob_vecs->user)->matrix_at0, local_matrix_nodes); */
+  /* double debug_sum = 0.; */
+  
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        element_data_t* ed = quad->p.user_data;
+
+        int deg_Gauss = ed->deg;
+        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss);
+        double* r_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 0);
+        double* s_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 1);
+        double* t_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 2);
+        double *jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
+
+        double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
+        double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
+        double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
+
+        linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
+        dgmath_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
+        dgmath_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
+        dgmath_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
+        double* xyz_Gauss [3] = {x_GL, y_GL, z_GL};
+
+        int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        /* double* debug_ones = P4EST_ALLOC(double, volume_nodes); */
+        /* linalg_fill_vec(debug_ones, 1., volume_nodes); */
+        
+        linalg_matvec_plus_vec(1.,&((multigrid_matrix_op_t*)prob_vecs->user)->matrix[matrix_stride], &prob_vecs->u[ed->stride], 0., &M_helmf_u[ed->stride], volume_nodes, volume_nodes);
+
+
+        /* double* matrix = &((multigrid_matrix_op_t*)prob_vecs->user)->matrix[matrix_stride]; */
+        /* DEBUG_PRINT_ARR_DBL(matrix, volume_nodes*volume_nodes); */
+        /* debug_sum += linalg_vec1_trans_mat_vec2(debug_ones, matrix, debug_ones, volume_nodes); */
+        
+        
+        P4EST_FREE(z_GL);
+        P4EST_FREE(y_GL);
+        P4EST_FREE(x_GL);
+        P4EST_FREE(jac_Gauss);
+        /* P4EST_FREE(debug_ones); */
+
+        matrix_stride += volume_nodes*volume_nodes;
+      }
+    }
+
+  /* printf("debug_sum = %.25f\n", debug_sum); */
+  linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
+  P4EST_FREE(M_helmf_u);
+}
+
+
+
+static
+void apply_helmholtz_matrix
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ element_data_t* ghost_data,
+ problem_data_t* prob_vecs,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+)
+{    
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+
+  printf("Quadrants = %d\n", p4est->local_num_quadrants);
+  
+  double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes);
+ 
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        element_data_t* ed = quad->p.user_data;
+
+        int deg_Gauss = ed->deg;
+        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss);
+        double* r_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 0);
+        double* s_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 1);
+        double* t_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 2);
+        double *jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
+
+        double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
+        double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
+        double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
+
+        linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
+        dgmath_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
+        dgmath_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
+        dgmath_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
+        double* xyz_Gauss [3] = {x_GL, y_GL, z_GL};
+
+        int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        double* matrix = P4EST_ALLOC(double, volume_nodes*volume_nodes);
+
+        dgmath_form_fofufofvlilj_matrix_Gaussnodes
+          (
+           dgmath_jit_dbase,
+           NULL,
+           NULL,
+           ed->deg,
+           xyz_Gauss,
+           jac_Gauss,
+           ed->deg,
+           (P4EST_DIM),
+           matrix,
+           helmholtz_fcn,
+           NULL,
+           NULL,
+           NULL
+          );
+
+        DEBUG_PRINT_ARR_DBL(matrix, volume_nodes*volume_nodes);
+        
+        linalg_matvec_plus_vec(1., matrix, &prob_vecs->u[ed->stride], 0., &M_helmf_u[ed->stride], volume_nodes, volume_nodes);
+
+        
+        P4EST_FREE(z_GL);
+        P4EST_FREE(y_GL);
+        P4EST_FREE(x_GL);
+        P4EST_FREE(jac_Gauss);        
+      }
+    }
+  
+  linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
+  P4EST_FREE(M_helmf_u);
+}
+
+
+static
+void apply_helmholtz
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ element_data_t* ghost_data,
+ problem_data_t* prob_vecs,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+)
+{  
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+  
+  double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes);
+ 
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        element_data_t* ed = quad->p.user_data;
+
+        int deg_Gauss = ed->deg;
+        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss);
+        double* r_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 0);
+        double* s_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 1);
+        double* t_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 2);
+        double *jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
+
+        double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
+        double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
+        double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
+
+        linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
+        dgmath_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
+        dgmath_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
+        dgmath_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
+        double* xyz_Gauss [3] = {x_GL, y_GL, z_GL};
+        
+        dgmath_apply_fofufofvlilj_Gaussnodes
+          (
+           dgmath_jit_dbase,
+           &prob_vecs->u[ed->stride],
+           NULL,
+           NULL,
+           ed->deg,
+           jac_Gauss,
+           xyz_Gauss,
+           deg_Gauss,
+           (P4EST_DIM),
+           &M_helmf_u[ed->stride],
+           helmholtz_fcn,
+           NULL,
+           NULL,
+           NULL
+          );
+
+        P4EST_FREE(z_GL);
+        P4EST_FREE(y_GL);
+        P4EST_FREE(x_GL);
+        P4EST_FREE(jac_Gauss);        
+      }
+    }
+  
+  linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
+  P4EST_FREE(M_helmf_u);
+}
+
+
+static
+void
+build_residual
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ element_data_t* ghost_data,
+ problem_data_t* prob_vecs,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+)
+{
+  apply_helmholtz(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+  linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
+}
+
+
+/* static */
+/* void apply_helmholtz */
+/* ( */
+/*  p4est_t* p4est, */
+/*  p4est_ghost_t* ghost, */
+/*  curved_element_data_t* ghost_data, */
+/*  problem_data_t* prob_vecs, */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  d4est_geometry_t* d4est_geom */
+/* ) */
+/* {   */
+/*   curved_poisson_operator_primal_apply_aij(p4est, */
+/*                                            ghost, */
+/*                                            ghost_data, */
+/*                                            prob_vecs, */
+/*                                            dgmath_jit_dbase, */
+/*                                            d4est_geom); */
+  
+/*   double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes); */
+
+/*   for (p4est_topidx_t tt = p4est->first_local_tree; */
+/*        tt <= p4est->last_local_tree; */
+/*        ++tt) */
+/*     { */
+/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
+/*       sc_array_t* tquadrants = &tree->quadrants; */
+/*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
+/*       for (int q = 0; q < Q; ++q) { */
+/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
+/*         curved_element_data_t* ed = quad->p.user_data;         */
+/*         dgmath_apply_fofufofvlilj_Gaussnodes */
+/*           ( */
+/*            dgmath_jit_dbase, */
+/*            &prob_vecs->u[ed->nodal_stride], */
+/*            NULL, */
+/*            NULL, */
+/*            ed->deg, */
+/*            ed->J_integ, */
+/*            ed->xyz_integ, */
+/*            ed->deg_integ, */
+/*            (P4EST_DIM), */
+/*            &M_helmf_u[ed->nodal_stride], */
+/*            helmholtz_fcn, */
+/*            NULL, */
+/*            NULL, */
+/*            NULL */
+/*           ); */
+/*       } */
+/*     } */
+  
+/*   linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes); */
+/*   P4EST_FREE(M_helmf_u); */
+/* } */
+
+
+
+
+static
+void problem_build_rhs
+(
+ p4est_t* p4est,
+ problem_data_t* prob_vecs,
+ weakeqn_ptrs_t* prob_fcns,
+ p4est_ghost_t* ghost,
+ element_data_t* ghost_data,
+ dgmath_jit_dbase_t* dgbase
+)
+{
+  double* f = P4EST_ALLOC(double, prob_vecs->local_nodes);
+  element_data_init_node_vec
+    (
+     p4est,
+     f,
+     f_fcn,
+     dgbase
+    );
+  
+  element_data_apply_Mij_on_vec
+    (
+     p4est,
+     f,
+     prob_vecs->rhs,
+     dgbase
+    );
+  
+  int local_nodes = prob_vecs->local_nodes;
+  double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* tmp = prob_vecs->u;
+  
+  prob_vecs->u = u_eq_0;
+  apply_helmholtz(p4est, ghost, ghost_data, prob_vecs, dgbase);
+  linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
+
+  prob_vecs->u = tmp;
+  P4EST_FREE(u_eq_0);
+  P4EST_FREE(f);
+}
+
 
 static
 problem_input_t
@@ -348,19 +527,16 @@ problem_input
  const char* input_file
 )
 {
-  int num_of_options = 9;
+  int num_of_options = 6;
   
   problem_input_t input;
+  input.ip_flux_penalty = -1;
   input.degree = -1;
-  input.endlevel = -1;
+  input.endlevel = -1; 
   input.gamma_h = -1;
   input.gamma_p = -1;
-  input.ip_flux_penalty = -1;
   input.sigma = -1;
-  input.c2x = -1;
-  input.c2y = -1;
-  input.c2z = -1;
-
+  
   input.count = 0;
   
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
@@ -371,17 +547,39 @@ problem_input
   return input;
 }
 
+
+p4est_t*
+problem_build_p4est
+(
+ sc_MPI_Comm mpicomm,
+ p4est_connectivity_t* conn,
+ p4est_locidx_t min_quadrants,
+ int min_level, 
+ int fill_uniform
+)
+{
+  return p4est_new_ext
+    (
+     mpicomm,
+     conn,
+     min_quadrants,
+     min_level,
+     fill_uniform,
+     sizeof(element_data_t),
+     NULL,
+     NULL
+    );
+}
+
 void
 problem_init
 (
- int argc,
- char* argv [],
+ const char* input_file,
  p4est_t* p4est,
- p4est_geometry_t* p4est_geom,
+ d4est_geometry_t* d4est_geom,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  int proc_size,
- sc_MPI_Comm mpicomm,
- int load_from_checkpoint
+ sc_MPI_Comm mpicomm
 )
 {
   mpi_assert((P4EST_DIM) == 3 || (P4EST_DIM) == 2);
@@ -398,38 +596,26 @@ problem_init
   double gamma_h = input.gamma_h;
   double gamma_p = input.gamma_p;
   double sigma = input.sigma;
-  c2x = input.c2x;
-  c2y = input.c2y;
-  c2z = input.c2z;
-
   
   ip_flux_params_t ip_flux_params;
   ip_flux_params.ip_flux_penalty_prefactor = input.ip_flux_penalty;
   ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
 
-  /* penalty_calc_t bi_u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh; */
-  /* penalty_calc_t bi_u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh; */
-  /* penalty_calc_t bi_gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh; */
-
   penalty_calc_t bi_u_penalty_fcn = houston_u_prefactor_maxp_minh;
   penalty_calc_t bi_u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
   penalty_calc_t bi_gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
-  
-  if (!load_from_checkpoint){
-    p4est_partition_ext(p4est, 0, NULL);
-    p4est_balance_ext(p4est, P4EST_CONNECT_FACE, NULL, NULL);
-  }
+
+  p4est_partition_ext(p4est, 0, NULL);
+  p4est_balance_ext(p4est, P4EST_CONNECT_FACE, NULL, NULL);
 
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   /* create space for storing the ghost data */
   element_data_t* ghost_data = P4EST_ALLOC (element_data_t,
                                             ghost->ghosts.elem_count);
 
-  if (!load_from_checkpoint){
-    p4est_reset_data(p4est, sizeof(element_data_t), NULL, NULL);
-    element_data_init(p4est, degree);
-  }
-  
+  p4est_reset_data(p4est, sizeof(element_data_t), NULL, NULL);
+  element_data_init(p4est, degree);
+
   int local_nodes = element_data_get_local_nodes(p4est);
   double* Au = P4EST_ALLOC_ZERO(double, local_nodes);
   double* u = P4EST_ALLOC_ZERO(double, local_nodes);
@@ -451,11 +637,11 @@ problem_init
                                           );
   
   prob_vecs.scalar_flux_fcn_data = sipg_flux_scalar_dirichlet_fetch_fcns(boundary_fcn);
-  linalg_fill_vec(u, 100., prob_vecs.local_nodes);
-  
+  /* linalg_fill_vec(u, 0., prob_vecs.local_nodes); */
+  element_data_init_node_vec(p4est, u, analytic_solution_fcn, dgmath_jit_dbase);
   weakeqn_ptrs_t prob_fcns;
 
-  prob_fcns.apply_lhs = poisson_apply_aij;
+  prob_fcns.apply_lhs = apply_helmholtz_matrix_2;
   prob_fcns.build_residual = build_residual;
 
 
@@ -469,10 +655,6 @@ problem_init
      dgmath_jit_dbase
     );
   
- 
-  if(load_from_checkpoint){
-    mpi_abort("load from checkpoint not working yet");
-  }
 
   hp_amr_scheme_t* scheme =
     hp_amr_smooth_pred_init
@@ -481,7 +663,7 @@ problem_init
      gamma_h,
      gamma_p,
      1.,
-     7,
+     6,
      hp_amr_smooth_pred_get_sigaverage_marker(&sigma)
     );
 
@@ -573,13 +755,13 @@ problem_init
        dgmath_jit_dbase
       );
     
-    estimator_stats_t stats;
-    estimator_stats_compute(p4est, &stats,0);
+    estimator_stats_t* stats = P4EST_ALLOC(estimator_stats_t, 1);
+    estimator_stats_compute(p4est, stats,0);
 
     /* if(world_rank == 0) */
       /* estimator_stats_print(&stats, 0); */
 
-    local_eta2 = stats.total;
+    local_eta2 = stats->total;
         
     element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);    
 
@@ -647,14 +829,18 @@ problem_init
     P4EST_FREE(u_vertex);   
     P4EST_FREE(eta2_vertex);   
 
-    estimator_stats_print(&stats, world_rank);
+    estimator_stats_print(stats);
     
     hp_amr(p4est,
            dgmath_jit_dbase,
            &u,
            &stats,
-           (level > 1) ? scheme : scheme_uni
+           (level > 1) ? scheme : scheme_uni,
+           0
           );
+
+
+    P4EST_FREE(stats);
     
     p4est_ghost_destroy(ghost);
     P4EST_FREE(ghost_data);
@@ -694,22 +880,27 @@ problem_init
     int min_level, max_level;
 
     element_data_get_level_range(p4est, &min_level, &max_level);
-    printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
-
+    printf("number of elements = %d, [min_top_level, max_top_level] = [%d,%d]\n", p4est->local_num_quadrants, min_level, max_level);
+    
+    
     /* need to do a reduce on min,max_level before supporting multiple proc */
     mpi_assert(proc_size == 1);
     int num_of_levels = max_level + 1;
     
-    int vcycle_iter = 0;
+    int vcycle_iter = 3;
+    /* int vcycle_iter = 1; */
       double vcycle_rtol = 1e-9;
       double vcycle_atol = 0.;
       int smooth_iter = 15;
-      int cg_eigs_iter = 10;
+      /* int smooth_iter = 1; */
+      int cg_eigs_iter = 15;
+     /* int cg_eigs_iter = 1; */
       /* double max_eig_factor = 1.1; */
       double max_eig_factor = 1.0;
       int max_eig_reuse = 1;
       double lmax_lmin_rat = 30.;
       int coarse_iter = 10000;
+      /* int coarse_iter = 1; */
       double coarse_rtol = 1e-10;
       int save_vtk_snapshot = 0;
       int perform_checksum = 0;
@@ -739,7 +930,10 @@ problem_init
         );
 
       
+      multigrid_matrix_op_t* matrix_op = multigrid_matrix_operator_init(mg_data, p4est, dgmath_jit_dbase, NULL);
       
+      multigrid_matrix_fofu_fofv_mass_operator_setup_deg_integ_eq_deg(p4est, dgmath_jit_dbase, NULL, NULL, helmholtz_fcn, NULL, NULL, NULL, matrix_op);
+
 
       element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);
       /* util_print_matrix(u_analytic, prob_vecs.local_nodes, 1, " u_analytic = ", 0); */
@@ -751,6 +945,14 @@ problem_init
          mg_data,
          analytic_solution_fcn
         );
+
+      /* int local_matrix_nodes = element_data_get_local_matrix_nodes(p4est); */
+
+      /* DEBUG_PRINT_ARR_DBL(matrix_op->matrix_at0, local_matrix_nodes); */
+      prob_vecs.user = matrix_op;
+
+      
+      /* printf("STOP HERE DUCKERS\n"); */
       
       multigrid_solve
         (
@@ -761,11 +963,26 @@ problem_init
          &ghost,
          &ghost_data
         );
-
       
+                
+      /* krylov_petsc_info_t info = */
+      /*   krylov_petsc_solve */
+      /*   ( */
+      /*    p4est, */
+      /*    &prob_vecs, */
+      /*    (void*)&prob_fcns, */
+      /*    &ghost, */
+      /*    (void**)&ghost_data, */
+      /*    dgmath_jit_dbase, */
+      /*    NULL, */
+      /*    input_file, */
+      /*    NULL, */
+      /*    NULL, */
+      /*    NULL */
+      /*   ); */
   
       multigrid_data_destroy(mg_data);
-
+      multigrid_matrix_operator_destroy(matrix_op);
       
 
     linalg_vec_axpy(-1., u, u_analytic, local_nodes);

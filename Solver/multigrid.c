@@ -135,7 +135,7 @@ multigrid_vcycle
   int toplevel = mg_data->num_of_levels - 1;
   int bottomlevel = 0;
 
-  double* max_eigs = mg_data->max_eigs;/* P4EST_ALLOC(double, mg_data->num_of_levels); */
+  /* double* max_eigs = mg_data->max_eigs;/\* P4EST_ALLOC(double, mg_data->num_of_levels); *\/ */
   
   int* elements_on_level_of_multigrid = P4EST_ALLOC_ZERO(int, mg_data->num_of_levels);
   int* nodes_on_level_of_multigrid = P4EST_ALLOC_ZERO(int, mg_data->num_of_levels);
@@ -159,6 +159,8 @@ multigrid_vcycle
   total_elements_on_surrogate_multigrid += elements_on_level_of_surrogate_multigrid[toplevel];
   total_nodes_on_surrogate_multigrid += nodes_on_level_of_surrogate_multigrid[toplevel];
 
+
+  
   /* FIXME: REALLOCATE AS WE COARSEN */
   multigrid_refine_data_t* coarse_grid_refinement = P4EST_ALLOC
                                                     (
@@ -207,6 +209,17 @@ multigrid_vcycle
   /**********************************************************/
   /**********************************************************/  
   /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
+
+  #ifdef DEBUG_INFO
+  printf("Level = %d\n", toplevel);
+  printf("State = %s\n", "PRE_V");
+  printf("elements_on_level = %d\n", elements_on_level_of_multigrid[toplevel]);
+  printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[toplevel]);
+  printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[toplevel]);
+  printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[toplevel]);
+#endif    
+  mg_data->mg_state = PRE_V; multigrid_update_user_data(p4est, toplevel, NULL);
+
   
   int stride_to_fine_data = 0;
   for (level = toplevel; level > bottomlevel; --level){
@@ -242,6 +255,14 @@ multigrid_vcycle
     /**********************************************************/
     /**********************************************************/  
 
+#ifdef DEBUG_INFO
+    printf("Level = %d\n", level);
+    printf("State = %s\n", "DOWNV_PRE_SMOOTH");
+    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
+    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
+    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
+    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
+#endif
     mg_data->mg_state = DOWNV_PRE_SMOOTH; multigrid_update_user_data(p4est, level, &vecs_for_cheby_smooth);
     
     multigrid_cheby_smoother
@@ -254,10 +275,17 @@ multigrid_vcycle
        &rres_at0[stride_to_fine_data],
        mg_data,
        fine_level
-      );
-
+      );  
+#ifdef DEBUG_INFO
+    printf("Level = %d\n", level);
+    printf("State = %s\n", "DOWNV_POST_SMOOTH");
+    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
+    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
+    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
+    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
+#endif    
     mg_data->mg_state = DOWNV_POST_SMOOTH; multigrid_update_user_data(p4est, level, &vecs_for_cheby_smooth);
-
+    
     /**********************************************************/
     /**********************************************************/
     /********************* END SMOOTH *************************/
@@ -270,7 +298,14 @@ multigrid_vcycle
     /******************* BEGIN COARSEN ************************/
     /**********************************************************/
     /**********************************************************/  
-
+#ifdef DEBUG_INFO
+    printf("Level = %d\n", level);
+    printf("State = %s\n", "DOWNV_PRE_COARSEN");
+    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
+    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
+    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
+    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
+#endif
     mg_data->mg_state = DOWNV_PRE_COARSEN; multigrid_update_user_data(p4est, level, NULL);
     
     /* increments the stride */
@@ -282,6 +317,15 @@ multigrid_vcycle
                        NULL
                       );
 
+#ifdef DEBUG_INFO
+    printf("Level = %d\n", level);
+    printf("State = %s\n", "DOWNV_POST_COARSEN");
+    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
+    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
+    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
+    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
+#endif
+    
     mg_data->mg_state = DOWNV_POST_COARSEN; multigrid_update_user_data(p4est, level, NULL);
 
     /**********************************************************/
@@ -350,7 +394,18 @@ multigrid_vcycle
     mg_data->temp_stride = 0;
     mg_data->intergrid_ptr = &rres_at0[stride_to_fine_data];//&(mg_data->rres)[0];
 
-    mg_data->mg_state = DOWNV_PRE_RESTRICTION; multigrid_update_user_data(p4est, level, NULL);   
+#ifdef DEBUG_INFO
+    printf("Level = %d\n", level);
+    printf("State = %s\n", "DOWNV_PRE_RESTRICTION");
+    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
+    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
+    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
+    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
+#endif
+    
+    mg_data->mg_state = DOWNV_PRE_RESTRICTION; multigrid_update_user_data(p4est, level, NULL);
+
+    
     
     p4est_iterate(
                   p4est,
@@ -362,8 +417,17 @@ multigrid_vcycle
                   NULL,
 #endif
                   NULL
-    );  
+    );
 
+#ifdef DEBUG_INFO
+    printf("Level = %d\n", level);
+    printf("State = %s\n", "DOWNV_POST_RESTRICTION");
+    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
+    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
+    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
+    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);    
+#endif
+    
     mg_data->mg_state = DOWNV_POST_RESTRICTION; multigrid_update_user_data(p4est, level, NULL);   
 
     linalg_copy_1st_to_2nd
@@ -440,7 +504,6 @@ multigrid_vcycle
 
     int fine_level = level + 1;
     int coarse_level = level;
-
 
     mg_data->fine_nodes = nodes_on_level_of_multigrid[level+1];
     mg_data->coarse_nodes = nodes_on_level_of_multigrid[level];
@@ -549,7 +612,19 @@ multigrid_vcycle
 
     
   }
-      
+
+  mg_data->mg_state = PRE_V; multigrid_update_user_data(p4est, toplevel, NULL);
+  
+  for (level = toplevel; level >= bottomlevel; --level){
+    printf("Level %d, Number of elements %d, Number of nodes %d\n",
+           level,
+           elements_on_level_of_multigrid[level],
+           nodes_on_level_of_multigrid[level]
+          );
+  }
+
+
+  
   mg_data->vcycle_r2local = linalg_vec_dot(&rres_at0[stride_to_fine_data],
                                            &rres_at0[stride_to_fine_data],
                                            mg_data->fine_nodes);
@@ -572,7 +647,6 @@ multigrid_vcycle
   P4EST_FREE(rres_at0);
   /* P4EST_FREE(max_eigs); */
   p4est->user_pointer = tmpptr;
-  
 }
 
 void

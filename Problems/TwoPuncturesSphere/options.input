@@ -1,34 +1,36 @@
 [p4est]
 min_quadrants = -1
-min_level = 2
+min_level = 1
 fill_uniform = 1
 
 [amr]
 num_unifrefs = 1
-num_of_amr_levels = 5
+num_of_amr_levels = 8
 
 [flux]
 ip_flux_penalty = 2.0
 
 [problem]
-deg_R2 = 2
-deg_integ_R2 = 2
+deg_offset_for_nonlinear_integ = 0
+deg_R2 = 5
+deg_integ_R2 = 5
 deg_R1 = 2
 deg_integ_R1 = 2
 deg_R0 = 2
 deg_integ_R0 = 2
+use_cactus = 0
 
 [geometry]
 name = compact_sphere
-R0 = 10
+R0 = 50
 R1 = 100
-R2 = 10000
+R2 = 100000
 
 [solver]
 ksp_type = gmres
 ksp_atol = 1e-50
-ksp_rtol = 1e-5
-ksp_max_it = 25
+ksp_rtol = 1e-1
+ksp_max_it = 2
 ksp_view = 1
 ksp_user_defined_pc = 0
 ksp_monitor = 1
@@ -36,5 +38,5 @@ snes_rtol = 1e-5
 snes_atol = 1e-50
 snes_max_funcs = 10000000000000
 snes_monitor = 1
-snes_linesearch_order = 3
+snes_linesearch_order = 0
 snes_linesearch_monitor = 1

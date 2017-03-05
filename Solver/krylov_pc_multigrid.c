@@ -21,6 +21,7 @@ krylov_pc_multigrid_setup
  krylov_pc_ctx_t* pc_ctx
 )
 {
+  return;
 }
 
 void

@@ -112,6 +112,7 @@ macro(petsc_build)
     --with-ssl=0
     # --with-cc=icc
     # --download-fblaslapack
+    # --enable-shared=0
     --with-shared-libraries=0
     --prefix=${PETSC_BUNDLED_PREFIX}
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make MAKE_NP=${N}

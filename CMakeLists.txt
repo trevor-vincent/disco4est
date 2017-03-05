@@ -162,15 +162,15 @@ add_dependencies(d4est build_bundled_libs)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
 
 
-add_custom_target(build_bundled_libs)
 add_custom_target(p4est_bundled_libs)
+add_custom_target(build_bundled_libs)
+
 
 include(zlib)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
-
-include(petsc)
 include(p4est)
+include(petsc)
 
 subdirs(ThirdParty)
 
@@ -179,8 +179,8 @@ SET (
   # ${Threads_LIBRARIES}
   # ${ZLIB_LIBRARIES}
   ${MPI_C_LIBRARIES}
-  ${PETSC_LIBRARIES}
   ${P4EST_LIBRARIES}
+  ${PETSC_LIBRARIES}
   m
   dl
   # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libopenblas.a
@@ -312,6 +312,7 @@ add_d4est_problem_2d(testcurvedprimal_driver_2d testcurvedprimal.c TestCurvedPri
 add_d4est_problem_3d(testcurvedprimal_driver_3d testcurvedprimal.c TestCurvedPrimal)
 add_d4est_problem_3d(testcubeprimal_driver_3d testcubeprimal.c TestCubePrimal)
 add_d4est_problem_3d(testhelmholtzmultigrid_driver_3d testhelmholtzmultigrid.c TestHelmholtzMultigrid)
+add_d4est_problem_3d(testhelmholtzmultigrid2_driver_3d testhelmholtzmultigrid2.c TestHelmholtzMultigrid)
 add_d4est_problem_3d(constantdensitystarprimal_driver constantdensitystarprimal.c ConstantDensityStarPrimal)
 # add_d4est_problem_3d(testcurvedipflux_driver_3d testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_3d(testcurvedshell_driver_3d testcurvedshell.c TestCurvedShell)

@@ -76,4 +76,13 @@ void linalg_kron_vec_o_vec_dot_xy(double *vec,double *x,double *y,int vec_size,d
 void linalg_kron_vec_o_vec_dot_x(double *vec,double *x,int vec_size,double *vecvec_dot_x);
 void linalg_kron_AoB(double *A,double *B,double *C,int a_rows,int a_cols,int b_rows,int b_cols);
 
+double
+linalg_vec1_trans_mat_vec2
+(
+ double* vec1,
+ double* mat,
+ double* vec2,
+ int N
+);
+
 #endif

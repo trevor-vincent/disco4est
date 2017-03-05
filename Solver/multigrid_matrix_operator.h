@@ -17,6 +17,7 @@ typedef struct {
   int stride_to_fine_matrix_data;
   double* matrix_at0; //points to data at beginning (fine level)
   double* matrix; //points to data at current level
+  void* user;
   
 } multigrid_matrix_op_t;
 
@@ -25,7 +26,7 @@ void multigrid_matrix_operator_restriction_callback(p4est_iter_volume_info_t *in
 void multigrid_matrix_operator_destroy(multigrid_matrix_op_t *matrix_op);
 
 void
-multigrid_matrix_fofu_fofv_mass_operator_setup
+multigrid_matrix_fofu_fofv_mass_operator_setup_deg_integ_eq_deg
 (
  p4est_t* p4est,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
@@ -38,6 +39,13 @@ multigrid_matrix_fofu_fofv_mass_operator_setup
  multigrid_matrix_op_t* matrix_op
 );
 
-multigrid_matrix_op_t *multigrid_matrix_operator_init(multigrid_data_t *mg_data,p4est_t *p4est,dgmath_jit_dbase_t *dgmath_jit_dbase);
+multigrid_matrix_op_t*
+multigrid_matrix_operator_init
+(
+ multigrid_data_t* mg_data,
+ p4est_t* p4est,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ void* user
+);
 
 #endif

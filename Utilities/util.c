@@ -308,7 +308,7 @@ util_max_error(double* u, double* u_sol, int N){
   return e_max;
 }
 
-void util_gen_rand_vec(double* vec, int N, int seed, double a, double b){
+void util_gen_rand_vec(double* vec, int N, long int seed, double a, double b){
   int i;
   for (i = 0; i < N; i++) {
     vec[i] = util_uniform_rand(seed,a,b);

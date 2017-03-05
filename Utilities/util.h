@@ -206,7 +206,7 @@ double util_uniform_rand(long int, double, double);
 double util_max_error(double*, double*, int);
 int util_compare_double(double,double,double);
 int util_compare_vecs(double*,double*,int,double);
-void util_gen_rand_vec(double*, int, int, double, double);
+void util_gen_rand_vec(double*, int, long int, double, double);
 int util_uniform_rand_int(long int seed, int a, int b);
 void util_eye(double* eye, int N);
 int util_int_pow_int(int x, int N);
