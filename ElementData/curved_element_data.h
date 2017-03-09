@@ -147,4 +147,36 @@ void curved_element_data_compute_xyz(dgmath_jit_dbase_t *dgmath_jit_dbase,p4est_
 void curved_element_data_init_node_vec(p4est_t *p4est,double *node_vec,grid_fcn_t init_fcn,dgmath_jit_dbase_t *dgmath_jit_dbase,p4est_geometry_t *p4est_geom);
 void curved_element_data_set_degrees(p4est_t *p4est,int(*set_deg_fcn)(int,int,int));
 
+void curved_element_data_apply_fofufofvlilj_Gaussnodes
+(
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ double* vec,
+ double* u,
+ double* v,
+ curved_element_data_t* elem_data,
+ int deg_Gauss,
+ int dim,
+ double* Mvec,
+ grid_fcn_ext_t fofu_fcn,
+ void* fofu_ctx,
+ grid_fcn_ext_t fofv_fcn,
+ void* fofv_ctx
+);
+
+void curved_element_apply_fofufofvlj_Gaussnodes
+(
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ double* u,
+ double* v,
+ curved_element_data_t* elem_data,
+ int deg_Gauss,
+ int dim,
+ double* out,
+ grid_fcn_ext_t fofu_fcn,
+ void* fofu_ctx,
+ grid_fcn_ext_t fofv_fcn,
+ void* fofv_ctx
+);
+
+
 #endif

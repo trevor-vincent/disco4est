@@ -4,25 +4,13 @@
 #include "../pXest/pXest.h"
 #include "../EllipticSystem/problem_data.h"
 #include "../EllipticSystem/problem_weakeqn_ptrs.h"
-
-typedef struct {
-
-  p4est_t* p4est;
-  problem_data_t* vecs;
-  void* fcns;
-  p4est_ghost_t** ghost;
-  void** ghost_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase;
-  d4est_geometry_t* d4est_geom;
-  void* pc_data;
-  
-} krylov_pc_ctx_t;
+#include <d4est_petsc.h>
 
 typedef
 void
 (*krylov_pc_apply_fcn_t)
 (
- krylov_pc_ctx_t*,
+ void*,
  double*,
  double*
 );
@@ -31,30 +19,72 @@ typedef
 void
 (*krylov_pc_setup_fcn_t)
 (
- krylov_pc_ctx_t*
+ void*
 );
 
 typedef struct {
 
-  krylov_pc_ctx_t* pc_ctx;
+  /* Start EXTERNAL Parameters */
+  /* THESE MUST BE SET */
+
+  /* Cannot be NULL */
   krylov_pc_apply_fcn_t pc_apply;
+
+  /* can be NULL */
   krylov_pc_setup_fcn_t pc_setup;
+
+  /* can be NULL */
+  void* pc_data;
+
+  /* End EXTERNAL Parameters */
+  
+  /* Start INTERNAL Parameters */
+  /* DO NOT SET THESE */
+  
+  petsc_ctx_t* pc_ctx;
+
+  /* End INTERNAL Parameters */
   
 } krylov_pc_t;
 
-typedef
-krylov_pc_t*
-(*krylov_pc_create_fcn_t)
-(
- krylov_pc_ctx_t*
-);
 
-typedef
-void
-(*krylov_pc_destroy_fcn_t)
+static
+PetscErrorCode
+krylov_petsc_pc_setup
 (
- krylov_pc_t*
-);
+ PC pc
+)
+{
+  PetscErrorCode ierr;
+  krylov_pc_t* kp;
+  ierr = PCShellGetContext(pc,(void**)&kp);CHKERRQ(ierr);
+  if (kp->pc_setup != NULL){
+    kp->pc_setup(kp->pc_ctx);
+  }
+  return ierr;
+}
+
+static
+PetscErrorCode
+krylov_petsc_pc_apply(PC pc,Vec x,Vec y)
+{
+  PetscErrorCode ierr;
+  krylov_pc_t* kp;
+  ierr = PCShellGetContext(pc,(void**)&kp);CHKERRQ(ierr);
+
+  double* yp;
+  const double* xp;
+  
+  VecGetArray(y,&yp); 
+  VecGetArrayRead(x,&xp);
+
+  kp->pc_apply(kp, (double*)xp, yp);
+  
+  VecRestoreArray(y,&yp);//CHKERRQ(ierr);
+  VecRestoreArrayRead(x,&xp);
+  
+  return ierr;
+}
 
 
 #endif

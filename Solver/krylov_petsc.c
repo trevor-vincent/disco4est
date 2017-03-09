@@ -4,7 +4,6 @@
 #include "../Solver/krylov_petsc.h"
 #include "petscsnes.h"
 #include <krylov_pc.h>
-#include <krylov_petsc_pc.h>
 #include <ini.h>
 
 static
@@ -60,12 +59,6 @@ int krylov_petsc_input_handler
     PetscOptionsSetValue(NULL,"-ksp_type",value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"solver",name,"ksp_user_defined_pc")) {
-    mpi_assert(pconfig->ksp_user_defined_pc = -1);
-    pconfig->ksp_user_defined_pc = atoi(value);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
-    pconfig->count += 1;
-  }   
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -79,12 +72,11 @@ krylov_petsc_input
  const char* input_file
 )
 {
-  int num_of_options = 7;
+  int num_of_options = 6;
   
   krylov_petsc_params_t input;
   input.count = 0;
   input.ksp_view = -1;
-  input.ksp_user_defined_pc = -1;
   input.ksp_monitor = -1;
   input.ksp_type[0] = '0';
   input.ksp_atol = -1;
@@ -97,7 +89,6 @@ krylov_petsc_input
   
   if(p4est->mpirank == 0){
     printf("[D4EST_INFO]: ksp_view = %d\n", input.ksp_view);
-    printf("[D4EST_INFO]: ksp_user_defined_pc = %d\n", input.ksp_user_defined_pc);
     printf("[D4EST_INFO]: ksp_monitor = %d\n", input.ksp_monitor);
     printf("[D4EST_INFO]: ksp_type = %s\n", &input.ksp_type[0]);
     printf("[D4EST_INFO]: ksp_atol = %.25f\n", input.ksp_atol);
@@ -117,13 +108,13 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   void           *ctx;
   PetscErrorCode ierr;
 
-  krylov_pc_ctx_t* kct;
+  krylov_ctx_t* kct;
   const double* px;
   double* py;
 
   /* PetscFunctionBegin; */
   ierr = MatShellGetContext( A, &ctx ); CHKERRQ(ierr);  
-  kct = (krylov_pc_ctx_t *)ctx;
+  kct = (krylov_ctx_t *)ctx;
   ierr = VecGetArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecGetArray( y, &py ); CHKERRQ(ierr);
 
@@ -172,19 +163,12 @@ krylov_petsc_solve
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  d4est_geometry_t* d4est_geom,
  const char* input_file,
- krylov_pc_create_fcn_t pc_create,
- krylov_pc_destroy_fcn_t pc_destroy,
- void* pc_data
+ krylov_pc_t* krylov_pc
 )
 {
 
   krylov_petsc_params_t krylov_params = krylov_petsc_input(p4est,input_file);
-  krylov_params.pc_create = (pc_create == NULL) ? NULL : pc_create;
-  krylov_params.pc_destroy = (pc_destroy == NULL) ? NULL : pc_destroy;
-  krylov_params.pc_data = pc_data;
-  if (krylov_params.pc_create == NULL){
-    krylov_params.ksp_user_defined_pc = 0;
-  }
+  krylov_params.pc = krylov_pc;
   
   krylov_petsc_info_t info;
   KSP ksp;
@@ -193,7 +177,7 @@ krylov_petsc_solve
   /* double* u_temp; */
   /* double* rhs_temp; */
 
-  krylov_pc_ctx_t kct;
+  krylov_ctx_t kct;
   kct.p4est = p4est;
   kct.vecs = vecs;
   kct.fcns = fcns;
@@ -201,7 +185,6 @@ krylov_petsc_solve
   kct.ghost_data = ghost_data;
   kct.dgmath_jit_dbase = dgmath_jit_dbase;
   kct.d4est_geom = d4est_geom;
-  kct.pc_data = krylov_params.pc_data;
 
   int local_nodes = vecs->local_nodes;
   double* u = vecs->u;
@@ -242,13 +225,14 @@ krylov_petsc_solve
 
   
   KSPGetPC(ksp,&pc);
-  krylov_pc_t* kp = NULL;
-  if (krylov_params.ksp_user_defined_pc) {
+  if (krylov_pc != NULL) {
     PCSetType(pc,PCSHELL);//CHKERRQ(ierr);
-    kp = krylov_params.pc_create(&kct);
+    krylov_pc->pc_ctx = &kct;
     PCShellSetApply(pc, krylov_petsc_pc_apply);//CHKERRQ(ierr);
-    PCShellSetSetUp(pc, krylov_petsc_pc_setup);
-    PCShellSetContext(pc, kp);//CHKERRQ(ierr);
+    if (krylov_pc->pc_setup != NULL){
+      PCShellSetSetUp(pc, krylov_petsc_pc_setup);
+    }
+    PCShellSetContext(pc, krylov_pc);//CHKERRQ(ierr);
   }
   else {
     PCSetType(pc,PCNONE);//CHKERRQ(ierr);
@@ -281,10 +265,6 @@ krylov_petsc_solve
   VecPlaceArray(x, u);
   
   KSPSolve(ksp,b,x);
-
-  if (krylov_params.ksp_user_defined_pc) {
-    krylov_params.pc_destroy(kp);
-  }
   
   KSPGetIterationNumber(ksp, &(info.iterations));
   KSPGetResidualNorm(ksp, &(info.residual_norm));

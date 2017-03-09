@@ -49,7 +49,7 @@ init_cactus_puncture_data
   params->par_S_plus[1] = 0.;
   params->par_S_plus[2] = 0.;
   
-  params->deg_offset_for_nonlinear_integ = deg_offset_for_nonlinear_integ;
+  params->deg_offset_for_puncture_nonlinearity_integ = deg_offset_for_puncture_nonlinearity_integ;
 }
 
 
@@ -252,16 +252,14 @@ void apply_jac_cactus
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;        
-        dgmath_apply_fofufofvlilj_Gaussnodes
+        curved_element_data_apply_fofufofvlilj_Gaussnodes
           (
            dgmath_jit_dbase,
            &prob_vecs->u[ed->nodal_stride],
            &prob_vecs->u0[ed->nodal_stride],
            NULL,
-           ed->deg,
-           ed->J_integ,
-           ed->xyz_integ,
-           ed->deg_integ + params->deg_offset_for_nonlinear_integ,
+           ed,
+           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
            (P4EST_DIM),
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
            cactus_plus_7o8_K2_psi_neg8,
@@ -303,15 +301,13 @@ build_residual_cactus
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;        
-        dgmath_apply_fofufofvlj_Gaussnodes
+        curved_element_data_apply_fofufofvlj_Gaussnodes
           (
            dgmath_jit_dbase,
            &prob_vecs->u[ed->nodal_stride],
            NULL,
-           ed->deg,
-           ed->J_integ,
-           ed->xyz_integ,
-           ed->deg_integ + params->deg_offset_for_nonlinear_integ,
+           ed,
+           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
            (P4EST_DIM),
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
            cactus_neg_1o8_K2_psi_neg7,

@@ -5,7 +5,6 @@
 #include "../Solver/newton_petsc.h"
 #include "petscsnes.h"
 #include <ini.h>
-#include <krylov_petsc_pc.h>
 
 
 typedef struct {
@@ -142,8 +141,8 @@ PetscErrorCode newton_petsc_save_x0
 {
 
   PetscErrorCode ierr;
-  newton_petsc_ctx_t* rct = (newton_petsc_ctx_t*) ctx;
-  problem_data_t* vecs = rct->vecs;
+  petsc_ctx_t* petsc_ctx = (petsc_ctx_t*) ctx;
+  problem_data_t* vecs = petsc_ctx->vecs;
   const double* px0;
   ierr = VecGetArrayRead( x0, &px0 ); CHKERRQ(ierr);
 
@@ -167,18 +166,18 @@ static
 PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
 
   const double* xx;
-  newton_petsc_ctx_t* rct = (newton_petsc_ctx_t*) ctx;
+  petsc_ctx_t* petsc_ctx = (petsc_ctx_t*) ctx;
 
   double* ftemp;
 
   VecGetArray(f,&ftemp); 
   VecGetArrayRead(x,&xx);
 
-  problem_data_t* vecs = rct->vecs;
-  p4est_t* p4est = rct->p4est;
-  p4est_ghost_t* ghost = rct->ghost;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = rct->dgmath_jit_dbase;
-  d4est_geometry_t* d4est_geom = rct->d4est_geom;
+  problem_data_t* vecs = petsc_ctx->vecs;
+  p4est_t* p4est = petsc_ctx->p4est;
+  p4est_ghost_t* ghost = petsc_ctx->ghost;
+  dgmath_jit_dbase_t* dgmath_jit_dbase = petsc_ctx->dgmath_jit_dbase;
+  d4est_geometry_t* d4est_geom = petsc_ctx->d4est_geom;
   
   problem_data_t vecs_for_res_build;
   problem_data_copy_ptrs(vecs, &vecs_for_res_build);
@@ -187,10 +186,10 @@ PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
   vecs_for_res_build.Au = ftemp;
 
   if (d4est_geom != NULL){
-    ((curved_weakeqn_ptrs_t*)(rct->fcns))->build_residual(p4est, ghost, (curved_element_data_t*)(rct->ghost_data), &vecs_for_res_build, dgmath_jit_dbase,d4est_geom);
+    ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (curved_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_res_build, dgmath_jit_dbase,d4est_geom);
   }
   else {
-    ((weakeqn_ptrs_t*)(rct->fcns))->build_residual(p4est, ghost, (element_data_t*)(rct->ghost_data), &vecs_for_res_build, dgmath_jit_dbase);
+    ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (element_data_t*)(petsc_ctx->ghost_data), &vecs_for_res_build, dgmath_jit_dbase);
   }
   VecRestoreArray(f,&ftemp);//CHKERRQ(ierr);
   VecRestoreArrayRead(x,&xx);
@@ -206,21 +205,21 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
   void           *ctx;
   PetscErrorCode ierr;
 
-  newton_petsc_ctx_t* rct;
+  petsc_ctx_t* petsc_ctx;
   const double* px;
   double* py;
 
   /* PetscFunctionBegin; */
   ierr = MatShellGetContext( jac, &ctx ); CHKERRQ(ierr);  
-  rct = (newton_petsc_ctx_t *)ctx;
+  petsc_ctx = (petsc_ctx_t *)ctx;
   ierr = VecGetArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecGetArray( y, &py ); CHKERRQ(ierr);
 
-  problem_data_t* vecs = rct->vecs;
-  p4est_t* p4est = rct->p4est;
-  p4est_ghost_t* ghost = rct->ghost;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = rct->dgmath_jit_dbase;
-  d4est_geometry_t* d4est_geom = rct->d4est_geom;
+  problem_data_t* vecs = petsc_ctx->vecs;
+  p4est_t* p4est = petsc_ctx->p4est;
+  p4est_ghost_t* ghost = petsc_ctx->ghost;
+  dgmath_jit_dbase_t* dgmath_jit_dbase = petsc_ctx->dgmath_jit_dbase;
+  d4est_geometry_t* d4est_geom = petsc_ctx->d4est_geom;
 
 
   /* int i; */
@@ -238,10 +237,10 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
 
 
   if (d4est_geom != NULL){
-    ((curved_weakeqn_ptrs_t*)(rct->fcns))->apply_lhs(p4est, ghost, (curved_element_data_t*)(rct->ghost_data), &vecs_for_jac, dgmath_jit_dbase,d4est_geom);
+    ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (curved_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_jac, dgmath_jit_dbase,d4est_geom);
   }
   else {
-    ((weakeqn_ptrs_t*)(rct->fcns))->apply_lhs(p4est, ghost, (element_data_t*)(rct->ghost_data), &vecs_for_jac, dgmath_jit_dbase);
+    ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (element_data_t*)(petsc_ctx->ghost_data), &vecs_for_jac, dgmath_jit_dbase);
   }
   
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
@@ -261,9 +260,7 @@ void newton_petsc_solve
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  d4est_geometry_t* d4est_geom,
  const char* input_file,
- krylov_pc_create_fcn_t pc_create,
- krylov_pc_destroy_fcn_t pc_destroy,
- void* pc_data
+ krylov_pc_t* krylov_pc
 )
 {
   SNES snes;
@@ -277,21 +274,20 @@ void newton_petsc_solve
   VecSetFromOptions(x);//CHKERRQ(ierr);
   VecDuplicate(x,&r);//CHKERRQ(ierr);
   /* VecGetArray(x,&u_temp); */
-  krylov_petsc_params_t krylov_params = krylov_petsc_input(p4est, input_file);
-  krylov_params.pc_create = (pc_create == NULL) ? NULL : pc_create;
-  krylov_params.pc_destroy = (pc_destroy == NULL) ? NULL : pc_destroy;
-  krylov_params.pc_data = pc_data;
+  krylov_petsc_params_t krylov_params = krylov_petsc_input(p4est,input_file);
+  krylov_params.pc = krylov_pc;
   newton_petsc_params_t newton_params = newton_petsc_input(input_file);
   
-  newton_petsc_ctx_t rct;
-  rct.p4est = p4est;
-  rct.vecs = vecs;
-  rct.fcns = fcns;
-  rct.ghost = *ghost;
-  rct.ghost_data = *ghost_data;
-  rct.dgmath_jit_dbase = dgmath_jit_dbase;
-  rct.d4est_geom = d4est_geom;
-  SNESSetFunction(snes,r,newton_petsc_get_residual,(void*)&rct);//CHKERRQ(ierr);
+  petsc_ctx_t petsc_ctx;
+  petsc_ctx.p4est = p4est;
+  petsc_ctx.vecs = vecs;
+  petsc_ctx.fcns = fcns;
+  petsc_ctx.ghost = *ghost;
+  petsc_ctx.ghost_data = *ghost_data;
+  petsc_ctx.dgmath_jit_dbase = dgmath_jit_dbase;
+  petsc_ctx.d4est_geom = d4est_geom;
+  
+  SNESSetFunction(snes,r,newton_petsc_get_residual,(void*)&petsc_ctx);//CHKERRQ(ierr);
   SNESGetKSP(snes,&ksp);
   /* PetscOptionsSetValue(NULL,"-snes_mf",""); */
   PetscOptionsSetValue(NULL,"-snes_converged_reason","");
@@ -320,17 +316,6 @@ void newton_petsc_solve
     /* PetscOptionsSetValue(NULL,"-ksp_monitor",""); */
 
 
-  /* SET PRECONDITIONER */
-  /* SET PRECONDITIONER */
-  /* SET PRECONDITIONER */
-  krylov_pc_ctx_t kct;
-  kct.p4est = p4est;
-  kct.vecs = vecs;
-  kct.fcns = fcns;
-  kct.ghost = ghost;
-  kct.ghost_data = ghost_data;
-  kct.dgmath_jit_dbase = dgmath_jit_dbase;
-  kct.d4est_geom = d4est_geom;
   /* PetscOptionsSetValue(NULL,"-ksp_monitor",""); */
   /* PetscOptionsSetValue(NULL,"-ksp_converged_reason",""); */
   /* PetscOptionsSetValue(NULL,"-ksp_atol","1e-20"); */
@@ -339,19 +324,19 @@ void newton_petsc_solve
   /* PetscOptionsSetValue(NULL,"-ksp_max_it","1000000"); */
   PC pc;
   KSPGetPC(ksp,&pc);
-  
-  krylov_pc_t* kp = NULL;
-  if (krylov_params.ksp_user_defined_pc) {
+  if (krylov_pc != NULL) {
     PCSetType(pc,PCSHELL);//CHKERRQ(ierr);
-    kp = krylov_params.pc_create(&kct);
+    krylov_pc->pc_ctx = &petsc_ctx;
     PCShellSetApply(pc, krylov_petsc_pc_apply);//CHKERRQ(ierr);
-    PCShellSetSetUp(pc, krylov_petsc_pc_setup);
-    PCShellSetContext(pc, kp);//CHKERRQ(ierr);
+    if (krylov_pc->pc_setup != NULL){
+      PCShellSetSetUp(pc, krylov_petsc_pc_setup);
+    }
+    PCShellSetContext(pc, krylov_pc);//CHKERRQ(ierr);
   }
   else {
     PCSetType(pc,PCNONE);//CHKERRQ(ierr);
   }
-
+  
   /* KSPSetType(ksp, krylov_params.ksp_type); */
   KSPSetFromOptions(ksp);
   
@@ -377,7 +362,7 @@ void newton_petsc_solve
      vecs->local_nodes,
      PETSC_DETERMINE,
      PETSC_DETERMINE,
-     (void*)&rct,
+     (void*)&petsc_ctx,
      &J
     );
   
@@ -385,7 +370,7 @@ void newton_petsc_solve
   /* MatSetFromOptions(J); */
   MatShellSetOperation(J,MATOP_MULT,(void(*)())newton_petsc_apply_jacobian);
   /* MatCreateSNESMF(snes, &J); */
-  SNESSetJacobian(snes,J,J,newton_petsc_save_x0,(void*)&rct);
+  SNESSetJacobian(snes,J,J,newton_petsc_save_x0,(void*)&petsc_ctx);
 
   /* linalg_copy_1st_to_2nd(vecs->u, u_temp, vecs->local_nodes); */
 

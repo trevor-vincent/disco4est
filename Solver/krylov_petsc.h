@@ -5,6 +5,8 @@
 #include "../pXest/pXest.h"
 #include "../EllipticSystem/problem_data.h"
 #include "../EllipticSystem/problem_weakeqn_ptrs.h"
+
+#include <d4est_petsc.h>
 #include <krylov_pc.h>
 
 typedef struct {
@@ -23,11 +25,7 @@ typedef struct {
   double ksp_atol;
   double ksp_rtol;
   int ksp_maxit;
-  int ksp_user_defined_pc;
-
-  krylov_pc_create_fcn_t pc_create;
-  krylov_pc_destroy_fcn_t pc_destroy;
-  void* pc_data;
+  krylov_pc_t* pc;
 
   int count;
   
@@ -45,9 +43,7 @@ krylov_petsc_solve
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  d4est_geometry_t* d4est_geom,
  const char* input_file,
- krylov_pc_create_fcn_t pc_create,
- krylov_pc_destroy_fcn_t pc_destroy,
- void* pc_data
+ krylov_pc_t* pc
 );
 
 krylov_petsc_params_t

@@ -1,38 +1,40 @@
 #ifndef TWOPUNCTURESFCNS_H
 #define TWOPUNCTURESFCNS_H 
 
-#define NUM_PUNCTURES 4
+#define MAX_PUNCTURES 10
 
 typedef struct {
-  double puncture_eps;
-  double xyz_bh [NUM_PUNCTURES][3];
-  double P_bh [NUM_PUNCTURES][3];
-  double S_bh [NUM_PUNCTURES][3];
-  double M_bh [NUM_PUNCTURES];
-  int deg_offset_for_nonlinear_integ;
+  double C_bh [MAX_PUNCTURES][3];
+  double P_bh [MAX_PUNCTURES][3];
+  double S_bh [MAX_PUNCTURES][3];
+  double M_bh [MAX_PUNCTURES];
+  int num_punctures;
+  int deg_offset_for_puncture_nonlinearity_integ;
   
 } twopunctures_params_t;
 
 static
 void
-init_puncture_data
+init_twopunctures_data
 (
  twopunctures_params_t* params,
- int deg_offset_for_nonlinear_integ
+ int deg_offset_for_puncture_nonlinearity_integ
 )
 {
   double M = 1.;
-  params->puncture_eps = 0.;
+  int num_punctures = 2;
+  mpi_assert(num_punctures < (MAX_PUNCTURES));
+  
   params->M_bh[0] = .5*M;
   params->M_bh[1] = .5*M;
 
-  params->xyz_bh[0][0] = -3*M;
-  params->xyz_bh[0][1] = 0.;
-  params->xyz_bh[0][2] = 0.;
+  params->C_bh[0][0] = -3*M;
+  params->C_bh[0][1] = 0.;
+  params->C_bh[0][2] = 0.;
 
-  params->xyz_bh[1][0] = 3*M;
-  params->xyz_bh[1][1] = 0;
-  params->xyz_bh[1][2] = 0;
+  params->C_bh[1][0] = 3*M;
+  params->C_bh[1][1] = 0;
+  params->C_bh[1][2] = 0;
 
   params->P_bh[0][0] = 0.;
   params->P_bh[0][1] = -0.2*M;
@@ -50,48 +52,11 @@ init_puncture_data
   params->S_bh[1][1] = 0.;
   params->S_bh[1][2] = 0.;
 
-  params->deg_offset_for_nonlinear_integ = deg_offset_for_nonlinear_integ;
-}
-
-static
-void
-init_S_puncture_data
-(
- p4est_t* p4est,
- twopunctures_params_t* params,
- int deg_offset_for_nonlinear_integ
-)
-{
-  double M = 1.;
-  params->puncture_eps = 0.;
-  params->M_bh[0] = .5*M;
-  params->M_bh[1] = .5*M;
-
-  params->xyz_bh[0][0] = -10*M;
-  params->xyz_bh[0][1] = 0.;
-  params->xyz_bh[0][2] = 0.;
-
-  params->xyz_bh[1][0] = +10*M;
-  params->xyz_bh[1][1] = 0.;
-  params->xyz_bh[1][2] = 0;
-
-  params->P_bh[0][0] = 0.;
-  params->P_bh[0][1] = -0.2*M;
-  params->P_bh[0][2] = 0.;
-
-  params->P_bh[1][0] = 0.;
-  params->P_bh[1][1] = 0.2*M;
-  params->P_bh[1][2] = 0.;
-
-  params->S_bh[0][0] = 0.;
-  params->S_bh[0][1] = 0.;
-  params->S_bh[0][2] = 0.;
+  params->deg_offset_for_puncture_nonlinearity_integ
+    = deg_offset_for_puncture_nonlinearity_integ;
   
-  params->S_bh[1][0] = 0.;
-  params->S_bh[1][1] = 0.;
-  params->S_bh[1][2] = 0.;
-  params->deg_offset_for_nonlinear_integ = deg_offset_for_nonlinear_integ;
 }
+
 
 static
 void
@@ -99,24 +64,26 @@ init_random_puncture_data
 (
  p4est_t* p4est,
  twopunctures_params_t* params,
- int deg_offset_for_nonlinear_integ
+ int num_punctures,
+ int deg_offset_for_puncture_nonlinearity_integ
 )
 {
-  double M = 1.;
-  params->puncture_eps = 0.;
-
-  double rand_x [NUM_PUNCTURES];
-  double rand_y [NUM_PUNCTURES];
-  double rand_px [NUM_PUNCTURES];
-  double rand_py [NUM_PUNCTURES];
-
-  util_gen_rand_vec(&rand_x[0], NUM_PUNCTURES, 1532413243, -5., 5.);
-  util_gen_rand_vec(&rand_y[0], NUM_PUNCTURES, 1532413243, -5., 5.);
-  util_gen_rand_vec(&rand_px[0], NUM_PUNCTURES, 13232413243, -.2, .2);
-  util_gen_rand_vec(&rand_py[0], NUM_PUNCTURES, 14432413243, -.2, .2);
+  mpi_assert(num_punctures < (MAX_PUNCTURES));
   
-  for (int i = 0; i < NUM_PUNCTURES; i++){
-    params->M_bh[i] = M/(double)(NUM_PUNCTURES);
+  double M = 1.;
+
+  double rand_x [MAX_PUNCTURES];
+  double rand_y [MAX_PUNCTURES];
+  double rand_px [MAX_PUNCTURES];
+  double rand_py [MAX_PUNCTURES];
+
+  util_gen_rand_vec(&rand_x[0], num_punctures, 1532413243, -5., 5.);
+  util_gen_rand_vec(&rand_y[0], num_punctures, 1532413243, -5., 5.);
+  util_gen_rand_vec(&rand_px[0], num_punctures, 13232413243, -.2, .2);
+  util_gen_rand_vec(&rand_py[0], num_punctures, 14432413243, -.2, .2);
+  
+  for (int i = 0; i < num_punctures; i++){
+    params->M_bh[i] = M/(double)(num_punctures);
     params->xyz_bh[i][0] = rand_x[i];
     params->xyz_bh[i][1] = rand_y[i];
     params->xyz_bh[i][2] = 0.;
@@ -143,7 +110,8 @@ init_random_puncture_data
     
   }
 
-  params->deg_offset_for_nonlinear_integ = deg_offset_for_nonlinear_integ;
+  params->deg_offset_for_puncture_nonlinearity_integ
+    = deg_offset_for_puncture_nonlinearity_integ;
 }
 
 static
@@ -345,16 +313,14 @@ void apply_jac
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;        
-        dgmath_apply_fofufofvlilj_Gaussnodes
+        curved_element_data_apply_fofufofvlilj_Gaussnodes
           (
            dgmath_jit_dbase,
            &prob_vecs->u[ed->nodal_stride],
            &prob_vecs->u0[ed->nodal_stride],
            NULL,
-           ed->deg,
-           ed->J_integ,
-           ed->xyz_integ,
-           ed->deg_integ + params->deg_offset_for_nonlinear_integ,
+           ed,
+           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
            (P4EST_DIM),
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
            plus_7o8_K2_psi_neg8,
@@ -396,15 +362,13 @@ build_residual
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;        
-        dgmath_apply_fofufofvlj_Gaussnodes
+        curved_element_data_apply_fofufofvlj_Gaussnodes
           (
            dgmath_jit_dbase,
            &prob_vecs->u[ed->nodal_stride],
            NULL,
-           ed->deg,
-           ed->J_integ,
-           ed->xyz_integ,
-           ed->deg_integ + params->deg_offset_for_nonlinear_integ,
+           ed,
+           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
            (P4EST_DIM),
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
            neg_1o8_K2_psi_neg7,

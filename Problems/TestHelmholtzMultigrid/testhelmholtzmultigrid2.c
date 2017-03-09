@@ -954,36 +954,36 @@ problem_init
       
       /* printf("STOP HERE DUCKERS\n"); */
       
-      multigrid_solve
-        (
-         p4est,
-         &prob_vecs,
-         &prob_fcns,
-         mg_data,
-         &ghost,
-         &ghost_data
-        );
-      
-                
-      /* krylov_petsc_info_t info = */
-      /*   krylov_petsc_solve */
+      /* multigrid_solve */
       /*   ( */
       /*    p4est, */
       /*    &prob_vecs, */
-      /*    (void*)&prob_fcns, */
+      /*    &prob_fcns, */
+      /*    mg_data, */
       /*    &ghost, */
-      /*    (void**)&ghost_data, */
-      /*    dgmath_jit_dbase, */
-      /*    NULL, */
-      /*    input_file, */
-      /*    NULL, */
-      /*    NULL, */
-      /*    NULL */
+      /*    &ghost_data */
       /*   ); */
+
+      krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data);
+
+                
+      krylov_petsc_info_t info =
+        krylov_petsc_solve
+        (
+         p4est,
+         &prob_vecs,
+         (void*)&prob_fcns,
+         &ghost,
+         (void**)&ghost_data,
+         dgmath_jit_dbase,
+         NULL,
+         input_file,
+         pc
+        );
   
       multigrid_data_destroy(mg_data);
       multigrid_matrix_operator_destroy(matrix_op);
-      
+      krylov_pc_multigrid_destroy(pc);      
 
     linalg_vec_axpy(-1., u, u_analytic, local_nodes);
     
