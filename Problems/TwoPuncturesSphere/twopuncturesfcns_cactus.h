@@ -12,7 +12,7 @@ typedef struct {
   double par_P_minus [3];
   double par_m_plus;
   double par_m_minus;
-  int deg_offset_for_nonlinear_integ;
+  int deg_offset_for_puncture_nonlinearity_integ;
   
 } twopunctures_cactus_params_t;
 
@@ -21,7 +21,7 @@ void
 init_cactus_puncture_data
 (
  twopunctures_cactus_params_t* params,
- int deg_offset_for_nonlinear_integ
+ int deg_offset_for_puncture_nonlinearity_integ
 )
 {
   double M = 1.;
@@ -30,7 +30,7 @@ init_cactus_puncture_data
   params->TP_epsilon = 0.;
   
   params->par_m_minus = .5*M;
-  params->par_m_minus = .5*M;
+  params->par_m_plus = .5*M;
   params->par_b = 3*M;
   
   params->par_P_minus[0] = 0.;
@@ -164,6 +164,8 @@ BY_KKofxyz (double x, double y, double z, void* user)
 	- 3.0 * (nm_Sm[i] * n_minus[j] + nm_Sm[j] * n_minus[i]) / r3_minus;
       if (i == j)
 	Aij -= +1.5 * (np_Pp / r2_plus + nm_Pm / r2_minus);
+
+      
       AijAij += Aij * Aij;
     }
   }
@@ -173,7 +175,7 @@ BY_KKofxyz (double x, double y, double z, void* user)
 
 
 static
-double cactus_plus_7o8_K2_psi_neg8
+double twopunctures_cactus_plus_7o8_K2_psi_neg8
 (
  double x,
  double y,
@@ -198,7 +200,7 @@ double cactus_plus_7o8_K2_psi_neg8
 
 
 static
-double cactus_neg_1o8_K2_psi_neg7
+double twopunctures_cactus_neg_1o8_K2_psi_neg7
 (
  double x,
  double y,
@@ -218,11 +220,14 @@ double cactus_neg_1o8_K2_psi_neg7
   psi4 = psi2 * psi2;
   psi7 = psi * psi2 * psi4;
 
+  /* printf("cactus r_plus r_minus m_plus m_minus = %.6f %.6f %.6f %.6f\n", r_plus, r_minus, params->par_m_plus, params->par_m_minus); */
+  /* printf("cactus BY_KKofxyz(x,y,z,user) = %.25f\n", BY_KKofxyz (x, y, z, user)); */
+  /* printf("cactus psi, psi7 = %.25f, %.25f\n", psi, psi7); */
   return -0.125 * BY_KKofxyz (x, y, z, user) / psi7;
 }
 
 static
-void apply_jac_cactus
+void twopunctures_cactus_apply_jac
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -255,6 +260,7 @@ void apply_jac_cactus
         curved_element_data_apply_fofufofvlilj_Gaussnodes
           (
            dgmath_jit_dbase,
+           d4est_geom,
            &prob_vecs->u[ed->nodal_stride],
            &prob_vecs->u0[ed->nodal_stride],
            NULL,
@@ -262,7 +268,7 @@ void apply_jac_cactus
            ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
            (P4EST_DIM),
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
-           cactus_plus_7o8_K2_psi_neg8,
+           twopunctures_cactus_plus_7o8_K2_psi_neg8,
            prob_vecs->user,
            NULL,
            NULL
@@ -276,7 +282,7 @@ void apply_jac_cactus
 
 static
 void
-build_residual_cactus
+twopunctures_cactus_build_residual
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -304,13 +310,14 @@ build_residual_cactus
         curved_element_data_apply_fofufofvlj_Gaussnodes
           (
            dgmath_jit_dbase,
+           d4est_geom,
            &prob_vecs->u[ed->nodal_stride],
            NULL,
            ed,
            ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
            (P4EST_DIM),
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
-           cactus_neg_1o8_K2_psi_neg7,
+           twopunctures_cactus_neg_1o8_K2_psi_neg7,
            prob_vecs->user,
            NULL,
            NULL

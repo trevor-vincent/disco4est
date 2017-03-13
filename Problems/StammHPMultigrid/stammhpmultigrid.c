@@ -374,14 +374,12 @@ problem_input
 void
 problem_init
 (
- int argc,
- char* argv [],
+ const char* input_file,
  p4est_t* p4est,
- p4est_geometry_t* p4est_geom,
+ d4est_geometry_t* d4est_geom,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  int proc_size,
- sc_MPI_Comm mpicomm,
- int load_from_checkpoint
+ sc_MPI_Comm mpicomm
 )
 {
   mpi_assert((P4EST_DIM) == 3 || (P4EST_DIM) == 2);
@@ -390,7 +388,7 @@ problem_init
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);
 
-  problem_input_t input = problem_input("options.input");
+  problem_input_t input = problem_input(input_file);
   
   int level;
   int endlevel = input.endlevel;
@@ -415,20 +413,16 @@ problem_init
   penalty_calc_t bi_u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
   penalty_calc_t bi_gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
   
-  if (!load_from_checkpoint){
     p4est_partition_ext(p4est, 0, NULL);
     p4est_balance_ext(p4est, P4EST_CONNECT_FACE, NULL, NULL);
-  }
 
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   /* create space for storing the ghost data */
   element_data_t* ghost_data = P4EST_ALLOC (element_data_t,
                                             ghost->ghosts.elem_count);
 
-  if (!load_from_checkpoint){
     p4est_reset_data(p4est, sizeof(element_data_t), NULL, NULL);
     element_data_init(p4est, degree);
-  }
   
   int local_nodes = element_data_get_local_nodes(p4est);
   double* Au = P4EST_ALLOC_ZERO(double, local_nodes);
@@ -470,10 +464,6 @@ problem_init
     );
   
  
-  if(load_from_checkpoint){
-    mpi_abort("load from checkpoint not working yet");
-  }
-
   hp_amr_scheme_t* scheme =
     hp_amr_smooth_pred_init
     (
@@ -573,13 +563,13 @@ problem_init
        dgmath_jit_dbase
       );
     
-    estimator_stats_t stats;
-    estimator_stats_compute(p4est, &stats,0);
+    estimator_stats_t* stats = P4EST_ALLOC(estimator_stats_t, 1);
+    estimator_stats_compute(p4est, stats,0);
 
     /* if(world_rank == 0) */
       /* estimator_stats_print(&stats, 0); */
 
-    local_eta2 = stats.total;
+    local_eta2 = stats->total;
         
     element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);    
 
@@ -647,14 +637,19 @@ problem_init
     P4EST_FREE(u_vertex);   
     P4EST_FREE(eta2_vertex);   
 
-    estimator_stats_print(&stats, world_rank);
+    if(world_rank == 0)
+      estimator_stats_print(stats);
     
+    int curved = 0;
     hp_amr(p4est,
            dgmath_jit_dbase,
            &u,
            &stats,
-           (level > 1) ? scheme : scheme_uni
+           (level > 1) ? scheme : scheme_uni,
+           curved
           );
+    
+    P4EST_FREE(stats);
     
     p4est_ghost_destroy(ghost);
     P4EST_FREE(ghost_data);
@@ -697,10 +692,10 @@ problem_init
     printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
 
     /* need to do a reduce on min,max_level before supporting multiple proc */
-    mpi_assert(proc_size == 1);
+    /* mpi_assert(proc_size == 1); */
     int num_of_levels = max_level + 1;
     
-    int vcycle_iter = 0;
+    int vcycle_iter = 3;
       double vcycle_rtol = 1e-9;
       double vcycle_atol = 0.;
       int smooth_iter = 15;
@@ -733,7 +728,7 @@ problem_init
          coarse_rtol,
          save_vtk_snapshot,
          perform_checksum,
-         ERR_AND_EIG_LOG,
+         RESIDUAL_INFO,
          dgmath_jit_dbase,
          cg_eigs_use_zero_vec_as_initial
         );

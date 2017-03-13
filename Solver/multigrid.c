@@ -649,6 +649,75 @@ multigrid_vcycle
   p4est->user_pointer = tmpptr;
 }
 
+
+
+void
+multigrid_print_info
+(
+ p4est_t* p4est,
+ multigrid_data_t* mg_data,
+ int v,
+ double r2_i_global,
+ double old_r2_i_global
+)
+{
+  if (mg_data->mpi_rank == 0 && mg_data->log_option == RESIDUAL_INFO)
+    printf("[MG_SOLVER]: %d %.30f %f\n", v, sqrt(r2_i_global), sqrt(r2_i_global/old_r2_i_global));
+}
+
+
+static double
+multigrid_compute_residual
+(
+ p4est_t* p4est,
+ multigrid_data_t* mg_data,
+ problem_data_t* vecs,
+ weakeqn_ptrs_t* fcns,
+ element_data_t* ghost_data,
+ p4est_ghost_t* ghost
+){
+
+  if (mg_data->mg_state == PRE_V){
+    double* Au; 
+    double* rhs;
+    int local_nodes = vecs->local_nodes;
+    Au = vecs->Au;
+    rhs = vecs->rhs;
+    double* r = P4EST_ALLOC(double, vecs->local_nodes);
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, mg_data->dgmath_jit_dbase);  
+    linalg_vec_axpyeqz(-1., Au, rhs, r, local_nodes);
+    double r2_0_local = linalg_vec_dot(r,r,local_nodes);  
+    P4EST_FREE(r);
+  
+    double r2_0_global;
+    sc_allreduce
+      (
+       &r2_0_local,
+       &r2_0_global,
+       1,
+       sc_MPI_DOUBLE,
+       sc_MPI_SUM,
+       sc_MPI_COMM_WORLD
+      );  
+  
+    return r2_0_global;
+  }
+  else {
+    double r2_i_local = mg_data->vcycle_r2local;
+    double r2_i_global;
+    sc_allreduce
+      (
+       &r2_i_local,
+       &r2_i_global,
+       1,
+       sc_MPI_DOUBLE,
+       sc_MPI_SUM,
+       sc_MPI_COMM_WORLD
+      );
+    return r2_i_global;
+  }
+}
+
 void
 multigrid_solve
 (
@@ -660,75 +729,38 @@ multigrid_solve
  element_data_t** ghost_data
 )
 {
-
   /*
    * Calculate the initial residual
    * for termination condition
    */
-  double* Au; 
-  double* rhs;
-  int local_nodes = vecs->local_nodes;
-  Au = vecs->Au;
-  rhs = vecs->rhs;
-  double* r = P4EST_ALLOC(double, vecs->local_nodes);
-  fcns->apply_lhs(p4est, *ghost, *ghost_data, vecs, mg_data->dgmath_jit_dbase);  
-  linalg_vec_axpyeqz(-1., Au, rhs, r, local_nodes);
-  double r2_0_local = linalg_vec_dot(r,r,local_nodes);  
-  P4EST_FREE(r);
-  
-  double r2_0_global;
-  sc_allreduce
-    (
-     &r2_0_local,
-     &r2_0_global,
-     1,
-     sc_MPI_DOUBLE,
-     sc_MPI_SUM,
-     sc_MPI_COMM_WORLD
-    );  
-  
-  double r2_i_local; 
+
+  double r2_0_global = multigrid_compute_residual
+                       (
+                        p4est,
+                        mg_data,
+                        vecs,
+                        fcns,
+                        *ghost_data,
+                        *ghost
+                       );
   double r2_i_global = r2_0_global;
   double old_r2_i_global = r2_i_global;
-  /*
-   * End Termination residual 
-   * calculation
-   */
 
 
-  /* double* err = NULL; */
-  /* double* u_analytic = NULL;  */
-  double err_2_temp, err_2, old_err_2 = -1.;
   int v = 0;
-  
-  if (mg_data->log_option == ERR_LOG || mg_data->log_option == ERR_AND_EIG_LOG){
+  mg_data->vcycle_num_finished = v;
+  mg_data->mg_state = PRE_V;
+  multigrid_print_info
+    (
+     p4est,
+     mg_data,
+     v,
+     r2_i_global,
+     old_r2_i_global
+    );
 
-    if (mg_data->analytical_solution == NULL){
-      mpi_abort("If log_option == ERR_LOG or ERR_AND_EIG_LOG, you must set the analytical solution");
-    }
-    
-    err_2_temp = (element_data_compute_l2_norm_error_no_local(p4est, vecs->u, vecs->local_nodes, mg_data->analytical_solution, mg_data->dgmath_jit_dbase));
- 
-    sc_reduce
-      (
-       &err_2_temp,
-       &err_2,
-       1,
-       sc_MPI_DOUBLE,
-       sc_MPI_SUM,
-       0,
-       sc_MPI_COMM_WORLD
-      );
-    old_err_2 = err_2;
-    if (mg_data->mpi_rank == 0)
-      printf("[MG_SOLVER]: %d %.20f %.20f %f %f\n", v, sqrt(err_2), sqrt(r2_i_global), sqrt(err_2/old_err_2), sqrt(r2_i_global/old_r2_i_global));
-  }
-  else {
-    if (mg_data->mpi_rank == 0)
-      printf("[MG_SOLVER]: %d %.20f %f\n", v, sqrt(r2_i_global), sqrt(r2_i_global/old_r2_i_global));
-  }
-
-  double r2_stop_atol = mg_data->vcycle_rtol*mg_data->vcycle_rtol*r2_0_global + mg_data->vcycle_atol*mg_data->vcycle_atol;
+  double r2_stop_atol = mg_data->vcycle_rtol*mg_data->vcycle_rtol*r2_0_global
+                        + mg_data->vcycle_atol*mg_data->vcycle_atol;
 
   /**
    * START VCYCLING
@@ -742,11 +774,7 @@ multigrid_solve
     )
     {
       
-    if (mg_data->perform_checksum == 1){
-      int checksum_b = p4est_checksum(p4est);
-      printf("[MG_SOLVER]: Checksum before VCYCLE: %d\n", checksum_b);
-    }
-
+ 
     if ( v != 0 && mg_data->max_eig_reuse == 1){
       mg_data->solve_for_eigs = 0;
       /* mg_data->max_eig_factor = 1.; */
@@ -754,72 +782,26 @@ multigrid_solve
     else {
       mg_data->solve_for_eigs = 1;
     }
-      
+    
     multigrid_vcycle(p4est, vecs, fcns, mg_data, ghost, ghost_data);
-
-    if (mg_data->perform_checksum == 1){
-      int checksum_a = p4est_checksum(p4est);
-      printf("[MG_SOLVER]: Checksum after VCYCLE: %d\n", checksum_a);
-    }
+    mg_data->mg_state = POST_V;
+    r2_i_global = multigrid_compute_residual
+                       (
+                        p4est,
+                        mg_data,
+                        vecs,
+                        fcns,
+                        *ghost_data,
+                        *ghost
+                       );
+    multigrid_print_info(p4est, mg_data, v, r2_i_global, old_r2_i_global);
     
-    /* Calculate for termination check*/
-    r2_i_local = mg_data->vcycle_r2local;
-    sc_allreduce
-      (
-       &r2_i_local,
-       &r2_i_global,
-       1,
-       sc_MPI_DOUBLE,
-       sc_MPI_SUM,
-       sc_MPI_COMM_WORLD
-      );
-
-    double gamma = sqrt(r2_i_global/old_r2_i_global);
-    /* print out error/residual diagnostics */
-    if (mg_data->log_option == ERR_LOG || mg_data->log_option == ERR_AND_EIG_LOG)
-      {
-        if (mg_data->analytical_solution == NULL){
-          mpi_abort("If log_option == ERR_LOG or ERR_AND_EIG_LOG, you must set the analytical solution");
-        }
-        
-        /* linalg_vec_axpyeqz(-1., vecs->u, u_analytic, err, local_nodes); */
-        err_2_temp = (element_data_compute_l2_norm_error_no_local(p4est, vecs->u, vecs->local_nodes, mg_data->analytical_solution, mg_data->dgmath_jit_dbase));
-        
-        sc_reduce
-          (
-           &err_2_temp,
-           &err_2,
-           1,
-           sc_MPI_DOUBLE,
-           sc_MPI_SUM,
-           0,
-           sc_MPI_COMM_WORLD
-          );
-        if (mg_data->mpi_rank == 0)
-          printf("[MG_SOLVER]: %d %.20f %.20f %f %f\n",v, sqrt(err_2), sqrt(r2_i_global), sqrt(err_2/old_err_2), sqrt(r2_i_global/old_r2_i_global));
-        old_err_2 = err_2;
-      }
-    else {
-      if (mg_data->mpi_rank == 0)
-        printf("[MG_SOLVER]: %d %.20f %.25f %.25f\n", v, sqrt(r2_i_global), sqrt(r2_i_global/old_r2_i_global), pow((r2_i_global/r2_0_global), 1./(v + 1)));
-    }
-
-    if (mg_data->log_option == RES_AND_EIG_LOG || mg_data->log_option == ERR_AND_EIG_LOG){
-      int i;
-      if(mg_data->mpi_rank == 0)
-        for (i = 0; i < mg_data->num_of_levels; i++){
-          printf("[MG_SOLVER]: LEV %d MAX_EIG %.20f\n", i, mg_data->max_eigs[i]);
-        }
-    }
-    
-    if (gamma >= .99){
+    if (sqrt(r2_i_global/old_r2_i_global) >= .99){
       break;
     } 
     old_r2_i_global = r2_i_global;
     v++;
+    mg_data->vcycle_num_finished = v;
   }
-  
 
-  mg_data->final_vcycles = v;
-  /* P4EST_FREE(mg_data->max_eigs); */
 }

@@ -150,6 +150,7 @@ void curved_element_data_set_degrees(p4est_t *p4est,int(*set_deg_fcn)(int,int,in
 void curved_element_data_apply_fofufofvlilj_Gaussnodes
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geometry,
  double* vec,
  double* u,
  double* v,
@@ -163,9 +164,10 @@ void curved_element_data_apply_fofufofvlilj_Gaussnodes
  void* fofv_ctx
 );
 
-void curved_element_apply_fofufofvlj_Gaussnodes
+void curved_element_data_apply_fofufofvlj_Gaussnodes
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geometry,
  double* u,
  double* v,
  curved_element_data_t* elem_data,

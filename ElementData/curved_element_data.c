@@ -1130,6 +1130,9 @@ curved_element_data_init_new
            elem_data->xyz_integ
           );
 
+        /* printf("\nElement %d\n", elem_data->id); */
+        /* DEBUG_PRINT_3ARR_DBL(elem_data->xyz_integ[0], elem_data->xyz_integ[1], elem_data->xyz_integ[2], volume_nodes_integ); */
+        
         curved_element_data_compute_dxyz_drst
           (
            dgmath_jit_dbase,
@@ -1484,6 +1487,12 @@ curved_element_compute_derivative_on_Gauss
   double* dvec_di_prolonged = P4EST_ALLOC(double, volume_nodes_Gauss);
   double* dvec_di_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
   double* dvec_di_Lobatto = P4EST_ALLOC(double, volume_nodes_Lobatto);
+
+  for (int j = 0; j < (P4EST_DIM); j++){
+    for (int k = 0; k < volume_nodes_Gauss; k++){
+      dvec[j][k] = 0.;
+    }
+  }
   
   for (int i = 0; i < (P4EST_DIM); i++){
 
@@ -1547,6 +1556,7 @@ curved_element_data_compute_dg_norm_sqr
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;
         int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), ed->deg_integ);
+        int volume_nodes_Lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg);
         double* dnodal_vec [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(dnodal_vec, volume_nodes_Gauss);
 
         curved_element_compute_derivative_on_Gauss
@@ -1558,7 +1568,7 @@ curved_element_data_compute_dg_norm_sqr
            ed->deg_integ,
            dgmath_jit_dbase
           );
-        
+  
         
         for (int d = 0; d < (P4EST_DIM); d++)
           {
@@ -4979,6 +4989,7 @@ curved_element_data_print_number_of_elements_per_tree
 void curved_element_data_apply_fofufofvlilj_Gaussnodes
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geometry,
  double* vec,
  double* u,
  double* v,
@@ -5019,11 +5030,11 @@ void curved_element_data_apply_fofufofvlilj_Gaussnodes
 
 
     int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss);
-    double J_integ = P4EST_ALLOC(double, volume_nodes_Gauss);
-    double xyz_integ [(P4EST_DIM)];
+    double* J_integ = P4EST_ALLOC(double, volume_nodes_Gauss);
+    double* xyz_integ [(P4EST_DIM)];
     D4EST_ALLOC_DIM_VEC(xyz_integ, volume_nodes_Gauss);
-    double xyz_rst_integ [(P4EST_DIM)][(P4EST_DIM)];
-    double rst_xyz_integ [(P4EST_DIM)][(P4EST_DIM)];
+    double* xyz_rst_integ [(P4EST_DIM)][(P4EST_DIM)];
+    double* rst_xyz_integ [(P4EST_DIM)][(P4EST_DIM)];
     D4EST_ALLOC_DBYD_MAT(xyz_rst_integ, volume_nodes_Gauss);
     D4EST_ALLOC_DBYD_MAT(rst_xyz_integ, volume_nodes_Gauss);
     
@@ -5032,7 +5043,7 @@ void curved_element_data_apply_fofufofvlilj_Gaussnodes
        dgmath_jit_dbase,
        d4est_geometry->p4est_geom,
        elem_data->tree,
-       elem_data->deg_Gauss,
+       deg_Gauss,
        GAUSS,
        elem_data->q,
        elem_data->dq,
@@ -5094,9 +5105,10 @@ void curved_element_data_apply_fofufofvlilj_Gaussnodes
 }
 
 
-void curved_element_apply_fofufofvlj_Gaussnodes
+void curved_element_data_apply_fofufofvlj_Gaussnodes
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geometry,
  double* u,
  double* v,
  curved_element_data_t* elem_data,
@@ -5112,9 +5124,10 @@ void curved_element_apply_fofufofvlj_Gaussnodes
 
   int deg_Lobatto = elem_data->deg;
   
-  if (deg_Lobatto == elem_data->deg
-      && deg_Gauss == elem_data->deg_integ)
+  if (deg_Gauss == elem_data->deg_integ)
     {
+      /* int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss); */
+      /* DEBUG_PRINT_ARR_DBL(elem_data->J_integ, volume_nodes_Gauss); */
       dgmath_apply_fofufofvlj_Gaussnodes
         (
          dgmath_jit_dbase,
@@ -5131,26 +5144,27 @@ void curved_element_apply_fofufofvlj_Gaussnodes
          fofv_fcn,
          fofv_ctx
         );
-    }
-  else if (deg_Lobatto == elem_data->deg &&
-           deg_Gauss > elem_data->deg_integ){
 
+      
+    }
+  else if (deg_Gauss > elem_data->deg_integ){
 
     int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss);
-    double J_integ = P4EST_ALLOC(double, volume_nodes_Gauss);
-    double xyz_integ [(P4EST_DIM)];
+    double* J_integ = P4EST_ALLOC(double, volume_nodes_Gauss);
+    double* xyz_integ [(P4EST_DIM)];
     D4EST_ALLOC_DIM_VEC(xyz_integ, volume_nodes_Gauss);
-    double xyz_rst_integ [(P4EST_DIM)][(P4EST_DIM)];
-    double rst_xyz_integ [(P4EST_DIM)][(P4EST_DIM)];
+    double* xyz_rst_integ [(P4EST_DIM)][(P4EST_DIM)];
+    double* rst_xyz_integ [(P4EST_DIM)][(P4EST_DIM)];
     D4EST_ALLOC_DBYD_MAT(xyz_rst_integ, volume_nodes_Gauss);
     D4EST_ALLOC_DBYD_MAT(rst_xyz_integ, volume_nodes_Gauss);
+    
     
     curved_element_data_compute_xyz
       (
        dgmath_jit_dbase,
        d4est_geometry->p4est_geom,
        elem_data->tree,
-       elem_data->deg_Gauss,
+       deg_Gauss,
        GAUSS,
        elem_data->q,
        elem_data->dq,

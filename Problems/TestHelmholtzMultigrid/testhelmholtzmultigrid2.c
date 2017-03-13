@@ -20,6 +20,7 @@
 #include <dg_norm.h>
 #include <ini.h>
 #include <krylov_petsc.h>
+#include <krylov_pc_multigrid.h>
 #include <multigrid_matrix_operator.h>
 #include "time.h"
 
@@ -884,7 +885,7 @@ problem_init
     
     
     /* need to do a reduce on min,max_level before supporting multiple proc */
-    mpi_assert(proc_size == 1);
+    /* mpi_assert(proc_size == 1); */
     int num_of_levels = max_level + 1;
     
     int vcycle_iter = 3;
@@ -924,7 +925,7 @@ problem_init
          coarse_rtol,
          save_vtk_snapshot,
          perform_checksum,
-         ERR_AND_EIG_LOG,
+         RESIDUAL_INFO,
          dgmath_jit_dbase,
          cg_eigs_use_zero_vec_as_initial
         );

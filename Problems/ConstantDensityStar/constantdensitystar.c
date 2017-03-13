@@ -1075,8 +1075,6 @@ problem_init
      dgmath_jit_dbase,
      NULL,
      input_file,
-     NULL,
-     NULL,
      NULL
     );
     

@@ -177,11 +177,18 @@ multigrid_matrix_operator_update_callback
 {
   multigrid_data_t* mg_data = p4est->user_pointer;
   multigrid_matrix_op_t* matrix_op = mg_data->user_ctx;
-  
+  int vcycle = mg_data->vcycle_num_finished;
+
   if(mg_data->mg_state == PRE_V){
-    matrix_op->matrix_nodes_on_level[level] = element_data_get_local_matrix_nodes(p4est);
-    matrix_op->total_matrix_nodes_on_multigrid = matrix_op->matrix_nodes_on_level[level];
+    if (vcycle == 0){
+      matrix_op->matrix_nodes_on_level[level] = element_data_get_local_matrix_nodes(p4est);
+      matrix_op->total_matrix_nodes_on_multigrid = matrix_op->matrix_nodes_on_level[level];
+    }
     matrix_op->stride_to_fine_matrix_data = 0;
+    matrix_op->coarse_matrix_stride = 0;
+    matrix_op->fine_matrix_stride = 0;
+    matrix_op->fine_matrix_nodes = 0;
+    matrix_op->coarse_matrix_nodes = 0;
   }
 
   else if(
@@ -193,15 +200,16 @@ multigrid_matrix_operator_update_callback
     vecs->user = matrix_op;
   }
   else if(mg_data->mg_state == DOWNV_POST_BALANCE){
-    matrix_op->matrix_nodes_on_level[level-1] = element_data_get_local_matrix_nodes(p4est);
-    matrix_op->total_matrix_nodes_on_multigrid += matrix_op->matrix_nodes_on_level[level-1];
-    matrix_op->matrix_at0 = P4EST_REALLOC
-                            (
-                             matrix_op->matrix_at0,
-                             double,
-                             matrix_op->total_matrix_nodes_on_multigrid
-                            );
-
+    if (vcycle == 0){
+      matrix_op->matrix_nodes_on_level[level-1] = element_data_get_local_matrix_nodes(p4est);
+      matrix_op->total_matrix_nodes_on_multigrid += matrix_op->matrix_nodes_on_level[level-1];
+      matrix_op->matrix_at0 = P4EST_REALLOC
+                              (
+                               matrix_op->matrix_at0,
+                               double,
+                               matrix_op->total_matrix_nodes_on_multigrid
+                              );
+    }
     /* setup for restriction */
     matrix_op->fine_matrix_nodes = matrix_op->matrix_nodes_on_level[level];
     matrix_op->coarse_matrix_nodes = matrix_op->matrix_nodes_on_level[level - 1];

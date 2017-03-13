@@ -35,6 +35,100 @@
 /* soon to be in the input files */
 static const double pi = 3.1415926535897932384626433832795;
 
+static
+void
+twopunctures_test_build_residual
+(
+ p4est_t* p4est,
+ twopunctures_params_t* tp_params,
+ twopunctures_cactus_params_t* tp_cactus_params,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom
+)
+{
+ 
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        curved_element_data_t* ed = quad->p.user_data;
+        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), ed->deg_integ);
+        printf("\n Element %d\n", ed->id);
+        for (int i = 0; i < volume_nodes_Gauss; i++){
+          double x = ed->xyz_integ[0][i];
+          double y = ed->xyz_integ[1][i];
+          double z = ed->xyz_integ[2][i];
+ 
+
+          /* if (ed->id == 103){ */
+          double Aij_cactus [3][3];
+          double Aij_me [3][3];
+          double Aij_spec [3][3];
+          BY_Aijofxyz(x,y,z, Aij_cactus, tp_cactus_params);
+          twopunctures_spec_compute_multiBH_tildeAij(x,y,z,tp_params->P_bh, tp_params->S_bh, tp_params->C_bh, tp_params->num_punctures, Aij_spec);
+
+          
+          for (int k = 0; k < 3; k++)
+            for (int j = 0; j < 3; j++){
+              Aij_me[k][j] = compute_confAij(k,j,x,y,z,tp_params);
+              double error = fabs(Aij_me[k][j] - Aij_cactus[k][j]) + fabs(Aij_me[k][j] - Aij_spec[k][j]);
+              /* if (error > 1e-8){ */
+                /* printf("Holy fucks batman error is big on this bitch\n"); */
+              /* } */
+              /* printf("x,y,z,i,j, Aij_me, Aij_cactus, Aij_spec = %.7f %.7f %.7f %d %d %.25f %.25f %.25f %.25f\n", */
+                     /* x,y,z,k,j, Aij_me[k][j], Aij_cactus[k][j], Aij_spec[k][j], error); */
+            }
+
+
+          double tp_me_aijsqr = compute_confAij_sqr(x,y,z, tp_params);
+          double tp_cactus_aijsqr = BY_KKofxyz(x,y,z, tp_cactus_params);
+          double tp_spec_aijsqr = twopunctures_spec_compute_tildeAijsqr(x,y,z, tp_params->P_bh, tp_params->S_bh, tp_params->C_bh, tp_params->num_punctures);
+          double error_aijsqr = fabs(tp_me_aijsqr - tp_cactus_aijsqr) + fabs(tp_me_aijsqr - tp_spec_aijsqr);
+          /* printf("x,y,z, me_aijsqr, cactus_aijsqr, spec_aijsqr, error = %.6f %.6f %.6f %.25f %.25f %.25f %.25f\n", x,y,z, tp_me_aijsqr, tp_cactus_aijsqr, tp_spec_aijsqr, error_aijsqr); */
+
+         double u = 0.;
+          double tp_me_neg_1o8_K2_psi_neg7 =
+            twopunctures_neg_1o8_K2_psi_neg7(x,y,z,u,tp_params);
+          double tp_spec_neg_1o8_K2_psi_neg7 =
+            twopunctures_spec_neg_1o8_K2_psi_neg7(x,y,z,u,tp_params);
+          double tp_cactus_neg_1o8_K2_psi_neg7 =
+            twopunctures_cactus_neg_1o8_K2_psi_neg7(x,y,z,u,tp_cactus_params);
+          /* printf("i,x,y,z, me, spec, cactus = %d %.7f %.7f %.7f %.25f %.25f %.25f\n",i, */
+                 /* x,y,z,tp_me_neg_1o8_K2_psi_neg7, tp_spec_neg_1o8_K2_psi_neg7, */
+                 /* tp_cactus_neg_1o8_K2_psi_neg7); */
+
+          double tp_me_plus_7o8_K2_psi_neg8 =
+            twopunctures_plus_7o8_K2_psi_neg8(x,y,z,u,tp_params);
+          double tp_spec_plus_7o8_K2_psi_neg8 =
+            twopunctures_spec_plus_7o8_K2_psi_neg8(x,y,z,u,tp_params);
+          double tp_cactus_plus_7o8_K2_psi_neg8 =
+            twopunctures_cactus_plus_7o8_K2_psi_neg8(x,y,z,u,tp_cactus_params);
+
+
+          double batman_error = fabs(tp_me_plus_7o8_K2_psi_neg8 - tp_spec_plus_7o8_K2_psi_neg8);
+          batman_error += fabs(tp_me_plus_7o8_K2_psi_neg8 - tp_cactus_plus_7o8_K2_psi_neg8);
+          batman_error += fabs(tp_me_neg_1o8_K2_psi_neg7  - tp_cactus_neg_1o8_K2_psi_neg7);
+          batman_error += fabs(tp_me_neg_1o8_K2_psi_neg7  - tp_spec_neg_1o8_K2_psi_neg7);
+          if (batman_error > 1e-16){
+            printf("Holy fucks batman error is big on this bitch\n");
+          }
+          
+          /* printf("i,x,y,z, me, spec, cactus = %d %.7f %.7f %.7f %.25f %.25f %.25f\n",i, */
+          /*        x,y,z,tp_me_plus_7o8_K2_psi_neg8, tp_spec_plus_7o8_K2_psi_neg8, */
+          /*        tp_cactus_plus_7o8_K2_psi_neg8);       */    
+          
+          /* } */
+        }
+      }
+    }
+
+}
+
 
 static
 int
@@ -536,6 +630,7 @@ problem_init
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
   /* geometric_factors_t* geometric_factors = geometric_factors_init(p4est); */
 
+
   /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
   twopunctures_params_t tp_params;
   init_twopunctures_data(&tp_params, input.deg_offset_for_nonlinear_integ);
@@ -564,14 +659,14 @@ problem_init
   curved_weakeqn_ptrs_t prob_fcns;
 
 
-  /* if(input.use_cactus){ */
-  /*   prob_fcns.build_residual = twopunctures_cactus_build_residual; */
-  /*   prob_fcns.apply_lhs = twopunctures_cactus_apply_jac; */
-  /* } */
-  /* else { */
-  prob_fcns.build_residual = twopunctures_build_residual_Lobatto;
-  prob_fcns.apply_lhs = twopunctures_apply_jac_Lobatto;
-  /* } */
+  if(input.use_cactus){
+    prob_fcns.build_residual = twopunctures_cactus_build_residual;
+    prob_fcns.apply_lhs = twopunctures_cactus_apply_jac;
+  }
+  else {
+    prob_fcns.build_residual = twopunctures_build_residual;
+    prob_fcns.apply_lhs = twopunctures_apply_jac;
+  }
   
   geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
 
@@ -630,32 +725,7 @@ problem_init
       prob_vecs.u = u;
       prob_vecs.rhs = rhs;
       prob_vecs.local_nodes = local_nodes;
-      
-      /* curved_bi_estimator_compute */
-      /*   ( */
-      /*    p4est, */
-      /*    &prob_vecs, */
-      /*    &prob_fcns, */
-      /*    bi_u_penalty_fcn, */
-      /*    bi_u_dirichlet_penalty_fcn, */
-      /*    bi_gradu_penalty_fcn, */
-      /*    zero_fcn, */
-      /*    ip_flux_params.ip_flux_penalty_prefactor, */
-      /*    ghost, */
-      /*    ghost_data, */
-      /*    dgmath_jit_dbase, */
-      /*    d4est_geom */
-      /*   ); */
-
-      
-      
-      
-      /* estimator_stats_t stats; */
-      /* estimator_stats_compute(p4est, &stats,1); */
-
-      /* /\* if(world_rank == 0) *\/ */
-      /* estimator_stats_print(&stats); */
-      
+     
 
 
   }
@@ -665,7 +735,6 @@ problem_init
 
   
   d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
-  /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
   curved_element_data_init_new(p4est,
                                geometric_factors,
                                dgmath_jit_dbase,
@@ -686,176 +755,14 @@ problem_init
     prob_vecs.rhs = rhs;
     prob_vecs.local_nodes = local_nodes;
 
-    curved_smooth_pred_marker_t amr_marker;
-    amr_marker.user = (void*)&input;
-    amr_marker.mark_element_fcn = amr_mark_element;
-    amr_marker.set_element_gamma_fcn = amr_set_element_gamma;
-    amr_marker.name = "puncture_marker";
-
-    hp_amr_scheme_t* scheme =
-      hp_amr_curved_smooth_pred_init
-      (
-       p4est,
-       (MAX_DEGREE)-2,
-       amr_marker
-      );
-
-    /* linalg_fill_vec(prob_vecs.u, 0.001, prob_vecs.local_nodes); */
-    linalg_fill_vec(prob_vecs.u, 0, prob_vecs.local_nodes);
-    
-
-    
-  for (level = 0; level < input.num_of_amr_levels; ++level){
-
-    if (world_rank == 0)
-      printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level);
-    
-
-    curved_bi_estimator_compute
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       bi_u_penalty_fcn,
-       bi_u_dirichlet_penalty_fcn,
-       bi_gradu_penalty_fcn,
-       zero_fcn,
-       ip_flux_params.ip_flux_penalty_prefactor,
-       ghost,
-       ghost_data,
-       dgmath_jit_dbase,
-       d4est_geom
-      );
-
-    
-    estimator_stats_t* stats [3];
-    for (int i = 0; i < 3; i++){
-      stats[i] = P4EST_ALLOC(estimator_stats_t, 1);
-    }
-    
-    double local_eta2 = estimator_stats_compute_per_bin
-                        (
-                         p4est,
-                         &stats[0],
-                         3,
-                         in_bin_fcn
-                        );
-
-    curved_element_data_print_number_of_elements_per_tree(p4est);
-    
-    estimator_stats_compute_max_percentiles_across_proc
-      (
-       stats,
-       3
-      );
-
-    if (world_rank == 0){
-      for (int i = 0; i < 3; i++){
-        estimator_stats_print(stats[i]);
-      }
-    }
-    
-
-    double R0 = ((d4est_geometry_sphere_attr_t*)(d4est_geom->p4est_geom->user))->R0;
-    /* printf("R0 = %.f\n", R0); */
-
-   /*  d4est_geometry_t* d4est_geom_vtk = d4est_geometry */
-  /*   p4est_connectivity_t* conn_vtk = p8est_connectivity_new_sphere(); */
-  /*   p4est_geometry_t* geom_vtk = p8est_geometry_new_sphere(conn_vtk, R0*3, R0*2, R0); */
-  /*   d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, "puncture-sphere"); */
-  /*   d4est_vtk_context_set_geom(vtk_ctx, geom_vtk); */
-  /*   d4est_vtk_context_set_scale(vtk_ctx, .99); */
-  /*   d4est_vtk_context_set_deg_array(vtk_ctx, deg_array); */
-  /*   vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase); */
-  /*   vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx, 1, 0, "u",u, vtk_ctx); */
-  /*   vtk_ctx = d4est_vtk_write_dg_cell_dataf */
-  /*             ( */
-  /*              vtk_ctx, */
-  /*              1, */
-  /*              1, */
-  /*              1, */
-  /*              0, */
-  /*              1, */
-  /*              1, */
-  /*              0, */
-  /*              "eta", */
-  /*              eta_array, */
-  /*              vtk_ctx */
-  /*             ); */
-
-
-  
-  /* d4est_vtk_write_footer(vtk_ctx); */
-  /* P4EST_FREE(deg_array); */
-  /* P4EST_FREE(eta_array); */
-  /* p8est_connectivity_destroy(conn_vtk); */
-  /* p8est_geometry_destroy(geom_vtk); */
-
-    problem_save_to_vtk
-      (
-       p4est,
-       dgmath_jit_dbase,
-       u,
-       level,
-       1,
-       R0
-      );
-  
-    
-    hp_amr(p4est,
-           dgmath_jit_dbase,
-           &u,
-           &stats[0],
-           scheme,
-           1
-          );        
-
-    for (int i = 0; i < 3; i++){
-      P4EST_FREE(stats[i]);
-    }
-    
-    p4est_ghost_destroy(ghost);
-    P4EST_FREE(ghost_data);
-
-    ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE);
-    ghost_data = P4EST_ALLOC(curved_element_data_t, ghost->ghosts.elem_count);
-    
-    curved_element_data_init_new(p4est,
-                                 geometric_factors,
-                                 dgmath_jit_dbase,
-                                 d4est_geom,
-                                 problem_set_degrees,
-                                 (void*)&input);
-    
-    local_nodes = curved_element_data_get_local_nodes(p4est);
-
-    u_prev = P4EST_REALLOC(u_prev, double, local_nodes);
-    Au = P4EST_REALLOC(Au, double, local_nodes);
-    prob_vecs.Au = Au;
-    prob_vecs.u = u;
-    prob_vecs.u0 = u;
-    prob_vecs.local_nodes = local_nodes;
-
-    linalg_copy_1st_to_2nd(u, u_prev, local_nodes);
-
-    clock_t begin = 0;
-    clock_t end = -1;
-
-    if (world_rank == 0){
-      begin = clock();
-    }
-
-    /* jacobian_tester */
-    /*   ( */
-    /*    p4est, */
-    /*    ghost, */
-    /*    ghost_data, */
-    /*    dgmath_jit_dbase, */
-    /*    d4est_geom, */
-    /*    &prob_fcns, */
-    /*    &prob_vecs */
-    /*   ); */
-
+twopunctures_test_build_residual
+(
+ p4est,
+ &tp_params,
+ &tp_cactus_params,
+ dgmath_jit_dbase,
+ d4est_geom
+);
 
     /* double* Au_spec = P4EST_ALLOC(double, local_nodes); */
     /* double* Au_me = P4EST_ALLOC(double, local_nodes); */
@@ -902,7 +809,6 @@ problem_init
     /*    d4est_geom */
     /*   ); */
     
-    /* prob_vecs_cactus.user = &tp_cactus_params; */
     
     /* twopunctures_cactus_build_residual */
     /*   ( */
@@ -926,98 +832,6 @@ problem_init
     /* P4EST_FREE(Au_cactus); */
     /* P4EST_FREE(u_test); */
     
-    newton_petsc_solve
-      (
-       p4est,
-       &prob_vecs,
-       (void*)&prob_fcns,
-       &ghost,
-       (void**)&ghost_data,
-       dgmath_jit_dbase,
-       d4est_geom,
-       input_file,
-       NULL
-      );
-
-    /* matrix_spd_tester_parallel */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs,  */
-    /*    &prob_fcns, */
-    /*    ghost, */
-    /*    ghost_data, */
-    /*    dgmath_jit_dbase, */
-    /*    d4est_geom, */
-    /*    1, */
-    /*    20 */
-    /*   ); */
-
-    /* matrix_sym_tester_parallel */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs,  */
-    /*    &prob_fcns, */
-    /*    ghost, */
-    /*    ghost_data, */
-    /*    dgmath_jit_dbase, */
-    /*    d4est_geom, */
-    /*    1, */
-    /*    20, */
-    /*    .000000001 */
-    /*   );  */
-
-    linalg_vec_axpy(-1., prob_vecs.u, u_prev, local_nodes);
-
-    double local_l2_norm_sqr = curved_element_data_compute_l2_norm_sqr
-                                (
-                                 p4est,
-                                 u_prev,
-                                 local_nodes,
-                                 dgmath_jit_dbase,
-                                 DO_NOT_STORE_LOCALLY
-                                );
-    
-
-    
-    double local_nodes_dbl = (double)local_nodes;
-    double local_reduce [3];
-    double global_reduce [3];
-
-    local_reduce[0] = local_l2_norm_sqr;
-    local_reduce[1] = local_nodes_dbl;
-    local_reduce[2] = local_eta2;
-    
-    sc_reduce
-      (
-       &local_reduce[0],
-       &global_reduce[0],
-       3,
-       sc_MPI_DOUBLE,
-       sc_MPI_SUM,
-       0,
-       sc_MPI_COMM_WORLD
-      );
-
-    double global_l2_norm_sqr = global_reduce[0];
-    double global_nodes_dbl = global_reduce[1];
-    double global_eta2 = global_reduce[2];
-
-    if (world_rank == 0){
-      end = clock();
-      double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf
-      (
-       "[HP_AMR]: %d, %d, %d, %.25f, %.25f, %f\n",
-       level,
-       (int)p4est->global_num_quadrants,
-       (int)global_nodes_dbl,
-       sqrt(global_eta2),
-       sqrt(global_l2_norm_sqr),
-       time_spent
-      );
-    }
-
-  }
          
   geometric_factors_destroy(geometric_factors);
 

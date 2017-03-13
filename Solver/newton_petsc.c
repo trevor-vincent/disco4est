@@ -175,7 +175,7 @@ PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
 
   problem_data_t* vecs = petsc_ctx->vecs;
   p4est_t* p4est = petsc_ctx->p4est;
-  p4est_ghost_t* ghost = petsc_ctx->ghost;
+  p4est_ghost_t* ghost = *petsc_ctx->ghost;
   dgmath_jit_dbase_t* dgmath_jit_dbase = petsc_ctx->dgmath_jit_dbase;
   d4est_geometry_t* d4est_geom = petsc_ctx->d4est_geom;
   
@@ -217,7 +217,7 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
 
   problem_data_t* vecs = petsc_ctx->vecs;
   p4est_t* p4est = petsc_ctx->p4est;
-  p4est_ghost_t* ghost = petsc_ctx->ghost;
+  p4est_ghost_t* ghost = *petsc_ctx->ghost;
   dgmath_jit_dbase_t* dgmath_jit_dbase = petsc_ctx->dgmath_jit_dbase;
   d4est_geometry_t* d4est_geom = petsc_ctx->d4est_geom;
 
@@ -282,8 +282,8 @@ void newton_petsc_solve
   petsc_ctx.p4est = p4est;
   petsc_ctx.vecs = vecs;
   petsc_ctx.fcns = fcns;
-  petsc_ctx.ghost = *ghost;
-  petsc_ctx.ghost_data = *ghost_data;
+  petsc_ctx.ghost = ghost;
+  petsc_ctx.ghost_data = ghost_data;
   petsc_ctx.dgmath_jit_dbase = dgmath_jit_dbase;
   petsc_ctx.d4est_geom = d4est_geom;
   

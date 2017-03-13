@@ -13,6 +13,9 @@ gamma_p = 0.1
 [flux]
 ip_flux_penalty = 10.0
 
+[geometry]
+name = square
+
 [problem]
 c2x = .5 
 c2y = .5 

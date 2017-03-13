@@ -908,8 +908,6 @@ problem_init
      dgmath_jit_dbase,
      d4est_geom,
      input_file,
-     NULL,
-     NULL,
      NULL
     );
     

@@ -1,6 +1,8 @@
 #ifndef TWOPUNCTURESFCNS_H
 #define TWOPUNCTURESFCNS_H 
 
+#include <curved_element_data.h>
+
 #define MAX_PUNCTURES 10
 
 typedef struct {
@@ -9,6 +11,7 @@ typedef struct {
   double S_bh [MAX_PUNCTURES][3];
   double M_bh [MAX_PUNCTURES];
   int num_punctures;
+  double puncture_eps;
   int deg_offset_for_puncture_nonlinearity_integ;
   
 } twopunctures_params_t;
@@ -22,8 +25,9 @@ init_twopunctures_data
 )
 {
   double M = 1.;
-  int num_punctures = 2;
-  mpi_assert(num_punctures < (MAX_PUNCTURES));
+  params->num_punctures = 2;
+  params->puncture_eps = 1e-10;
+  mpi_assert(params->num_punctures < (MAX_PUNCTURES));
   
   params->M_bh[0] = .5*M;
   params->M_bh[1] = .5*M;
@@ -69,7 +73,8 @@ init_random_puncture_data
 )
 {
   mpi_assert(num_punctures < (MAX_PUNCTURES));
-  
+  params->puncture_eps = 1e-10;
+  params->num_punctures = num_punctures;
   double M = 1.;
 
   double rand_x [MAX_PUNCTURES];
@@ -84,9 +89,9 @@ init_random_puncture_data
   
   for (int i = 0; i < num_punctures; i++){
     params->M_bh[i] = M/(double)(num_punctures);
-    params->xyz_bh[i][0] = rand_x[i];
-    params->xyz_bh[i][1] = rand_y[i];
-    params->xyz_bh[i][2] = 0.;
+    params->C_bh[i][0] = rand_x[i];
+    params->C_bh[i][1] = rand_y[i];
+    params->C_bh[i][2] = 0.;
     params->P_bh[i][0] = rand_px[i];
     params->P_bh[i][1] = rand_py[i];
     params->P_bh[i][2] = 0.;
@@ -97,9 +102,9 @@ init_random_puncture_data
     printf("Puncture %d: M_bh, x, y, z, px, py, pz, sx, sy ,sz \n", i);
     printf(" %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f ,%.6f \n",
            params->M_bh[i],
-           params->xyz_bh[i][0],
-           params->xyz_bh[i][1],
-           params->xyz_bh[i][2],
+           params->C_bh[i][0],
+           params->C_bh[i][1],
+           params->C_bh[i][2],
            params->P_bh[i][0],
            params->P_bh[i][1],
            params->P_bh[i][2],
@@ -155,30 +160,28 @@ double compute_confAij
 {
   twopunctures_params_t* params = user;
   
-  double nvec[NUM_PUNCTURES][3];
+  double nvec[MAX_PUNCTURES][3];
   double confAij = 0.;
   
   /* initialize and check if (x,y,z) is a puncture point*/
-  int n;
-  for (n = 0; n < NUM_PUNCTURES; n++){
-    double dxn = (x - params->xyz_bh[n][0]);
-    double dyn = (y - params->xyz_bh[n][1]);
-    double dzn = (z - params->xyz_bh[n][2]);
+  for (int n = 0; n < params->num_punctures; n++){
+    double dxn = (x - params->C_bh[n][0]);
+    double dyn = (y - params->C_bh[n][1]);
+    double dzn = (z - params->C_bh[n][2]);
     double rn = sqrt(dxn*dxn + dyn*dyn + dzn*dzn);
     if (rn == 0.)
       rn += params->puncture_eps;
-    nvec[n][0] = (x - params->xyz_bh[n][0])/rn;
-    nvec[n][1] = (y - params->xyz_bh[n][1])/rn;
-    nvec[n][2] = (z - params->xyz_bh[n][2])/rn;
+    nvec[n][0] = (x - params->C_bh[n][0])/rn;
+    nvec[n][1] = (y - params->C_bh[n][1])/rn;
+    nvec[n][2] = (z - params->C_bh[n][2])/rn;
 
     double lcikl_dot_Sk_dot_nln_times_njn = 0.;
     double lcjkl_dot_Sk_dot_nln_times_nin = 0.;
     double Pn_dot_nvec = 0.;
     
-    int k,l;
-    for (k = 0; k < 3; k++){
+    for (int k = 0; k < 3; k++){
       Pn_dot_nvec += params->P_bh[n][k]*nvec[n][k];
-      for (l = 0; l < 3; l++){
+      for (int l = 0; l < 3; l++){
         lcikl_dot_Sk_dot_nln_times_njn += (levi_civita(i,k,l))*params->S_bh[n][k]*nvec[n][l]*nvec[n][j];
         lcjkl_dot_Sk_dot_nln_times_nin += (levi_civita(j,k,l))*params->S_bh[n][k]*nvec[n][l]*nvec[n][i];
       }
@@ -216,7 +219,7 @@ double compute_confAij_sqr
 
 
 static
-double neg_1o8_K2_psi_neg7
+double twopunctures_neg_1o8_K2_psi_neg7
 (
  double x,
  double y,
@@ -228,18 +231,22 @@ double neg_1o8_K2_psi_neg7
   twopunctures_params_t* params = user;
   double sumn_mn_o_2rn = 0.;
   double dxn, dyn, dzn, r;
-  int n;
-  for (n = 0; n < NUM_PUNCTURES; n++){
-    dxn = x - params->xyz_bh[n][0];
-    dyn = y - params->xyz_bh[n][1];
-    dzn = z - params->xyz_bh[n][2];
+  for (int n = 0; n < params->num_punctures; n++){
+    dxn = x - params->C_bh[n][0];
+    dyn = y - params->C_bh[n][1];
+    dzn = z - params->C_bh[n][2];
     r = sqrt(dxn*dxn + dyn*dyn + dzn*dzn);
     sumn_mn_o_2rn += params->M_bh[n]/(2.*r);
+    /* printf("me r+- M+- = %.6f %.6f\n", r, params->M_bh[n]); */
+    /* printf("params->C_bh[n][0] = %.25f\n", params->C_bh[n][0]); */
   }
+
 
   double psi_0 = 1. + u + sumn_mn_o_2rn;
   double confAij_sqr = compute_confAij_sqr(x,y,z,user);
 
+  /* printf("me psi, psi7 = %.25f %.25f\n", psi_0, pow(psi_0,7)); */
+  
   if (r > params->puncture_eps)
     return (-1./8.)*confAij_sqr/(psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0);
   else{
@@ -250,7 +257,7 @@ double neg_1o8_K2_psi_neg7
 
 
 static
-double plus_7o8_K2_psi_neg8
+double twopunctures_plus_7o8_K2_psi_neg8
 (
  double x,
  double y,
@@ -263,14 +270,17 @@ double plus_7o8_K2_psi_neg8
   double sumn_mn_o_2rn = 0.;
   double dxn, dyn, dzn, r;
   int n;
-  for (n = 0; n < NUM_PUNCTURES; n++){
-    dxn = x - params->xyz_bh[n][0];
-    dyn = y - params->xyz_bh[n][1];
-    dzn = z - params->xyz_bh[n][2];
+  for (n = 0; n < params->num_punctures; n++){
+    dxn = x - params->C_bh[n][0];
+    dyn = y - params->C_bh[n][1];
+    dzn = z - params->C_bh[n][2];
     r = sqrt(dxn*dxn + dyn*dyn + dzn*dzn);
     sumn_mn_o_2rn += params->M_bh[n]/(2.*r);
+
+
   }
 
+  
   double psi_0 = 1. + u + sumn_mn_o_2rn;
   double confAij_sqr = compute_confAij_sqr(x,y,z,user);
 
@@ -283,7 +293,7 @@ double plus_7o8_K2_psi_neg8
 
 
 static
-void apply_jac
+void twopunctures_apply_jac
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -316,6 +326,7 @@ void apply_jac
         curved_element_data_apply_fofufofvlilj_Gaussnodes
           (
            dgmath_jit_dbase,
+           d4est_geom,
            &prob_vecs->u[ed->nodal_stride],
            &prob_vecs->u0[ed->nodal_stride],
            NULL,
@@ -323,7 +334,7 @@ void apply_jac
            ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
            (P4EST_DIM),
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
-           plus_7o8_K2_psi_neg8,
+           twopunctures_plus_7o8_K2_psi_neg8,
            prob_vecs->user,
            NULL,
            NULL
@@ -335,9 +346,82 @@ void apply_jac
   P4EST_FREE(M_plus_7o8_K2_psi_neg8_of_u0_u_vec);
 }
 
+
+static
+void twopunctures_apply_jac_Lobatto
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ curved_element_data_t* ghost_data,
+ problem_data_t* prob_vecs,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom
+)
+{
+  twopunctures_params_t* params = prob_vecs->user;
+  curved_poisson_operator_primal_apply_aij(p4est,
+                                           ghost,
+                                           ghost_data,
+                                           prob_vecs,
+                                           dgmath_jit_dbase,
+                                           d4est_geom);
+  
+  double* M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
+  double* plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
+
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        curved_element_data_t* ed = quad->p.user_data;
+        int volume_nodes_lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        for (int i = 0; i < volume_nodes_lobatto; i++){
+          double x = ed->xyz[0][i];
+          double y = ed->xyz[1][i];
+          double z = ed->xyz[2][i];
+          plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride + i] =
+            twopunctures_plus_7o8_K2_psi_neg8(
+                                             x,
+                                             y,
+                                             z,
+                                             prob_vecs->u0[ed->nodal_stride + i],
+                                             prob_vecs->user
+                                            );
+        }
+
+        
+        curved_element_data_apply_fofufofvlilj_Gaussnodes
+          (
+           dgmath_jit_dbase,
+           d4est_geom,
+           &prob_vecs->u[ed->nodal_stride],
+           &plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
+           NULL,
+           ed,
+           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           (P4EST_DIM),
+           &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
+           NULL,
+           NULL,
+           NULL,
+           NULL
+          );
+      }
+    }
+  
+  linalg_vec_axpy(1.0, M_plus_7o8_K2_psi_neg8_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  P4EST_FREE(M_plus_7o8_K2_psi_neg8_of_u0_u_vec);
+  P4EST_FREE(plus_7o8_K2_psi_neg8_of_u0_u_vec);
+}
+
 static
 void
-build_residual
+twopunctures_build_residual
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -361,21 +445,31 @@ build_residual
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;        
+        curved_element_data_t* ed = quad->p.user_data;
         curved_element_data_apply_fofufofvlj_Gaussnodes
           (
            dgmath_jit_dbase,
+           d4est_geom,
            &prob_vecs->u[ed->nodal_stride],
            NULL,
            ed,
            ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
            (P4EST_DIM),
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
-           neg_1o8_K2_psi_neg7,
+           twopunctures_neg_1o8_K2_psi_neg7,
            prob_vecs->user,
            NULL,
            NULL
           );
+
+        /* DEBUG_PRINT_ARR_DBL */
+        
+        /* int volume_nodes_Lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg); */
+        /* int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), ed->deg_integ); */
+        /* double* u_tmp = &prob_vecs->u[ed->nodal_stride]; */
+        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_Lobatto); */
+        /* DEBUG_PRINT_ARR_DBL(ed->J_integ, volume_nodes_Gauss); */
+        
       }
     }
 
@@ -384,8 +478,87 @@ build_residual
                   prob_vecs->Au,
                   prob_vecs->local_nodes);
 
-  P4EST_FREE(M_neg_1o8_K2_psi_neg7_vec); 
+  P4EST_FREE(M_neg_1o8_K2_psi_neg7_vec);
 }
 
+
+static
+void
+twopunctures_build_residual_Lobatto
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ curved_element_data_t* ghost_data,
+ problem_data_t* prob_vecs,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom
+)
+{
+  twopunctures_params_t* params = prob_vecs->user;
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+
+  double* M_neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
+  double* neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
+ 
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        curved_element_data_t* ed = quad->p.user_data;
+        int volume_nodes_lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        for (int i = 0; i < volume_nodes_lobatto; i++){
+          double x = ed->xyz[0][i];
+          double y = ed->xyz[1][i];
+          double z = ed->xyz[2][i];
+          neg_1o8_K2_psi_neg7_vec[ed->nodal_stride + i] =
+            twopunctures_neg_1o8_K2_psi_neg7(
+                                             x,
+                                             y,
+                                             z,
+                                             prob_vecs->u[ed->nodal_stride + i],
+                                             prob_vecs->user
+                                            );
+        }
+
+        curved_element_data_apply_fofufofvlj_Gaussnodes
+          (
+           dgmath_jit_dbase,
+           d4est_geom,
+           &neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
+           NULL,
+           ed,
+           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           (P4EST_DIM),
+           &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
+           NULL,
+           NULL,
+           NULL,
+           NULL
+          );
+
+        /* DEBUG_PRINT_ARR_DBL */
+        
+        /* int volume_nodes_Lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg); */
+        /* int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), ed->deg_integ); */
+        /* double* u_tmp = &prob_vecs->u[ed->nodal_stride]; */
+        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_Lobatto); */
+        /* DEBUG_PRINT_ARR_DBL(ed->J_integ, volume_nodes_Gauss); */
+        
+      }
+    }
+
+  linalg_vec_axpy(1.0,
+                  M_neg_1o8_K2_psi_neg7_vec,
+                  prob_vecs->Au,
+                  prob_vecs->local_nodes);
+
+  P4EST_FREE(M_neg_1o8_K2_psi_neg7_vec);
+  P4EST_FREE(neg_1o8_K2_psi_neg7_vec);
+}
 
 #endif

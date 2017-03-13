@@ -108,23 +108,23 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   void           *ctx;
   PetscErrorCode ierr;
 
-  krylov_ctx_t* kct;
+  petsc_ctx_t* petsc_ctx;
   const double* px;
   double* py;
 
   /* PetscFunctionBegin; */
   ierr = MatShellGetContext( A, &ctx ); CHKERRQ(ierr);  
-  kct = (krylov_ctx_t *)ctx;
+  petsc_ctx = (petsc_ctx_t *)ctx;
   ierr = VecGetArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecGetArray( y, &py ); CHKERRQ(ierr);
 
-  /* weakeqn_ptrs_t* fcns = kct->fcns; */
-  p4est_t* p4est = kct->p4est;
-  p4est_ghost_t* ghost = *kct->ghost;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = kct->dgmath_jit_dbase;
+  /* weakeqn_ptrs_t* fcns = petsc_ctx->fcns; */
+  p4est_t* p4est = petsc_ctx->p4est;
+  p4est_ghost_t* ghost = *petsc_ctx->ghost;
+  dgmath_jit_dbase_t* dgmath_jit_dbase = petsc_ctx->dgmath_jit_dbase;
 
   problem_data_t vecs_for_aij;
-  problem_data_copy_ptrs(kct->vecs, &vecs_for_aij);
+  problem_data_copy_ptrs(petsc_ctx->vecs, &vecs_for_aij);
 
   vecs_for_aij.u = (double*)px;
   vecs_for_aij.Au = py;
@@ -132,20 +132,20 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   /* DEBUG_PRINT_ARR_DBL(vecs_for_aij.u, vecs_for_aij.local_nodes); */
 
   
-  if (kct->d4est_geom == NULL){
-    ((weakeqn_ptrs_t*)(kct->fcns))->apply_lhs(p4est,
+  if (petsc_ctx->d4est_geom == NULL){
+    ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
                                               ghost,
-                                              (element_data_t*)(*kct->ghost_data),
+                                              (element_data_t*)(*petsc_ctx->ghost_data),
                                               &vecs_for_aij,
                                               dgmath_jit_dbase);
   }
   else {
-    ((curved_weakeqn_ptrs_t*)(kct->fcns))->apply_lhs(p4est,
+    ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
                                                      ghost,
-                                                     (curved_element_data_t*)(*kct->ghost_data),
+                                                     (curved_element_data_t*)(*petsc_ctx->ghost_data),
                                                      &vecs_for_aij,
                                                      dgmath_jit_dbase,
-                                                     kct->d4est_geom);
+                                                     petsc_ctx->d4est_geom);
   }
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecRestoreArray( y, &py ); CHKERRQ(ierr);
@@ -177,14 +177,14 @@ krylov_petsc_solve
   /* double* u_temp; */
   /* double* rhs_temp; */
 
-  krylov_ctx_t kct;
-  kct.p4est = p4est;
-  kct.vecs = vecs;
-  kct.fcns = fcns;
-  kct.ghost = ghost;
-  kct.ghost_data = ghost_data;
-  kct.dgmath_jit_dbase = dgmath_jit_dbase;
-  kct.d4est_geom = d4est_geom;
+  petsc_ctx_t petsc_ctx;
+  petsc_ctx.p4est = p4est;
+  petsc_ctx.vecs = vecs;
+  petsc_ctx.fcns = fcns;
+  petsc_ctx.ghost = ghost;
+  petsc_ctx.ghost_data = ghost_data;
+  petsc_ctx.dgmath_jit_dbase = dgmath_jit_dbase;
+  petsc_ctx.d4est_geom = d4est_geom;
 
   int local_nodes = vecs->local_nodes;
   double* u = vecs->u;
@@ -227,7 +227,7 @@ krylov_petsc_solve
   KSPGetPC(ksp,&pc);
   if (krylov_pc != NULL) {
     PCSetType(pc,PCSHELL);//CHKERRQ(ierr);
-    krylov_pc->pc_ctx = &kct;
+    krylov_pc->pc_ctx = &petsc_ctx;
     PCShellSetApply(pc, krylov_petsc_pc_apply);//CHKERRQ(ierr);
     if (krylov_pc->pc_setup != NULL){
       PCShellSetSetUp(pc, krylov_petsc_pc_setup);
@@ -250,7 +250,7 @@ krylov_petsc_solve
      local_nodes,
      PETSC_DETERMINE,
      PETSC_DETERMINE,
-     (void*)&kct,
+     (void*)&petsc_ctx,
      &A
     ); 
   MatShellSetOperation(A,MATOP_MULT,(void(*)())krylov_petsc_apply_aij);

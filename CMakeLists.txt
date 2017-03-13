@@ -91,6 +91,7 @@ SET (
   SRCS
   InputParser/ini.c
   Solver/krylov_petsc.c
+  Solver/krylov_pc_multigrid.c
   Solver/multigrid.c
   Solver/newton_petsc.c
   Solver/cg_eigs.c
@@ -303,22 +304,23 @@ endfunction()
 # message( "DUCK COMPILE_DEFINITIONS = ${DirDefs}" )
 # add_d4est_problem_3d(testcompile1 testcompile.c TestCompile)
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
-add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
-# add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
+# add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
+add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
 # add_d4est_problem_2d(testmultigridmatrixop_driver testmultigridmatrixop.c TestMultigridMatrixOp)
 # add_d4est_problem_3d(testcurvedipflux_driver testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_2d(testcurvedipflux_driver_2d testcurvedipflux.c TestCurvedIPFlux)
-add_d4est_problem_2d(testcurvedprimal_driver_2d testcurvedprimal.c TestCurvedPrimal)
-add_d4est_problem_3d(testcurvedprimal_driver_3d testcurvedprimal.c TestCurvedPrimal)
-add_d4est_problem_3d(testcubeprimal_driver_3d testcubeprimal.c TestCubePrimal)
-add_d4est_problem_3d(testhelmholtzmultigrid_driver_3d testhelmholtzmultigrid.c TestHelmholtzMultigrid)
-add_d4est_problem_3d(testhelmholtzmultigrid2_driver_3d testhelmholtzmultigrid2.c TestHelmholtzMultigrid)
-add_d4est_problem_3d(constantdensitystarprimal_driver constantdensitystarprimal.c ConstantDensityStarPrimal)
+# add_d4est_problem_2d(testcurvedprimal_driver_2d testcurvedprimal.c TestCurvedPrimal)
+# add_d4est_problem_3d(testcurvedprimal_driver_3d testcurvedprimal.c TestCurvedPrimal)
+# add_d4est_problem_3d(testcubeprimal_driver_3d testcubeprimal.c TestCubePrimal)
+# add_d4est_problem_3d(testhelmholtzmultigrid_driver_3d testhelmholtzmultigrid.c TestHelmholtzMultigrid)
+# add_d4est_problem_3d(testhelmholtzmultigrid2_driver_3d testhelmholtzmultigrid2.c TestHelmholtzMultigrid)
+# add_d4est_problem_3d(constantdensitystarprimal_driver constantdensitystarprimal.c ConstantDensityStarPrimal)
 # add_d4est_problem_3d(testcurvedipflux_driver_3d testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_3d(testcurvedshell_driver_3d testcurvedshell.c TestCurvedShell)
-add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)
-add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
-add_d4est_problem_2d(testmortarjacobianterms_driver_2d testmortarjacobianterms.c TestMortarJacobianTerms)
+# add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)
+# add_d4est_problem_3d(twopunctures_testfcns_driver twopunctures_testfcns.c TwoPuncturesSphere)
+# add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
+# add_d4est_problem_2d(testmortarjacobianterms_driver_2d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
 # add_d4est_problem_2d(testcurvedipfluxoncube2d_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
 # add_d4est_problem_3d(testnoncurvedipfluxoncube_driver testnoncurvedipfluxoncube.c TestNonCurvedIPFluxOnCube)

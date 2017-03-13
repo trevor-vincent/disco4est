@@ -30,11 +30,10 @@ krylov_pc_multigrid_destroy(krylov_pc_t* pc){
 void
 krylov_pc_multigrid_apply(void* kpc_in, double* xp, double* yp)
 {
-  int local_nodes = kct->vecs->local_nodes;
-
   krylov_pc_t* kpc = kpc_in;
   multigrid_data_t* mg_data = (multigrid_data_t*)kpc->pc_data;
   petsc_ctx_t* kct = kpc->pc_ctx;
+  int local_nodes = kct->vecs->local_nodes;
   
   linalg_fill_vec(yp, 0., local_nodes);
 
@@ -53,7 +52,7 @@ krylov_pc_multigrid_apply(void* kpc_in, double* xp, double* yp)
      kct->fcns,
      mg_data,
      kct->ghost,
-     kct->ghost_data
+     (element_data_t**)kct->ghost_data
     );
       
   P4EST_FREE(Au);  

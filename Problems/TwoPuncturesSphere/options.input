@@ -4,7 +4,7 @@ min_level = 1
 fill_uniform = 1
 
 [amr]
-num_unifrefs = 1
+num_unifrefs = 0
 num_of_amr_levels = 8
 
 [flux]
@@ -12,8 +12,8 @@ ip_flux_penalty = 2.0
 
 [problem]
 deg_offset_for_nonlinear_integ = 0
-deg_R2 = 5
-deg_integ_R2 = 5
+deg_R2 = 2
+deg_integ_R2 = 2
 deg_R1 = 2
 deg_integ_R1 = 2
 deg_R0 = 2
@@ -22,14 +22,14 @@ use_cactus = 0
 
 [geometry]
 name = compact_sphere
-R0 = 50
+R0 = 10
 R1 = 100
-R2 = 100000
+R2 = 1000
 
 [solver]
 ksp_type = gmres
 ksp_atol = 1e-50
-ksp_rtol = 1e-1
+ksp_rtol = .9
 ksp_max_it = 2
 ksp_view = 1
 ksp_user_defined_pc = 0

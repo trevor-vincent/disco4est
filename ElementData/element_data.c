@@ -11,6 +11,7 @@
 #include "../ElementData/element_data.h"
 #include "../Flux/compute_flux.h"
 #include "../Flux/dg_norm.h"
+#include <sc_reduce.h>
 
 /* static int element_data_stride; */
 
@@ -2885,8 +2886,31 @@ element_data_get_level_range
       }
     }  
 
-  *min_level = min;
-  *max_level = max;
+
+  int local_reduce [2];
+  int global_reduce [2];
+  local_reduce[0] = -1*min;
+  local_reduce[1] = max;
+
+  if(p4est->mpisize > 1){
+    sc_allreduce
+      (
+       &local_reduce[0],
+       &global_reduce[0],
+       4,
+       sc_MPI_INT,
+       sc_MPI_MAX,
+       sc_MPI_COMM_WORLD
+      );
+  }
+  else {
+    global_reduce[0] = local_reduce[0];
+    global_reduce[1] = local_reduce[1];
+  }
+
+  
+  *min_level = global_reduce[0]*-1;
+  *max_level = global_reduce[1];
 }
 
 double

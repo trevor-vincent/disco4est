@@ -1,6 +1,11 @@
 #ifndef D4EST_PETSC_H
 #define D4EST_PETSC_H 
 
+#include <pXest.h>
+#include <problem_data.h>
+#include <dgmath.h>
+#include <petscsnes.h>
+
 typedef struct {
 
   p4est_t* p4est;

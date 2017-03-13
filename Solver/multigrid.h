@@ -34,12 +34,7 @@ typedef struct {
 typedef enum 
   {
     NONE,
-    DEBUG,
-    ERR_LOG, /* print error if analytical soln is available */
-    RES_LOG, /* print residual */
-    ERR_AND_EIG_LOG, /* print eigenvalues and error */
-    RES_AND_EIG_LOG, /* print eigenvalues and residual */
-    PRINT_NOT_SET
+    RESIDUAL_INFO, /* print residual */
   } multigrid_log_option_t;
 
 typedef enum
@@ -161,7 +156,7 @@ typedef struct {
   int coarse_stride;
   
   double vcycle_r2local;
-  int final_vcycles; /* final number of vcycles */
+  int vcycle_num_finished; /* final number of vcycles */
 
   double lmax; /* max eigenvalue to sweep */
   double lmin; /* min eigenvalue to sweep */

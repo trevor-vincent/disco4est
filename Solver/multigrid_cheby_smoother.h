@@ -101,9 +101,9 @@ multigrid_cheby_smoother
   cheby_params.lmax = mg_data->max_eigs[level];
   cheby_params.iter = mg_data->smooth_iter;
 
-  if (mg_data->log_option == DEBUG){
-  printf("[MG_CHEBY_SMOOTHER]: Lev %d Max_eig %.25f Iter %d\n", level, mg_data->max_eigs[level], mg_data->smooth_iter);
-  }  
+  /* if (mg_data->log_option == DEBUG){ */
+  /* printf("[MG_CHEBY_SMOOTHER]: Lev %d Max_eig %.25f Iter %d\n", level, mg_data->max_eigs[level], mg_data->smooth_iter); */
+  /* }   */
   
   multigrid_cheby_smoother_iterate
     (
