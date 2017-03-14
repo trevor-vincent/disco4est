@@ -113,8 +113,8 @@ multigrid_apply_restriction
     int degh = coarse_grid_refinement[(*stride)].degh[0];
     int degH = coarse_grid_refinement[(*stride)].degH;
 
-    if(mg_data->user_defined_fields && mg_data->mg_restrict_user_callback != NULL){
-      mg_data->mg_restrict_user_callback(info, user_data, &degh, degH, 1);
+    if(mg_data->user_callbacks != NULL && mg_data->user_callbacks->mg_restrict_user_callback != NULL){
+      mg_data->user_callbacks->mg_restrict_user_callback(info, user_data, &degh, degH, 1);
     }
     
     dgmath_apply_p_prolong_transpose
@@ -136,8 +136,8 @@ multigrid_apply_restriction
     int* degh = &(coarse_grid_refinement[(*stride)].degh[0]);
     int degH = coarse_grid_refinement[(*stride)].degH;
 
-    if(mg_data->user_defined_fields && mg_data->mg_restrict_user_callback != NULL){
-      mg_data->mg_restrict_user_callback(info, user_data, degh, degH, (P4EST_CHILDREN));
+    if(mg_data->user_callbacks != NULL && mg_data->user_callbacks->mg_restrict_user_callback != NULL){
+      mg_data->user_callbacks->mg_restrict_user_callback(info, user_data, degh, degH, (P4EST_CHILDREN));
     }
     
     dgmath_apply_hp_prolong_transpose
@@ -159,8 +159,8 @@ multigrid_apply_restriction
   else {
     int deg = coarse_grid_refinement[(*stride)].degh[*temp_stride];
 
-    if(mg_data->user_defined_fields && mg_data->mg_restrict_user_callback != NULL){
-      mg_data->mg_restrict_user_callback(info, user_data, &deg, deg, 1);
+    if(mg_data->user_callbacks != NULL && mg_data->user_callbacks->mg_restrict_user_callback != NULL){
+      mg_data->user_callbacks->mg_restrict_user_callback(info, user_data, &deg, deg, 1);
     }
     
     int nodes = dgmath_get_nodes( (P4EST_DIM) , deg );
@@ -228,9 +228,10 @@ multigrid_refine_and_apply_prolongation
   multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
   dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase;
 
-  if(mg_data->user_defined_fields && mg_data->mg_prolong_user_callback != NULL)
-    mg_data->mg_prolong_user_callback(p4est,which_tree,quadrant);
-  
+  if(mg_data->user_callbacks != NULL && mg_data->user_callbacks->mg_prolong_user_callback != NULL){
+    mg_data->user_callbacks->mg_prolong_user_callback(p4est,which_tree,quadrant);
+  }
+    
   double* x = mg_data->intergrid_ptr;
 
   int* stride = &mg_data->stride;

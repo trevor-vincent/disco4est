@@ -138,6 +138,9 @@ SET (
   # Flux/curved_Gauss_central_flux_vector_fcns.c
   # Flux/curved_Gauss_sipg_flux_scalar_fcns.c
   # Flux/curved_Gauss_sipg_flux_vector_fcns.c
+  Solver/multigrid_bottom_solver_cg.c
+  Solver/multigrid_smoother_cheby.c
+  Solver/multigrid_logger_residual.c
   Flux/curved_Gauss_primal_sipg_flux_fcns.c
   Flux/curved_test_mortarjacobianterms_flux_fcns.c
   Flux/dg_norm.c

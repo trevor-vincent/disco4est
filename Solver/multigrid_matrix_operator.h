@@ -20,32 +20,9 @@ typedef struct {
   void* user;
   
 } multigrid_matrix_op_t;
-
-void multigrid_matrix_operator_update_callback(p4est_t *p4est,int level, problem_data_t *vecs);
-void multigrid_matrix_operator_restriction_callback(p4est_iter_volume_info_t *info,void *user_data,int *degh,int degH,int num_children_h);
-void multigrid_matrix_operator_destroy(multigrid_matrix_op_t *matrix_op);
-
-void
-multigrid_matrix_fofu_fofv_mass_operator_setup_deg_integ_eq_deg
-(
- p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* u,
- double* v,
- grid_fcn_ext_t fofu_fcn,
- void* fofu_ctx,
- grid_fcn_ext_t fofv_fcn,
- void* fofv_ctx,
- multigrid_matrix_op_t* matrix_op
-);
-
-multigrid_matrix_op_t*
-multigrid_matrix_operator_init
-(
- multigrid_data_t* mg_data,
- p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- void* user
-);
+/* This file was automatically generated.  Do not edit! */
+void multigrid_matrix_operator_destroy(multigrid_user_callbacks_t *user_callbacks);
+void multigrid_matrix_fofu_fofv_mass_operator_setup_deg_integ_eq_deg(p4est_t *p4est,dgmath_jit_dbase_t *dgmath_jit_dbase,double *u,double *v,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx,multigrid_matrix_op_t *matrix_op);
+multigrid_user_callbacks_t *multigrid_matrix_operator_init(p4est_t *p4est,int num_of_levels,dgmath_jit_dbase_t *dgmath_jit_dbase,void *user);
 
 #endif

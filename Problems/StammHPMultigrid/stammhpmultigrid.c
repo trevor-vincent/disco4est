@@ -695,57 +695,60 @@ problem_init
     /* mpi_assert(proc_size == 1); */
     int num_of_levels = max_level + 1;
     
-    int vcycle_iter = 3;
-      double vcycle_rtol = 1e-9;
-      double vcycle_atol = 0.;
-      int smooth_iter = 15;
-      int cg_eigs_iter = 10;
-      /* double max_eig_factor = 1.1; */
-      double max_eig_factor = 1.0;
-      int max_eig_reuse = 1;
-      double lmax_lmin_rat = 30.;
-      int coarse_iter = 10000;
-      double coarse_rtol = 1e-10;
-      int save_vtk_snapshot = 0;
-      int perform_checksum = 0;
-      int cg_eigs_use_zero_vec_as_initial = 0;
-      
-      multigrid_data_t* mg_data
-        = multigrid_data_init
-        (
-         world_rank,
-         num_of_levels,
-         vcycle_iter,
-         vcycle_rtol,
-         vcycle_atol,
-         smooth_iter,
-         cg_eigs_iter,
-         max_eig_factor,
-         max_eig_reuse,
-         lmax_lmin_rat,
-         CG,
-         coarse_iter,
-         coarse_rtol,
-         save_vtk_snapshot,
-         perform_checksum,
-         RESIDUAL_INFO,
-         dgmath_jit_dbase,
-         cg_eigs_use_zero_vec_as_initial
-        );
+    /* int vcycle_iter = 3; */
+    /*   double vcycle_rtol = 1e-9; */
+    /*   double vcycle_atol = 0.; */
+    /*   int smooth_iter = 15; */
+    /*   int cg_eigs_iter = 10; */
+    /*   /\* double max_eig_factor = 1.1; *\/ */
+    /*   double max_eig_factor = 1.0; */
+    /*   int max_eig_reuse = 1; */
+    /*   double lmax_lmin_rat = 30.; */
+    /*   int coarse_iter = 10000; */
+    /*   double coarse_rtol = 1e-10; */
+    /*   int save_vtk_snapshot = 0; */
+    /*   int perform_checksum = 0; */
+    /*   int cg_eigs_use_zero_vec_as_initial = 0; */
 
-      
-      
+    multigrid_smooth_t* smoother = multigrid_smoother_cheby_init
+                                   (
+                                    p4est,
+                                    num_of_levels,
+                                    input_file
+                                   );
+
+
+    multigrid_bottom_solver_t* bottom_solver = multigrid_bottom_solver_cg_init
+                                               (
+                                                p4est,
+                                                input_file
+                                               );
+
+    multigrid_logger_t* logger = multigrid_residual_logger_init
+                                 (
+                                 );
+
+    
+    multigrid_data_t* mg_data = multigrid_data_init(p4est,
+                                                    num_of_levels,
+                                                    smoother,
+                                                    bottom_solver,
+                                                    logger,
+                                                    NULL,
+                                                    input_file
+                                                   );
+
 
       element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);
       /* util_print_matrix(u_analytic, prob_vecs.local_nodes, 1, " u_analytic = ", 0); */
 
       /* element_data_print(p4est); */
 
-      multigrid_data_set_analytical_solution
-        (
-         mg_data,
-         analytic_solution_fcn
-        );
+      /* multigrid_data_set_analytical_solution */
+      /*   ( */
+      /*    mg_data, */
+      /*    analytic_solution_fcn */
+      /*   ); */
       
       multigrid_solve
         (

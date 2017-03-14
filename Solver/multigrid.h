@@ -13,32 +13,9 @@ typedef struct {
 
 } multigrid_refine_data_t;
 
-typedef struct {
-
-  int iter;
-  double rtol;
-  int mpi_rank;
-
-} multigrid_cg_params_t;
-
-typedef struct {
-
-  int iter;
-  double lmin;
-  double lmax;
-  int mpi_rank;
-
-} multigrid_cheby_params_t;
-
-/* determine which type of verbosity one desires */
-typedef enum 
-  {
-    NONE,
-    RESIDUAL_INFO, /* print residual */
-  } multigrid_log_option_t;
-
 typedef enum
   {
+    START,
     PRE_V,
     DOWNV_PRE_SMOOTH,
     DOWNV_POST_SMOOTH,
@@ -55,19 +32,13 @@ typedef enum
     UPV_PRE_SMOOTH,
     UPV_POST_SMOOTH,
     POST_V,
+    POST_RESIDUAL_UPDATE,
+    END
   } multigrid_state_t;
-
-
-typedef enum 
-  {
-    CHEBY, 
-    CG,
-    SOLVER_NOT_SET
-  } multigrid_coarse_solver_t;
 
 typedef
 void
-(*multigrid_update_user_callback_fcn_t)
+(*multigrid_update_callback_fcn_t)
 (
  p4est_t*,
  int, /* current level */
@@ -76,7 +47,7 @@ void
 
 typedef
 void
-(*multigrid_restrict_user_callback_fcn_t)
+(*multigrid_restrict_callback_fcn_t)
 (
  p4est_iter_volume_info_t*,
  void*,
@@ -87,121 +58,139 @@ void
 
 typedef
 void
-(*multigrid_prolong_user_callback_fcn_t)
+(*multigrid_prolong_callback_fcn_t)
 (
  p4est_t*,
  p4est_topidx_t,
  p4est_quadrant_t*
 );
 
+
+
+
+typedef
+void
+(*multigrid_prolong_callback_fcn_t)
+(
+ p4est_t*,
+ p4est_topidx_t,
+ p4est_quadrant_t*
+);
+
+
+typedef
+void
+(*multigrid_smoother_fcn_t)
+(
+ p4est_t*,
+ problem_data_t*,
+ weakeqn_ptrs_t*,
+ p4est_ghost_t*,
+ element_data_t*,
+ double*,
+ int
+);
+
+typedef
+void
+(*multigrid_bottom_solver_fcn_t)
+(
+ p4est_t*,
+ problem_data_t*,
+ weakeqn_ptrs_t*,
+ p4est_ghost_t*,
+ element_data_t*,
+ double*
+);
+
+typedef struct {
+
+  multigrid_update_callback_fcn_t update;
+  void* user;
+
+} multigrid_logger_t;
+
+typedef struct {
+
+  multigrid_update_callback_fcn_t update;
+  multigrid_smoother_fcn_t smoother;
+  void* user;
+
+} multigrid_smoother_t;
+
+typedef struct {
+
+  multigrid_update_callback_fcn_t update;
+  multigrid_bottom_solver_fcn_t bottom_solver;
+  void* user;
+
+} multigrid_bottom_solver_t;
+
+typedef struct {
+
+  multigrid_prolong_callback_fcn_t mg_prolong_user_callback;
+  multigrid_restrict_callback_fcn_t mg_restrict_user_callback;
+  multigrid_update_callback_fcn_t update;
+  void* user;
+  
+} multigrid_user_callbacks_t;
+
+
 typedef struct {
  
   /* ******* REQUIRED EXTERNAL PARAMETERS ******* */
-  /* ******* user should set all of these ******** */
-
-  int smooth_iter; /* smoothing iterations */
-
-  int coarse_iter; /* coarse iterations */
-  double coarse_rtol;
-
+  /* ******* SET BY FUNCTION CALL ******** */
   int num_of_levels;
-  
-  int mpi_rank;
-  int save_vtk_snapshot; /* save each grid level to vtk */
-  int perform_checksum; /* perform a checksum before&after vcycle */
 
-  int vcycle_iter; /* max number of vcycles */
+  /* ******* SET BY INPUT FILE ******** */
+  int vcycle_imax; /* max number of vcycles */
   double vcycle_rtol; /* residual tolerance for termination */
   double vcycle_atol;
-  
-  double lmax_lmin_rat; /* lmin = lmax/lmax_lmin_rat */
-  int cg_eigs_iter;
-  double max_eig_factor;
-  int max_eig_reuse; // reuse same eigenvalues going up V (yes if you want MG-operator to be symmetric)
 
-  int cg_eigs_use_zero_vec_as_initial;
-  
-  multigrid_log_option_t log_option;
-  multigrid_coarse_solver_t coarse_solver_type;
-  dgmath_jit_dbase_t* dgmath_jit_dbase;
-
-  /* NOT REQUIRED EXTERNAL PARAMETERS */
-  /* Set these if you want to prolong/restrict custom (user-defined) fields */
-  int user_defined_fields;
-  multigrid_prolong_user_callback_fcn_t mg_prolong_user_callback;
-  multigrid_restrict_user_callback_fcn_t mg_restrict_user_callback;
-  multigrid_update_user_callback_fcn_t mg_update_user_callback;
-  void* user_ctx;
-
-  /* If we are running a test problem with an analytical solution */
-  grid_fcn_t analytical_solution;
-  
   /* ******* INTERNAL PARAMETERS ******* */
-  /* ******* no need to set these ******** */
-  int fine_nodes;
-  int coarse_nodes;
-
-  /* eigenvalues on each level */
-  double* max_eigs;
-  int solve_for_eigs;
-  double* intergrid_ptr;
   
-  /* To store mesh information for each level */
+  multigrid_state_t mg_state;
   multigrid_refine_data_t* coarse_grid_refinement;
-
+  dgmath_jit_dbase_t* dgmath_jit_dbase;
+  
   /* Helper strides */
   int stride;
   int temp_stride;
   int fine_stride;
   int coarse_stride;
+
+  /* Helper sizes */
+  int fine_nodes;
+  int coarse_nodes;
+
+  /* Helper alias */
+  double* intergrid_ptr;
+
+  /* Residuals and Vcycle Info */
+  double vcycle_r2_local_current;
+  double vcycle_r2_global_current;
+  double vcycle_r2_global_last;
+  double vcycle_r2_global_stoptol;
+  int vcycle_num_finished;
   
-  double vcycle_r2local;
-  int vcycle_num_finished; /* final number of vcycles */
+  /* INTERNAL COMPONENTS */
+  multigrid_smoother_t* smoother;
+  multigrid_logger_t* logger;
+  multigrid_bottom_solver_t* bottom_solver;
+  multigrid_user_callbacks_t* user_callbacks;
 
-  double lmax; /* max eigenvalue to sweep */
-  double lmin; /* min eigenvalue to sweep */
-
-  multigrid_state_t mg_state;
+  /* INTERNAL PARAMETERS FOR LOGGING*/
+  double* Ae_at0;
+  double* err_at0;
+  double* rres_at0;
+  double* res_at0;
+  int* elements_on_level_of_multigrid;
+  int* elements_on_level_of_surrogate_multigrid;
+  int* nodes_on_level_of_multigrid;
+  int* nodes_on_level_of_surrogate_multigrid;
   
 } multigrid_data_t;
 
-
-multigrid_data_t*
-multigrid_data_init
-(
- int mpi_rank, 
- int num_of_levels,
- int vcycle_iter,
- /* Stopping condition := r2 <= vcycle_rtol*vcycle_rtol*r2initial + vcycle_atol*vcycle_atol */
- double vcycle_rtol,
- double vcycle_atol,
- int smooth_iter,
- /* Iterations of cg to find spectral radius */
-int cg_eigs_iter,
- /* Multiplier for maximum eigenvalue estimate, = 1.0 for no multiplier */
- double max_eig_factor,
- /* Reuse eigenvalue estimates from the last vcycle, =1 is most sensible */
- int max_eig_reuse,
- double lmax_lmin_rat,
- multigrid_coarse_solver_t coarse_solver_type,
- int coarse_iter,
- double coarse_rtol,
- int save_vtk_snapshot,
- int perform_checksum,
- multigrid_log_option_t log_option,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- int cg_eigs_use_zero_vec_as_initial
-);
-
-void
-multigrid_data_set_user_defined_fields
-(
- multigrid_data_t* mg_data,
- multigrid_prolong_user_callback_fcn_t mg_prolong_user_callback,
- multigrid_restrict_user_callback_fcn_t mg_restrict_user_callback,
- multigrid_update_user_callback_fcn_t mg_update_user_callback,
- void* user_ctx
-);
 
 void
 multigrid_solve
@@ -217,11 +206,5 @@ multigrid_solve
 void multigrid_data_destroy
 (multigrid_data_t*);
 
-void
-multigrid_data_set_analytical_solution
-(
- multigrid_data_t* mg_data,
- grid_fcn_t analytical_solution
-);
 
 #endif
