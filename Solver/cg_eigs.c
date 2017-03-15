@@ -47,8 +47,7 @@ cg_eigs
  element_data_t* ghost_data,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  int imax,
- double* eig_max,
- int print_residual_norm
+ double* eig_max
 )
 {
   
@@ -188,10 +187,10 @@ cg_eigs
     beta_old = beta;
     beta = delta_new/delta_old;
     linalg_vec_xpby(r, beta, d, local_nodes);
-    if (print_residual_norm){
-      printf ("%03d: r'r %g alpha %g beta %g\n",
-              i, delta_new, alpha, beta);
-    }
+    /* if (print_residual_norm){ */
+    /*   printf ("%03d: r'r %g alpha %g beta %g\n", */
+    /*           i, delta_new, alpha, beta); */
+    /* } */
   tridiag_gershgorin(i, local_nodes, alpha_old, beta_old, alpha, beta, &temp_max, &temp_min);
 
   /* printf("alpha_old, alpha, beta_old, beta = %f,%f,%f,%f\n", alpha_old, alpha, beta_old, beta); */

@@ -17,7 +17,7 @@ multigrid_matrix_operator_restriction_callback
   multigrid_data_t* mg_data = (multigrid_data_t*) info->p4est->user_pointer;
   multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
   dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase;
-  multigrid_matrix_op_t* matrix_op = mg_data->user_ctx;
+  multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
   int* fine_matrix_stride = &matrix_op->fine_matrix_stride;
   int* coarse_matrix_stride = &matrix_op->coarse_matrix_stride;
@@ -56,7 +56,7 @@ multigrid_matrix_operator_update_callback
 )
 {
   multigrid_data_t* mg_data = p4est->user_pointer;
-  multigrid_matrix_op_t* matrix_op = mg_data->user_ctx;
+  multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
   int vcycle = mg_data->vcycle_num_finished;
 
   if(mg_data->mg_state == PRE_V){

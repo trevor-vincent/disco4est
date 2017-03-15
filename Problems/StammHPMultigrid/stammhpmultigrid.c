@@ -23,6 +23,9 @@
 #include <hacked_p4est_vtk.h>
 #include <dg_norm.h>
 #include <ini.h>
+#include <multigrid_smoother_cheby.h>
+#include <multigrid_bottom_solver_cg.h>
+#include <multigrid_logger_residual.h>
 #include "time.h"
 
 static const double pi = 3.1415926535897932384626433832795;
@@ -710,7 +713,7 @@ problem_init
     /*   int perform_checksum = 0; */
     /*   int cg_eigs_use_zero_vec_as_initial = 0; */
 
-    multigrid_smooth_t* smoother = multigrid_smoother_cheby_init
+    multigrid_smoother_t* smoother = multigrid_smoother_cheby_init
                                    (
                                     p4est,
                                     num_of_levels,
@@ -724,12 +727,13 @@ problem_init
                                                 input_file
                                                );
 
-    multigrid_logger_t* logger = multigrid_residual_logger_init
+    multigrid_logger_t* logger = multigrid_logger_residual_init
                                  (
                                  );
 
     
     multigrid_data_t* mg_data = multigrid_data_init(p4est,
+                                                    dgmath_jit_dbase,
                                                     num_of_levels,
                                                     smoother,
                                                     bottom_solver,

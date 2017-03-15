@@ -1,7 +1,10 @@
 #include <multigrid_bottom_solver_cg.h>
+#include <util.h>
+#include <ini.h>
+#include <linalg.h>
+#include <sc_reduce.h>
 
-
-static
+static int
 multigrid_bottom_solver_cg_input_handler
 (
  void* user,
@@ -34,46 +37,6 @@ multigrid_bottom_solver_cg_input_handler
   return 1;
 }
 
-multigrid_bottom_solver_t*
-multigrid_bottom_solver_cg_init
-(
- p4est_t* p4est,
- const char* input_file
-)
-{
-  multigrid_bottom_solver_t* bottom_solver = P4EST_ALLOC(bottom_solver, 1);
-  multigrid_bottom_solver_cg_t* bottom_data = P4EST_ALLOC(multigrid_bottom_solver_cg_t, 1);
-  
-  bottom_data->bottom_atol = -1;
-  bottom_data->bottom_rtol = -1;
-  bottom_data->bottom_imax = -1;
-  bottom_data->bottom_print_residual_norm = -1;
-  
-  if (ini_parse(input_file, multigrid_bottom_solver_cg_input_handler, bottom_data) < 0) {
-    mpi_abort("Can't load input file");
-  }
-  if(bottom_data->bottom_atol == -1){
-    mpi_abort("[D4EST_ERROR]: bottom_atol not set in multigrid input");
-  }
-  if(bottom_data->bottom_rtol == -1){
-    mpi_abort("[D4EST_ERROR]: bottom_rtol not set in multigrid input");
-  }
-  if(bottom_data->bottom_imax == -1){
-    mpi_abort("[D4EST_ERROR]: bottom_imax not set in multigrid input");
-  }  
-  if(p4est->mpirank == 0){
-    printf("[D4EST_INFO]: Multigrid_Bottom_Solver_CG Parameters\n");
-    printf("[D4EST_INFO]: bottom imax = %d\n", bottom_data->bottom_imax);
-    printf("[D4EST_INFO]: bottom rtol = %.25f\n", bottom_data->bottom_rtol);
-    printf("[D4EST_INFO]: bottom atol = %.25f\n", bottom_data->bottom_atol);
-  }
-
-  bottom_solver->user = bottom_data;
-  bottom_solver->solve = multigrid_bottom_solver_cg;
-  bottom_solver->update = NULL;
-
-  return bottom_solver;
-}
 
 void
 multigrid_bottom_solver_cg_destroy(multigrid_bottom_solver_t* bottom)
@@ -190,11 +153,52 @@ multigrid_bottom_solver_cg
     beta = delta_new/delta_old;
     linalg_vec_xpby(r, beta, d, local_nodes);
 
-    if (p4est->mpirank == 0 && bottom->bottom_print_residual_norm == 1){
+    if (p4est->mpirank == 0 && cg_params->bottom_print_residual_norm == 1){
       printf("[CG_BOTTOM_SOLVER]: CG ITER %03d RNRMSQR %.10f\n", i, delta_new);
     }
   }
   
   vecs->u = u;
   P4EST_FREE(d);
+}
+
+multigrid_bottom_solver_t*
+multigrid_bottom_solver_cg_init
+(
+ p4est_t* p4est,
+ const char* input_file
+)
+{
+  multigrid_bottom_solver_t* bottom_solver = P4EST_ALLOC(multigrid_bottom_solver_t, 1);
+  multigrid_bottom_solver_cg_t* bottom_data = P4EST_ALLOC(multigrid_bottom_solver_cg_t, 1);
+  
+  bottom_data->bottom_atol = -1;
+  bottom_data->bottom_rtol = -1;
+  bottom_data->bottom_imax = -1;
+  bottom_data->bottom_print_residual_norm = -1;
+  
+  if (ini_parse(input_file, multigrid_bottom_solver_cg_input_handler, bottom_data) < 0) {
+    mpi_abort("Can't load input file");
+  }
+  if(bottom_data->bottom_atol == -1){
+    mpi_abort("[D4EST_ERROR]: bottom_atol not set in multigrid input");
+  }
+  if(bottom_data->bottom_rtol == -1){
+    mpi_abort("[D4EST_ERROR]: bottom_rtol not set in multigrid input");
+  }
+  if(bottom_data->bottom_imax == -1){
+    mpi_abort("[D4EST_ERROR]: bottom_imax not set in multigrid input");
+  }  
+  if(p4est->mpirank == 0){
+    printf("[D4EST_INFO]: Multigrid_Bottom_Solver_CG Parameters\n");
+    printf("[D4EST_INFO]: bottom imax = %d\n", bottom_data->bottom_imax);
+    printf("[D4EST_INFO]: bottom rtol = %.25f\n", bottom_data->bottom_rtol);
+    printf("[D4EST_INFO]: bottom atol = %.25f\n", bottom_data->bottom_atol);
+  }
+
+  bottom_solver->user = bottom_data;
+  bottom_solver->solve = multigrid_bottom_solver_cg;
+  bottom_solver->update = NULL;
+
+  return bottom_solver;
 }

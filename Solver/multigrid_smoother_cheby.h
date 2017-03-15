@@ -10,6 +10,7 @@ typedef struct {
   int smoother_eigs_compute;
 
   /* SET IN INPUT FILE */
+  double* eigs;
   int smoother_imax;
   int smoother_eigs_cg_imax;
   double smoother_eigs_lmax_lmin_ratio;

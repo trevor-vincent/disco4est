@@ -113,7 +113,7 @@ typedef struct {
 typedef struct {
 
   multigrid_update_callback_fcn_t update;
-  multigrid_smoother_fcn_t smoother;
+  multigrid_smoother_fcn_t smooth;
   void* user;
 
 } multigrid_smoother_t;
@@ -121,7 +121,7 @@ typedef struct {
 typedef struct {
 
   multigrid_update_callback_fcn_t update;
-  multigrid_bottom_solver_fcn_t bottom_solver;
+  multigrid_bottom_solver_fcn_t solve;
   void* user;
 
 } multigrid_bottom_solver_t;
@@ -206,5 +206,22 @@ multigrid_solve
 void multigrid_data_destroy
 (multigrid_data_t*);
 
+
+/* This file was automatically generated.  Do not edit! */
+void multigrid_solve(p4est_t *p4est,problem_data_t *vecs,weakeqn_ptrs_t *fcns,multigrid_data_t *mg_data,p4est_ghost_t **ghost,element_data_t **ghost_data);
+void multigrid_data_destroy(multigrid_data_t *mg_data);
+
+multigrid_data_t*
+multigrid_data_init
+(
+ p4est_t* p4est,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ int num_of_levels,
+ multigrid_smoother_t* smoother,
+ multigrid_bottom_solver_t* bottom_solver,
+ multigrid_logger_t* logger,
+ multigrid_user_callbacks_t* user_callbacks,
+ const char* input_file
+);
 
 #endif
