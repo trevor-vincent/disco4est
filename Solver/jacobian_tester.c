@@ -11,7 +11,7 @@ jacobian_tester
  curved_element_data_t* ghost_data,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  d4est_geometry_t* d4est_geom,
- curved_weakeqn_ptrs_t* prob_fcns,
+ weakeqn_ptrs_t* prob_fcns,
  problem_data_t* prob_vecs
 )
 {

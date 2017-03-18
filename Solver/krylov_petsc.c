@@ -131,22 +131,14 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
 
   /* DEBUG_PRINT_ARR_DBL(vecs_for_aij.u, vecs_for_aij.local_nodes); */
 
-  
-  if (petsc_ctx->d4est_geom == NULL){
-    ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
-                                              ghost,
-                                              (element_data_t*)(*petsc_ctx->ghost_data),
-                                              &vecs_for_aij,
-                                              dgmath_jit_dbase);
-  }
-  else {
-    ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
-                                                     ghost,
-                                                     (curved_element_data_t*)(*petsc_ctx->ghost_data),
-                                                     &vecs_for_aij,
-                                                     dgmath_jit_dbase,
-                                                     petsc_ctx->d4est_geom);
-  }
+
+  ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
+                                                  ghost,
+                                                  (*petsc_ctx->ghost_data),
+                                                  &vecs_for_aij,
+                                                  dgmath_jit_dbase,
+                                                  petsc_ctx->d4est_geom);
+
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecRestoreArray( y, &py ); CHKERRQ(ierr);
   return ierr;

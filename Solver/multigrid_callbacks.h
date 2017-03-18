@@ -10,20 +10,33 @@ multigrid_coarsen (
 {
   multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
   multigrid_refine_data_t* coarse_grid_refinement = (multigrid_refine_data_t*) mg_data->coarse_grid_refinement;
+  d4est_geometry_t* d4est_geom = mg_data->elem_data_updater->d4est_geom;
   int* stride = &mg_data->stride;
 
   if (children[1] != NULL){
     coarse_grid_refinement[*stride].hrefine = 1;
-    
     int i;
-    for (i = 0; i < (P4EST_CHILDREN); i++){
-      coarse_grid_refinement[*stride].degh[i] = ((element_data_t*)children[i]->p.user_data)->deg;
+    if (d4est_geom == NULL){
+      for (i = 0; i < (P4EST_CHILDREN); i++){
+        coarse_grid_refinement[*stride].degh[i] = ((element_data_t*)children[i]->p.user_data)->deg;
+      }
+    }
+    else {
+      for (i = 0; i < (P4EST_CHILDREN); i++){
+        coarse_grid_refinement[*stride].degh[i] = ((curved_element_data_t*)children[i]->p.user_data)->deg;
+      }
     }
   }
   else{
     coarse_grid_refinement[*stride].hrefine = 0;
-    coarse_grid_refinement[*stride].degh[0] = ((element_data_t*)children[0]->p.user_data)->deg;
-    coarse_grid_refinement[*stride].degH = ((element_data_t*)children[0]->p.user_data)->deg;
+    if (d4est_geom == NULL){
+      coarse_grid_refinement[*stride].degh[0] = ((element_data_t*)children[0]->p.user_data)->deg;
+      coarse_grid_refinement[*stride].degH = ((element_data_t*)children[0]->p.user_data)->deg;
+    }
+    else {
+      coarse_grid_refinement[*stride].degh[0] = ((curved_element_data_t*)children[0]->p.user_data)->deg;
+      coarse_grid_refinement[*stride].degH = ((curved_element_data_t*)children[0]->p.user_data)->deg;
+    }
   }
   (*stride)++;
   return 1;
@@ -37,10 +50,13 @@ multigrid_coarsen_init
  p4est_quadrant_t *quadrant
 )
 {
-  element_data_t* element_data = (element_data_t*)quadrant->p.user_data;
+
   multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
   multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
+  d4est_geometry_t* d4est_geom = mg_data->elem_data_updater->d4est_geom;
 
+  /* element_data_t* element_data = (element_data_t*)quadrant->p.user_data; */
+  
   int* stride = &mg_data->stride;
   int children = (coarse_grid_refinement[*stride - 1].hrefine == 1) ? (P4EST_CHILDREN) : 1;
   int min_deg = coarse_grid_refinement[*stride - 1].degh[0];
@@ -52,7 +68,12 @@ multigrid_coarsen_init
         min_deg = coarse_grid_refinement[*stride - 1].degh[i];
     }
 
-  element_data->deg = min_deg;
+  if (d4est_geom == NULL)
+    ((element_data_t*)quadrant->p.user_data)->deg = min_deg;
+  else
+    ((curved_element_data_t*)quadrant->p.user_data)->deg = min_deg;
+
+
   coarse_grid_refinement[*stride - 1].degH = min_deg;
 }
 
@@ -72,18 +93,32 @@ multigrid_store_balance_changes
       printf("num_outgoing != 1 in store_balance_changes");
       exit(1);
     }
-  
-  element_data_t* parent_data = (element_data_t*) outgoing[0]->p.user_data;
+ 
   multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
   multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
-  int stride = mg_data->stride;
+  d4est_geometry_t* d4est_geom = mg_data->elem_data_updater->d4est_geom;
+
+  int parent_id = -1;
+  if (d4est_geom == NULL){
+    parent_id = ((element_data_t*) outgoing[0]->p.user_data)->id;
+  }
+  else {
+    parent_id = ((curved_element_data_t*) outgoing[0]->p.user_data)->id;
+  }
   
-  coarse_grid_refinement[stride + parent_data->id].hrefine = 2;
+  int stride = mg_data->stride;
+  coarse_grid_refinement[stride + parent_id].hrefine = 2;
 
   int i;
   for (i = 0; i < (P4EST_CHILDREN); i++){
-    element_data_t* child_data = (element_data_t*) incoming[i]->p.user_data;
-    child_data->deg = coarse_grid_refinement[stride + parent_data->id].degh[i];
+    if (d4est_geom == NULL){
+      element_data_t* child_data = (element_data_t*) incoming[i]->p.user_data;
+      child_data->deg = coarse_grid_refinement[stride + parent_id].degh[i];
+    }
+    else {
+      curved_element_data_t* child_data = (curved_element_data_t*) incoming[i]->p.user_data;
+      child_data->deg = coarse_grid_refinement[stride + parent_id].degh[i];
+    }
   }
 }
 
@@ -202,7 +237,7 @@ multigrid_refine_and_apply_prolongation_replace
   
   multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
   multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
-
+  d4est_geometry_t* d4est_geom = mg_data->elem_data_updater->d4est_geom;
   /* the refine function increments the stride, so the stride of
      the parent element we want is -1 */
   int stride = mg_data->stride - 1;
@@ -211,8 +246,14 @@ multigrid_refine_and_apply_prolongation_replace
   
   int i;
   for (i = 0; i < (P4EST_CHILDREN); i++){
+    if (d4est_geom == NULL){
     element_data_t* child_data = (element_data_t*) incoming[i]->p.user_data;
     child_data->deg = coarse_grid_refinement[stride].degh[i];
+    }
+    else {
+    curved_element_data_t* child_data = (curved_element_data_t*) incoming[i]->p.user_data;
+    child_data->deg = coarse_grid_refinement[stride].degh[i];
+    }
   }
 }
 

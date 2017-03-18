@@ -72,7 +72,7 @@ void cg_solve(p4est_t* p4est, problem_data_t* vecs, weakeqn_ptrs_t* fcns,
   r = P4EST_ALLOC(double, local_nodes);
 
   /* first iteration data, store Au in r */
-  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgbase);
+  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgbase, NULL);
 
 
   
@@ -102,7 +102,7 @@ void cg_solve(p4est_t* p4est, problem_data_t* vecs, weakeqn_ptrs_t* fcns,
 
   for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++) {
     /* Au = A*d; */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgbase);
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgbase, NULL);
     d_dot_Au = linalg_vec_dot(d, Au, local_nodes);
 
     sc_allreduce(&d_dot_Au, &d_dot_Au_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,
@@ -144,7 +144,7 @@ void cg_solve(p4est_t* p4est, problem_data_t* vecs, weakeqn_ptrs_t* fcns,
 void curved_cg_solve(
                      p4est_t* p4est,
                      problem_data_t* vecs,
-                     curved_weakeqn_ptrs_t* fcns,
+                     weakeqn_ptrs_t* fcns,
                      dgmath_jit_dbase_t* dgbase,
                      d4est_geometry_t* geom,
                      p4est_ghost_t* ghost,

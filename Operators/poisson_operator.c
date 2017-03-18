@@ -427,9 +427,10 @@ void poisson_destroy_vecs(p4est_iter_volume_info_t * info, void *user_data)
 void poisson_apply_aij(
                          p4est_t* p4est,
                          p4est_ghost_t* ghost,
-                         element_data_t* ghost_data,
+                         void* ghost_data,
                          problem_data_t* prob_vecs,
-			 dgmath_jit_dbase_t* dgmath_jit_dbase
+			 dgmath_jit_dbase_t* dgmath_jit_dbase,
+                         d4est_geometry_t* d4est_geom
                          )
 {
   /* p4est_ghost_t* ghost; */

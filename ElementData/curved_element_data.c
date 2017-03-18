@@ -1064,23 +1064,26 @@ curved_element_data_init_new
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  d4est_geometry_t* d4est_geometry,
  curved_element_data_user_fcn_t user_fcn,
- void* user_ctx
+ void* user_ctx,
+ int compute_geometric_data
 )
 {
   curved_element_data_local_sizes_t local_sizes
     = curved_element_data_compute_strides_and_sizes(p4est, dgmath_jit_dbase, d4est_geometry, user_fcn, user_ctx);
 
-  geometric_factors_reinit
-    (
-     p4est,
-     geometric_factors,
-     local_sizes
-     /* local_sizes.local_nodes, */
-     /* local_sizes.local_nodes_integ, */
-     /* local_sizes.local_sqr_nodes, */
-     /* local_sizes.local_sqr_trace_nodes */
-    );
-
+  if (compute_geometric_data){
+    geometric_factors_reinit
+      (
+       p4est,
+       geometric_factors,
+       local_sizes
+       /* local_sizes.local_nodes, */
+       /* local_sizes.local_nodes_integ, */
+       /* local_sizes.local_sqr_nodes, */
+       /* local_sizes.local_sqr_trace_nodes */
+      );
+  }
+  
   /* int invM_stride = 0; */
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
@@ -1105,7 +1108,8 @@ curved_element_data_init_new
 
         int volume_nodes_integ = dgmath_get_nodes((P4EST_DIM), elem_data->deg_integ);
         int volume_nodes= dgmath_get_nodes((P4EST_DIM), elem_data->deg);
-        
+
+        if (compute_geometric_data){
         curved_element_data_compute_xyz
           (
            dgmath_jit_dbase,
@@ -1158,7 +1162,7 @@ curved_element_data_init_new
            elem_data->rst_xyz_integ,
            volume_nodes_integ
           );
-        
+        }
         /* if(elem_data->deg == elem_data->deg_integ) */
         /*   elem_data->invM == NULL; */
         /* else{ */

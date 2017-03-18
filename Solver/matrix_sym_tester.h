@@ -22,7 +22,17 @@ matrix_sym_tester_parallel_aux
  double* Aij
 );
 int matrix_sym_tester_parallel(p4est_t *p4est,problem_data_t *vecs,void *fcns,p4est_ghost_t *ghost,void *ghost_data,dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geom,int print,int num_tests,double sym_eps);
-void serial_matrix_sym_tester(p4est_t *p4est,problem_data_t *vecs,void *fcns,double sym_eps,dgmath_jit_dbase_t *dgmath_jit_dbase,int curved,int print,d4est_geometry_t *geom);
+void
+serial_matrix_sym_tester
+(
+ p4est_t* p4est,
+ problem_data_t* vecs, /* only needed for # of nodes */
+ weakeqn_ptrs_t* fcns,
+ double sym_eps,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ int print,
+ d4est_geometry_t* geom
+);
 
 /* void */
 /* parallel_matrix_sym_tester */

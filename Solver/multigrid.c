@@ -8,6 +8,7 @@
 #include "../hpAMR/hp_amr.h"
 #include "../Solver/multigrid_callbacks.h"
 #include <ini.h>
+#include <util.h>
 
 static void
 multigrid_update_components
@@ -40,7 +41,17 @@ multigrid_update_components
     if (mg_data->smoother->update != NULL){
       mg_data->smoother->update(p4est, level, data);
     }
-  }   
+  }
+
+  if (mg_data->elem_data_updater != NULL){
+    if (mg_data->elem_data_updater->update != NULL){
+      mg_data->elem_data_updater->update(p4est, level, data);
+    }
+  }
+  else {
+    mpi_abort("You should set elem_data_updater in multigrid\n");
+  }
+  
 }
 
 static
@@ -82,6 +93,7 @@ multigrid_data_init
  multigrid_bottom_solver_t* bottom_solver,
  multigrid_logger_t* logger,
  multigrid_user_callbacks_t* user_callbacks,
+ multigrid_element_data_updater_t* updater,
  const char* input_file
 )
 {
@@ -125,6 +137,7 @@ multigrid_data_init
   mg_data->logger = logger;
   mg_data->bottom_solver = bottom_solver;
   mg_data->user_callbacks = user_callbacks;
+  mg_data->elem_data_updater = updater;
   
   return mg_data;
 }
@@ -142,12 +155,10 @@ multigrid_vcycle
 (
  p4est_t* p4est,
  problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
- multigrid_data_t* mg_data,
- p4est_ghost_t** ghost,
- element_data_t** ghost_data
+ weakeqn_ptrs_t* fcns
 )
 {
+  multigrid_data_t* mg_data = p4est->user_pointer;
   int level;
 
   /* start and end levels of multigrid */
@@ -290,8 +301,6 @@ multigrid_vcycle
        p4est,
        &vecs_for_smooth,
        fcns,
-       *ghost,
-       *ghost_data,
        &rres_at0[stride_to_fine_data],
        fine_level
       );
@@ -355,10 +364,10 @@ multigrid_vcycle
     /**********************************************************/  
     
     /* p4est has changed, so update the element data, this does not change the stride */
-    element_data_init(p4est, -1);
+    /* element_data_init(p4est, -1); */
 
     /* update surrogate info */
-    nodes_on_level_of_surrogate_multigrid[level-1] = element_data_get_local_nodes(p4est);
+    nodes_on_level_of_surrogate_multigrid[level-1] = mg_data->elem_data_updater->get_local_nodes(p4est);
     elements_on_level_of_surrogate_multigrid[level-1] = p4est->local_num_quadrants;
 
     total_elements_on_surrogate_multigrid += elements_on_level_of_surrogate_multigrid[level-1];
@@ -384,19 +393,19 @@ multigrid_vcycle
     /**********************************************************/
     /**********************************************************/  
     
-    element_data_init(p4est, -1);
+    /* element_data_init(p4est, -1); */
 
-    /* update ghost data */
-    P4EST_FREE(*ghost_data);
-    p4est_ghost_destroy (*ghost);
-    *ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
-    *ghost_data = P4EST_ALLOC (element_data_t,
-                               (*ghost)->ghosts.elem_count);
+    /* /\* update ghost data *\/ */
+    /* P4EST_FREE(*ghost_data); */
+    /* p4est_ghost_destroy (*ghost); */
+    /* *ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE); */
+    /* *ghost_data = P4EST_ALLOC (element_data_t, */
+    /*                            (*ghost)->ghosts.elem_count); */
 
     /* update coarse grid info */
     elements_on_level_of_multigrid[level-1] = p4est->local_num_quadrants;
     total_elements_on_multigrid += elements_on_level_of_multigrid[level-1];
-    nodes_on_level_of_multigrid[level-1] = element_data_get_local_nodes(p4est);
+    nodes_on_level_of_multigrid[level-1] = mg_data->elem_data_updater->get_local_nodes(p4est);
     total_nodes_on_multigrid += nodes_on_level_of_multigrid[level-1];
 
     mg_data->fine_nodes = nodes_on_level_of_multigrid[level];
@@ -491,8 +500,6 @@ multigrid_vcycle
      p4est,
      &vecs_for_bottom_solve,
      fcns,
-     *ghost,
-     *ghost_data,
      /* &(mg_data->rres[mg_data->fine_nodes]), */
      &rres_at0[stride_to_fine_data]//[mg_data->fine_nodes]),
     );
@@ -566,16 +573,16 @@ multigrid_vcycle
 
 
     
-    P4EST_FREE(*ghost_data);
-    p4est_ghost_destroy (*ghost);
-    *ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
-    *ghost_data = P4EST_ALLOC (element_data_t,
-                               (*ghost)->ghosts.elem_count);
+    /* P4EST_FREE(*ghost_data); */
+    /* p4est_ghost_destroy (*ghost); */
+    /* *ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE); */
+    /* *ghost_data = P4EST_ALLOC (element_data_t, */
+    /*                            (*ghost)->ghosts.elem_count); */
+
+    /* element_data_init(p4est, -1); */
     
     /* decrements the stride */
     mg_data->stride -= elements_on_level_of_surrogate_multigrid[level];
-
-    element_data_init(p4est, -1);
 
     /* If the grid is not the finiest */
     if(fine_level != toplevel){
@@ -609,8 +616,6 @@ multigrid_vcycle
        p4est,
        &vecs_for_smooth,
        fcns,
-       *ghost,
-       *ghost_data,
        &rres_at0[stride_to_fine_data],//mg_data->rres,
        fine_level
       );
@@ -666,12 +671,14 @@ multigrid_compute_residual
 (
  p4est_t* p4est,
  problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
- element_data_t* ghost_data,
- p4est_ghost_t* ghost
+ weakeqn_ptrs_t* fcns
 ){
   
   multigrid_data_t* mg_data = p4est->user_pointer;
+  multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
+  p4est_ghost_t* ghost = *(updater->ghost);
+  void* ghost_data = *(updater->ghost_data);
+  d4est_geometry_t* d4est_geom = updater->d4est_geom;
   
   if (mg_data->mg_state == START){
     double* Au; 
@@ -680,7 +687,7 @@ multigrid_compute_residual
     Au = vecs->Au;
     rhs = vecs->rhs;
     double* r = P4EST_ALLOC(double, vecs->local_nodes);
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, mg_data->dgmath_jit_dbase);  
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, mg_data->dgmath_jit_dbase, d4est_geom);  
     linalg_vec_axpyeqz(-1., Au, rhs, r, local_nodes);
     double r2_0_local = linalg_vec_dot(r,r,local_nodes);  
     P4EST_FREE(r);
@@ -720,9 +727,7 @@ multigrid_solve
  p4est_t* p4est,
  problem_data_t* vecs,
  weakeqn_ptrs_t* fcns,
- multigrid_data_t* mg_data,
- p4est_ghost_t** ghost,
- element_data_t** ghost_data
+ multigrid_data_t* mg_data
 )
 {
   void* tmp_ptr = p4est->user_pointer;
@@ -734,13 +739,11 @@ multigrid_solve
   
   mg_data->mg_state = START;
   mg_data->vcycle_r2_global_current = multigrid_compute_residual
-                                           (
-                                            p4est,
-                                            vecs,
-                                            fcns,
-                                            *ghost_data,
-                                            *ghost
-                                           );
+                                               (
+                                                p4est,
+                                                vecs,
+                                                fcns
+                                               );
 
   mg_data->vcycle_r2_global_last = mg_data->vcycle_r2_global_current;
   
@@ -762,16 +765,14 @@ multigrid_solve
     )
     {
 
-      multigrid_vcycle(p4est, vecs, fcns, mg_data, ghost, ghost_data);
+      multigrid_vcycle(p4est, vecs, fcns);
 
       mg_data->vcycle_r2_global_current = multigrid_compute_residual
-                                               (
-                                                p4est,
-                                                vecs,
-                                                fcns,
-                                                *ghost_data,
-                                                *ghost
-                                               );
+                                          (
+                                           p4est,
+                                           vecs,
+                                           fcns
+                                          );
 
       mg_data->vcycle_num_finished++;
       mg_data->mg_state = POST_RESIDUAL_UPDATE;
@@ -783,7 +784,7 @@ multigrid_solve
       }
       
       mg_data->vcycle_r2_global_last = mg_data->vcycle_r2_global_current;
-  }
+    }
 
 
   mg_data->mg_state = END;

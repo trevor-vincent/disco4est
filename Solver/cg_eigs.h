@@ -12,8 +12,9 @@ cg_eigs
  problem_data_t* vecs,
  weakeqn_ptrs_t* fcns,
  p4est_ghost_t* ghost,
- element_data_t* ghost_data,
+ void* ghost_data,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom,
  int imax,
  double* eig_max
 );

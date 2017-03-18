@@ -141,6 +141,7 @@ SET (
   Solver/multigrid_bottom_solver_cg.c
   Solver/multigrid_smoother_cheby.c
   Solver/multigrid_logger_residual.c
+  Solver/multigrid_element_data_updater_nocurved.c
   Flux/curved_Gauss_primal_sipg_flux_fcns.c
   Flux/curved_test_mortarjacobianterms_flux_fcns.c
   Flux/dg_norm.c
@@ -313,10 +314,10 @@ add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid
 # add_d4est_problem_3d(testcurvedipflux_driver testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_2d(testcurvedipflux_driver_2d testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_2d(testcurvedprimal_driver_2d testcurvedprimal.c TestCurvedPrimal)
-# add_d4est_problem_3d(testcurvedprimal_driver_3d testcurvedprimal.c TestCurvedPrimal)
+add_d4est_problem_3d(testcurvedprimal_driver_3d testcurvedprimal.c TestCurvedPrimal)
 # add_d4est_problem_3d(testcubeprimal_driver_3d testcubeprimal.c TestCubePrimal)
 # add_d4est_problem_3d(testhelmholtzmultigrid_driver_3d testhelmholtzmultigrid.c TestHelmholtzMultigrid)
-# add_d4est_problem_3d(testhelmholtzmultigrid2_driver_3d testhelmholtzmultigrid2.c TestHelmholtzMultigrid)
+add_d4est_problem_3d(testhelmholtzmultigridsphere_driver_3d testhelmholtzmultigridsphere.c TestHelmholtzMultigrid)
 # add_d4est_problem_3d(constantdensitystarprimal_driver constantdensitystarprimal.c ConstantDensityStarPrimal)
 # add_d4est_problem_3d(testcurvedipflux_driver_3d testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_3d(testcurvedshell_driver_3d testcurvedshell.c TestCurvedShell)

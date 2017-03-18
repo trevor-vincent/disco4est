@@ -44,8 +44,9 @@ cg_eigs
  problem_data_t* vecs,
  weakeqn_ptrs_t* fcns,
  p4est_ghost_t* ghost,
- element_data_t* ghost_data,
+ void* ghost_data,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom,
  int imax,
  double* eig_max
 )
@@ -101,8 +102,8 @@ cg_eigs
   /* fcns->build_rhs(p4est, ghost, ghost_data, vecs); */
   /* debug("Build RHS in CG solve ends"); */
   
-  /* first iteration data, store Au in r */ 
-  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase);
+  /* first iteration data, store Au in r */
+  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, d4est_geom);
   linalg_copy_1st_to_2nd(Au, r, local_nodes);
   /* r = f - Au ; Au is stored in r so r = rhs - r */
   linalg_vec_xpby(rhs, -1., r, local_nodes);
@@ -141,7 +142,7 @@ cg_eigs
     /* util_print_matrix( u, vecs->local_nodes, 1, "u = ", 0); */
     
     /* Au = A*d; */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase);
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, d4est_geom);
 
     /* printf("i = %d, cg_eigs Au sum at i = %.25f\n",i, linalg_vec_sum(vecs->Au, vecs->local_nodes)); */
     /* printf("cg_eigs u sum at i = %.25f\n", linalg_vec_sum(vecs->u, vecs->local_nodes)); */

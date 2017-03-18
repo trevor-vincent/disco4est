@@ -383,10 +383,9 @@ serial_matrix_sym_tester
 (
  p4est_t* p4est,
  problem_data_t* vecs, /* only needed for # of nodes */
- void* fcns,
+ weakeqn_ptrs_t* fcns,
  double sym_eps,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
- int curved,
  int print,
  d4est_geometry_t* geom
 )
@@ -401,7 +400,7 @@ serial_matrix_sym_tester
   p4est_ghost_t *ghost;  
   ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
 
-  if (curved)
+  if (geom != NULL)
     ghost_data = (void*)P4EST_ALLOC (curved_element_data_t, ghost->ghosts.elem_count);
   else
     ghost_data = (void*)P4EST_ALLOC (element_data_t, ghost->ghosts.elem_count);
@@ -417,10 +416,10 @@ serial_matrix_sym_tester
   
   for (i = 0; i < vecs->local_nodes; i++){
     vecs->u[i] = 1.;
-    if (curved)
-      ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, vecs, dgmath_jit_dbase, geom);
-    else
-      ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (element_data_t*)ghost_data, vecs, dgmath_jit_dbase);
+    /* if (curved) */
+      /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, vecs, dgmath_jit_dbase, geom); */
+    /* else */
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, geom);
 
     /* to make parallel send stride as well */
     linalg_set_column(a_mat, vecs->Au, i, vecs->local_nodes, vecs->local_nodes);
@@ -469,7 +468,8 @@ serial_matrix_sym_tester
   }
 
   if (print == 3){
-    mpi_assert(curved);
+    /* mpi_assert(curved); */
+    mpi_assert(geom != NULL);
     printf("(i,j) Pairs that aren't equal\n");
     for (int i = 0; i < local_nodes; i++){
       for (int j = 0; j <= i; j++){
@@ -485,7 +485,7 @@ serial_matrix_sym_tester
   }
 
   if (print == 4){
-    mpi_assert(curved);
+    mpi_assert(geom != NULL);
     printf("(i,j) Pairs that aren't equal\n");
     for (int i = 0; i < local_nodes; i++){
       for (int j = 0; j <= i; j++){
@@ -839,25 +839,26 @@ matrix_sym_tester_parallel_aux
   vecs_for_sym_test.u0 = ui0;
   vecs_for_sym_test.Au = A_ui;
 
-  if (d4est_geom != NULL){
-    ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(
-                                              p4est,
-                                              ghost,
-                                              (curved_element_data_t*)ghost_data,
-                                              &vecs_for_sym_test,
-                                              dgmath_jit_dbase,
-                                              d4est_geom
-                                             );
-  }  
-  else{
+  /* if (d4est_geom != NULL){ */
+    /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs( */
+                                              /* p4est, */
+                                              /* ghost, */
+                                              /* (curved_element_data_t*)ghost_data, */
+                                              /* &vecs_for_sym_test, */
+                                              /* dgmath_jit_dbase, */
+                                              /* d4est_geom */
+                                             /* ); */
+  /* }   */
+  /* else{ */
     ((weakeqn_ptrs_t*)fcns)->apply_lhs(
                                        p4est,
                                        ghost,
-                                       (element_data_t*)ghost_data,
+                                       ghost_data,
                                        &vecs_for_sym_test,
-                                       dgmath_jit_dbase
+                                       dgmath_jit_dbase,
+                                       d4est_geom
                                       );
-  }
+  /* } */
   uj_A_ui_local = linalg_vec_dot(uj, A_ui, vecs->local_nodes);
 
  
@@ -866,10 +867,10 @@ matrix_sym_tester_parallel_aux
   vecs_for_sym_test.u0 = uj0;
   vecs_for_sym_test.Au = A_uj;
     
-  if (d4est_geom != NULL)
-    ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, &vecs_for_sym_test, dgmath_jit_dbase, d4est_geom);
-  else
-    ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (element_data_t*)ghost_data, &vecs_for_sym_test, dgmath_jit_dbase);
+  /* if (d4est_geom != NULL) */
+    /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, &vecs_for_sym_test, dgmath_jit_dbase, d4est_geom); */
+  /* else */
+    ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, ghost_data, &vecs_for_sym_test, dgmath_jit_dbase, d4est_geom);
     
   ui_A_uj_local = linalg_vec_dot(ui, A_uj, vecs->local_nodes);
 

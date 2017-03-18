@@ -12,12 +12,12 @@ ip_flux_penalty = 2.0
 use_ip_flux = 0
 
 [problem]
-deg_R2 = 2
-deg_integ_R2 = 2
-deg_R1 = 2
-deg_integ_R1 = 2
-deg_R0 = 2
-deg_integ_R0 = 2
+deg_R3 = 3
+deg_integ_R3 = 3
+deg_R1 = 3
+deg_integ_R1 = 3
+deg_R0 = 3
+deg_integ_R0 = 3
 
 [geometry]
 name = sphere
@@ -26,9 +26,10 @@ R1 = .66666666666666666666666666666666
 R2 = 1
 
 [solver]
-ksp_type = gmres
+ksp_type = cg
 ksp_atol = 1e-20
-ksp_rtol = 1e-10
-ksp_maxit = 10000
+ksp_rtol = 1e-20
+ksp_max_it = 10000
 ksp_view = 1
+ksp_user_defined_pc = 0
 ksp_monitor = 1

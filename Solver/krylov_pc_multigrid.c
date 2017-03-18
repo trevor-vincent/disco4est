@@ -50,9 +50,7 @@ krylov_pc_multigrid_apply(void* kpc_in, double* xp, double* yp)
      kct->p4est,
      &mg_prob_vecs,
      kct->fcns,
-     mg_data,
-     kct->ghost,
-     (element_data_t**)kct->ghost_data
+     mg_data
     );
       
   P4EST_FREE(Au);  

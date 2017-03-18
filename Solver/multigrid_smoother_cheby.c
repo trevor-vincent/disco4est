@@ -71,8 +71,6 @@ multigrid_smoother_cheby_iterate
  p4est_t* p4est,
  problem_data_t* vecs,
  weakeqn_ptrs_t* fcns,
- p4est_ghost_t* ghost,
- element_data_t* ghost_data,
  double* r,
  int iter,
  double lmin,
@@ -87,7 +85,11 @@ multigrid_smoother_cheby_iterate
 
   multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
   dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase;
- 
+  multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
+  p4est_ghost_t* ghost = *(updater->ghost);
+  void* ghost_data = *(updater->ghost_data);
+  d4est_geometry_t* d4est_geom = updater->d4est_geom;
+  
   int i;
   double d = (lmax + lmin)*.5;
   double c = (lmax - lmin)*.5;
@@ -104,7 +106,7 @@ multigrid_smoother_cheby_iterate
   linalg_fill_vec(p, 0., local_nodes);
   for (i = 0; i < iter; i++){
     /* calculate residual r = rhs - Au */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase);
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, d4est_geom);
     linalg_copy_1st_to_2nd(Au, r, local_nodes);
     linalg_vec_xpby(rhs, -1., r, local_nodes);
 
@@ -127,7 +129,7 @@ multigrid_smoother_cheby_iterate
   }
 
   /* calculate the residual */
-  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase);
+  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, d4est_geom);
   linalg_copy_1st_to_2nd(Au, r, local_nodes);
   linalg_vec_xpby(rhs, -1., r, local_nodes);
 
@@ -144,8 +146,14 @@ multigrid_smoother_cheby_update
  problem_data_t* vecs
 )
 {
-  multigrid_data_t* mg_data = p4est->user_pointer;
+  multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
   multigrid_smoother_cheby_t* cheby = mg_data->smoother->user;
+  
+  /* dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase; */
+  /* multigrid_element_data_updater_t* updater = mg_data->elem_data_updater; */
+  /* p4est_ghost_t* ghost = *(updater->ghost); */
+  /* void* ghost_data = *(updater->ghost_data); */
+  /* d4est_geometry_t* d4est_geom = updater->d4est_geom; */
     
   int vcycle = mg_data->vcycle_num_finished;
 
@@ -154,10 +162,10 @@ multigrid_smoother_cheby_update
        cheby->smoother_eigs_reuse_fromlastvcycle == 1 &&
        vcycle != 0
     ){
-      cheby->smoother_eigs_compute == 0;
+      cheby->smoother_eigs_compute = 0;
     }
     else {
-      cheby->smoother_eigs_compute == 1;
+      cheby->smoother_eigs_compute = 1;
     }
   }
   
@@ -165,10 +173,10 @@ multigrid_smoother_cheby_update
     if (
         cheby->smoother_eigs_reuse_fromdownvcycle == 1
     ){
-      cheby->smoother_eigs_compute == 0;
+      cheby->smoother_eigs_compute = 0;
     }
     else {
-      cheby->smoother_eigs_compute == 1;
+      cheby->smoother_eigs_compute = 1;
     }
   }
   
@@ -184,14 +192,14 @@ multigrid_smoother_cheby
  p4est_t* p4est,
  problem_data_t* vecs,
  weakeqn_ptrs_t* fcns,
- p4est_ghost_t* ghost,
- element_data_t* ghost_data,
  double* r,
  int level
 )
 {
   multigrid_data_t* mg_data = p4est->user_pointer;
   multigrid_smoother_cheby_t* cheby = mg_data->smoother->user;
+  multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
+  
   
   if (cheby->smoother_eigs_compute){
       cg_eigs
@@ -199,9 +207,10 @@ multigrid_smoother_cheby
          p4est,
          vecs,
          fcns,
-         ghost,
-         ghost_data,
+         *(updater->ghost),
+         *(updater->ghost_data),
          mg_data->dgmath_jit_dbase,
+         updater->d4est_geom,
          cheby->smoother_eigs_cg_imax,
          &cheby->eigs[level]
         );
@@ -222,8 +231,6 @@ multigrid_smoother_cheby
      p4est,
      vecs,
      fcns,
-     ghost,
-     ghost_data,
      r,
      iter,
      lmin,

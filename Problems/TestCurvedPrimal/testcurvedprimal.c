@@ -260,7 +260,7 @@ void problem_build_rhs
 (
  p4est_t* p4est,
  problem_data_t* prob_vecs,
- curved_weakeqn_ptrs_t* prob_fcns,
+ weakeqn_ptrs_t* prob_fcns,
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  dgmath_jit_dbase_t* dgbase,
@@ -407,10 +407,11 @@ problem_load_p4est_from_checkpoint
 void
 problem_set_degrees
 (
- curved_element_data_t* elem_data,
+ void* elem_data_temp,
  void* user_ctx
 )
 {
+  curved_element_data_t* elem_data = elem_data_temp;
   problem_input_t* input = user_ctx;
   /* outer shell */
   if (elem_data->tree < 6){
@@ -519,7 +520,7 @@ problem_init
 
   }
   
-  curved_weakeqn_ptrs_t prob_fcns;
+  weakeqn_ptrs_t prob_fcns;
   prob_fcns.apply_lhs = curved_poisson_operator_primal_apply_aij;
 
      
@@ -533,7 +534,7 @@ problem_init
                              dgmath_jit_dbase,
                              d4est_geom,
                              problem_set_degrees,
-                                 (void*)&input);
+                                 (void*)&input,1);
 
 
 
@@ -570,7 +571,7 @@ problem_init
                              dgmath_jit_dbase,
                              d4est_geom,
                              problem_set_degrees,
-                                 (void*)&input);
+                                  (void*)&input,1);
 
       
   }
@@ -624,17 +625,16 @@ problem_init
     /* printf("Total volume = %.25f\n", total_volume); */
     /* printf("Theoretical volume = %.25f\n", (4./3.)*M_PI*pow((input.Rinf),3)); */
     
-    serial_matrix_sym_tester
-      (
-       p4est,
-       &prob_vecs, /* only needed for # of nodes */
-       (void*)&prob_fcns,
-       .0000000001,
-       dgmath_jit_dbase,
-       1, /* is it curved */
-       2, /* should we print */
-       d4est_geom
-      );
+    /* serial_matrix_sym_tester */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, /\* only needed for # of nodes *\/ */
+    /*    (void*)&prob_fcns, */
+    /*    .0000000001, */
+    /*    dgmath_jit_dbase, */
+    /*    0, /\* should we print *\/ */
+    /*    d4est_geom */
+    /*   ); */
 
      /* p4est_vtk_write_all */
      /*   (p4est, p4est_geom,     /\* we do not need to transform from the vertex space into physical space, so we do not need a p4est_geometry_t * pointer *\/ */
@@ -698,21 +698,21 @@ problem_init
   /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, prob_vecs.local_nodes); */
 
           
-     /* krylov_petsc_info_t info = */
-     /*   krylov_petsc_solve */
-     /*   ( */
-     /*    p4est, */
-     /*    &prob_vecs, */
-     /*    (void*)&prob_fcns, */
-     /*    &ghost, */
-     /*    (void**)&ghost_data, */
-     /*    dgmath_jit_dbase, */
-     /*    d4est_geom, */
-     /*    NULL, */
-     /*    NULL, */
-     /*    NULL */
-     /*    /\* &params *\/ */
-     /*   ); */
+     krylov_petsc_info_t info =
+       krylov_petsc_solve
+       (
+        p4est,
+        &prob_vecs,
+        (void*)&prob_fcns,
+        &ghost,
+        (void**)&ghost_data,
+        dgmath_jit_dbase,
+        d4est_geom,
+        input_file,
+        NULL
+        /* NULL */
+        /* &params */
+       );
 
 
   double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);

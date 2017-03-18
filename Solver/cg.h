@@ -50,7 +50,7 @@ void curved_cg_solve
 (
  p4est_t* p4est,
  problem_data_t* vecs,
- curved_weakeqn_ptrs_t* fcns,
+ weakeqn_ptrs_t* fcns,
  dgmath_jit_dbase_t* dgbase,
  d4est_geometry_t* geom,
  p4est_ghost_t* ghost,

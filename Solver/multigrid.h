@@ -85,8 +85,6 @@ void
  p4est_t*,
  problem_data_t*,
  weakeqn_ptrs_t*,
- p4est_ghost_t*,
- element_data_t*,
  double*,
  int
 );
@@ -98,8 +96,6 @@ void
  p4est_t*,
  problem_data_t*,
  weakeqn_ptrs_t*,
- p4est_ghost_t*,
- element_data_t*,
  double*
 );
 
@@ -134,6 +130,23 @@ typedef struct {
   void* user;
   
 } multigrid_user_callbacks_t;
+
+typedef struct {
+
+
+  int(*get_local_nodes)(p4est_t*);
+  multigrid_update_callback_fcn_t update;
+  void* user;
+  p4est_ghost_t** ghost;
+  void** ghost_data;
+  
+  /* extra stuff for use with curved infrastructure */
+  d4est_geometry_t* d4est_geom;
+  void(*element_data_init_user_fcn)(void*,void*);
+  geometric_factors_t** geometric_factors;
+  
+} multigrid_element_data_updater_t;
+
 
 
 typedef struct {
@@ -178,6 +191,7 @@ typedef struct {
   multigrid_logger_t* logger;
   multigrid_bottom_solver_t* bottom_solver;
   multigrid_user_callbacks_t* user_callbacks;
+  multigrid_element_data_updater_t* elem_data_updater;
 
   /* INTERNAL PARAMETERS FOR LOGGING*/
   double* Ae_at0;
@@ -198,18 +212,12 @@ multigrid_solve
  p4est_t* p4est,
  problem_data_t* vecs,
  weakeqn_ptrs_t* fcns,
- multigrid_data_t* mg_data,
- p4est_ghost_t** ghost,
- element_data_t** ghost_data
+ multigrid_data_t* mg_data
 );
 
 void multigrid_data_destroy
 (multigrid_data_t*);
 
-
-/* This file was automatically generated.  Do not edit! */
-void multigrid_solve(p4est_t *p4est,problem_data_t *vecs,weakeqn_ptrs_t *fcns,multigrid_data_t *mg_data,p4est_ghost_t **ghost,element_data_t **ghost_data);
-void multigrid_data_destroy(multigrid_data_t *mg_data);
 
 multigrid_data_t*
 multigrid_data_init
@@ -221,6 +229,7 @@ multigrid_data_init
  multigrid_bottom_solver_t* bottom_solver,
  multigrid_logger_t* logger,
  multigrid_user_callbacks_t* user_callbacks,
+ multigrid_element_data_updater_t* updater,
  const char* input_file
 );
 

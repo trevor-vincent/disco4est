@@ -220,7 +220,8 @@ bi_estimator_compute
      ghost,
      ghost_data,
      vecs,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     NULL
     );
 
 

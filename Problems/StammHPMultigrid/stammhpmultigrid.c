@@ -26,6 +26,7 @@
 #include <multigrid_smoother_cheby.h>
 #include <multigrid_bottom_solver_cg.h>
 #include <multigrid_logger_residual.h>
+#include <multigrid_element_data_updater_nocurved.h>
 #include "time.h"
 
 static const double pi = 3.1415926535897932384626433832795;
@@ -177,7 +178,7 @@ void problem_build_rhs
   double* tmp = prob_vecs->u;
   
   prob_vecs->u = u_eq_0;
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgbase);
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgbase, NULL);
   linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
 
   /* DEBUG_PRINT_ARR_DBL(prob_vecs->Au, prob_vecs->local_nodes); */
@@ -196,12 +197,13 @@ build_residual
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- element_data_t* ghost_data,
+ void* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom
 )
 {
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, NULL);
   linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
 }
  
@@ -731,6 +733,11 @@ problem_init
                                  (
                                  );
 
+    multigrid_element_data_updater_t* updater = multigrid_element_data_updater_nocurved_init(
+                                                                                             &ghost,
+                                                                                             &ghost_data
+    );
+
     
     multigrid_data_t* mg_data = multigrid_data_init(p4est,
                                                     dgmath_jit_dbase,
@@ -739,31 +746,26 @@ problem_init
                                                     bottom_solver,
                                                     logger,
                                                     NULL,
+                                                    updater,
                                                     input_file
                                                    );
 
 
       element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);
-      /* util_print_matrix(u_analytic, prob_vecs.local_nodes, 1, " u_analytic = ", 0); */
 
-      /* element_data_print(p4est); */
-
-      /* multigrid_data_set_analytical_solution */
-      /*   ( */
-      /*    mg_data, */
-      /*    analytic_solution_fcn */
-      /*   ); */
-      
       multigrid_solve
         (
          p4est,
          &prob_vecs,
          &prob_fcns,
-         mg_data,
-         &ghost,
-         &ghost_data
+         mg_data
         );
 
+
+      multigrid_smoother_cheby_destroy(smoother);
+      multigrid_bottom_solver_cg_destroy(bottom_solver);
+      multigrid_logger_residual_destroy(logger);
+      multigrid_element_data_updater_nocurved_destroy(updater);
       
   
       multigrid_data_destroy(mg_data);

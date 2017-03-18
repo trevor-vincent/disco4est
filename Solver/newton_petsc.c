@@ -185,12 +185,12 @@ PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
   vecs_for_res_build.u0 = (double*)xx;//x_temp;
   vecs_for_res_build.Au = ftemp;
 
-  if (d4est_geom != NULL){
-    ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (curved_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_res_build, dgmath_jit_dbase,d4est_geom);
-  }
-  else {
-    ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (element_data_t*)(petsc_ctx->ghost_data), &vecs_for_res_build, dgmath_jit_dbase);
-  }
+  /* if (d4est_geom != NULL){ */
+  /*   ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (curved_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_res_build, dgmath_jit_dbase,d4est_geom); */
+  /* } */
+  /* else { */
+  ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (petsc_ctx->ghost_data), &vecs_for_res_build, dgmath_jit_dbase, d4est_geom);
+  /* } */
   VecRestoreArray(f,&ftemp);//CHKERRQ(ierr);
   VecRestoreArrayRead(x,&xx);
 
@@ -236,12 +236,12 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
   /* vecs->u0 is already set by newton_petsc_save_x0 */
 
 
-  if (d4est_geom != NULL){
-    ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (curved_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_jac, dgmath_jit_dbase,d4est_geom);
-  }
-  else {
-    ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (element_data_t*)(petsc_ctx->ghost_data), &vecs_for_jac, dgmath_jit_dbase);
-  }
+  /* if (d4est_geom != NULL){ */
+    /* ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (curved_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_jac, dgmath_jit_dbase,d4est_geom); */
+  /* } */
+  /* else { */
+((weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (petsc_ctx->ghost_data), &vecs_for_jac, dgmath_jit_dbase, d4est_geom);
+  /* } */
   
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecRestoreArray( y, &py ); CHKERRQ(ierr);

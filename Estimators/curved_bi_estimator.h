@@ -9,7 +9,7 @@ curved_bi_estimator_compute
 (
  p4est_t* p4est,
  problem_data_t* vecs,
- curved_weakeqn_ptrs_t* fcns,
+ weakeqn_ptrs_t* fcns,
  penalty_calc_t u_penalty_fcn,
  penalty_calc_t u_dirichlet_penalty_fcn,
  penalty_calc_t gradu_penalty_fcn,
