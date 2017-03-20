@@ -10,6 +10,60 @@
 #include <ini.h>
 #include <util.h>
 
+void
+multigrid_get_level_range
+(
+ p4est_t* p4est,
+ int* min_level,
+ int* max_level
+)
+{
+  int level;
+  int min = P4EST_MAXLEVEL;
+  int max = -1;
+  
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        level = quad->level;
+        min = (level < min) ? level : min;
+        max = (level > max) ? level : max;
+      }
+    }  
+
+
+  int local_reduce [2];
+  int global_reduce [2];
+  local_reduce[0] = -1*min;
+  local_reduce[1] = max;
+
+  if(p4est->mpisize > 1){
+    sc_allreduce
+      (
+       &local_reduce[0],
+       &global_reduce[0],
+       4,
+       sc_MPI_INT,
+       sc_MPI_MAX,
+       sc_MPI_COMM_WORLD
+      );
+  }
+  else {
+    global_reduce[0] = local_reduce[0];
+    global_reduce[1] = local_reduce[1];
+  }
+
+  
+  *min_level = global_reduce[0]*-1;
+  *max_level = global_reduce[1];
+}
+
 static void
 multigrid_update_components
 (

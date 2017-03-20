@@ -233,4 +233,12 @@ multigrid_data_init
  const char* input_file
 );
 
+void
+multigrid_get_level_range
+(
+ p4est_t* p4est,
+ int* min_level,
+ int* max_level
+);
+
 #endif

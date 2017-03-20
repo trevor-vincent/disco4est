@@ -34,13 +34,13 @@ curved_bi_est_dirichlet
 
   double* xyz_on_f_m_Gauss [(P4EST_DIM)];
   double* n_on_f_m_Gauss [(P4EST_DIM)];
-  double* sj_n_on_f_m_Gauss [(P4EST_DIM)];
+  /* double* sj_n_on_f_m_Gauss [(P4EST_DIM)]; */
 
   
   for (int d = 0; d < (P4EST_DIM); d++) {
     xyz_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     n_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
-    sj_n_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
+    /* sj_n_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss); */
   }
   
   dgmath_apply_slicer(dgmath_jit_dbase,
@@ -147,7 +147,7 @@ curved_bi_est_dirichlet
   for (int d = 0; d < (P4EST_DIM); d++){
     P4EST_FREE(xyz_on_f_m_Gauss[d]);
     P4EST_FREE(n_on_f_m_Gauss[d]);
-    P4EST_FREE(sj_n_on_f_m_Gauss[d]);
+    /* P4EST_FREE(sj_n_on_f_m_Gauss[d]); */
   }
 }
 
@@ -281,7 +281,7 @@ curved_bi_est_interface
   double* dudx_p_on_f_p_mortar_Gauss [(P4EST_DIM)];
   double* sj_on_f_m_mortar_Gauss = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
   double* n_on_f_m_mortar_Gauss [(P4EST_DIM)];
-  double* sj_n_on_f_m_mortar_Gauss [(P4EST_DIM)];  
+  /* double* sj_n_on_f_m_mortar_Gauss [(P4EST_DIM)];   */
 
 
   double* drst_dxyz_m_on_mortar_Gauss [(P4EST_DIM)][(P4EST_DIM)];
@@ -301,7 +301,7 @@ curved_bi_est_interface
     dudr_m_on_f_m_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
     dudx_m_on_f_m_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
     n_on_f_m_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
-    sj_n_on_f_m_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+    /* sj_n_on_f_m_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss); */
   }
  
   double* Je1 = P4EST_ALLOC_ZERO(double, total_nodes_mortar_Gauss);

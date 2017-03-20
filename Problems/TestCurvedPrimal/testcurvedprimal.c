@@ -148,7 +148,6 @@ typedef struct {
   int deg_R2;
   int deg_integ_R2;
 
-  int use_ip_flux;
   double ip_flux_penalty;
 
   double R0;
@@ -302,6 +301,8 @@ void problem_build_rhs
                                      &prob_vecs->rhs[ed->nodal_stride]
                                     );
 
+        printf("elem_id, rhs sum = %d %.25f\n", ed->id, linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], dgmath_get_nodes((P4EST_DIM), ed->deg)));
+        
         /* double* tmp1 = &f[ed->nodal_stride]; */
         /* double* tmp2 = &prob_vecs->rhs[ed->nodal_stride]; */
         /* DEBUG_PRINT_3ARR_DBL(tmp1,tmp2,ed->J_integ,dgmath_get_nodes((P4EST_DIM), ed->deg)); */
@@ -312,11 +313,16 @@ void problem_build_rhs
   int local_nodes = prob_vecs->local_nodes;
   double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
   double* tmp = prob_vecs->u;
+
+  /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs->rhs, local_nodes); */
   
   prob_vecs->u = u_eq_0; 
   curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgbase, d4est_geom);
   linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
-
+ 
+  /* printf("rhs after aij added to rhs\n"); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs->rhs, local_nodes); */
+  
   prob_vecs->u = tmp;
   P4EST_FREE(u_eq_0);
 
@@ -534,7 +540,7 @@ problem_init
                              dgmath_jit_dbase,
                              d4est_geom,
                              problem_set_degrees,
-                                 (void*)&input,1);
+                                 (void*)&input,1,1);
 
 
 
@@ -571,7 +577,7 @@ problem_init
                              dgmath_jit_dbase,
                              d4est_geom,
                              problem_set_degrees,
-                                  (void*)&input,1);
+                                  (void*)&input,1,1);
 
       
   }

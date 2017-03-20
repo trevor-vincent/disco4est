@@ -1,4 +1,3 @@
-
 #define NDEBUG
 #define _GNU_SOURCE
 
@@ -693,7 +692,7 @@ problem_init
 
     int min_level, max_level;
 
-    element_data_get_level_range(p4est, &min_level, &max_level);
+    multigrid_get_level_range(p4est, &min_level, &max_level);
     printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
 
     /* need to do a reduce on min,max_level before supporting multiple proc */

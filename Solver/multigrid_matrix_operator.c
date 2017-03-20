@@ -224,6 +224,62 @@ multigrid_matrix_fofu_fofv_mass_operator_setup_deg_integ_eq_deg
 
 
 void
+multigrid_matrix_curved_fofu_fofv_mass_operator_setup_deg_integ_eq_deg
+(
+ p4est_t* p4est,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom,
+ double* u,
+ double* v,
+ grid_fcn_ext_t fofu_fcn,
+ void* fofu_ctx,
+ grid_fcn_ext_t fofv_fcn,
+ void* fofv_ctx,
+ multigrid_matrix_op_t* matrix_op,
+ int(*set_deg_Gauss)(void*, void*),
+ void* set_deg_Gauss_ctx
+)
+{
+  int nodal_stride = 0;
+  int matrix_nodal_stride = 0;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        curved_element_data_t* ed = quad->p.user_data;
+        int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        int matrix_volume_nodes = volume_nodes*volume_nodes;
+
+        curved_element_data_form_fofufofvlilj_matrix_Gaussnodes
+          (
+           dgmath_jit_dbase,
+           d4est_geom,
+           (u == NULL) ? NULL : &u[nodal_stride],
+           (v == NULL) ? NULL : &v[nodal_stride],
+           ed,
+           set_deg_Gauss(ed, set_deg_Gauss_ctx),
+           (P4EST_DIM),
+           &matrix_op->matrix_at0[matrix_nodal_stride],
+           fofu_fcn,
+           fofu_ctx,
+           fofv_fcn,
+           fofv_ctx
+          );
+
+        nodal_stride += volume_nodes;
+        matrix_nodal_stride += matrix_volume_nodes;
+      }
+    }
+}
+
+
+
+void
 multigrid_matrix_operator_destroy(multigrid_user_callbacks_t* user_callbacks)
 {
   multigrid_matrix_op_t* matrix_op = user_callbacks->user;

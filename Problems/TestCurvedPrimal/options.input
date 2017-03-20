@@ -8,16 +8,15 @@ num_unifrefs = 1
 num_randrefs = 0
 
 [flux]
-ip_flux_penalty = 2.0
-use_ip_flux = 0
+ip_flux_penalty = 10.0
 
 [problem]
-deg_R3 = 3
-deg_integ_R3 = 3
-deg_R1 = 3
-deg_integ_R1 = 3
-deg_R0 = 3
-deg_integ_R0 = 3
+deg_R2 = 2
+deg_integ_R2 = 2
+deg_R1 = 2
+deg_integ_R1 = 2
+deg_R0 = 2
+deg_integ_R0 = 2
 
 [geometry]
 name = sphere

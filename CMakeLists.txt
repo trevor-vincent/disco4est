@@ -130,6 +130,7 @@ SET (
   hpAMR/hp_amr_smooth_pred.c
   hpAMR/hp_amr_curved_smooth_pred.c
   hpAMR/hp_amr_uniform.c
+  hpAMR/hp_amr_curved_uniform.c
   ElementData/curved_element_data.c
   ElementData/element_data.c
   Flux/central_flux_vector_fcns.c
@@ -142,6 +143,7 @@ SET (
   Solver/multigrid_smoother_cheby.c
   Solver/multigrid_logger_residual.c
   Solver/multigrid_element_data_updater_nocurved.c
+  Solver/multigrid_element_data_updater_curved.c
   Flux/curved_Gauss_primal_sipg_flux_fcns.c
   Flux/curved_test_mortarjacobianterms_flux_fcns.c
   Flux/dg_norm.c
