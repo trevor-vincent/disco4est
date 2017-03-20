@@ -48,7 +48,7 @@ multigrid_get_level_range
       (
        &local_reduce[0],
        &global_reduce[0],
-       4,
+       2,
        sc_MPI_INT,
        sc_MPI_MAX,
        sc_MPI_COMM_WORLD
