@@ -67,37 +67,74 @@ curved_test_mortarjacobianterms_dirichlet
   D4EST_ALLOC_DIM_VEC(nvol_on_f_m_Gauss,face_nodes_m_Gauss);
   D4EST_ALLOC_DIM_VEC(xyz_on_f_m_Gauss,face_nodes_m_Gauss);
   D4EST_ALLOC_DBYD_MAT(drst_dxyz_on_f_m_Gauss,face_nodes_m_Gauss);
-  
-  curved_element_data_compute_mortar_normal_and_sj_using_face_data
+
+
+  mpi_assert(geom->X_mapping_type == MAP_ISOPARAMETRIC);
+  /* curved_element_data_compute_mortar_normal_and_sj_using_face_data */
+  /*   ( */
+  /*    &e_m, */
+  /*    1, */
+  /*    1, */
+  /*    &e_m->deg_integ, */
+  /*    f_m, */
+  /*    geom->dxdr_method, */
+  /*    1, */
+  /*    n_on_f_m_Gauss, */
+  /*    sj_on_f_m_Gauss, */
+  /*    geom, */
+  /*    dgmath_jit_dbase, */
+  /*    xyz_on_f_m_Gauss */
+  /*   ); */
+
+  d4est_geometry_compute_geometric_data_on_mortar
     (
-     &e_m,
+     e_m->tree,
+     e_m->q,
+     e_m->dq,
      1,
      1,
      &e_m->deg_integ,
      f_m,
-     geom->dxdr_method,
+     drst_dxyz_on_f_m_Gauss ,
+     sjvol_on_f_m_Gauss,
+     nvol_on_f_m_Gauss,
+     NULL,
+     GAUSS,
+     geom,
+     dgmath_jit_dbase
+    );
+  
+  d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
+    (
+     e_m->tree,
+     e_m->q,
+     e_m->dq,
      1,
+     1,
+     &e_m->deg_integ,
+     f_m,
+     GAUSS,
      n_on_f_m_Gauss,
      sj_on_f_m_Gauss,
      geom,
      dgmath_jit_dbase,
      xyz_on_f_m_Gauss
     );
-
-  curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
-    (
-     &e_m,
-     1,
-     1,
-     &e_m->deg_integ,
-     f_m,
-     drst_dxyz_on_f_m_Gauss,
-     sjvol_on_f_m_Gauss,
-     nvol_on_f_m_Gauss,
-     geom->p4est_geom,
-     dgmath_jit_dbase,
-     NULL
-    );
+  
+  /* curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data */
+  /*   ( */
+  /*    &e_m, */
+  /*    1, */
+  /*    1, */
+  /*    &e_m->deg_integ, */
+  /*    f_m, */
+  /*    drst_dxyz_on_f_m_Gauss, */
+  /*    sjvol_on_f_m_Gauss, */
+  /*    nvol_on_f_m_Gauss, */
+  /*    geom->p4est_geom, */
+  /*    dgmath_jit_dbase, */
+  /*    NULL */
+  /*   ); */
 
   /* DEBUG_PRINT_2ARR_DBL(sj_on_f_m_Gauss, */
   /*                      sjvol_on_f_m_Gauss, */
@@ -105,12 +142,17 @@ curved_test_mortarjacobianterms_dirichlet
 
   double maxerror = util_max_error(sj_on_f_m_Gauss, sjvol_on_f_m_Gauss, face_nodes_m_Gauss);
   maxerror += util_max_error(n_on_f_m_Gauss[0], nvol_on_f_m_Gauss[0], face_nodes_m_Gauss);
+
   maxerror += util_max_error(n_on_f_m_Gauss[1], nvol_on_f_m_Gauss[1], face_nodes_m_Gauss);
+
 #if (P4EST_DIM)==3
   maxerror += util_max_error(n_on_f_m_Gauss[2], nvol_on_f_m_Gauss[2], face_nodes_m_Gauss);
 #endif
   if (maxerror > data->local_eps){
     printf("Holy shit batman, LOTS OF ERROR HERE\n");
+    DEBUG_PRINT_2ARR_DBL(n_on_f_m_Gauss[0], nvol_on_f_m_Gauss[0], face_nodes_m_Gauss);
+    DEBUG_PRINT_2ARR_DBL(n_on_f_m_Gauss[1], nvol_on_f_m_Gauss[1], face_nodes_m_Gauss);
+    DEBUG_PRINT_2ARR_DBL(n_on_f_m_Gauss[2], nvol_on_f_m_Gauss[2], face_nodes_m_Gauss);
   }
 
   data->global_err += maxerror;
@@ -388,15 +430,17 @@ curved_test_mortarjacobianterms_interface
   D4EST_ALLOC_DBYD_MAT(drst_dxyz_m_on_mortar_Gauss,total_nodes_mortar_Gauss);
   D4EST_ALLOC_DBYD_MAT(drst_dxyz_p_on_mortar_Gauss_porder,total_nodes_mortar_Gauss);
   
-  curved_element_data_compute_mortar_normal_and_sj_using_face_data
+
+  d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
     (
-     e_m,
+     e_m[0]->tree,
+     e_m[0]->q,
+     e_m[0]->dq,
      faces_m,
      faces_mortar,
      &deg_mortar_Gauss[0],
      f_m,
-     geom->dxdr_method,
-     1,
+     GAUSS,
      n_on_f_m_mortar_Gauss,
      sj_on_f_m_mortar_Gauss,
      geom,
@@ -404,9 +448,12 @@ curved_test_mortarjacobianterms_interface
      tmpxyz
     );
 
-  curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
+  
+  d4est_geometry_compute_geometric_data_on_mortar
     (
-     e_m,
+     e_m[0]->tree,
+     e_m[0]->q,
+     e_m[0]->dq,
      faces_m,
      faces_mortar,
      &deg_mortar_Gauss[0],
@@ -414,32 +461,29 @@ curved_test_mortarjacobianterms_interface
      drst_dxyz_m_on_mortar_Gauss,
      sjvol_m_on_f_m_mortar_Gauss,
      nvol_m_on_f_m_mortar_Gauss,
-     geom->p4est_geom,
-     dgmath_jit_dbase,
-     NULL
+     NULL,
+     GAUSS,
+     geom,
+     dgmath_jit_dbase
     );
 
-
-
-
-
-  
-  curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
+  d4est_geometry_compute_geometric_data_on_mortar
     (
-     e_p,
+     e_p[0]->tree,
+     e_p[0]->q,
+     e_p[0]->dq,
      faces_p,
      faces_mortar,
-     &deg_mortar_Gauss_porder[0], 
+     &deg_mortar_Gauss_porder[0],
      f_p,
      drst_dxyz_p_on_mortar_Gauss_porder,
      sjvol_p_on_f_p_mortar_Gauss,
      nvol_p_on_f_p_mortar_Gauss,
-     geom->p4est_geom,
-     dgmath_jit_dbase,
-     NULL
-    );
-
-  
+     NULL,
+     GAUSS,
+     geom,
+     dgmath_jit_dbase
+    ); 
   
 
   for (int d = 0; d < (P4EST_DIM); d++){

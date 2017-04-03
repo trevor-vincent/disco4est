@@ -34,6 +34,7 @@
 
 #include <dgmath.h>
 #include <pXest.h>
+#include <d4est_geometry.h>
 /* SC_EXTERN_C_BEGIN; */
 
 /** Opaque context type for writing VTK output with multiple function calls.
@@ -56,7 +57,7 @@ typedef struct d4est_vtk_context d4est_vtk_context_t;
  *                      filename_rank.vtu, and the meta file filename.pvtu.
  */
 void                d4est_vtk_write_file (p4est_t * d4est,
-                                          p4est_geometry_t * geom,
+                                          d4est_geometry_t * geom,
                                           const char *filename);
 
 /** The first call to write a VTK file using individual functions.
@@ -94,7 +95,7 @@ d4est_vtk_context_new (p4est_t * p4est,
  *                  \b tree_to_vertex must be non-NULL.
  */
 void                d4est_vtk_context_set_geom (d4est_vtk_context_t * cont,
-                                                p4est_geometry_t * geom);
+                                                d4est_geometry_t * geom);
 
 /** Modify the context parameter for scaling the quadrants.
  * After \ref d4est_vtk_context_new, it is at the default 0.95.

@@ -3699,12 +3699,12 @@ void dgmath_apply_p_restrict_interp(dgmath_jit_dbase_t* dgbase, double* in,
 //         |----------------------+
 
 
-/* only use for cross products or obtaining normal direction */
+
 void dgmath_get_face_info(int f, dgmath_face_info_t* face_info) {
 
   if (f == 0) {
-    face_info->a = 2;
-    face_info->b = 1;
+    face_info->a = 1;
+    face_info->b = 2;
     face_info->sgn = -1.;
     face_info->c = 0;
   } else if (f == 1) {
@@ -3718,13 +3718,13 @@ void dgmath_get_face_info(int f, dgmath_face_info_t* face_info) {
     face_info->sgn = -1.;
     face_info->c = 1;
   } else if (f == 3) {
-    face_info->a = 2;
-    face_info->b = 0;
+    face_info->a = 0;
+    face_info->b = 2;
     face_info->sgn = 1.;
     face_info->c = 1;
   } else if (f == 4) {
-    face_info->a = 1;
-    face_info->b = 0;
+    face_info->a = 0;
+    face_info->b = 1;
     face_info->sgn = -1.;
     face_info->c = 2;
   } else if (f==5) {

@@ -2,6 +2,7 @@
 #include <linalg.h>
 #include <grid_functions.h>
 #include <element_data.h>
+#include <curved_element_data.h>
 #include <multigrid_matrix_operator.h>
 
 static void
@@ -61,7 +62,7 @@ multigrid_matrix_operator_update_callback
 
   if(mg_data->mg_state == PRE_V){
     if (vcycle == 0){
-      matrix_op->matrix_nodes_on_level[level] = element_data_get_local_matrix_nodes(p4est);
+      matrix_op->matrix_nodes_on_level[level] = matrix_op->get_local_matrix_nodes(p4est);
       matrix_op->total_matrix_nodes_on_multigrid = matrix_op->matrix_nodes_on_level[level];
     }
     matrix_op->stride_to_fine_matrix_data = 0;
@@ -81,7 +82,7 @@ multigrid_matrix_operator_update_callback
   }
   else if(mg_data->mg_state == DOWNV_POST_BALANCE){
     if (vcycle == 0){
-      matrix_op->matrix_nodes_on_level[level-1] = element_data_get_local_matrix_nodes(p4est);
+      matrix_op->matrix_nodes_on_level[level-1] = matrix_op->get_local_matrix_nodes(p4est);
       matrix_op->total_matrix_nodes_on_multigrid += matrix_op->matrix_nodes_on_level[level-1];
       matrix_op->matrix_at0 = P4EST_REALLOC
                               (
@@ -117,14 +118,15 @@ multigrid_matrix_operator_init
  p4est_t* p4est,
  int num_of_levels,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
+ int(*get_local_matrix_nodes)(p4est_t*),
  void* user
 )
 {
   multigrid_matrix_op_t* matrix_op = P4EST_ALLOC(multigrid_matrix_op_t, 1);
-  int local_matrix_nodes = element_data_get_local_matrix_nodes(p4est);
+  int local_matrix_nodes = get_local_matrix_nodes(p4est);
   matrix_op->matrix_at0 = P4EST_ALLOC(double, local_matrix_nodes);
   matrix_op->matrix_nodes_on_level = P4EST_ALLOC(int, num_of_levels);
-  
+  matrix_op->get_local_matrix_nodes = get_local_matrix_nodes;
   matrix_op->total_matrix_nodes_on_multigrid = -1;
   matrix_op->stride_to_fine_matrix_data = -1;
   
@@ -288,4 +290,3 @@ multigrid_matrix_operator_destroy(multigrid_user_callbacks_t* user_callbacks)
   P4EST_FREE(matrix_op);
   P4EST_FREE(user_callbacks);
 }
-

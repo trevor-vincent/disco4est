@@ -78,7 +78,8 @@ typedef struct {
   
   /* nodal degree */
   int deg;
-  int deg_integ;
+  int deg_integ; /* for integration other than stiffness matrix */
+  int deg_stiffness; /* for integration of the stiffness matrix */
   
 #ifndef NDEBUG
   /* useful flag for debugging */
@@ -132,19 +133,17 @@ double curved_element_data_compute_l2_norm_sqr(p4est_t *p4est,double *nodal_vec,
 void curved_element_data_compute_J_and_rst_xyz(double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)],double *jac,double *drst_dxyz[(P4EST_DIM)][(P4EST_DIM)],int volume_nodes);
 void curved_element_data_init_new(p4est_t *p4est,geometric_factors_t *geometric_factors,dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,curved_element_data_user_fcn_t user_fcn,void *user_ctx, int compute_geometric_data, int set_geometric_aliases);
 curved_element_data_local_sizes_t curved_element_data_compute_strides_and_sizes(p4est_t *p4est,dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,curved_element_data_user_fcn_t user_fcn,void *user_ctx);
-void curved_element_data_compute_mortar_normal_and_sj_using_face_data(curved_element_data_t **e,int num_faces_side,int num_faces_mortar,int *deg_mortar,int face_side,dxdr_method_t dxdr_method,int interp_to_Gauss,double *n[(P4EST_DIM)],double *sj,d4est_geometry_t *d4est_geom,dgmath_jit_dbase_t *dgmath_jit_dbase,double *xyz_storage[(P4EST_DIM)]);
 double curved_element_data_compute_element_face_area(curved_element_data_t *elem_data,dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *geom,int face,int deg);
 double curved_element_data_compute_element_volume(dgmath_jit_dbase_t *dgmath_jit_dbase,int deg_GL,double *jac_GL);
 int curved_element_data_is_it_on_boundary(p4est_t *p4est,p4est_quadrant_t *q,int which_tree);
 double curved_element_data_compute_diam(double *xyz[(P4EST_DIM)],int deg,diam_compute_option_t option);
 void curved_element_data_debug_print_node_vecs(p4est_t *p4est,double **vecs,int num_vecs,int *elems,int num_elems);
 void curved_element_data_print_node_vec(p4est_t *p4est,double *vec);
-void curved_element_data_compute_dxyz_drst(dgmath_jit_dbase_t *dgmath_jit_dbase,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int which_tree,p4est_geometry_t *p4est_geom,int deg,int interp_to_Gauss,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)],double *xyz_store[(P4EST_DIM)]);
 void geometric_factors_destroy(geometric_factors_t *geometric_factors);
 void geometric_factors_reinit(p4est_t *p4est,geometric_factors_t *geometric_factors,curved_element_data_local_sizes_t local_sizes);
 geometric_factors_t *geometric_factors_init(p4est_t *p4est);
 void curved_element_data_compute_xyz(dgmath_jit_dbase_t *dgmath_jit_dbase,p4est_geometry_t *p4est_geometry,int which_tree,int deg,quadrature_type_t type,p4est_qcoord_t q[(P4EST_DIM)],p4est_qcoord_t dq,double *xyz[(P4EST_DIM)]);
-void curved_element_data_init_node_vec(p4est_t *p4est,double *node_vec,grid_fcn_t init_fcn,dgmath_jit_dbase_t *dgmath_jit_dbase,p4est_geometry_t *p4est_geom);
+void curved_element_data_init_node_vec(p4est_t *p4est,double *node_vec,grid_fcn_t init_fcn,dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geom);
 void curved_element_data_set_degrees(p4est_t *p4est,int(*set_deg_fcn)(int,int,int));
 
 void curved_element_data_apply_fofufofvlilj_Gaussnodes
@@ -195,5 +194,18 @@ void curved_element_data_form_fofufofvlilj_matrix_Gaussnodes
  grid_fcn_ext_t fofv_fcn,
  void* fofv_ctx
 );
+
+
+int curved_element_data_get_local_matrix_nodes(p4est_t* p4est);
+
+void curved_element_data_apply_curvedGaussStiff
+(
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geometry,
+ curved_element_data_t* elem_data,
+ double* vec,
+ double* stiff_vec
+);
+
 
 #endif

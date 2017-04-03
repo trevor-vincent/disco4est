@@ -15,7 +15,7 @@
 #include <matrix_sym_tester.h>
 #include <dg_norm.h>
 #include <d4est_geometry.h>
-#include <d4est_geometry_sphere.h>
+#include <d4est_geometry_cubed_sphere.h>
 #include <d4est_geometry_disk.h>
 #include <curved_poisson_debug_vecs.h>
 #include <d4est_vtk.h>
@@ -26,6 +26,82 @@
 
 double global_Rinf;
 double global_sigma;
+
+
+void
+problem_save_to_vtk
+(
+ p4est_t* p4est,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom,
+ double* error,
+ const char* input_file
+)
+{
+   int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
+   int vtk_nodes = 0;
+     
+    int stride = 0;
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt)
+      {
+        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+        sc_array_t* tquadrants = &tree->quadrants;
+        int Q = (p4est_locidx_t) tquadrants->elem_count;
+        for (int q = 0; q < Q; ++q) {
+          /* k++; */
+          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+          curved_element_data_t* ed = quad->p.user_data;
+          deg_array[stride] = ed->deg;
+          vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
+          stride++;
+        }
+      }
+    
+    char sol_save_as [500];
+    sprintf(sol_save_as, "test_mortar_terms");
+    
+    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, sol_save_as);
+    d4est_vtk_context_set_geom(vtk_ctx, d4est_geom);
+    d4est_vtk_context_set_scale(vtk_ctx, .99);
+    d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
+    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);    
+
+    if (error != NULL){
+    vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx,
+                                             1,
+                                             0,
+                                             "error",
+                                             error,
+                                             vtk_ctx
+                                            );
+    }
+    else {
+    vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx,
+                                             0,
+                                             0,
+                                             vtk_ctx
+                                            );
+    }
+
+      vtk_ctx = d4est_vtk_write_dg_cell_dataf
+                (
+                 vtk_ctx,
+                 1,
+                 1,
+                 1,
+                 0,
+                 1,
+                 0,
+                 0,
+                 vtk_ctx
+                );
+    
+    d4est_vtk_write_footer(vtk_ctx);
+    P4EST_FREE(deg_array);
+}
+
 
 static int
 random_h_refine(p4est_t * p4est, p4est_topidx_t which_tree,
@@ -333,17 +409,9 @@ problem_input
  const char* input_file
 )
 {
-  int num_of_options = 12;
-  
   problem_input_t input;
-  /* input.degree = -1; */
   input.num_unifrefs = -1;
   input.ip_flux_penalty = -1;
-  input.R2 = -1;
-  input.R1 = -1;
-  input.R0 = -1;
-  /* input.w = -1; */
-  /* input.Rinf = -1; */
   input.num_randrefs = -1;
   input.deg_R0 = -1;
   input.deg_integ_R0 = -1;
@@ -351,16 +419,21 @@ problem_input
   input.deg_integ_R1 = -1;
   input.deg_R2 = -1;
   input.deg_integ_R2 = -1;
-  /* input.gauss_integ_deg = -1; */
-  /* input.krylov_type = ""; */
-  
-  input.count = 0;
   
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
   }
 
-  mpi_assert(input.count == num_of_options);
+  D4EST_CHECK_INPUT("problem", input.num_unifrefs, -1);
+  D4EST_CHECK_INPUT("problem", input.ip_flux_penalty, -1);
+  D4EST_CHECK_INPUT("problem", input.num_randrefs, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_R0, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_integ_R0, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_R1, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_integ_R1, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_R2, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_integ_R2, -1);
+
   return input;
 }
 
@@ -409,56 +482,61 @@ problem_load_p4est_from_checkpoint
                 conn);
 }
 
-/* void */
-/* problem_set_degrees */
-/* ( */
-/*  curved_element_data_t* elem_data, */
-/*  void* user_ctx */
-/* ) */
-/* { */
-/*   problem_input_t* input = user_ctx; */
-/*   /\* outer shell *\/ */
-/*   if (elem_data->tree < 6){ */
-/*     elem_data->deg = input->deg_R2; */
-/*     elem_data->deg_integ = input->deg_integ_R2; */
-/*   } */
-/*   /\* inner shell *\/ */
-/*   else if(elem_data->tree < 12){ */
-/*     elem_data->deg = input->deg_R1; */
-/*     elem_data->deg_integ = input->deg_integ_R1; */
-/*   } */
-/*   /\* center cube *\/ */
-/*   else { */
-/*     elem_data->deg = input->deg_R0; */
-/*     elem_data->deg_integ = input->deg_integ_R0; */
-/*   } */
-/* } */
-
 
 void
 problem_set_degrees
 (
- curved_element_data_t* elem_data,
+ void* elem_data_tmp,
  void* user_ctx
 )
 {
-  problem_input_t* input = user_ctx;
+
+  curved_element_data_t* elem_data = elem_data_tmp;
+    problem_input_t* input = user_ctx;
   /* outer shell */
   if (elem_data->tree < 6){
-    elem_data->deg = rand()%5 + 1;
-    elem_data->deg_integ = elem_data->deg;
+    elem_data->deg = input->deg_R2;
+    elem_data->deg_integ = input->deg_integ_R2;
   }
   /* inner shell */
   else if(elem_data->tree < 12){
-    elem_data->deg = rand()%5 + 1;
-    elem_data->deg_integ = elem_data->deg;
+    elem_data->deg = input->deg_R1;
+    elem_data->deg_integ = input->deg_integ_R1;
   }
   /* center cube */
   else {
-    elem_data->deg = rand()%5 + 1;
-    elem_data->deg_integ = elem_data->deg;
+    elem_data->deg = input->deg_R0;
+    elem_data->deg_integ = input->deg_integ_R0;
   }
 }
+
+
+/* void */
+/* problem_set_degrees */
+/* ( */
+/*  void* elem_data_tmp, */
+/*  void* user_ctx */
+/* ) */
+/* { */
+
+/*   curved_element_data_t* elem_data = elem_data_tmp; */
+/*   problem_input_t* input = user_ctx; */
+/*   /\* outer shell *\/ */
+/*   if (elem_data->tree < 6){ */
+/*     elem_data->deg = rand()%5 + 1; */
+/*     elem_data->deg_integ = elem_data->deg; */
+/*   } */
+/*   /\* inner shell *\/ */
+/*   else if(elem_data->tree < 12){ */
+/*     elem_data->deg = rand()%5 + 1; */
+/*     elem_data->deg_integ = elem_data->deg; */
+/*   } */
+/*   /\* center cube *\/ */
+/*   else { */
+/*     elem_data->deg = rand()%5 + 1; */
+/*     elem_data->deg_integ = elem_data->deg; */
+/*   } */
+/* } */
 
 
 
@@ -553,7 +631,7 @@ problem_init
      
     geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
 
-    d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
+    /* d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;     */
     
     /* d4est_geometry_t dgeom; */
     /* dgeom.p4est_geom = p4est_geom; */
@@ -565,7 +643,7 @@ problem_init
                              dgmath_jit_dbase,
                              d4est_geom,
                              problem_set_degrees,
-                                 (void*)&input);
+                                 (void*)&input,1,1);
 
 
 
@@ -600,14 +678,137 @@ problem_init
                              dgmath_jit_dbase,
                              d4est_geom,
                              problem_set_degrees,
-                                 (void*)&input);
+                                 (void*)&input,1,1);
 
       
   }
-   
+
+  /* curved_element_data_init_new(p4est, */
+  /*                              geometric_factors, */
+  /*                              dgmath_jit_dbase, */
+  /*                              d4est_geom, */
+  /*                              problem_set_degrees, */
+  /*                              (void*)&input,1,1); */
+  
+  local_nodes = curved_element_data_get_local_nodes(p4est);
+  printf("Number of elements = %d\n", p4est->local_num_quadrants);
+  double* error = P4EST_ALLOC(double, local_nodes);
+  int nodal_stride = 0;
+ /*  for (p4est_topidx_t tt = p4est->first_local_tree; */
+/*        tt <= p4est->last_local_tree; */
+/*        ++tt) */
+/*     { */
+/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
+/*       sc_array_t* tquadrants = &tree->quadrants; */
+/*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
+/*       for (int q = 0; q < Q; ++q) { */
+/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
+/*         curved_element_data_t* ed = quad->p.user_data; */
+/*         int volume_nodes_test = dgmath_get_nodes((P4EST_DIM), ed->deg); */
+/*         /\* printf("ed->deg, volume_nodes_test = %d, %d\n", ed->deg, volume_nodes_test); *\/ */
+
+
+/*         double* dxyz_drst_analytic [(P4EST_DIM)][(P4EST_DIM)]; */
+/*         double* dxyz_drst_isoparametric [(P4EST_DIM)][(P4EST_DIM)]; */
+/*         D4EST_ALLOC_DBYD_MAT(dxyz_drst_analytic, volume_nodes_test); */
+/*         D4EST_ALLOC_DBYD_MAT(dxyz_drst_isoparametric, volume_nodes_test); */
+/*         quadrature_type_t quad_type = LOBATTO; */
+/*         dgmath_rst_t rst_points = dgmath_get_rst_points(dgmath_jit_dbase, */
+/*                                                         ed->deg, */
+/*                                                         (P4EST_DIM), */
+/*                                                         LOBATTO); */
+/*         double rst_i [(P4EST_DIM)]; */
+/*         double trst_i [(P4EST_DIM)]; */
+/*         double xyz_i [(P4EST_DIM)]; */
+/*         double* rst [(P4EST_DIM)] = {rst_points.r, rst_points.s, NULL}; */
+/* #if (P4EST_DIM)==3 */
+/*         rst[2] = rst_points.t; */
+/* #endif */
+
+/*         /\* printf("Element %d: r s t, q0, q1, q2, x, y,z \n", ed->id); *\/ */
+/*         for (int i = 0; i < volume_nodes_test; i++){ */
+/*           for (int d = 0; d < (P4EST_DIM); d++){ */
+/*             rst_i[d] = rst[d][i]; */
+/*           } */
+
+/*             d4est_geometry_get_tree_coords_in_range_0_to_1(ed->q, ed->dq, rst_i, COORDS_INTEG_RST, trst_i); */
+/*           d4est_geom->X(d4est_geom, */
+/*                         tt, */
+/*                         ed->q, */
+/*                         ed->dq, */
+/*                         rst_i, */
+/*                         COORDS_INTEG_RST, */
+/*                         xyz_i); */
+          
+/*           /\* printf("%f %f %f %f %f %f %f %f %f\n", *\/ */
+/*                  /\* rst_i[0],rst_i[1],rst_i[2], *\/ */
+/*                  /\* trst_i[0], trst_i[1], trst_i[2], *\/ */
+/*                  /\* xyz_i[0], xyz_i[1], xyz_i[2] *\/ */
+/*                 /\* ); *\/ */
+                 
+/*         } */
+/*         /\* 0.6060108055465463 0.6045997880780726 *\/ */
+
+/*         d4est_geometry_compute_dxyz_drst_isoparametric */
+/*           ( */
+/*            ed->tree, */
+/*            ed->q, */
+/*            ed->dq, */
+/*            ed->deg, */
+/*            quad_type, */
+/*            d4est_geom, */
+/*            dgmath_jit_dbase, */
+/*            dxyz_drst_isoparametric */
+/*           ); */
+
+/*         d4est_geometry_compute_dxyz_drst_analytic */
+/*           ( */
+/*            ed->tree, */
+/*            ed->q, */
+/*            ed->dq, */
+/*            ed->deg, */
+/*            quad_type, */
+/*            d4est_geom, */
+/*            dgmath_jit_dbase, */
+/*            dxyz_drst_analytic */
+/*           ); */
+
+
+/*         for (int i = 0; i < volume_nodes_test; i++){ */
+/*           double max_err = -1; */
+/*           for (int d1 = 0; d1 < (P4EST_DIM); d1++) { */
+/*             for (int d2 = 0; d2 < (P4EST_DIM); d2++) { */
+/*               double err = fabs(dxyz_drst_isoparametric[d1][d2][i] - dxyz_drst_analytic[d1][d2][i]); */
+/*               if (err > max_err) */
+/*                 max_err = err; */
+/*             } */
+/*           } */
+/*           error[i + nodal_stride] = max_err; */
+/*         } */
+
+/*         nodal_stride += volume_nodes_test; */
+/*         /\* DEBUG_PRINT_2ARR_DBL(dxyz_drst_isoparametric[0][0], dxyz_drst_analytic[0][0], volume_nodes_test); *\/ */
+        
+/*         D4EST_FREE_DBYD_MAT(dxyz_drst_analytic); */
+/*         D4EST_FREE_DBYD_MAT(dxyz_drst_isoparametric); */
+/*       } */
+/*     } */
+
+  problem_save_to_vtk
+    (
+     p4est,
+     dgmath_jit_dbase,
+     d4est_geom,
+     NULL,
+     NULL
+    );
+
+  
+  P4EST_FREE(error);
+    
   local_nodes = curved_element_data_get_local_nodes(p4est);
   double* u = P4EST_ALLOC(double, local_nodes);
-  curved_element_data_init_node_vec(p4est, u, sinpix_fcn, dgmath_jit_dbase, d4est_geom->p4est_geom);
+  curved_element_data_init_node_vec(p4est, u, sinpix_fcn, dgmath_jit_dbase, d4est_geom);
     
   test_mortarjacobianterms_data_t test_data;
   test_data.u = u;

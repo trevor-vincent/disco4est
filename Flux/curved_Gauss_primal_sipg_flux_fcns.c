@@ -109,10 +109,11 @@ curved_Gauss_primal_sipg_flux_dirichlet
    
   }
 
-
-  curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
+  d4est_geometry_compute_geometric_data_on_mortar
     (
-     &e_m,
+     e_m->tree,
+     e_m->q,
+     e_m->dq,
      1,
      1,
      &e_m->deg_integ,
@@ -120,10 +121,12 @@ curved_Gauss_primal_sipg_flux_dirichlet
      drst_dxyz_Gauss,
      sj_on_f_m_Gauss,
      n_on_f_m_Gauss,
-     geom->p4est_geom,
-     dgmath_jit_dbase,
-     NULL
+     NULL,
+     GAUSS,
+     geom,
+     dgmath_jit_dbase
     );
+  
 
   
   dgmath_apply_slicer(dgmath_jit_dbase, e_m->u_storage, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
@@ -637,10 +640,11 @@ curved_Gauss_primal_sipg_flux_interface
     }
   }
 
-
-  curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
+  d4est_geometry_compute_geometric_data_on_mortar
     (
-     e_m,
+     e_m[0]->tree,
+     e_m[0]->q,
+     e_m[0]->dq,
      faces_m,
      faces_mortar,
      &deg_mortar_Gauss[0],
@@ -648,28 +652,28 @@ curved_Gauss_primal_sipg_flux_interface
      drst_dxyz_m_on_mortar_Gauss,
      sj_on_f_m_mortar_Gauss,
      n_on_f_m_mortar_Gauss,
-     geom->p4est_geom,
-     dgmath_jit_dbase,
-     NULL
+     NULL,
+     GAUSS,
+     geom,
+     dgmath_jit_dbase
     );
 
-  curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
+  d4est_geometry_compute_geometric_data_on_mortar
     (
-     e_p,
+     e_p[0]->tree,
+     e_p[0]->q,
+     e_p[0]->dq,
      faces_p,
      faces_mortar,
-     &deg_mortar_Gauss_porder[0], 
+     &deg_mortar_Gauss_porder[0],
      f_p,
      drst_dxyz_p_on_mortar_Gauss_porder,
      NULL,
-     (double* [(P4EST_DIM)]){NULL, NULL
-#if (P4EST_DIM)==3
-         , NULL
-#endif
-         },
-     geom->p4est_geom,
-     dgmath_jit_dbase,
-     NULL
+     NULL,
+     NULL,
+     GAUSS,
+     geom,
+     dgmath_jit_dbase
     );
 
   for (int d = 0; d < (P4EST_DIM); d++){

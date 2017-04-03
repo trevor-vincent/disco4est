@@ -813,7 +813,7 @@ multigrid_solve
    */
   while
     (
-     mg_data->vcycle_num_finished <= mg_data->vcycle_imax
+     mg_data->vcycle_num_finished < mg_data->vcycle_imax
      &&
      mg_data->vcycle_r2_global_current > mg_data->vcycle_r2_global_stoptol
     )

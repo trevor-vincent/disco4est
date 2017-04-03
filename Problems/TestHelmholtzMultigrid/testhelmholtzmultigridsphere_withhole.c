@@ -17,7 +17,7 @@
 #include <hp_amr_curved_smooth_pred.h>
 #include <hp_amr_curved_uniform.h>
 #include <d4est_geometry.h>
-#include <d4est_geometry_sphere.h>
+#include <d4est_geometry_cubed_sphere.h>
 #include <d4est_geometry_disk.h>
 #include <curved_poisson_debug_vecs.h>
 #include <d4est_vtk.h>
@@ -146,19 +146,22 @@ typedef struct {
 
   int num_unifrefs;
   int num_of_amr_levels;
-
+  int solve_with_multigrid;
+  
   int deg_R0;
   int deg_integ_R0;
+  int deg_stiffness_R0;
   int deg_R1;
   int deg_integ_R1;
+  int deg_stiffness_R1;
   int deg_R2;
   int deg_integ_R2;
+  int deg_stiffness_R2;
   int deg_offset_for_nonlinear_integ;
   double ip_flux_penalty;
   int count;
   
 } problem_input_t;
-
 
 static
 int problem_input_handler
@@ -170,6 +173,11 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
+  if (util_match_couple(section,"problem",name,"solve_with_multigrid")) {
+    mpi_assert(pconfig->solve_with_multigrid == -1);
+    pconfig->solve_with_multigrid = atoi(value);
+    pconfig->count += 1;
+  }
   if (util_match_couple(section,"amr",name,"num_of_amr_levels")) {
     mpi_assert(pconfig->num_of_amr_levels == -1);
     pconfig->num_of_amr_levels = atoi(value);
@@ -195,6 +203,11 @@ int problem_input_handler
     pconfig->deg_integ_R0 = atoi(value);
     pconfig->count += 1;
   }
+  else if (util_match_couple(section,"problem",name,"deg_stiffness_R0")) {
+    mpi_assert(pconfig->deg_stiffness_R0 == -1);
+    pconfig->deg_stiffness_R0 = atoi(value);
+    pconfig->count += 1;
+  }
   else if (util_match_couple(section,"problem",name,"deg_R1")) {
     mpi_assert(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
@@ -203,6 +216,11 @@ int problem_input_handler
   else if (util_match_couple(section,"problem",name,"deg_integ_R1")) {
     mpi_assert(pconfig->deg_integ_R1 == -1);
     pconfig->deg_integ_R1 = atoi(value);
+    pconfig->count += 1;
+  }
+  else if (util_match_couple(section,"problem",name,"deg_stiffness_R1")) {
+    mpi_assert(pconfig->deg_stiffness_R1 == -1);
+    pconfig->deg_stiffness_R1 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_R2")) {
@@ -214,7 +232,12 @@ int problem_input_handler
     mpi_assert(pconfig->deg_integ_R2 == -1);
     pconfig->deg_integ_R2 = atoi(value);
     pconfig->count += 1;
-  }  
+  }
+  else if (util_match_couple(section,"problem",name,"deg_stiffness_R2")) {
+    mpi_assert(pconfig->deg_stiffness_R2 == -1);
+    pconfig->deg_stiffness_R2 = atoi(value);
+    pconfig->count += 1;
+  }
   else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_integ")) {
     mpi_assert(pconfig->deg_offset_for_nonlinear_integ == -1);
     pconfig->deg_offset_for_nonlinear_integ = atoi(value);
@@ -235,7 +258,7 @@ problem_input
  const char* input_file
 )
 {
-  int num_of_options = 10;
+  int num_of_options = 14;
   
   problem_input_t input;
   input.num_unifrefs = -1;
@@ -243,11 +266,15 @@ problem_input
   input.ip_flux_penalty = -1;
   input.deg_R0 = -1;
   input.deg_integ_R0 = -1;
+  input.deg_stiffness_R0 = -1;
   input.deg_R1 = -1;
   input.deg_integ_R1 = -1;
+  input.deg_stiffness_R1 = -1;
   input.deg_R2 = -1;
   input.deg_integ_R2 = -1; 
+  input.deg_stiffness_R2 = -1; 
   input.deg_offset_for_nonlinear_integ = -1;
+  input.solve_with_multigrid = -1;
   
   input.count = 0;
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
@@ -345,16 +372,19 @@ problem_set_degrees
   if (elem_data->tree < 6){
     elem_data->deg = input->deg_R2;
     elem_data->deg_integ = input->deg_integ_R2;
+    elem_data->deg_stiffness = input->deg_stiffness_R2;
   }
   /* inner shell */
   else if(elem_data->tree < 12){
     elem_data->deg = input->deg_R1;
     elem_data->deg_integ = input->deg_integ_R1;
+    elem_data->deg_stiffness = input->deg_stiffness_R1;
   }
   /* center cube */
   else {
     elem_data->deg = input->deg_R0;
     elem_data->deg_integ = input->deg_integ_R0;
+    elem_data->deg_stiffness = input->deg_stiffness_R0;
   } 
 }
 
@@ -370,14 +400,17 @@ set_deg_integ
   /* outer shell */
   if (elem_data->tree < 6){
     elem_data->deg_integ = input->deg_integ_R2;
+    elem_data->deg_stiffness = input->deg_stiffness_R2;
   }
   /* inner shell */
   else if(elem_data->tree < 12){
     elem_data->deg_integ = input->deg_integ_R1;
+    elem_data->deg_stiffness = input->deg_stiffness_R1;
   }
   /* center cube */
   else {
     elem_data->deg_integ = input->deg_integ_R0;
+    elem_data->deg_stiffness = input->deg_stiffness_R0;
   } 
 }
 
@@ -413,9 +446,15 @@ problem_save_to_vtk
  p4est_t* p4est,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double* u,
+ double* u_analytic,
+ double* error,
  int level,
  int with_eta,
- double R0
+ double R0,
+ double R1,
+ double R2,
+ int compactify,
+ const char* input_file
 )
 {
    int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
@@ -442,22 +481,24 @@ problem_save_to_vtk
       }
 
 
-    p4est_connectivity_t* conn_vtk = p8est_connectivity_new_sphere();
-    p4est_geometry_t* geom_vtk = d4est_geometry_sphere_from_param
+    d4est_geometry_t* geom_vtk = d4est_geometry_new
                                  (
-                                  R0,
-                                  2.*R0,
-                                  3.*R0,
-                                  0,
-                                  conn_vtk
+                                  p4est->mpirank,
+                                  input_file
                                  );
 
 
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->R2 = R2;
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->R1 = R1;
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->R0 = R0;
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->compactify = compactify;
+
+    
     char sol_save_as [500];
     if (with_eta)
-      sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_witheta", "puncture", level);
+      sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_witheta", "helmholtz", level);
     else
-      sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta", "puncture", level);
+      sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta", "helmholtz", level);
     
     d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, sol_save_as);
     d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
@@ -465,10 +506,14 @@ problem_save_to_vtk
     d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
     vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);    
     vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx,
-                                             1,
+                                             3,
                                              0,
                                              "u",
                                              u,
+                                             "u_analytic",
+                                             u_analytic,
+                                             "error",
+                                             error,
                                              vtk_ctx
                                             );
 
@@ -506,8 +551,7 @@ problem_save_to_vtk
     d4est_vtk_write_footer(vtk_ctx);
     P4EST_FREE(deg_array);
     P4EST_FREE(eta_array);
-    p8est_connectivity_destroy(conn_vtk);
-    p8est_geometry_destroy(geom_vtk);
+    d4est_geometry_destroy(geom_vtk);
 }
 
 static
@@ -597,14 +641,12 @@ double analytic_solution_fcn
   /* double arg = -(x*x + y*y + z*z)/(global_sigma*global_sigma); */
   /* double N = 1./sqrt(pow(2,n)*pow(global_sigma,2*n)*pow(M_PI,n)); */
   /* return N*exp(arg); */
-  double global_Rinf = 1.;
 #if (P4EST_DIM)==3
   double r2 = x*x + y*y + z*z;
-  double ret = global_Rinf*global_Rinf - r2;
+  double ret = 1/sqrt(r2);
   /* printf("global_Rinf, x,y,z,analytic = %f, %f,%f,%f,%f\n",global_Rinf, x,y,z,ret); */
 #else
-  double r2 = x*x + y*y;
-  double ret = global_Rinf*global_Rinf - r2;
+  mpi_abort("Dimension should be 3");
 #endif
   return ret;
 }
@@ -622,12 +664,12 @@ double boundary_fcn
 {
   /* double r2 = x*x + y*y + z*z; */
   /* printf("boundary_fcn(x,y,z) = %.25f, r2 = %.25f, global_Rinf = %.25f\n ", analytic_fcn(x,y,z), r2, global_Rinf);  */
-  /* return analytic_fcn(x,y,z); */
-  return zero_fcn(x,y
-#if (P4EST_DIM)==3
-                  ,z
-#endif
-                  );
+  return analytic_solution_fcn(x,y,z);
+/*   return zero_fcn(x,y */
+/* #if (P4EST_DIM)==3 */
+/*                   ,z */
+/* #endif */
+/*                   ); */
 }
 
 static
@@ -644,9 +686,9 @@ double f_fcn
   double u = analytic_solution_fcn(x,y,z);
   /* printf(" helmholtz_fcn(x,y,z,0,NULL)*u = %f\n",  helmholtz_fcn(x,y,z,0,NULL)*u); */
 #if (P4EST_DIM)==3
-  return 6. + helmholtz_fcn(x,y,z,u,NULL)*u;
+  return 0. + helmholtz_fcn(x,y,z,u,NULL)*u;
 #else
-  return 4 + helmholtz_fcn(x,y,z,u,NULL)*u;
+  mpi_abort("Only DIM = 3");
 #endif
   /* return 2*analytic_fcn(x,y,z)*(2*x*x + 2*y*y + 2*z*z - 3*global_sigma*global_sigma)/(global_sigma*global_sigma*global_sigma*global_sigma); */
 }
@@ -833,7 +875,7 @@ void problem_build_rhs
      f,
      f_fcn,
      dgbase,
-     d4est_geom->p4est_geom
+     d4est_geom
     );
   
    prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns(boundary_fcn,ip_flux_params);
@@ -953,6 +995,7 @@ problem_init
   double* rhs = P4EST_ALLOC_ZERO(double, 1);
   double* u = P4EST_ALLOC_ZERO(double, 1);
   double* u_analytic = P4EST_ALLOC_ZERO(double, 1);
+  double* error = P4EST_ALLOC_ZERO(double, 1);
   /* double* u_prev = P4EST_ALLOC_ZERO(double, 1); */
   int local_nodes = 1;
 
@@ -1100,7 +1143,7 @@ problem_init
   /* linalg_fill_vec(prob_vecs.u, 0., local_nodes); */
 
   
-  d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
+  /* d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;     */
   /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
   curved_element_data_init_new(p4est,
                                geometric_factors,
@@ -1117,6 +1160,7 @@ problem_init
     u = P4EST_REALLOC(u, double, local_nodes);
     rhs = P4EST_REALLOC(rhs, double, local_nodes);
     u_analytic = P4EST_REALLOC(u_analytic, double, local_nodes);
+    error = P4EST_REALLOC(error, double, local_nodes);
 
     prob_vecs.Au = Au;
     prob_vecs.u = u;
@@ -1138,19 +1182,27 @@ problem_init
       /* ); */
 
     /* linalg_fill_vec(prob_vecs.u, 0.001, prob_vecs.local_nodes); */
-    linalg_fill_vec(prob_vecs.u, 0, prob_vecs.local_nodes);
+    /* linalg_fill_vec(prob_vecs.u, 0, prob_vecs.local_nodes); */
+    curved_element_data_init_node_vec(
+                                      p4est,
+                                      u,
+                                      analytic_solution_fcn,
+                                      dgmath_jit_dbase,
+                                      d4est_geom
+    );  
+
     curved_element_data_init_node_vec(
                                       p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
                                       dgmath_jit_dbase,
-                                      d4est_geom->p4est_geom
+                                      d4est_geom
     );  
-    linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+    linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
     double initial_l2_norm_sqr_local = curved_element_data_compute_l2_norm_sqr
       (
        p4est,
-       u_analytic,
+       error,
        local_nodes,
        dgmath_jit_dbase,
        DO_NOT_STORE_LOCALLY
@@ -1158,25 +1210,25 @@ problem_init
     printf("Initial local l2 norm = %.25f\n", sqrt(initial_l2_norm_sqr_local));
     
     
-     problem_build_rhs
-       (
-        p4est,
-        &prob_vecs,
-        &prob_fcns,
-        ghost,
-        ghost_data,
-        dgmath_jit_dbase,
-        d4est_geom,
-        &input,
-        &ip_flux_params
-       );
 
     
   for (level = 0; level < input.num_of_amr_levels; ++level){
 
     if (world_rank == 0)
       printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level);
-    
+
+    problem_build_rhs
+      (
+       p4est,
+       &prob_vecs,
+       &prob_fcns,
+       ghost,
+       ghost_data,
+       dgmath_jit_dbase,
+       d4est_geom,
+       &input,
+       &ip_flux_params
+      );   
 
     curved_bi_estimator_compute
       (
@@ -1223,7 +1275,7 @@ problem_init
     }
     
 
-    double R0 = ((d4est_geometry_sphere_attr_t*)(d4est_geom->p4est_geom->user))->R0;
+    double R0 = ((d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R0;
     /* printf("R0 = %.f\n", R0); */
 
    /*  d4est_geometry_t* d4est_geom_vtk = d4est_geometry */
@@ -1258,14 +1310,31 @@ problem_init
   /* p8est_connectivity_destroy(conn_vtk); */
   /* p8est_geometry_destroy(geom_vtk); */
 
+
+    curved_element_data_init_node_vec(
+                                      p4est,
+                                      u_analytic,
+                                      analytic_solution_fcn,
+                                      dgmath_jit_dbase,
+                                      d4est_geom
+                                     );  
+    linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
+    linalg_vec_fabs(error, local_nodes);
+    
     problem_save_to_vtk
       (
        p4est,
        dgmath_jit_dbase,
        u,
+       u_analytic,
+       error,
        level,
        1,
-       R0
+       R0,
+       2*R0,
+       3*R0,
+       1,
+       input_file
       );
   
     
@@ -1297,6 +1366,7 @@ problem_init
     local_nodes = curved_element_data_get_local_nodes(p4est);
 
     u_analytic = P4EST_REALLOC(u_analytic, double, local_nodes);
+    error = P4EST_REALLOC(error, double, local_nodes);
     Au = P4EST_REALLOC(Au, double, local_nodes);
     rhs = P4EST_REALLOC(rhs, double, local_nodes);
     prob_vecs.Au = Au;
@@ -1435,6 +1505,9 @@ problem_init
     /*    NULL */
     /*   ); */
 
+
+     if (input.solve_with_multigrid){
+     
     int min_level, max_level;
 
     multigrid_get_level_range(p4est, &min_level, &max_level);
@@ -1446,7 +1519,7 @@ problem_init
      
       
     
-    multigrid_smoother_t* smoother = multigrid_smoother_cheby_init
+    multigrid_smoother_t* smoother = multigrid_smoother_cheby_d4est_init
                                    (
                                     p4est,
                                     num_of_levels,
@@ -1477,14 +1550,14 @@ problem_init
       );
     
 
-    multigrid_user_callbacks_t* matrix_op_callbacks = multigrid_matrix_operator_init
-                                                      (
-                                                       p4est,
-                                                       num_of_levels,
-                                                       dgmath_jit_dbase,
-                                                       curved_element_data_get_local_matrix_nodes,
-                                                       NULL
-                                                      );
+    /* multigrid_user_callbacks_t* matrix_op_callbacks = multigrid_matrix_operator_init */
+    /*                                                   ( */
+    /*                                                    p4est, */
+    /*                                                    num_of_levels, */
+    /*                                                    dgmath_jit_dbase, */
+    /*                                                    curved_element_data_get_local_matrix_nodes, */
+    /*                                                    NULL */
+    /*                                                   ); */
     
     multigrid_data_t* mg_data = multigrid_data_init(p4est,
                                                     dgmath_jit_dbase,
@@ -1492,7 +1565,7 @@ problem_init
                                                     smoother,
                                                     bottom_solver,
                                                     logger,
-                                                    matrix_op_callbacks,
+                                                    NULL, //matrix_op_callbacks,
                                                     updater,
                                                     input_file
                                                    );
@@ -1500,23 +1573,23 @@ problem_init
 
 
 
-      prob_vecs.user = matrix_op_callbacks->user;
+      /* prob_vecs.user = matrix_op_callbacks->user; */
 
-      multigrid_matrix_curved_fofu_fofv_mass_operator_setup_deg_integ_eq_deg
-        (
-         p4est,
-         dgmath_jit_dbase,
-         d4est_geom,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         NULL,
-         matrix_op_callbacks->user,
-         set_deg_Gauss,
-         &input
-        );
+      /* multigrid_matrix_curved_fofu_fofv_mass_operator_setup_deg_integ_eq_deg */
+      /*   ( */
+      /*    p4est, */
+      /*    dgmath_jit_dbase, */
+      /*    d4est_geom, */
+      /*    NULL, */
+      /*    NULL, */
+      /*    NULL, */
+      /*    NULL, */
+      /*    NULL, */
+      /*    NULL, */
+      /*    matrix_op_callbacks->user, */
+      /*    set_deg_Gauss, */
+      /*    &input */
+      /*   ); */
     
       /* multigrid_solve */
       /*   ( */
@@ -1528,7 +1601,10 @@ problem_init
 
 
       krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data);
+      krylov_petsc_params_t petsc_params;
 
+      krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &petsc_params);
+      
                 
       krylov_info_t info =
         krylov_petsc_solve
@@ -1540,29 +1616,48 @@ problem_init
          (void**)&ghost_data,
          dgmath_jit_dbase,
          d4est_geom,
-         input_file,
+         &petsc_params,
          pc
         );
       
 
-      multigrid_smoother_cheby_destroy(smoother);
+      multigrid_smoother_cheby_d4est_destroy(smoother);
       multigrid_bottom_solver_cg_destroy(bottom_solver);
       multigrid_logger_residual_destroy(logger);
       multigrid_element_data_updater_curved_destroy(updater, num_of_levels);
-      multigrid_matrix_operator_destroy(matrix_op_callbacks);
+      /* multigrid_matrix_operator_destroy(matrix_op_callbacks); */
       multigrid_data_destroy(mg_data);
 
       krylov_pc_multigrid_destroy(pc);
+     }
+     else {
+      krylov_petsc_params_t petsc_params;
+      krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &petsc_params);      
+       
+      krylov_info_t info =
+        krylov_petsc_solve
+        (
+         p4est,
+         &prob_vecs,
+         (void*)&prob_fcns,
+         &ghost,
+         (void**)&ghost_data,
+         dgmath_jit_dbase,
+         d4est_geom,
+         &petsc_params,
+         NULL
+        );
 
+     }
     
     curved_element_data_init_node_vec(
                                       p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
                                       dgmath_jit_dbase,
-                                      d4est_geom->p4est_geom
+                                      d4est_geom
                                      );  
-    linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+    linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
 
     /* matrix_spd_tester_parallel */
     /*   ( */
@@ -1593,10 +1688,12 @@ problem_init
 
     /* linalg_vec_axpy(-1., prob_vecs.u, u_prev, local_nodes); */
 
+
+    
     double local_l2_norm_sqr = curved_element_data_compute_l2_norm_sqr
                                 (
                                  p4est,
-                                 u_analytic,
+                                 error,
                                  local_nodes,
                                  dgmath_jit_dbase,
                                  DO_NOT_STORE_LOCALLY
@@ -1657,5 +1754,6 @@ problem_init
   P4EST_FREE(Au);
   P4EST_FREE(rhs);
   P4EST_FREE(u_analytic);
+  P4EST_FREE(error);
   P4EST_FREE(u);
 }

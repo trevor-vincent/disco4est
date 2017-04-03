@@ -106,12 +106,12 @@ SET (
   Estimators/curved_bi_estimator.c
   Estimators/curved_bi_estimator_flux_fcns.c
   Estimators/bi_estimator_flux_fcns.c
-  Geometry/d4est_geometry_sphere.c
-  Geometry/d4est_geometry_shell.c
+  Geometry/d4est_geometry_cubed_sphere.c
+  # Geometry/d4est_geometry_shell.c
   Geometry/d4est_geometry_disk.c
-  Geometry/d4est_geometry_2pac.c
-  Geometry/d4est_geometry_pizza_half.c
-  Geometry/d4est_geometry_trap.c
+  # Geometry/d4est_geometry_2pac.c
+  # Geometry/d4est_geometry_pizza_half.c
+  # Geometry/d4est_geometry_trap.c
   Geometry/d4est_geometry.c
   # Estimators/curved_bi_estimator.c
   # Estimators/curved_bi_estimator_flux_fcns.c
@@ -141,6 +141,8 @@ SET (
   # Flux/curved_Gauss_sipg_flux_vector_fcns.c
   Solver/multigrid_bottom_solver_cg.c
   Solver/multigrid_smoother_cheby.c
+  Solver/multigrid_smoother_krylov_petsc.c
+  Solver/multigrid_bottom_solver_krylov_petsc.c
   Solver/multigrid_logger_residual.c
   Solver/multigrid_element_data_updater_nocurved.c
   Solver/multigrid_element_data_updater_curved.c
@@ -316,16 +318,18 @@ add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid
 # add_d4est_problem_3d(testcurvedipflux_driver testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_2d(testcurvedipflux_driver_2d testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_2d(testcurvedprimal_driver_2d testcurvedprimal.c TestCurvedPrimal)
-add_d4est_problem_3d(testcurvedprimal_driver_3d testcurvedprimal.c TestCurvedPrimal)
+# add_d4est_problem_3d(testcurvedprimal_driver_3d testcurvedprimal.c TestCurvedPrimal)
 # add_d4est_problem_3d(testcubeprimal_driver_3d testcubeprimal.c TestCubePrimal)
 # add_d4est_problem_3d(testhelmholtzmultigrid_driver_3d testhelmholtzmultigrid.c TestHelmholtzMultigrid)
-add_d4est_problem_3d(testhelmholtzmultigridsphere_driver_3d testhelmholtzmultigridsphere.c TestHelmholtzMultigrid)
-# add_d4est_problem_3d(constantdensitystarprimal_driver constantdensitystarprimal.c ConstantDensityStarPrimal)
+# add_d4est_problem_3d(testhelmholtzmultigridsphere_driver_3d testhelmholtzmultigridsphere.c TestHelmholtzMultigrid)
+# add_d4est_problem_3d(testhelmholtzmultigridsphere_withhole_driver_3d testhelmholtzmultigridsphere_withhole.c TestHelmholtzMultigrid)
+#add_d4est_problem_3d(constantdensitystarprimal_driver constantdensitystarprimal.c ConstantDensityStarPrimal)
+# add_d4est_problem_3d(cdssphere_driver cdssphere.c ConstantDensityStarSphere)
 # add_d4est_problem_3d(testcurvedipflux_driver_3d testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_3d(testcurvedshell_driver_3d testcurvedshell.c TestCurvedShell)
 # add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopunctures_testfcns_driver twopunctures_testfcns.c TwoPuncturesSphere)
-# add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
+add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_2d(testmortarjacobianterms_driver_2d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
 # add_d4est_problem_2d(testcurvedipfluxoncube2d_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)

@@ -9,7 +9,8 @@
 #include <util.h>
 
 typedef struct {
-  
+
+  d4est_geometry_t* d4est_geom;
   dgmath_jit_dbase_t* dgmath_jit_dbase;
   problem_data_t* problem_data;
 #ifndef NDEBUG
@@ -82,18 +83,27 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
 
   double* stiff_u = P4EST_ALLOC(double, volume_nodes_Lobatto);
 
-  dgmath_apply_curvedGaussStiff
+  /* dgmath_apply_curvedGaussStiff */
+  /*   ( */
+  /*    dgmath_jit_dbase, */
+  /*    &element_data->u_storage[0], */
+  /*    element_data->deg, */
+  /*    element_data->J_integ, */
+  /*    element_data->rst_xyz_integ, */
+  /*    element_data->deg_stiffness, */
+  /*    (P4EST_DIM), */
+  /*    stiff_u */
+  /*   ); */
+
+  curved_element_data_apply_curvedGaussStiff
     (
      dgmath_jit_dbase,
+     curved_poisson_operator_primal_user_data->d4est_geom,
+     element_data,
      &element_data->u_storage[0],
-     element_data->deg,
-     element_data->J_integ,
-     element_data->rst_xyz_integ,
-     element_data->deg_integ,
-     (P4EST_DIM),
      stiff_u
     );
-
+  
 
   for (int i = 0; i < volume_nodes_Lobatto; i++){
     element_data->Au_elem[i] += stiff_u[i];
@@ -118,6 +128,7 @@ curved_poisson_operator_primal_apply_aij
   curved_poisson_operator_primal_user_data_t curved_poisson_operator_primal_user_data;
   curved_poisson_operator_primal_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
   curved_poisson_operator_primal_user_data.problem_data = prob_vecs;
+  curved_poisson_operator_primal_user_data.d4est_geom = geom;
 #ifndef NDEBUG
   curved_poisson_operator_primal_user_data.debug_vecs = NULL;
 #endif

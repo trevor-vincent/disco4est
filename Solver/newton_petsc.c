@@ -7,18 +7,7 @@
 #include <ini.h>
 
 
-typedef struct {
 
-  int snes_monitor;
-  int snes_linesearch_monitor;
-  int snes_linesearch_order;
-  double snes_atol;
-  double snes_rtol;
-  int snes_max_funcs;
-
-  int count;
-  
-} newton_petsc_params_t;
 
 
 static
@@ -32,47 +21,41 @@ int newton_petsc_input_handler
 {
   newton_petsc_params_t* pconfig = (newton_petsc_params_t*)user;
   
-  if (util_match_couple(section,"solver",name,"snes_atol")) {
+  if (util_match_couple(section,"newton_petsc",name,"snes_atol")) {
     mpi_assert(pconfig->snes_atol == -1);
     pconfig->snes_atol = atof(value);
-    PetscOptionsSetValue(NULL,"-snes_atol",value);
-    pconfig->count += 1;
+    PetscOptionsSetValue(pconfig->petsc_options,"-snes_atol",value);
   }
-  else if (util_match_couple(section,"solver",name,"snes_rtol")) {
+  else if (util_match_couple(section,"newton_petsc",name,"snes_rtol")) {
     mpi_assert(pconfig->snes_rtol == -1);
     pconfig->snes_rtol = atof(value);
-    PetscOptionsSetValue(NULL,"-snes_rtol",value);
-    pconfig->count += 1;
+    PetscOptionsSetValue(pconfig->petsc_options,"-snes_rtol",value);
   }
-  else if (util_match_couple(section,"solver",name,"snes_max_funcs")) {
+  else if (util_match_couple(section,"newton_petsc",name,"snes_max_funcs")) {
     mpi_assert(pconfig->snes_max_funcs == -1);
     pconfig->snes_max_funcs = atoi(value);
-    PetscOptionsSetValue(NULL,"-snes_max_funcs",value);
-    pconfig->count += 1;
+    PetscOptionsSetValue(pconfig->petsc_options,"-snes_max_funcs",value);
   }
-  else if (util_match_couple(section,"solver",name,"snes_linesearch_monitor")) {
+  else if (util_match_couple(section,"newton_petsc",name,"snes_linesearch_monitor")) {
     mpi_assert(pconfig->snes_linesearch_monitor == -1);
     pconfig->snes_linesearch_monitor = atoi(value);
     mpi_assert(atoi(value) == 0 || atoi(value) == 1);
     if (atoi(value) == 1){
-      PetscOptionsSetValue(NULL,"-snes_linesearch_monitor","");
+      PetscOptionsSetValue(pconfig->petsc_options,"-snes_linesearch_monitor","");
     }
-    pconfig->count += 1;
   }  
-  else if (util_match_couple(section,"solver",name,"snes_linesearch_order")) {
+  else if (util_match_couple(section,"newton_petsc",name,"snes_linesearch_order")) {
     mpi_assert(pconfig->snes_linesearch_order == -1);
     pconfig->snes_linesearch_order = atoi(value);
-    PetscOptionsSetValue(NULL,"-snes_linesearch_order",value);
-    pconfig->count += 1;
+    PetscOptionsSetValue(pconfig->petsc_options,"-snes_linesearch_order",value);
   }
-  else if (util_match_couple(section,"solver",name,"snes_monitor")) {
+  else if (util_match_couple(section,"newton_petsc",name,"snes_monitor")) {
     mpi_assert(pconfig->snes_monitor == -1);
     pconfig->snes_monitor = atoi(value);
     mpi_assert(atoi(value) == 0 || atoi(value) == 1);
     if (atoi(value) == 1){
-      PetscOptionsSetValue(NULL,"-snes_monitor","");
+      PetscOptionsSetValue(pconfig->petsc_options,"-snes_monitor","");
     }
-    pconfig->count += 1;
   }    
   else {
     return 0;  /* unknown section/name, error */
@@ -87,10 +70,7 @@ newton_petsc_input
  const char* input_file
 )
 {
-  int num_of_options = 6;
-  
   newton_petsc_params_t input;
-  input.count = 0;
   input.snes_atol = -1;
   input.snes_rtol = -1;
   input.snes_max_funcs = -1;
@@ -100,18 +80,15 @@ newton_petsc_input
   
   if (ini_parse(input_file, newton_petsc_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
-  }
+  }  
 
-  /* printf("[D4EST_INFO]: snes_atol = %.25f\n", input.snes_atol); */
-  /* printf("[D4EST_INFO]: snes_rtol = %.25f\n", input.snes_rtol); */
-  /* printf("[D4EST_INFO]: snes_max_funcs = %d\n", input.snes_max_funcs); */
-  /* printf("[D4EST_INFO]: snes_monitor = %d\n", input.snes_monitor); */
-  /* printf("[D4EST_INFO]: snes_linesearch_order = %d\n", input.snes_linesearch_order); */
-  /* printf("[D4EST_INFO]: snes_linesearch_monitor = %d\n", input.snes_linesearch_monitor); */
+  D4EST_CHECK_INPUT("newton_petsc", input.snes_atol, -1);
+  D4EST_CHECK_INPUT("newton_petsc", input.snes_rtol, -1);
+  D4EST_CHECK_INPUT("newton_petsc", input.snes_max_funcs, -1);
+  D4EST_CHECK_INPUT("newton_petsc", input.snes_monitor, -1);
+  D4EST_CHECK_INPUT("newton_petsc", input.snes_linesearch_order, -1);
+  D4EST_CHECK_INPUT("newton_petsc", input.snes_linesearch_monitor, -1);
   
-  if (input.count != num_of_options){
-    mpi_abort("[D4EST_ERROR]: input.count != num_of_options in newton_petsc_params");
-  }
   return input;
 }
 
@@ -259,10 +236,14 @@ void newton_petsc_solve
  void** ghost_data, 
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  d4est_geometry_t* d4est_geom,
- const char* input_file,
+ PetscOptions krylov_options,
+ PetscOptions newton_options,
  krylov_pc_t* krylov_pc
 )
 {
+  PetscOptionsSetFromOptions(krylov_options);
+  PetscOptionsSetFromOptions(newton_options);
+  
   SNES snes;
   KSP ksp;
   Vec x,r;
@@ -273,10 +254,6 @@ void newton_petsc_solve
   VecSetSizes(x, vecs->local_nodes, PETSC_DECIDE);//CHKERRQ(ierr);
   VecSetFromOptions(x);//CHKERRQ(ierr);
   VecDuplicate(x,&r);//CHKERRQ(ierr);
-  /* VecGetArray(x,&u_temp); */
-  krylov_petsc_params_t krylov_params = krylov_petsc_input(p4est,input_file);
-  krylov_params.pc = krylov_pc;
-  newton_petsc_params_t newton_params = newton_petsc_input(input_file);
   
   petsc_ctx_t petsc_ctx;
   petsc_ctx.p4est = p4est;

@@ -570,7 +570,7 @@ problem_init
   /* } */
   /* else { */
   prob_fcns.build_residual = twopunctures_build_residual_Lobatto;
-  prob_fcns.apply_lhs = twopunctures_apply_jac_Lobatto;
+  prob_fcns.apply_lhs = twopunctures_apply_jac;
   /* } */
   
   geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
@@ -1030,6 +1030,7 @@ problem_init
 
   P4EST_FREE(Au);
   P4EST_FREE(rhs);
+  P4EST_FREE(u_prev);
   /* P4EST_FREE(u_analytic); */
   P4EST_FREE(u);
 }

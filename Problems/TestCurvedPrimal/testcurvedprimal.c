@@ -704,7 +704,7 @@ problem_init
   /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, prob_vecs.local_nodes); */
 
           
-     krylov_petsc_info_t info =
+     krylov_info_t info =
        krylov_petsc_solve
        (
         p4est,

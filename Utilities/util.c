@@ -448,17 +448,18 @@ util_linear_regression
  */
 int util_bisection
 (
- double funk(double),
+ double funk(double, void*),
  double x1,
  double x2,
  double xacc,
  int iter,
- double* root
+ double* root,
+ void* user
 )
 {
   double dx,xmid;
-  double f = funk(x1);
-  double fmid = funk(x2);
+  double f = funk(x1, user);
+  double fmid = funk(x2, user);
   if(f*fmid > 0.0)
     return 1;
   
@@ -468,7 +469,7 @@ int util_bisection
   for (j=1;j<=iter;j++) {
 
     /* printf(" root = %.25f\n ", *root); */
-    fmid=funk(xmid=(*root)+(dx *= 0.5)); 
+    fmid=funk(xmid=(*root)+(dx *= 0.5), user); 
     if (fmid <= 0.0) (*root)=xmid;
     if (fabs(dx) < xacc || fmid == 0.0) return 0;
   }
@@ -536,7 +537,6 @@ int util_match_couple
   return (strcmp(section1, section2) == 0 && strcmp(name1, name2) == 0);
 }
 
-
 int util_match
 (
  const char* str1,
@@ -545,3 +545,4 @@ int util_match
 {
   return (strcmp(str1, str2) == 0);
 }
+

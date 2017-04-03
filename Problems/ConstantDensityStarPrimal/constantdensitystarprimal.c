@@ -39,6 +39,14 @@ double cx;
 double cy;
 double cz;
 
+
+typedef struct {
+
+  int deg_off_set_for_nonlinear_integ;
+  ip_flux_params_t* ip_flux_params;
+  
+} problem_ctx_t;
+
 static
 double u_alpha
 (
@@ -152,13 +160,6 @@ double neg_2pi_rho_up1_neg5
   return (-2.*pi)*rho_fcn(x,y,z)*(psi)*(psi)*(psi)*(psi)*(psi);
 }
 
-typedef struct {
-
-  int deg_offset_for_nonlinear_integ;
-  ip_flux_params_t* ip_flux_params;
-  
-} problem_ctx_t;
-
 
 static
 void
@@ -192,7 +193,7 @@ build_residual
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;        
-        int deg_nonlinear = ed->deg + ctx->deg_offset_for_nonlinear_integ;
+        int deg_nonlinear = ed->deg;
 
         dgmath_apply_fofufofvlj_Gaussnodes
           (
@@ -249,7 +250,7 @@ void apply_jac
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;
-        int deg_nonlinear = ed->deg + ctx->deg_offset_for_nonlinear_integ;
+        int deg_nonlinear = ed->deg;// + ctx->deg_offset_for_nonlinear_integ;
         dgmath_apply_fofufofvlilj_Gaussnodes
           (
            dgmath_jit_dbase,
@@ -480,10 +481,11 @@ problem_input
 void
 problem_set_degrees
 (
- curved_element_data_t* elem_data,
+ void* elem_data_tmp,
  void* user_ctx
 )
 {
+  curved_element_data_t* elem_data = elem_data_tmp;
   problem_input_t* input = user_ctx;
   elem_data->deg = input->degree;
   elem_data->deg_integ = input->degree;

@@ -25,23 +25,36 @@ curved_bi_est_dirichlet
   int face_nodes_m_Gauss = dgmath_get_nodes((P4EST_DIM) - 1, e_m->deg_integ);
 
   double* u_m_on_f_m = P4EST_ALLOC(double, face_nodes_m_Lobatto);
-  double* u_m_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
+  double* u_on_f_m_min_u_at_bndry_Lobatto = P4EST_ALLOC(double, face_nodes_m_Lobatto);
+  double* u_on_f_m_min_u_at_bndry_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
   
 
   double* MJe2 = P4EST_ALLOC(double, face_nodes_m_Gauss);
   double* sj_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
   double* Je2 = P4EST_ALLOC(double, face_nodes_m_Gauss);
 
-  double* xyz_on_f_m_Gauss [(P4EST_DIM)];
+  double* xyz_on_f_m [(P4EST_DIM)];
   double* n_on_f_m_Gauss [(P4EST_DIM)];
   /* double* sj_n_on_f_m_Gauss [(P4EST_DIM)]; */
 
   
   for (int d = 0; d < (P4EST_DIM); d++) {
-    xyz_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
+    /* xyz_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss); */
+    xyz_on_f_m[d] = P4EST_ALLOC(double, face_nodes_m_Lobatto);
     n_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     /* sj_n_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss); */
+
+
+    dgmath_apply_slicer(dgmath_jit_dbase,
+                        e_m->xyz[d],
+                        (P4EST_DIM),
+                        f_m,
+                        e_m->deg,
+                        xyz_on_f_m[d]);
+    
   }
+
+  
   
   dgmath_apply_slicer(dgmath_jit_dbase,
                       e_m->u_storage,
@@ -50,31 +63,51 @@ curved_bi_est_dirichlet
                       e_m->deg,
                       u_m_on_f_m);
 
-  dgmath_interp_GLL_to_GL
-    (
-     dgmath_jit_dbase,
-     u_m_on_f_m,
-     e_m->deg,
-     e_m->deg_integ,
-     u_m_on_f_m_Gauss,
-     (P4EST_DIM)-1
-    );
+  /* dgmath_interp_GLL_to_GL */
+  /*   ( */
+  /*    dgmath_jit_dbase, */
+  /*    u_m_on_f_m, */
+  /*    e_m->deg, */
+  /*    e_m->deg_integ, */
+  /*    u_m_on_f_m_Gauss, */
+  /*    (P4EST_DIM)-1 */
+  /*   ); */
  
-  curved_element_data_compute_mortar_normal_and_sj_using_face_data
+  /* curved_element_data_compute_mortar_normal_and_sj_using_face_data */
+  /*   ( */
+  /*    &e_m, */
+  /*    1, */
+  /*    1, */
+  /*    &e_m->deg_integ, */
+  /*    f_m, */
+  /*    geom->dxdr_method, */
+  /*    1, */
+  /*    n_on_f_m_Gauss, */
+  /*    sj_on_f_m_Gauss, */
+  /*    geom, */
+  /*    dgmath_jit_dbase, */
+  /*    xyz_on_f_m_Gauss */
+  /*   ); */
+
+  d4est_geometry_compute_geometric_data_on_mortar
     (
-     &e_m,
+     e_m->tree,
+     e_m->q,
+     e_m->dq,
      1,
      1,
      &e_m->deg_integ,
      f_m,
-     geom->dxdr_method,
-     1,
-     n_on_f_m_Gauss,
+     NULL,
      sj_on_f_m_Gauss,
+     n_on_f_m_Gauss,
+     NULL,
+     GAUSS,
      geom,
-     dgmath_jit_dbase,
-     xyz_on_f_m_Gauss
+     dgmath_jit_dbase
     );
+  
+  
   
   double h = (e_m->volume/e_m->surface_area[f_m]);
   /* find IP penalty parameter for each face pair of the two sides*/
@@ -88,24 +121,33 @@ curved_bi_est_dirichlet
                   );
     
 
-
+  for (int i = 0; i < face_nodes_m_Lobatto; i++){
+    u_on_f_m_min_u_at_bndry_Lobatto[i] = u_m_on_f_m[i]
+                                         - u_at_bndry
+                                         (
+                                          xyz_on_f_m[0][i],
+                                          xyz_on_f_m[1][i]
+#if (P4EST_DIM)==3
+                                          ,
+                                          xyz_on_f_m[2][i]
+#endif
+                                         );
+  }
+  dgmath_interp_GLL_to_GL
+    (
+     dgmath_jit_dbase,
+     u_on_f_m_min_u_at_bndry_Lobatto,
+     e_m->deg,
+     e_m->deg_integ,
+     u_on_f_m_min_u_at_bndry_Gauss,
+     (P4EST_DIM)-1
+    );
   
   for (int dim = 0; dim < (P4EST_DIM); dim++){
     /* calculate qstar - q(-) */
 
     for(int i = 0; i < face_nodes_m_Gauss; i++){
-      Je2[i] = n_on_f_m_Gauss[dim][i]*Je2_prefactor*(u_m_on_f_m_Gauss[i]
-                                                     -
-                                                     u_at_bndry
-                                                     (
-                                                      xyz_on_f_m_Gauss[0][i],
-                                                      xyz_on_f_m_Gauss[1][i]
-#if (P4EST_DIM)==3
-                                                      ,
-                                                      xyz_on_f_m_Gauss[2][i]
-#endif
-                                                     )
-                                                    );
+      Je2[i] = n_on_f_m_Gauss[dim][i]*Je2_prefactor*(u_on_f_m_min_u_at_bndry_Gauss[i]);
      
     }
     
@@ -139,13 +181,14 @@ curved_bi_est_dirichlet
 
 
   P4EST_FREE(u_m_on_f_m);
-  P4EST_FREE(u_m_on_f_m_Gauss);
   P4EST_FREE(sj_on_f_m_Gauss);
   P4EST_FREE(Je2);
   P4EST_FREE(MJe2);
+  P4EST_FREE(u_on_f_m_min_u_at_bndry_Lobatto);
+  P4EST_FREE(u_on_f_m_min_u_at_bndry_Gauss);
   
   for (int d = 0; d < (P4EST_DIM); d++){
-    P4EST_FREE(xyz_on_f_m_Gauss[d]);
+    P4EST_FREE(xyz_on_f_m[d]);
     P4EST_FREE(n_on_f_m_Gauss[d]);
     /* P4EST_FREE(sj_n_on_f_m_Gauss[d]); */
   }
@@ -468,9 +511,26 @@ curved_bi_est_interface
   
 
 
- curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
+ /* curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data */
+ /*    ( */
+ /*     e_m, */
+ /*     faces_m, */
+ /*     faces_mortar, */
+ /*     &deg_mortar_Gauss[0], */
+ /*     f_m, */
+ /*     drst_dxyz_m_on_mortar_Gauss, */
+ /*     sj_on_f_m_mortar_Gauss, */
+ /*     n_on_f_m_mortar_Gauss, */
+ /*     geom->p4est_geom, */
+ /*     dgmath_jit_dbase, */
+ /*     NULL */
+ /*    ); */
+
+  d4est_geometry_compute_geometric_data_on_mortar
     (
-     e_m,
+     e_m[0]->tree,
+     e_m[0]->q,
+     e_m[0]->dq,
      faces_m,
      faces_mortar,
      &deg_mortar_Gauss[0],
@@ -478,28 +538,28 @@ curved_bi_est_interface
      drst_dxyz_m_on_mortar_Gauss,
      sj_on_f_m_mortar_Gauss,
      n_on_f_m_mortar_Gauss,
-     geom->p4est_geom,
-     dgmath_jit_dbase,
-     NULL
+     NULL,
+     GAUSS,
+     geom,
+     dgmath_jit_dbase
     );
 
-  curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data
+  d4est_geometry_compute_geometric_data_on_mortar
     (
-     e_p,
+     e_p[0]->tree,
+     e_p[0]->q,
+     e_p[0]->dq,
      faces_p,
      faces_mortar,
-     &deg_mortar_Gauss_porder[0], 
+     &deg_mortar_Gauss_porder[0],
      f_p,
      drst_dxyz_p_on_mortar_Gauss_porder,
      NULL,
-     (double* [(P4EST_DIM)]){NULL, NULL
-#if (P4EST_DIM)==3
-         , NULL
-#endif
-         },
-     geom->p4est_geom,
-     dgmath_jit_dbase,
-     NULL
+     NULL,
+     NULL,
+     GAUSS,
+     geom,
+     dgmath_jit_dbase
     );
 
   

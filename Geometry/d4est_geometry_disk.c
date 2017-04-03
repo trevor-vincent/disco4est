@@ -1,13 +1,18 @@
-#include <d4est_geometry_disk.h>
 #include <ini.h>
 #include <util.h>
+#include <pXest.h>
+#include <d4est_geometry.h>
+
+#if (P4EST_DIM)==2
+#include <d4est_geometry_disk.h>
+#include <p4est_connectivity.h>
+
 
 
 typedef struct {
 
   double R0;
   double R1;
-  int count;
   
 } d4est_geometry_disk_input_t;
 
@@ -24,12 +29,10 @@ int d4est_geometry_disk_input_handler
   if (util_match_couple(section,"geometry",name,"R0")) {
     mpi_assert(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
-    pconfig->count += 1;
   }
   else if (util_match_couple(section,"geometry",name,"R1")) {
     mpi_assert(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
-    pconfig->count += 1;
   }
   else {
     return 0;  /* unknown section/name, error */
@@ -37,24 +40,23 @@ int d4est_geometry_disk_input_handler
   return 1;
 }
 
-d4est_geometry_disk_input_t
+d4est_geometry_disk_input_t*
 d4est_geometry_disk_input
 (
  const char* input_file
 )
 {
-  int num_of_options = 2;
-  
-  d4est_geometry_disk_input_t input;
-  input.count = 0;
-  input.R0 = -1;
-  input.R1 = -1;
+  d4est_geometry_disk_input_t* input = P4EST_ALLOC(d4est_geometry_disk_input_t, 1);
+  input->R0 = -1;
+  input->R1 = -1;
   
   if (ini_parse(input_file, d4est_geometry_disk_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
   }
 
-  mpi_assert(input.count == num_of_options);
+  D4EST_CHECK_INPUT("geometry", input->R0, -1);
+  D4EST_CHECK_INPUT("geometry", input->R1, -1);
+  
   return input;
 }
 
@@ -97,17 +99,26 @@ d4est_geometry_disk_map_cube_to_slab(
 
 
 static void 
-d4est_geometry_disk_X(p4est_geometry_t * geom,
-                       p4est_topidx_t which_tree,
-                       const double rst[3], double xyz[3])
+d4est_geometry_disk_X(d4est_geometry_t * geom,
+                      p4est_topidx_t which_tree,
+                      p4est_qcoord_t q0 [2],
+                      p4est_qcoord_t dq,
+                      const double coords[2],
+                      coords_type_t coords_type,
+                      double xyz[2]
+                      )
 {
   double* radii = (double*)geom->user;
   
   double R0 = radii[0];
   double R1 = radii[1];
 
-  double xref = rst[0];
-  double yref = rst[1];
+  double tcoords[2];
+
+  d4est_geometry_get_tree_coords_in_range_0_to_1(q0, dq, coords, coords_type, tcoords);
+  
+  double xref = tcoords[0];
+  double yref = tcoords[1];
   double x,y;
   
   if (which_tree == 0){
@@ -145,7 +156,7 @@ d4est_geometry_disk_X(p4est_geometry_t * geom,
 static void
 d4est_geometry_disk_destroy
 (
- p4est_geometry_t* geom
+ d4est_geometry_t* geom
 )
 {
   P4EST_FREE(geom->user);
@@ -156,30 +167,25 @@ d4est_geometry_disk_destroy
 void
 d4est_geometry_disk_new
 (
+ int mpirank,
  const char* input_file,
  d4est_geometry_t* d4est_geom
 )
 {
   mpi_assert((P4EST_DIM)==2);
-  d4est_geometry_disk_input_t input = d4est_geometry_disk_input(input_file);
-  p4est_geometry_t *disk_geometry = P4EST_ALLOC(p4est_geometry_t,1);
-  p4est_connectivity_t* conn = NULL;
-#ifndef P4_TO_P8
-  conn = p4est_connectivity_new_disk();
-#endif
-  double* radii = P4EST_ALLOC(double, 2);
-  radii[0] = input.R0;
-  radii[1] = input.R1;
+  d4est_geometry_disk_input_t* input = d4est_geometry_disk_input(input_file);
+  p4est_connectivity_t* conn = p4est_connectivity_new_disk();
   
-  disk_geometry->user = (void*)radii;
-  disk_geometry->destroy = d4est_geometry_disk_destroy;
-  disk_geometry->X = d4est_geometry_disk_X;
+  d4est_geom->user = input;
+  d4est_geom->destroy = d4est_geometry_disk_destroy;
+  d4est_geom->X = d4est_geometry_disk_X;
+  d4est_geom->DX = NULL;
 
-  d4est_geom->p4est_geom = disk_geometry;
-  d4est_geom->p4est_conn = conn;
-  
-  printf("[GEOMETRY_INFO]: NAME = disk\n");
-  printf("[GEOMETRY_INFO]: R0 = %.25f\n", radii[0]);
-  printf("[GEOMETRY_INFO]: R1 = %.25f\n", radii[1]);
+  if (mpirank == 0){
+    printf("[GEOMETRY_INFO]: NAME = disk\n");
+    printf("[GEOMETRY_INFO]: R0 = %.25f\n", input->R0);
+    printf("[GEOMETRY_INFO]: R1 = %.25f\n", input->R1);
+  }
 }
 
+#endif

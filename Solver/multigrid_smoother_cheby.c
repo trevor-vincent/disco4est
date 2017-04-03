@@ -6,7 +6,7 @@
 
 static
 int
-multigrid_smoother_cheby_input_handler
+multigrid_smoother_cheby_d4est_input_handler
 (
  void* user,
  const char* section,
@@ -14,39 +14,39 @@ multigrid_smoother_cheby_input_handler
  const char* value
 )
 {  
-  multigrid_smoother_cheby_t* pconfig = ((multigrid_smoother_cheby_t*)user);
+  multigrid_smoother_cheby_d4est_t* pconfig = ((multigrid_smoother_cheby_d4est_t*)user);
 
-  if (util_match_couple(section,"multigrid",name,"smoother_imax")) {
-    mpi_assert(pconfig->smoother_imax == -1);
-    pconfig->smoother_imax = atoi(value);
+  if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_imax")) {
+    mpi_assert(pconfig->cheby_imax == -1);
+    pconfig->cheby_imax = atoi(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"smoother_eigs_cg_imax")) {
-    mpi_assert(pconfig->smoother_eigs_cg_imax == -1);
-    pconfig->smoother_eigs_cg_imax = atoi(value);
+  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_cg_imax")) {
+    mpi_assert(pconfig->cheby_eigs_cg_imax == -1);
+    pconfig->cheby_eigs_cg_imax = atoi(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"smoother_eigs_lmax_lmin_ratio")) {
-    mpi_assert(pconfig->smoother_eigs_lmax_lmin_ratio == -1);
-    pconfig->smoother_eigs_lmax_lmin_ratio = atof(value);
+  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_lmax_lmin_ratio")) {
+    mpi_assert(pconfig->cheby_eigs_lmax_lmin_ratio == -1);
+    pconfig->cheby_eigs_lmax_lmin_ratio = atof(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"smoother_eigs_max_multiplier")) {
-    mpi_assert(pconfig->smoother_eigs_max_multiplier == -1);
-    pconfig->smoother_eigs_max_multiplier = atof(value);
+  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_max_multiplier")) {
+    mpi_assert(pconfig->cheby_eigs_max_multiplier == -1);
+    pconfig->cheby_eigs_max_multiplier = atof(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"smoother_eigs_reuse_fromdownvcycle")) {
-    mpi_assert(pconfig->smoother_eigs_reuse_fromdownvcycle == -1);
-    pconfig->smoother_eigs_reuse_fromdownvcycle = atoi(value);
+  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_reuse_fromdownvcycle")) {
+    mpi_assert(pconfig->cheby_eigs_reuse_fromdownvcycle == -1);
+    pconfig->cheby_eigs_reuse_fromdownvcycle = atoi(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"smoother_eigs_reuse_fromlastvcycle")) {
-    mpi_assert(pconfig->smoother_eigs_reuse_fromlastvcycle == -1);
-    pconfig->smoother_eigs_reuse_fromlastvcycle = atoi(value);
+  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_reuse_fromlastvcycle")) {
+    mpi_assert(pconfig->cheby_eigs_reuse_fromlastvcycle == -1);
+    pconfig->cheby_eigs_reuse_fromlastvcycle = atoi(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"smoother_print_residual_norm")) {
-    mpi_assert(pconfig->smoother_print_residual_norm == -1);
-    pconfig->smoother_print_residual_norm = atoi(value);
+  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_print_residual_norm")) {
+    mpi_assert(pconfig->cheby_print_residual_norm == -1);
+    pconfig->cheby_print_residual_norm = atoi(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"smoother_print_eigs")) {
-    mpi_assert(pconfig->smoother_print_eigs == -1);
-    pconfig->smoother_print_eigs = atoi(value);
+  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_print_eigs")) {
+    mpi_assert(pconfig->cheby_print_eigs == -1);
+    pconfig->cheby_print_eigs = atoi(value);
   }
   else {
     return 0;  /* unknown section/name, error */
@@ -55,18 +55,17 @@ multigrid_smoother_cheby_input_handler
 }
 
 void
-multigrid_smoother_cheby_destroy(multigrid_smoother_t* smoother)
+multigrid_smoother_cheby_d4est_destroy(multigrid_smoother_t* smoother)
 {
 
-  multigrid_smoother_cheby_t* cheby = smoother->user;
+  multigrid_smoother_cheby_d4est_t* cheby = smoother->user;
   P4EST_FREE(cheby->eigs);
   P4EST_FREE(cheby);
   P4EST_FREE(smoother);
 }
 
-
 static void 
-multigrid_smoother_cheby_iterate
+multigrid_smoother_cheby_d4est_iterate
 (
  p4est_t* p4est,
  problem_data_t* vecs,
@@ -111,7 +110,7 @@ multigrid_smoother_cheby_iterate
     linalg_vec_xpby(rhs, -1., r, local_nodes);
 
     if(print_residual_norm && p4est->mpirank == 0){
-      printf("[MG_CHEBY_SMOOTHER]: iter, residual = %d, %.25f\n", i, linalg_vec_dot(r,r,local_nodes));
+      printf("[CHEBYSHEV]: iter, residual = %d, %.25f\n", i, linalg_vec_dot(r,r,local_nodes));
     }
     
     if (i == 0)
@@ -139,7 +138,7 @@ multigrid_smoother_cheby_iterate
 }
 
 static void
-multigrid_smoother_cheby_update
+multigrid_smoother_cheby_d4est_update
 (
  p4est_t* p4est,
  int level,
@@ -147,7 +146,7 @@ multigrid_smoother_cheby_update
 )
 {
   multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
-  multigrid_smoother_cheby_t* cheby = mg_data->smoother->user;
+  multigrid_smoother_cheby_d4est_t* cheby = mg_data->smoother->user;
   
   /* dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase; */
   /* multigrid_element_data_updater_t* updater = mg_data->elem_data_updater; */
@@ -159,35 +158,36 @@ multigrid_smoother_cheby_update
 
   if(mg_data->mg_state == PRE_V){
     if(
-       cheby->smoother_eigs_reuse_fromlastvcycle == 1 &&
+       cheby->cheby_eigs_reuse_fromlastvcycle == 1 &&
        vcycle != 0
     ){
-      cheby->smoother_eigs_compute = 0;
+      cheby->cheby_eigs_compute = 0;
     }
     else {
-      cheby->smoother_eigs_compute = 1;
+      cheby->cheby_eigs_compute = 1;
     }
   }
   
   else if (mg_data->mg_state == UPV_PRE_SMOOTH){
     if (
-        cheby->smoother_eigs_reuse_fromdownvcycle == 1
+        cheby->cheby_eigs_reuse_fromdownvcycle == 1
+        || (cheby->cheby_eigs_reuse_fromlastvcycle == 1 &&
+            vcycle != 0)
     ){
-      cheby->smoother_eigs_compute = 0;
+      cheby->cheby_eigs_compute = 0;
     }
     else {
-      cheby->smoother_eigs_compute = 1;
+      cheby->cheby_eigs_compute = 1;
     }
   }
-  
+    
   else {
     return;
   }
 }
- 
 
 static void
-multigrid_smoother_cheby
+multigrid_smoother_cheby_d4est
 (
  p4est_t* p4est,
  problem_data_t* vecs,
@@ -197,11 +197,11 @@ multigrid_smoother_cheby
 )
 {
   multigrid_data_t* mg_data = p4est->user_pointer;
-  multigrid_smoother_cheby_t* cheby = mg_data->smoother->user;
+  multigrid_smoother_cheby_d4est_t* cheby = mg_data->smoother->user;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   
   
-  if (cheby->smoother_eigs_compute){
+  if (cheby->cheby_eigs_compute){
       cg_eigs
         (
          p4est,
@@ -211,22 +211,22 @@ multigrid_smoother_cheby
          *(updater->ghost_data),
          mg_data->dgmath_jit_dbase,
          updater->d4est_geom,
-         cheby->smoother_eigs_cg_imax,
+         cheby->cheby_eigs_cg_imax,
          &cheby->eigs[level]
         );
 
-      cheby->eigs[level] *= cheby->smoother_eigs_max_multiplier;
+      cheby->eigs[level] *= cheby->cheby_eigs_max_multiplier;
   }
 
-  int iter = cheby->smoother_imax;
-  double lmin = cheby->eigs[level]/cheby->smoother_eigs_lmax_lmin_ratio;
+  int iter = cheby->cheby_imax;
+  double lmin = cheby->eigs[level]/cheby->cheby_eigs_lmax_lmin_ratio;
   double lmax = cheby->eigs[level];
 
-  if (cheby->smoother_print_eigs){
-    printf("[MG_CHEBY_SMOOTHER]: Lev %d Max_eig %.25f\n", level, cheby->eigs[level]);
+  if (cheby->cheby_print_eigs){
+    printf("[MG_CHEBY_CHEBY]: Lev %d Max_eig %.25f\n", level, cheby->eigs[level]);
   }
   
-  multigrid_smoother_cheby_iterate
+  multigrid_smoother_cheby_d4est_iterate
     (
      p4est,
      vecs,
@@ -235,13 +235,14 @@ multigrid_smoother_cheby
      iter,
      lmin,
      lmax,
-     cheby->smoother_print_residual_norm
+     cheby->cheby_print_residual_norm
     );
 }
 
 
+
 multigrid_smoother_t*
-multigrid_smoother_cheby_init
+multigrid_smoother_cheby_d4est_init
 (
  p4est_t* p4est,
  int num_of_levels,
@@ -249,67 +250,69 @@ multigrid_smoother_cheby_init
 )
 {
   multigrid_smoother_t* smoother = P4EST_ALLOC(multigrid_smoother_t, 1);
-  multigrid_smoother_cheby_t* smoother_data = P4EST_ALLOC(multigrid_smoother_cheby_t, 1);
+  multigrid_smoother_cheby_d4est_t* cheby_data = P4EST_ALLOC(multigrid_smoother_cheby_d4est_t, 1);
   
-  smoother_data->eigs = P4EST_ALLOC(double, num_of_levels);  
+  cheby_data->eigs = P4EST_ALLOC(double, num_of_levels);  
   
   /* set externally in input file */
-  smoother_data->smoother_imax = -1;
-  smoother_data->smoother_eigs_cg_imax = -1;
-  smoother_data->smoother_eigs_lmax_lmin_ratio = -1;
-  smoother_data->smoother_eigs_max_multiplier = -1;
-  smoother_data->smoother_eigs_reuse_fromdownvcycle = -1;
-  smoother_data->smoother_eigs_reuse_fromlastvcycle = -1;
-  smoother_data->smoother_print_residual_norm = -1;
-  smoother_data->smoother_print_eigs = -1;
+  cheby_data->cheby_imax = -1;
+  cheby_data->cheby_eigs_cg_imax = -1;
+  cheby_data->cheby_eigs_lmax_lmin_ratio = -1;
+  cheby_data->cheby_eigs_max_multiplier = -1;
+  cheby_data->cheby_eigs_reuse_fromdownvcycle = -1;
+  cheby_data->cheby_eigs_reuse_fromlastvcycle = -1;
+  cheby_data->cheby_print_residual_norm = -1;
+  cheby_data->cheby_print_eigs = -1;
 
   /* set internally */
-  smoother_data->mpirank = p4est->mpirank;
-  smoother_data->smoother_eigs_compute = -1;
+  cheby_data->mpirank = p4est->mpirank;
+  cheby_data->cheby_eigs_compute = -1;
   
-  if (ini_parse(input_file, multigrid_smoother_cheby_input_handler, smoother_data) < 0) {
+  if (ini_parse(input_file, multigrid_smoother_cheby_d4est_input_handler, cheby_data) < 0) {
     mpi_abort("Can't load input file");
   }
-  if(smoother_data->smoother_imax == -1){
-    mpi_abort("[D4EST_ERROR]: smoother_imax not set in multigrid input");
+  if(cheby_data->cheby_imax == -1){
+    mpi_abort("[D4EST_ERROR]: cheby_imax not set in multigrid input");
   }
-  if(smoother_data->smoother_eigs_cg_imax == -1){
-    mpi_abort("[D4EST_ERROR]: smoother_eigs_cg_imax not set in multigrid input");
+  if(cheby_data->cheby_eigs_cg_imax == -1){
+    mpi_abort("[D4EST_ERROR]: cheby_eigs_cg_imax not set in multigrid input");
   }
-  if(smoother_data->smoother_eigs_lmax_lmin_ratio == -1){
-    mpi_abort("[D4EST_ERROR]: smoother_eigs_lmax_lmin_ratio not set in multigrid input");
+  if(cheby_data->cheby_eigs_lmax_lmin_ratio == -1){
+    mpi_abort("[D4EST_ERROR]: cheby_eigs_lmax_lmin_ratio not set in multigrid input");
   }
-  if(smoother_data->smoother_eigs_max_multiplier == -1){
-    mpi_abort("[D4EST_ERROR]: smoother_eigs_max_multiplier not set in multigrid input");
+  if(cheby_data->cheby_eigs_max_multiplier == -1){
+    mpi_abort("[D4EST_ERROR]: cheby_eigs_max_multiplier not set in multigrid input");
   }
-  if(smoother_data->smoother_eigs_reuse_fromdownvcycle == -1){
-    mpi_abort("[D4EST_ERROR]: smoother_eigs_reuse_fromdownvcycle not set in multigrid input");
+  if(cheby_data->cheby_eigs_reuse_fromdownvcycle == -1){
+    mpi_abort("[D4EST_ERROR]: cheby_eigs_reuse_fromdownvcycle not set in multigrid input");
   }
-  if(smoother_data->smoother_eigs_reuse_fromlastvcycle == -1){
-    mpi_abort("[D4EST_ERROR]: smoother_eigs_reuse_fromlastvcycle not set in multigrid input");
+  if(cheby_data->cheby_eigs_reuse_fromlastvcycle == -1){
+    mpi_abort("[D4EST_ERROR]: cheby_eigs_reuse_fromlastvcycle not set in multigrid input");
   }
-  if(smoother_data->smoother_print_residual_norm == -1){
-    mpi_abort("[D4EST_ERROR]: smoother_print_residual_norm  not set in multigrid input");
+  if(cheby_data->cheby_print_residual_norm == -1){
+    mpi_abort("[D4EST_ERROR]: cheby_print_residual_norm  not set in multigrid input");
   }
-  if(smoother_data->smoother_print_eigs == -1){
-    mpi_abort("[D4EST_ERROR]: smoother_print_eigs not set in multigrid input");
+  if(cheby_data->cheby_print_eigs == -1){
+    mpi_abort("[D4EST_ERROR]: cheby_print_eigs not set in multigrid input");
   }
   
   if(p4est->mpirank == 0){
-    printf("[D4EST_INFO]: Multigrid_Smoother_CHEBY Parameters\n");
-    printf("[D4EST_INFO]: Smoother imax = %d\n", smoother_data->smoother_imax);
-    printf("[D4EST_INFO]: Smoother eigs cg max = %d\n", smoother_data->smoother_eigs_cg_imax);
-    printf("[D4EST_INFO]: Smoother eigs lmax_lmin_ratio = %f\n", smoother_data->smoother_eigs_lmax_lmin_ratio);
-    printf("[D4EST_INFO]: Smoother eigs max multiplier = %.25f\n", smoother_data->smoother_eigs_max_multiplier);
-    printf("[D4EST_INFO]: Smoother eigs reuse up vcycle = %d\n", smoother_data->smoother_eigs_reuse_fromdownvcycle);
-    printf("[D4EST_INFO]: Smoother eigs reuse from last vcycle = %d\n", smoother_data->smoother_eigs_reuse_fromlastvcycle);
-    printf("[D4EST_INFO]: Smoother print residual norm = %d\n", smoother_data->smoother_print_residual_norm);
-    printf("[D4EST_INFO]: Smoother print eigs = %d\n", smoother_data->smoother_print_eigs);
+    printf("[D4EST_INFO]: Multigrid_Smoother_Cheby_D4est Parameters\n");
+    printf("[D4EST_INFO]: Smoother imax = %d\n", cheby_data->cheby_imax);
+    printf("[D4EST_INFO]: Smoother eigs cg max = %d\n", cheby_data->cheby_eigs_cg_imax);
+    printf("[D4EST_INFO]: Smoother eigs lmax_lmin_ratio = %f\n", cheby_data->cheby_eigs_lmax_lmin_ratio);
+    printf("[D4EST_INFO]: Smoother eigs max multiplier = %.25f\n", cheby_data->cheby_eigs_max_multiplier);
+    printf("[D4EST_INFO]: Smoother eigs reuse up vcycle = %d\n", cheby_data->cheby_eigs_reuse_fromdownvcycle);
+    printf("[D4EST_INFO]: Smoother eigs reuse from last vcycle = %d\n", cheby_data->cheby_eigs_reuse_fromlastvcycle);
+    printf("[D4EST_INFO]: Smoother print residual norm = %d\n", cheby_data->cheby_print_residual_norm);
+    printf("[D4EST_INFO]: Smoother print eigs = %d\n", cheby_data->cheby_print_eigs);
   }
 
-  smoother->user = smoother_data;
-  smoother->smooth = multigrid_smoother_cheby;
-  smoother->update = multigrid_smoother_cheby_update;
+  smoother->user = cheby_data;
+  smoother->smooth = multigrid_smoother_cheby_d4est;
+  smoother->update = multigrid_smoother_cheby_d4est_update;
 
   return smoother;
 }
+
+

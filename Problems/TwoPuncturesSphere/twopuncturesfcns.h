@@ -18,6 +18,39 @@ typedef struct {
 
 static
 void
+init_onepuncture_data
+(
+ twopunctures_params_t* params,
+ int deg_offset_for_puncture_nonlinearity_integ
+)
+{
+  double M = 1.;
+  params->num_punctures = 1;
+  params->puncture_eps = 1e-10;
+  mpi_assert(params->num_punctures < (MAX_PUNCTURES));
+  
+  params->M_bh[0] = M;
+
+  params->C_bh[0][0] = 0.;
+  params->C_bh[0][1] = 0.;
+  params->C_bh[0][2] = 0.;
+
+  params->P_bh[0][0] = 0.;
+  params->P_bh[0][1] = 0.;
+  params->P_bh[0][2] = 0.;
+
+  params->S_bh[0][0] = 0.;
+  params->S_bh[0][1] = 0.;
+  params->S_bh[0][2] = 0.2*M;
+  
+  params->deg_offset_for_puncture_nonlinearity_integ
+    = deg_offset_for_puncture_nonlinearity_integ;
+  
+}
+
+
+static
+void
 init_twopunctures_data
 (
  twopunctures_params_t* params,
@@ -60,6 +93,8 @@ init_twopunctures_data
     = deg_offset_for_puncture_nonlinearity_integ;
   
 }
+
+
 
 
 static

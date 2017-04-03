@@ -65,20 +65,22 @@ curved_dg_norm_boundary
      (P4EST_DIM)-1
     );
  
-  curved_element_data_compute_mortar_normal_and_sj_using_face_data
+ d4est_geometry_compute_geometric_data_on_mortar
     (
-     &e_m,
+     e_m->tree,
+     e_m->q,
+     e_m->dq,
      1,
      1,
      &e_m->deg_integ,
      f_m,
-     geom->dxdr_method,
-     1,
-     n_on_f_m_Gauss,
+     NULL,
      sj_on_f_m_Gauss,
+     n_on_f_m_Gauss,
+     NULL,
+     GAUSS,
      geom,
-     dgmath_jit_dbase,
-     xyz_on_f_m_Gauss
+     dgmath_jit_dbase
     );
   
   double h = (e_m->volume/e_m->surface_area[f_m]);
@@ -329,26 +331,23 @@ curved_dg_norm_interface
      deg_mortar_Gauss
     );
 
-  curved_element_data_compute_mortar_normal_and_sj_using_face_data
+  d4est_geometry_compute_geometric_data_on_mortar
     (
-     e_m,
+     e_m[0]->tree,
+     e_m[0]->q,
+     e_m[0]->dq,
      faces_m,
      faces_mortar,
      &deg_mortar_Gauss[0],
      f_m,
-     INTERP_X_ON_LOBATTO,
-     1,
-     n_on_f_m_mortar_Gauss,
+     NULL,
      sj_on_f_m_mortar_Gauss,
+     n_on_f_m_mortar_Gauss,
+     NULL,
+     GAUSS,
      geom,
-     dgmath_jit_dbase,
-     (double* [(P4EST_DIM)]){NULL, NULL
-#if (P4EST_DIM)==3
-         , NULL
-#endif
-         }
+     dgmath_jit_dbase
     );
-
   
   stride = 0;
   for (int f = 0; f < faces_mortar; f++){

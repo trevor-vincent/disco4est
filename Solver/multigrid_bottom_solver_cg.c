@@ -157,7 +157,7 @@ multigrid_bottom_solver_cg
     linalg_vec_xpby(r, beta, d, local_nodes);
 
     if (p4est->mpirank == 0 && cg_params->bottom_print_residual_norm == 1){
-      printf("[CG_BOTTOM_SOLVER]: CG ITER %03d RNRMSQR %.10f\n", i, delta_new);
+      printf("[MG_BOTTOM_SOLVER_CG]: ITER %03d RNRMSQR %.10f\n", i, delta_new);
     }
   }
   

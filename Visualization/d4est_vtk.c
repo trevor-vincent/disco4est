@@ -188,7 +188,7 @@ struct d4est_vtk_context
   dgmath_jit_dbase_t* dgbase;
   
   /* parameters that can optionally be set in a context */
-  p4est_geometry_t   *geom;        /**< The geometry may be NULL. */
+  d4est_geometry_t   *geom;        /**< The geometry may be NULL. */
   double              scale;       /**< Parameter to shrink quadrants. */
   int                 continuous;  /**< Assume continuous point data? */
 
@@ -260,7 +260,7 @@ d4est_vtk_dg_context_new (p4est_t * p4est, dgmath_jit_dbase_t* dgbase, const cha
 
 void
 d4est_vtk_context_set_geom (d4est_vtk_context_t * cont,
-                            p4est_geometry_t * geom)
+                            d4est_geometry_t * geom)
 {
 #ifdef D4EST_VTK_DEBUG
   printf("[D4EST_VTK]: Starting d4est_vtk_context_set_geom \n");
@@ -366,7 +366,7 @@ d4est_vtk_context_destroy (d4est_vtk_context_t * context)
 }
 
 void
-d4est_vtk_write_file (p4est_t * p4est, p4est_geometry_t * geom,
+d4est_vtk_write_file (p4est_t * p4est, d4est_geometry_t * geom,
                       const char *filename)
 {
 #ifdef D4EST_VTK_DEBUG
@@ -416,7 +416,7 @@ d4est_vtk_write_header (d4est_vtk_context_t * cont)
   p4est_locidx_t      Ncells, Ncorners;
   p4est_t            *p4est;
   p4est_connectivity_t *connectivity;
-  p4est_geometry_t   *geom;
+  d4est_geometry_t   *geom;
 #ifdef D4EST_VTK_ASCII
   double              wx, wy, wz;
 #else
@@ -596,7 +596,7 @@ d4est_vtk_write_header (d4est_vtk_context_t * cont)
                 xyz[0] = eta_x;
                 xyz[1] = eta_y;
                 xyz[2] = eta_z;
-                geom->X (geom, jt, xyz, XYZ);
+                geom->X (geom, jt, (p4est_qcoord_t [(P4EST_DIM)]){0}, -(P4EST_ROOT_LEN), xyz, COORDS_TREE_UNITCUBE, XYZ);
                 for (j = 0; j < 3; ++j) {
                   float_data[3 * (P4EST_CHILDREN * quad_count + k) + j] =
                     (D4EST_VTK_FLOAT_TYPE) XYZ[j];
@@ -962,7 +962,7 @@ d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, dgmath_jit_dbase_t* dgmat
   p4est_locidx_t      Ncells, Ncorners;
   p4est_t            *p4est;
   p4est_connectivity_t *connectivity;
-  p4est_geometry_t   *geom;
+  d4est_geometry_t   *geom;
 #ifdef D4EST_VTK_ASCII
   double              wx, wy, wz;
 #else
@@ -1141,7 +1141,8 @@ d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, dgmath_jit_dbase_t* dgmat
                 xyz[0] = eta_x;
                 xyz[1] = eta_y;
                 xyz[2] = eta_z;
-                geom->X (geom, jt, xyz, XYZ);
+                               geom->X (geom, jt, (p4est_qcoord_t [(P4EST_DIM)]){0}, -(P4EST_ROOT_LEN), xyz, COORDS_TREE_UNITCUBE, XYZ);
+                /* printf("xyz, XYZ = %f, %f, %f, %f,%f,%f\n", xyz[0], xyz[1], xyz[2], XYZ[0], XYZ[1], XYZ[2]); */
                 for (j = 0; j < 3; ++j) {
                   float_data[stride + corn*3 + ec*3*(P4EST_CHILDREN) + j] =
                     (D4EST_VTK_FLOAT_TYPE) XYZ[j];

@@ -61,39 +61,46 @@ ip_flux_penalty = 10.0
 deg_offset_for_nonlinear_integ = 0
 deg_R2 = 2
 deg_integ_R2 = 2
+deg_stiffness_R2 = 2
 deg_R1 = 2
 deg_integ_R1 = 2
+deg_stiffness_R1 = 2
 deg_R0 = 2
 deg_integ_R0 = 2
+deg_stiffness_R0 = 2
+solve_with_multigrid = 0
 
 [geometry]
-name = sphere
-R0 = .3333333333333
-R1 = .6666666666666
-R2 = 1
+name = cubed_sphere_with_cube_hole
+R0 = .3333
+R1 = .6666
+R2 = 1.
+compactify = 1
+X_mapping_type = analytic
 
-; [solver]
-; ksp_type = cg
-; ksp_atol = 1e-20
-; ksp_rtol = 1e-20
-; ksp_max_it = 10000
-; ksp_view = 1
-; ksp_user_defined_pc = 0
-; ksp_monitor = 1
+[krylov_petsc]
+ksp_type = cg
+ksp_atol = 1e-20
+ksp_rtol = 1e-20
+ksp_max_it = 10000
+ksp_view = 1
+ksp_monitor = 1
+ksp_converged_reason = 1
+ksp_initial_guess_nonzero = 1
 
 [multigrid]
-vcycle_imax = 3;
+vcycle_imax = 1;
 vcycle_rtol = 1e-9;
 vcycle_atol = 0.;
-bottom_iter = 10000;
+bottom_iter = 10;
 bottom_rtol = 1e-10;
 bottom_atol = 0.;
-bottom_print_residual_norm = 0.;
+bottom_print_residual_norm = 1;
 smoother_imax = 15;
 smoother_eigs_cg_imax = 10;
 smoother_eigs_lmax_lmin_ratio = 30.;
 smoother_eigs_max_multiplier = 1.;
 smoother_eigs_reuse_fromdownvcycle = 0;
 smoother_eigs_reuse_fromlastvcycle = 0;
-smoother_print_residual_norm = 0;
+smoother_print_residual_norm = 1;
 smoother_print_eigs = 1;

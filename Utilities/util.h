@@ -161,8 +161,6 @@
     free(tmp_string_for_extend);                     \
   }
 
-
-
 #define D4EST_FREE_MAT(a, n1, n2) do {                                  \
     for (int i = 0; i < n1; i++) {                                      \
       for (int j = 0; j < n2; j++) {                                    \
@@ -195,6 +193,22 @@
 #define D4EST_FREE_DBYD_MAT(a) D4EST_FREE_MAT(a, (P4EST_DIM), (P4EST_DIM));
 #define D4EST_ALLOC_DIM_VEC(a, size) D4EST_ALLOC_VEC(a, (P4EST_DIM), size);
 #define D4EST_FREE_DIM_VEC(a) D4EST_FREE_VEC(a, (P4EST_DIM));
+
+/* #define D4EST_INPUT_CHECK(section, param, param_default) do {           \ */
+/*   if (param == param_default){                                          \ */
+/*     printf("Please set %s in section %s\n", section, #param);           \ */
+/*     mpi_abort("Parameter not set");                                     \ */
+/*   }                                                              */
+/* } while(0) */
+
+
+#define D4EST_CHECK_INPUT(section, param, param_default) do {           \
+    if (param == param_default) {                                       \
+      printf("Please set %s in input file section %s\n",#param, section); \
+      mpi_abort("");                                                    \
+    }                                                                   \
+  } while(0)
+    
 
 
 void util_print_matrix(double*,int,int,char[],int);
@@ -238,14 +252,14 @@ util_parallel_reduce_dbl_scalar
 
 int util_bisection
 (
- double funk(double),
+ double funk(double, void*),
  double x1,
  double x2,
  double xacc,
  int iter,
- double* root
+ double* root,
+ void* user
 );
-
 
 void
 util_find_biggest_error

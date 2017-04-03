@@ -714,7 +714,7 @@ problem_init
     /*   int perform_checksum = 0; */
     /*   int cg_eigs_use_zero_vec_as_initial = 0; */
 
-    multigrid_smoother_t* smoother = multigrid_smoother_cheby_init
+    multigrid_smoother_t* smoother = multigrid_smoother_cheby_d4est_init
                                    (
                                     p4est,
                                     num_of_levels,
@@ -761,7 +761,7 @@ problem_init
         );
 
 
-      multigrid_smoother_cheby_destroy(smoother);
+      multigrid_smoother_cheby_d4est_destroy(smoother);
       multigrid_bottom_solver_cg_destroy(bottom_solver);
       multigrid_logger_residual_destroy(logger);
       multigrid_element_data_updater_nocurved_destroy(updater);

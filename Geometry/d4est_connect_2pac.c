@@ -48,14 +48,6 @@ p4est_connectivity_new_2pac_aligned_CUBE (void)
   const p4est_topidx_t num_vertices = 6;
   const p4est_topidx_t num_trees = 2;
   const p4est_topidx_t num_ctt = 0;
-  /* const double        vertices[6 * 3] = { */
-  /*   0, 0, 0, */
-  /*   1, 0, 0, */
-  /*   0, 1, 0, */
-  /*   1, 1, 0, */
-  /*   2, 0, 0, */
-  /*   2, 1, 0, */
-  /* }; */
   const double        vertices[6 * 3] = {
     -1., -1., 0,
     0.6, -1, 0,
