@@ -99,7 +99,7 @@ curved_test_mortarjacobianterms_dirichlet
      sjvol_on_f_m_Gauss,
      nvol_on_f_m_Gauss,
      NULL,
-     GAUSS,
+     LOBATTO,
      geom,
      dgmath_jit_dbase
     );
@@ -113,7 +113,7 @@ curved_test_mortarjacobianterms_dirichlet
      1,
      &e_m->deg_integ,
      f_m,
-     GAUSS,
+     LOBATTO,
      n_on_f_m_Gauss,
      sj_on_f_m_Gauss,
      geom,
@@ -153,6 +153,7 @@ curved_test_mortarjacobianterms_dirichlet
     DEBUG_PRINT_2ARR_DBL(n_on_f_m_Gauss[0], nvol_on_f_m_Gauss[0], face_nodes_m_Gauss);
     DEBUG_PRINT_2ARR_DBL(n_on_f_m_Gauss[1], nvol_on_f_m_Gauss[1], face_nodes_m_Gauss);
     DEBUG_PRINT_2ARR_DBL(n_on_f_m_Gauss[2], nvol_on_f_m_Gauss[2], face_nodes_m_Gauss);
+    DEBUG_PRINT_2ARR_DBL(sj_on_f_m_Gauss, sjvol_on_f_m_Gauss, face_nodes_m_Gauss);
   }
 
   data->global_err += maxerror;

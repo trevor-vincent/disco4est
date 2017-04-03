@@ -512,9 +512,11 @@ d4est_geometry_compute_jacobian_and_drst_dxyz
     double* ty = &drst_dxyz[2][1][i];
     double* tz = &drst_dxyz[2][2][i];
 #endif
-    double* J;
-    if (jac != NULL)
+    double Jvar = 0;
+    double* J = &Jvar;
+    if (jac != NULL){
       J = &jac[i];
+    }
     
 #if (P4EST_DIM) == 3
     *J = xr*(ys*zt-zs*yt)
@@ -562,7 +564,7 @@ d4est_geometry_compute_geometric_data_on_mortar
 )
 {
   
-  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)];
+  /* double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)]; */
   double* dxyz_drst_on_face_integ [(P4EST_DIM)][(P4EST_DIM)];
   double* drst_dxyz_on_face_integ[(P4EST_DIM)][(P4EST_DIM)];
   
@@ -574,7 +576,7 @@ d4est_geometry_compute_geometric_data_on_mortar
   int face_nodes_max = dgmath_get_nodes((P4EST_DIM)-1, max_deg);
   for (int i = 0; i < (P4EST_DIM); i++)
     for (int j = 0; j < (P4EST_DIM); j++){
-      dxyz_drst[i][j] = P4EST_ALLOC(double, volume_nodes_max);
+      /* dxyz_drst[i][j] = P4EST_ALLOC(double, volume_nodes_max); */
       dxyz_drst_on_face_integ[i][j] = P4EST_ALLOC(double, face_nodes_max);
       if (drst_dxyz_on_mortar_integ == NULL){
         /* printf("drst_dxyz_on_mortar_integ is NULL\n"); */
@@ -657,6 +659,9 @@ d4est_geometry_compute_geometric_data_on_mortar
       }
     }
 
+
+  
+    
     
       d4est_geometry_compute_jacobian_and_drst_dxyz(dxyz_drst_on_face_integ, J_on_face_integ, drst_dxyz_on_face_integ, face_mortar_integ_nodes);
 
@@ -709,7 +714,7 @@ d4est_geometry_compute_geometric_data_on_mortar
 
   for (int i = 0; i < (P4EST_DIM); i++)
     for (int j = 0; j < (P4EST_DIM); j++){
-      P4EST_FREE(dxyz_drst[i][j]);
+      /* P4EST_FREE(dxyz_drst[i][j]); */
       P4EST_FREE(dxyz_drst_on_face_integ[i][j]);
       if (drst_dxyz_on_mortar_integ == NULL){
         P4EST_FREE(drst_dxyz_on_face_integ[i][j]);
@@ -952,7 +957,7 @@ d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
         }
 
         /* convert vertex coords to physical coords */
-        d4est_geom->X(d4est_geom, e0_tree, (p4est_qcoord_t [(P4EST_DIM)]){0},-1, abc, COORDS_P4EST_INT, xyz_i);     
+        d4est_geom->X(d4est_geom, e0_tree, (p4est_qcoord_t [(P4EST_DIM)]){0},-1, abc, COORDS_TREE_UNITCUBE, xyz_i);     
         for (int d = 0; d < (P4EST_DIM); d++){
           xyz[d][i] = xyz_i[d];
         }
