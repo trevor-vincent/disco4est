@@ -125,6 +125,11 @@ d4est_geometry_new(int mpirank, const char* input_file){
   }
 #endif
   free(input.name);
+
+  if(d4est_geom->X_mapping_type == MAP_ANALYTIC && d4est_geom->DX == NULL){
+    mpi_abort("[D4EST_ERROR]:If X_mapping_type = analytic you must set DX function");
+  }
+  
   return d4est_geom;
 }
 
@@ -957,7 +962,7 @@ d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
         }
 
         /* convert vertex coords to physical coords */
-        d4est_geom->X(d4est_geom, e0_tree, (p4est_qcoord_t [(P4EST_DIM)]){0},-1, abc, COORDS_TREE_UNITCUBE, xyz_i);     
+        d4est_geom->X(d4est_geom, e0_tree, (p4est_qcoord_t [(P4EST_DIM)]){0},-1, abc, COORDS_TREE_UNITCUBE , xyz_i);     
         for (int d = 0; d < (P4EST_DIM); d++){
           xyz[d][i] = xyz_i[d];
         }

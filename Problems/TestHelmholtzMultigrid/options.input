@@ -59,22 +59,22 @@ ip_flux_penalty = 10.0
 
 [problem]
 deg_offset_for_nonlinear_integ = 0
-deg_R2 = 2
-deg_integ_R2 = 2
-deg_stiffness_R2 = 2
-deg_R1 = 2
-deg_integ_R1 = 2
-deg_stiffness_R1 = 2
-deg_R0 = 2
-deg_integ_R0 = 2
-deg_stiffness_R0 = 2
+deg_R2 = 5
+deg_integ_R2 = 5
+deg_stiffness_R2 = 5
+deg_R1 = 5
+deg_integ_R1 = 5
+deg_stiffness_R1 = 5
+deg_R0 = 5
+deg_integ_R0 = 5
+deg_stiffness_R0 = 5
 solve_with_multigrid = 0
 
 [geometry]
 name = cubed_sphere_with_cube_hole
-R0 = .3333
-R1 = .6666
-R2 = 1.
+R0 = 10
+R1 = 10000
+R2 = 1000000
 compactify = 1
 X_mapping_type = analytic
 
@@ -96,11 +96,13 @@ bottom_iter = 10;
 bottom_rtol = 1e-10;
 bottom_atol = 0.;
 bottom_print_residual_norm = 1;
-smoother_imax = 15;
-smoother_eigs_cg_imax = 10;
-smoother_eigs_lmax_lmin_ratio = 30.;
-smoother_eigs_max_multiplier = 1.;
-smoother_eigs_reuse_fromdownvcycle = 0;
-smoother_eigs_reuse_fromlastvcycle = 0;
-smoother_print_residual_norm = 1;
-smoother_print_eigs = 1;
+
+[mg_smoother_cheby_d4est]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 10;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 1;
+cheby_print_eigs = 1;

@@ -59,17 +59,21 @@ curved_test_mortarjacobianterms_dirichlet
 
   double* sj_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
   double* sjvol_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
+  double* sjvol_on_f_m_Gauss_analytic = P4EST_ALLOC(double, face_nodes_m_Gauss);
   double* n_on_f_m_Gauss [(P4EST_DIM)];
   double* nvol_on_f_m_Gauss [(P4EST_DIM)];
+  double* nvol_on_f_m_Gauss_analytic [(P4EST_DIM)];
   double* xyz_on_f_m_Gauss [(P4EST_DIM)];
   double* drst_dxyz_on_f_m_Gauss [(P4EST_DIM)][(P4EST_DIM)];
+  double* drst_dxyz_on_f_m_Gauss_analytic [(P4EST_DIM)][(P4EST_DIM)];
   D4EST_ALLOC_DIM_VEC(n_on_f_m_Gauss,face_nodes_m_Gauss);
   D4EST_ALLOC_DIM_VEC(nvol_on_f_m_Gauss,face_nodes_m_Gauss);
+  D4EST_ALLOC_DIM_VEC(nvol_on_f_m_Gauss_analytic,face_nodes_m_Gauss);
   D4EST_ALLOC_DIM_VEC(xyz_on_f_m_Gauss,face_nodes_m_Gauss);
   D4EST_ALLOC_DBYD_MAT(drst_dxyz_on_f_m_Gauss,face_nodes_m_Gauss);
+  D4EST_ALLOC_DBYD_MAT(drst_dxyz_on_f_m_Gauss_analytic,face_nodes_m_Gauss);
 
-
-  mpi_assert(geom->X_mapping_type == MAP_ISOPARAMETRIC);
+  /* mpi_assert(geom->X_mapping_type == MAP_ISOPARAMETRIC); */
   /* curved_element_data_compute_mortar_normal_and_sj_using_face_data */
   /*   ( */
   /*    &e_m, */
@@ -86,6 +90,9 @@ curved_test_mortarjacobianterms_dirichlet
   /*    xyz_on_f_m_Gauss */
   /*   ); */
 
+
+  mapping_type_t mapping_orig  = geom->X_mapping_type;
+  geom->X_mapping_type = MAP_ISOPARAMETRIC;
   d4est_geometry_compute_geometric_data_on_mortar
     (
      e_m->tree,
@@ -99,11 +106,32 @@ curved_test_mortarjacobianterms_dirichlet
      sjvol_on_f_m_Gauss,
      nvol_on_f_m_Gauss,
      NULL,
-     LOBATTO,
+     GAUSS,
      geom,
      dgmath_jit_dbase
     );
-  
+
+
+  geom->X_mapping_type = MAP_ANALYTIC;
+  d4est_geometry_compute_geometric_data_on_mortar
+    (
+     e_m->tree,
+     e_m->q,
+     e_m->dq,
+     1,
+     1,
+     &e_m->deg_integ,
+     f_m,
+     drst_dxyz_on_f_m_Gauss_analytic,
+     sjvol_on_f_m_Gauss_analytic,
+     nvol_on_f_m_Gauss_analytic,
+     NULL,
+     GAUSS,
+     geom,
+     dgmath_jit_dbase
+    );
+
+  geom->X_mapping_type = MAP_ISOPARAMETRIC;
   d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
     (
      e_m->tree,
@@ -113,13 +141,17 @@ curved_test_mortarjacobianterms_dirichlet
      1,
      &e_m->deg_integ,
      f_m,
-     LOBATTO,
+     GAUSS,
      n_on_f_m_Gauss,
      sj_on_f_m_Gauss,
      geom,
      dgmath_jit_dbase,
      xyz_on_f_m_Gauss
     );
+
+  geom->X_mapping_type = mapping_orig;
+
+  /* DEBUG_PRINT_2ARR_DBL(sjvol_on_f_m_Gauss_analytic, sjvol_on_f_m_Gauss, face_nodes_m_Gauss); */
   
   /* curved_data_compute_drst_dxyz_Gauss_on_mortar_using_volume_data */
   /*   ( */
@@ -160,10 +192,13 @@ curved_test_mortarjacobianterms_dirichlet
   
   P4EST_FREE(sj_on_f_m_Gauss);
   P4EST_FREE(sjvol_on_f_m_Gauss);
+  P4EST_FREE(sjvol_on_f_m_Gauss_analytic);
   D4EST_FREE_DIM_VEC(n_on_f_m_Gauss);
   D4EST_FREE_DIM_VEC(nvol_on_f_m_Gauss);
+  D4EST_FREE_DIM_VEC(nvol_on_f_m_Gauss_analytic);
   D4EST_FREE_DIM_VEC(xyz_on_f_m_Gauss);
   D4EST_FREE_DBYD_MAT(drst_dxyz_on_f_m_Gauss);
+  D4EST_FREE_DBYD_MAT(drst_dxyz_on_f_m_Gauss_analytic);
 }
 
 static void
@@ -274,9 +309,15 @@ curved_test_mortarjacobianterms_interface
   double* dudr_m_on_f_m_mortar [(P4EST_DIM)];
   double* dudr_p_on_f_p_mortar_Gauss_porder [(P4EST_DIM)];
   double* dudr_m_on_f_m_mortar_Gauss [(P4EST_DIM)];
+
   double* dudx_p_on_f_p_mortar_Gauss_porder [(P4EST_DIM)];
   double* dudx_m_on_f_m_mortar_Gauss [(P4EST_DIM)];
   double* dudx_p_on_f_p_mortar_Gauss [(P4EST_DIM)];
+
+  double* dudx_p_on_f_p_mortar_Gauss_porder_analytic [(P4EST_DIM)];
+  double* dudx_m_on_f_m_mortar_Gauss_analytic [(P4EST_DIM)];
+  double* dudx_p_on_f_p_mortar_Gauss_analytic [(P4EST_DIM)];
+
   double* mortar_flux [(P4EST_DIM)];
 
   double* u_m_on_f_m = P4EST_ALLOC(double, total_side_nodes_m_Lobatto);
@@ -285,14 +326,21 @@ curved_test_mortarjacobianterms_interface
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_porder, total_side_nodes_p_Lobatto); 
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_porder, total_nodes_mortar_Gauss);
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_Gauss_porder, total_nodes_mortar_Gauss);
-  D4EST_ALLOC_DIM_VEC(dudx_p_on_f_p_mortar_Gauss_porder, total_nodes_mortar_Gauss);
-  D4EST_ALLOC_DIM_VEC(dudx_p_on_f_p_mortar_Gauss, total_nodes_mortar_Gauss);
+
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m, total_side_nodes_m_Lobatto);
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m_mortar, total_nodes_mortar_Gauss);
   D4EST_ALLOC_DIM_VEC(mortar_flux, total_nodes_mortar_Gauss);
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m_mortar_Gauss, total_nodes_mortar_Gauss);
-  D4EST_ALLOC_DIM_VEC(dudx_m_on_f_m_mortar_Gauss, total_nodes_mortar_Gauss);
 
+  D4EST_ALLOC_DIM_VEC(dudx_m_on_f_m_mortar_Gauss, total_nodes_mortar_Gauss);
+  D4EST_ALLOC_DIM_VEC(dudx_p_on_f_p_mortar_Gauss_porder, total_nodes_mortar_Gauss);
+  D4EST_ALLOC_DIM_VEC(dudx_p_on_f_p_mortar_Gauss, total_nodes_mortar_Gauss);
+
+  D4EST_ALLOC_DIM_VEC(dudx_m_on_f_m_mortar_Gauss_analytic, total_nodes_mortar_Gauss);
+  D4EST_ALLOC_DIM_VEC(dudx_p_on_f_p_mortar_Gauss_porder_analytic, total_nodes_mortar_Gauss);
+  D4EST_ALLOC_DIM_VEC(dudx_p_on_f_p_mortar_Gauss_analytic, total_nodes_mortar_Gauss);
+  
+  
   stride = 0;
   for (int i = 0; i < faces_m; i++){    
     for (int d = 0; d < (P4EST_DIM); d++){
@@ -413,25 +461,46 @@ curved_test_mortarjacobianterms_interface
   }
 
   double* sj_on_f_m_mortar_Gauss = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+  double* n_on_f_m_mortar_Gauss [(P4EST_DIM)];
+  double* tmpxyz [(P4EST_DIM)];
+
+  D4EST_ALLOC_DIM_VEC(tmpxyz,total_nodes_mortar_Gauss);
+  D4EST_ALLOC_DIM_VEC(n_on_f_m_mortar_Gauss,total_nodes_mortar_Gauss);
+
   double* sjvol_m_on_f_m_mortar_Gauss = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
   double* sjvol_p_on_f_p_mortar_Gauss = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
   double* sjvol_p_on_f_p_mortar_Gauss_reoriented = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
-  double* n_on_f_m_mortar_Gauss [(P4EST_DIM)];
   double* nvol_m_on_f_m_mortar_Gauss [(P4EST_DIM)];
   double* nvol_p_on_f_p_mortar_Gauss [(P4EST_DIM)];
   double* nvol_p_on_f_p_mortar_Gauss_reoriented [(P4EST_DIM)];
   double* drst_dxyz_m_on_mortar_Gauss [(P4EST_DIM)][(P4EST_DIM)];
   double* drst_dxyz_p_on_mortar_Gauss_porder [(P4EST_DIM)][(P4EST_DIM)];
-  double* tmpxyz [(P4EST_DIM)];
-  D4EST_ALLOC_DIM_VEC(tmpxyz,total_nodes_mortar_Gauss);
-  D4EST_ALLOC_DIM_VEC(n_on_f_m_mortar_Gauss,total_nodes_mortar_Gauss);
+
   D4EST_ALLOC_DIM_VEC(nvol_m_on_f_m_mortar_Gauss,total_nodes_mortar_Gauss);
   D4EST_ALLOC_DIM_VEC(nvol_p_on_f_p_mortar_Gauss,total_nodes_mortar_Gauss);
   D4EST_ALLOC_DIM_VEC(nvol_p_on_f_p_mortar_Gauss_reoriented,total_nodes_mortar_Gauss);
   D4EST_ALLOC_DBYD_MAT(drst_dxyz_m_on_mortar_Gauss,total_nodes_mortar_Gauss);
   D4EST_ALLOC_DBYD_MAT(drst_dxyz_p_on_mortar_Gauss_porder,total_nodes_mortar_Gauss);
-  
 
+
+  double* sjvol_m_on_f_m_mortar_Gauss_analytic = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+  double* sjvol_p_on_f_p_mortar_Gauss_analytic = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+  double* sjvol_p_on_f_p_mortar_Gauss_reoriented_analytic = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+  double* nvol_m_on_f_m_mortar_Gauss_analytic [(P4EST_DIM)];
+  double* nvol_p_on_f_p_mortar_Gauss_analytic [(P4EST_DIM)];
+  double* nvol_p_on_f_p_mortar_Gauss_reoriented_analytic [(P4EST_DIM)];
+  double* drst_dxyz_m_on_mortar_Gauss_analytic [(P4EST_DIM)][(P4EST_DIM)];
+  double* drst_dxyz_p_on_mortar_Gauss_porder_analytic [(P4EST_DIM)][(P4EST_DIM)];
+
+  D4EST_ALLOC_DIM_VEC(nvol_m_on_f_m_mortar_Gauss_analytic,total_nodes_mortar_Gauss);
+  D4EST_ALLOC_DIM_VEC(nvol_p_on_f_p_mortar_Gauss_analytic,total_nodes_mortar_Gauss);
+  D4EST_ALLOC_DIM_VEC(nvol_p_on_f_p_mortar_Gauss_reoriented_analytic,total_nodes_mortar_Gauss);
+  D4EST_ALLOC_DBYD_MAT(drst_dxyz_m_on_mortar_Gauss_analytic,total_nodes_mortar_Gauss);
+  D4EST_ALLOC_DBYD_MAT(drst_dxyz_p_on_mortar_Gauss_porder_analytic,total_nodes_mortar_Gauss);
+
+
+  mapping_type_t mapping_orig = geom->X_mapping_type;
+  geom->X_mapping_type = MAP_ISOPARAMETRIC;
   d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
     (
      e_m[0]->tree,
@@ -484,7 +553,49 @@ curved_test_mortarjacobianterms_interface
      GAUSS,
      geom,
      dgmath_jit_dbase
+    );
+
+  if(geom->DX != NULL){
+  geom->X_mapping_type = MAP_ANALYTIC;
+  d4est_geometry_compute_geometric_data_on_mortar
+    (
+     e_m[0]->tree,
+     e_m[0]->q,
+     e_m[0]->dq,
+     faces_m,
+     faces_mortar,
+     &deg_mortar_Gauss[0],
+     f_m,
+     drst_dxyz_m_on_mortar_Gauss_analytic,
+     sjvol_m_on_f_m_mortar_Gauss_analytic,
+     nvol_m_on_f_m_mortar_Gauss_analytic,
+     NULL,
+     GAUSS,
+     geom,
+     dgmath_jit_dbase
+    );
+
+  d4est_geometry_compute_geometric_data_on_mortar
+    (
+     e_p[0]->tree,
+     e_p[0]->q,
+     e_p[0]->dq,
+     faces_p,
+     faces_mortar,
+     &deg_mortar_Gauss_porder[0],
+     f_p,
+     drst_dxyz_p_on_mortar_Gauss_porder_analytic,
+     sjvol_p_on_f_p_mortar_Gauss_analytic,
+     nvol_p_on_f_p_mortar_Gauss_analytic,
+     NULL,
+     GAUSS,
+     geom,
+     dgmath_jit_dbase
     ); 
+  }
+  geom->X_mapping_type = mapping_orig;
+  
+  
   
 
   for (int d = 0; d < (P4EST_DIM); d++){
@@ -502,6 +613,23 @@ curved_test_mortarjacobianterms_interface
        0.0,
        total_nodes_mortar_Gauss
       );
+
+
+    linalg_fill_vec
+      (
+       dudx_m_on_f_m_mortar_Gauss_analytic[d],
+       0.0,
+       total_nodes_mortar_Gauss
+      );
+
+
+    linalg_fill_vec
+      (
+       dudx_p_on_f_p_mortar_Gauss_porder_analytic[d],
+       0.0,
+       total_nodes_mortar_Gauss
+      );
+    
   }
 
 
@@ -515,6 +643,10 @@ curved_test_mortarjacobianterms_interface
         dudx_m_on_f_m_mortar_Gauss[j][k] += drst_dxyz_m_on_mortar_Gauss[i][j][k]*dudr_m_on_f_m_mortar_Gauss[i][k];
         dudx_p_on_f_p_mortar_Gauss_porder[j][k] += drst_dxyz_p_on_mortar_Gauss_porder[i][j][k]*dudr_p_on_f_p_mortar_Gauss_porder[i][k];
 
+          if(geom->DX != NULL){
+        dudx_m_on_f_m_mortar_Gauss_analytic[j][k] += drst_dxyz_m_on_mortar_Gauss_analytic[i][j][k]*dudr_m_on_f_m_mortar_Gauss[i][k];
+        dudx_p_on_f_p_mortar_Gauss_porder_analytic[j][k] += drst_dxyz_p_on_mortar_Gauss_porder_analytic[i][j][k]*dudr_p_on_f_p_mortar_Gauss_porder[i][k];
+          }        
         /* if (e_m[0]->id == 0 && e_p[0]->id == 4){ */
         /*   printf("drst_dxyz_p_on_mortar_Gauss_porder[%d][%d][%d], drst_dxyz_m_on_mortar_Gauss[%d][%d][%d] = %.25f, %.25f\n",i,j,k,i,j,k, drst_dxyz_p_on_mortar_Gauss_porder[i][j][k], drst_dxyz_m_on_mortar_Gauss[i][j][k]); */
         /* } */
@@ -594,6 +726,20 @@ curved_test_mortarjacobianterms_interface
        &sjvol_p_on_f_p_mortar_Gauss_reoriented[face_mortar_stride]
       );
 
+     if(geom->DX != NULL){ 
+    dgmath_reorient_face_data
+      (
+       dgmath_jit_dbase,
+       &sjvol_p_on_f_p_mortar_Gauss_analytic[oriented_face_mortar_stride],
+       (P4EST_DIM)-1,
+       deg_mortar_Gauss[face],
+       orientation,
+       f_m,
+       f_p,
+       &sjvol_p_on_f_p_mortar_Gauss_reoriented_analytic[face_mortar_stride]
+      );
+     }    
+
     for (int d = 0; d < (P4EST_DIM); d++){
       dgmath_reorient_face_data
         (
@@ -619,9 +765,38 @@ curved_test_mortarjacobianterms_interface
          &nvol_p_on_f_p_mortar_Gauss_reoriented[d][face_mortar_stride]
         );
 
+  if(geom->DX != NULL){
+      dgmath_reorient_face_data
+        (
+         dgmath_jit_dbase,
+         &dudx_p_on_f_p_mortar_Gauss_porder_analytic[d][oriented_face_mortar_stride],
+         (P4EST_DIM)-1,
+         deg_mortar_Gauss[face],
+         orientation,
+         f_m,
+         f_p,
+         &dudx_p_on_f_p_mortar_Gauss_analytic[d][face_mortar_stride]
+        );
+      
+      dgmath_reorient_face_data
+        (
+         dgmath_jit_dbase,
+         &nvol_p_on_f_p_mortar_Gauss_analytic[d][oriented_face_mortar_stride],
+         (P4EST_DIM)-1,
+         deg_mortar_Gauss[face],
+         orientation,
+         f_m,
+         f_p,
+         &nvol_p_on_f_p_mortar_Gauss_reoriented_analytic[d][face_mortar_stride]
+        );
+  }
       
 
       linalg_vec_scale(-1., &nvol_p_on_f_p_mortar_Gauss_reoriented[d][face_mortar_stride], dgmath_get_nodes((P4EST_DIM)-1, deg_mortar_Gauss[face]));
+
+
+      linalg_vec_scale(-1., &nvol_p_on_f_p_mortar_Gauss_reoriented_analytic[d][face_mortar_stride], dgmath_get_nodes((P4EST_DIM)-1, deg_mortar_Gauss[face]));
+      
     }
     
     face_mortar_stride += dgmath_get_nodes((P4EST_DIM)-1, deg_mortar_Gauss[face]);
@@ -632,19 +807,19 @@ curved_test_mortarjacobianterms_interface
       mortar_flux[d][i] = dudx_p_on_f_p_mortar_Gauss[d][i] + dudx_m_on_f_m_mortar_Gauss[d][i];
     }
   }
-  printf("\n***NEW FACE FLUX CALCULATION***\n");
-  printf("Elements on m-face %d\n", f_m);
-  for (int f = 0; f < faces_m; f++){
-    printf("e_m[%d]->id = %d, ",f, e_m[f]->id);
-  }
-  printf("\nElements on p-face %d\n", f_p);
-  for (int f = 0; f < faces_p; f++){
-    printf("e_p[%d]->id = %d, ",f, e_p[f]->id);
-  }
-  printf("\n");
-  for (int d = 0; d < (P4EST_DIM); d++){
-    DEBUG_PRINT_ARR_DBL_SUM(mortar_flux[d], total_nodes_mortar_Gauss);
-  }
+  /* printf("\n***NEW FACE FLUX CALCULATION***\n"); */
+  /* printf("Elements on m-face %d\n", f_m); */
+  /* for (int f = 0; f < faces_m; f++){ */
+  /*   printf("e_m[%d]->id = %d, ",f, e_m[f]->id); */
+  /* } */
+  /* printf("\nElements on p-face %d\n", f_p); */
+  /* for (int f = 0; f < faces_p; f++){ */
+  /*   printf("e_p[%d]->id = %d, ",f, e_p[f]->id); */
+  /* } */
+  /* printf("\n"); */
+  /* for (int d = 0; d < (P4EST_DIM); d++){ */
+  /*   DEBUG_PRINT_ARR_DBL_SUM(mortar_flux[d], total_nodes_mortar_Gauss); */
+  /* } */
   /* printf("faces_m, faces_p = %d,%d\n", faces_m, faces_p); */
 
   
@@ -680,12 +855,31 @@ curved_test_mortarjacobianterms_interface
   maxerror += util_max_error(n_on_f_m_mortar_Gauss[1], nvol_m_on_f_m_mortar_Gauss[1], total_nodes_mortar_Gauss);
   maxerror += util_max_error(dudx_p_on_f_p_mortar_Gauss[0], dudx_m_on_f_m_mortar_Gauss[0], total_nodes_mortar_Gauss);
   maxerror += util_max_error(dudx_p_on_f_p_mortar_Gauss[1], dudx_m_on_f_m_mortar_Gauss[1], total_nodes_mortar_Gauss);
+
+  double maxerror_analytic = 0.;
+  if(geom->DX != NULL){
+  maxerror_analytic += util_max_error(sjvol_m_on_f_m_mortar_Gauss_analytic, sjvol_p_on_f_p_mortar_Gauss_reoriented_analytic, total_nodes_mortar_Gauss);
+  maxerror_analytic += util_max_error(nvol_m_on_f_m_mortar_Gauss_analytic[0], nvol_p_on_f_p_mortar_Gauss_reoriented_analytic[0], total_nodes_mortar_Gauss);
+  maxerror_analytic += util_max_error(nvol_m_on_f_m_mortar_Gauss_analytic[1], nvol_p_on_f_p_mortar_Gauss_reoriented_analytic[1], total_nodes_mortar_Gauss);
+  maxerror_analytic += util_max_error(dudx_p_on_f_p_mortar_Gauss_analytic[0], dudx_m_on_f_m_mortar_Gauss_analytic[0], total_nodes_mortar_Gauss);
+  maxerror_analytic += util_max_error(dudx_p_on_f_p_mortar_Gauss_analytic[1], dudx_m_on_f_m_mortar_Gauss_analytic[1], total_nodes_mortar_Gauss);
+
+  DEBUG_PRINT_2ARR_DBL(sjvol_m_on_f_m_mortar_Gauss_analytic, sjvol_p_on_f_p_mortar_Gauss_reoriented_analytic, total_nodes_mortar_Gauss);
+  }
+  
 #if (P4EST_DIM)==3
   maxerror += util_max_error(dudx_p_on_f_p_mortar_Gauss[2], dudx_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss);
   maxerror += util_max_error(n_on_f_m_mortar_Gauss[2], nvol_p_on_f_p_mortar_Gauss_reoriented[2], total_nodes_mortar_Gauss);
   maxerror += util_max_error(n_on_f_m_mortar_Gauss[2], nvol_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss);
+
+  if(geom->DX != NULL){
+    maxerror_analytic += util_max_error(dudx_p_on_f_p_mortar_Gauss_analytic[2], dudx_m_on_f_m_mortar_Gauss_analytic[2], total_nodes_mortar_Gauss);
+    maxerror_analytic += util_max_error(nvol_m_on_f_m_mortar_Gauss_analytic[2], nvol_p_on_f_p_mortar_Gauss_reoriented_analytic[2], total_nodes_mortar_Gauss);
+  }
 #endif
-  
+
+
+  maxerror += maxerror_analytic;
   /* DEBUG_PRINT_2ARR_DBL(dudx_p_on_f_p_mortar_Gauss[0], dudx_m_on_f_m_mortar_Gauss[0], total_nodes_mortar_Gauss); */
   /* DEBUG_PRINT_2ARR_DBL(dudx_p_on_f_p_mortar_Gauss[1], dudx_m_on_f_m_mortar_Gauss[1], total_nodes_mortar_Gauss); */
 /* #if (P4EST_DIM)==3 */
@@ -717,26 +911,44 @@ curved_test_mortarjacobianterms_interface
   P4EST_FREE(u_p_on_f_p_porder);
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(sj_on_f_m_mortar_Gauss);
-  P4EST_FREE(sjvol_m_on_f_m_mortar_Gauss);
-  P4EST_FREE(sjvol_p_on_f_p_mortar_Gauss);
-  P4EST_FREE(sjvol_p_on_f_p_mortar_Gauss_reoriented);
+
   D4EST_FREE_DIM_VEC(tmpxyz);
   D4EST_FREE_DIM_VEC(n_on_f_m_mortar_Gauss);
   D4EST_FREE_DIM_VEC(mortar_flux);
+  P4EST_FREE(sjvol_m_on_f_m_mortar_Gauss);
+  P4EST_FREE(sjvol_p_on_f_p_mortar_Gauss);
+  P4EST_FREE(sjvol_p_on_f_p_mortar_Gauss_reoriented);
   D4EST_FREE_DIM_VEC(nvol_m_on_f_m_mortar_Gauss);
   D4EST_FREE_DIM_VEC(nvol_p_on_f_p_mortar_Gauss);
   D4EST_FREE_DIM_VEC(nvol_p_on_f_p_mortar_Gauss_reoriented);
   D4EST_FREE_DBYD_MAT(drst_dxyz_m_on_mortar_Gauss);
   D4EST_FREE_DBYD_MAT(drst_dxyz_p_on_mortar_Gauss_porder);
+
+
+  P4EST_FREE(sjvol_m_on_f_m_mortar_Gauss_analytic);
+  P4EST_FREE(sjvol_p_on_f_p_mortar_Gauss_analytic);
+  P4EST_FREE(sjvol_p_on_f_p_mortar_Gauss_reoriented_analytic);
+  D4EST_FREE_DIM_VEC(nvol_m_on_f_m_mortar_Gauss_analytic);
+  D4EST_FREE_DIM_VEC(nvol_p_on_f_p_mortar_Gauss_analytic);
+  D4EST_FREE_DIM_VEC(nvol_p_on_f_p_mortar_Gauss_reoriented_analytic);
+  D4EST_FREE_DBYD_MAT(drst_dxyz_m_on_mortar_Gauss_analytic);
+  D4EST_FREE_DBYD_MAT(drst_dxyz_p_on_mortar_Gauss_porder_analytic);
+
+
   D4EST_FREE_DIM_VEC(dudr_p_on_f_p_porder); 
   D4EST_FREE_DIM_VEC(dudr_p_on_f_p_mortar_porder);
   D4EST_FREE_DIM_VEC(dudr_p_on_f_p_mortar_Gauss_porder);
-  D4EST_FREE_DIM_VEC(dudx_p_on_f_p_mortar_Gauss_porder);
-  D4EST_FREE_DIM_VEC(dudx_p_on_f_p_mortar_Gauss);
+
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m);
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m_mortar);
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m_mortar_Gauss);
   D4EST_FREE_DIM_VEC(dudx_m_on_f_m_mortar_Gauss);
+  D4EST_FREE_DIM_VEC(dudx_p_on_f_p_mortar_Gauss_porder);
+  D4EST_FREE_DIM_VEC(dudx_p_on_f_p_mortar_Gauss);
+ 
+  D4EST_FREE_DIM_VEC(dudx_m_on_f_m_mortar_Gauss_analytic);
+  D4EST_FREE_DIM_VEC(dudx_p_on_f_p_mortar_Gauss_porder_analytic);
+  D4EST_FREE_DIM_VEC(dudx_p_on_f_p_mortar_Gauss_analytic);
   
 }
 

@@ -72,7 +72,7 @@
 #define DEBUG_PRINT_2ARR_DBL(a, b, n) do {            \
     printf("%s, %s = \n",#a, #b);               \
     for (int i = 0; i < n; i++) {               \
-      printf("%.16f %.16f\n",a[i], b[i]);       \
+      printf("%.25f %.25f\n",a[i], b[i]);       \
     }                                           \
   } while(0)
 

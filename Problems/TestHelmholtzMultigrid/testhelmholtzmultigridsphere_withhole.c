@@ -1548,7 +1548,6 @@ problem_init
        set_deg_integ,
        &input
       );
-    
 
     /* multigrid_user_callbacks_t* matrix_op_callbacks = multigrid_matrix_operator_init */
     /*                                                   ( */
