@@ -27,8 +27,9 @@
 #include <curved_poisson_operator_primal.h>
 #include <curved_Gauss_central_flux_vector_fcns.h>
 #include <multigrid_matrix_operator.h>
-#include <multigrid_smoother_cheby.h>
-#include <multigrid_bottom_solver_cg.h>
+#include <multigrid_smoother_cheby_d4est.h>
+#include <multigrid_bottom_solver_cg_d4est.h>
+#include <multigrid_bottom_solver_cheby_d4est.h>
 #include <multigrid_logger_residual.h>
 #include <multigrid_element_data_updater_curved.h>
 #include <krylov_pc_multigrid.h>
@@ -1527,12 +1528,19 @@ problem_init
                                    );
 
 
-    multigrid_bottom_solver_t* bottom_solver = multigrid_bottom_solver_cg_init
+    multigrid_bottom_solver_t* bottom_solver = multigrid_bottom_solver_cg_d4est_init
                                                (
                                                 p4est,
                                                 input_file
                                                );
 
+    /* multigrid_bottom_solver_t* bottom_solver = multigrid_bottom_solver_cheby_d4est_init */
+    /*                                            ( */
+    /*                                             p4est, */
+    /*                                             num_of_levels, */
+    /*                                             input_file */
+    /*                                            ); */
+    
     multigrid_logger_t* logger = multigrid_logger_residual_init
                                  (
                                  );
@@ -1621,7 +1629,8 @@ problem_init
       
 
       multigrid_smoother_cheby_d4est_destroy(smoother);
-      multigrid_bottom_solver_cg_destroy(bottom_solver);
+      multigrid_bottom_solver_cg_d4est_destroy(bottom_solver);
+      /* multigrid_bottom_solver_cheby_d4est_destroy(bottom_solver); */
       multigrid_logger_residual_destroy(logger);
       multigrid_element_data_updater_curved_destroy(updater, num_of_levels);
       /* multigrid_matrix_operator_destroy(matrix_op_callbacks); */

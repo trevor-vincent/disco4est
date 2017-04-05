@@ -1,4 +1,4 @@
-#include <multigrid_smoother_cheby.h>
+#include <multigrid_smoother_cheby_d4est.h>
 #include <linalg.h>
 #include <ini.h>
 #include <util.h>
@@ -64,7 +64,7 @@ multigrid_smoother_cheby_d4est_destroy(multigrid_smoother_t* smoother)
   P4EST_FREE(smoother);
 }
 
-static void 
+void 
 multigrid_smoother_cheby_d4est_iterate
 (
  p4est_t* p4est,

@@ -1,11 +1,11 @@
-#include <multigrid_bottom_solver_cg.h>
+#include <multigrid_bottom_solver_cg_d4est.h>
 #include <util.h>
 #include <ini.h>
 #include <linalg.h>
 #include <sc_reduce.h>
 
 static int
-multigrid_bottom_solver_cg_input_handler
+multigrid_bottom_solver_cg_d4est_input_handler
 (
  void* user,
  const char* section,
@@ -13,21 +13,21 @@ multigrid_bottom_solver_cg_input_handler
  const char* value
 )
 {
-  multigrid_bottom_solver_cg_t* pconfig = ((multigrid_bottom_solver_cg_t*)user);
+  multigrid_bottom_solver_cg_d4est_t* pconfig = ((multigrid_bottom_solver_cg_d4est_t*)user);
   
-  if (util_match_couple(section,"multigrid",name,"bottom_iter")) {
+  if (util_match_couple(section,"mg_bottom_solver_cg_d4est",name,"bottom_iter")) {
     mpi_assert(pconfig->bottom_imax == -1);
     pconfig->bottom_imax = atoi(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"bottom_rtol")) {
+  else if (util_match_couple(section,"mg_bottom_solver_cg_d4est",name,"bottom_rtol")) {
     mpi_assert(pconfig->bottom_rtol == -1);
     pconfig->bottom_rtol = atof(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"bottom_atol")) {
+  else if (util_match_couple(section,"mg_bottom_solver_cg_d4est",name,"bottom_atol")) {
     mpi_assert(pconfig->bottom_atol == -1);
     pconfig->bottom_atol = atof(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"bottom_print_residual_norm")) {
+  else if (util_match_couple(section,"mg_bottom_solver_cg_d4est",name,"bottom_print_residual_norm")) {
     mpi_assert(pconfig->bottom_print_residual_norm == -1);
     pconfig->bottom_print_residual_norm = atoi(value);
   }
@@ -39,14 +39,14 @@ multigrid_bottom_solver_cg_input_handler
 
 
 void
-multigrid_bottom_solver_cg_destroy(multigrid_bottom_solver_t* bottom)
+multigrid_bottom_solver_cg_d4est_destroy(multigrid_bottom_solver_t* bottom)
 {
   P4EST_FREE(bottom->user);
   P4EST_FREE(bottom);
 }
 
 static void 
-multigrid_bottom_solver_cg
+multigrid_bottom_solver_cg_d4est
 (
  p4est_t* p4est,
  problem_data_t* vecs,
@@ -63,7 +63,7 @@ multigrid_bottom_solver_cg
   int local_nodes;
   double delta_new, delta_0, delta_old, beta, alpha;
 
-  multigrid_bottom_solver_cg_t* cg_params = mg_data->bottom_solver->user;
+  multigrid_bottom_solver_cg_d4est_t* cg_params = mg_data->bottom_solver->user;
   dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase;
 
   double* Au; 
@@ -166,41 +166,39 @@ multigrid_bottom_solver_cg
 }
 
 multigrid_bottom_solver_t*
-multigrid_bottom_solver_cg_init
+multigrid_bottom_solver_cg_d4est_init
 (
  p4est_t* p4est,
  const char* input_file
 )
 {
   multigrid_bottom_solver_t* bottom_solver = P4EST_ALLOC(multigrid_bottom_solver_t, 1);
-  multigrid_bottom_solver_cg_t* bottom_data = P4EST_ALLOC(multigrid_bottom_solver_cg_t, 1);
+  multigrid_bottom_solver_cg_d4est_t* bottom_data = P4EST_ALLOC(multigrid_bottom_solver_cg_d4est_t, 1);
   
   bottom_data->bottom_atol = -1;
   bottom_data->bottom_rtol = -1;
   bottom_data->bottom_imax = -1;
   bottom_data->bottom_print_residual_norm = -1;
   
-  if (ini_parse(input_file, multigrid_bottom_solver_cg_input_handler, bottom_data) < 0) {
+  if (ini_parse(input_file, multigrid_bottom_solver_cg_d4est_input_handler, bottom_data) < 0) {
     mpi_abort("Can't load input file");
   }
-  if(bottom_data->bottom_atol == -1){
-    mpi_abort("[D4EST_ERROR]: bottom_atol not set in multigrid input");
-  }
-  if(bottom_data->bottom_rtol == -1){
-    mpi_abort("[D4EST_ERROR]: bottom_rtol not set in multigrid input");
-  }
-  if(bottom_data->bottom_imax == -1){
-    mpi_abort("[D4EST_ERROR]: bottom_imax not set in multigrid input");
-  }  
+
+  D4EST_CHECK_INPUT("mg_bottom_solver_cg_d4est", bottom_data->bottom_atol, -1);
+  D4EST_CHECK_INPUT("mg_bottom_solver_cg_d4est", bottom_data->bottom_rtol, -1);
+  D4EST_CHECK_INPUT("mg_bottom_solver_cg_d4est", bottom_data->bottom_imax, -1);
+  D4EST_CHECK_INPUT("mg_bottom_solver_cg_d4est", bottom_data->bottom_print_residual_norm, -1);
+  
   if(p4est->mpirank == 0){
-    printf("[D4EST_INFO]: Multigrid_Bottom_Solver_CG Parameters\n");
+    printf("[D4EST_INFO]: d4est_bottom_solver_cg_d4est parameters\n");
     printf("[D4EST_INFO]: bottom imax = %d\n", bottom_data->bottom_imax);
     printf("[D4EST_INFO]: bottom rtol = %.25f\n", bottom_data->bottom_rtol);
     printf("[D4EST_INFO]: bottom atol = %.25f\n", bottom_data->bottom_atol);
+    printf("[D4EST_INFO]: bottom atol = %d\n", bottom_data->bottom_print_residual_norm);
   }
 
   bottom_solver->user = bottom_data;
-  bottom_solver->solve = multigrid_bottom_solver_cg;
+  bottom_solver->solve = multigrid_bottom_solver_cg_d4est;
   bottom_solver->update = NULL;
 
   return bottom_solver;

@@ -1,4 +1,5 @@
-#include <multigrid_bottom_solver_cheby.h>
+#include <multigrid_bottom_solver_cheby_d4est.h>
+#include <multigrid_smoother_cheby_d4est.h>
 #include <linalg.h>
 #include <ini.h>
 #include <util.h>
@@ -6,7 +7,7 @@
 
 static
 int
-multigrid_bottom_solver_cheby_input_handler
+multigrid_bottom_solver_cheby_d4est_input_handler
 (
  void* user,
  const char* section,
@@ -14,29 +15,29 @@ multigrid_bottom_solver_cheby_input_handler
  const char* value
 )
 {  
-  multigrid_bottom_solver_cheby_t* pconfig = ((multigrid_bottom_solver_cheby_t*)user);
+  multigrid_bottom_solver_cheby_d4est_t* pconfig = ((multigrid_bottom_solver_cheby_d4est_t*)user);
 
-  if (util_match_couple(section,"multigrid_bottom_solver",name,"cheby_imax")) {
+  if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_imax")) {
     mpi_assert(pconfig->cheby_imax == -1);
     pconfig->cheby_imax = atoi(value);
   }
-  else if (util_match_couple(section,"multigrid_bottom_solver",name,"cheby_eigs_cg_imax")) {
+  else if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_eigs_cg_imax")) {
     mpi_assert(pconfig->cheby_eigs_cg_imax == -1);
     pconfig->cheby_eigs_cg_imax = atoi(value);
   }
-  else if (util_match_couple(section,"multigrid_bottom_solver",name,"cheby_eigs_lmax_lmin_ratio")) {
+  else if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_eigs_lmax_lmin_ratio")) {
     mpi_assert(pconfig->cheby_eigs_lmax_lmin_ratio == -1);
     pconfig->cheby_eigs_lmax_lmin_ratio = atof(value);
   }
-  else if (util_match_couple(section,"multigrid_bottom_solver",name,"cheby_eigs_max_multiplier")) {
+  else if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_eigs_max_multiplier")) {
     mpi_assert(pconfig->cheby_eigs_max_multiplier == -1);
     pconfig->cheby_eigs_max_multiplier = atof(value);
   }
-  else if (util_match_couple(section,"multigrid_bottom_solver",name,"cheby_print_residual_norm")) {
+  else if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_print_residual_norm")) {
     mpi_assert(pconfig->cheby_print_residual_norm == -1);
     pconfig->cheby_print_residual_norm = atoi(value);
   }
-  else if (util_match_couple(section,"multigrid_bottom_solver",name,"cheby_print_eig")) {
+  else if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_print_eig")) {
     mpi_assert(pconfig->cheby_print_eig == -1);
     pconfig->cheby_print_eig = atoi(value);
   }
@@ -48,7 +49,7 @@ multigrid_bottom_solver_cheby_input_handler
 
 
 static void
-multigrid_bottom_solver_cheby
+multigrid_bottom_solver_cheby_d4est
 (
  p4est_t* p4est,
  problem_data_t* vecs,
@@ -57,7 +58,7 @@ multigrid_bottom_solver_cheby
 )
 {
   multigrid_data_t* mg_data = p4est->user_pointer;
-  multigrid_bottom_solver_cheby_t* cheby = mg_data->bottom_solver->user;
+  multigrid_bottom_solver_cheby_d4est_t* cheby = mg_data->bottom_solver->user;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   int level = 0;
   
@@ -84,7 +85,7 @@ multigrid_bottom_solver_cheby
     printf("[MG_BOTTOM_SOLVER_CHEBY]: Lev %d Max_eig %.25f\n", level, cheby->eig);
   }
   
-  multigrid_smoother_cheby_iterate
+  multigrid_smoother_cheby_d4est_iterate
     (
      p4est,
      vecs,
@@ -97,8 +98,20 @@ multigrid_bottom_solver_cheby
     );
 }
 
+void
+multigrid_bottom_solver_cheby_d4est_destroy
+(
+ multigrid_bottom_solver_t* bottom_solver
+)
+{
+  P4EST_FREE(bottom_solver->user);
+  bottom_solver->solve = NULL;
+  bottom_solver->update = NULL;
+  P4EST_FREE(bottom_solver);
+}
+
 multigrid_bottom_solver_t*
-multigrid_bottom_solver_cheby_init
+multigrid_bottom_solver_cheby_d4est_init
 (
  p4est_t* p4est,
  int num_of_levels,
@@ -106,7 +119,7 @@ multigrid_bottom_solver_cheby_init
 )
 {
   multigrid_bottom_solver_t* bottom_solver = P4EST_ALLOC(multigrid_bottom_solver_t, 1);
-  multigrid_bottom_solver_cheby_t* cheby_data = P4EST_ALLOC(multigrid_bottom_solver_cheby_t, 1);
+  multigrid_bottom_solver_cheby_d4est_t* cheby_data = P4EST_ALLOC(multigrid_bottom_solver_cheby_d4est_t, 1);
   
   /* set externally in input file */
   cheby_data->cheby_imax = -1;
@@ -116,7 +129,7 @@ multigrid_bottom_solver_cheby_init
   cheby_data->cheby_print_residual_norm = -1;
   cheby_data->cheby_print_eig = -1;
   
-  if (ini_parse(input_file, multigrid_bottom_solver_cheby_input_handler, cheby_data) < 0) {
+  if (ini_parse(input_file, multigrid_bottom_solver_cheby_d4est_input_handler, cheby_data) < 0) {
     mpi_abort("Can't load input file");
   }
 
@@ -138,7 +151,7 @@ multigrid_bottom_solver_cheby_init
   }
 
   bottom_solver->user = cheby_data;
-  bottom_solver->solve = multigrid_bottom_solver_cheby;
+  bottom_solver->solve = multigrid_bottom_solver_cheby_d4est;
   bottom_solver->update = NULL;
 
   return bottom_solver;

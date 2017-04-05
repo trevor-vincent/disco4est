@@ -68,7 +68,7 @@ deg_stiffness_R1 = 5
 deg_R0 = 5
 deg_integ_R0 = 5
 deg_stiffness_R0 = 5
-solve_with_multigrid = 0
+solve_with_multigrid = 1
 
 [geometry]
 name = cubed_sphere_with_cube_hole
@@ -92,6 +92,8 @@ ksp_initial_guess_nonzero = 1
 vcycle_imax = 1;
 vcycle_rtol = 1e-9;
 vcycle_atol = 0.;
+
+[mg_bottom_solver_cg_d4est]
 bottom_iter = 10;
 bottom_rtol = 1e-10;
 bottom_atol = 0.;
@@ -106,3 +108,13 @@ cheby_eigs_reuse_fromdownvcycle = 0;
 cheby_eigs_reuse_fromlastvcycle = 0;
 cheby_print_residual_norm = 1;
 cheby_print_eigs = 1;
+
+[mg_bottom_solver_cheby_d4est]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 10;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 1;
+cheby_print_eig = 1;

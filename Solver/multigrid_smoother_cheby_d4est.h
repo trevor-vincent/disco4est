@@ -26,5 +26,19 @@ typedef struct {
 void multigrid_smoother_cheby_d4est_destroy(multigrid_smoother_t *smoother);
 multigrid_smoother_t *multigrid_smoother_cheby_d4est_init(p4est_t *p4est,int num_of_levels,const char *input_file);
 
+void 
+multigrid_smoother_cheby_d4est_iterate
+(
+ p4est_t* p4est,
+ problem_data_t* vecs,
+ weakeqn_ptrs_t* fcns,
+ double* r,
+ int iter,
+ double lmin,
+ double lmax,
+ int print_residual_norm
+ /* multigrid_cheby_params_t* cheby_params */
+);
+
 
 #endif
