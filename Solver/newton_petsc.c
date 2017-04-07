@@ -6,10 +6,6 @@
 #include "petscsnes.h"
 #include <ini.h>
 
-
-
-
-
 static
 int newton_petsc_input_handler
 (

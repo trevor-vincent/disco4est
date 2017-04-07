@@ -157,6 +157,8 @@ typedef struct {
 
   /* ******* SET BY INPUT FILE ******** */
   int vcycle_imax; /* max number of vcycles */
+  char smoother_name [50];
+  char bottom_solver_name [50];
   double vcycle_rtol; /* residual tolerance for termination */
   double vcycle_atol;
 
@@ -225,8 +227,6 @@ multigrid_data_init
  p4est_t* p4est,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  int num_of_levels,
- multigrid_smoother_t* smoother,
- multigrid_bottom_solver_t* bottom_solver,
  multigrid_logger_t* logger,
  multigrid_user_callbacks_t* user_callbacks,
  multigrid_element_data_updater_t* updater,

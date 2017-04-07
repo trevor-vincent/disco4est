@@ -29,9 +29,5 @@ int newton_d4est_solve
  krylov_pc_t *krylov_pc
 );
 
-newton_d4est_params_t newton_d4est_input
-(
- const char *input_file
-);
 
 #endif

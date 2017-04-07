@@ -94,6 +94,7 @@ SET (
   Solver/krylov_pc_multigrid.c
   Solver/multigrid.c
   Solver/newton_petsc.c
+  Solver/newton_d4est.c
   Solver/cg_eigs.c
   Solver/matrix_sym_tester.c
   Solver/multigrid_matrix_operator.c
@@ -328,9 +329,9 @@ add_d4est_problem_3d(testhelmholtzmultigridsphere_withhole_driver_3d testhelmhol
 # add_d4est_problem_3d(cdssphere_driver cdssphere.c ConstantDensityStarSphere)
 # add_d4est_problem_3d(testcurvedipflux_driver_3d testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_3d(testcurvedshell_driver_3d testcurvedshell.c TestCurvedShell)
-# add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)
+add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopunctures_testfcns_driver twopunctures_testfcns.c TwoPuncturesSphere)
-# add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
+add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_2d(testmortarjacobianterms_driver_2d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
 # add_d4est_problem_2d(testcurvedipfluxoncube2d_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
@@ -346,4 +347,4 @@ add_d4est_problem_3d(testhelmholtzmultigridsphere_withhole_driver_3d testhelmhol
 # add_executable(testcompile2 driver.c ./Problems/TestCompile/testcompile.c)
 # target_link_libraries(testcompile2 d4est)
 # set_target_properties(testcompile2 PROPERTIES COMPILE_DEFINITIONS "DIM=2")
-# include("${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/petsc/conf/PETScBuildInternal.cmake")
+# include("${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/petsc/conf/PETScBuildInternal.cmake"

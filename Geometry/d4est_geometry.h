@@ -72,15 +72,7 @@ struct d4est_geometry {
 };
 
 /* This file was automatically generated.  Do not edit! */
-void
-d4est_geometry_get_tree_coords_in_range_0_to_1
-(
- p4est_qcoord_t q0 [3],
- p4est_qcoord_t dq,
- const double coords[3],
- coords_type_t coords_type,
- double tcoords[3]
-);
+void d4est_geometry_get_tree_coords_in_range_0_to_1(p4est_qcoord_t q0[3],p4est_qcoord_t dq,const double coords[3],coords_type_t coords_type,double tcoords[3]);
 void d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY(p4est_topidx_t e0_tree,p4est_qcoord_t e0_q[(P4EST_DIM)],p4est_qcoord_t e0_dq,int num_faces_side,int num_faces_mortar,int *deg_mortar,int face_side,quadrature_type_t quad_type,double *n[(P4EST_DIM)],double *sj,d4est_geometry_t *d4est_geom,dgmath_jit_dbase_t *dgmath_jit_dbase,double *xyz_storage[(P4EST_DIM)]);
 void d4est_geometry_compute_drst_dxyz(double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)],double *drst_dxyz[(P4EST_DIM)][(P4EST_DIM)],int nodes);
 void d4est_geometry_compute_xyz(dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geom,int which_tree,int deg,quadrature_type_t type,p4est_qcoord_t q[(P4EST_DIM)],p4est_qcoord_t dq,double *xyz[(P4EST_DIM)]);

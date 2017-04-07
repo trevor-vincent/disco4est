@@ -14,29 +14,38 @@ ip_flux_penalty = 2.0
 deg_offset_for_nonlinear_integ = 0
 deg_R2 = 2
 deg_integ_R2 = 2
+deg_stiffness_R2 = 2
 deg_R1 = 2
 deg_integ_R1 = 2
+deg_stiffness_R1 = 2
 deg_R0 = 2
 deg_integ_R0 = 2
+deg_stiffness_R0 = 2
 use_cactus = 0
 
 [geometry]
-name = compact_sphere
+name = cubed_sphere
 R0 = 10
 R1 = 100
-R2 = 1000
+R2 = 10000
+compactify_outer_shell = 1
+compactify_inner_shell = 0
+X_mapping_type = analytic
 
-[solver]
+[newton_d4est]
+atol = 1e-15
+rtol = 1e-3
+imax = 5
+monitor = 1
+imin = 1
+
+
+[krylov_petsc]
 ksp_type = gmres
-ksp_atol = 1e-50
-ksp_rtol = .9
-ksp_max_it = 2
+ksp_atol = 1e-5
+ksp_rtol = 1e-5
+ksp_max_it = 10000
 ksp_view = 1
-ksp_user_defined_pc = 0
 ksp_monitor = 1
-snes_rtol = 1e-5
-snes_atol = 1e-50
-snes_max_funcs = 10000000000000
-snes_monitor = 1
-snes_linesearch_order = 0
-snes_linesearch_monitor = 1
+ksp_converged_reason = 1
+ksp_initial_guess_nonzero = 1

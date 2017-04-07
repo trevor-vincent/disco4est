@@ -546,3 +546,9 @@ int util_match
   return (strcmp(str1, str2) == 0);
 }
 
+void
+util_compute_error_array(double* arr1, double* arr2, double* err, int N){
+  for (int i = 0; i < N; i++) {
+    err[i] = fabs(arr2[i] - arr1[i]);
+  }
+}

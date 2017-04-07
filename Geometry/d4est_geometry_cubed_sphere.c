@@ -40,10 +40,15 @@ int d4est_geometry_cubed_sphere_input_handler
     pconfig->R2 = atof(value);
     mpi_assert(pconfig->R2 > 0);
   }
-  else if (util_match_couple(section,"geometry",name,"compactify")) {
-    mpi_assert(pconfig->compactify == -1);
-    pconfig->compactify = atoi(value);
-    mpi_assert(pconfig->compactify == 0 || pconfig->compactify == 1);
+  else if (util_match_couple(section,"geometry",name,"compactify_outer_shell")) {
+    mpi_assert(pconfig->compactify_outer_shell == -1);
+    pconfig->compactify_outer_shell = atoi(value);
+    mpi_assert(pconfig->compactify_outer_shell == 0 || pconfig->compactify_outer_shell == 1);
+  }
+  else if (util_match_couple(section,"geometry",name,"compactify_inner_shell")) {
+    mpi_assert(pconfig->compactify_inner_shell == -1);
+    pconfig->compactify_inner_shell = atoi(value);
+    mpi_assert(pconfig->compactify_inner_shell == 0 || pconfig->compactify_inner_shell == 1);
   }
   else {
     return 0;  /* unknown section/name, error */
@@ -56,11 +61,11 @@ static p4est_connectivity_t *
 d4est_connectivity_new_sphere_with_cube_hole (void)
 {
 /* *INDENT-OFF* */
-  const p4est_topidx_t num_vertices = 16;
-  const p4est_topidx_t num_trees =    12;
+  const p4est_topidx_t num_vertices = 8;
+  const p4est_topidx_t num_trees = 12;
   const p4est_topidx_t ctt_offset = 0;
   const p4est_topidx_t ett_offset = 0;
-  const double        vertices[16 * 3] = {
+  const double        vertices[8 * 3] = {
     -1, -1,  1,
      1, -1,  1,
     -1,  1,  1,
@@ -69,14 +74,6 @@ d4est_connectivity_new_sphere_with_cube_hole (void)
      1, -1,  2,
     -1,  1,  2,
      1,  1,  2,
-    -1, -1, -1,
-     1, -1, -1,
-    -1,  1, -1,
-     1,  1, -1,
-    -1, -1,  1,
-     1, -1,  1,
-    -1,  1,  1,
-     1,  1,  1,
   };
   const p4est_topidx_t tree_to_vertex[12 * 8] = {
     0,  1,  2,  3,  4,  5,  6,  7,
@@ -134,6 +131,113 @@ d4est_connectivity_new_sphere_with_cube_hole (void)
 #endif
 }
 
+
+p4est_connectivity_t *
+d4est_connectivity_new_sphere_7tree (void)
+{
+/* *INDENT-OFF* */
+  const p4est_topidx_t num_vertices = 16;
+  const p4est_topidx_t num_trees = 7;
+  const p4est_topidx_t ctt_offset = 0;
+  const p4est_topidx_t ett_offset = 0;
+  const double vertices[16 * 3] = {
+    -1, -1,  1,
+     1, -1,  1,
+    -1,  1,  1,
+     1,  1,  1,
+    -1, -1,  2,
+     1, -1,  2,
+    -1,  1,  2,
+     1,  1,  2,
+    -1, -1, -1,
+     1, -1, -1,
+    -1,  1, -1,
+     1,  1, -1,
+    -1, -1,  1,
+     1, -1,  1,
+    -1,  1,  1,
+     1,  1,  1,
+  };
+  const p4est_topidx_t tree_to_vertex[7 * 8] = {
+    0,  1,  2,  3,  4,  5,  6,  7,
+    0,  1,  2,  3,  4,  5,  6,  7,
+    0,  1,  2,  3,  4,  5,  6,  7,
+    0,  1,  2,  3,  4,  5,  6,  7,
+    0,  1,  2,  3,  4,  5,  6,  7,
+    0,  1,  2,  3,  4,  5,  6,  7,
+    8,  9, 10, 11, 12, 13, 14, 15,
+  };
+  const p4est_topidx_t tree_to_tree[7 * 6] = {    
+     5,  3, 4,  1, 6,  0, //
+     5,  3,  0,  2, 6,  1,
+     5,  3,  1, 4, 6,  2,
+     2,  0,  1, 4, 6,  3,
+     2,  0,  3, 5, 6,  4,
+     2,  0, 4,  1, 6,  5,
+     5,  3,  0,  2, 4,  1,
+  };
+  const int8_t tree_to_face[7 * 6] = {
+     1,  7,  7,  2,  2,  5,
+     9,  8,  3,  2,  5,  5,
+     6,  0,  3,  6, 15,  5,
+     1,  7,  7,  2, 19,  5,
+     9,  8,  3,  2, 22,  5,
+     6,  0,  3,  6,  6,  5,
+    10, 22,  4, 16, 22,  5,
+  };
+
+  return p4est_connectivity_new_copy (num_vertices, num_trees,
+                                      0, 0,
+                                      vertices, tree_to_vertex,
+                                      tree_to_tree, tree_to_face,
+                                      NULL, &ett_offset,
+                                      NULL, NULL,
+                                      NULL, &ctt_offset, NULL, NULL);
+}
+
+
+static p4est_connectivity_t *
+d4est_connectivity_new_sphere_innerouter_shell (void)
+{
+/* *INDENT-OFF* */
+  const p4est_topidx_t num_vertices = 8;
+  const p4est_topidx_t num_trees = 2;
+  const p4est_topidx_t ctt_offset = 0;
+  const p4est_topidx_t ett_offset = 0;
+  const double        vertices[8 * 3] = {
+    -1, -1,  1,
+     1, -1,  1,
+    -1,  1,  1,
+     1,  1,  1,
+    -1, -1,  2,
+     1, -1,  2,
+    -1,  1,  2,
+     1,  1,  2,
+  };
+  const p4est_topidx_t tree_to_vertex[2 * 8] = {
+    0,  1,  2,  3,  4,  5,  6,  7,
+    0,  1,  2,  3,  4,  5,  6,  7,
+  };
+  const p4est_topidx_t tree_to_tree[2 * 6] = {
+     0,  0,  0,  0,  1,  0, //0 CHANGE THESE to 0 and 0, i.e 0 -> 0 and 1 -> 0
+     1,  1,  1,  1, 1,  0, //1
+  };
+  const int8_t        tree_to_face[12 * 6] = {
+     0,  1,  2,  3,  5,  5, //1
+     0,  1,  2,  3,  4,  4, //7
+  };
+
+  return p4est_connectivity_new_copy (num_vertices, num_trees,
+                                      0, 0,
+                                      vertices, tree_to_vertex,
+                                      tree_to_tree, tree_to_face,
+                                      NULL, &ett_offset,
+                                      NULL, NULL,
+                                      NULL, &ctt_offset, NULL, NULL);
+}
+
+
+
 static void 
 d4est_geometry_cubed_sphere_inner_shell_block_X(
                                                 d4est_geometry_t * geom,
@@ -158,14 +262,14 @@ d4est_geometry_cubed_sphere_inner_shell_block_X(
   abc[1] = 2*tcoords[1] - 1;
   abc[2] = tcoords[2] + 1;
 
-  /* if (sphere->compactify){ */
-  /*   double m = (2. - 1.)/((1./sphere->R1) - (1./sphere->R0)); */
-  /*   double t = (1.*sphere->R0 - 2.*sphere->R1)/(sphere->R0 - sphere->R1); */
-  /*   R = m/(abc[2] - t); */
-  /* } */
-  /* else { */
+  if (sphere->compactify_inner_shell){
+    double m = (2. - 1.)/((1./sphere->R1) - (1./sphere->R0));
+    double t = (1.*sphere->R0 - 2.*sphere->R1)/(sphere->R0 - sphere->R1);
+    R = m/(abc[2] - t);
+  }
+  else {
     R = sphere->R0*(2. - abc[2]) + sphere->R1*(abc[2] - 1.);
-  /* } */
+  }
   double p = 2. - abc[2];
   double tanx = tan (abc[0] * M_PI_4);
   double tany = tan (abc[1] * M_PI_4);
@@ -182,15 +286,15 @@ static void
 d4est_geometry_cubed_sphere_outer_shell_block_X(
                                                 d4est_geometry_t * geom,
                                                 p4est_topidx_t which_tree,
-                                                p4est_qcoord_t q0 [3],
+                                                p4est_qcoord_t q0 [(P4EST_DIM)],
                                                 p4est_qcoord_t dq,
-                                                const double coords[3],
+                                                const double coords[(P4EST_DIM)],
                                                 coords_type_t coords_type,
-                                                double xyz[3]
+                                                double xyz[(P4EST_DIM)]
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere = geom->user;
-  double tcoords [3];
+  double tcoords [(P4EST_DIM)];
 
   d4est_geometry_get_tree_coords_in_range_0_to_1(q0, dq, coords, coords_type, tcoords);
 
@@ -203,7 +307,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_X(
   double R = -1.;
   double x = tan (abc[0] * M_PI_4);
   double y = tan (abc[1] * M_PI_4);
-  if (sphere->compactify){
+  if (sphere->compactify_outer_shell){
     double m = (2. - 1.)/((1./sphere->R2) - (1./sphere->R1));
     double t = (1.*sphere->R1 - 2.*sphere->R2)/(sphere->R1 - sphere->R2);
     R = m/(abc[2] - t);
@@ -216,6 +320,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_X(
   xyz[1] = +q * y;
   xyz[2] = +q;
 }
+
 
 static void
 d4est_geometry_cubed_sphere_X(
@@ -244,7 +349,7 @@ d4est_geometry_cubed_sphere_X(
   if (which_tree < 6) {         /* outer shell */
     x = tan (abc[0] * M_PI_4);
     y = tan (abc[1] * M_PI_4);
-    if (sphere->compactify){
+    if (sphere->compactify_outer_shell){
       double m = (2. - 1.)/((1./sphere->R2) - (1./sphere->R1));
       double t = (1.*sphere->R1 - 2.*sphere->R2)/(sphere->R1 - sphere->R2);
       R = m/(abc[2] - t);
@@ -307,6 +412,28 @@ d4est_geometry_cubed_sphere_X(
   }
 }
 
+
+static void
+d4est_geometry_cubed_sphere_7tree_X(
+                              d4est_geometry_t * geom,
+                              p4est_topidx_t which_tree,
+                              p4est_qcoord_t q0 [3],
+                              p4est_qcoord_t dq,
+                              const double coords[3],
+                              coords_type_t coords_type,
+                              double xyz[3]
+)
+{
+  d4est_geometry_cubed_sphere_X(geom,
+                                which_tree + 6,
+                                q0,
+                                dq,
+                                coords,
+                                coords_type,
+                                xyz
+                               );
+}
+
 static void
 d4est_geometry_cubed_sphere_inner_shell_block_DX(d4est_geometry_t* d4est_geom,
                                                  p4est_topidx_t which_tree,
@@ -316,7 +443,7 @@ d4est_geometry_cubed_sphere_inner_shell_block_DX(d4est_geometry_t* d4est_geom,
                                                  double dxyz_drst[3][3]
                                                 )
 {
-  int compactify = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify;
+  int compactify_inner_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_inner_shell;
   double R0 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R0;
   double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
   /* Element integration weight x-coordinates in [-1,1]^3 space of the element*/
@@ -350,18 +477,18 @@ d4est_geometry_cubed_sphere_inner_shell_block_DX(d4est_geometry_t* d4est_geom,
 
   /* FROM MATHEMATICA */
   
-  /* if (compactify) { */
-  /*   dxyz_drst[0][0] = -((amax - amin)*R0*R1*(M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)) + 8*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(32.*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5)); */
-  /*   dxyz_drst[0][1] = -((bmax - bmin)*M_PI*R0*R1*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(8.*(-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5)); */
-  /*   dxyz_drst[0][2] = -((cmax - cmin)*R0*R1*((R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 4*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 16*(R0 - R1)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(8.*pow(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5)); */
-  /*   dxyz_drst[1][0] = -((amax - amin)*M_PI*R0*R1*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.))/(8.*(-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5)); */
-  /*   dxyz_drst[1][1] = -((bmax - bmin)*R0*R1*(M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)) + 8*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(32.*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5)); */
-  /*   dxyz_drst[1][2] = -((cmax - cmin)*R0*R1*((R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 4*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*(bmax + bmin + bmax*s - bmin*s - 2*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 16*(R0 - R1)*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(8.*pow(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5)); */
-  /*   dxyz_drst[2][0] = -((amax - amin)*M_PI*R0*R1*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(2.*sqrt(2)*(-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(-2*(-5 + cmax + cmin + cmax*t - cmin*t) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2),1.5)); */
-  /*   dxyz_drst[2][1] = -((bmax - bmin)*M_PI*R0*R1*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(2.*sqrt(2)*(-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(-2*(-5 + cmax + cmin + cmax*t - cmin*t) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2),1.5)); */
-  /*   dxyz_drst[2][2] = -((cmax - cmin)*R0*R1*((-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R0*(-2 + cmax + cmin + cmax*t - cmin*t))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) + 4*(R0 - R1)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(2.*pow(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5)); */
-  /* } */
-  /* else { */
+  if (compactify_inner_shell) {
+    dxyz_drst[0][0] = -((amax - amin)*R0*R1*(M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)) + 8*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(32.*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
+    dxyz_drst[0][1] = -((bmax - bmin)*M_PI*R0*R1*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(8.*(-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
+    dxyz_drst[0][2] = -((cmax - cmin)*R0*R1*((R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 4*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 16*(R0 - R1)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(8.*pow(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
+    dxyz_drst[1][0] = -((amax - amin)*M_PI*R0*R1*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.))/(8.*(-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
+    dxyz_drst[1][1] = -((bmax - bmin)*R0*R1*(M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)) + 8*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(32.*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
+    dxyz_drst[1][2] = -((cmax - cmin)*R0*R1*((R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 4*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t))*(bmax + bmin + bmax*s - bmin*s - 2*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 16*(R0 - R1)*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(8.*pow(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
+    dxyz_drst[2][0] = -((amax - amin)*M_PI*R0*R1*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(2.*sqrt(2)*(-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(-2*(-5 + cmax + cmin + cmax*t - cmin*t) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2),1.5));
+    dxyz_drst[2][1] = -((bmax - bmin)*M_PI*R0*R1*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(2.*sqrt(2)*(-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R0*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(-2*(-5 + cmax + cmin + cmax*t - cmin*t) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2),1.5));
+    dxyz_drst[2][2] = -((cmax - cmin)*R0*R1*((-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R0*(-2 + cmax + cmin + cmax*t - cmin*t))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) + 4*(R0 - R1)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(2.*pow(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R0*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
+  }
+  else {
     dxyz_drst[0][0] = ((amax - amin)*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)) + 8*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(128.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
     dxyz_drst[0][1] = -((bmax - bmin)*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(32.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
     dxyz_drst[0][2] = ((cmax - cmin)*(-((R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))) - 4*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(R0 - R1)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(32.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
@@ -371,8 +498,7 @@ d4est_geometry_cubed_sphere_inner_shell_block_DX(d4est_geometry_t* d4est_geom,
     dxyz_drst[2][0] = -((amax - amin)*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(32.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
     dxyz_drst[2][1] = -((bmax - bmin)*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(32.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
     dxyz_drst[2][2] = ((cmax - cmin)*((R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 4*(R0 - R1)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(8.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));
-    
-  /* } */
+  }
 }
 
 
@@ -388,7 +514,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_DX(d4est_geometry_t* d4est_geom,
                                                 )
 {
 
-  int compactify = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify;
+  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
   double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
   double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
 
@@ -421,7 +547,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_DX(d4est_geometry_t* d4est_geom,
   cmin = cmin + 1.;
   cmax = cmax + 1.;  
   
-  if(compactify){
+  if(compactify_outer_shell){
     dxyz_drst[0][0] = ((amax - amin)*M_PI*R1*R2*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(4.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
     dxyz_drst[0][1] = -((bmax - bmin)*M_PI*R1*R2*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(4.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
     dxyz_drst[0][2] = (-2*(cmax - cmin)*R1*(R1 - R2)*R2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
@@ -444,6 +570,73 @@ d4est_geometry_cubed_sphere_outer_shell_block_DX(d4est_geometry_t* d4est_geom,
     dxyz_drst[2][2] = -((cmax - cmin)*(R1 - R2))/(2.*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
   } 
 }
+
+
+static void
+d4est_geometry_cubed_sphere_innerouter_shell_X
+(
+ d4est_geometry_t * geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [(P4EST_DIM)],
+ p4est_qcoord_t dq,
+ const double coords[(P4EST_DIM)],
+ coords_type_t coords_type,
+ double xyz[(P4EST_DIM)]
+)
+{
+  if (which_tree == 0){
+    d4est_geometry_cubed_sphere_outer_shell_block_X(geom,
+                                                     which_tree,
+                                                     q0,
+                                                     dq,
+                                                     coords,
+                                                    coords_type,
+                                                     xyz);
+  }
+  else if (which_tree == 1){
+    d4est_geometry_cubed_sphere_inner_shell_block_X(geom,
+                                                    which_tree,
+                                                    q0,
+                                                    dq,
+                                                    coords,
+                                                    coords_type,
+                                                    xyz);
+  }
+  else {
+    mpi_abort("[D4EST_ERROR]: which_tree should only be 0 or 1 for innerouter_shell");
+  }
+}
+
+static void
+d4est_geometry_cubed_sphere_innerouter_shell_DX(d4est_geometry_t* d4est_geom,
+                         p4est_topidx_t which_tree,
+                         p4est_qcoord_t q0 [(P4EST_DIM)],
+                         p4est_qcoord_t dq,
+                         const double rst[(P4EST_DIM)], /* [-1,1]^3 */
+                         double dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]
+                                                )
+{
+  if (which_tree == 0){
+    d4est_geometry_cubed_sphere_outer_shell_block_DX(d4est_geom,
+                                                     which_tree,
+                                                     q0,
+                                                     dq,
+                                                     rst,
+                                                     dxyz_drst);
+  }
+  else if (which_tree == 1){
+    d4est_geometry_cubed_sphere_inner_shell_block_DX(d4est_geom,
+                                                     which_tree,
+                                                     q0,
+                                                     dq,
+                                                     rst,
+                                                     dxyz_drst);
+  }
+  else {
+    mpi_abort("[D4EST_ERROR]: which_tree should only be 0 or 1 for innerouter_shell");
+  }
+}
+
 
 static void
 d4est_geometry_cubed_sphere_DX(d4est_geometry_t* d4est_geom,
@@ -586,6 +779,24 @@ d4est_geometry_cubed_sphere_DX(d4est_geometry_t* d4est_geom,
   }
 }
 
+
+static void
+d4est_geometry_cubed_sphere_7tree_DX(d4est_geometry_t* d4est_geom,
+                         p4est_topidx_t which_tree,
+                         p4est_qcoord_t q0 [(P4EST_DIM)],
+                         p4est_qcoord_t dq,
+                         const double rst[(P4EST_DIM)], /* [-1,1]^3 */
+                         double dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]
+                                                )
+{
+  d4est_geometry_cubed_sphere_DX(d4est_geom,
+                                 which_tree + 6,
+                                 q0,
+                                 dq,
+                                 rst,
+                                 dxyz_drst);
+}
+
 static
 d4est_geometry_cubed_sphere_attr_t*
 d4est_geometry_cubed_sphere_input
@@ -597,7 +808,8 @@ d4est_geometry_cubed_sphere_input
   sphere_attrs->R0 = -1;
   sphere_attrs->R1 = -1;
   sphere_attrs->R2 = -1;
-  sphere_attrs->compactify = -1;
+  sphere_attrs->compactify_outer_shell = -1;
+  sphere_attrs->compactify_inner_shell = -1;
 
   if (ini_parse(input_file, d4est_geometry_cubed_sphere_input_handler, sphere_attrs) < 0) {
     mpi_abort("Can't load input file");
@@ -606,7 +818,8 @@ d4est_geometry_cubed_sphere_input
   D4EST_CHECK_INPUT("geometry", sphere_attrs->R0, -1);
   D4EST_CHECK_INPUT("geometry", sphere_attrs->R1, -1);
   D4EST_CHECK_INPUT("geometry", sphere_attrs->R2, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify, -1);
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_outer_shell, -1);
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_inner_shell, -1);
 
   /* variables useful for the center cube */
   sphere_attrs->Clength = sphere_attrs->R0 / sqrt (3.);
@@ -626,7 +839,8 @@ d4est_geometry_cubed_sphere_inner_shell_input
   sphere_attrs->R0 = -1;
   sphere_attrs->R1 = -1;
   sphere_attrs->R2 = -1;
-  /* sphere_attrs->compactify = -1; */
+  sphere_attrs->compactify_inner_shell = -1;
+  sphere_attrs->compactify_outer_shell = -1;
 
   if (ini_parse(input_file, d4est_geometry_cubed_sphere_input_handler, sphere_attrs) < 0) {
     mpi_abort("Can't load input file");
@@ -634,7 +848,69 @@ d4est_geometry_cubed_sphere_inner_shell_input
 
   D4EST_CHECK_INPUT("geometry", sphere_attrs->R0, -1);
   D4EST_CHECK_INPUT("geometry", sphere_attrs->R1, -1);
-  /* D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify, -1); */
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_inner_shell, -1);
+  /* D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_outer_shell, -1); */
+
+  /* variables useful for the center cube */
+  sphere_attrs->Clength = sphere_attrs->R0 / sqrt (3.);
+
+  return sphere_attrs;
+}
+
+
+static
+d4est_geometry_cubed_sphere_attr_t*
+d4est_geometry_cubed_sphere_innerouter_shell_input
+(
+ const char* input_file
+)
+{
+  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = P4EST_ALLOC(d4est_geometry_cubed_sphere_attr_t, 1);
+  sphere_attrs->R0 = -1;
+  sphere_attrs->R1 = -1;
+  sphere_attrs->R2 = -1;
+  sphere_attrs->compactify_inner_shell = -1;
+  sphere_attrs->compactify_outer_shell = -1;
+
+  if (ini_parse(input_file, d4est_geometry_cubed_sphere_input_handler, sphere_attrs) < 0) {
+    mpi_abort("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->R0, -1);
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->R1, -1);
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->R2, -1);
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_inner_shell, -1);
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_outer_shell, -1);
+
+  /* variables useful for the center cube */
+  sphere_attrs->Clength = sphere_attrs->R0 / sqrt (3.);
+
+  return sphere_attrs;
+}
+
+static
+d4est_geometry_cubed_sphere_attr_t*
+d4est_geometry_cubed_sphere_7tree_input
+(
+ const char* input_file
+)
+{
+  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = P4EST_ALLOC(d4est_geometry_cubed_sphere_attr_t, 1);
+  sphere_attrs->R0 = -1;
+  sphere_attrs->R1 = -1;
+  sphere_attrs->R2 = -1;
+  sphere_attrs->compactify_inner_shell = -1;
+  sphere_attrs->compactify_outer_shell = -1;
+
+  if (ini_parse(input_file, d4est_geometry_cubed_sphere_input_handler, sphere_attrs) < 0) {
+    mpi_abort("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->R0, -1);
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->R1, -1);
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->R2, -1);
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_inner_shell, -1);
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_outer_shell, -1);
 
   /* variables useful for the center cube */
   sphere_attrs->Clength = sphere_attrs->R0 / sqrt (3.);
@@ -654,7 +930,8 @@ d4est_geometry_cubed_sphere_outer_shell_input
   sphere_attrs->R0 = -1;
   sphere_attrs->R1 = -1;
   sphere_attrs->R2 = -1;
-  sphere_attrs->compactify = -1;
+  sphere_attrs->compactify_outer_shell = -1;
+  sphere_attrs->compactify_inner_shell = -1;
 
   if (ini_parse(input_file, d4est_geometry_cubed_sphere_input_handler, sphere_attrs) < 0) {
     mpi_abort("Can't load input file");
@@ -663,7 +940,8 @@ d4est_geometry_cubed_sphere_outer_shell_input
   /* D4EST_CHECK_INPUT("geometry", sphere_attrs->R0, -1); */
   D4EST_CHECK_INPUT("geometry", sphere_attrs->R1, -1);
   D4EST_CHECK_INPUT("geometry", sphere_attrs->R2, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify, -1);
+  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_outer_shell, -1);
+
 
   return sphere_attrs;
 }
@@ -703,7 +981,67 @@ d4est_geometry_cubed_sphere_new
     printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
     printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
     printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
-    printf("[GEOMETRY_INFO]: compactify = %d\n", sphere_attrs->compactify);
+    printf("[GEOMETRY_INFO]: compactify_outer_shell = %d\n", sphere_attrs->compactify_outer_shell);
+    printf("[GEOMETRY_INFO]: compactify_inner_shell = %d\n", sphere_attrs->compactify_inner_shell);
+  }
+}
+
+void
+d4est_geometry_cubed_sphere_7tree_new
+(
+ int mpirank,
+ const char* input_file,
+ d4est_geometry_t* d4est_geom
+)
+{
+  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_7tree_input(input_file);
+  p4est_connectivity_t* conn = d4est_connectivity_new_sphere_7tree();
+  
+  d4est_geom->user = sphere_attrs;
+  d4est_geom->X = d4est_geometry_cubed_sphere_7tree_X;
+  if (d4est_geom->X_mapping_type == MAP_ANALYTIC)
+    d4est_geom->DX = d4est_geometry_cubed_sphere_7tree_DX;
+  else
+    d4est_geom->DX = NULL;
+  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
+  d4est_geom->p4est_conn = conn;
+
+  if (mpirank == 0){
+    printf("[GEOMETRY_INFO]: NAME = cubed sphere\n");
+    printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
+    printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
+    printf("[GEOMETRY_INFO]: compactify_inner_shell = %d\n", sphere_attrs->compactify_inner_shell);
+  }
+}
+
+
+void
+d4est_geometry_cubed_sphere_innerouter_shell_new
+(
+ int mpirank,
+ const char* input_file,
+ d4est_geometry_t* d4est_geom
+)
+{
+  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_innerouter_shell_input(input_file);
+  p4est_connectivity_t* conn = d4est_connectivity_new_sphere_innerouter_shell();
+  
+  d4est_geom->user = sphere_attrs;
+  d4est_geom->X = d4est_geometry_cubed_sphere_innerouter_shell_X;
+  if (d4est_geom->X_mapping_type == MAP_ANALYTIC)
+    d4est_geom->DX = d4est_geometry_cubed_sphere_innerouter_shell_DX;
+  else
+    d4est_geom->DX = NULL;
+  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
+  d4est_geom->p4est_conn = conn;
+
+  if (mpirank == 0){
+    printf("[GEOMETRY_INFO]: NAME = cubed sphere innerouter shell\n");
+    printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
+    printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
+    printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
+    printf("[GEOMETRY_INFO]: compactify_outer_shell = %d\n", sphere_attrs->compactify_outer_shell);
+    printf("[GEOMETRY_INFO]: compactify_inner_shell = %d\n", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -731,7 +1069,7 @@ d4est_geometry_cubed_sphere_inner_shell_block_new
     printf("[GEOMETRY_INFO]: NAME = cubed sphere inner shell block\n");
     printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
     printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
-    printf("[GEOMETRY_INFO]: compactify = %d\n", sphere_attrs->compactify);
+    printf("[GEOMETRY_INFO]: compactify_inner_shell = %d\n", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -760,7 +1098,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_new
     printf("[GEOMETRY_INFO]: NAME = cubed sphere outer shell block\n");
     printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
     printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
-    printf("[GEOMETRY_INFO]: compactify = %d\n", sphere_attrs->compactify);
+    printf("[GEOMETRY_INFO]: compactify_outer_shell = %d\n", sphere_attrs->compactify_outer_shell);
   }
 }
 
@@ -790,7 +1128,8 @@ which_tree == 12 will never occur */
     printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
     printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
     printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
-    printf("[GEOMETRY_INFO]: compactify = %d\n", sphere_attrs->compactify);
+    printf("[GEOMETRY_INFO]: compactify_outer_shell = %d\n", sphere_attrs->compactify_outer_shell);
+    printf("[GEOMETRY_INFO]: compactify_inner_shell = %d\n", sphere_attrs->compactify_inner_shell);
   }
 }
 

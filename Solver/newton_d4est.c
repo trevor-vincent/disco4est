@@ -2,6 +2,9 @@
 #include "../LinearAlgebra/linalg.h"
 #include "../Utilities/util.h"
 #include "../Solver/matrix_sym_tester.h"
+#include <ini.h>
+#include <krylov_pc.h>
+#include <krylov_petsc.h>
 #include "sc_reduce.h"
 
 typedef struct {
@@ -10,6 +13,7 @@ typedef struct {
   double atol;
   int imax;
   int imin;
+  int monitor;
   
 } newton_d4est_params_t;
 
@@ -25,19 +29,23 @@ int newton_d4est_input_handler
 {
   newton_d4est_params_t* pconfig = (newton_d4est_params_t*)user;
   
-  if (util_match_couple(section,"newton",name,"atol")) {
+  if (util_match_couple(section,"newton_d4est",name,"atol")) {
     mpi_assert(pconfig->atol == -1);
     pconfig->atol = atof(value);
   }
-  else if (util_match_couple(section,"newton",name,"rtol")) {
+  else if (util_match_couple(section,"newton_d4est",name,"rtol")) {
     mpi_assert(pconfig->rtol == -1);
     pconfig->rtol = atof(value);
   }
-  else if (util_match_couple(section,"newton",name,"imax")) {
+  else if (util_match_couple(section,"newton_d4est",name,"imax")) {
     mpi_assert(pconfig->imax == -1);
     pconfig->imax = atoi(value);
   }
-  else if (util_match_couple(section,"newton",name,"imin")) {
+  else if (util_match_couple(section,"newton_d4est",name,"monitor")) {
+    mpi_assert(pconfig->monitor == -1);
+    pconfig->monitor = atoi(value);
+  }
+  else if (util_match_couple(section,"newton_d4est",name,"imin")) {
     mpi_assert(pconfig->imin == -1);
     pconfig->imin = atoi(value);
   }
@@ -59,6 +67,7 @@ newton_d4est_input
   input.rtol = -1;
   input.imin = -1;
   input.imax = -1;
+  input.monitor = -1;
   
   if (ini_parse(input_file, newton_d4est_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
@@ -68,6 +77,7 @@ newton_d4est_input
   D4EST_CHECK_INPUT("newton", input.rtol, -1);
   D4EST_CHECK_INPUT("newton", input.imin, -1);
   D4EST_CHECK_INPUT("newton", input.imax, -1);
+  D4EST_CHECK_INPUT("newton", input.monitor, -1);
   
   return input;
 }
@@ -104,7 +114,7 @@ newton_d4est_solve
 (
  p4est_t* p4est,
  problem_data_t* vecs,
- void* fcns,
+ weakeqn_ptrs_t* fcns,
  p4est_ghost_t** ghost,
  void** ghost_data, 
  dgmath_jit_dbase_t* dgmath_jit_dbase,
@@ -113,6 +123,14 @@ newton_d4est_solve
  krylov_pc_t* krylov_pc
 )
 {
+
+  krylov_petsc_params_t petsc_params;
+  krylov_petsc_input(p4est,
+                     input_file,
+                     "krylov_petsc",
+                     "[KRYLOV_PETSC]",
+                     &petsc_params);      
+  
   int ierr = 0;
   int local_nodes = vecs->local_nodes;
   int n = local_nodes;
@@ -134,12 +152,12 @@ newton_d4est_solve
   problem_data_copy_ptrs(vecs, &vecs_for_res_build);
   
   /******** external parameters ********/
-  newton_d4est_params_t* nr_params = newton_d4est_input(input_file);
+  newton_d4est_params_t nr_params = newton_d4est_input(input_file);
   
-  double atol = nr_params->atol;
-  double rtol = nr_params->rtol;
-  int maxit = nr_params->imaxer;
-  int minit = nr_params->iminer;
+  double atol = nr_params.atol;
+  double rtol = nr_params.rtol;
+  int maxit = nr_params.imax;
+  int minit = nr_params.imin;
   
   vecs_for_res_build.rhs = vecs->rhs;
   vecs_for_res_build.Au = f0;
@@ -184,7 +202,7 @@ newton_d4est_solve
     linalg_fill_vec(vecs_for_linsolve.u, 0., n);
 
 
-    krylov_solve
+    krylov_petsc_solve
       (
        p4est,
        &vecs_for_linsolve,
@@ -193,7 +211,7 @@ newton_d4est_solve
        ghost_data,
        dgmath_jit_dbase,
        d4est_geom,
-       input_file,
+       &petsc_params,
        krylov_pc
       );
     
@@ -228,7 +246,7 @@ newton_d4est_solve
 
     fnrm = sqrt(fnrm_global);
 
-    if (p4est->mpi_rank == 0 && nr_params->monitor)
+    if (p4est->mpirank == 0 && nr_params.monitor)
       printf("[NEWTON_D4EST]: ITER %03d PRE-FNRM %.30f POST-FNRM %.30f INNER ITER %d INNER FNRM %.30f\n" ,itc, fnrmo,  fnrm, krylov_final_iter, krylov_final_fnrm);
     
     if (krylov_final_iter == 0){
@@ -238,8 +256,8 @@ newton_d4est_solve
   }
   
  /* clean: */
-  nr_params->final_iter = itc;
-  nr_params->final_fnrm = fnrm;
+  /* nr_params.final_iter = itc; */
+  /* nr_params.final_fnrm = fnrm; */
 
   if (fnrm > stop_tol && ierr == 0){
     ierr = 1;

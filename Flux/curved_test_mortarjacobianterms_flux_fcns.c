@@ -106,7 +106,7 @@ curved_test_mortarjacobianterms_dirichlet
      sjvol_on_f_m_Gauss,
      nvol_on_f_m_Gauss,
      NULL,
-     GAUSS,
+     LOBATTO,
      geom,
      dgmath_jit_dbase
     );
@@ -126,7 +126,7 @@ curved_test_mortarjacobianterms_dirichlet
      sjvol_on_f_m_Gauss_analytic,
      nvol_on_f_m_Gauss_analytic,
      NULL,
-     GAUSS,
+     LOBATTO,
      geom,
      dgmath_jit_dbase
     );
@@ -141,7 +141,7 @@ curved_test_mortarjacobianterms_dirichlet
      1,
      &e_m->deg_integ,
      f_m,
-     GAUSS,
+     LOBATTO,
      n_on_f_m_Gauss,
      sj_on_f_m_Gauss,
      geom,
@@ -172,22 +172,33 @@ curved_test_mortarjacobianterms_dirichlet
   /*                      sjvol_on_f_m_Gauss, */
   /*                      face_nodes_m_Gauss); */
 
+  double* n_error [(P4EST_DIM)];
+  double* sj_error = P4EST_ALLOC(double, face_nodes_m_Gauss);
+  D4EST_ALLOC_DIM_VEC(n_error, face_nodes_m_Gauss);
+  
   double maxerror = util_max_error(sj_on_f_m_Gauss, sjvol_on_f_m_Gauss, face_nodes_m_Gauss);
   maxerror += util_max_error(n_on_f_m_Gauss[0], nvol_on_f_m_Gauss[0], face_nodes_m_Gauss);
 
   maxerror += util_max_error(n_on_f_m_Gauss[1], nvol_on_f_m_Gauss[1], face_nodes_m_Gauss);
-
+  util_compute_error_array(n_on_f_m_Gauss[0], nvol_on_f_m_Gauss[0], n_error[0], face_nodes_m_Gauss);
+  util_compute_error_array(n_on_f_m_Gauss[1], nvol_on_f_m_Gauss[1], n_error[1], face_nodes_m_Gauss);
+  util_compute_error_array(sj_on_f_m_Gauss, sjvol_on_f_m_Gauss, sj_error, face_nodes_m_Gauss);
+  
 #if (P4EST_DIM)==3
-  maxerror += util_max_error(n_on_f_m_Gauss[2], nvol_on_f_m_Gauss[2], face_nodes_m_Gauss);
+  util_compute_error_array(n_on_f_m_Gauss[2], nvol_on_f_m_Gauss[2], n_error[2], face_nodes_m_Gauss);
+  maxerror += util_max_error(n_on_f_m_Gauss[2], nvol_on_f_m_Gauss[2],face_nodes_m_Gauss);
 #endif
   if (maxerror > data->local_eps){
-    printf("Holy shit batman, LOTS OF ERROR HERE\n");
-    DEBUG_PRINT_2ARR_DBL(n_on_f_m_Gauss[0], nvol_on_f_m_Gauss[0], face_nodes_m_Gauss);
-    DEBUG_PRINT_2ARR_DBL(n_on_f_m_Gauss[1], nvol_on_f_m_Gauss[1], face_nodes_m_Gauss);
-    DEBUG_PRINT_2ARR_DBL(n_on_f_m_Gauss[2], nvol_on_f_m_Gauss[2], face_nodes_m_Gauss);
-    DEBUG_PRINT_2ARR_DBL(sj_on_f_m_Gauss, sjvol_on_f_m_Gauss, face_nodes_m_Gauss);
+    printf("Holy shit batman, LOTS OF N_ERROR ON THE BOUNDARY HERE, NOT SURPRISING BECAUSE THIS IS ISOPARAMETRIC, OR IS IT?\n");
+    DEBUG_PRINT_4ARR_DBL(n_on_f_m_Gauss[0], nvol_on_f_m_Gauss[0], n_error[0],nvol_on_f_m_Gauss_analytic[0],face_nodes_m_Gauss);
+    DEBUG_PRINT_4ARR_DBL(n_on_f_m_Gauss[1], nvol_on_f_m_Gauss[1], n_error[1],nvol_on_f_m_Gauss_analytic[1],face_nodes_m_Gauss);
+    DEBUG_PRINT_4ARR_DBL(n_on_f_m_Gauss[2], nvol_on_f_m_Gauss[2], n_error[2],nvol_on_f_m_Gauss_analytic[2],face_nodes_m_Gauss);
+    DEBUG_PRINT_4ARR_DBL(sj_on_f_m_Gauss, sjvol_on_f_m_Gauss, sj_error, sjvol_on_f_m_Gauss_analytic, face_nodes_m_Gauss);
   }
 
+  D4EST_FREE_DIM_VEC(n_error);
+  P4EST_FREE(sj_error);  
+  
   data->global_err += maxerror;
   
   P4EST_FREE(sj_on_f_m_Gauss);
@@ -864,7 +875,7 @@ curved_test_mortarjacobianterms_interface
   maxerror_analytic += util_max_error(dudx_p_on_f_p_mortar_Gauss_analytic[0], dudx_m_on_f_m_mortar_Gauss_analytic[0], total_nodes_mortar_Gauss);
   maxerror_analytic += util_max_error(dudx_p_on_f_p_mortar_Gauss_analytic[1], dudx_m_on_f_m_mortar_Gauss_analytic[1], total_nodes_mortar_Gauss);
 
-  DEBUG_PRINT_2ARR_DBL(sjvol_m_on_f_m_mortar_Gauss_analytic, sjvol_p_on_f_p_mortar_Gauss_reoriented_analytic, total_nodes_mortar_Gauss);
+  /* DEBUG_PRINT_2ARR_DBL(sjvol_m_on_f_m_mortar_Gauss_analytic, sjvol_p_on_f_p_mortar_Gauss_reoriented_analytic, total_nodes_mortar_Gauss); */
   }
   
 #if (P4EST_DIM)==3

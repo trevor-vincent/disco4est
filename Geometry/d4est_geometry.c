@@ -95,9 +95,16 @@ d4est_geometry_new(int mpirank, const char* input_file){
   if (util_match(input.name,"cubed_sphere")) {
     d4est_geometry_cubed_sphere_new(mpirank, input_file, d4est_geom);
   }
+  else if (util_match(input.name,"cubed_sphere_7tree")) {
+    d4est_geometry_cubed_sphere_7tree_new(mpirank, input_file, d4est_geom);
+  }
   else if (util_match(input.name,"cubed_sphere_with_cube_hole")) {
     d4est_geometry_cubed_sphere_with_cube_hole_new(mpirank, input_file, d4est_geom);
   }
+  else if (util_match(input.name,"cubed_sphere_innerouter_shell")) {
+    d4est_geometry_cubed_sphere_innerouter_shell_new(mpirank, input_file, d4est_geom);
+  }
+  
   /* else if (util_match(input.name,"shell")) { */
   /*   d4est_geometry_shell_new(input_file, d4est_geom); */
   /* } */

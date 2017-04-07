@@ -16,7 +16,7 @@
 #include <hp_amr.h>
 #include <hp_amr_curved_smooth_pred.h>
 #include <d4est_geometry.h>
-#include <d4est_geometry_sphere.h>
+#include <d4est_geometry_cubed_sphere.h>
 #include <d4est_geometry_disk.h>
 #include <curved_poisson_debug_vecs.h>
 #include <d4est_vtk.h>
@@ -31,6 +31,7 @@
 #include "./twopuncturesfcns_spec.h"
 #include "time.h"
 #include "util.h"
+#include <newton_d4est.h>
 
 /* soon to be in the input files */
 static const double pi = 3.1415926535897932384626433832795;
@@ -362,25 +363,29 @@ in_bin_fcn
 void
 problem_set_degrees
 (
- curved_element_data_t* elem_data,
+ void* elem_data_tmp,
  void* user_ctx
 )
 {
+  curved_element_data_t* elem_data = elem_data_tmp;
   problem_input_t* input = user_ctx;
   /* outer shell */
   if (elem_data->tree < 6){
     elem_data->deg = input->deg_R2;
     elem_data->deg_integ = input->deg_integ_R2;
+    elem_data->deg_stiffness = input->deg_integ_R2;
   }
   /* inner shell */
   else if(elem_data->tree < 12){
     elem_data->deg = input->deg_R1;
     elem_data->deg_integ = input->deg_integ_R1;
+        elem_data->deg_stiffness = input->deg_integ_R1;
   }
   /* center cube */
   else {
     elem_data->deg = input->deg_R0;
     elem_data->deg_integ = input->deg_integ_R0;
+    elem_data->deg_stiffness = input->deg_integ_R0;
   } 
 }
 
@@ -393,7 +398,12 @@ problem_save_to_vtk
  double* u,
  int level,
  int with_eta,
- double R0
+ double R0,
+ double R1,
+ double R2,
+ int compactify_outer_shell,
+ int compactify_inner_shell,
+ const char* input_file
 )
 {
    int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
@@ -420,15 +430,18 @@ problem_save_to_vtk
       }
 
 
-    p4est_connectivity_t* conn_vtk = p8est_connectivity_new_sphere();
-    p4est_geometry_t* geom_vtk = d4est_geometry_compactified_sphere_from_param
+     d4est_geometry_t* geom_vtk = d4est_geometry_new
                                  (
-                                  R0,
-                                  2.*R0,
-                                  3.*R0,
-                                  conn_vtk
+                                  p4est->mpirank,
+                                  input_file
                                  );
 
+
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->R2 = R2;
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->R1 = R1;
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->R0 = R0;
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->compactify_outer_shell = compactify_outer_shell;
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->compactify_inner_shell = compactify_inner_shell;
 
     char sol_save_as [500];
     if (with_eta)
@@ -483,8 +496,7 @@ problem_save_to_vtk
     d4est_vtk_write_footer(vtk_ctx);
     P4EST_FREE(deg_array);
     P4EST_FREE(eta_array);
-    p8est_connectivity_destroy(conn_vtk);
-    p8est_geometry_destroy(geom_vtk);
+    d4est_geometry_destroy(geom_vtk);
 }
 
 
@@ -561,7 +573,7 @@ problem_init
     prob_vecs.user = &tp_params;
   }
 
-  curved_weakeqn_ptrs_t prob_fcns;
+  weakeqn_ptrs_t prob_fcns;
 
 
   /* if(input.use_cactus){ */
@@ -569,7 +581,7 @@ problem_init
   /*   prob_fcns.apply_lhs = twopunctures_cactus_apply_jac; */
   /* } */
   /* else { */
-  prob_fcns.build_residual = twopunctures_build_residual_Lobatto;
+  prob_fcns.build_residual = twopunctures_build_residual;
   prob_fcns.apply_lhs = twopunctures_apply_jac;
   /* } */
   
@@ -614,7 +626,9 @@ problem_init
                                    dgmath_jit_dbase,
                                    d4est_geom,
                                    problem_set_degrees,
-                                   (void*)&input);
+                                   (void*)&input,
+                                   1,
+                                  1);
 
 
 
@@ -664,14 +678,14 @@ problem_init
   /* linalg_fill_vec(prob_vecs.u, 0., local_nodes); */
 
   
-  d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
+  /* d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;     */
   /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
   curved_element_data_init_new(p4est,
                                geometric_factors,
                                dgmath_jit_dbase,
                                d4est_geom,
                                problem_set_degrees,
-                               (void*)&input);
+                               (void*)&input,1,1);
 
 
     
@@ -756,7 +770,7 @@ problem_init
     }
     
 
-    double R0 = ((d4est_geometry_sphere_attr_t*)(d4est_geom->p4est_geom->user))->R0;
+    double R0 = ((d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R0;
     /* printf("R0 = %.f\n", R0); */
 
    /*  d4est_geometry_t* d4est_geom_vtk = d4est_geometry */
@@ -798,7 +812,12 @@ problem_init
        u,
        level,
        1,
-       R0
+       R0,
+       2*R0,
+       3*R0,
+       0,
+       1,
+       input_file
       );
   
     
@@ -825,7 +844,7 @@ problem_init
                                  dgmath_jit_dbase,
                                  d4est_geom,
                                  problem_set_degrees,
-                                 (void*)&input);
+                                 (void*)&input,1,1);
     
     local_nodes = curved_element_data_get_local_nodes(p4est);
 
@@ -926,7 +945,21 @@ problem_init
     /* P4EST_FREE(Au_cactus); */
     /* P4EST_FREE(u_test); */
     
-    newton_petsc_solve
+    /* newton_petsc_solve */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    (void*)&prob_fcns, */
+    /*    &ghost, */
+    /*    (void**)&ghost_data, */
+    /*    dgmath_jit_dbase, */
+    /*    d4est_geom, */
+    /*    input_file, */
+    /*    NULL */
+    /*   ); */
+
+
+    newton_d4est_solve
       (
        p4est,
        &prob_vecs,
@@ -938,7 +971,6 @@ problem_init
        input_file,
        NULL
       );
-
     /* matrix_spd_tester_parallel */
     /*   ( */
     /*    p4est, */

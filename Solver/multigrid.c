@@ -7,6 +7,11 @@
 #include "../Solver/cg_eigs.h"
 #include "../hpAMR/hp_amr.h"
 #include "../Solver/multigrid_callbacks.h"
+#include <multigrid_smoother_cheby_d4est.h>
+#include <multigrid_smoother_krylov_petsc.h>
+#include <multigrid_bottom_solver_cg_d4est.h>
+#include <multigrid_bottom_solver_cheby_d4est.h>
+#include <multigrid_bottom_solver_krylov_petsc.h>
 #include <ini.h>
 #include <util.h>
 
@@ -131,11 +136,116 @@ int multigrid_input_handler
     mpi_assert(mg_data->vcycle_atol == -1);
     mg_data->vcycle_atol = atof(value);
   }
+  else if (util_match_couple(section,"multigrid",name,"smoother_name")) {
+    mpi_assert(mg_data->smoother_name[0] == '*');
+    snprintf (mg_data->smoother_name, sizeof(mg_data->smoother_name), "%s", value);
+  }
+  else if (util_match_couple(section,"multigrid",name,"bottom_solver_name")) {
+    mpi_assert(mg_data->bottom_solver_name[0] == '*');
+    snprintf (mg_data->bottom_solver_name, sizeof(mg_data->bottom_solver_name), "%s", value);
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
   return 1;
 }
+
+
+void
+multigrid_set_smoother(p4est_t* p4est, const char* input_file, multigrid_data_t* mg_data){
+
+  if(util_match(mg_data->smoother_name, "mg_smoother_krylov_petsc")){
+    mg_data->smoother = multigrid_smoother_krylov_petsc_init(p4est, input_file);
+  }
+  else if(util_match(mg_data->smoother_name, "mg_smoother_cheby_d4est")){
+    mg_data->smoother = multigrid_smoother_cheby_d4est_init
+                        (
+                         p4est,
+                         mg_data->num_of_levels,
+                         input_file
+                        );
+  }
+  else {
+    printf("[D4EST_ERROR]: You chose the %s smoother\n", mg_data->smoother_name);
+    mpi_abort("[D4EST_ERROR]: This smoother is not supported");
+  }
+}
+
+
+void
+multigrid_destroy_smoother(multigrid_data_t* mg_data){
+
+  if(util_match(mg_data->smoother_name, "mg_smoother_krylov_petsc")){
+    multigrid_smoother_krylov_petsc_destroy(mg_data->smoother);
+  }
+  else if(util_match(mg_data->smoother_name, "mg_smoother_cheby_d4est")){
+    multigrid_smoother_cheby_d4est_destroy(mg_data->smoother);
+  }
+  else {
+    printf("[D4EST_ERROR]: You chose the %s smoother\n", mg_data->smoother_name);
+    mpi_abort("[D4EST_ERROR]: This smoother is not supported");
+  }
+}
+
+void
+multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file, multigrid_data_t* mg_data){
+
+  if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_krylov_petsc")){
+    mg_data->bottom_solver = multigrid_bottom_solver_krylov_petsc_init
+                                               (
+                                                p4est,
+                                                input_file
+                                               );
+  }
+  else if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cheby_d4est")){
+    mg_data->bottom_solver = multigrid_bottom_solver_cheby_d4est_init
+                                               (
+                                                p4est,
+                                                mg_data->num_of_levels,
+                                                input_file
+                                               );
+  }
+  else if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cg_d4est")){
+    mg_data->bottom_solver = multigrid_bottom_solver_cg_d4est_init
+                                               (
+                                                p4est,
+                                                input_file
+                                               );
+  }
+  else {
+    printf("[D4EST_ERROR]: You chose the %s bottom_solver\n", mg_data->bottom_solver_name);
+    mpi_abort("[D4EST_ERROR]: This bottom_solver is not supported");
+  }
+}
+
+
+void
+multigrid_destroy_bottom_solver(multigrid_data_t* mg_data){
+
+  if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_krylov_petsc")){
+    multigrid_bottom_solver_krylov_petsc_destroy
+                                               (
+                                                mg_data->bottom_solver
+                                               );
+  }
+  else if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cheby_d4est")){
+    multigrid_bottom_solver_cheby_d4est_destroy
+                                               (
+                                                mg_data->bottom_solver
+                                               );
+  }
+  else if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cg_d4est")){
+    multigrid_bottom_solver_cg_d4est_destroy
+      (
+       mg_data->bottom_solver
+      );
+  }
+  else {
+    printf("[D4EST_ERROR]: You chose the %s bottom_solver\n", mg_data->bottom_solver_name);
+    mpi_abort("[D4EST_ERROR]: This bottom_solver is not supported");
+  }
+}
+
 
 multigrid_data_t*
 multigrid_data_init
@@ -143,8 +253,6 @@ multigrid_data_init
  p4est_t* p4est,
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  int num_of_levels,
- multigrid_smoother_t* smoother,
- multigrid_bottom_solver_t* bottom_solver,
  multigrid_logger_t* logger,
  multigrid_user_callbacks_t* user_callbacks,
  multigrid_element_data_updater_t* updater,
@@ -159,6 +267,8 @@ multigrid_data_init
   mg_data->vcycle_atol = -1;
   mg_data->vcycle_rtol = -1;
   mg_data->vcycle_imax = -1;
+  mg_data->bottom_solver_name[0] = '*';
+  mg_data->smoother_name[0] = '*';
   mg_data->Ae_at0 = NULL;
   mg_data->err_at0 = NULL;
   mg_data->rres_at0 = NULL;
@@ -171,25 +281,26 @@ multigrid_data_init
   if (ini_parse(input_file, multigrid_input_handler, mg_data) < 0) {
     mpi_abort("Can't load input file");
   }
-  if(mg_data->vcycle_atol == -1){
-    mpi_abort("[D4EST_ERROR]: vcycle_atol not set in multigrid input");
-  }
-  if(mg_data->vcycle_rtol == -1){
-    mpi_abort("[D4EST_ERROR]: vcycle_rtol not set in multigrid input");
-  }
-  if(mg_data->vcycle_imax == -1){
-    mpi_abort("[D4EST_ERROR]: vcycle_imax not set in multigrid input");
-  }  
+
+  D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_atol, -1);
+  D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_rtol, -1);
+  D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_imax, -1);
+  D4EST_CHECK_INPUT("multigrid", mg_data->smoother_name[0], '*');
+  D4EST_CHECK_INPUT("multigrid", mg_data->bottom_solver_name[0], '*');
+
+  multigrid_set_smoother(p4est, input_file, mg_data);
+  multigrid_set_bottom_solver(p4est, input_file, mg_data);
+  
   if(p4est->mpirank == 0){
     printf("[D4EST_INFO]: Multigrid Parameters\n");
     printf("[D4EST_INFO]: vcycle imax = %d\n", mg_data->vcycle_imax);
     printf("[D4EST_INFO]: vcycle rtol = %.25f\n", mg_data->vcycle_rtol);
     printf("[D4EST_INFO]: vcycle atol = %.25f\n", mg_data->vcycle_atol);
+    printf("[D4EST_INFO]: smoother = %s\n", mg_data->smoother_name);
+    printf("[D4EST_INFO]: bottom solver = %s\n", mg_data->bottom_solver_name);
   }
 
-  mg_data->smoother = smoother;
   mg_data->logger = logger;
-  mg_data->bottom_solver = bottom_solver;
   mg_data->user_callbacks = user_callbacks;
   mg_data->elem_data_updater = updater;
   
@@ -200,6 +311,8 @@ multigrid_data_init
 void
 multigrid_data_destroy(multigrid_data_t* mg_data)
 {
+  multigrid_destroy_smoother(mg_data);
+  multigrid_destroy_bottom_solver(mg_data);
   P4EST_FREE(mg_data);
 }
 

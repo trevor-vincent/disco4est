@@ -16,7 +16,7 @@
 #include <hp_amr.h>
 #include <hp_amr_curved_smooth_pred.h>
 #include <d4est_geometry.h>
-#include <d4est_geometry_sphere.h>
+#include <d4est_geometry_cubed_sphere.h>
 #include <d4est_geometry_disk.h>
 #include <curved_poisson_debug_vecs.h>
 #include <d4est_vtk.h>
@@ -487,7 +487,12 @@ problem_save_to_vtk
  double* u,
  int level,
  int with_eta,
- double R0
+ double R0,
+ double R1,
+ double R2,
+ int compactify_outer_shell,
+ int compactify_inner_shell,
+ const char* input_file
 )
 {
    int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
@@ -514,15 +519,18 @@ problem_save_to_vtk
       }
 
 
-    p4est_connectivity_t* conn_vtk = p8est_connectivity_new_sphere();
-    p4est_geometry_t* geom_vtk = d4est_geometry_compactified_sphere_from_param
+   d4est_geometry_t* geom_vtk = d4est_geometry_new
                                  (
-                                  R0,
-                                  2.*R0,
-                                  3.*R0,
-                                  conn_vtk
+                                  p4est->mpirank,
+                                  input_file
                                  );
 
+
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->R2 = R2;
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->R1 = R1;
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->R0 = R0;
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->compactify_outer_shell = compactify_outer_shell;
+    ((d4est_geometry_cubed_sphere_attr_t*)geom_vtk->user)->compactify_inner_shell = compactify_inner_shell;
 
     char sol_save_as [500];
     if (with_eta)
@@ -577,8 +585,7 @@ problem_save_to_vtk
     d4est_vtk_write_footer(vtk_ctx);
     P4EST_FREE(deg_array);
     P4EST_FREE(eta_array);
-    p8est_connectivity_destroy(conn_vtk);
-    p8est_geometry_destroy(geom_vtk);
+    d4est_geometry_destroy(geom_vtk);
 }
 
 

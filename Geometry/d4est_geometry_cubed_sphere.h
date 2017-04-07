@@ -9,7 +9,8 @@ typedef struct
 {
   double R2, R1, R0;
   double Clength;
-  int compactify;
+  int compactify_outer_shell;
+  int compactify_inner_shell;
     
 } d4est_geometry_cubed_sphere_attr_t;
 

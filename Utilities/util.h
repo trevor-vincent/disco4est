@@ -295,4 +295,7 @@ int util_match
  const char* str2
 );
 
+void
+util_compute_error_array(double* arr1, double* arr2, double* err, int N);
+
 #endif
