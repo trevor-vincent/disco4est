@@ -257,17 +257,19 @@ geometric_factors_destroy
 )
 {
   /* P4EST_FREE(geometric_factors->J); */
-  P4EST_FREE(geometric_factors->J_integ);
-  P4EST_FREE(geometric_factors->xyz);
-  P4EST_FREE(geometric_factors->xyz_integ);
-  /* P4EST_FREE(geometric_factors->xyz_rst); */
-  P4EST_FREE(geometric_factors->xyz_rst_integ);
-  P4EST_FREE(geometric_factors->xyz_rst_Lobatto_integ);
-  /* P4EST_FREE(geometric_factors->rst_xyz); */
-  P4EST_FREE(geometric_factors->rst_xyz_integ);
-  /* P4EST_FREE(geometric_factors->invM); */
-  /* P4EST_FREE(geometric_factors->invMface); */
-  P4EST_FREE(geometric_factors);
+  if (geometric_factors != NULL){
+    P4EST_FREE(geometric_factors->J_integ);
+    P4EST_FREE(geometric_factors->xyz);
+    P4EST_FREE(geometric_factors->xyz_integ);
+    /* P4EST_FREE(geometric_factors->xyz_rst); */
+    P4EST_FREE(geometric_factors->xyz_rst_integ);
+    P4EST_FREE(geometric_factors->xyz_rst_Lobatto_integ);
+    /* P4EST_FREE(geometric_factors->rst_xyz); */
+    P4EST_FREE(geometric_factors->rst_xyz_integ);
+    /* P4EST_FREE(geometric_factors->invM); */
+    /* P4EST_FREE(geometric_factors->invMface); */
+    P4EST_FREE(geometric_factors);
+  }
 }
 
 static void
@@ -571,7 +573,8 @@ curved_element_data_compute_element_face_area
                                                   NULL,
                                                   GAUSS,
                                                   geom,
-                                                  dgmath_jit_dbase
+                                                  dgmath_jit_dbase,
+                                                  COMPUTE_NORMAL_USING_JACOBIAN
                                                  );
                                                   
   double* Msj = P4EST_ALLOC(double, face_nodes);
@@ -784,6 +787,7 @@ curved_element_data_init_new
            elem_data->xyz_rst_integ,
            elem_data->J_integ,
            elem_data->rst_xyz_integ,
+           NULL,
            volume_nodes_integ
           );
         }
@@ -1912,6 +1916,7 @@ void curved_element_data_apply_fofufofvlilj_Gaussnodes
        elem_data->xyz_rst_integ,
        elem_data->J_integ,
        elem_data->rst_xyz_integ,
+       NULL,
        volume_nodes_Gauss
       );
     
@@ -2028,6 +2033,7 @@ void curved_element_data_apply_fofufofvlj_Gaussnodes
        elem_data->xyz_rst_integ,
        elem_data->J_integ,
        elem_data->rst_xyz_integ,
+       NULL,
        volume_nodes_Gauss
       );
     
@@ -2141,6 +2147,7 @@ d4est_geometry_compute_dxyz_drst
        elem_data->xyz_rst_integ,
        elem_data->J_integ,
        elem_data->rst_xyz_integ,
+       NULL,
        volume_nodes_Gauss
       );
     
@@ -2271,6 +2278,7 @@ d4est_geometry_compute_dxyz_drst
        xyz_rst_stiffness,
        J_stiffness,
        rst_xyz_stiffness,
+       NULL,
        volume_nodes_stiffness
       );
 

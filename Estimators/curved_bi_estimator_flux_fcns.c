@@ -104,7 +104,8 @@ curved_bi_est_dirichlet
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
   
   
@@ -541,7 +542,8 @@ curved_bi_est_interface
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
 
   d4est_geometry_compute_geometric_data_on_mortar
@@ -559,7 +561,8 @@ curved_bi_est_interface
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
 
   

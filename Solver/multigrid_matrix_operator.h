@@ -4,9 +4,11 @@
 #include <problem_data.h>
 #include <multigrid.h>
 
-typedef struct {
+typedef struct multigrid_matrix_op_t multigrid_matrix_op_t;
 
+struct multigrid_matrix_op_t{  
   int(*get_local_matrix_nodes)(p4est_t*);
+       
   int* matrix_nodes_on_level;
   int total_matrix_nodes_on_multigrid;
   
@@ -20,7 +22,7 @@ typedef struct {
   double* matrix; //points to data at current level
   void* user;
   
-} multigrid_matrix_op_t;
+};
 
 
 /* This file was automatically generated.  Do not edit! */

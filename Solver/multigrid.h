@@ -5,6 +5,10 @@
 #include "../EllipticSystem/problem_weakeqn_ptrs.h"
 #include "../dGMath/dgmath.h"
 
+typedef struct multigrid_data_t multigrid_data_t;
+
+
+
 typedef struct {
 
   int hrefine; /* holds a flag: 0 = no refinement, 1 = h refinement, 2 = coarsened then refined after 2:1 balance */
@@ -35,6 +39,15 @@ typedef enum
     POST_RESIDUAL_UPDATE,
     END
   } multigrid_state_t;
+
+/* typedef */
+/* void */
+/* (*multigrid_user_setup_callback_fcn_t) */
+/* ( */
+/*  p4est_t*, */
+/*  multigrid_data_t*, /\* current level *\/ */
+/*  void* */
+/* ); */
 
 typedef
 void
@@ -127,6 +140,7 @@ typedef struct {
   multigrid_prolong_callback_fcn_t mg_prolong_user_callback;
   multigrid_restrict_callback_fcn_t mg_restrict_user_callback;
   multigrid_update_callback_fcn_t update;
+  /* multigrid_user_setup_callback_fcn_t setup; */
   void* user;
   
 } multigrid_user_callbacks_t;
@@ -148,8 +162,7 @@ typedef struct {
 } multigrid_element_data_updater_t;
 
 
-
-typedef struct {
+struct multigrid_data_t {
  
   /* ******* REQUIRED EXTERNAL PARAMETERS ******* */
   /* ******* SET BY FUNCTION CALL ******** */
@@ -205,7 +218,7 @@ typedef struct {
   int* nodes_on_level_of_multigrid;
   int* nodes_on_level_of_surrogate_multigrid;
   
-} multigrid_data_t;
+};
 
 
 void

@@ -101,22 +101,45 @@ krylov_petsc_set_options_database_from_params
 {
   if(input->ksp_monitor)
     PetscOptionsSetValue(NULL,"-ksp_monitor","");
+  else
+    PetscOptionsClearValue(NULL,"-ksp_monitor");
+
   if(input->ksp_view)
     PetscOptionsSetValue(NULL,"-ksp_view","");
+  else
+    PetscOptionsClearValue(NULL,"-ksp_view");
+
   if(input->ksp_converged_reason)
      PetscOptionsSetValue(NULL,"-ksp_converged_reason","");
+  else
+    PetscOptionsClearValue(NULL,"-ksp_converged_reason");
+
   if(input->ksp_initial_guess_nonzero)
     PetscOptionsSetValue(NULL,"-ksp_initial_guess_nonzero","");
+  else
+    PetscOptionsClearValue(NULL,"-ksp_initial_guess_nonzero");
+
+  PetscOptionsClearValue(NULL,"-ksp_type");
   PetscOptionsSetValue(NULL,"-ksp_type",input->ksp_type);
+  
+  PetscOptionsClearValue(NULL,"-ksp_atol");
   PetscOptionsSetValue(NULL,"-ksp_atol",input->ksp_atol);
+  
+  PetscOptionsClearValue(NULL,"-ksp_rtol");
   PetscOptionsSetValue(NULL,"-ksp_rtol",input->ksp_rtol);
+  
+  PetscOptionsClearValue(NULL,"-ksp_max_it");
   PetscOptionsSetValue(NULL,"-ksp_max_it", input->ksp_max_it);
 
   if(util_match(input->ksp_type,"chebyshev")){
+    PetscOptionsClearValue(NULL,"-ksp_chebyshev_esteig_steps");
     PetscOptionsSetValue(NULL,"-ksp_chebyshev_esteig_steps",input->ksp_chebyshev_esteig_steps);
+    PetscOptionsClearValue(NULL,"-ksp_chebyshev_esteig");
     PetscOptionsSetValue(NULL,"-ksp_chebyshev_esteig",input->ksp_chebyshev_esteig);
     if(input->ksp_chebyshev_esteig_random)
       PetscOptionsSetValue(NULL,"-ksp_chebyshev_esteig_random","");
+    else
+      PetscOptionsClearValue(NULL,"-ksp_chebyshev_esteig_random");
   }
 }
 
@@ -164,9 +187,9 @@ krylov_petsc_input
   }
     
   if(p4est->mpirank == 0){
+    printf("%s: ksp_type = %s\n",printf_prefix, input->ksp_type);
     printf("%s: ksp_view = %d\n",printf_prefix, input->ksp_view);
     printf("%s: ksp_monitor = %d\n",printf_prefix, input->ksp_monitor);
-    printf("%s: ksp_type = %s\n",printf_prefix, input->ksp_type);
     printf("%s: ksp_atol = %s\n",printf_prefix, input->ksp_atol);
     printf("%s: ksp_rtol = %s\n",printf_prefix, input->ksp_rtol);
     printf("%s: ksp_maxit = %s\n",printf_prefix, input->ksp_max_it);
@@ -177,7 +200,9 @@ krylov_petsc_input
       printf("%s: ksp_chebyshev_esteig = %s\n",printf_prefix, input->ksp_chebyshev_esteig);
       printf("%s: ksp_chebyshev_esteig_random = %d\n",printf_prefix, input->ksp_chebyshev_esteig_random);
     }
-  } 
+  }
+
+  
 }
 
 static

@@ -2,6 +2,10 @@
 #define TWOPUNCTURESFCNS_H 
 
 #include <curved_element_data.h>
+#include <multigrid.h>
+#include <multigrid_matrix_operator.h>
+#include <krylov_pc_multigrid.h>
+#include <d4est_petsc.h>
 
 #define MAX_PUNCTURES 10
 
@@ -382,6 +386,204 @@ void twopunctures_apply_jac
 }
 
 
+
+void
+twopunctures_compute_jac_matrix_operator
+(
+ p4est_t* p4est,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom,
+ double* u0,
+ multigrid_matrix_op_t* matrix_op
+)
+{
+  printf("DONALD TRUMPY - twopunctures_compute_jac_matrix_operator\n");
+  
+  twopunctures_params_t* params = matrix_op->user;
+  int nodal_stride = 0;
+  int matrix_nodal_stride = 0;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        curved_element_data_t* ed = quad->p.user_data;
+        int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        int matrix_volume_nodes = volume_nodes*volume_nodes;
+        
+        curved_element_data_form_fofufofvlilj_matrix_Gaussnodes
+          (
+           dgmath_jit_dbase,
+           d4est_geom,
+           u0,
+           NULL,
+           ed,
+           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           (P4EST_DIM),
+           &matrix_op->matrix_at0[matrix_nodal_stride],
+           twopunctures_plus_7o8_K2_psi_neg8,
+           params,
+           NULL,
+           NULL
+          );
+
+        nodal_stride += volume_nodes;
+        matrix_nodal_stride += matrix_volume_nodes;
+      }
+    }
+}
+
+void
+twopunctures_compute_jac_matrix_operator_for_pc
+(
+ krylov_pc_t* kpc
+)
+{
+  petsc_ctx_t* pc_ctx = kpc->pc_ctx;
+  krylov_pc_multigrid_data_t* kpcmgdata = kpc->pc_data;
+  multigrid_data_t* mg_data = kpcmgdata->mg_data;
+  multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
+
+  printf("DONALD TRUMPY - twopunctures_compute_jac_matrix_operator_for_pc\n");
+  twopunctures_compute_jac_matrix_operator
+    (
+     pc_ctx->p4est,
+     pc_ctx->dgmath_jit_dbase,
+     pc_ctx->d4est_geom,
+     pc_ctx->vecs->u0,
+     matrix_op
+    );
+}
+
+void
+twopunctures_build_residual_mg
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ void* ghost_data,
+ problem_data_t* prob_vecs,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom
+)
+{
+  twopunctures_params_t* params = ((multigrid_matrix_op_t*)prob_vecs->user)->user;
+  /* twopunctures_params_t* params = prob_vecs->user; */
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+
+  double* M_neg_1o8_K2_psi_neg7_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
+ 
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        curved_element_data_t* ed = quad->p.user_data;
+        curved_element_data_apply_fofufofvlj_Gaussnodes
+          (
+           dgmath_jit_dbase,
+           d4est_geom,
+           &prob_vecs->u[ed->nodal_stride],
+           NULL,
+           ed,
+           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           (P4EST_DIM),
+           &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
+           twopunctures_neg_1o8_K2_psi_neg7,
+           params,
+           NULL,
+           NULL
+          );
+
+        /* DEBUG_PRINT_ARR_DBL */
+        
+        /* int volume_nodes_Lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg); */
+        /* int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), ed->deg_integ); */
+        /* double* u_tmp = &prob_vecs->u[ed->nodal_stride]; */
+        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_Lobatto); */
+        /* DEBUG_PRINT_ARR_DBL(ed->J_integ, volume_nodes_Gauss); */
+        
+      }
+    }
+
+  linalg_vec_axpy(1.0,
+                  M_neg_1o8_K2_psi_neg7_vec,
+                  prob_vecs->Au,
+                  prob_vecs->local_nodes);
+
+  P4EST_FREE(M_neg_1o8_K2_psi_neg7_vec);
+}
+
+
+void twopunctures_apply_jac_mg
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ void* ghost_data,
+ problem_data_t* prob_vecs,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom
+)
+{
+  twopunctures_params_t* params = ((multigrid_matrix_op_t*)prob_vecs->user)->user;
+  curved_poisson_operator_primal_apply_aij(p4est,
+                                           ghost,
+                                           ghost_data,
+                                           prob_vecs,
+                                           dgmath_jit_dbase,
+                                           d4est_geom);
+  
+  double* M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
+  int matrix_stride = 0;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        curved_element_data_t* ed = quad->p.user_data;
+        int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        /* curved_element_data_apply_fofufofvlilj_Gaussnodes */
+        /*   ( */
+        /*    dgmath_jit_dbase, */
+        /*    d4est_geom, */
+        /*    &prob_vecs->u[ed->nodal_stride], */
+        /*    &prob_vecs->u0[ed->nodal_stride], */
+        /*    NULL, */
+        /*    ed, */
+        /*    ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ, */
+        /*    (P4EST_DIM), */
+        /*    &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride], */
+        /*    twopunctures_plus_7o8_K2_psi_neg8, */
+        /*    prob_vecs->user, */
+        /*    NULL, */
+        /*    NULL */
+        /*   ); */
+
+        /* double* tmp = &((multigrid_matrix_op_t*)prob_vecs->user)->matrix[matrix_stride]; */
+        /* DEBUG_PRINT_ARR_DBL(tmp, volume_nodes*volume_nodes); */
+        
+        linalg_matvec_plus_vec(1.,&((multigrid_matrix_op_t*)prob_vecs->user)->matrix[matrix_stride], &prob_vecs->u[ed->nodal_stride], 0., &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride], volume_nodes, volume_nodes);
+
+        matrix_stride += volume_nodes*volume_nodes;
+      }
+    }
+  
+  linalg_vec_axpy(1.0, M_plus_7o8_K2_psi_neg8_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  P4EST_FREE(M_plus_7o8_K2_psi_neg8_of_u0_u_vec);
+}
+
+
 static
 void twopunctures_apply_jac_Lobatto
 (
@@ -454,7 +656,6 @@ void twopunctures_apply_jac_Lobatto
   P4EST_FREE(plus_7o8_K2_psi_neg8_of_u0_u_vec);
 }
 
-static
 void
 twopunctures_build_residual
 (

@@ -80,7 +80,8 @@ curved_dg_norm_boundary
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
   
   double h = (e_m->volume/e_m->surface_area[f_m]);
@@ -346,7 +347,8 @@ curved_dg_norm_interface
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
   
   stride = 0;

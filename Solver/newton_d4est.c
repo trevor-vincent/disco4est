@@ -59,6 +59,7 @@ int newton_d4est_input_handler
 newton_d4est_params_t
 newton_d4est_input
 (
+ p4est_t* p4est,
  const char* input_file
 )
 {
@@ -78,6 +79,16 @@ newton_d4est_input
   D4EST_CHECK_INPUT("newton", input.imin, -1);
   D4EST_CHECK_INPUT("newton", input.imax, -1);
   D4EST_CHECK_INPUT("newton", input.monitor, -1);
+
+
+   
+  if(p4est->mpirank == 0){
+    printf("[NEWTON_D4EST]: atol = %f\n", input.atol);
+    printf("[NEWTON_D4EST]: rtol = %f\n", input.rtol);
+    printf("[NEWTON_D4EST]: imin = %d\n", input.imin);
+    printf("[NEWTON_D4EST]: imax = %d", input.imax);
+    printf("[NEWTON_D4EST]: monitor = %d\n", input.monitor);
+  }
   
   return input;
 }
@@ -134,8 +145,6 @@ newton_d4est_solve
   int ierr = 0;
   int local_nodes = vecs->local_nodes;
   int n = local_nodes;
-  int krylov_final_iter;
-  double krylov_final_fnrm;
   problem_data_t vecs_for_linsolve;
   problem_data_t vecs_for_res_build;
 
@@ -152,7 +161,7 @@ newton_d4est_solve
   problem_data_copy_ptrs(vecs, &vecs_for_res_build);
   
   /******** external parameters ********/
-  newton_d4est_params_t nr_params = newton_d4est_input(input_file);
+  newton_d4est_params_t nr_params = newton_d4est_input(p4est,input_file);
   
   double atol = nr_params.atol;
   double rtol = nr_params.rtol;
@@ -186,6 +195,11 @@ newton_d4est_solve
   double stop_tol = atol + rtol*fnrm;
   int itc = 0;
 
+
+  if (p4est->mpirank == 0 && nr_params.monitor){
+    printf("[NEWTON_D4EST]: ITER %03d PRE-FNRM %.30f POST-FNRM  %.30f\n", itc, fnrmo,  fnrm);
+  }
+  
   while((fnrm > stop_tol || itc < minit) && (itc < maxit)){
 
     /* double ratio = fnrm/fnrmo; */
@@ -201,7 +215,21 @@ newton_d4est_solve
     /* set initial guess */
     linalg_fill_vec(vecs_for_linsolve.u, 0., n);
 
-
+    /* petsc_ctx_t petsc_ctx; */
+    /* if(krylov_pc != NULL){ */
+    /*   petsc_ctx.p4est = p4est; */
+    /*   petsc_ctx.vecs = vecs; */
+    /*   petsc_ctx.fcns = fcns; */
+    /*   petsc_ctx.ghost = ghost; */
+    /*   petsc_ctx.ghost_data = ghost_data; */
+    /*   petsc_ctx.dgmath_jit_dbase = dgmath_jit_dbase; */
+    /*   petsc_ctx.d4est_geom = d4est_geom; */
+    /*   krylov_pc->pc_ctx = &petsc_ctx; */
+    /*   if(krylov_pc->pc_setup != NULL){ */
+    /*     krylov_pc->pc_setup(krylov_pc); */
+    /*   } */
+    /* } */
+    
     krylov_petsc_solve
       (
        p4est,
@@ -246,13 +274,10 @@ newton_d4est_solve
 
     fnrm = sqrt(fnrm_global);
 
-    if (p4est->mpirank == 0 && nr_params.monitor)
-      printf("[NEWTON_D4EST]: ITER %03d PRE-FNRM %.30f POST-FNRM %.30f INNER ITER %d INNER FNRM %.30f\n" ,itc, fnrmo,  fnrm, krylov_final_iter, krylov_final_fnrm);
-    
-    if (krylov_final_iter == 0){
-      sc_MPI_Barrier(sc_MPI_COMM_WORLD);
-      break;
+    if (p4est->mpirank == 0 && nr_params.monitor){
+      printf("[NEWTON_D4EST]: ITER %03d PRE-FNRM %.30f POST-FNRM  %.30f\n" ,itc, fnrmo,  fnrm);
     }
+    
   }
   
  /* clean: */

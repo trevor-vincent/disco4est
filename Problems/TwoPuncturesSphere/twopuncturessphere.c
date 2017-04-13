@@ -959,7 +959,69 @@ problem_init
     /*   ); */
 
 
-    newton_d4est_solve
+   /*  int min_level, max_level; */
+
+   /*  multigrid_get_level_range(p4est, &min_level, &max_level); */
+   /*  printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level); */
+
+   /*  /\* need to do a reduce on min,max_level before supporting multiple proc *\/ */
+   /*  /\* mpi_assert(proc_size == 1); *\/ */
+   /*  int num_of_levels = max_level + 1; */
+     
+    
+
+    /* multigrid_logger_t* logger = multigrid_logger_residual_init */
+    /*                              ( */
+    /*                              ); */
+
+    /* multigrid_element_data_updater_t* updater */
+    /*   = multigrid_element_data_updater_curved_init */
+    /*   ( */
+    /*    num_of_levels, */
+    /*    &ghost, */
+    /*    &ghost_data, */
+    /*    geometric_factors, */
+    /*    d4est_geom, */
+    /*    set_deg_integ, */
+    /*    &input */
+    /*   ); */
+
+    /* multigrid_user_callbacks_t* matrix_op_callbacks = multigrid_matrix_operator_init */
+    /*                                                   ( */
+    /*                                                    p4est, */
+    /*                                                    num_of_levels, */
+    /*                                                    dgmath_jit_dbase, */
+    /*                                                    curved_element_data_get_local_matrix_nodes, */
+    /*                                                    NULL */
+    /*                                                   ); */
+    
+    /* multigrid_data_t* mg_data = multigrid_data_init(p4est, */
+    /*                                                 dgmath_jit_dbase, */
+    /*                                                 num_of_levels, */
+    /*                                                 logger, */
+    /*                                                 /\* NULL, //matrix_op_callbacks, *\/ */
+    /*                                                 matrix_op_callbacks, */
+    /*                                                 updater, */
+    /*                                                 input_file */
+    /*                                                ); */
+
+
+
+
+    /* prob_vecs.user = matrix_op_callbacks->user; */
+    /* krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, tp_matrix_operator_setup_for_pc); */
+    /* krylov_pc_multigrid_setup(pc); */
+      
+
+    
+    krylov_petsc_params_t krylov_petsc_params;
+    krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);      
+
+    newton_petsc_params_t newton_petsc_params;
+    newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_petsc_params);       
+
+    
+    newton_petsc_solve
       (
        p4est,
        &prob_vecs,
@@ -968,9 +1030,32 @@ problem_init
        (void**)&ghost_data,
        dgmath_jit_dbase,
        d4est_geom,
-       input_file,
+       &krylov_petsc_params,
+       &newton_petsc_params,
        NULL
       );
+
+
+    /* krylov_pc_multigrid_destroy(pc); */
+    /* multigrid_logger_residual_destroy(logger); */
+    /* multigrid_element_data_updater_curved_destroy(updater, num_of_levels); */
+    /* multigrid_matrix_operator_destroy(matrix_op_callbacks); */
+    /* multigrid_data_destroy(mg_data); */
+
+    
+    /* newton_d4est_solve */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    (void*)&prob_fcns, */
+    /*    &ghost, */
+    /*    (void**)&ghost_data, */
+    /*    dgmath_jit_dbase, */
+    /*    d4est_geom, */
+    /*    input_file, */
+    /*    NULL */
+    /*   ); */
+    
     /* matrix_spd_tester_parallel */
     /*   ( */
     /*    p4est, */

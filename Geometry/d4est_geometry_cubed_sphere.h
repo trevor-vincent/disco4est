@@ -17,6 +17,8 @@ typedef struct
 void d4est_geometry_cubed_sphere_with_cube_hole_new(int mpirank,const char *input_file,d4est_geometry_t *d4est_geom);
 void d4est_geometry_cubed_sphere_outer_shell_block_new(int mpirank,const char *input_file,d4est_geometry_t *d4est_geom);
 void d4est_geometry_cubed_sphere_inner_shell_block_new(int mpirank,const char *input_file,d4est_geometry_t *d4est_geom);
+void d4est_geometry_cubed_sphere_innerouter_shell_new(int mpirank,const char *input_file,d4est_geometry_t *d4est_geom);
+void d4est_geometry_cubed_sphere_7tree_new(int mpirank,const char *input_file,d4est_geometry_t *d4est_geom);
 void d4est_geometry_cubed_sphere_new(int mpirank,const char *input_file,d4est_geometry_t *d4est_geom);
 
 

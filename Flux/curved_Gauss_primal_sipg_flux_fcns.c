@@ -124,7 +124,8 @@ curved_Gauss_primal_sipg_flux_dirichlet
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
   
 
@@ -655,7 +656,8 @@ curved_Gauss_primal_sipg_flux_interface
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
 
   d4est_geometry_compute_geometric_data_on_mortar
@@ -673,7 +675,8 @@ curved_Gauss_primal_sipg_flux_interface
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
 
   for (int d = 0; d < (P4EST_DIM); d++){

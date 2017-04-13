@@ -6,11 +6,13 @@
 #include "../EllipticSystem/problem_weakeqn_ptrs.h"
 #include <d4est_petsc.h>
 
+typedef struct krylov_pc krylov_pc_t;
+
 typedef
 void
 (*krylov_pc_apply_fcn_t)
 (
- void*,
+ krylov_pc_t*,
  double*,
  double*
 );
@@ -19,10 +21,10 @@ typedef
 void
 (*krylov_pc_setup_fcn_t)
 (
- void*
+ krylov_pc_t*
 );
 
-typedef struct {
+struct krylov_pc {
 
   /* Start EXTERNAL Parameters */
   /* THESE MUST BE SET */
@@ -45,7 +47,7 @@ typedef struct {
 
   /* End INTERNAL Parameters */
   
-} krylov_pc_t;
+};
 
 
 static
@@ -59,7 +61,7 @@ krylov_petsc_pc_setup
   krylov_pc_t* kp;
   ierr = PCShellGetContext(pc,(void**)&kp);CHKERRQ(ierr);
   if (kp->pc_setup != NULL){
-    kp->pc_setup(kp->pc_ctx);
+    kp->pc_setup(kp);
   }
   return ierr;
 }

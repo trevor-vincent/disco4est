@@ -490,6 +490,7 @@ d4est_geometry_compute_jacobian_and_drst_dxyz
  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)],
  double* jac,
  double* drst_dxyz [(P4EST_DIM)][(P4EST_DIM)],
+ double* drst_dxyz_times_jac [(P4EST_DIM)][(P4EST_DIM)],
  int volume_nodes
 )
 {
@@ -524,6 +525,39 @@ d4est_geometry_compute_jacobian_and_drst_dxyz
     double* ty = &drst_dxyz[2][1][i];
     double* tz = &drst_dxyz[2][2][i];
 #endif
+
+
+    double* rx_jac = NULL;
+    double* ry_jac = NULL;
+    double* rz_jac = NULL;
+
+
+    double* sx_jac = NULL;
+    double* sy_jac = NULL;
+    double* sz_jac = NULL;
+
+
+    double* tx_jac = NULL;
+    double* ty_jac = NULL;
+    double* tz_jac = NULL;
+    
+    if (drst_dxyz_times_jac != NULL){
+     rx_jac = &drst_dxyz_times_jac[0][0][i];
+     ry_jac = &drst_dxyz_times_jac[0][1][i];
+#if (P4EST_DIM)==3
+     rz_jac = &drst_dxyz_times_jac[0][2][i];
+#endif
+     sx_jac = &drst_dxyz_times_jac[1][0][i];
+     sy_jac = &drst_dxyz_times_jac[1][1][i];
+#if (P4EST_DIM)==3
+     sz_jac = &drst_dxyz_times_jac[1][2][i];
+    
+     tx_jac = &drst_dxyz_times_jac[2][0][i];
+     ty_jac = &drst_dxyz_times_jac[2][1][i];
+     tz_jac = &drst_dxyz_times_jac[2][2][i];
+#endif
+    }
+    
     double Jvar = 0;
     double* J = &Jvar;
     if (jac != NULL){
@@ -534,6 +568,19 @@ d4est_geometry_compute_jacobian_and_drst_dxyz
     *J = xr*(ys*zt-zs*yt)
                 - yr*(xs*zt-zs*xt)
                 + zr*(xs*yt-ys*xt);
+
+    if (drst_dxyz_times_jac != NULL){
+    *rx_jac =  (ys*zt - zs*yt);
+    *ry_jac = -(xs*zt - zs*xt);
+    *rz_jac =  (xs*yt - ys*xt);
+    *sx_jac = -(yr*zt - zr*yt);
+    *sy_jac =  (xr*zt - zr*xt);
+    *sz_jac = -(xr*yt - yr*xt);
+    *tx_jac =  (yr*zs - zr*ys);
+    *ty_jac = -(xr*zs - zr*xs);
+    *tz_jac =  (xr*ys - yr*xs);
+    }
+    
     *rx =  (ys*zt - zs*yt)/(*J);
     *ry = -(xs*zt - zs*xt)/(*J);
     *rz =  (xs*yt - ys*xt)/(*J);
@@ -545,6 +592,14 @@ d4est_geometry_compute_jacobian_and_drst_dxyz
     *tz =  (xr*ys - yr*xs)/(*J);
 #elif (P4EST_DIM) == 2
     *J = -xs*yr + xr*ys;
+
+    if (drst_dxyz_times_jac != NULL){
+    *rx_jac = ys;
+    *sx_jac =-yr;
+    *ry_jac =-xs;
+    *sy_jac = xr;
+    }
+
     *rx = ys/(*J);
     *sx =-yr/(*J);
     *ry =-xs/(*J);
@@ -554,6 +609,8 @@ d4est_geometry_compute_jacobian_and_drst_dxyz
 #endif 
   }  
 }
+
+
 
 
 void
@@ -572,13 +629,15 @@ d4est_geometry_compute_geometric_data_on_mortar
  double* j_div_sj_mortar_integ,
  quadrature_type_t quad_type,
  d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ normal_compute_method_t n_compute_method
 )
 {
   
   /* double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)]; */
   double* dxyz_drst_on_face_integ [(P4EST_DIM)][(P4EST_DIM)];
   double* drst_dxyz_on_face_integ[(P4EST_DIM)][(P4EST_DIM)];
+  double* drst_dxyz_times_jac_on_face_integ[(P4EST_DIM)][(P4EST_DIM)];
   
   int max_deg = 0;
   for (int i = 0; i < num_faces_mortar; i++){
@@ -590,6 +649,8 @@ d4est_geometry_compute_geometric_data_on_mortar
     for (int j = 0; j < (P4EST_DIM); j++){
       /* dxyz_drst[i][j] = P4EST_ALLOC(double, volume_nodes_max); */
       dxyz_drst_on_face_integ[i][j] = P4EST_ALLOC(double, face_nodes_max);
+      drst_dxyz_times_jac_on_face_integ[i][j] = P4EST_ALLOC(double, face_nodes_max);
+      
       if (drst_dxyz_on_mortar_integ == NULL){
         /* printf("drst_dxyz_on_mortar_integ is NULL\n"); */
         drst_dxyz_on_face_integ[i][j] = P4EST_ALLOC(double, face_nodes_max);
@@ -670,12 +731,8 @@ d4est_geometry_compute_geometric_data_on_mortar
         }
       }
     }
-
-
-  
     
-    
-      d4est_geometry_compute_jacobian_and_drst_dxyz(dxyz_drst_on_face_integ, J_on_face_integ, drst_dxyz_on_face_integ, face_mortar_integ_nodes);
+    d4est_geometry_compute_jacobian_and_drst_dxyz(dxyz_drst_on_face_integ, J_on_face_integ, drst_dxyz_on_face_integ, drst_dxyz_times_jac_on_face_integ, face_mortar_integ_nodes);
 
       int i0 = -1; 
       if (face == 0 || face == 1){
@@ -691,17 +748,64 @@ d4est_geometry_compute_geometric_data_on_mortar
         mpi_abort("face must be < 6\n");
       }
       double sgn = (face == 0 || face == 2 || face == 4) ? -1. : 1.;
+      dgmath_face_info_t face_info;
+      dgmath_get_face_info(face, &face_info);
+
+      
       for (int i = 0; i < face_mortar_integ_nodes; i++){
         int is = face_mortar_integ_stride + i;
-        double n_is [(P4EST_DIM)];
+        double n_is [] = {0.,0.,0.};
         double sj_is = 0.;
-        for (int d = 0; d < (P4EST_DIM); d++){
-          n_is[d] = sgn*drst_dxyz_on_face_integ[i0][d][i]*J_on_face_integ[i];
-          sj_is += n_is[d]*n_is[d];
+        if(n_compute_method == COMPUTE_NORMAL_USING_JACOBIAN){
+          double sgn = (face == 0 || face == 2 || face == 4) ? -1. : 1.;
+          for (int d = 0; d < (P4EST_DIM); d++){
+            /* n_is[d] = sgn*drst_dxyz_on_face_integ[i0][d][i]*J_on_face_integ[i]; */
+            n_is[d] = sgn*drst_dxyz_times_jac_on_face_integ[i0][d][i];
+            sj_is += n_is[d]*n_is[d];
+          }
+          sj_is = sqrt(sj_is);
+          for (int d = 0; d < (P4EST_DIM); d++)
+            n_is[d] /= sj_is;
         }
-        sj_is = sqrt(sj_is);
-        for (int d = 0; d < (P4EST_DIM); d++)
-          n_is[d] /= sj_is;
+        
+        else if (n_compute_method == COMPUTE_NORMAL_USING_CROSS_PRODUCT){
+          double sgn = (face == 0 || face == 3 || face == 4) ? -1. : 1.;
+          double vecs [2][3] = {{0.,0.,0.},{0.,0.,1.}};
+          
+          for (int d = 0; d < (P4EST_DIM); d++)
+            for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){
+              vecs[dir][d] =  dxyz_drst_on_face_integ[d][dir == 0 ? face_info.a : face_info.b][i];
+            }
+          
+          linalg_cross_prod
+            (
+             vecs[0][0],
+             vecs[0][1],
+             vecs[0][2],
+             vecs[1][0],
+             vecs[1][1],
+             vecs[1][2],
+             &(n_is[0]),
+             &(n_is[1]),
+             &(n_is[2])
+            );
+
+
+          sj_is = 0.;
+          for (int d = 0; d < (P4EST_DIM); d++){
+            /* The normals are backwards for these 2(3) face_mortars in 2-d(3-d) */
+            n_is[d] *= sgn;
+            sj_is += n_is[d]*n_is[d];
+          }
+          sj_is = sqrt(sj_is);
+          
+          for (int d = 0; d < (P4EST_DIM); d++)
+            n_is[d] /= sj_is;
+          
+        }
+        else {
+          mpi_abort("[D4EST_ERROR]: Only two ways to compute normal");
+        }
 
         /* STORE COMPUTATIONS */
         if (n_on_mortar_integ != NULL){
@@ -711,7 +815,7 @@ d4est_geometry_compute_geometric_data_on_mortar
         }
         if (sj_on_mortar_integ != NULL){
           sj_on_mortar_integ[is] = sj_is;
-        }
+        }       
         if (j_div_sj_mortar_integ != NULL){
           j_div_sj_mortar_integ[is] = J_on_face_integ[i]/sj_is;
         }
@@ -730,6 +834,7 @@ d4est_geometry_compute_geometric_data_on_mortar
       P4EST_FREE(dxyz_drst_on_face_integ[i][j]);
       if (drst_dxyz_on_mortar_integ == NULL){
         P4EST_FREE(drst_dxyz_on_face_integ[i][j]);
+        P4EST_FREE(drst_dxyz_times_jac_on_face_integ[i][j]);
       }
     }
 }
@@ -842,6 +947,8 @@ d4est_geometry_compute_drst_dxyz
   }  
 }
 
+
+
 void
 d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
 (
@@ -932,7 +1039,6 @@ d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
 
     int face_mortar_nodes = dgmath_get_nodes((P4EST_DIM) - 1, deg_mortar[face_mortar]);
     /* compute the LGL nodes in the directions of the face_mortar vectors */
-
     double* tmp = P4EST_ALLOC(double,face_mortar_nodes);
     for (int d = 0; d < (P4EST_DIM); d++){
       /* xyz[d] = P4EST_ALLOC(double, face_mortar_nodes); */
@@ -996,6 +1102,7 @@ d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
         }
       }
     }
+    
     /* get the normal by taking the cross product of the tangent vectors
      * in 2-d, we take the cross product of the tangent vector and zhat*/
     for (int i = 0; i < face_mortar_nodes; i++){

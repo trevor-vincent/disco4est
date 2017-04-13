@@ -6,14 +6,17 @@
 #include "../Solver/multigrid.h"
 #include "../Solver/cg_eigs.h"
 #include "../hpAMR/hp_amr.h"
-#include "../Solver/multigrid_callbacks.h"
+#include <ini.h>
+#include <util.h>
+#include <multigrid_callbacks.h>
 #include <multigrid_smoother_cheby_d4est.h>
 #include <multigrid_smoother_krylov_petsc.h>
 #include <multigrid_bottom_solver_cg_d4est.h>
 #include <multigrid_bottom_solver_cheby_d4est.h>
 #include <multigrid_bottom_solver_krylov_petsc.h>
-#include <ini.h>
-#include <util.h>
+
+
+
 
 void
 multigrid_get_level_range
@@ -292,12 +295,12 @@ multigrid_data_init
   multigrid_set_bottom_solver(p4est, input_file, mg_data);
   
   if(p4est->mpirank == 0){
-    printf("[D4EST_INFO]: Multigrid Parameters\n");
-    printf("[D4EST_INFO]: vcycle imax = %d\n", mg_data->vcycle_imax);
-    printf("[D4EST_INFO]: vcycle rtol = %.25f\n", mg_data->vcycle_rtol);
-    printf("[D4EST_INFO]: vcycle atol = %.25f\n", mg_data->vcycle_atol);
-    printf("[D4EST_INFO]: smoother = %s\n", mg_data->smoother_name);
-    printf("[D4EST_INFO]: bottom solver = %s\n", mg_data->bottom_solver_name);
+    printf("[MG_SOLVER]: Multigrid Parameters\n");
+    printf("[MG_SOLVER]: vcycle imax = %d\n", mg_data->vcycle_imax);
+    printf("[MG_SOLVER]: vcycle rtol = %.25f\n", mg_data->vcycle_rtol);
+    printf("[MG_SOLVER]: vcycle atol = %.25f\n", mg_data->vcycle_atol);
+    printf("[MG_SOLVER]: smoother = %s\n", mg_data->smoother_name);
+    printf("[MG_SOLVER]: bottom solver = %s\n", mg_data->bottom_solver_name);
   }
 
   mg_data->logger = logger;

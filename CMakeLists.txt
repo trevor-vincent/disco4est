@@ -149,6 +149,7 @@ SET (
   Solver/multigrid_element_data_updater_nocurved.c
   Solver/multigrid_element_data_updater_curved.c
   Flux/curved_Gauss_primal_sipg_flux_fcns.c
+  Flux/curved_Gauss_primal_sipg_varyingpen_flux_fcns.c
   Flux/curved_test_mortarjacobianterms_flux_fcns.c
   Flux/dg_norm.c
   Flux/curved_dg_norm.c
@@ -330,6 +331,7 @@ add_d4est_problem_3d(testhelmholtzmultigridsphere_withhole_driver_3d testhelmhol
 # add_d4est_problem_3d(testcurvedipflux_driver_3d testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_3d(testcurvedshell_driver_3d testcurvedshell.c TestCurvedShell)
 add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)
+add_d4est_problem_3d(twopuncturessphere_mg_driver twopuncturessphere_mg.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopunctures_testfcns_driver twopunctures_testfcns.c TwoPuncturesSphere)
 add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_2d(testmortarjacobianterms_driver_2d testmortarjacobianterms.c TestMortarJacobianTerms)

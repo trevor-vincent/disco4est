@@ -56,4 +56,10 @@ krylov_petsc_input
  krylov_petsc_params_t* params
 );
 
+void
+krylov_petsc_set_options_database_from_params
+(
+ krylov_petsc_params_t* input
+);
+
 #endif

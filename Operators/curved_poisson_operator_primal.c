@@ -103,6 +103,7 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
      &element_data->u_storage[0],
      stiff_u
     );
+
   
 
   for (int i = 0; i < volume_nodes_Lobatto; i++){

@@ -20,16 +20,9 @@ deg_integ_R0 = 5
 
 [geometry]
 name = cubed_sphere_outer_shell_block
-compactify = 0
+compactify_outer_shell = 1
+compactify_inner_shell = 0
 X_mapping_type = analytic
-R0 = .333
-R1 = .666
-R2 = 1.
-
-[solver]
-ksp_type = gmres
-ksp_atol = 1e-20
-ksp_rtol = 1e-10
-ksp_maxit = 10000
-ksp_view = 1
-ksp_monitor = 1
+R0 = 10
+R1 = 100
+R2 = 10000

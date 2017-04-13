@@ -92,7 +92,9 @@ curved_test_mortarjacobianterms_dirichlet
 
 
   mapping_type_t mapping_orig  = geom->X_mapping_type;
-  geom->X_mapping_type = MAP_ISOPARAMETRIC;
+
+
+  geom->X_mapping_type = MAP_ANALYTIC;
   d4est_geometry_compute_geometric_data_on_mortar
     (
      e_m->tree,
@@ -106,13 +108,13 @@ curved_test_mortarjacobianterms_dirichlet
      sjvol_on_f_m_Gauss,
      nvol_on_f_m_Gauss,
      NULL,
-     LOBATTO,
+     GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
 
 
-  geom->X_mapping_type = MAP_ANALYTIC;
   d4est_geometry_compute_geometric_data_on_mortar
     (
      e_m->tree,
@@ -126,13 +128,14 @@ curved_test_mortarjacobianterms_dirichlet
      sjvol_on_f_m_Gauss_analytic,
      nvol_on_f_m_Gauss_analytic,
      NULL,
-     LOBATTO,
+     GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
 
-  geom->X_mapping_type = MAP_ISOPARAMETRIC;
-  d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
+  
+  d4est_geometry_compute_geometric_data_on_mortar
     (
      e_m->tree,
      e_m->q,
@@ -141,13 +144,96 @@ curved_test_mortarjacobianterms_dirichlet
      1,
      &e_m->deg_integ,
      f_m,
-     LOBATTO,
-     n_on_f_m_Gauss,
+     NULL,
      sj_on_f_m_Gauss,
+     n_on_f_m_Gauss,
+     NULL,
+     GAUSS,
      geom,
      dgmath_jit_dbase,
-     xyz_on_f_m_Gauss
+     COMPUTE_NORMAL_USING_CROSS_PRODUCT
     );
+
+
+  /* geom->X_mapping_type = MAP_ISOPARAMETRIC; */
+  /* d4est_geometry_compute_geometric_data_on_mortar */
+  /*   ( */
+  /*    e_m->tree, */
+  /*    e_m->q, */
+  /*    e_m->dq, */
+  /*    1, */
+  /*    1, */
+  /*    &e_m->deg_integ, */
+  /*    f_m, */
+  /*    drst_dxyz_on_f_m_Gauss , */
+  /*    sjvol_on_f_m_Gauss, */
+  /*    nvol_on_f_m_Gauss, */
+  /*    NULL, */
+  /*    LOBATTO, */
+  /*    geom, */
+  /*    dgmath_jit_dbase, */
+  /*    COMPUTE_NORMAL_USING_JACOBIAN */
+  /*   ); */
+
+
+  /* geom->X_mapping_type = MAP_ANALYTIC; */
+  /* d4est_geometry_compute_geometric_data_on_mortar */
+  /*   ( */
+  /*    e_m->tree, */
+  /*    e_m->q, */
+  /*    e_m->dq, */
+  /*    1, */
+  /*    1, */
+  /*    &e_m->deg_integ, */
+  /*    f_m, */
+  /*    drst_dxyz_on_f_m_Gauss_analytic, */
+  /*    sjvol_on_f_m_Gauss_analytic, */
+  /*    nvol_on_f_m_Gauss_analytic, */
+  /*    NULL, */
+  /*    LOBATTO, */
+  /*    geom, */
+  /*    dgmath_jit_dbase, */
+  /*    COMPUTE_NORMAL_USING_JACOBIAN */
+  /*   ); */
+
+  
+  /* geom->X_mapping_type = MAP_ISOPARAMETRIC; */
+  /* d4est_geometry_compute_geometric_data_on_mortar */
+  /*   ( */
+  /*    e_m->tree, */
+  /*    e_m->q, */
+  /*    e_m->dq, */
+  /*    1, */
+  /*    1, */
+  /*    &e_m->deg_integ, */
+  /*    f_m, */
+  /*    NULL, */
+  /*    sj_on_f_m_Gauss, */
+  /*    n_on_f_m_Gauss, */
+  /*    NULL, */
+  /*    LOBATTO, */
+  /*    geom, */
+  /*    dgmath_jit_dbase, */
+  /*    COMPUTE_NORMAL_USING_CROSS_PRODUCT */
+  /*   ); */
+
+
+  /* d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY */
+  /*   ( */
+  /*    e_m->tree, */
+  /*    e_m->q, */
+  /*    e_m->dq, */
+  /*    1, */
+  /*    1, */
+  /*    &e_m->deg_integ, */
+  /*    f_m, */
+  /*    LOBATTO, */
+  /*    n_on_f_m_Gauss, */
+  /*    sj_on_f_m_Gauss, */
+  /*    geom, */
+  /*    dgmath_jit_dbase, */
+  /*    xyz_on_f_m_Gauss */
+  /*   ); */
 
   geom->X_mapping_type = mapping_orig;
 
@@ -188,8 +274,11 @@ curved_test_mortarjacobianterms_dirichlet
   util_compute_error_array(n_on_f_m_Gauss[2], nvol_on_f_m_Gauss[2], n_error[2], face_nodes_m_Gauss);
   maxerror += util_max_error(n_on_f_m_Gauss[2], nvol_on_f_m_Gauss[2],face_nodes_m_Gauss);
 #endif
+  
   if (maxerror > data->local_eps){
     printf("Holy shit batman, LOTS OF N_ERROR ON THE BOUNDARY HERE, NOT SURPRISING BECAUSE THIS IS ISOPARAMETRIC, OR IS IT?\n");
+    printf("face = %d\n", f_m);
+    
     DEBUG_PRINT_4ARR_DBL(n_on_f_m_Gauss[0], nvol_on_f_m_Gauss[0], n_error[0],nvol_on_f_m_Gauss_analytic[0],face_nodes_m_Gauss);
     DEBUG_PRINT_4ARR_DBL(n_on_f_m_Gauss[1], nvol_on_f_m_Gauss[1], n_error[1],nvol_on_f_m_Gauss_analytic[1],face_nodes_m_Gauss);
     DEBUG_PRINT_4ARR_DBL(n_on_f_m_Gauss[2], nvol_on_f_m_Gauss[2], n_error[2],nvol_on_f_m_Gauss_analytic[2],face_nodes_m_Gauss);
@@ -511,8 +600,27 @@ curved_test_mortarjacobianterms_interface
 
 
   mapping_type_t mapping_orig = geom->X_mapping_type;
-  geom->X_mapping_type = MAP_ISOPARAMETRIC;
-  d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
+  geom->X_mapping_type = MAP_ANALYTIC;
+  /* geom->X_mapping_type = MAP_ISOPARAMETRIC; */
+  /* d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY */
+  /*   ( */
+  /*    e_m[0]->tree, */
+  /*    e_m[0]->q, */
+  /*    e_m[0]->dq, */
+  /*    faces_m, */
+  /*    faces_mortar, */
+  /*    &deg_mortar_Gauss[0], */
+  /*    f_m, */
+  /*    GAUSS, */
+  /*    n_on_f_m_mortar_Gauss, */
+  /*    sj_on_f_m_mortar_Gauss, */
+  /*    geom, */
+  /*    dgmath_jit_dbase, */
+  /*    tmpxyz */
+  /*   ); */
+
+
+  d4est_geometry_compute_geometric_data_on_mortar
     (
      e_m[0]->tree,
      e_m[0]->q,
@@ -521,12 +629,14 @@ curved_test_mortarjacobianterms_interface
      faces_mortar,
      &deg_mortar_Gauss[0],
      f_m,
-     GAUSS,
-     n_on_f_m_mortar_Gauss,
+     NULL,
      sj_on_f_m_mortar_Gauss,
+     n_on_f_m_mortar_Gauss,
+     NULL,
+     GAUSS,
      geom,
      dgmath_jit_dbase,
-     tmpxyz
+     COMPUTE_NORMAL_USING_CROSS_PRODUCT
     );
 
   
@@ -545,7 +655,8 @@ curved_test_mortarjacobianterms_interface
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
 
   d4est_geometry_compute_geometric_data_on_mortar
@@ -563,11 +674,13 @@ curved_test_mortarjacobianterms_interface
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
 
   if(geom->DX != NULL){
   geom->X_mapping_type = MAP_ANALYTIC;
+  /* geom->X_mapping_type = MAP_ISOPARAMETRIC; */
   d4est_geometry_compute_geometric_data_on_mortar
     (
      e_m[0]->tree,
@@ -583,7 +696,8 @@ curved_test_mortarjacobianterms_interface
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     );
 
   d4est_geometry_compute_geometric_data_on_mortar
@@ -601,7 +715,8 @@ curved_test_mortarjacobianterms_interface
      NULL,
      GAUSS,
      geom,
-     dgmath_jit_dbase
+     dgmath_jit_dbase,
+     COMPUTE_NORMAL_USING_JACOBIAN
     ); 
   }
   geom->X_mapping_type = mapping_orig;
@@ -864,33 +979,40 @@ curved_test_mortarjacobianterms_interface
   maxerror += util_max_error(n_on_f_m_mortar_Gauss[0], nvol_m_on_f_m_mortar_Gauss[0], total_nodes_mortar_Gauss);
   maxerror += util_max_error(n_on_f_m_mortar_Gauss[1], nvol_p_on_f_p_mortar_Gauss_reoriented[1], total_nodes_mortar_Gauss);
   maxerror += util_max_error(n_on_f_m_mortar_Gauss[1], nvol_m_on_f_m_mortar_Gauss[1], total_nodes_mortar_Gauss);
-  maxerror += util_max_error(dudx_p_on_f_p_mortar_Gauss[0], dudx_m_on_f_m_mortar_Gauss[0], total_nodes_mortar_Gauss);
-  maxerror += util_max_error(dudx_p_on_f_p_mortar_Gauss[1], dudx_m_on_f_m_mortar_Gauss[1], total_nodes_mortar_Gauss);
+  /* maxerror += util_max_error(dudx_p_on_f_p_mortar_Gauss[0], dudx_m_on_f_m_mortar_Gauss[0], total_nodes_mortar_Gauss); */
+  /* maxerror += util_max_error(dudx_p_on_f_p_mortar_Gauss[1], dudx_m_on_f_m_mortar_Gauss[1], total_nodes_mortar_Gauss); */
 
   double maxerror_analytic = 0.;
   if(geom->DX != NULL){
   maxerror_analytic += util_max_error(sjvol_m_on_f_m_mortar_Gauss_analytic, sjvol_p_on_f_p_mortar_Gauss_reoriented_analytic, total_nodes_mortar_Gauss);
   maxerror_analytic += util_max_error(nvol_m_on_f_m_mortar_Gauss_analytic[0], nvol_p_on_f_p_mortar_Gauss_reoriented_analytic[0], total_nodes_mortar_Gauss);
   maxerror_analytic += util_max_error(nvol_m_on_f_m_mortar_Gauss_analytic[1], nvol_p_on_f_p_mortar_Gauss_reoriented_analytic[1], total_nodes_mortar_Gauss);
-  maxerror_analytic += util_max_error(dudx_p_on_f_p_mortar_Gauss_analytic[0], dudx_m_on_f_m_mortar_Gauss_analytic[0], total_nodes_mortar_Gauss);
-  maxerror_analytic += util_max_error(dudx_p_on_f_p_mortar_Gauss_analytic[1], dudx_m_on_f_m_mortar_Gauss_analytic[1], total_nodes_mortar_Gauss);
+  /* maxerror_analytic += util_max_error(dudx_p_on_f_p_mortar_Gauss_analytic[0], dudx_m_on_f_m_mortar_Gauss_analytic[0], total_nodes_mortar_Gauss); */
+  /* maxerror_analytic += util_max_error(dudx_p_on_f_p_mortar_Gauss_analytic[1], dudx_m_on_f_m_mortar_Gauss_analytic[1], total_nodes_mortar_Gauss); */
 
   /* DEBUG_PRINT_2ARR_DBL(sjvol_m_on_f_m_mortar_Gauss_analytic, sjvol_p_on_f_p_mortar_Gauss_reoriented_analytic, total_nodes_mortar_Gauss); */
   }
   
 #if (P4EST_DIM)==3
-  maxerror += util_max_error(dudx_p_on_f_p_mortar_Gauss[2], dudx_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss);
+  /* maxerror += util_max_error(dudx_p_on_f_p_mortar_Gauss[2], dudx_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss); */
   maxerror += util_max_error(n_on_f_m_mortar_Gauss[2], nvol_p_on_f_p_mortar_Gauss_reoriented[2], total_nodes_mortar_Gauss);
   maxerror += util_max_error(n_on_f_m_mortar_Gauss[2], nvol_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss);
 
   if(geom->DX != NULL){
-    maxerror_analytic += util_max_error(dudx_p_on_f_p_mortar_Gauss_analytic[2], dudx_m_on_f_m_mortar_Gauss_analytic[2], total_nodes_mortar_Gauss);
+    /* maxerror_analytic += util_max_error(dudx_p_on_f_p_mortar_Gauss_analytic[2], dudx_m_on_f_m_mortar_Gauss_analytic[2], total_nodes_mortar_Gauss); */
     maxerror_analytic += util_max_error(nvol_m_on_f_m_mortar_Gauss_analytic[2], nvol_p_on_f_p_mortar_Gauss_reoriented_analytic[2], total_nodes_mortar_Gauss);
   }
 #endif
 
 
   maxerror += maxerror_analytic;
+  if (maxerror > data->local_eps){
+    printf("HOLY FUCKS DONALD TRUMP, LOOK AT THIS ERROR\n");
+    /* DEBUG_PRINT_2ARR_DBL(dudr_p_on_f_p_mortar_Gauss_porder[0], dudr_m_on_f_m_mortar_Gauss[0], total_nodes_mortar_Gauss); */
+      /* DEBUG_PRINT_2ARR_DBL(dudr_p_on_f_p_mortar_Gauss_porder[1], dudr_m_on_f_m_mortar_Gauss[1], total_nodes_mortar_Gauss); */
+      /* DEBUG_PRINT_2ARR_DBL(dudr_p_on_f_p_mortar_Gauss_porder[2], dudr_m_on_f_m_mortar_Gauss[2], total_nodes_mortar_Gauss); */
+  }
+  
   /* DEBUG_PRINT_2ARR_DBL(dudx_p_on_f_p_mortar_Gauss[0], dudx_m_on_f_m_mortar_Gauss[0], total_nodes_mortar_Gauss); */
   /* DEBUG_PRINT_2ARR_DBL(dudx_p_on_f_p_mortar_Gauss[1], dudx_m_on_f_m_mortar_Gauss[1], total_nodes_mortar_Gauss); */
 /* #if (P4EST_DIM)==3 */

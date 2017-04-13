@@ -47,7 +47,6 @@ multigrid_matrix_operator_restriction_callback
   (*coarse_matrix_stride) += coarse_volume_nodes*coarse_volume_nodes;
 }
 
-
 static void
 multigrid_matrix_operator_update_callback
 (
@@ -110,7 +109,6 @@ multigrid_matrix_operator_update_callback
     return;
   }
 }
-
 
 multigrid_user_callbacks_t*
 multigrid_matrix_operator_init
