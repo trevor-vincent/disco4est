@@ -5,7 +5,7 @@
 #include "../Utilities/util.h"
 #include "../Flux/curved_compute_flux.h"
 #include <curved_dg_norm.h>
-#include <ip_flux_aux.h>
+#include <ip_flux_params.h>
 
 /* See houston2007 for the definition of the dg-norm */
 

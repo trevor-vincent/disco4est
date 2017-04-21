@@ -2,7 +2,7 @@
 #define CURVED_BI_ESTIMATOR_FLUX_FCNS_H
 
 #include "../Flux/curved_compute_flux.h"
-#include "../Flux/ip_flux_aux.h"
+#include "../Flux/ip_flux_params.h"
 #include "../Utilities/util.h"
 
 curved_flux_fcn_ptrs_t

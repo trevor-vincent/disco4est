@@ -87,7 +87,19 @@ void d4est_geometry_quadtree_to_vertex(p4est_connectivity_t *connectivity,p4est_
 void d4est_geometry_octree_to_vertex(p8est_connectivity_t *connectivity,p4est_topidx_t which_tree,const double abc[3],double xyz[3]);
 void d4est_geometry_destroy(d4est_geometry_t *d4est_geom);
 d4est_geometry_t *d4est_geometry_new(int mpirank,const char *input_file);
-
+void
+d4est_geometry_data_compute_xyz_face_analytic
+(
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ p4est_qcoord_t q0 [(P4EST_DIM)],
+ p4est_qcoord_t dq,
+ int which_tree,
+ int face,
+ d4est_geometry_t* d4est_geom,
+ quadrature_type_t quad_type,
+ int deg,
+ double* xyz [(P4EST_DIM)]
+);
 
 #endif
 

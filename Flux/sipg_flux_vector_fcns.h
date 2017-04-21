@@ -3,7 +3,7 @@
 
 #include "../GridFunctions/grid_functions.h"
 #include "../Flux/compute_flux.h"
-#include "../Flux/ip_flux_aux.h"
+#include "../Flux/ip_flux_params.h"
 
 inline static double
 sipg_flux_vector_calc_penalty_meanp2_over_minh

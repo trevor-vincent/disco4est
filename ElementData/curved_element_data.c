@@ -2,9 +2,9 @@
 #include "../GridFunctions/grid_functions.h"
 #include "../Utilities/util.h"
 #include "../LinearAlgebra/linalg.h"
+#include <ip_flux.h>
 #include <curved_compute_flux.h>
 #include <curved_dg_norm.h>
-#include <ip_flux_aux.h>
 #include <d4est_geometry.h>
 #include <sc_reduce.h>
 
@@ -144,6 +144,78 @@ curved_element_data_init_node_vec
   }
   
 }
+
+
+void
+curved_element_data_init_node_vec_ext
+(
+ p4est_t* p4est,
+ double* node_vec,
+ grid_fcn_ext_t fofxyzv,
+ double* v,
+ double* fofxyzv_user,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_geometry_t* d4est_geom
+)
+{
+
+  double* xyz_temp [(P4EST_DIM)];
+  for (int d = 0; d < (P4EST_DIM); d++){
+    xyz_temp[d] = P4EST_ALLOC(double, dgmath_get_nodes((P4EST_DIM), (MAX_DEGREE)));
+  }
+  
+
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        curved_element_data_t* ed = quad->p.user_data;        
+        int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
+
+        d4est_geometry_compute_xyz
+          (
+           dgmath_jit_dbase,
+           d4est_geom,
+           tt,
+           ed->deg,
+           LOBATTO,
+           ed->q,
+           ed->dq,
+           xyz_temp
+          );
+
+        
+        for (int i = 0; i < volume_nodes; i++){
+          node_vec[ed->nodal_stride + i] = fofxyzv(xyz_temp[0][i],
+                                                    xyz_temp[1][i],
+#if (P4EST_DIM)==3
+                                                    xyz_temp[2][i],
+#endif
+                                                    v[i],
+                                                    fofxyzv_user
+                                                   );
+
+          /* printf(" %d %.15f %.15f %.15f %.15f\n",ed->id, xyz_temp[0][i], xyz_temp[1][i], xyz_temp[2][i], node_vec[ed->nodal_stride + i]); */
+        }
+
+        
+
+        
+      }
+    }
+
+
+  for (int d = 0; d < (P4EST_DIM); d++) {
+    P4EST_FREE(xyz_temp[d]);
+  }
+  
+}
+
 
 
 typedef struct {
@@ -1967,6 +2039,7 @@ void curved_element_data_apply_fofufofvlj_Gaussnodes
 {
 
   int deg_Lobatto = elem_data->deg;
+
   
   if (deg_Gauss == elem_data->deg_integ)
     {
@@ -1998,10 +2071,7 @@ void curved_element_data_apply_fofufofvlj_Gaussnodes
     double* xyz_integ [(P4EST_DIM)];
     D4EST_ALLOC_DIM_VEC(xyz_integ, volume_nodes_Gauss);
     double* xyz_rst_integ [(P4EST_DIM)][(P4EST_DIM)];
-    double* rst_xyz_integ [(P4EST_DIM)][(P4EST_DIM)];
     D4EST_ALLOC_DBYD_MAT(xyz_rst_integ, volume_nodes_Gauss);
-    D4EST_ALLOC_DBYD_MAT(rst_xyz_integ, volume_nodes_Gauss);
-    
     
     d4est_geometry_compute_xyz
       (
@@ -2014,28 +2084,30 @@ void curved_element_data_apply_fofufofvlj_Gaussnodes
        elem_data->dq,
        xyz_integ
       );
-
+    
     d4est_geometry_compute_dxyz_drst
       (
        elem_data->tree,
        elem_data->q,
        elem_data->dq,
-       elem_data->deg_integ,       
+       deg_Gauss,       
        GAUSS,
        d4est_geometry,
        dgmath_jit_dbase,
-       elem_data->xyz_rst_integ
+       xyz_rst_integ
       );
 
     
     d4est_geometry_compute_jacobian_and_drst_dxyz
       (
-       elem_data->xyz_rst_integ,
-       elem_data->J_integ,
-       elem_data->rst_xyz_integ,
+       xyz_rst_integ,
+       J_integ,
+       NULL,
        NULL,
        volume_nodes_Gauss
       );
+
+    /* DEBUG_PRINT_ARR_DBL(J_integ, volume_nodes_Gauss); */
     
 
     dgmath_apply_fofufofvlj_Gaussnodes
@@ -2058,7 +2130,6 @@ void curved_element_data_apply_fofufofvlj_Gaussnodes
     P4EST_FREE(J_integ);
     D4EST_FREE_DIM_VEC(xyz_integ);
     D4EST_FREE_DBYD_MAT(xyz_rst_integ);
-    D4EST_FREE_DBYD_MAT(rst_xyz_integ);
   }
   else {
     mpi_abort("deg_Lobatto == elem_data->deg && deg_Gauss >= elem_data->deg_integ");
@@ -2112,9 +2183,7 @@ void curved_element_data_form_fofufofvlilj_matrix_Gaussnodes
     double* xyz_integ [(P4EST_DIM)];
     D4EST_ALLOC_DIM_VEC(xyz_integ, volume_nodes_Gauss);
     double* xyz_rst_integ [(P4EST_DIM)][(P4EST_DIM)];
-    double* rst_xyz_integ [(P4EST_DIM)][(P4EST_DIM)];
     D4EST_ALLOC_DBYD_MAT(xyz_rst_integ, volume_nodes_Gauss);
-    D4EST_ALLOC_DBYD_MAT(rst_xyz_integ, volume_nodes_Gauss);
     
     d4est_geometry_compute_xyz
       (
@@ -2138,15 +2207,15 @@ d4est_geometry_compute_dxyz_drst
        GAUSS,
        d4est_geometry,
        dgmath_jit_dbase,
-       elem_data->xyz_rst_integ
+       xyz_rst_integ
       );
 
     
     d4est_geometry_compute_jacobian_and_drst_dxyz
       (
-       elem_data->xyz_rst_integ,
-       elem_data->J_integ,
-       elem_data->rst_xyz_integ,
+       xyz_rst_integ,
+       J_integ,
+       NULL,
        NULL,
        volume_nodes_Gauss
       );
@@ -2171,7 +2240,6 @@ d4est_geometry_compute_dxyz_drst
     P4EST_FREE(J_integ);
     D4EST_FREE_DIM_VEC(xyz_integ);
     D4EST_FREE_DBYD_MAT(xyz_rst_integ);
-    D4EST_FREE_DBYD_MAT(rst_xyz_integ);
   }
   else {
     mpi_abort("deg_Lobatto == elem_data->deg && deg_Gauss >= elem_data->deg_integ");

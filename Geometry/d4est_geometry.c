@@ -409,6 +409,46 @@ d4est_geometry_data_compute_dxyz_drst_face_analytic
 
 
 void
+d4est_geometry_data_compute_xyz_face_analytic
+(
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ p4est_qcoord_t q0 [(P4EST_DIM)],
+ p4est_qcoord_t dq,
+ int which_tree,
+ int face,
+ d4est_geometry_t* d4est_geom,
+ quadrature_type_t quad_type,
+ int deg,
+ double* xyz [(P4EST_DIM)]
+)
+{
+  int face_nodes = dgmath_get_nodes((P4EST_DIM)-1,deg);
+  double rst [(P4EST_DIM)];
+
+  dgmath_rst_t rst_points
+    = dgmath_get_rst_points(dgmath_jit_dbase, deg, (P4EST_DIM) - 1, quad_type);
+
+  dgmath_face_info_t face_info;
+  dgmath_get_face_info(face, &face_info);
+  
+  for (int i = 0; i < face_nodes; i++){
+    rst[face_info.a] = rst_points.r[i];
+#if (P4EST_DIM)==3
+    rst[face_info.b] = rst_points.s[i];
+#endif
+    rst[face_info.c] = face_info.sgn;
+
+    double xyz_i [(P4EST_DIM)];
+    d4est_geom->X(d4est_geom, which_tree, q0, dq, rst, COORDS_INTEG_RST, xyz_i);
+    for (int d = 0; d < (P4EST_DIM); d++){
+      xyz[d][i] = xyz_i[d];
+    }
+  }
+}
+
+
+
+void
 d4est_geometry_data_compute_dxyz_drst_face_isoparametric
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
@@ -510,22 +550,37 @@ d4est_geometry_compute_jacobian_and_drst_dxyz
     double zs = dxyz_drst[2][1][i];
     double zt = dxyz_drst[2][2][i];
 #endif
-    
-    double* rx = &drst_dxyz[0][0][i];
-    double* ry = &drst_dxyz[0][1][i];
-#if (P4EST_DIM)==3
-    double* rz = &drst_dxyz[0][2][i];
-#endif
-    double* sx = &drst_dxyz[1][0][i];
-    double* sy = &drst_dxyz[1][1][i];
-#if (P4EST_DIM)==3
-    double* sz = &drst_dxyz[1][2][i];
-    
-    double* tx = &drst_dxyz[2][0][i];
-    double* ty = &drst_dxyz[2][1][i];
-    double* tz = &drst_dxyz[2][2][i];
-#endif
 
+    double* rx;
+    double* ry;
+#if (P4EST_DIM)==3
+    double* rz;
+#endif
+    double* sx;
+    double* sy;
+#if (P4EST_DIM)==3
+    double* sz;
+    double* tx;
+    double* ty;
+    double* tz;
+#endif
+    
+    if (drst_dxyz != NULL){
+     rx = &drst_dxyz[0][0][i];
+     ry = &drst_dxyz[0][1][i];
+#if (P4EST_DIM)==3
+     rz = &drst_dxyz[0][2][i];
+#endif
+     sx = &drst_dxyz[1][0][i];
+     sy = &drst_dxyz[1][1][i];
+#if (P4EST_DIM)==3
+     sz = &drst_dxyz[1][2][i];
+    
+     tx = &drst_dxyz[2][0][i];
+     ty = &drst_dxyz[2][1][i];
+     tz = &drst_dxyz[2][2][i];
+#endif
+    }
 
     double* rx_jac = NULL;
     double* ry_jac = NULL;
@@ -580,7 +635,7 @@ d4est_geometry_compute_jacobian_and_drst_dxyz
     *ty_jac = -(xr*zs - zr*xs);
     *tz_jac =  (xr*ys - yr*xs);
     }
-    
+    if (drst_dxyz != NULL && jac != NULL){
     *rx =  (ys*zt - zs*yt)/(*J);
     *ry = -(xs*zt - zs*xt)/(*J);
     *rz =  (xs*yt - ys*xt)/(*J);
@@ -590,6 +645,7 @@ d4est_geometry_compute_jacobian_and_drst_dxyz
     *tx =  (yr*zs - zr*ys)/(*J);
     *ty = -(xr*zs - zr*xs)/(*J);
     *tz =  (xr*ys - yr*xs)/(*J);
+    }
 #elif (P4EST_DIM) == 2
     *J = -xs*yr + xr*ys;
 
@@ -599,11 +655,12 @@ d4est_geometry_compute_jacobian_and_drst_dxyz
     *ry_jac =-xs;
     *sy_jac = xr;
     }
-
+    if (drst_dxyz != NULL && jac != NULL){
     *rx = ys/(*J);
     *sx =-yr/(*J);
     *ry =-xs/(*J);
     *sy = xr/(*J);
+    }
 #else
     mpi_abort("DIM must be 2 or 3");
 #endif 
@@ -873,10 +930,13 @@ d4est_geometry_compute_xyz
     for (int d = 0; d < (P4EST_DIM); d++){
       rst_i[d] = rst[d][i];
     }
+    
     d4est_geom->X(d4est_geom, which_tree, q, dq, rst_i, COORDS_INTEG_RST, xyz_i);
     for (int d = 0; d < (P4EST_DIM); d++){
       xyz[d][i] = xyz_i[d];
     }
+    /* printf("xyz[0], xyz[1], xyz[2], rst[0], rst[1], rst[2] = %f,%f,%f,%f,%f,%f\n", xyz_i[0], xyz_i[1], xyz_i[2], rst_i[0], rst_i[1], rst_i[2]); */
+    
   }
 }
 

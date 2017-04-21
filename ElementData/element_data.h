@@ -13,7 +13,7 @@
 #define ELEMENTDATA_H
 
 #include "../GridFunctions/grid_functions.h"
-#include "../Flux/ip_flux_aux.h"
+#include "../Flux/ip_flux.h"
 #include "../dGMath/dgmath.h"
 
 typedef struct {

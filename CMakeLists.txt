@@ -148,8 +148,10 @@ SET (
   Solver/multigrid_logger_residual.c
   Solver/multigrid_element_data_updater_nocurved.c
   Solver/multigrid_element_data_updater_curved.c
-  Flux/curved_Gauss_primal_sipg_flux_fcns.c
-  Flux/curved_Gauss_primal_sipg_varyingpen_flux_fcns.c
+  Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.c
+  Flux/curved_Gauss_primal_sipg_hesthaven_flux_fcns.c
+  Flux/ip_flux.c
+  Flux/ip_flux_params.c
   Flux/curved_test_mortarjacobianterms_flux_fcns.c
   Flux/dg_norm.c
   Flux/curved_dg_norm.c
@@ -326,14 +328,15 @@ endfunction()
 # add_d4est_problem_3d(testhelmholtzmultigrid_driver_3d testhelmholtzmultigrid.c TestHelmholtzMultigrid)
 # add_d4est_problem_3d(testhelmholtzmultigridsphere_driver_3d testhelmholtzmultigridsphere.c TestHelmholtzMultigrid)
 add_d4est_problem_3d(testhelmholtzmultigridsphere_withhole_driver_3d testhelmholtzmultigridsphere_withhole.c TestHelmholtzMultigrid)
+# add_d4est_problem_3d(testhelmholtzmultigridsphere_withhole_tp_driver_3d testhelmholtzmultigridsphere_withhole_tp.c TestHelmholtzMultigrid)
 #add_d4est_problem_3d(constantdensitystarprimal_driver constantdensitystarprimal.c ConstantDensityStarPrimal)
 # add_d4est_problem_3d(cdssphere_driver cdssphere.c ConstantDensityStarSphere)
 # add_d4est_problem_3d(testcurvedipflux_driver_3d testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_3d(testcurvedshell_driver_3d testcurvedshell.c TestCurvedShell)
-add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)
-add_d4est_problem_3d(twopuncturessphere_mg_driver twopuncturessphere_mg.c TwoPuncturesSphere)
+# add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)
+# add_d4est_problem_3d(twopuncturessphere_mg_driver twopuncturessphere_mg.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopunctures_testfcns_driver twopunctures_testfcns.c TwoPuncturesSphere)
-add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
+# add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_2d(testmortarjacobianterms_driver_2d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)
 # add_d4est_problem_2d(testcurvedipfluxoncube2d_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)

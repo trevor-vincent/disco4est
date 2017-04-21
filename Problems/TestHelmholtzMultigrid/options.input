@@ -50,10 +50,16 @@ min_quadrants = -1
 min_level = 0
 fill_uniform = 1
 
+[ip_flux_params]
+name = kronbichler
+ip_flux_penalty_prefactor = 10.0
+ip_flux_bc_eval = BC_EVAL_ON_GAUSS_POINTS
+ip_flux_h_calc = H_EQ_VOLUME_DIV_AREA
+ip_flux_penalty_calculate_fcn = meanp_sqr_over_meanh
+
 [problem]
 num_unifrefs = 0
 num_of_amr_levels = 1
-ip_flux_penalty = 10.0
 deg_offset_for_nonlinear_integ = 0
 deg_R2 = 2
 deg_integ_R2 = 2

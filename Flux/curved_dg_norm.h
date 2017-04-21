@@ -2,7 +2,7 @@
 #define CURVED_DG_NORM_H 
 
 #include <curved_compute_flux.h>
-#include <ip_flux_aux.h>
+#include <ip_flux.h>
 
 typedef struct{
   ip_flux_params_t* ip_flux_params;

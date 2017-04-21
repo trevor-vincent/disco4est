@@ -1375,8 +1375,9 @@ void dgmath_apply_fofufofvlj_Gaussnodes
 #if (P4EST_DIM)==3
                                    xyz_Gauss[2][i],
 #endif
-                                   u_Gauss[i],
+                                   (u != NULL) ? u_Gauss[i] : 0,
                                    fofu_ctx);
+      /* printf("xyz_Gauss[0][i], xyz_Gauss[1][i], xyz_Gauss[2][i], fofu_fofv[i] = %f,%f,%f,%f\n",xyz_Gauss[0][i], xyz_Gauss[1][i], xyz_Gauss[2][i], fofu_fofv[i]); */
     }
     if (v != NULL || fofv_fcn != identity_fcn){
       fofu_fofv[i] *= fofv_fcn(xyz_Gauss[0][i],
@@ -1384,11 +1385,12 @@ void dgmath_apply_fofufofvlj_Gaussnodes
 #if (P4EST_DIM)==3
                                    xyz_Gauss[2][i],
 #endif
-                                   v_Gauss[i],
+                                   (v != NULL) ? v_Gauss[i] : 0,
                                    fofv_ctx);
     }
-  }
 
+  }
+ 
   dgmath_apply_curvedGaussMass_onGaussNodeVec
     (
      dgmath_jit_dbase,
@@ -1399,6 +1401,10 @@ void dgmath_apply_fofufofvlj_Gaussnodes
      dim,
      out
     );
+
+  /* DEBUG_PRINT_2ARR_DBL(fofu_fofv,jac_Gauss, dgmath_get_nodes((P4EST_DIM), deg_Gauss)); */
+  /* DEBUG_PRINT_ARR_DBL(out, dgmath_get_nodes((P4EST_DIM), deg_Lobatto)); */
+
   
   P4EST_FREE(u_Gauss);
   P4EST_FREE(v_Gauss);

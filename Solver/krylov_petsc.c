@@ -1,4 +1,5 @@
 #include <util.h>
+#include <ip_flux.h>
 #include "../pXest/pXest.h"
 #include "../LinearAlgebra/linalg.h"
 #include "../Solver/krylov_petsc.h"

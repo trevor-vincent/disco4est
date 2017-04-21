@@ -21,7 +21,8 @@ typedef struct {
   /* auxiliary node vector to
    * hold previous iterate or
    * initial iterate for Newton
-   * Raphson (pointer alias)*/
+   * Raphson (pointer alias) 
+   */
   double* u0;
 
   /* used to store rhs of weak eqns (pointer alias)*/
@@ -31,7 +32,7 @@ typedef struct {
   flux_fcn_ptrs_t scalar_flux_fcn_data;
   curved_flux_fcn_ptrs_t curved_scalar_flux_fcn_data;
 
-  /* function pointers to calculate flux for vector variable */
+  /* function pointers to calculate flux for vector variable, will be deprecated eventually */
   flux_fcn_ptrs_t vector_flux_fcn_data;
   curved_flux_fcn_ptrs_t curved_vector_flux_fcn_data;
 
