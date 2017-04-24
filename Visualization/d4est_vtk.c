@@ -25,6 +25,7 @@
 
 #include <pXest.h>
 #include "d4est_vtk.h"
+#include "d4est_geometry.h"
 #include <util.h>
 #ifdef P4_TO_P8
 /* #include <p8est_vtk.h> */
@@ -2688,3 +2689,41 @@ d4est_vtk_write_dg_point_dataf (d4est_vtk_context_t * cont,
   return cont;
 }
 
+
+void
+d4est_vtk_save_geometry_and_dg_fields
+(
+ const char* save_as_filename,
+ p4est_t* p4est,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ int* deg_array,
+ const char* input_file,
+ const char* input_section,
+ d4est_vtk_user_fcn_t d4est_vtk_user_fcn,
+ void* vtk_user
+){
+
+
+    d4est_geometry_t* geom_vtk = d4est_geometry_new
+                                 (
+                                  p4est->mpirank,
+                                  input_file,
+                                  input_section,
+                                  "[D4EST_VTK_GEOMETRY]"
+                                 );
+
+    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, save_as_filename);
+    d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
+    d4est_vtk_context_set_scale(vtk_ctx, .99);
+    d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
+    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);    
+
+    d4est_vtk_user_fcn(
+                       vtk_ctx,
+                       vtk_user
+                      );
+
+    d4est_vtk_write_footer(vtk_ctx);
+
+    d4est_geometry_destroy(geom_vtk);
+}

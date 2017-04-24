@@ -5,6 +5,7 @@
 #include <linalg.h>
 #include <util.h>
 
+
 #if (P4EST_DIM)==3
 #include <d4est_geometry_cubed_sphere.h>
 /* #include <d4est_geometry_shell.h> */
@@ -16,6 +17,7 @@
 
 typedef struct {
 
+  const char* input_section;
   char* name;
   mapping_type_t X_mapping_type;
   
@@ -32,11 +34,12 @@ int d4est_geometry_input_handler
 )
 {
   d4est_geometry_input_t* pconfig = (d4est_geometry_input_t*)user;
-  if (util_match_couple(section,"geometry",name,"name")) {
+
+  if (util_match_couple(section,pconfig->input_section,name,"name")) {
     mpi_assert(pconfig->name == NULL);
     D4EST_ASPRINTF(pconfig->name,"%s",value);
   }
-  else if (util_match_couple(section,"geometry",name,"X_mapping_type")) {
+  else if (util_match_couple(section,pconfig->input_section,name,"X_mapping_type")) {
     if(util_match(value, "isoparametric")){
       pconfig->X_mapping_type = MAP_ISOPARAMETRIC;
     }
@@ -58,11 +61,14 @@ static
 d4est_geometry_input_t
 d4est_geometry_input
 (
- const char* input_file
+ const char* input_file,
+ const char* input_section,
+ const char* printf_prefix
 )
 {
   
   d4est_geometry_input_t input;
+  input.input_section = input_section;
   input.name = NULL;
   input.X_mapping_type = MAP_NONE;
   
@@ -70,49 +76,47 @@ d4est_geometry_input
     mpi_abort("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("geometry", input.name, NULL);
-  D4EST_CHECK_INPUT("geometry", input.X_mapping_type, MAP_NONE);
-
-
-  
-  printf("[D4EST_GEOMETRY]: Loading %s geometry\n", input.name);
+  D4EST_CHECK_INPUT(input_section, input.name, NULL);
+  D4EST_CHECK_INPUT(input_section, input.X_mapping_type, MAP_NONE);
+ 
+  printf("%s: Loading %s geometry\n", printf_prefix, input.name);
   if (input.X_mapping_type == MAP_ISOPARAMETRIC)
-    printf("[D4EST_GEOMETRY]: Mapping type = %s\n", "isoparametric");
+    printf("%s: Mapping type = %s\n", printf_prefix, "isoparametric");
   if (input.X_mapping_type == MAP_ANALYTIC)
-    printf("[D4EST_GEOMETRY]: Mapping type = %s\n", "analytic");
+    printf("%s: Mapping type = %s\n", printf_prefix, "analytic");
   return input;
 }
 
 
 d4est_geometry_t*
-d4est_geometry_new(int mpirank, const char* input_file){
+d4est_geometry_new(int mpirank,
+                   const char* input_file,
+                   const char* input_section,
+                   const char* printf_prefix)
+{
 
-  d4est_geometry_input_t input = d4est_geometry_input(input_file);
+  d4est_geometry_input_t input = d4est_geometry_input(input_file, input_section, printf_prefix);
   d4est_geometry_t* d4est_geom = P4EST_ALLOC(d4est_geometry_t, 1);
   d4est_geom->X_mapping_type = input.X_mapping_type;
   
 #if (P4EST_DIM)==3
   if (util_match(input.name,"cubed_sphere")) {
-    d4est_geometry_cubed_sphere_new(mpirank, input_file, d4est_geom);
+    d4est_geometry_cubed_sphere_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
   }
   else if (util_match(input.name,"cubed_sphere_7tree")) {
-    d4est_geometry_cubed_sphere_7tree_new(mpirank, input_file, d4est_geom);
+    d4est_geometry_cubed_sphere_7tree_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
   }
   else if (util_match(input.name,"cubed_sphere_with_cube_hole")) {
-    d4est_geometry_cubed_sphere_with_cube_hole_new(mpirank, input_file, d4est_geom);
+    d4est_geometry_cubed_sphere_with_cube_hole_new(mpirank, input_file, input_section, printf_prefix,  d4est_geom);
   }
   else if (util_match(input.name,"cubed_sphere_innerouter_shell")) {
-    d4est_geometry_cubed_sphere_innerouter_shell_new(mpirank, input_file, d4est_geom);
+    d4est_geometry_cubed_sphere_innerouter_shell_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
   }
-  
-  /* else if (util_match(input.name,"shell")) { */
-  /*   d4est_geometry_shell_new(input_file, d4est_geom); */
-  /* } */
   else if (util_match(input.name,"cubed_sphere_outer_shell_block")){
-    d4est_geometry_cubed_sphere_outer_shell_block_new(mpirank, input_file,d4est_geom);
+    d4est_geometry_cubed_sphere_outer_shell_block_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
   }
   else if (util_match(input.name,"cubed_sphere_inner_shell_block")){
-    d4est_geometry_cubed_sphere_inner_shell_block_new(mpirank, input_file,d4est_geom);
+    d4est_geometry_cubed_sphere_inner_shell_block_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
   }
   else if (util_match(input.name,"none")){}
   else {
@@ -123,7 +127,10 @@ d4est_geometry_new(int mpirank, const char* input_file){
 #endif
 #if (P4EST_DIM)==2
   if (util_match(input.name,"disk")) {
-    d4est_geometry_disk_new(mpirank, input_file, d4est_geom);
+    d4est_geometry_5treedisk_new(mpirank, input_file, input_section, printf_prefix,  d4est_geom);
+  }
+  else if (util_match(input.name,"disk_outer_wedge")){
+    d4est_geometry_disk_outer_wedge_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
   }
   else if (util_match(input.name,"none")){}
   else {
@@ -939,8 +946,6 @@ d4est_geometry_compute_xyz
     
   }
 }
-
-
 
 void
 d4est_geometry_compute_drst_dxyz

@@ -145,5 +145,21 @@ void curved_element_data_init_node_vec_ext(p4est_t *p4est,double *node_vec,grid_
 void curved_element_data_init_node_vec(p4est_t *p4est,double *node_vec,grid_fcn_t init_fcn,dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geom);
 void curved_element_data_set_degrees(p4est_t *p4est,int(*set_deg_fcn)(int,int,int));
 
+void
+curved_element_data_compute_jacobian_on_lgl_grid
+(
+ p4est_t* p4est,
+ d4est_geometry_t* d4est_geometry,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ double* jacobian_lgl
+);
+
+void
+curved_element_data_get_array_of_degrees
+(
+ p4est_t* p4est,
+ int* deg_array
+);
+
 
 #endif

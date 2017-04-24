@@ -2430,3 +2430,83 @@ curved_element_compute_derivative_on_Gauss
   P4EST_FREE(dvec_di_Gauss);
   P4EST_FREE(dvec_di_Lobatto);
 }
+
+void
+curved_element_data_compute_jacobian_on_lgl_grid
+(
+ p4est_t* p4est,
+ d4est_geometry_t* d4est_geometry,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ double* jacobian_lgl
+)
+{
+  int nodal_stride;
+  double* xyz_rst [(P4EST_DIM)][(P4EST_DIM)];
+  D4EST_ALLOC_DBYD_MAT(xyz_rst, dgmath_get_nodes((P4EST_DIM),(MAX_DEGREE)));
+
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        curved_element_data_t* elem_data = (curved_element_data_t*)(quad->p.user_data);
+        int volume_nodes = dgmath_get_nodes((P4EST_DIM), elem_data->deg);
+
+        d4est_geometry_compute_dxyz_drst
+          (
+           elem_data->tree,
+           elem_data->q,
+           elem_data->dq,
+           elem_data->deg,           
+           LOBATTO,
+           d4est_geometry,
+           dgmath_jit_dbase,
+           xyz_rst
+          );       
+
+        d4est_geometry_compute_jacobian_and_drst_dxyz
+          (
+           xyz_rst,
+           &jacobian_lgl[nodal_stride],
+           NULL,
+           NULL,
+           volume_nodes
+          );
+
+        nodal_stride += volume_nodes;
+        }
+    }
+                       
+  D4EST_FREE_DBYD_MAT(xyz_rst);
+}
+
+void
+curved_element_data_get_array_of_degrees
+(
+ p4est_t* p4est,
+ int* deg_array
+)
+{
+   int vtk_nodes = 0;
+     
+    int stride = 0;
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt)
+      {
+        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+        sc_array_t* tquadrants = &tree->quadrants;
+        int Q = (p4est_locidx_t) tquadrants->elem_count;
+        for (int q = 0; q < Q; ++q) {
+          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+          curved_element_data_t* ed = quad->p.user_data;
+          deg_array[stride] = ed->deg;
+          vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
+          stride++;
+        }
+      }
+}

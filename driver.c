@@ -45,7 +45,10 @@ int main(int argc, char *argv[])
 #endif
 
  
-  d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,"options.input");
+  d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
+                                                    "options.input",
+                                                    "geometry",
+                                                    "[D4EST_GEOMETRY]");
   /* p4est_connectivity_t* conn = problem_build_conn(); */
 
   pXest_input_t pXest_input = pXest_input_parse("options.input");

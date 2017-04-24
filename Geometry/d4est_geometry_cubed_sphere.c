@@ -9,7 +9,7 @@
 #if (P4EST_DIM)==3
 #include <d4est_geometry_cubed_sphere.h>
 
-double
+static inline double
 secant_fcn(double x){
   return 1./cos(x);
 }
@@ -25,27 +25,27 @@ int d4est_geometry_cubed_sphere_input_handler
 )
 {
   d4est_geometry_cubed_sphere_attr_t* pconfig = user;
-  if (util_match_couple(section,"geometry",name,"R0")) {
+  if (util_match_couple(section,pconfig->input_section,name,"R0")) {
     mpi_assert(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
     mpi_assert(pconfig->R0 > 0);
   }
-  else if (util_match_couple(section,"geometry",name,"R1")) {
+  else if (util_match_couple(section,pconfig->input_section,name,"R1")) {
     mpi_assert(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
     mpi_assert(pconfig->R1 > 0);
   }
-  else if (util_match_couple(section,"geometry",name,"R2")) {
+  else if (util_match_couple(section,pconfig->input_section,name,"R2")) {
     mpi_assert(pconfig->R2 == -1);
     pconfig->R2 = atof(value);
     mpi_assert(pconfig->R2 > 0);
   }
-  else if (util_match_couple(section,"geometry",name,"compactify_outer_shell")) {
+  else if (util_match_couple(section,pconfig->input_section,name,"compactify_outer_shell")) {
     mpi_assert(pconfig->compactify_outer_shell == -1);
     pconfig->compactify_outer_shell = atoi(value);
     mpi_assert(pconfig->compactify_outer_shell == 0 || pconfig->compactify_outer_shell == 1);
   }
-  else if (util_match_couple(section,"geometry",name,"compactify_inner_shell")) {
+  else if (util_match_couple(section,pconfig->input_section,name,"compactify_inner_shell")) {
     mpi_assert(pconfig->compactify_inner_shell == -1);
     pconfig->compactify_inner_shell = atoi(value);
     mpi_assert(pconfig->compactify_inner_shell == 0 || pconfig->compactify_inner_shell == 1);
@@ -801,10 +801,12 @@ static
 d4est_geometry_cubed_sphere_attr_t*
 d4est_geometry_cubed_sphere_input
 (
- const char* input_file
+ const char* input_file,
+ const char* input_section
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere_attrs = P4EST_ALLOC(d4est_geometry_cubed_sphere_attr_t, 1);
+  snprintf (sphere_attrs->input_section, sizeof(sphere_attrs->input_section), "%s", input_section);
   sphere_attrs->R0 = -1;
   sphere_attrs->R1 = -1;
   sphere_attrs->R2 = -1;
@@ -815,11 +817,11 @@ d4est_geometry_cubed_sphere_input
     mpi_abort("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R0, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R1, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R2, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_outer_shell, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_inner_shell, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R0, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R1, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R2, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_outer_shell, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_inner_shell, -1);
 
   /* variables useful for the center cube */
   sphere_attrs->Clength = sphere_attrs->R0 / sqrt (3.);
@@ -832,10 +834,12 @@ static
 d4est_geometry_cubed_sphere_attr_t*
 d4est_geometry_cubed_sphere_inner_shell_input
 (
- const char* input_file
+ const char* input_file,
+ const char* input_section
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere_attrs = P4EST_ALLOC(d4est_geometry_cubed_sphere_attr_t, 1);
+  snprintf (sphere_attrs->input_section, sizeof(sphere_attrs->input_section), "%s", input_section);
   sphere_attrs->R0 = -1;
   sphere_attrs->R1 = -1;
   sphere_attrs->R2 = -1;
@@ -846,10 +850,10 @@ d4est_geometry_cubed_sphere_inner_shell_input
     mpi_abort("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R0, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R1, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_inner_shell, -1);
-  /* D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_outer_shell, -1); */
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R0, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R1, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_inner_shell, -1);
+  /* D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_outer_shell, -1); */
 
   /* variables useful for the center cube */
   sphere_attrs->Clength = sphere_attrs->R0 / sqrt (3.);
@@ -862,10 +866,12 @@ static
 d4est_geometry_cubed_sphere_attr_t*
 d4est_geometry_cubed_sphere_innerouter_shell_input
 (
- const char* input_file
+ const char* input_file,
+ const char* input_section
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere_attrs = P4EST_ALLOC(d4est_geometry_cubed_sphere_attr_t, 1);
+  snprintf (sphere_attrs->input_section, sizeof(sphere_attrs->input_section), "%s", input_section);
   sphere_attrs->R0 = -1;
   sphere_attrs->R1 = -1;
   sphere_attrs->R2 = -1;
@@ -876,11 +882,11 @@ d4est_geometry_cubed_sphere_innerouter_shell_input
     mpi_abort("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R0, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R1, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R2, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_inner_shell, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_outer_shell, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R0, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R1, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R2, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_inner_shell, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_outer_shell, -1);
 
   /* variables useful for the center cube */
   sphere_attrs->Clength = sphere_attrs->R0 / sqrt (3.);
@@ -892,10 +898,12 @@ static
 d4est_geometry_cubed_sphere_attr_t*
 d4est_geometry_cubed_sphere_7tree_input
 (
- const char* input_file
+ const char* input_file,
+ const char* input_section
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere_attrs = P4EST_ALLOC(d4est_geometry_cubed_sphere_attr_t, 1);
+  snprintf (sphere_attrs->input_section, sizeof(sphere_attrs->input_section), "%s", input_section);
   sphere_attrs->R0 = -1;
   sphere_attrs->R1 = -1;
   sphere_attrs->R2 = -1;
@@ -906,11 +914,11 @@ d4est_geometry_cubed_sphere_7tree_input
     mpi_abort("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R0, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R1, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R2, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_inner_shell, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_outer_shell, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R0, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R1, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R2, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_inner_shell, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_outer_shell, -1);
 
   /* variables useful for the center cube */
   sphere_attrs->Clength = sphere_attrs->R0 / sqrt (3.);
@@ -923,10 +931,12 @@ static
 d4est_geometry_cubed_sphere_attr_t*
 d4est_geometry_cubed_sphere_outer_shell_input
 (
- const char* input_file
+ const char* input_file,
+ const char* input_section
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere_attrs = P4EST_ALLOC(d4est_geometry_cubed_sphere_attr_t, 1);
+  snprintf (sphere_attrs->input_section, sizeof(sphere_attrs->input_section), "%s", input_section);
   sphere_attrs->R0 = -1;
   sphere_attrs->R1 = -1;
   sphere_attrs->R2 = -1;
@@ -937,10 +947,10 @@ d4est_geometry_cubed_sphere_outer_shell_input
     mpi_abort("Can't load input file");
   }
 
-  /* D4EST_CHECK_INPUT("geometry", sphere_attrs->R0, -1); */
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R1, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->R2, -1);
-  D4EST_CHECK_INPUT("geometry", sphere_attrs->compactify_outer_shell, -1);
+  /* D4EST_CHECK_INPUT(input_section, sphere_attrs->R0, -1); */
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R1, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->R2, -1);
+  D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_outer_shell, -1);
 
 
   return sphere_attrs;
@@ -961,10 +971,12 @@ d4est_geometry_cubed_sphere_new
 (
  int mpirank,
  const char* input_file,
+ const char* input_section,
+ const char* printf_prefix,
  d4est_geometry_t* d4est_geom
 )
 {
-  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_input(input_file);
+  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_input(input_file, input_section);
   p4est_connectivity_t* conn = p8est_connectivity_new_sphere();
   
   d4est_geom->user = sphere_attrs;
@@ -977,12 +989,12 @@ d4est_geometry_cubed_sphere_new
   d4est_geom->p4est_conn = conn;
 
   if (mpirank == 0){
-    printf("[GEOMETRY_INFO]: NAME = cubed sphere\n");
-    printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
-    printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
-    printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
-    printf("[GEOMETRY_INFO]: compactify_outer_shell = %d\n", sphere_attrs->compactify_outer_shell);
-    printf("[GEOMETRY_INFO]: compactify_inner_shell = %d\n", sphere_attrs->compactify_inner_shell);
+    printf("%s: NAME = cubed sphere\n", printf_prefix);
+    printf("%s: R0 = %.25f\n", printf_prefix, sphere_attrs->R0);
+    printf("%s: R1 = %.25f\n", printf_prefix, sphere_attrs->R1);
+    printf("%s: R2 = %.25f\n", printf_prefix, sphere_attrs->R2);
+    printf("%s: compactify_outer_shell = %d\n", printf_prefix, sphere_attrs->compactify_outer_shell);
+    printf("%s: compactify_inner_shell = %d\n", printf_prefix, sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -991,10 +1003,12 @@ d4est_geometry_cubed_sphere_7tree_new
 (
  int mpirank,
  const char* input_file,
+ const char* input_section,
+ const char* printf_prefix,
  d4est_geometry_t* d4est_geom
 )
 {
-  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_7tree_input(input_file);
+  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_7tree_input(input_file, input_section);
   p4est_connectivity_t* conn = d4est_connectivity_new_sphere_7tree();
   
   d4est_geom->user = sphere_attrs;
@@ -1007,10 +1021,10 @@ d4est_geometry_cubed_sphere_7tree_new
   d4est_geom->p4est_conn = conn;
 
   if (mpirank == 0){
-    printf("[GEOMETRY_INFO]: NAME = cubed sphere\n");
-    printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
-    printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
-    printf("[GEOMETRY_INFO]: compactify_inner_shell = %d\n", sphere_attrs->compactify_inner_shell);
+    printf("%s: NAME = cubed sphere\n", printf_prefix );
+    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
+    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
+    printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1020,10 +1034,12 @@ d4est_geometry_cubed_sphere_innerouter_shell_new
 (
  int mpirank,
  const char* input_file,
+ const char* input_section,
+ const char* printf_prefix,
  d4est_geometry_t* d4est_geom
 )
 {
-  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_innerouter_shell_input(input_file);
+  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_innerouter_shell_input(input_file, input_section);
   p4est_connectivity_t* conn = d4est_connectivity_new_sphere_innerouter_shell();
   
   d4est_geom->user = sphere_attrs;
@@ -1036,12 +1052,12 @@ d4est_geometry_cubed_sphere_innerouter_shell_new
   d4est_geom->p4est_conn = conn;
 
   if (mpirank == 0){
-    printf("[GEOMETRY_INFO]: NAME = cubed sphere innerouter shell\n");
-    printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
-    printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
-    printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
-    printf("[GEOMETRY_INFO]: compactify_outer_shell = %d\n", sphere_attrs->compactify_outer_shell);
-    printf("[GEOMETRY_INFO]: compactify_inner_shell = %d\n", sphere_attrs->compactify_inner_shell);
+    printf("%s: NAME = cubed sphere innerouter shell\n", printf_prefix );
+    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
+    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
+    printf("%s: R2 = %.25f\n", printf_prefix , sphere_attrs->R2);
+    printf("%s: compactify_outer_shell = %d\n", printf_prefix , sphere_attrs->compactify_outer_shell);
+    printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1050,10 +1066,12 @@ d4est_geometry_cubed_sphere_inner_shell_block_new
 (
  int mpirank,
  const char* input_file,
+ const char* input_section,
+ const char* printf_prefix,
  d4est_geometry_t* d4est_geom
 )
 {
-  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_inner_shell_input(input_file);
+  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_inner_shell_input(input_file, input_section);
   p4est_connectivity_t* conn = p8est_connectivity_new_unitcube();
   
   d4est_geom->user = sphere_attrs;
@@ -1066,10 +1084,10 @@ d4est_geometry_cubed_sphere_inner_shell_block_new
   d4est_geom->p4est_conn = conn;
 
   if (mpirank == 0){
-    printf("[GEOMETRY_INFO]: NAME = cubed sphere inner shell block\n");
-    printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
-    printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
-    printf("[GEOMETRY_INFO]: compactify_inner_shell = %d\n", sphere_attrs->compactify_inner_shell);
+    printf("%s: NAME = cubed sphere inner shell block\n", printf_prefix );
+    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
+    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
+    printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1078,10 +1096,12 @@ d4est_geometry_cubed_sphere_outer_shell_block_new
 (
  int mpirank,
  const char* input_file,
+ const char* input_section,
+ const char* printf_prefix,
  d4est_geometry_t* d4est_geom
 )
 {
-  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_outer_shell_input(input_file);
+  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_outer_shell_input(input_file, input_section);
   p4est_connectivity_t* conn = p8est_connectivity_new_unitcube();
   
   d4est_geom->user = sphere_attrs;
@@ -1095,10 +1115,10 @@ d4est_geometry_cubed_sphere_outer_shell_block_new
 
   
   if (mpirank == 0){
-    printf("[GEOMETRY_INFO]: NAME = cubed sphere outer shell block\n");
-    printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
-    printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
-    printf("[GEOMETRY_INFO]: compactify_outer_shell = %d\n", sphere_attrs->compactify_outer_shell);
+    printf("%s: NAME = cubed sphere outer shell block\n", printf_prefix );
+    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
+    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
+    printf("%s: compactify_outer_shell = %d\n", printf_prefix , sphere_attrs->compactify_outer_shell);
   }
 }
 
@@ -1107,10 +1127,12 @@ d4est_geometry_cubed_sphere_with_cube_hole_new
 (
  int mpirank,
  const char* input_file,
+ const char* input_section,
+ const char* printf_prefix,
  d4est_geometry_t* d4est_geom
 )
 {
-  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_input(input_file);
+  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_input(input_file, input_section);
   p4est_connectivity_t* conn = d4est_connectivity_new_sphere_with_cube_hole();
   
   d4est_geom->p4est_conn = conn; 
@@ -1124,12 +1146,12 @@ which_tree == 12 will never occur */
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   
   if (mpirank == 0){
-    printf("[GEOMETRY_INFO]: NAME = compact_sphere_with_cube_hole\n");
-    printf("[GEOMETRY_INFO]: R0 = %.25f\n", sphere_attrs->R0);
-    printf("[GEOMETRY_INFO]: R1 = %.25f\n", sphere_attrs->R1);
-    printf("[GEOMETRY_INFO]: R2 = %.25f\n", sphere_attrs->R2);
-    printf("[GEOMETRY_INFO]: compactify_outer_shell = %d\n", sphere_attrs->compactify_outer_shell);
-    printf("[GEOMETRY_INFO]: compactify_inner_shell = %d\n", sphere_attrs->compactify_inner_shell);
+    printf("%s: NAME = compact_sphere_with_cube_hole\n", printf_prefix );
+    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
+    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
+    printf("%s: R2 = %.25f\n", printf_prefix , sphere_attrs->R2);
+    printf("%s: compactify_outer_shell = %d\n", printf_prefix , sphere_attrs->compactify_outer_shell);
+    printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
   }
 }
 

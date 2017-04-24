@@ -37,9 +37,20 @@
 #include <d4est_geometry.h>
 /* SC_EXTERN_C_BEGIN; */
 
+
+
 /** Opaque context type for writing VTK output with multiple function calls.
  */
 typedef struct d4est_vtk_context d4est_vtk_context_t;
+
+
+typedef void
+(*d4est_vtk_user_fcn_t)
+(
+ d4est_vtk_context_t*,
+ void*
+);
+
 
 /** Write the d4est in VTK format.
  *
@@ -282,5 +293,19 @@ d4est_vtk_write_dg_point_dataf (d4est_vtk_context_t * cont,
                                 ...);
 d4est_vtk_context_t *
 d4est_vtk_dg_context_new (p4est_t * p4est, dgmath_jit_dbase_t* dgbase, const char *filename);
+
+
+void
+d4est_vtk_save_geometry_and_dg_fields
+(
+ const char* save_as_filename,
+ p4est_t* p4est,
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ int* deg_array,
+ const char* input_file,
+ const char* input_section,
+ d4est_vtk_user_fcn_t d4est_vtk_user_fcn,
+ void* vtk_user
+);
 
 #endif /* !D4EST_VTK_H */
