@@ -4,7 +4,7 @@
 #include <linalg.h>
 #include <curved_element_data.h>
 #include <sipg_flux_vector_fcns.h>
-#include <curved_Gauss_primal_sipg_flux_fcns.h>
+#include <curved_Gauss_primal_sipg_kronbichler_flux_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
 #include <problem_weakeqn_ptrs.h>
@@ -14,7 +14,7 @@
 #include <matrix_sym_tester.h>
 #include <dg_norm.h>
 #include <d4est_geometry.h>
-#include <d4est_geometry_sphere.h>
+#include <d4est_geometry_cubed_sphere.h>
 #include <d4est_geometry_disk.h>
 /* #include <curved_poisson_debug_vecs.h> */
 #include <d4est_vtk.h>
@@ -143,21 +143,13 @@ typedef struct {
   /* int gauss_integ_deg; */
   int deg_R0;
   int deg_integ_R0;
+  int deg_stiffness_R0;
   int deg_R1;
   int deg_integ_R1;
+  int deg_stiffness_R1;
   int deg_R2;
   int deg_integ_R2;
-
-  double ip_flux_penalty;
-
-  double R0;
-  double R1;
-  double R2;
-  /* double Rinf; */
-  /* double w; */
-  KSPType krylov_type;
-  
-  int count;
+  int deg_stiffness_R2;
   
 } problem_input_t;
 
@@ -175,79 +167,47 @@ int problem_input_handler
   if (util_match_couple(section,"amr",name,"num_unifrefs")) {
     mpi_assert(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
-    pconfig->count += 1;
   }
   else if (util_match_couple(section,"amr",name,"num_randrefs")) {
     mpi_assert(pconfig->num_randrefs == -1);
     pconfig->num_randrefs = atoi(value);
-    pconfig->count += 1;
   }
-
-  else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
-    mpi_assert(pconfig->ip_flux_penalty == -1);
-    pconfig->ip_flux_penalty = atof(value);
-    pconfig->count += 1;
-  } 
-  /* else if (util_match_couple(section,"problem",name,"gauss_integ_deg")) { */
-  /*   mpi_assert(pconfig->gauss_integ_deg == -1); */
-  /*   pconfig->gauss_integ_deg = atoi(value); */
-  /*   pconfig->count += 1; */
-  /* } */
-  else if (util_match_couple(section,"problem",name,"R0")) {
-    mpi_assert(pconfig->R0 == -1);
-    pconfig->R0 = atof(value);
-    pconfig->count += 1;
-  }
-  else if (util_match_couple(section,"problem",name,"R1")) {
-    mpi_assert(pconfig->R1 == -1);
-    pconfig->R1 = atof(value);
-    pconfig->count += 1;
-  }
-  else if (util_match_couple(section,"problem",name,"R2")) {
-    mpi_assert(pconfig->R2 == -1);
-    pconfig->R2 = atof(value);
-    pconfig->count += 1;
-  }
-  /* else if (util_match_couple(section,"problem",name,"Rinf")) { */
-    /* mpi_assert(pconfig->Rinf == -1); */
-    /* pconfig->Rinf = atof(value); */
-    /* pconfig->count += 1; */
-  /* } */
-  /* else if (util_match_couple(section,"problem",name,"w")) { */
-    /* mpi_assert(pconfig->w == -1); */
-    /* pconfig->w = atof(value); */
-    /* pconfig->count += 1; */
-  /* } */
   else if (util_match_couple(section,"problem",name,"deg_R0")) {
     mpi_assert(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
-    pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_integ_R0")) {
     mpi_assert(pconfig->deg_integ_R0 == -1);
     pconfig->deg_integ_R0 = atoi(value);
-    pconfig->count += 1;
+  }
+  else if (util_match_couple(section,"problem",name,"deg_stiffness_R0")) {
+    mpi_assert(pconfig->deg_stiffness_R0 == -1);
+    pconfig->deg_stiffness_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R1")) {
     mpi_assert(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
-    pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_integ_R1")) {
     mpi_assert(pconfig->deg_integ_R1 == -1);
     pconfig->deg_integ_R1 = atoi(value);
-    pconfig->count += 1;
+  }
+  else if (util_match_couple(section,"problem",name,"deg_stiffness_R1")) {
+    mpi_assert(pconfig->deg_stiffness_R1 == -1);
+    pconfig->deg_stiffness_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R2")) {
     mpi_assert(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
-    pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_integ_R2")) {
     mpi_assert(pconfig->deg_integ_R2 == -1);
     pconfig->deg_integ_R2 = atoi(value);
-    pconfig->count += 1;
-  }  
+  }
+  else if (util_match_couple(section,"problem",name,"deg_stiffness_R2")) {
+    mpi_assert(pconfig->deg_stiffness_R2 == -1);
+    pconfig->deg_stiffness_R2 = atoi(value);
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -277,10 +237,10 @@ void problem_build_rhs
      f,
      f_fcn,
      dgbase,
-     d4est_geom->p4est_geom
+     d4est_geom
     );
   
-   prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns(boundary_fcn,ip_flux_params);
+   prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns(boundary_fcn,ip_flux_params);
 
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
@@ -327,7 +287,7 @@ void problem_build_rhs
   P4EST_FREE(u_eq_0);
 
 
-  prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
                                            (zero_fcn,ip_flux_params);
 
   P4EST_FREE(f);
@@ -340,28 +300,36 @@ problem_input
 (
  const char* input_file
 )
-{
-  int num_of_options = 9;
-  
+{  
   problem_input_t input;
   /* input.degree = -1; */
   input.num_unifrefs = -1;
-  input.ip_flux_penalty = -1;
   input.num_randrefs = -1;
   input.deg_R0 = -1;
   input.deg_integ_R0 = -1;
+  input.deg_stiffness_R0 = -1;
   input.deg_R1 = -1;
   input.deg_integ_R1 = -1;
+  input.deg_stiffness_R1 = -1;
   input.deg_R2 = -1;
-  input.deg_integ_R2 = -1;
-  
-  input.count = 0;
-  
+  input.deg_integ_R2 = -1; 
+  input.deg_stiffness_R2 = -1; 
+    
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
   }
 
-  mpi_assert(input.count == num_of_options);
+  D4EST_CHECK_INPUT("problem", input.num_unifrefs, -1);
+  D4EST_CHECK_INPUT("problem", input.num_randrefs, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_R0, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_integ_R0, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_stiffness_R0, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_R1, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_integ_R1, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_stiffness_R1, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_R2, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_integ_R2, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_stiffness_R2, -1); 
   return input;
 }
 
@@ -413,29 +381,31 @@ problem_load_p4est_from_checkpoint
 void
 problem_set_degrees
 (
- void* elem_data_temp,
+ void* elem_data_tmp,
  void* user_ctx
 )
 {
-  curved_element_data_t* elem_data = elem_data_temp;
+  curved_element_data_t* elem_data = elem_data_tmp;
   problem_input_t* input = user_ctx;
   /* outer shell */
   if (elem_data->tree < 6){
     elem_data->deg = input->deg_R2;
     elem_data->deg_integ = input->deg_integ_R2;
+    elem_data->deg_stiffness = input->deg_stiffness_R2;
   }
   /* inner shell */
   else if(elem_data->tree < 12){
     elem_data->deg = input->deg_R1;
     elem_data->deg_integ = input->deg_integ_R1;
+    elem_data->deg_stiffness = input->deg_stiffness_R1;
   }
   /* center cube */
   else {
     elem_data->deg = input->deg_R0;
     elem_data->deg_integ = input->deg_integ_R0;
+    elem_data->deg_stiffness = input->deg_stiffness_R0;
   } 
 }
-
 
 
 void
@@ -453,9 +423,7 @@ problem_init
   problem_input_t input = problem_input(input_file);
   
   int level;
-  /* int degree = input.degree;          */
   global_Rinf = 1.;
-  global_sigma = input.R0;
   
   mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
   int world_rank, world_size;
@@ -471,11 +439,10 @@ problem_init
   /* ip_flux_params_t ip_flux_params; */
   /* ip_flux_params.ip_flux_penalty_prefactor = atof(argv[6]); */
   /* ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh; */
-  
-  ip_flux_params_t ip_flux_params;
-  ip_flux_params.ip_flux_penalty_prefactor = input.ip_flux_penalty;
-  ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
 
+  ip_flux_t* ip_flux = ip_flux_dirichlet_new(p4est, "[IP_FLUX]", input_file, zero_fcn);
+  ip_flux_params_t ip_flux_params = *(ip_flux->ip_flux_params);
+  
   /* central_flux_params_t central_flux_params; */
   /* central_flux_params.central_flux_penalty_prefactor = input.ip_flux_penalty; */
   
@@ -533,7 +500,7 @@ problem_init
     geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
 
 
-    d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
+    /* d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;     */
     /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
     curved_element_data_init_new(p4est,
                              geometric_factors,
@@ -606,7 +573,7 @@ problem_init
 
 
 
-    prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+    prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
                                              (zero_fcn,&ip_flux_params);
     
     /* linalg_fill_vec(u, 0., local_nodes); */
@@ -703,28 +670,28 @@ problem_init
   /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.rhs, prob_vecs.local_nodes); */
   /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, prob_vecs.local_nodes); */
 
-          
-     krylov_info_t info =
-       krylov_petsc_solve
-       (
-        p4est,
-        &prob_vecs,
-        (void*)&prob_fcns,
-        &ghost,
-        (void**)&ghost_data,
-        dgmath_jit_dbase,
-        d4est_geom,
-        input_file,
-        NULL
-        /* NULL */
-        /* &params */
-       );
+  krylov_petsc_params_t petsc_params;
+  krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &petsc_params);      
+       
+  krylov_info_t info =
+    krylov_petsc_solve
+    (
+     p4est,
+     &prob_vecs,
+     (void*)&prob_fcns,
+     &ghost,
+     (void**)&ghost_data,
+     dgmath_jit_dbase,
+     d4est_geom,
+     &petsc_params,
+     NULL
+    );
 
 
   double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
   double* analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
   
-  curved_element_data_init_node_vec(p4est, analytic, analytic_fcn, dgmath_jit_dbase, d4est_geom->p4est_geom);
+  curved_element_data_init_node_vec(p4est, analytic, analytic_fcn, dgmath_jit_dbase, d4est_geom);
 
   for (int i = 0; i < local_nodes; i++){
     error[i] = prob_vecs.u[i] - analytic[i];
@@ -788,14 +755,16 @@ problem_init
   }
 
      
-    geometric_factors_destroy(geometric_factors);
+  geometric_factors_destroy(geometric_factors);
+  ip_flux_dirichlet_destroy(ip_flux);
 
-    if (ghost) {
-      p4est_ghost_destroy (ghost);
-      P4EST_FREE (ghost_data);
-      ghost = NULL;
-      ghost_data = NULL;
-    }
+    
+  if (ghost) {
+    p4est_ghost_destroy (ghost);
+    P4EST_FREE (ghost_data);
+    ghost = NULL;
+    ghost_data = NULL;
+  }
 
   P4EST_FREE(Au);
   P4EST_FREE(rhs);
