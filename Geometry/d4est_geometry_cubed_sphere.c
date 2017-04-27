@@ -1146,7 +1146,7 @@ which_tree == 12 will never occur */
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   
   if (mpirank == 0){
-    printf("%s: NAME = compact_sphere_with_cube_hole\n", printf_prefix );
+    printf("%s: NAME = cubed sphere with cube hole\n", printf_prefix );
     printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
     printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
     printf("%s: R2 = %.25f\n", printf_prefix , sphere_attrs->R2);

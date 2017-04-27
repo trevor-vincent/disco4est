@@ -10,7 +10,8 @@ typedef struct {
   int min_quadrants;
   int min_level;
   int fill_uniform;
-
+  int print_elements_per_proc;
+  
 } pXest_input_t;
 
 static
@@ -29,6 +30,8 @@ int pXest_input_handler
     pconfig->min_level = atoi(value);
   } else if (util_match_couple(section,"p4est",name,"fill_uniform")) {
     pconfig->fill_uniform = atoi(value);
+  } else if (util_match_couple(section,"p4est",name,"print_elements_per_proc")) {
+    pconfig->print_elements_per_proc = atoi(value);
   } else {
     return 0;  /* unknown section/name, error */
   }
@@ -48,14 +51,19 @@ pXest_input_parse(const char* input_file){
   MPI_Comm_rank(mpicomm, &proc_rank);
   
   pXest_input_t pXest_input;
-  pXest_input.min_quadrants = -1;
-  pXest_input.min_level = 0;
-  pXest_input.fill_uniform = 1;
+  pXest_input.min_quadrants = -2;
+  pXest_input.min_level = -2;
+  pXest_input.fill_uniform = -2;
+  pXest_input.print_elements_per_proc = 0;
   
   if (ini_parse("options.input", pXest_input_handler, &pXest_input) < 0) {
     mpi_abort("[D4EST_ERROR]: Can't load pXest input file");
   }
 
+  D4EST_CHECK_INPUT("p4est", pXest_input.min_quadrants, -2);
+  D4EST_CHECK_INPUT("p4est", pXest_input.min_level, -2);
+  D4EST_CHECK_INPUT("p4est", pXest_input.fill_uniform, -2);
+  
   if(
      proc_size != 1
      &&

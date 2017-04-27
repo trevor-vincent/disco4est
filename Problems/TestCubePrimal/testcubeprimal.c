@@ -4,7 +4,7 @@
 #include <linalg.h>
 #include <curved_element_data.h>
 #include <sipg_flux_vector_fcns.h>
-#include <curved_Gauss_primal_sipg_flux_fcns.h>
+#include <curved_Gauss_primal_sipg_kronbichler_flux_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
 #include <problem_weakeqn_ptrs.h>
@@ -156,7 +156,7 @@ void problem_build_rhs
 (
  p4est_t* p4est,
  problem_data_t* prob_vecs,
- curved_weakeqn_ptrs_t* prob_fcns,
+ weakeqn_ptrs_t* prob_fcns,
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  dgmath_jit_dbase_t* dgbase,
@@ -173,11 +173,11 @@ void problem_build_rhs
      f,
      f_fcn,
      dgbase,
-     d4est_geom->p4est_geom
+     d4est_geom
     );
   
    prob_vecs->curved_scalar_flux_fcn_data
-     = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+     = curved_Gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
      (
       zero_fcn,ip_flux_params
      );
@@ -215,7 +215,7 @@ void problem_build_rhs
   P4EST_FREE(u_eq_0);
 
 
-  prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
                                            (zero_fcn,ip_flux_params);
 
   P4EST_FREE(f);
@@ -391,21 +391,21 @@ problem_init
 
   }
   
-  curved_weakeqn_ptrs_t prob_fcns;
+  weakeqn_ptrs_t prob_fcns;
   prob_fcns.apply_lhs = curved_poisson_operator_primal_apply_aij;
 
      
     geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
 
 
-    d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
+    /* d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;     */
     /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
     curved_element_data_init_new(p4est,
                              geometric_factors,
                              dgmath_jit_dbase,
                              d4est_geom,
                              problem_set_degrees,
-                                 (void*)&input);
+                                 (void*)&input,1,1);
 
 
 

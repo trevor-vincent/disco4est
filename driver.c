@@ -30,10 +30,10 @@ int main(int argc, char *argv[])
 
 #ifdef CURVED
   if(proc_rank == 0)
-    printf("[D4EST_INFO]: Using CURVED infracstructure\n");
+    printf("[D4EST_INFO]: Using CURVED infrastructure\n");
 #else
   if(proc_rank == 0)
-    printf("[D4EST_INFO]: Using NON-CURVED infracstructure\n");  
+    printf("[D4EST_INFO]: Using NON-CURVED infrastructure\n");  
 #endif
   
 #if (P4EST_DIM)==3
@@ -67,13 +67,14 @@ int main(int argc, char *argv[])
     printf("[D4EST_INFO]: min_level = %d\n", pXest_input.min_level);
     printf("[D4EST_INFO]: fill_uniform = %d\n", pXest_input.fill_uniform);
   }
-
+  if(pXest_input.print_elements_per_proc){
+    sc_MPI_Barrier(mpicomm);
+    printf("[D4EST_INFO]: elements on proc %d = %d\n", proc_rank, p4est->local_num_quadrants);
+    sc_MPI_Barrier(mpicomm);
+  }
   
   /* start just-in-time dg-math */
-  dgmath_jit_dbase_t* dgmath_jit_dbase = dgmath_jit_dbase_init();
-
-  /* checkpoints not supported yet */
-  int load_from_checkpoint = 0;
+  dgmath_jit_dbase_t* dgmath_jit_dbase = dgmath_jit_dbase_init();  
   
   /* Solve Problem */
   problem_init

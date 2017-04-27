@@ -162,4 +162,12 @@ curved_element_data_get_array_of_degrees
 );
 
 
+void
+curved_element_data_compute_grid_volume_and_surface_area
+(
+ p4est_t* p4est,
+ double* volume,
+ double* surface_area
+);
+
 #endif

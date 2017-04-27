@@ -661,6 +661,29 @@ problem_init
   /* } */
   
   linalg_fill_vec(prob_vecs.u, 1., local_nodes);
+
+  double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
+  double* analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
+  
+  curved_element_data_init_node_vec(p4est, analytic, analytic_fcn, dgmath_jit_dbase, d4est_geom);
+
+  for (int i = 0; i < local_nodes; i++){
+    error[i] = prob_vecs.u[i] - analytic[i];
+  }
+
+  DEBUG_PRINT_ARR_DBL_SUM(error, local_nodes);
+  DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, local_nodes);
+  DEBUG_PRINT_ARR_DBL_SUM(analytic, local_nodes);
+  
+  double initial_l2_norm_sqr_local = curved_element_data_compute_l2_norm_sqr
+                                     (
+                                      p4est,
+                                      error,
+                                      local_nodes,
+                                      dgmath_jit_dbase,
+                                      DO_NOT_STORE_LOCALLY
+                                     );
+  printf("Initial local l2 norm = %.25f\n", sqrt(initial_l2_norm_sqr_local));
   
   /* prob_fcns.apply_lhs(p4est, ghost, ghost_data, &prob_vecs, dgmath_jit_dbase, d4est_geom); */
 
@@ -688,9 +711,6 @@ problem_init
     );
 
 
-  double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
-  double* analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
-  
   curved_element_data_init_node_vec(p4est, analytic, analytic_fcn, dgmath_jit_dbase, d4est_geom);
 
   for (int i = 0; i < local_nodes; i++){

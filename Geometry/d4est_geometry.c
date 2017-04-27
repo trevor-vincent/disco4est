@@ -531,26 +531,63 @@ d4est_geometry_data_compute_dxyz_drst_face_isoparametric
   D4EST_FREE_DBYD_MAT(dxyz_drst_volume);
 }
 
+
 void
-d4est_geometry_compute_jacobian_and_drst_dxyz
+d4est_geometry_compute_jacobian
 (
  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)],
  double* jac,
- double* drst_dxyz [(P4EST_DIM)][(P4EST_DIM)],
- double* drst_dxyz_times_jac [(P4EST_DIM)][(P4EST_DIM)],
  int volume_nodes
 )
 {
   for (int i = 0; i < volume_nodes; i++){
     double xr = dxyz_drst[0][0][i];
     double xs = dxyz_drst[0][1][i];
-#if (P4EST_DIM)==3
-    double xt = dxyz_drst[0][2][i];
-#endif
     
     double yr = dxyz_drst[1][0][i];
     double ys = dxyz_drst[1][1][i];
+
 #if (P4EST_DIM)==3
+    double xt = dxyz_drst[0][2][i];
+    double yt = dxyz_drst[1][2][i];
+    
+    double zr = dxyz_drst[2][0][i];
+    double zs = dxyz_drst[2][1][i];
+    double zt = dxyz_drst[2][2][i];
+#endif
+    
+#if (P4EST_DIM) == 3
+    jac[i] = xr*(ys*zt-zs*yt)
+                - yr*(xs*zt-zs*xt)
+                + zr*(xs*yt-ys*xt);
+#elif (P4EST_DIM) == 2
+    jac[i] = -xs*yr + xr*ys;
+#else
+    mpi_abort("DIM must be 2 or 3");
+#endif 
+  }  
+}
+
+
+
+void
+d4est_geometry_compute_drst_dxyz
+(
+ double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)],
+ double* jac,
+ double* drst_dxyz [(P4EST_DIM)][(P4EST_DIM)],
+ int volume_nodes
+)
+{
+  for (int i = 0; i < volume_nodes; i++){
+    double xr = dxyz_drst[0][0][i];
+    double xs = dxyz_drst[0][1][i];
+    
+    double yr = dxyz_drst[1][0][i];
+    double ys = dxyz_drst[1][1][i];
+
+#if (P4EST_DIM)==3
+    double xt = dxyz_drst[0][2][i];
     double yt = dxyz_drst[1][2][i];
     
     double zr = dxyz_drst[2][0][i];
@@ -558,121 +595,107 @@ d4est_geometry_compute_jacobian_and_drst_dxyz
     double zt = dxyz_drst[2][2][i];
 #endif
 
-    double* rx;
-    double* ry;
+    double J = jac[i];
+
+    double* rx = &drst_dxyz[0][0][i];
+    double* ry = &drst_dxyz[0][1][i];
+    double* sx = &drst_dxyz[1][0][i];
+    double* sy = &drst_dxyz[1][1][i];
+
 #if (P4EST_DIM)==3
-    double* rz;
+    double* rz = &drst_dxyz[0][2][i];
+    double* sz = &drst_dxyz[1][2][i];
+    
+    double* tx = &drst_dxyz[2][0][i];
+    double* ty = &drst_dxyz[2][1][i];
+    double* tz = &drst_dxyz[2][2][i];
 #endif
-    double* sx;
-    double* sy;
+
 #if (P4EST_DIM)==3
-    double* sz;
-    double* tx;
-    double* ty;
-    double* tz;
+    *rx =  (ys*zt - zs*yt)/(J);
+    *ry = -(xs*zt - zs*xt)/(J);
+    *sx = -(yr*zt - zr*yt)/(J);
+    *sy =  (xr*zt - zr*xt)/(J);
+    *rz =  (xs*yt - ys*xt)/(J);
+    *sz = -(xr*yt - yr*xt)/(J);
+    *tx =  (yr*zs - zr*ys)/(J);
+    *ty = -(xr*zs - zr*xs)/(J);
+    *tz =  (xr*ys - yr*xs)/(J);
+#endif
+
+#if (P4EST_DIM)==2
+    *rx = ys/(J);
+    *sx =-yr/(J);
+    *ry =-xs/(J);
+    *sy = xr/(J);
 #endif
     
-    if (drst_dxyz != NULL){
-     rx = &drst_dxyz[0][0][i];
-     ry = &drst_dxyz[0][1][i];
+  }  
+}
+
+
+
+
+void
+d4est_geometry_compute_drst_dxyz_times_jacobian
+(
+ double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)],
+ double* drst_dxyz_times_jac [(P4EST_DIM)][(P4EST_DIM)],
+ int volume_nodes
+)
+{
+  for (int i = 0; i < volume_nodes; i++){
+    double xr = dxyz_drst[0][0][i];
+    double xs = dxyz_drst[0][1][i];
+    
+    double yr = dxyz_drst[1][0][i];
+    double ys = dxyz_drst[1][1][i];
+
 #if (P4EST_DIM)==3
-     rz = &drst_dxyz[0][2][i];
+    double xt = dxyz_drst[0][2][i];
+    double yt = dxyz_drst[1][2][i];
+    
+    double zr = dxyz_drst[2][0][i];
+    double zs = dxyz_drst[2][1][i];
+    double zt = dxyz_drst[2][2][i];
 #endif
-     sx = &drst_dxyz[1][0][i];
-     sy = &drst_dxyz[1][1][i];
+
+    double* rx_jac = &drst_dxyz_times_jac[0][0][i];
+    double* ry_jac = &drst_dxyz_times_jac[0][1][i];
+    double* sx_jac = &drst_dxyz_times_jac[1][0][i];
+    double* sy_jac = &drst_dxyz_times_jac[1][1][i];
+
 #if (P4EST_DIM)==3
-     sz = &drst_dxyz[1][2][i];
+    double* rz_jac = &drst_dxyz_times_jac[0][2][i];
+    double* sz_jac = &drst_dxyz_times_jac[1][2][i];
     
-     tx = &drst_dxyz[2][0][i];
-     ty = &drst_dxyz[2][1][i];
-     tz = &drst_dxyz[2][2][i];
+    double* tx_jac = &drst_dxyz_times_jac[2][0][i];
+    double* ty_jac = &drst_dxyz_times_jac[2][1][i];
+    double* tz_jac = &drst_dxyz_times_jac[2][2][i];
 #endif
-    }
 
-    double* rx_jac = NULL;
-    double* ry_jac = NULL;
-    double* rz_jac = NULL;
-
-
-    double* sx_jac = NULL;
-    double* sy_jac = NULL;
-    double* sz_jac = NULL;
-
-
-    double* tx_jac = NULL;
-    double* ty_jac = NULL;
-    double* tz_jac = NULL;
-    
-    if (drst_dxyz_times_jac != NULL){
-     rx_jac = &drst_dxyz_times_jac[0][0][i];
-     ry_jac = &drst_dxyz_times_jac[0][1][i];
 #if (P4EST_DIM)==3
-     rz_jac = &drst_dxyz_times_jac[0][2][i];
-#endif
-     sx_jac = &drst_dxyz_times_jac[1][0][i];
-     sy_jac = &drst_dxyz_times_jac[1][1][i];
-#if (P4EST_DIM)==3
-     sz_jac = &drst_dxyz_times_jac[1][2][i];
-    
-     tx_jac = &drst_dxyz_times_jac[2][0][i];
-     ty_jac = &drst_dxyz_times_jac[2][1][i];
-     tz_jac = &drst_dxyz_times_jac[2][2][i];
-#endif
-    }
-    
-    double Jvar = 0;
-    double* J = &Jvar;
-    if (jac != NULL){
-      J = &jac[i];
-    }
-    
-#if (P4EST_DIM) == 3
-    *J = xr*(ys*zt-zs*yt)
-                - yr*(xs*zt-zs*xt)
-                + zr*(xs*yt-ys*xt);
-
-    if (drst_dxyz_times_jac != NULL){
     *rx_jac =  (ys*zt - zs*yt);
     *ry_jac = -(xs*zt - zs*xt);
-    *rz_jac =  (xs*yt - ys*xt);
     *sx_jac = -(yr*zt - zr*yt);
     *sy_jac =  (xr*zt - zr*xt);
+    *rz_jac =  (xs*yt - ys*xt);
     *sz_jac = -(xr*yt - yr*xt);
     *tx_jac =  (yr*zs - zr*ys);
     *ty_jac = -(xr*zs - zr*xs);
     *tz_jac =  (xr*ys - yr*xs);
-    }
-    if (drst_dxyz != NULL && jac != NULL){
-    *rx =  (ys*zt - zs*yt)/(*J);
-    *ry = -(xs*zt - zs*xt)/(*J);
-    *rz =  (xs*yt - ys*xt)/(*J);
-    *sx = -(yr*zt - zr*yt)/(*J);
-    *sy =  (xr*zt - zr*xt)/(*J);
-    *sz = -(xr*yt - yr*xt)/(*J);
-    *tx =  (yr*zs - zr*ys)/(*J);
-    *ty = -(xr*zs - zr*xs)/(*J);
-    *tz =  (xr*ys - yr*xs)/(*J);
-    }
-#elif (P4EST_DIM) == 2
-    *J = -xs*yr + xr*ys;
-
-    if (drst_dxyz_times_jac != NULL){
+#endif
+#if (P4EST_DIM)==2    
     *rx_jac = ys;
     *sx_jac =-yr;
     *ry_jac =-xs;
     *sy_jac = xr;
-    }
-    if (drst_dxyz != NULL && jac != NULL){
-    *rx = ys/(*J);
-    *sx =-yr/(*J);
-    *ry =-xs/(*J);
-    *sy = xr/(*J);
-    }
-#else
-    mpi_abort("DIM must be 2 or 3");
-#endif 
+#endif
+    
   }  
 }
+
+
 
 
 
@@ -786,7 +809,6 @@ d4est_geometry_compute_geometric_data_on_mortar
       mpi_abort("mapping type not supported");
     }
 
-
     if (drst_dxyz_on_mortar_integ != NULL){
       /* printf("drst_dxyz is not NULL\n"); */
       for (int i = 0; i < (P4EST_DIM); i++){
@@ -795,9 +817,29 @@ d4est_geometry_compute_geometric_data_on_mortar
         }
       }
     }
-    
-    d4est_geometry_compute_jacobian_and_drst_dxyz(dxyz_drst_on_face_integ, J_on_face_integ, drst_dxyz_on_face_integ, drst_dxyz_times_jac_on_face_integ, face_mortar_integ_nodes);
 
+    d4est_geometry_compute_jacobian
+      (
+       dxyz_drst_on_face_integ,
+       J_on_face_integ,
+       face_mortar_integ_nodes
+      );
+
+    d4est_geometry_compute_drst_dxyz
+      (
+       dxyz_drst_on_face_integ,
+       J_on_face_integ,
+       drst_dxyz_on_face_integ,
+       face_mortar_integ_nodes
+      );
+
+    d4est_geometry_compute_drst_dxyz_times_jacobian
+      (
+       dxyz_drst_on_face_integ,
+       drst_dxyz_times_jac_on_face_integ,
+       face_mortar_integ_nodes
+      );
+    
       int i0 = -1; 
       if (face == 0 || face == 1){
         i0 = 0;
@@ -904,8 +946,6 @@ d4est_geometry_compute_geometric_data_on_mortar
 }
 
 
-
-
 void
 d4est_geometry_compute_xyz
 (
@@ -924,7 +964,7 @@ d4est_geometry_compute_xyz
                                                   (P4EST_DIM),
                                                   type);
   
-  double* rst [(P4EST_DIM)] = {rst_points.r, rst_points.s, NULL};
+  double* rst [3] = {rst_points.r, rst_points.s, NULL};
 #if (P4EST_DIM)==3
   rst[2] = rst_points.t;
 #endif
@@ -946,73 +986,6 @@ d4est_geometry_compute_xyz
     
   }
 }
-
-void
-d4est_geometry_compute_drst_dxyz
-(
- double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)],
- double* drst_dxyz [(P4EST_DIM)][(P4EST_DIM)],
- int nodes
-)
-{
- for (int i = 0; i < nodes; i++){
-    double xr = dxyz_drst[0][0][i];
-    double xs = dxyz_drst[0][1][i];
-#if (P4EST_DIM)==3
-    double xt = dxyz_drst[0][2][i];
-#endif
-    
-    double yr = dxyz_drst[1][0][i];
-    double ys = dxyz_drst[1][1][i];
-#if (P4EST_DIM)==3
-    double yt = dxyz_drst[1][2][i];
-    
-    double zr = dxyz_drst[2][0][i];
-    double zs = dxyz_drst[2][1][i];
-    double zt = dxyz_drst[2][2][i];
-#endif
-    
-    double* rx = &drst_dxyz[0][0][i];
-    double* ry = &drst_dxyz[0][1][i];
-#if (P4EST_DIM)==3
-    double* rz = &drst_dxyz[0][2][i];
-#endif
-    double* sx = &drst_dxyz[1][0][i];
-    double* sy = &drst_dxyz[1][1][i];
-#if (P4EST_DIM)==3
-    double* sz = &drst_dxyz[1][2][i];
-    
-    double* tx = &drst_dxyz[2][0][i];
-    double* ty = &drst_dxyz[2][1][i];
-    double* tz = &drst_dxyz[2][2][i];
-#endif
-
-#if (P4EST_DIM) == 3
-    double J = xr*(ys*zt-zs*yt)
-                 - yr*(xs*zt-zs*xt)
-                 + zr*(xs*yt-ys*xt);
-    *rx =  (ys*zt - zs*yt)/(J);
-    *ry = -(xs*zt - zs*xt)/(J);
-    *rz =  (xs*yt - ys*xt)/(J);
-    *sx = -(yr*zt - zr*yt)/(J);
-    *sy =  (xr*zt - zr*xt)/(J);
-    *sz = -(xr*yt - yr*xt)/(J);
-    *tx =  (yr*zs - zr*ys)/(J);
-    *ty = -(xr*zs - zr*xs)/(J);
-    *tz =  (xr*ys - yr*xs)/(J);
-#elif (P4EST_DIM) == 2
-    double J = -xs*yr + xr*ys;
-    *rx = ys/(J);
-    *sx =-yr/(J);
-    *ry =-xs/(J);
-    *sy = xr/(J);
-#else
-    mpi_abort("DIM must be 2 or 3");
-#endif 
-  }  
-}
-
-
 
 void
 d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
@@ -1262,4 +1235,60 @@ d4est_geometry_get_tree_coords_in_range_0_to_1
   else {
     mpi_abort("[D4EST_ERROR]: You either did not set a coords type or used an unsupported coords type");
   }
+}
+
+
+int
+d4est_geometry_does_element_touch_boundary
+(
+ p4est_t* p4est,
+ p4est_quadrant_t* q,
+ int which_tree
+)
+{
+  int fbsum = 0;
+  for (int face = 0; face < (P4EST_FACES); face++){
+    fbsum += d4est_geometry_is_face_on_boundary(p4est, q, which_tree, face);
+  }
+  return (fbsum > 0);
+}
+
+
+int
+d4est_geometry_is_face_on_boundary
+(
+ p4est_t* p4est,
+ p4est_quadrant_t* q,
+ int which_tree,
+ int face
+)
+{
+  p4est_qcoord_t      dh, xyz_temp;
+  p4est_connectivity_t *conn = p4est->connectivity;
+  int fbsum = 0;
+  if (conn->tree_to_tree[P4EST_FACES * which_tree + face] != which_tree ||
+      (int) conn->tree_to_face[P4EST_FACES * which_tree + face] != face) {
+  }
+  else {
+    dh = P4EST_LAST_OFFSET (q->level);
+    switch (face / 2) {
+    case 0:
+      xyz_temp = q->x;
+      break;
+    case 1:
+      xyz_temp = q->y;
+      break;
+#ifdef P4_TO_P8
+    case 2:
+      xyz_temp = q->z;
+      break;
+#endif
+    default:
+      SC_ABORT_NOT_REACHED ();
+      break;
+    }
+    fbsum += (xyz_temp == ((face & 0x01) ? dh : 0));
+  }
+
+  return (fbsum > 0);
 }

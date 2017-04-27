@@ -257,6 +257,8 @@ curved_Gauss_primal_sipg_kronbichler_flux_dirichlet
          xyz_on_f_m_Gauss[2][i]
 #endif
         );
+
+      //      printf("boundary = %f\n", u_at_bndry_Gauss[i]);
     }
     
     for (int i = 0; i < face_nodes_m_Gauss; i++){

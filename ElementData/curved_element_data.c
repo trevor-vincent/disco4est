@@ -539,48 +539,37 @@ curved_element_data_compute_diam
   return diam;
 }
 
-
-
-int
-curved_element_data_is_it_on_boundary
+void
+curved_element_data_compute_grid_volume_and_surface_area
 (
  p4est_t* p4est,
- p4est_quadrant_t* q,
- int which_tree
+ double* volume,
+ double* surface_area
 )
 {
-  p4est_qcoord_t      dh, xyz_temp;
-  p4est_connectivity_t *conn = p4est->connectivity;
-  int fbsum = 0;
-  for (int face = 0; face < (P4EST_FACES); face++){
-    if (conn->tree_to_tree[P4EST_FACES * which_tree + face] != which_tree ||
-        (int) conn->tree_to_face[P4EST_FACES * which_tree + face] != face) {
-    }
-    else {
-      dh = P4EST_LAST_OFFSET (q->level);
-      switch (face / 2) {
-      case 0:
-        xyz_temp = q->x;
-        break;
-      case 1:
-        xyz_temp = q->y;
-        break;
-#ifdef P4_TO_P8
-      case 2:
-        xyz_temp = q->z;
-        break;
-#endif
-      default:
-        SC_ABORT_NOT_REACHED ();
-        break;
-      }
-      fbsum += (xyz_temp == ((face & 0x01) ? dh : 0));
-    }
-    if (fbsum > 0) break;
-  }
+  *surface_area = 0;
+  *volume = 0;
   
-  return (fbsum > 0);
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        curved_element_data_t* elem_data = (curved_element_data_t*)(quad->p.user_data);
+        for (int i = 0; i < (P4EST_FACES); i++){
+          if (d4est_geometry_is_face_on_boundary(p4est, quad, elem_data->tree, i)){
+            *surface_area += elem_data->surface_area[i];
+          }
+        }
+        *volume += elem_data->volume;
+      }
+    }
 }
+
 
 double
 curved_element_data_compute_element_volume
@@ -818,314 +807,78 @@ curved_element_data_init_new
         int volume_nodes = dgmath_get_nodes((P4EST_DIM), elem_data->deg);
 
         if (compute_geometric_data && set_geometric_aliases){
-        d4est_geometry_compute_xyz
-          (
-           dgmath_jit_dbase,
-           d4est_geometry,
-           tt,
-           elem_data->deg,
-           LOBATTO,
-           elem_data->q,
-           elem_data->dq,
-           elem_data->xyz
-          );
+          d4est_geometry_compute_xyz
+            (
+             dgmath_jit_dbase,
+             d4est_geometry,
+             tt,
+             elem_data->deg,
+             LOBATTO,
+             elem_data->q,
+             elem_data->dq,
+             elem_data->xyz
+            );
 
-        d4est_geometry_compute_xyz
-          (
-           dgmath_jit_dbase,
-           d4est_geometry,
-           tt,
-           elem_data->deg_integ,
-           GAUSS,
-           elem_data->q,
-           elem_data->dq,
-           elem_data->xyz_integ
-          );
+          d4est_geometry_compute_xyz
+            (
+             dgmath_jit_dbase,
+             d4est_geometry,
+             tt,
+             elem_data->deg_integ,
+             GAUSS,
+             elem_data->q,
+             elem_data->dq,
+             elem_data->xyz_integ
+            );
 
-        d4est_geometry_compute_dxyz_drst
-          (
-           elem_data->tree,
-           elem_data->q,
-           elem_data->dq,
-           elem_data->deg_integ,           
-           GAUSS,
-           d4est_geometry,
-           dgmath_jit_dbase,
-           elem_data->xyz_rst_integ
-          );
+          d4est_geometry_compute_dxyz_drst
+            (
+             elem_data->tree,
+             elem_data->q,
+             elem_data->dq,
+             elem_data->deg_integ,           
+             GAUSS,
+             d4est_geometry,
+             dgmath_jit_dbase,
+             elem_data->xyz_rst_integ
+            );
 
-        d4est_geometry_compute_jacobian_and_drst_dxyz
-          (
-           elem_data->xyz_rst_integ,
-           elem_data->J_integ,
-           elem_data->rst_xyz_integ,
-           NULL,
-           volume_nodes_integ
-          );
-        }
-        /* if(elem_data->deg == elem_data->deg_integ) */
-        /*   elem_data->invM == NULL; */
-        /* else{ */
-        /*   elem_data->invM = &geometric_factors->invM[invM_stride]; */
-        /*   dgmath_compute_curvedInverseGaussMass */
-        /*     ( */
-        /*      dgmath_jit_dbase, */
-        /*      elem_data->deg, */
-        /*      elem_data->deg_integ, */
-        /*      (P4EST_DIM), */
-        /*      elem_data->J_integ, */
-        /*      elem_data->invM */
-        /*     ); */
-        /*   invM_stride += volume_nodes*volume_nodes; */
-        /* } */
-
-        if (set_geometric_aliases){
-        elem_data->volume
-          = curved_element_data_compute_element_volume
-          (
-           dgmath_jit_dbase,
-           elem_data->deg_integ,
-           elem_data->J_integ
-          );
+          d4est_geometry_compute_jacobian
+            (
+             elem_data->xyz_rst_integ,
+             elem_data->J_integ,
+             volume_nodes_integ
+            );
         
-        for (int face = 0; face < (P4EST_FACES); face++){
-          elem_data->surface_area[face] = curved_element_data_compute_element_face_area(elem_data,dgmath_jit_dbase, d4est_geometry,face, elem_data->deg_integ);
-        }
-        elem_data->diam = curved_element_data_compute_diam(elem_data->xyz, elem_data->deg, DIAM_APPROX_CUBE);
-        }
+          d4est_geometry_compute_drst_dxyz
+            (
+             elem_data->xyz_rst_integ,
+             elem_data->J_integ,
+             elem_data->rst_xyz_integ,
+             volume_nodes_integ
+            );
+
+          if (set_geometric_aliases){
+            elem_data->volume
+              = curved_element_data_compute_element_volume
+              (
+               dgmath_jit_dbase,
+               elem_data->deg_integ,
+               elem_data->J_integ
+              );
         
+            for (int face = 0; face < (P4EST_FACES); face++){
+              elem_data->surface_area[face] = curved_element_data_compute_element_face_area(elem_data,dgmath_jit_dbase, d4est_geometry,face, elem_data->deg_integ);
+            }
+            elem_data->diam = curved_element_data_compute_diam(elem_data->xyz, elem_data->deg, DIAM_APPROX_CUBE);
+          }
+        
+        }
       }
+  
     }
-  
 }
 
-/* void */
-/* curved_element_data_init */
-/* ( */
-/*  p4est_t* p4est, */
-/*  geometric_factors_t* geometric_factors, */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
-/*  /\* p4est_geometry_t* p4est_geometry, *\/ */
-/*  d4est_geometry_t* d4est_geometry, */
-/*  int deg, */
-/*  /\* int* deg_integ_diff, *\/ */
-/*  int deg_integ */
-/* ) */
-/* {   */
-/*   curved_element_data_init_ctx_t ctx; */
-/*   /\* ctx.p4est_geometry = p4est_geometry; *\/ */
-/*   ctx.d4est_geometry = d4est_geometry; */
-/*   ctx.dgmath_jit_dbase = dgmath_jit_dbase; */
-/*   ctx.geometric_factors = geometric_factors; */
-/*   ctx.deg = deg; */
-/*   ctx.deg_integ = deg_integ; */
-/*   /\* ctx.deg_integ_diff = deg_integ_diff; *\/ */
-/*   ctx.id_stride = 0; */
-/*   /\* ctx.integ_type = integ_type; *\/ */
-
-/*   int local_nodes = 0.; */
-/*   int local_nodes_integ = 0.; */
-/*   int local_sqr_nodes = 0.; */
-/*   int local_sqr_trace_nodes = 0.; */
-/*   if (deg == -1){ */
-/*     for (p4est_topidx_t tt = p4est->first_local_tree; */
-/*          tt <= p4est->last_local_tree; */
-/*          ++tt) */
-/*       { */
-/*         p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-/*         sc_array_t* tquadrants = &tree->quadrants; */
-/*         int Q = (p4est_locidx_t) tquadrants->elem_count; */
-/*         for (int q = 0; q < Q; ++q) { */
-/*           p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-/*           curved_element_data_t* elem_data = (curved_element_data_t*)(quad->p.user_data);  */
-/*           /\* elem_data->deg_integ = elem_data->deg + deg_integ_diff[tt]; *\/ */
-/*           elem_data->deg_integ = deg_integ; */
-/*           local_nodes_integ += dgmath_get_nodes((P4EST_DIM), elem_data->deg_integ); */
-/*           int nodes = dgmath_get_nodes((P4EST_DIM), elem_data->deg); */
-/*           int face_nodes = dgmath_get_nodes((P4EST_DIM)-1, elem_data->deg); */
-/*           local_nodes += nodes; */
-/*           local_sqr_nodes += nodes*nodes; */
-/*           local_sqr_trace_nodes += (P4EST_FACES)*face_nodes*face_nodes; */
-/*         } */
-/*       }     */
-/*   } */
-/*   else if (deg > 0){ */
-/*     int nodes = dgmath_get_nodes((P4EST_DIM), deg); */
-/*     int face_nodes = dgmath_get_nodes((P4EST_DIM)-1, deg); */
-/*     local_nodes = p4est->local_num_quadrants*nodes; */
-/*     local_sqr_nodes = p4est->local_num_quadrants*nodes*nodes;  */
-/*     local_sqr_trace_nodes = p4est->local_num_quadrants*face_nodes*face_nodes*(P4EST_FACES);  */
-/*     for (p4est_topidx_t tt = p4est->first_local_tree; */
-/*          tt <= p4est->last_local_tree; */
-/*          ++tt) */
-/*       { */
-/*         p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-/*         sc_array_t* tquadrants = &tree->quadrants; */
-/*         int Q = (p4est_locidx_t) tquadrants->elem_count; */
-/*         for (int q = 0; q < Q; ++q) { */
-/*           /\* local_nodes_integ += dgmath_get_nodes((P4EST_DIM), deg_integ_diff[tt] + deg); *\/ */
-/*           local_nodes_integ += dgmath_get_nodes((P4EST_DIM), deg_integ); */
-/*         } */
-/*       } */
-/*   } */
-/*   else */
-/*     mpi_abort("[D4EST_ERROR]: curved_element_data_init, deg bad"); */
-
-/*   ctx.local_nodes = local_nodes; */
-/*   ctx.local_nodes_integ = local_nodes_integ; */
-/*   ctx.local_sqr_nodes = local_sqr_nodes; */
-/*   ctx.local_sqr_trace_nodes = local_sqr_trace_nodes; */
-/*   ctx.nodal_stride = 0; */
-/*   ctx.sqr_nodal_stride = 0; */
-/*   ctx.sqr_trace_stride = 0; */
-/*   ctx.integ_stride = 0; */
-/*   /\* ctx.nodal_vector_stride = 0; *\/ */
-/*   /\* ctx.nodal_matrix_stride = 0; *\/ */
-
-/*   /\* reinitialize geometric factors *\/ */
-
-/*   /\* printf("local_nodes_integ = %d\n", local_nodes_integ); *\/ */
-/*   geometric_factors_reinit */
-/*     ( */
-/*      p4est, */
-/*      geometric_factors, */
-/*      /\* deg, *\/ */
-/*      /\* local_nodes, *\/ */
-/*      /\* local_nodes_integ, *\/ */
-/*      /\* local_sqr_nodes, *\/ */
-/*      /\* local_sqr_trace_nodes *\/ */
-/*     ); */
-  
-/*   p4est_iterate(p4est, */
-/*                 NULL, */
-/*                 (void*) &ctx, */
-/*                 curved_element_data_init_callback, */
-/*                 NULL, */
-/* #if (P4EST_DIM)==3 */
-/*                 NULL,        */
-/* #endif                 */
-/*                 NULL); */
-
-/* } */
-
-
-/* void */
-/* curved_element_data_destroy */
-/* ( */
-/*  p4est_t* p4est */
-/* ) */
-/* {  */
-/*   p4est_iterate(p4est, */
-/* 		NULL, */
-/* 		NULL, */
-/* 		curved_element_data_destroy_callback, */
-/* 		NULL, */
-/* #if (P4EST_DIM)==3 */
-/*                  NULL,        */
-/* #endif                 */
-/* 		NULL); */
-/* } */
-
-
-typedef struct {
-  double *u;
-  double *Mu;
-  int* stride;
-}
-  apply_Mij_on_vec_user_data_t;
-
-/* static */
-/* void curved_element_data_apply_Mij_on_vec_callback( */
-/*                               p4est_iter_volume_info_t * info, */
-/*                               void *user_data) */
-/* { */
-/*   p4est_quadrant_t* q = info->quad; */
-/*   curved_element_data_t* elem_data = (curved_element_data_t*) q->p.user_data; */
-/*   apply_Mij_on_vec_user_data_t* apply_Mij_on_vec_user_data = (apply_Mij_on_vec_user_data_t*)user_data; */
-/*   /\* dgmath_jit_dbase_t* dgmath_jit_dbase = (dgmath_jit_dbase_t*)info->p4est->user_pointer; *\/ */
-
-/*   int* stride = apply_Mij_on_vec_user_data->stride; */
-/*   /\* double* u = apply_Mij_on_vec_user_data->u; *\/ */
-/*   /\* double* Mu = apply_Mij_on_vec_user_data->Mu;                                        *\/ */
-/*   int volume_nodes = dgmath_get_nodes( (P4EST_DIM), elem_data->deg );   */
-/*   /\* int deg = elem_data->deg; *\/ */
-/*   /\* int dim = (P4EST_DIM); *\/ */
-
-/* #ifdef GEOM_DEALIASING */
-/*   dgmath_compute_M_vec_wo_aliasing */
-/*     ( */
-/*      dgmath_jit_dbase, */
-/*      elem_data->xyz_rst, */
-/*      &u[*stride], */
-/*      elem_data->deg, */
-/*      &Mu[*stride], */
-/*      2*elem_data->deg */
-/*     ); */
-/* #else */
-/*   mpi_abort("NOT SUPPORTED ANYMORE"); */
-/*   /\* double* Ju = P4EST_ALLOC(double, volume_nodes);  *\/ */
-/*   /\* linalg_component_mult(&u[*stride], &elem_data->J[0], Ju, volume_nodes); *\/ */
-/*   /\* dgmath_apply_Mij(dgmath_jit_dbase, Ju, (P4EST_DIM), elem_data->deg, &Mu[*stride]); *\/ */
-/*   /\* P4EST_FREE(Ju); *\/ */
-/* #endif */
-/*   *stride = *stride + volume_nodes;   */
-/* } */
-
-/* void */
-/* curved_element_data_apply_Mij_on_vec */
-/* ( */
-/*  p4est_t* p4est, */
-/*  double* u, */
-/*  double* Mu, */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase */
-/* ) */
-/* { */
-/*   void* tmp = p4est->user_pointer; */
-/*   p4est->user_pointer = dgmath_jit_dbase; */
-
-/*   int stride = 0; */
-  
-/*   apply_Mij_on_vec_user_data_t apply_Mij_on_vec_user_data; */
-/*   apply_Mij_on_vec_user_data.u = u; */
-/*   apply_Mij_on_vec_user_data.Mu = Mu; */
-/*   apply_Mij_on_vec_user_data.stride = &stride; */
-  
-/*   p4est_iterate( */
-/*                 p4est, */
-/*  		NULL, */
-/* 		(void*)&apply_Mij_on_vec_user_data, */
-/* 		curved_element_data_apply_Mij_on_vec_callback, */
-/* 		NULL, */
-/* #if (P4EST_DIM)==3 */
-/*                 NULL, */
-/* #endif */
-/* 		NULL */
-/*   ); */
-
-/*   p4est->user_pointer = tmp; */
-/* } */
-
-/* double */
-/* curved_element_data_compute_l2_norm_sqr_no_local */
-/* ( */
-/*  p4est_t* p4est, */
-/*  double* vec, */
-/*  int local_nodes, */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase */
-/* ) */
-/* { */
-/*   double* Mvec = P4EST_ALLOC(double, local_nodes); */
-/*   curved_element_data_apply_Mij_on_vec */
-/*     ( */
-/*      p4est, */
-/*      vec, */
-/*      Mvec, */
-/*      dgmath_jit_dbase */
-/*     ); */
-/*   double vTMv = linalg_vec_dot(vec, Mvec, local_nodes); */
-/*   P4EST_FREE(Mvec); */
-/*   return vTMv; */
-/* } */
 
 double
 curved_element_data_compute_l2_norm_sqr
@@ -1983,14 +1736,22 @@ void curved_element_data_apply_fofufofvlilj_Gaussnodes
        elem_data->xyz_rst_integ
       );
     
-    d4est_geometry_compute_jacobian_and_drst_dxyz
+
+    d4est_geometry_compute_jacobian
+      (
+       elem_data->xyz_rst_integ,
+       elem_data->J_integ,
+       volume_nodes_Gauss
+      );
+        
+    d4est_geometry_compute_drst_dxyz
       (
        elem_data->xyz_rst_integ,
        elem_data->J_integ,
        elem_data->rst_xyz_integ,
-       NULL,
        volume_nodes_Gauss
       );
+    
     
     dgmath_apply_fofufofvlilj_Gaussnodes
       (
@@ -2098,14 +1859,25 @@ void curved_element_data_apply_fofufofvlj_Gaussnodes
       );
 
     
-    d4est_geometry_compute_jacobian_and_drst_dxyz
-      (
-       xyz_rst_integ,
-       J_integ,
-       NULL,
-       NULL,
-       volume_nodes_Gauss
-      );
+    /* d4est_geometry_compute_jacobian_and_drst_dxyz */
+    /*   ( */
+    /*    xyz_rst_integ, */
+    /*    J_integ, */
+    /*    NULL, */
+    /*    NULL, */
+    /*    volume_nodes_Gauss */
+    /*   ); */
+
+
+   d4est_geometry_compute_jacobian
+            (
+             xyz_rst_integ,
+             J_integ,
+             volume_nodes_Gauss
+            );
+        
+
+    
 
     /* DEBUG_PRINT_ARR_DBL(J_integ, volume_nodes_Gauss); */
     
@@ -2198,7 +1970,7 @@ void curved_element_data_form_fofufofvlilj_matrix_Gaussnodes
       );
 
 
-d4est_geometry_compute_dxyz_drst
+    d4est_geometry_compute_dxyz_drst
       (
        elem_data->tree,
        elem_data->q,
@@ -2210,15 +1982,16 @@ d4est_geometry_compute_dxyz_drst
        xyz_rst_integ
       );
 
+   
+   d4est_geometry_compute_jacobian
+            (
+             xyz_rst_integ,
+             J_integ,
+             volume_nodes_Gauss
+            );
+        
+
     
-    d4est_geometry_compute_jacobian_and_drst_dxyz
-      (
-       xyz_rst_integ,
-       J_integ,
-       NULL,
-       NULL,
-       volume_nodes_Gauss
-      );
     
       dgmath_form_fofufofvlilj_matrix_Gaussnodes
       (
@@ -2298,8 +2071,10 @@ void curved_element_data_apply_curvedGaussStiff
     double* J_stiffness = P4EST_ALLOC(double, volume_nodes_stiffness);
     double* xyz_rst_stiffness [(P4EST_DIM)][(P4EST_DIM)];
     double* rst_xyz_stiffness [(P4EST_DIM)][(P4EST_DIM)];
+    double* rst_xyz_times_jac_stiffness [(P4EST_DIM)][(P4EST_DIM)];
     D4EST_ALLOC_DBYD_MAT(xyz_rst_stiffness, volume_nodes_stiffness);
     D4EST_ALLOC_DBYD_MAT(rst_xyz_stiffness, volume_nodes_stiffness);
+    D4EST_ALLOC_DBYD_MAT(rst_xyz_times_jac_stiffness, volume_nodes_stiffness);
     
  
 /*     curved_element_data_compute_dxyz_drst */
@@ -2327,7 +2102,7 @@ void curved_element_data_apply_curvedGaussStiff
 /*        volume_nodes_stiffness */
 /*       ); */
 
-d4est_geometry_compute_dxyz_drst
+    d4est_geometry_compute_dxyz_drst
       (
        elem_data->tree,
        elem_data->q,
@@ -2338,37 +2113,79 @@ d4est_geometry_compute_dxyz_drst
        dgmath_jit_dbase,
        xyz_rst_stiffness
       );
-
-   
     
-    d4est_geometry_compute_jacobian_and_drst_dxyz
+    d4est_geometry_compute_jacobian
+      (
+       xyz_rst_stiffness,
+       J_stiffness,
+       volume_nodes_stiffness
+      );
+        
+    d4est_geometry_compute_drst_dxyz
       (
        xyz_rst_stiffness,
        J_stiffness,
        rst_xyz_stiffness,
-       NULL,
        volume_nodes_stiffness
       );
 
+    d4est_geometry_compute_drst_dxyz_times_jacobian
+      (
+       xyz_rst_stiffness,
+       rst_xyz_times_jac_stiffness,
+       volume_nodes_stiffness
+      );
 
+    /* DEBUG_PRINT_9ARR_DBL(rst_xyz_times_jac_stiffness[0][0], */
+    /*                      rst_xyz_times_jac_stiffness[0][1], */
+    /*                      rst_xyz_times_jac_stiffness[0][2], */
+    /*                      rst_xyz_times_jac_stiffness[1][0], */
+    /*                      rst_xyz_times_jac_stiffness[1][1], */
+    /*                      rst_xyz_times_jac_stiffness[1][2], */
+    /*                      rst_xyz_times_jac_stiffness[2][0], */
+    /*                      rst_xyz_times_jac_stiffness[2][1], */
+    /*                      rst_xyz_times_jac_stiffness[2][2], */
+    /*                      volume_nodes_stiffness); */
     
-      dgmath_apply_curvedGaussStiff
-        (
-         dgmath_jit_dbase,
-         vec,
-         elem_data->deg,
-         J_stiffness,
-         rst_xyz_stiffness,
-         elem_data->deg_stiffness,
-         (P4EST_DIM),
-         stiff_vec
-        );
-
-
+    
+    dgmath_apply_curvedGaussStiff
+      (
+       dgmath_jit_dbase,
+       vec,
+       elem_data->deg,
+       J_stiffness,
+       rst_xyz_stiffness,
+       elem_data->deg_stiffness,
+       (P4EST_DIM),
+       stiff_vec
+      );
+    
+    /* DEBUG_PRINT_ARR_DBL(stiff_vec, volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(xyz_rst_stiffness[0][0], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(xyz_rst_stiffness[0][1], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(xyz_rst_stiffness[0][2], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(xyz_rst_stiffness[1][0], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(xyz_rst_stiffness[1][1], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(xyz_rst_stiffness[1][2], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(xyz_rst_stiffness[2][0], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(xyz_rst_stiffness[2][1], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(xyz_rst_stiffness[2][2], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(J_stiffness, volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(rst_xyz_stiffness[0][0], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(rst_xyz_stiffness[0][1], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(rst_xyz_stiffness[0][2], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(rst_xyz_stiffness[1][0], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(rst_xyz_stiffness[1][1], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(rst_xyz_stiffness[1][2], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(rst_xyz_stiffness[2][0], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(rst_xyz_stiffness[2][1], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(rst_xyz_stiffness[2][2], volume_nodes_stiffness); */
+    /* DEBUG_PRINT_ARR_DBL(vec, dgmath_get_nodes((P4EST_DIM), elem_data->deg)); */
 
     P4EST_FREE(J_stiffness);
     D4EST_FREE_DBYD_MAT(xyz_rst_stiffness);
     D4EST_FREE_DBYD_MAT(rst_xyz_stiffness);
+    D4EST_FREE_DBYD_MAT(rst_xyz_times_jac_stiffness);
   }
   else {
     mpi_abort("deg_stiffness >= elem_data->deg_integ");
@@ -2468,15 +2285,14 @@ curved_element_data_compute_jacobian_on_lgl_grid
            xyz_rst
           );       
 
-        d4est_geometry_compute_jacobian_and_drst_dxyz
+        d4est_geometry_compute_jacobian
           (
            xyz_rst,
            &jacobian_lgl[nodal_stride],
-           NULL,
-           NULL,
            volume_nodes
           );
 
+        
         nodal_stride += volume_nodes;
         }
     }
