@@ -400,6 +400,7 @@ void problem_apply_lhs
    }
   
   linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
+  P4EST_FREE(M_helmf_u);
 }
 
 static

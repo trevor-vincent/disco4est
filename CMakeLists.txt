@@ -34,6 +34,16 @@ if(SCINET)
   set(OPENBLAS_INCLUDE_DIR "/scinet/gpc/Libraries/OpenBLAS/singlethreaded/include")  
 endif()
 
+if(CITA)
+  set(USE_OPENBLAS ON)
+  set(OPENBLAS_DIR "/opt/openblas/0.2.19/")
+  set(OPENBLAS_ROOT "/opt/openblas/0.2.19/")
+  set(OPENBLAS_LIBRARIES
+    "/opt/openblas/0.2.19/lib/libopenblas.a"
+    )
+  set(OPENBLAS_INCLUDE_DIR "/opt/openblas/0.2.19/include")
+endif()
+
 if(USE_OPENBLAS)
   include_directories(${OPENBLAS_INCLUDE_DIR})
 # else()

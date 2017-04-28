@@ -1896,6 +1896,22 @@ double* dgmath_fetch_Mij_1d(dgmath_jit_dbase_t* dgbase, int deg) {
 
 
 
+/* double* dgmath_fetch_Mij_1d(dgmath_jit_dbase_t* dgbase, int deg) { */
+/*   mpi_assert(deg < dgbase->dgmath_max_storage); */
+/*   if (dgbase->dgmath_ref_Mij_1d_table[deg] != NULL) { */
+/*     return dgbase->dgmath_ref_Mij_1d_table[deg]; */
+/*   } */
+/*   else { */
+/*     int size = (deg + 1) * (deg + 1); */
+/*     dgbase->dgmath_ref_Mij_1d_table[deg] = P4EST_ALLOC(double, size); */
+/*     double* op = dgbase->dgmath_ref_Mij_1d_table[deg]; */
+/*     dgmath_build_Mij_1d(dgbase, op, deg); */
+/*     return op; */
+/*   } */
+/* } */
+
+
+
 
 static void dgmath_build_invMij_1d(dgmath_jit_dbase_t* dgbase,
                                    double* invMij_1d, int deg) {
@@ -4329,7 +4345,6 @@ void dgmath_convert_nodal_to_vtk
 
   P4EST_FREE(temp);
 }
-
 
 /* Computes \sum w_i u_i v_i */
 double dgmath_Gauss_quadrature

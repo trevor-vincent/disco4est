@@ -737,18 +737,11 @@ d4est_geometry_compute_geometric_data_on_mortar
       /* dxyz_drst[i][j] = P4EST_ALLOC(double, volume_nodes_max); */
       dxyz_drst_on_face_integ[i][j] = P4EST_ALLOC(double, face_nodes_max);
       drst_dxyz_times_jac_on_face_integ[i][j] = P4EST_ALLOC(double, face_nodes_max);
-      
-      if (drst_dxyz_on_mortar_integ == NULL){
-        /* printf("drst_dxyz_on_mortar_integ is NULL\n"); */
-        drst_dxyz_on_face_integ[i][j] = P4EST_ALLOC(double, face_nodes_max);
-      }
+      drst_dxyz_on_face_integ[i][j] = P4EST_ALLOC(double, face_nodes_max);
     }
 
   double* temp = P4EST_ALLOC(double, volume_nodes_max);
   double* J_on_face_integ = P4EST_ALLOC(double, face_nodes_max);
-
-
-  
   p4est_qcoord_t q0 [(P4EST_HALF)][(P4EST_DIM)];
   
   for (int j = 0; j < (P4EST_HALF); j++){
@@ -809,14 +802,7 @@ d4est_geometry_compute_geometric_data_on_mortar
       mpi_abort("mapping type not supported");
     }
 
-    if (drst_dxyz_on_mortar_integ != NULL){
-      /* printf("drst_dxyz is not NULL\n"); */
-      for (int i = 0; i < (P4EST_DIM); i++){
-        for (int j = 0; j < (P4EST_DIM); j++){
-          drst_dxyz_on_face_integ[i][j] = &drst_dxyz_on_mortar_integ[i][j][face_mortar_integ_stride];
-        }
-      }
-    }
+
 
     d4est_geometry_compute_jacobian
       (
@@ -857,11 +843,19 @@ d4est_geometry_compute_geometric_data_on_mortar
       dgmath_face_info_t face_info;
       dgmath_get_face_info(face, &face_info);
 
-      
       for (int i = 0; i < face_mortar_integ_nodes; i++){
         int is = face_mortar_integ_stride + i;
         double n_is [] = {0.,0.,0.};
         double sj_is = 0.;
+
+        if (drst_dxyz_on_mortar_integ != NULL){
+          for (int i = 0; i < (P4EST_DIM); i++){
+            for (int j = 0; j < (P4EST_DIM); j++){
+              drst_dxyz_on_mortar_integ[i][j][is] = drst_dxyz_on_face_integ[i][j][i];
+            }
+          }
+        }
+        
         if(n_compute_method == COMPUTE_NORMAL_USING_JACOBIAN){
           double sgn = (face == 0 || face == 2 || face == 4) ? -1. : 1.;
           for (int d = 0; d < (P4EST_DIM); d++){
@@ -936,12 +930,9 @@ d4est_geometry_compute_geometric_data_on_mortar
 
   for (int i = 0; i < (P4EST_DIM); i++)
     for (int j = 0; j < (P4EST_DIM); j++){
-      /* P4EST_FREE(dxyz_drst[i][j]); */
       P4EST_FREE(dxyz_drst_on_face_integ[i][j]);
-      if (drst_dxyz_on_mortar_integ == NULL){
-        P4EST_FREE(drst_dxyz_on_face_integ[i][j]);
-        P4EST_FREE(drst_dxyz_times_jac_on_face_integ[i][j]);
-      }
+      P4EST_FREE(drst_dxyz_on_face_integ[i][j]);
+      P4EST_FREE(drst_dxyz_times_jac_on_face_integ[i][j]);
     }
 }
 

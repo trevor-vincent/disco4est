@@ -4,6 +4,8 @@
 #include "../LinearAlgebra/linalg.h"
 #include "../Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.h"
 
+
+
 static void
 curved_Gauss_primal_sipg_kronbichler_flux_dirichlet
 (
