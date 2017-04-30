@@ -849,9 +849,9 @@ d4est_geometry_compute_geometric_data_on_mortar
         double sj_is = 0.;
 
         if (drst_dxyz_on_mortar_integ != NULL){
-          for (int i = 0; i < (P4EST_DIM); i++){
-            for (int j = 0; j < (P4EST_DIM); j++){
-              drst_dxyz_on_mortar_integ[i][j][is] = drst_dxyz_on_face_integ[i][j][i];
+          for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+            for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+              drst_dxyz_on_mortar_integ[d1][d2][is] = drst_dxyz_on_face_integ[d1][d2][i];
             }
           }
         }
