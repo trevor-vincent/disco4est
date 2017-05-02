@@ -23,7 +23,8 @@ typedef struct {
   int ksp_view;
   int ksp_converged_reason;
   int ksp_initial_guess_nonzero;
-
+  int ksp_monitor_singular_value;
+  
   char ksp_chebyshev_esteig_steps [25];
   char ksp_chebyshev_esteig [25];
   int ksp_chebyshev_esteig_random;

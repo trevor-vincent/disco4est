@@ -1729,26 +1729,26 @@ void curved_element_data_apply_fofufofvlilj_Gaussnodes
        elem_data->tree,
        elem_data->q,
        elem_data->dq,
-       elem_data->deg_integ,       
+       deg_Gauss,       
        GAUSS,
        d4est_geometry,
        dgmath_jit_dbase,
-       elem_data->xyz_rst_integ
+       xyz_rst_integ
       );
     
 
     d4est_geometry_compute_jacobian
       (
-       elem_data->xyz_rst_integ,
-       elem_data->J_integ,
+       xyz_rst_integ,
+       J_integ,
        volume_nodes_Gauss
       );
         
     d4est_geometry_compute_drst_dxyz
       (
-       elem_data->xyz_rst_integ,
-       elem_data->J_integ,
-       elem_data->rst_xyz_integ,
+       xyz_rst_integ,
+       J_integ,
+       rst_xyz_integ,
        volume_nodes_Gauss
       );
     
@@ -1975,7 +1975,7 @@ void curved_element_data_form_fofufofvlilj_matrix_Gaussnodes
        elem_data->tree,
        elem_data->q,
        elem_data->dq,
-       elem_data->deg_integ,       
+       deg_Gauss,       
        GAUSS,
        d4est_geometry,
        dgmath_jit_dbase,

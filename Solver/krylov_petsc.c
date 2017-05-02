@@ -58,7 +58,11 @@ int krylov_petsc_input_handler
     /* if (atoi(value) == 1){ */
       /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_converged_reason",""); */
     /* } */
-  }    
+  }
+  else if (util_match_couple(section,pconfig->input_section,name,"ksp_monitor_singular_value")) {
+    pconfig->ksp_monitor_singular_value = atoi(value);
+    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+  }      
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_initial_guess_nonzero")) {
     mpi_assert(pconfig->ksp_initial_guess_nonzero == -1);
     pconfig->ksp_initial_guess_nonzero = atoi(value);
@@ -120,6 +124,11 @@ krylov_petsc_set_options_database_from_params
   else
     PetscOptionsClearValue(NULL,"-ksp_initial_guess_nonzero");
 
+  if(input->ksp_monitor_singular_value == 1)
+    PetscOptionsSetValue(NULL,"-ksp_monitor_singular_value","");
+  else
+    PetscOptionsClearValue(NULL,"-ksp_monitor_singular_value");
+  
   PetscOptionsClearValue(NULL,"-ksp_type");
   PetscOptionsSetValue(NULL,"-ksp_type",input->ksp_type);
   
@@ -165,7 +174,8 @@ krylov_petsc_input
   input->ksp_chebyshev_esteig_steps[0] = '*';
   input->ksp_chebyshev_esteig[0] = '*';
   input->ksp_chebyshev_esteig_random = -1;
-   
+  input->ksp_monitor_singular_value = 0;
+  
   mpi_assert(sizeof(input->input_section) <= 50);
   snprintf (input->input_section, sizeof(input->input_section), "%s", input_section);
   if (ini_parse(input_file, krylov_petsc_input_handler, input) < 0) {
@@ -290,6 +300,7 @@ krylov_petsc_solve
   VecSetFromOptions(x);//CHKERRQ(ierr);
   VecDuplicate(x,&b);//CHKERRQ(ierr);
 
+  
   KSPGetPC(ksp,&pc);
   if (krylov_pc != NULL) {
     PCSetType(pc,PCSHELL);//CHKERRQ(ierr);
@@ -304,8 +315,8 @@ krylov_petsc_solve
     PCSetType(pc,PCNONE);//CHKERRQ(ierr);
   }
 
+
   KSPSetFromOptions(ksp);
-  
   /* Create matrix-free shell for Aij */
   Mat A;
   MatCreateShell
@@ -324,12 +335,13 @@ krylov_petsc_solve
   KSPSetOperators(ksp,A,A);
   VecPlaceArray(b, rhs);
   VecPlaceArray(x, u);
-  
+
   KSPSolve(ksp,b,x);
   
   KSPGetIterationNumber(ksp, &(info.iterations));
   KSPGetResidualNorm(ksp, &(info.residual_norm));
-  
+
+
   VecResetArray(b);
   VecResetArray(x);
   VecDestroy(&x);

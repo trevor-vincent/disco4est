@@ -103,12 +103,14 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
      &element_data->u_storage[0],
      stiff_u
     );
-
   
-
   for (int i = 0; i < volume_nodes_Lobatto; i++){
     element_data->Au_elem[i] += stiff_u[i];
+    /* printf("blah\n"); */
   }
+
+ 
+  
 
   P4EST_FREE(stiff_u);
 }
@@ -154,7 +156,7 @@ curved_poisson_operator_primal_apply_aij
  
   curved_compute_flux_user_data.flux_fcn_ptrs = &prob_vecs->curved_scalar_flux_fcn_data;
   p4est->user_pointer = &curved_compute_flux_user_data;
-  
+
   p4est_iterate(p4est,
 		ghost,
 		(void*) ghost_data,
@@ -164,7 +166,6 @@ curved_poisson_operator_primal_apply_aij
                 NULL,
 #endif
 		NULL);
-
  
   
   p4est_iterate (p4est,
