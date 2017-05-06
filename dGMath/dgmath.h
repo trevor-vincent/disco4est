@@ -25,6 +25,7 @@ typedef struct {
   double** dgmath_ref_GaussVij_1d_table;
   double** dgmath_ref_invGaussVij_1d_table;
   double** dgmath_vtk_interp_1d_table;
+  
   double** dgmath_ref_GLL_to_GL_interp_1d_table;
   double** dgmath_ref_GLL_to_GL_interp_1d_inverse_table;
   double** dgmath_ref_GLL_to_GL_interp_trans_1d_table;
@@ -150,7 +151,7 @@ void dgmath_apply_curvedInverseGaussMass(dgmath_jit_dbase_t *dgmath_jit_dbase,do
 void dgmath_apply_fofufofvlj_Gaussnodes(dgmath_jit_dbase_t *dgmath_jit_dbase,double *u,double *v,int deg_Lobatto,double *jac_Gauss,double *xyz_Gauss[(P4EST_DIM)],int deg_Gauss,int dim,double *out,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx);
 void dgmath_apply_fofufofvlilj_Gaussnodes(dgmath_jit_dbase_t *dgmath_jit_dbase,double *vec,double *u,double *v,int deg_Lobatto,double *jac_Gauss,double *xyz_Gauss[(P4EST_DIM)],int deg_Gauss,int dim,double *Mvec,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx);
 void dgmath_form_fofufofvlilj_matrix_Gaussnodes(dgmath_jit_dbase_t *dgmath_jit_dbase,double *u,double *v,int deg_Lobatto,double *xyz_Gauss[(P4EST_DIM)],double *jac_Gauss,int deg_Gauss,int dim,double *out,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx);
-void dgmath_compute_PT_mat_P(dgmath_jit_dbase_t *dgmath_jit_dbase,double *in_mat,int degH,int dim,int *degh,int children,double *out_mat);
+void dgmath_compute_PT_mat_P(dgmath_jit_dbase_t *dgmath_jit_dbase,double *mat,int degH,int dim,int *degh,int children,double *PT_mat_P);
 void dgmath_apply_hp_prolong(dgmath_jit_dbase_t *dgbase,double *in,int degH,int dim,int *degh,double *out);
 void dgmath_compute_prolong_matrix(dgmath_jit_dbase_t *dgmath_jit_dbase,int degH,int dim,int *degh,int children,double *prolong_mat);
 void dgmath_compute_curvedGaussMass(dgmath_jit_dbase_t *dgmath_jit_dbase,int deg_Lobatto,int deg_Gauss,int dim,double *jac_Gauss,double *M);
@@ -161,9 +162,11 @@ void dgmath_apply_p_prolong(dgmath_jit_dbase_t *dgbase,double *in,int degH,int d
 double *dgmath_fetch_p_prolong_transpose_1d(dgmath_jit_dbase_t *dgbase,int degH,int degh);
 double *dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase_t *dgbase,int deg);
 void dgmath_apply_curvedLobattoMass(dgmath_jit_dbase_t *dgmath_jit_dbase,double *in,int deg_Lobatto,double *jac_Lobatto_integ,int deg_Lobatto_integ,int dim,double *out);
+void dgmath_apply_curvedGaussStiff_withJdrdxdrdx(dgmath_jit_dbase_t *dgmath_jit_dbase,double *in,int deg_Lobatto,double *Jdrdxdrdx[(P4EST_DIM)][(P4EST_DIM)],int deg_Gauss,int dim,double *out);
 void dgmath_apply_Dij_transpose(dgmath_jit_dbase_t *dgbase,double *in,int dim,int deg,int dir,double *out);
 void dgmath_apply_Dij(dgmath_jit_dbase_t *dgbase,double *in,int dim,int deg,int dir,double *out);
 void dgmath_apply_curvedGaussStiff(dgmath_jit_dbase_t *dgmath_jit_dbase,double *in,int deg_Lobatto,double *jac_Gauss,double *rst_xyz[(P4EST_DIM)][(P4EST_DIM)],int deg_Gauss,int dim,double *out);
+void dgmath_compute_curvedInverseGaussStiff(dgmath_jit_dbase_t *dgmath_jit_dbase,int deg_Lobatto,double *jac_Gauss,double *rst_xyz[(P4EST_DIM)][(P4EST_DIM)],int deg_Gauss,int dim,double *invS);
 double *dgmath_fetch_GL_weights_1d(dgmath_jit_dbase_t *dgbase,int deg);
 void dgmath_apply_curvedGaussMass(dgmath_jit_dbase_t *dgmath_jit_dbase,double *in,int deg_Lobatto,double *jac_Gauss,int deg_Gauss,int dim,double *out);
 void dgmath_interp_GLL_to_GL(dgmath_jit_dbase_t *dgmath_jit_dbase,double *u_Lobatto_in,int deg_Lobatto,int deg_Gauss,double *u_Gauss_out,int dim);

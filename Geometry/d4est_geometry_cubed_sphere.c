@@ -502,7 +502,382 @@ d4est_geometry_cubed_sphere_inner_shell_block_DX(d4est_geometry_t* d4est_geom,
 }
 
 
+static void
+d4est_geometry_cubed_sphere_outer_shell_block_DRDX_JAC
+(
+ d4est_geometry_t* d4est_geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [3],
+ p4est_qcoord_t dq,
+ const double rst[3], /* [-1,1]^3 */
+ double drst_dxyz_times_jac[3][3]
+)
+{
 
+  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
+  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
+
+  /* Element integration weight x-coordinates in [-1,1]^3 space of the element*/
+  double r = rst[0];
+  double s = rst[1];
+  double t = rst[2];
+
+  /* topological coordinates of element corners */
+  double amin = q0[0];
+  double amax = q0[0] + dq;
+  double bmin = q0[1];
+  double bmax = q0[1] + dq;
+  double cmin = q0[2];
+  double cmax = q0[2] + dq;
+
+  /* transform element corners to [0,1]^3 topological space */
+  amin /= (double)P4EST_ROOT_LEN;
+  amax /= (double)P4EST_ROOT_LEN;
+  bmin /= (double)P4EST_ROOT_LEN;
+  bmax /= (double)P4EST_ROOT_LEN;
+  cmin /= (double)P4EST_ROOT_LEN;
+  cmax /= (double)P4EST_ROOT_LEN;
+
+  /* transform element corners to [-1,1]^2 x [1,2] topological space */
+  amin = 2.*amin - 1.;
+  amax = 2.*amax - 1.;
+  bmin = 2.*bmin - 1.;
+  bmax = 2.*bmax - 1.;
+  cmin = cmin + 1.;
+  cmax = cmax + 1.;
+
+  if(compactify_outer_shell){
+ 
+drst_dxyz_times_jac[0][0] = -((bmax - bmin)*(cmax - cmin)*M_PI*pow(R1,2)*(R1 - R2)*pow(R2,2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(2.*pow(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t),3)*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+drst_dxyz_times_jac[0][1] = 0;
+
+drst_dxyz_times_jac[0][2] = ((bmax - bmin)*(cmax - cmin)*M_PI*pow(R1,2)*(R1 - R2)*pow(R2,2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(2.*pow(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t),3)*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+drst_dxyz_times_jac[1][0] = 0;
+
+drst_dxyz_times_jac[1][1] = -((amax - amin)*(cmax - cmin)*M_PI*pow(R1,2)*(R1 - R2)*pow(R2,2)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/(2.*pow(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t),3)*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+drst_dxyz_times_jac[1][2] = ((amax - amin)*(cmax - cmin)*M_PI*pow(R1,2)*(R1 - R2)*pow(R2,2)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(2.*pow(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t),3)*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+drst_dxyz_times_jac[2][0] = ((amax - amin)*(bmax - bmin)*pow(M_PI,2)*pow(R1,2)*pow(R2,2)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(16.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2));
+
+drst_dxyz_times_jac[2][1] = ((amax - amin)*(bmax - bmin)*pow(M_PI,2)*pow(R1,2)*pow(R2,2)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(16.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2));
+
+drst_dxyz_times_jac[2][2] = ((amax - amin)*(bmax - bmin)*pow(M_PI,2)*pow(R1,2)*pow(R2,2)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(16.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2));
+ 
+  }
+  else {
+
+    drst_dxyz_times_jac[0][0] = ((bmax - bmin)*(cmax - cmin)*M_PI*(R1 - R2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(32.*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drst_dxyz_times_jac[0][1] = 0;
+
+    drst_dxyz_times_jac[0][2] = -((bmax - bmin)*(cmax - cmin)*M_PI*(R1 - R2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(32.*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drst_dxyz_times_jac[1][0] = 0;
+
+    drst_dxyz_times_jac[1][1] = ((amax - amin)*(cmax - cmin)*M_PI*(R1 - R2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/(32.*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drst_dxyz_times_jac[1][2] = -((amax - amin)*(cmax - cmin)*M_PI*(R1 - R2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(32.*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drst_dxyz_times_jac[2][0] = ((amax - amin)*(bmax - bmin)*pow(M_PI,2)*pow(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(256.*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2));
+
+    drst_dxyz_times_jac[2][1] = ((amax - amin)*(bmax - bmin)*pow(M_PI,2)*pow(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(256.*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2));
+
+    drst_dxyz_times_jac[2][2] = ((amax - amin)*(bmax - bmin)*pow(M_PI,2)*pow(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(256.*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2));
+
+  }
+  
+}
+
+
+static void
+d4est_geometry_cubed_sphere_outer_shell_block_DRDX
+(
+ d4est_geometry_t* d4est_geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [3],
+ p4est_qcoord_t dq,
+ const double rst[3], /* [-1,1]^3 */
+ double drst_dxyz[3][3]
+)
+{
+
+  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
+  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
+
+  /* Element integration weight x-coordinates in [-1,1]^3 space of the element*/
+  double r = rst[0];
+  double s = rst[1];
+  double t = rst[2];
+
+  /* topological coordinates of element corners */
+  double amin = q0[0];
+  double amax = q0[0] + dq;
+  double bmin = q0[1];
+  double bmax = q0[1] + dq;
+  double cmin = q0[2];
+  double cmax = q0[2] + dq;
+
+  /* transform element corners to [0,1]^3 topological space */
+  amin /= (double)P4EST_ROOT_LEN;
+  amax /= (double)P4EST_ROOT_LEN;
+  bmin /= (double)P4EST_ROOT_LEN;
+  bmax /= (double)P4EST_ROOT_LEN;
+  cmin /= (double)P4EST_ROOT_LEN;
+  cmax /= (double)P4EST_ROOT_LEN;
+
+  /* transform element corners to [-1,1]^2 x [1,2] topological space */
+  amin = 2.*amin - 1.;
+  amax = 2.*amax - 1.;
+  bmin = 2.*bmin - 1.;
+  bmax = 2.*bmax - 1.;
+  cmin = cmin + 1.;
+  cmax = cmax + 1.;
+
+  if(compactify_outer_shell){
+
+    drst_dxyz[0][0] = (4*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(cos((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)))/((amax - amin)*M_PI*R1*R2);
+
+    drst_dxyz[0][1] = 0;
+
+    drst_dxyz[0][2] = (-2*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*sin((M_PI*(amax + amin + amax*r - amin*r))/4.)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)))/((amax - amin)*M_PI*R1*R2);
+
+    drst_dxyz[1][0] = 0;
+
+    drst_dxyz[1][1] = (4*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)))/((bmax - bmin)*M_PI*R1*R2);
+
+    drst_dxyz[1][2] = (-2*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)))/((bmax - bmin)*M_PI*R1*R2);
+
+    drst_dxyz[2][0] = -(pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(2.*(cmax - cmin)*R1*(R1 - R2)*R2*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drst_dxyz[2][1] = -(pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(2.*(cmax - cmin)*R1*(R1 - R2)*R2*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drst_dxyz[2][2] = -pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)/(2.*(cmax - cmin)*R1*(R1 - R2)*R2*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+  }
+  else {
+    drst_dxyz[0][0] = (-16*pow(cos((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)))/((amax - amin)*M_PI*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t)));
+
+    drst_dxyz[0][1] = 0;
+
+    drst_dxyz[0][2] = (8*sin((M_PI*(amax + amin + amax*r - amin*r))/4.)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)))/((amax - amin)*M_PI*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t)));
+
+    drst_dxyz[1][0] = 0;
+
+    drst_dxyz[1][1] = (-16*pow(cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)))/((bmax - bmin)*M_PI*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t)));
+
+    drst_dxyz[1][2] = (8*sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)))/((bmax - bmin)*M_PI*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t)));
+
+    drst_dxyz[2][0] = (-2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/((cmax - cmin)*(R1 - R2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drst_dxyz[2][1] = (-2*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/((cmax - cmin)*(R1 - R2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drst_dxyz[2][2] = -2/((cmax - cmin)*(R1 - R2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+  }
+  
+}
+
+
+static void
+d4est_geometry_cubed_sphere_outer_shell_block_drdxjacdrdx(
+                                                          d4est_geometry_t* d4est_geom,
+                                                          p4est_topidx_t which_tree,
+                                                          p4est_qcoord_t q0 [3],
+                                                          p4est_qcoord_t dq,
+                                                          const double rst[3], /* [-1,1]^3 */
+                                                          double drdxJdrdx [3][3]
+                                                         )
+{
+  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
+  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
+
+  /* Element integration weight x-coordinates in [-1,1]^3 space of the element*/
+  double r = rst[0];
+  double s = rst[1];
+  double t = rst[2];
+
+  /* topological coordinates of element corners */
+  double amin = q0[0];
+  double amax = q0[0] + dq;
+  double bmin = q0[1];
+  double bmax = q0[1] + dq;
+  double cmin = q0[2];
+  double cmax = q0[2] + dq;
+
+  /* transform element corners to [0,1]^3 topological space */
+  amin /= (double)P4EST_ROOT_LEN;
+  amax /= (double)P4EST_ROOT_LEN;
+  bmin /= (double)P4EST_ROOT_LEN;
+  bmax /= (double)P4EST_ROOT_LEN;
+  cmin /= (double)P4EST_ROOT_LEN;
+  cmax /= (double)P4EST_ROOT_LEN;
+
+  /* transform element corners to [-1,1]^2 x [1,2] topological space */
+  amin = 2.*amin - 1.;
+  amax = 2.*amax - 1.;
+  bmin = 2.*bmin - 1.;
+  bmax = 2.*bmax - 1.;
+  cmin = cmin + 1.;
+  cmax = cmax + 1.;
+
+  if(compactify_outer_shell){
+    drdxJdrdx[0][0] = (-2*(bmax - bmin)*(cmax - cmin)*R1*(R1 - R2)*R2*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/((amax - amin)*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drdxJdrdx[0][1] = (-2*(cmax - cmin)*R1*(R1 - R2)*R2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drdxJdrdx[0][2] = 0;
+
+    drdxJdrdx[1][0] = (-2*(cmax - cmin)*R1*(R1 - R2)*R2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drdxJdrdx[1][1] = (-2*(amax - amin)*(cmax - cmin)*R1*(R1 - R2)*R2*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/((bmax - bmin)*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drdxJdrdx[1][2] = 0;
+
+    drdxJdrdx[2][0] = 0;
+
+    drdxJdrdx[2][1] = 0;
+
+    drdxJdrdx[2][2] = -((amax - amin)*(bmax - bmin)*pow(M_PI,2)*R1*R2*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(32.*(cmax - cmin)*(R1 - R2)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+    
+  }
+  else {
+
+    drdxJdrdx[0][0] = -((bmax - bmin)*(cmax - cmin)*(R1 - R2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(2.*(amax - amin)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drdxJdrdx[0][1] = -((cmax - cmin)*(R1 - R2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(2.*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drdxJdrdx[0][2] = 0;
+
+    drdxJdrdx[1][0] = -((cmax - cmin)*(R1 - R2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(2.*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drdxJdrdx[1][1] = -((amax - amin)*(cmax - cmin)*(R1 - R2)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/(2.*(bmax - bmin)*sqrt(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    drdxJdrdx[1][2] = 0;
+
+    drdxJdrdx[2][0] = 0;
+
+    drdxJdrdx[2][1] = 0;
+
+    drdxJdrdx[2][2] = -((amax - amin)*(bmax - bmin)*pow(M_PI,2)*pow(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(128.*(cmax - cmin)*(R1 - R2)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+    
+  }
+
+}
+
+
+
+
+static void
+d4est_geometry_cubed_sphere_outer_shell_block_jac(d4est_geometry_t* d4est_geom,
+                                                 p4est_topidx_t which_tree,
+                                                 p4est_qcoord_t q0 [3],
+                                                 p4est_qcoord_t dq,
+                                                 const double rst[3], /* [-1,1]^3 */
+                                                 double* jac
+                                                )
+{
+
+  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
+  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
+
+  /* Element integration weight x-coordinates in [-1,1]^3 space of the element*/
+  double r = rst[0];
+  double s = rst[1];
+  double t = rst[2];
+
+  /* topological coordinates of element corners */
+  double amin = q0[0];
+  double amax = q0[0] + dq;
+  double bmin = q0[1];
+  double bmax = q0[1] + dq;
+  double cmin = q0[2];
+  double cmax = q0[2] + dq;
+
+  /* transform element corners to [0,1]^3 topological space */
+  amin /= (double)P4EST_ROOT_LEN;
+  amax /= (double)P4EST_ROOT_LEN;
+  bmin /= (double)P4EST_ROOT_LEN;
+  bmax /= (double)P4EST_ROOT_LEN;
+  cmin /= (double)P4EST_ROOT_LEN;
+  cmax /= (double)P4EST_ROOT_LEN;
+
+  /* transform element corners to [-1,1]^2 x [1,2] topological space */
+  amin = 2.*amin - 1.;
+  amax = 2.*amax - 1.;
+  bmin = 2.*bmin - 1.;
+  bmax = 2.*bmax - 1.;
+  cmin = cmin + 1.;
+  cmax = cmax + 1.;
+
+  if(compactify_outer_shell){
+    *jac = -((amax - amin)*(bmax - bmin)*(cmax - cmin)*pow(M_PI,2)*pow(R1,3)*(R1
+               - R2)*pow(R2,3)*pow(secant_fcn((M_PI*(amax + amin + amax*r -
+               amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s -
+               bmin*s))/8.),2))/(8.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax
+               + cmin + cmax*t - cmin*t),4)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s -
+               bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+  }
+  else {
+    *jac = -((amax - amin)*(bmax - bmin)*(cmax - cmin)*pow(M_PI,2)*(R1
+           - R2)*pow(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax
+           + cmin + cmax*t - cmin*t),2)*pow(secant_fcn((M_PI*(amax + amin +
+           amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s -
+           bmin*s))/8.),2))/(512.*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s -
+           bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+  }
+  
+}
+
+
+/* drst_dxyz_times_jac[0][0] = -((bmax - bmin)*(cmax - cmin)*M_PI*pow(R1,2)*(R1 */
+/* - R2)*pow(R2,2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - */
+/* bmin*s))/8.),2))/(2.*pow(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + */
+/* cmax + cmin + cmax*t - cmin*t),3)*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s */
+/* - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2))); */
+/* drst_dxyz_times_jac[0][1] = 0; */
+/* drst_dxyz_times_jac[0][2] = 0; */
+/* drst_dxyz_times_jac[1][0] = -((amax - amin)*(cmax - cmin)*M_PI*pow(R1,2)*(R1 */
+/* - R2)*pow(R2,2)*pow(secant_fcn((M_PI*(amax + amin + amax*r - */
+/* amin*r))/8.),2))/(2.*pow(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + */
+/* cmax + cmin + cmax*t - cmin*t),3)*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s */
+/* - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2))); */
+/* drst_dxyz_times_jac[1][1] = ((bmax - bmin)*(cmax - */
+/* cmin)*M_PI*pow(R1,2)*(R1 - R2)*pow(R2,2)*pow(secant_fcn((M_PI*(bmax */
+/* + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - */
+/* amin*r))/8.))/(2.*pow(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + */
+/* cmax + cmin + cmax*t - cmin*t),3)*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s */
+/* - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2))); */
+/* drst_dxyz_times_jac[1][2] = ((amax - amin)*(cmax - */
+/* cmin)*M_PI*pow(R1,2)*(R1 - R2)*pow(R2,2)*pow(secant_fcn((M_PI*(amax */
+/* + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - */
+/* bmin*s))/8.))/(2.*pow(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + */
+/* cmax + cmin + cmax*t - cmin*t),3)*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s */
+/* - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2))); */
+/* drst_dxyz_times_jac[2][0] = ((amax - amin)*(bmax - */
+/* bmin)*pow(M_PI,2)*pow(R1,2)*pow(R2,2)*pow(secant_fcn((M_PI*(amax + amin */
+/* + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - */
+/* bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(16.*pow(R2*(-4 */
+/* + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t */
+/* - cmin*t),2)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - */
+/* bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2)); */
+/* drst_dxyz_times_jac[2][1] = ((amax - amin)*(bmax - */
+/* bmin)*pow(M_PI,2)*pow(R1,2)*pow(R2,2)*pow(secant_fcn((M_PI*(amax + amin */
+/* + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - */
+/* bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(16.*pow(R2*(-4 */
+/* + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t */
+/* - cmin*t),2)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - */
+/* bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2)); */
+/* drst_dxyz_times_jac[2][2] = ((amax - amin)*(bmax - */
+/* bmin)*pow(M_PI,2)*pow(R1,2)*pow(R2,2)*pow(secant_fcn((M_PI*(amax + amin */
+/* + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - */
+/* bmin*s))/8.),2))/(16.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + */
+/* cmax + cmin + cmax*t - cmin*t),2)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s */
+/* - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2)); */
 
 static void
 d4est_geometry_cubed_sphere_outer_shell_block_DX(d4est_geometry_t* d4est_geom,
@@ -1108,12 +1483,20 @@ d4est_geometry_cubed_sphere_outer_shell_block_new
   d4est_geom->X = d4est_geometry_cubed_sphere_outer_shell_block_X;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
   d4est_geom->p4est_conn = conn;
-  if (d4est_geom->X_mapping_type == MAP_ANALYTIC)
+  if (d4est_geom->X_mapping_type == MAP_ANALYTIC || d4est_geom->X_mapping_type == MAP_ANALYTIC_NEW){
     d4est_geom->DX = d4est_geometry_cubed_sphere_outer_shell_block_DX;
-  else
+    d4est_geom->DRDX = d4est_geometry_cubed_sphere_outer_shell_block_DRDX;
+    d4est_geom->DRDX_JAC = d4est_geometry_cubed_sphere_outer_shell_block_DRDX_JAC;
+    d4est_geom->JAC = d4est_geometry_cubed_sphere_outer_shell_block_jac;
+    d4est_geom->JACDRDXDRDX = d4est_geometry_cubed_sphere_outer_shell_block_drdxjacdrdx;
+  }
+  else{
     d4est_geom->DX = NULL;
-
-  
+    d4est_geom->DRDX = NULL;
+    d4est_geom->JAC = NULL;
+    d4est_geom->JACDRDXDRDX = NULL;
+  }
+    
   if (mpirank == 0){
     printf("%s: NAME = cubed sphere outer shell block\n", printf_prefix );
     printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);

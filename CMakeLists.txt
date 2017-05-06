@@ -159,6 +159,7 @@ SET (
   Solver/multigrid_element_data_updater_nocurved.c
   Solver/multigrid_element_data_updater_curved.c
   Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.c
+  Flux/curved_Gauss_primal_sipg_kronbichler_uniform_flux_fcns.c
   Flux/curved_Gauss_primal_sipg_hesthaven_flux_fcns.c
   Flux/ip_flux.c
   Flux/ip_flux_params.c
@@ -329,7 +330,7 @@ endfunction()
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
 # add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
-# add_d4est_problem_2d(test_uniform_wedge_driver test_uniform_wedge.c UniformExamples/Wedge)
+add_d4est_problem_2d(test_uniform_wedge_driver test_uniform_wedge.c UniformExamples/Wedge)
 add_d4est_problem_3d(test_uniform_cubedsphere_poisson_driver test_uniform_cubedsphere_poisson.c UniformExamples/CubedSpherePoisson)
 add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_driver test_uniform_cubedsphere_helmholtz.c UniformExamples/CubedSphereHelmholtz)
 add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_driver test_uniform_cubedsphere_with_hole_helmholtz.c UniformExamples/CubedSphereWithHoleHelmholtz)

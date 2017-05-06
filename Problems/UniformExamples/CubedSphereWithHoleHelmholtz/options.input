@@ -1,6 +1,6 @@
 [p4est]
 min_quadrants = -1
-min_level = 2
+min_level = 0
 fill_uniform = 1
 
 [ip_flux_params]
@@ -14,7 +14,7 @@ ip_flux_penalty_calculate_fcn = meanp_sqr_over_meanh
 num_unifrefs = 0
 deg_R2= 3
 deg_integ_R2= 3
-deg_stiffness_R2= 3
+deg_stiffness_R2= 4
 deg_R1= 3
 deg_integ_R1= 3
 deg_stiffness_R1= 3
@@ -38,11 +38,12 @@ compactify_inner_shell = 0
 ksp_type = cg
 ksp_atol = 1e-25
 ksp_rtol = 1e-25
-ksp_max_it = 100000
+ksp_max_it = 10000
 ksp_view = 1
 ksp_monitor = 1
 ksp_converged_reason = 1
 ksp_initial_guess_nonzero = 1
+ksp_monitor_singular_value = 1
 
 [d4est_vtk_geometry]
 ; name = cubed_sphere_inner_shell_block

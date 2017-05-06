@@ -37,6 +37,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_dirichlet_withbcterms
   double* u_m_on_f_m_min_u_at_bndry_Lobatto = P4EST_ALLOC(double, face_nodes_m_Lobatto);
   double* sj_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
   double* n_on_f_m_Gauss [(P4EST_DIM)];
+  double* n_sj_on_f_m_Gauss [(P4EST_DIM)];
 
   double* drst_dxyz_Gauss [(P4EST_DIM)][(P4EST_DIM)]; D4EST_ALLOC_DBYD_MAT(drst_dxyz_Gauss, face_nodes_m_Gauss);
   
@@ -46,6 +47,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_dirichlet_withbcterms
     dudr_m_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     dudx_m_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
     n_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
+    n_sj_on_f_m_Gauss[d] = P4EST_ALLOC(double, face_nodes_m_Gauss);
   }
 
   int volume_nodes_m_Lobatto = dgmath_get_nodes((P4EST_DIM), e_m->deg);
@@ -103,6 +105,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_dirichlet_withbcterms
      drst_dxyz_Gauss,
      sj_on_f_m_Gauss,
      n_on_f_m_Gauss,
+     n_sj_on_f_m_Gauss,
      J_div_SJ_Gauss,
      GAUSS,
      geom,
@@ -222,7 +225,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_dirichlet_withbcterms
        (P4EST_DIM)-1
       );
     
-    d4est_geometry_data_compute_xyz_face_analytic
+    d4est_geometry_compute_xyz_face_analytic
       (
        dgmath_jit_dbase,
        e_m->q,
@@ -265,10 +268,14 @@ curved_Gauss_primal_sipg_hesthaven_flux_dirichlet_withbcterms
     for (int l = 0; l < (P4EST_DIM); l++){
       term2_Gauss[l][i] = 0.;
       for (int d = 0; d < (P4EST_DIM); d++){
-        term2_Gauss[l][i] += sj_on_f_m_Gauss[i]
-                             *drst_dxyz_Gauss[l][d][i]
-                             *n_on_f_m_Gauss[d][i]
+        /* term2_Gauss[l][i] += sj_on_f_m_Gauss[i] */
+                             /* *drst_dxyz_Gauss[l][d][i] */
+                             /* *n_on_f_m_Gauss[d][i] */
+                             /* *u_at_bndry_Gauss[i]; */
+        term2_Gauss[l][i] += drst_dxyz_Gauss[l][d][i]
+                             *n_sj_on_f_m_Gauss[d][i]
                              *u_at_bndry_Gauss[i];
+        
       }
     }
     term3_Gauss[i] = sj_on_f_m_Gauss[i]
@@ -356,6 +363,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_dirichlet_withbcterms
   
   for (int d = 0; d < (P4EST_DIM); d++){
     P4EST_FREE(n_on_f_m_Gauss[d]);
+    P4EST_FREE(n_sj_on_f_m_Gauss[d]);
   }
   D4EST_FREE_DBYD_MAT(drst_dxyz_Gauss);
 
@@ -539,11 +547,13 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
   
   double* sj_on_f_m_mortar_Gauss = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
   double* n_on_f_m_mortar_Gauss [(P4EST_DIM)];
+  double* n_sj_on_f_m_mortar_Gauss [(P4EST_DIM)];
 
   double* tmp = P4EST_ALLOC(double, total_side_nodes_p_Gauss);
  
   for (int i = 0; i < (P4EST_DIM); i++) {
     n_on_f_m_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
+    n_sj_on_f_m_mortar_Gauss[i] = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
   }  
   
   stride = 0;
@@ -719,6 +729,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
      drst_dxyz_m_on_mortar_Gauss,
      sj_on_f_m_mortar_Gauss,
      n_on_f_m_mortar_Gauss,
+     n_sj_on_f_m_mortar_Gauss,
      j_div_sj_on_f_m_mortar_Gauss,
      GAUSS,
      geom,
@@ -736,6 +747,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
      &deg_mortar_Gauss_porder[0],
      f_p,
      drst_dxyz_p_on_mortar_Gauss_porder,
+     NULL,
      NULL,
      NULL,
      j_div_sj_on_f_p_mortar_Gauss_porder,
@@ -856,20 +868,27 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
     for (int k = 0; k < nodes_mortar_Gauss[f]; k++){
       int ks = k + stride;
 
-      term1_mortar_Gauss[ks] = 0.;
+    term1_mortar_Gauss[ks] = 0.;
       for (int d = 0; d < (P4EST_DIM); d++){
-        term1_mortar_Gauss[ks] += -1.*sj_on_f_m_mortar_Gauss[ks]
-                                  *n_on_f_m_mortar_Gauss[d][ks]
+        /* term1_mortar_Gauss[ks] += -1.*sj_on_f_m_mortar_Gauss[ks] */
+                                  /* *n_on_f_m_mortar_Gauss[d][ks] */
+                                  /* *.5*(dudx_p_on_f_p_mortar_Gauss[d][ks] + dudx_m_on_f_m_mortar_Gauss[d][ks]); */
+        term1_mortar_Gauss[ks] += -1.*n_sj_on_f_m_mortar_Gauss[d][ks]
                                   *.5*(dudx_p_on_f_p_mortar_Gauss[d][ks] + dudx_m_on_f_m_mortar_Gauss[d][ks]);
+        
       }
         
       for (int l = 0; l < (P4EST_DIM); l++){
         term2_mortar_Gauss[l][ks] = 0.;
         for (int d = 0; d < (P4EST_DIM); d++){
-          term2_mortar_Gauss[l][ks] += -.5*sj_on_f_m_mortar_Gauss[ks]
-                                       *drst_dxyz_m_on_mortar_Gauss[l][d][ks]
-                                       *n_on_f_m_mortar_Gauss[d][ks]
+          /* term2_mortar_Gauss[l][ks] += -.5*sj_on_f_m_mortar_Gauss[ks] */
+                                       /* *drst_dxyz_m_on_mortar_Gauss[l][d][ks] */
+                                       /* *n_on_f_m_mortar_Gauss[d][ks] */
+                                       /* *(u_m_on_f_m_mortar_Gauss[ks] - u_p_on_f_p_mortar_Gauss[ks]); */
+          term2_mortar_Gauss[l][ks] += -.5*drst_dxyz_m_on_mortar_Gauss[l][d][ks]
+                                       *n_sj_on_f_m_mortar_Gauss[d][ks]
                                        *(u_m_on_f_m_mortar_Gauss[ks] - u_p_on_f_p_mortar_Gauss[ks]);
+          
         }
       }
         
@@ -1033,6 +1052,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
   P4EST_FREE(sj_on_f_m_mortar_Gauss);
   for (int i = 0; i < (P4EST_DIM); i++){
     P4EST_FREE(n_on_f_m_mortar_Gauss[i]);
+    P4EST_FREE(n_sj_on_f_m_mortar_Gauss[i]);
   }
 
   P4EST_FREE(j_div_sj_on_f_m_mortar_Gauss);

@@ -477,16 +477,16 @@ void problem_build_rhs
         
         
       }
-    }    
+    }
 
   int local_nodes = prob_vecs->local_nodes;
   double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
   double* tmp = prob_vecs->u;
-  
-  prob_vecs->u = u_eq_0; 
+
+  prob_vecs->u = u_eq_0;
   problem_apply_lhs(p4est, ghost, ghost_data, prob_vecs, dgbase, d4est_geom);
   linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
-  
+
   prob_vecs->u = tmp;
   P4EST_FREE(u_eq_0);
 
@@ -680,7 +680,7 @@ problem_init
        d4est_geom,
        &input,
        NULL
-      );   
+      );
 
     
     clock_t begin = 0;
@@ -702,9 +702,84 @@ problem_init
     printf("[GRID_INFO]: volume numerical/theoretical = %.25f/%.25f\n", volume, volume_theory);
     printf("[GRID_INFO]: surface_area numerical/theoretical = %.25f/%.25f\n", surface_area, surface_area_theory);
 
+    /* double jac_error_sum = 0.; */
+    /* double drdx_error_sum = 0.; */
+    /* double drdxjacdrdx_error_sum = 0.; */
+    
+ /*    for (p4est_topidx_t tt = p4est->first_local_tree; */
+/*          tt <= p4est->last_local_tree; */
+/*          ++tt) */
+/*     { */
+/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
+/*       sc_array_t* tquadrants = &tree->quadrants; */
+/*       int QQ = (p4est_locidx_t) tquadrants->elem_count; */
+/*       for (int qq = 0; qq < QQ; ++qq) { */
+/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq); */
+/*         curved_element_data_t* ed = (curved_element_data_t*)(quad->p.user_data); */
+
+/*         int volume_nodes = dgmath_get_nodes((P4EST_DIM),ed->deg_integ); */
+/*         double rst [(P4EST_DIM)]; */
+/*         double drst_dxyz_i [(P4EST_DIM)][(P4EST_DIM)]; */
+/*         double drdxjacdrdx_i_anal [(P4EST_DIM)][(P4EST_DIM)]; */
+/*         double drdxjacdrdx_i_mult [(P4EST_DIM)][(P4EST_DIM)]; */
+
+/*         dgmath_rst_t rst_points */
+/*           = dgmath_get_rst_points(dgmath_jit_dbase, ed->deg_integ, (P4EST_DIM), GAUSS); */
+  
+/*         for (int i = 0; i < volume_nodes; i++){ */
+/*           rst[0] = rst_points.r[i]; */
+/*           rst[1] = rst_points.s[i]; */
+/* #if (P4EST_DIM)==3 */
+/*           rst[2] = rst_points.t[i]; */
+/* #endif */
+
+/*           if (d4est_geom->DRDX == NULL){ */
+/*             mpi_abort("d4est_geom->DRDX == NULL"); */
+/*           } */
+/*           d4est_geom->DRDX(d4est_geom, tt, ed->q, ed->dq, rst, drst_dxyz_i); */
+
+/*           if (d4est_geom->JAC == NULL){ */
+/*             mpi_abort("d4est_geom->JAC == NULL"); */
+/*           } */
+
+/*           d4est_geom->JACDRDXDRDX(d4est_geom, tt, ed->q, ed->dq, rst, drdxjacdrdx_i_anal); */
+/*           double jac; */
+/*           d4est_geom->JAC(d4est_geom, tt, ed->q, ed->dq, rst, &jac); */
+          
+/*           for (int d1 = 0; d1 < (P4EST_DIM); d1++) { */
+/*             for (int d2 = 0; d2 < (P4EST_DIM); d2++) { */
+/*               drdxjacdrdx_i_mult[d1][d2] = 0.; */
+/*               for (int k = 0; k < (P4EST_DIM); k++){ */
+/*                 drdxjacdrdx_i_mult[d1][d2] += jac*ed->rst_xyz_integ[d1][k][i]*ed->rst_xyz_integ[d2][k][i]; */
+/*               } */
+/*               printf(" %d drdxjacdrdx_i_mult[%d][%d] drdxjacdrdx_i_anal[%d][%d] = %.15f %.15f\n", i, d1,d2,d1,d2,drdxjacdrdx_i_mult[d1][d2], drdxjacdrdx_i_anal[d1][d2]); */
+/*               drdxjacdrdx_error_sum += fabs(drdxjacdrdx_i_mult[d1][d2] - drdxjacdrdx_i_anal[d1][d2]); */
+/*               drdx_error_sum += fabs(ed->rst_xyz_integ[d1][d2][i] - drst_dxyz_i[d1][d2]); */
+/*             }  */
+/*           } */
+
+/*           jac_error_sum += fabs(jac - ed->J_integ[i]); */
+
+
+/*           printf(" %d jac_mult jac_anal = %.15f %.15f\n", i, ed->J_integ[i], jac); */
+/*           printf(" %d drdx_mult drdx_anal = %.15f %.15f\n",i, ed->rst_xyz_integ[0][0][i], drst_dxyz_i[0][0]); */
+/*           printf(" %d drdy_mult drdy_anal = %.15f %.15f\n",i, ed->rst_xyz_integ[0][1][i], drst_dxyz_i[0][1]); */
+/*           printf(" %d drdz_mult drdz_anal = %.15f %.15f\n",i, ed->rst_xyz_integ[0][2][i], drst_dxyz_i[0][2]); */
+/*           printf(" %d dsdx_mult dsdx_anal = %.15f %.15f\n",i, ed->rst_xyz_integ[1][0][i], drst_dxyz_i[1][0]); */
+/*           printf(" %d dsdy_mult dsdy_anal = %.15f %.15f\n",i, ed->rst_xyz_integ[1][1][i], drst_dxyz_i[1][1]); */
+/*           printf(" %d dsdz_mult dsdz_anal = %.15f %.15f\n",i, ed->rst_xyz_integ[1][2][i], drst_dxyz_i[1][2]); */
+/*           printf(" %d dtdx_mult dtdx_anal = %.15f %.15f\n",i, ed->rst_xyz_integ[2][0][i], drst_dxyz_i[2][0]); */
+/*           printf(" %d dtdy_mult dtdy_anal = %.15f %.15f\n",i, ed->rst_xyz_integ[2][1][i], drst_dxyz_i[2][1]); */
+/*           printf(" %d dtdz_mult dtdz_anal = %.15f %.15f\n",i, ed->rst_xyz_integ[2][2][i], drst_dxyz_i[2][2]); */
+
+/*           printf("drdx_error_sum jac_error_sum drdxjacdrdx_error_sum = %.15f %.15f %.15f\n", drdx_error_sum, jac_error_sum, drdxjacdrdx_error_sum); */
+/*         } */
+                
+/*       } */
+/*     } */
     
     krylov_petsc_params_t petsc_params;
-    krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &petsc_params);      
+    krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &petsc_params);
        
     krylov_info_t info =
       krylov_petsc_solve
@@ -726,7 +801,7 @@ problem_init
                                       analytic_solution_fcn,
                                       dgmath_jit_dbase,
                                       d4est_geom
-                                     );  
+                                     );
     linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
 
     
@@ -768,10 +843,10 @@ problem_init
        "d4est_vtk_geometry",
        vtk_field_plotter,
        (void*)&vtk_nodal_vecs
-      );  
+      );
 
     P4EST_FREE(jacobian_lgl);
-    P4EST_FREE(deg_array);    
+    P4EST_FREE(deg_array);
     double local_nodes_dbl = (double)local_nodes;
     double local_reduce [2];
     double global_reduce [2];

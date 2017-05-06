@@ -60,22 +60,35 @@ vtk_field_plotter
  void* user
 )
 {
-  /* vtk_nodal_vecs_t* vecs = user; */
-  /* vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx, */
-  /*                                          4, */
-  /*                                          0, */
-  /*                                          "u", */
-  /*                                          vecs->u, */
-  /*                                          "u_analytic", */
-  /*                                          vecs->u_analytic, */
-  /*                                          "error", */
-  /*                                          vecs->error, */
-  /*                                          "jacobian", */
-  /*                                          vecs->jacobian, */
-  /*                                          vtk_ctx */
-  /*                                         ); */
+ vtk_nodal_vecs_t* vecs = user;
+  vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx,
+                                           4,
+                                           0,
+                                           "u",
+                                           vecs->u,
+                                           "u_analytic",
+                                           vecs->u_analytic,
+                                           "error",
+                                           vecs->error,
+                                           "jacobian",
+                                           vecs->jacobian,
+                                           vtk_ctx
+                                          );
 
 
+   vtk_ctx = d4est_vtk_write_dg_cell_dataf
+                (
+                 vtk_ctx,
+                 1,
+                 1,
+                 1,
+                 0,
+                 1,
+                 0,
+                 0,
+                 vtk_ctx
+                );
+  
 }
 
 
@@ -218,7 +231,7 @@ double helmholtz_fcn
 )
 {
   /* return 2.*x*y*z*x*y; */
-  return 2;
+  return 1.;
 }
 
 static
@@ -233,9 +246,6 @@ double analytic_solution_fcn
 )
 {
   double r2 = x*x + y*y;
-#if (P4EST_DIM)==3
-  r2 += z*z;
-#endif
   return 1./sqrt(r2);
 }
 
@@ -268,17 +278,10 @@ double f_fcn
 #endif
 )
 {
-  double u = analytic_solution_fcn(x,y
-#if (P4EST_DIM)==3
-                               ,z
-#endif
-                              );
-
-  return 0. + helmholtz_fcn(x,y,
-#if (P4EST_DIM)==3
-                            z,
-#endif
-                            u,NULL)*u;
+  double r2 = x*x + y*y;
+  double r3 = pow(r2, 1.5);
+  double u = analytic_solution_fcn(x,y);
+  return -(1./r3) + helmholtz_fcn(x,y,u,NULL)*u;
 }
 
 
@@ -294,17 +297,10 @@ double f_fcn_ext
  void* user
 )
 {
-  double u = analytic_solution_fcn(x,y
-#if (P4EST_DIM)==3
-                               ,z
-#endif
-                              );
-
-  return 0. + helmholtz_fcn(x,y,
-#if (P4EST_DIM)==3
-                            z,
-#endif
-                            u0,NULL)*u;
+  double r2 = x*x + y*y;
+  double r3 = pow(r2, 1.5);
+  double u = analytic_solution_fcn(x,y);
+  return -(1./r3) + helmholtz_fcn(x,y,u,NULL)*u;
 }
 
 static
@@ -387,7 +383,7 @@ void problem_build_rhs
      d4est_geom
     );
 
-  DEBUG_PRINT_ARR_DBL(f, prob_vecs->local_nodes);
+  /* DEBUG_PRINT_ARR_DBL(f, prob_vecs->local_nodes); */
   
   prob_vecs->curved_scalar_flux_fcn_data.bndry_fcn = boundary_fcn;
 
@@ -696,7 +692,7 @@ problem_init
       mpi_abort("rhs_use_Lobatto must be 0 or 1");
     }
 
-    DEBUG_PRINT_2ARR_DBL(prob_vecs.u, prob_vecs.rhs, local_nodes);
+    /* DEBUG_PRINT_2ARR_DBL(prob_vecs.u, prob_vecs.rhs, local_nodes); */
     
     clock_t begin = 0;
     clock_t end = -1;

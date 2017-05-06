@@ -224,7 +224,7 @@ d4est_geometry_disk_outer_wedge_X(d4est_geometry_t * geom,
   /* transform topog coordinates in [0,1]^3 to cubed sphere vertex space [-1,1]^2 x [1,2]  */
   double abc [3];
   abc[0] = 2*tcoords[0] - 1;
-  abc[1] = tcoords[2] + 1;
+  abc[1] = tcoords[1] + 1;
 
   double R = -1.;
   double x = tan (abc[0] * M_PI_4);
