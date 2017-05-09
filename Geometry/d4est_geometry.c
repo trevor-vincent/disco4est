@@ -19,7 +19,8 @@ typedef struct {
 
   const char* input_section;
   char* name;
-  mapping_type_t X_mapping_type;
+  geometric_quantity_compute_method_t DX_compute_method;
+  geometric_quantity_compute_method_t JAC_compute_method;
   
 } d4est_geometry_input_t;
 
@@ -39,15 +40,24 @@ int d4est_geometry_input_handler
     mpi_assert(pconfig->name == NULL);
     D4EST_ASPRINTF(pconfig->name,"%s",value);
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"X_mapping_type")) {
-    if(util_match(value, "isoparametric")){
-      pconfig->X_mapping_type = MAP_ISOPARAMETRIC;
+  else if (util_match_couple(section,pconfig->input_section,name,"DX_compute_method")) {
+    if(util_match(value, "numerical")){
+      pconfig->DX_compute_method = GEOM_COMPUTE_NUMERICAL;
     }
     else if (util_match(value, "analytic")){
-      pconfig->X_mapping_type = MAP_ANALYTIC;
+      pconfig->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
     }
-    else if (util_match(value, "analytic_new")){
-      pconfig->X_mapping_type = MAP_ANALYTIC_NEW;
+    else {
+      printf("[D4EST_ERROR]: You tried to use %s as a mapping type\n", value);
+      mpi_abort("[D4EST_ERROR]: This mapping is not supported");
+    }
+  }
+  else if (util_match_couple(section,pconfig->input_section,name,"JAC_compute_method")) {
+    if(util_match(value, "numerical")){
+      pconfig->JAC_compute_method = GEOM_COMPUTE_NUMERICAL;
+    }
+    else if (util_match(value, "analytic")){
+      pconfig->JAC_compute_method = GEOM_COMPUTE_ANALYTIC;
     }
     else {
       printf("[D4EST_ERROR]: You tried to use %s as a mapping type\n", value);
@@ -73,22 +83,23 @@ d4est_geometry_input
   d4est_geometry_input_t input;
   input.input_section = input_section;
   input.name = NULL;
-  input.X_mapping_type = MAP_NONE;
+  input.DX_compute_method = GEOM_COMPUTE_NOT_SET;
+  input.JAC_compute_method = GEOM_COMPUTE_NOT_SET;
   
   if (ini_parse(input_file, d4est_geometry_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
   }
 
   D4EST_CHECK_INPUT(input_section, input.name, NULL);
-  D4EST_CHECK_INPUT(input_section, input.X_mapping_type, MAP_NONE);
+  D4EST_CHECK_INPUT(input_section, input.DX_compute_method, GEOM_COMPUTE_NOT_SET);
+  D4EST_CHECK_INPUT(input_section, input.JAC_compute_method, GEOM_COMPUTE_NOT_SET);
  
   printf("%s: Loading %s geometry\n", printf_prefix, input.name);
-  if (input.X_mapping_type == MAP_ISOPARAMETRIC)
-    printf("%s: Mapping type = %s\n", printf_prefix, "isoparametric");
-  if (input.X_mapping_type == MAP_ANALYTIC)
-    printf("%s: Mapping type = %s\n", printf_prefix, "analytic");
-  if (input.X_mapping_type == MAP_ANALYTIC_NEW)
-    printf("%s: Mapping type = %s\n", printf_prefix, "analytic_new");
+  if (input.DX_compute_method == GEOM_COMPUTE_NUMERICAL)
+    printf("%s: Dx computation method = %s\n", printf_prefix, "numerical");
+  if (input.DX_compute_method == GEOM_COMPUTE_ANALYTIC)
+    printf("%s: Dx computation method = %s\n", printf_prefix, "analytic");
+
   return input;
 }
 
@@ -102,7 +113,8 @@ d4est_geometry_new(int mpirank,
 
   d4est_geometry_input_t input = d4est_geometry_input(input_file, input_section, printf_prefix);
   d4est_geometry_t* d4est_geom = P4EST_ALLOC(d4est_geometry_t, 1);
-  d4est_geom->X_mapping_type = input.X_mapping_type;
+  d4est_geom->DX_compute_method = input.DX_compute_method;
+  d4est_geom->JAC_compute_method = input.JAC_compute_method;
   
 #if (P4EST_DIM)==3
   if (util_match(input.name,"cubed_sphere")) {
@@ -145,8 +157,12 @@ d4est_geometry_new(int mpirank,
 #endif
   free(input.name);
 
-  if(d4est_geom->X_mapping_type == MAP_ANALYTIC && d4est_geom->DX == NULL){
-    mpi_abort("[D4EST_ERROR]:If X_mapping_type = analytic you must set DX function");
+  if(d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC && d4est_geom->DX == NULL){
+    mpi_abort("[D4EST_ERROR]: This geometry does not support analytic derivatives");
+  }
+
+  if(d4est_geom->JAC_compute_method == GEOM_COMPUTE_ANALYTIC && d4est_geom->JAC == NULL){
+    mpi_abort("[D4EST_ERROR]: This geometry does not support analytic jacobians");
   }
   
   return d4est_geom;
@@ -271,79 +287,79 @@ d4est_geometry_compute_dxyz_drst_analytic
   }
 }
 
-void
-d4est_geometry_compute_Jdrdxdrdx_analytic
-(
- p4est_topidx_t which_tree,
- p4est_qcoord_t q0 [(P4EST_DIM)],
- p4est_qcoord_t dq,
- int deg,
- quadrature_type_t quad_type,
- d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* Jdrdxdrdx [(P4EST_DIM)][(P4EST_DIM)]
-)
-{  int volume_nodes = dgmath_get_nodes((P4EST_DIM),deg);
-  double rst [(P4EST_DIM)];
-  double Jdrdxdrdx_i [(P4EST_DIM)][(P4EST_DIM)];
+/* void */
+/* d4est_geometry_compute_Jdrdxdrdx_analytic */
+/* ( */
+/*  p4est_topidx_t which_tree, */
+/*  p4est_qcoord_t q0 [(P4EST_DIM)], */
+/*  p4est_qcoord_t dq, */
+/*  int deg, */
+/*  quadrature_type_t quad_type, */
+/*  d4est_geometry_t* d4est_geom, */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  double* Jdrdxdrdx [(P4EST_DIM)][(P4EST_DIM)] */
+/* ) */
+/* {  int volume_nodes = dgmath_get_nodes((P4EST_DIM),deg); */
+/*   double rst [(P4EST_DIM)]; */
+/*   double Jdrdxdrdx_i [(P4EST_DIM)][(P4EST_DIM)]; */
 
-  dgmath_rst_t rst_points
-    = dgmath_get_rst_points(dgmath_jit_dbase, deg, (P4EST_DIM), quad_type);
+/*   dgmath_rst_t rst_points */
+/*     = dgmath_get_rst_points(dgmath_jit_dbase, deg, (P4EST_DIM), quad_type); */
   
-  for (int i = 0; i < volume_nodes; i++){
-    rst[0] = rst_points.r[i];
-    rst[1] = rst_points.s[i];
-#if (P4EST_DIM)==3
-    rst[2] = rst_points.t[i];
-#endif
+/*   for (int i = 0; i < volume_nodes; i++){ */
+/*     rst[0] = rst_points.r[i]; */
+/*     rst[1] = rst_points.s[i]; */
+/* #if (P4EST_DIM)==3 */
+/*     rst[2] = rst_points.t[i]; */
+/* #endif */
 
-    d4est_geom->JACDRDXDRDX(d4est_geom, which_tree, q0, dq, rst, Jdrdxdrdx_i);
-    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-        Jdrdxdrdx[d1][d2][i] = Jdrdxdrdx_i[d1][d2];
-      }
-    }
+/*     d4est_geom->JACDRDXDRDX(d4est_geom, which_tree, q0, dq, rst, Jdrdxdrdx_i); */
+/*     for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
+/*       for (int d2 = 0; d2 < (P4EST_DIM); d2++){ */
+/*         Jdrdxdrdx[d1][d2][i] = Jdrdxdrdx_i[d1][d2]; */
+/*       } */
+/*     } */
     
-  }
-}
+/*   } */
+/* } */
 
 
-void
-d4est_geometry_compute_drst_dxyz_analytic
-(
- p4est_topidx_t which_tree,
- p4est_qcoord_t q0 [(P4EST_DIM)],
- p4est_qcoord_t dq,
- int deg,
- quadrature_type_t quad_type,
- d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* drst_dxyz [(P4EST_DIM)][(P4EST_DIM)]
-)
-{
-  int volume_nodes = dgmath_get_nodes((P4EST_DIM),deg);
-  double rst [(P4EST_DIM)];
-  double drst_dxyz_i [(P4EST_DIM)][(P4EST_DIM)];
+/* void */
+/* d4est_geometry_compute_drst_dxyz_analytic */
+/* ( */
+/*  p4est_topidx_t which_tree, */
+/*  p4est_qcoord_t q0 [(P4EST_DIM)], */
+/*  p4est_qcoord_t dq, */
+/*  int deg, */
+/*  quadrature_type_t quad_type, */
+/*  d4est_geometry_t* d4est_geom, */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  double* drst_dxyz [(P4EST_DIM)][(P4EST_DIM)] */
+/* ) */
+/* { */
+/*   int volume_nodes = dgmath_get_nodes((P4EST_DIM),deg); */
+/*   double rst [(P4EST_DIM)]; */
+/*   double drst_dxyz_i [(P4EST_DIM)][(P4EST_DIM)]; */
 
-  dgmath_rst_t rst_points
-    = dgmath_get_rst_points(dgmath_jit_dbase, deg, (P4EST_DIM), quad_type);
+/*   dgmath_rst_t rst_points */
+/*     = dgmath_get_rst_points(dgmath_jit_dbase, deg, (P4EST_DIM), quad_type); */
   
-  for (int i = 0; i < volume_nodes; i++){
-    rst[0] = rst_points.r[i];
-    rst[1] = rst_points.s[i];
-#if (P4EST_DIM)==3
-    rst[2] = rst_points.t[i];
-#endif
+/*   for (int i = 0; i < volume_nodes; i++){ */
+/*     rst[0] = rst_points.r[i]; */
+/*     rst[1] = rst_points.s[i]; */
+/* #if (P4EST_DIM)==3 */
+/*     rst[2] = rst_points.t[i]; */
+/* #endif */
 
-    d4est_geom->DRDX(d4est_geom, which_tree, q0, dq, rst, drst_dxyz_i);
-    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-        drst_dxyz[d1][d2][i] = drst_dxyz_i[d1][d2];
-      }
-    }
+/*     d4est_geom->DRDX(d4est_geom, which_tree, q0, dq, rst, drst_dxyz_i); */
+/*     for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
+/*       for (int d2 = 0; d2 < (P4EST_DIM); d2++){ */
+/*         drst_dxyz[d1][d2][i] = drst_dxyz_i[d1][d2]; */
+/*       } */
+/*     } */
     
-  }
-}
+/*   } */
+/* } */
 
 
 void
@@ -391,7 +407,7 @@ d4est_geometry_compute_dxyz_drst
  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)] 
 )
 {
-  if (d4est_geom->X_mapping_type == MAP_ISOPARAMETRIC){
+  if (d4est_geom->DX_compute_method == GEOM_COMPUTE_NUMERICAL){
     d4est_geometry_compute_dxyz_drst_isoparametric
       (
        which_tree,
@@ -404,7 +420,7 @@ d4est_geometry_compute_dxyz_drst
        dxyz_drst
       );
   }
-  else if (d4est_geom->X_mapping_type == MAP_ANALYTIC || d4est_geom->X_mapping_type == MAP_ANALYTIC_NEW) {
+  else if (d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC) {
     d4est_geometry_compute_dxyz_drst_analytic
       (
        which_tree,
@@ -525,93 +541,93 @@ d4est_geometry_compute_dxyz_drst_face_analytic
   }
 }
 
-void
-d4est_geometry_compute_drst_dxyz_face_analytic
-(
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- p4est_qcoord_t q0 [(P4EST_DIM)],
- p4est_qcoord_t dq,
- int which_tree,
- int face,
- d4est_geometry_t* d4est_geom,
- quadrature_type_t quad_type,
- int deg,
- double* drst_dxyz [(P4EST_DIM)][(P4EST_DIM)]
-)
-{
-  int face_nodes = dgmath_get_nodes((P4EST_DIM)-1,deg);
-  double rst [(P4EST_DIM)];
-  double drst_dxyz_i [(P4EST_DIM)][(P4EST_DIM)];
+/* void */
+/* d4est_geometry_compute_drst_dxyz_face_analytic */
+/* ( */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  p4est_qcoord_t q0 [(P4EST_DIM)], */
+/*  p4est_qcoord_t dq, */
+/*  int which_tree, */
+/*  int face, */
+/*  d4est_geometry_t* d4est_geom, */
+/*  quadrature_type_t quad_type, */
+/*  int deg, */
+/*  double* drst_dxyz [(P4EST_DIM)][(P4EST_DIM)] */
+/* ) */
+/* { */
+/*   int face_nodes = dgmath_get_nodes((P4EST_DIM)-1,deg); */
+/*   double rst [(P4EST_DIM)]; */
+/*   double drst_dxyz_i [(P4EST_DIM)][(P4EST_DIM)]; */
 
-  dgmath_rst_t rst_points
-    = dgmath_get_rst_points(dgmath_jit_dbase, deg, (P4EST_DIM) - 1, quad_type);
+/*   dgmath_rst_t rst_points */
+/*     = dgmath_get_rst_points(dgmath_jit_dbase, deg, (P4EST_DIM) - 1, quad_type); */
 
-  dgmath_face_info_t face_info;
-  dgmath_get_face_info(face, &face_info);
+/*   dgmath_face_info_t face_info; */
+/*   dgmath_get_face_info(face, &face_info); */
 
-  if(d4est_geom->DRDX == NULL){
-    mpi_abort("d4est_geom->DRDX == NULL");
-  }
+/*   if(d4est_geom->DRDX == NULL){ */
+/*     mpi_abort("d4est_geom->DRDX == NULL"); */
+/*   } */
   
-  for (int i = 0; i < face_nodes; i++){
-    rst[face_info.a] = rst_points.r[i];
-#if (P4EST_DIM)==3
-    rst[face_info.b] = rst_points.s[i];
-#endif
-    rst[face_info.c] = face_info.sgn;
+/*   for (int i = 0; i < face_nodes; i++){ */
+/*     rst[face_info.a] = rst_points.r[i]; */
+/* #if (P4EST_DIM)==3 */
+/*     rst[face_info.b] = rst_points.s[i]; */
+/* #endif */
+/*     rst[face_info.c] = face_info.sgn; */
 
-    d4est_geom->DRDX(d4est_geom, which_tree, q0, dq, rst, drst_dxyz_i);
-    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-        drst_dxyz[d1][d2][i] = drst_dxyz_i[d1][d2];
-      }
-    }
-  }
-}
+/*     d4est_geom->DRDX(d4est_geom, which_tree, q0, dq, rst, drst_dxyz_i); */
+/*     for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
+/*       for (int d2 = 0; d2 < (P4EST_DIM); d2++){ */
+/*         drst_dxyz[d1][d2][i] = drst_dxyz_i[d1][d2]; */
+/*       } */
+/*     } */
+/*   } */
+/* } */
 
-void
-d4est_geometry_compute_drst_dxyz_times_jacobian_face_analytic
-(
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- p4est_qcoord_t q0 [(P4EST_DIM)],
- p4est_qcoord_t dq,
- int which_tree,
- int face,
- d4est_geometry_t* d4est_geom,
- quadrature_type_t quad_type,
- int deg,
- double* drst_dxyz_times_jac [(P4EST_DIM)][(P4EST_DIM)]
-)
-{
-  int face_nodes = dgmath_get_nodes((P4EST_DIM)-1,deg);
-  double rst [(P4EST_DIM)];
-  double drst_dxyz_times_jac_i [(P4EST_DIM)][(P4EST_DIM)];
+/* void */
+/* d4est_geometry_compute_drst_dxyz_times_jacobian_face_analytic */
+/* ( */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  p4est_qcoord_t q0 [(P4EST_DIM)], */
+/*  p4est_qcoord_t dq, */
+/*  int which_tree, */
+/*  int face, */
+/*  d4est_geometry_t* d4est_geom, */
+/*  quadrature_type_t quad_type, */
+/*  int deg, */
+/*  double* drst_dxyz_times_jac [(P4EST_DIM)][(P4EST_DIM)] */
+/* ) */
+/* { */
+/*   int face_nodes = dgmath_get_nodes((P4EST_DIM)-1,deg); */
+/*   double rst [(P4EST_DIM)]; */
+/*   double drst_dxyz_times_jac_i [(P4EST_DIM)][(P4EST_DIM)]; */
 
-  dgmath_rst_t rst_points
-    = dgmath_get_rst_points(dgmath_jit_dbase, deg, (P4EST_DIM) - 1, quad_type);
+/*   dgmath_rst_t rst_points */
+/*     = dgmath_get_rst_points(dgmath_jit_dbase, deg, (P4EST_DIM) - 1, quad_type); */
 
-  dgmath_face_info_t face_info;
-  dgmath_get_face_info(face, &face_info);
+/*   dgmath_face_info_t face_info; */
+/*   dgmath_get_face_info(face, &face_info); */
 
-  if(d4est_geom->DRDX == NULL){
-    mpi_abort("d4est_geom->DRDX == NULL");
-  }
+/*   if(d4est_geom->DRDX == NULL){ */
+/*     mpi_abort("d4est_geom->DRDX == NULL"); */
+/*   } */
   
-  for (int i = 0; i < face_nodes; i++){
-    rst[face_info.a] = rst_points.r[i];
-#if (P4EST_DIM)==3
-    rst[face_info.b] = rst_points.s[i];
-#endif
-    rst[face_info.c] = face_info.sgn;
+/*   for (int i = 0; i < face_nodes; i++){ */
+/*     rst[face_info.a] = rst_points.r[i]; */
+/* #if (P4EST_DIM)==3 */
+/*     rst[face_info.b] = rst_points.s[i]; */
+/* #endif */
+/*     rst[face_info.c] = face_info.sgn; */
 
-    d4est_geom->DRDX_JAC(d4est_geom, which_tree, q0, dq, rst, drst_dxyz_times_jac_i);
-    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-        drst_dxyz_times_jac[d1][d2][i] = drst_dxyz_times_jac_i[d1][d2];
-      }
-    }
-  }
-}
+/*     d4est_geom->DRDX_JAC(d4est_geom, which_tree, q0, dq, rst, drst_dxyz_times_jac_i); */
+/*     for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
+/*       for (int d2 = 0; d2 < (P4EST_DIM); d2++){ */
+/*         drst_dxyz_times_jac[d1][d2][i] = drst_dxyz_times_jac_i[d1][d2]; */
+/*       } */
+/*     } */
+/*   } */
+/* } */
 
 
 
@@ -1024,7 +1040,7 @@ d4est_geometry_compute_geometric_data_on_mortar
       q[d] = q0[face_mortar][d];
     }
 
-    if (d4est_geom->X_mapping_type == MAP_ANALYTIC || d4est_geom->X_mapping_type == MAP_ANALYTIC_NEW){
+    if (d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC){
       d4est_geometry_compute_dxyz_drst_face_analytic
         (
          dgmath_jit_dbase,
@@ -1037,7 +1053,7 @@ d4est_geometry_compute_geometric_data_on_mortar
          deg_mortar_integ[face_mortar],
          dxyz_drst_on_face_integ);
     }
-    else if (d4est_geom->X_mapping_type == MAP_ISOPARAMETRIC){
+    else if (d4est_geom->DX_compute_method == GEOM_COMPUTE_NUMERICAL){
       /* printf("using MAP_ISOPARAMETRIC\n"); */
       d4est_geometry_compute_dxyz_drst_face_isoparametric(dgmath_jit_dbase,
                                                                q,
@@ -1053,26 +1069,11 @@ d4est_geometry_compute_geometric_data_on_mortar
       mpi_abort("mapping type not supported");
     }
 
-    if (d4est_geom->X_mapping_type != MAP_ANALYTIC_NEW){
+    if (d4est_geom->JAC_compute_method == GEOM_COMPUTE_NUMERICAL){
     d4est_geometry_compute_jacobian
       (
        dxyz_drst_on_face_integ,
        J_on_face_integ,
-       face_mortar_integ_nodes
-      );
-
-    d4est_geometry_compute_drst_dxyz
-      (
-       dxyz_drst_on_face_integ,
-       J_on_face_integ,
-       drst_dxyz_on_face_integ,
-       face_mortar_integ_nodes
-      );
-
-    d4est_geometry_compute_drst_dxyz_times_jacobian
-      (
-       dxyz_drst_on_face_integ,
-       drst_dxyz_times_jac_on_face_integ,
        face_mortar_integ_nodes
       );
     }
@@ -1088,35 +1089,23 @@ d4est_geometry_compute_geometric_data_on_mortar
          quad_type,
          deg_mortar_integ[face_mortar],
          J_on_face_integ
-        );
-
-      d4est_geometry_compute_drst_dxyz_face_analytic
-        (
-         dgmath_jit_dbase,
-         q,
-         mortar_dq,
-         e0_tree,
-         face,
-         d4est_geom,
-         quad_type,
-         deg_mortar_integ[face_mortar],
-         drst_dxyz_on_face_integ
-        );            
-
-      d4est_geometry_compute_drst_dxyz_times_jacobian_face_analytic
-        (
-         dgmath_jit_dbase,
-         q,
-         mortar_dq,
-         e0_tree,
-         face,
-         d4est_geom,
-         quad_type,
-         deg_mortar_integ[face_mortar],
-         drst_dxyz_times_jac_on_face_integ
-        );            
+        );      
     }
 
+    d4est_geometry_compute_drst_dxyz
+      (
+       dxyz_drst_on_face_integ,
+       J_on_face_integ,
+       drst_dxyz_on_face_integ,
+       face_mortar_integ_nodes
+      );
+
+    d4est_geometry_compute_drst_dxyz_times_jacobian
+      (
+       dxyz_drst_on_face_integ,
+       drst_dxyz_times_jac_on_face_integ,
+       face_mortar_integ_nodes
+      );
     
       int i0 = -1; 
       if (face == 0 || face == 1){

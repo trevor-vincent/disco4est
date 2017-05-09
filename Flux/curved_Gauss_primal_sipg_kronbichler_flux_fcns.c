@@ -72,7 +72,7 @@ curved_Gauss_primal_sipg_kronbichler_flux_dirichlet
   double* lifted_VT_w_term3_Lobatto = P4EST_ALLOC(double, volume_nodes_m_Lobatto);
 
   double* J_div_SJ_Gauss = NULL;
-  if (ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ){
+  if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ || ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
     J_div_SJ_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
   }
 
@@ -97,7 +97,11 @@ curved_Gauss_primal_sipg_kronbichler_flux_dirichlet
     );
   
   double* sigma = P4EST_ALLOC(double, face_nodes_m_Gauss);
-  double h;
+  double h, h_min;
+  if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ_MIN){
+    h_min = util_min_dbl_array(J_div_SJ_Gauss, face_nodes_m_Gauss);
+  }
+    
   for (int i = 0; i < face_nodes_m_Gauss; i++){
     if (ip_flux_params->ip_flux_h_calc == H_EQ_VOLUME_DIV_AREA){
       h = (e_m->volume/e_m->surface_area[f_m]);
@@ -105,7 +109,9 @@ curved_Gauss_primal_sipg_kronbichler_flux_dirichlet
     else if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ){
       h = J_div_SJ_Gauss[i];
     }
-
+    else if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ_MIN){
+      h = h_min;
+    }
     sigma[i] = sipg_kronbichler_flux_penalty_calculate_fcn
                (
                 e_m->deg,
@@ -116,7 +122,7 @@ curved_Gauss_primal_sipg_kronbichler_flux_dirichlet
                );
   }
 
-  if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ){
+  if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ || ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
     P4EST_FREE(J_div_SJ_Gauss);
   }
 
@@ -758,7 +764,7 @@ curved_Gauss_primal_sipg_kronbichler_flux_interface
   double* j_div_sj_on_f_p_mortar_Gauss_porder = NULL;
   double* j_div_sj_on_f_p_mortar_Gauss_porder_oriented = NULL;
 
-  if(ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ){
+  if(ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ || ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
     j_div_sj_on_f_m_mortar_Gauss = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
     j_div_sj_on_f_p_mortar_Gauss_porder =  P4EST_ALLOC(double, total_nodes_mortar_Gauss);
     j_div_sj_on_f_p_mortar_Gauss_porder_oriented =  P4EST_ALLOC(double, total_nodes_mortar_Gauss);
@@ -875,6 +881,12 @@ curved_Gauss_primal_sipg_kronbichler_flux_interface
     face_mortar_stride += dgmath_get_nodes((P4EST_DIM)-1, deg_mortar_Gauss[face]);
   }
 
+  double hm_min, hp_min;
+  if (ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+    hp_min = util_min_dbl_array(j_div_sj_on_f_p_mortar_Gauss_porder_oriented, total_nodes_mortar_Gauss);
+    hm_min = util_min_dbl_array(j_div_sj_on_f_m_mortar_Gauss,total_nodes_mortar_Gauss);
+  }
+  
   stride = 0;
   double* sigma = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
   for (int f = 0; f < faces_mortar; f++){
@@ -887,7 +899,6 @@ curved_Gauss_primal_sipg_kronbichler_flux_interface
       else if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ){
         double hp = j_div_sj_on_f_p_mortar_Gauss_porder_oriented[ks];
         double hm = j_div_sj_on_f_m_mortar_Gauss[ks];
-
         sigma[ks] = sipg_kronbichler_flux_penalty_calculate_fcn
                 (
                  e_m[f]->deg,
@@ -897,6 +908,16 @@ curved_Gauss_primal_sipg_kronbichler_flux_interface
                  sipg_kronbichler_flux_penalty_prefactor
                 );
 
+      }
+      else if (ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+        sigma[ks] = sipg_kronbichler_flux_penalty_calculate_fcn
+                (
+                 e_m[f]->deg,
+                 hm_min,
+                 e_p_oriented[f]->deg,
+                 hp_min,
+                 sipg_kronbichler_flux_penalty_prefactor
+                );
       }
       else {
         mpi_abort("Select j_DIV_SJ or VOLUME_DIV_AREA for ip_flux_h_calc");

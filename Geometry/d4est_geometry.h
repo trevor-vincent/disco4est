@@ -10,7 +10,7 @@
 typedef struct d4est_geometry d4est_geometry_t;
 
 typedef enum {COMPUTE_NORMAL_USING_JACOBIAN, COMPUTE_NORMAL_USING_CROSS_PRODUCT} normal_compute_method_t;
-typedef enum {MAP_ISOPARAMETRIC, MAP_ANALYTIC, MAP_ANALYTIC_NEW, MAP_NONE} mapping_type_t;
+typedef enum {GEOM_COMPUTE_NUMERICAL, GEOM_COMPUTE_ANALYTIC, GEOM_COMPUTE_NOT_SET} geometric_quantity_compute_method_t;
 
 /**
 * There are three types of coords used to describe a point in an element.
@@ -76,15 +76,17 @@ struct d4est_geometry {
   p4est_connectivity_t* p4est_conn;
 
   /* Mapping from [-1,1]^3 to grid coordinates*/
-  d4est_geometry_VEC_t X;
-  mapping_type_t X_mapping_type;
+  /* geometric_quantity_compute_method_t X_compute_method; /\* only analytic atm *\/ */
+  geometric_quantity_compute_method_t DX_compute_method; /* analytic and numerical available */
+  geometric_quantity_compute_method_t JAC_compute_method; /* analytic and numerical available usually */
   
   /* Analytic derivatives of the mapping */
-  d4est_geometry_MAT_t DX;
   d4est_geometry_SCA_t JAC;
-  d4est_geometry_MAT_t DRDX;
-  d4est_geometry_MAT_t DRDX_JAC;
-  d4est_geometry_MAT_t JACDRDXDRDX;
+  d4est_geometry_VEC_t X;
+  d4est_geometry_MAT_t DX;
+  /* d4est_geometry_MAT_t DRDX; */
+  /* d4est_geometry_MAT_t DRDX_JAC; */
+  /* d4est_geometry_MAT_t JACDRDXDRDX; */
   
   d4est_geometry_destroy_t destroy;
   void* user;

@@ -298,4 +298,8 @@ int util_match
 void
 util_compute_error_array(double* arr1, double* arr2, double* err, int N);
 
+
+double
+util_min_dbl_array(double* arr, int N);
+
 #endif

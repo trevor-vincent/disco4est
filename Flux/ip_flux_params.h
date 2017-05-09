@@ -14,7 +14,7 @@ typedef double
 );
 
 typedef enum { BC_EVAL_ON_GAUSS_POINTS, BC_EVAL_ON_LOBATTO_POINTS, BC_EVAL_NOTSET} bc_eval_t;
-typedef enum { H_EQ_J_DIV_SJ, H_EQ_VOLUME_DIV_AREA, H_EQ_NOTSET } h_calc_method_t;
+typedef enum { H_EQ_J_DIV_SJ, H_EQ_J_DIV_SJ_MIN, H_EQ_VOLUME_DIV_AREA, H_EQ_NOTSET } h_calc_method_t;
 
 typedef struct {
   double ip_flux_penalty_prefactor;

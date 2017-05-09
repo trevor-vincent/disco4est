@@ -1,6 +1,6 @@
 [p4est]
 min_quadrants = -1
-min_level = 0
+min_level = 1
 fill_uniform = 1
 
 [ip_flux_params]
@@ -12,12 +12,12 @@ ip_flux_penalty_calculate_fcn = meanp_sqr_over_meanh
 
 [problem]
 num_unifrefs = 0
-deg_R2= 1
-deg_integ_R2= 1
-deg_stiffness_R2= 1
-deg_R1  = 1
-deg_integ_R1  = 1
-deg_stiffness_R1  = 1
+deg_R2= 3
+deg_integ_R2= 3
+deg_stiffness_R2= 3
+deg_R1  = 3
+deg_integ_R1  = 3
+deg_stiffness_R1  = 3
 deg_R0= 2
 deg_integ_R0= 2
 deg_stiffness_R0= 2
@@ -25,12 +25,12 @@ rhs_compute_method = COMPUTE_RHS_ON_LOBATTO
 
 [geometry]
 ; name = cubed_sphere_inner_shell_block
-name = cubed_sphere_outer_shell_block
-; name = cubed_sphere_innerouter_shell
+; name = cubed_sphere_outer_shell_block
+name = cubed_sphere_innerouter_shell
 ; name = cubed_sphere_with_cube_hole
 R0 = 4
 R1 = 4.5
-R2 = 100000000000
+R2 = 10000000000
 DX_compute_method = analytic
 ; JAC_compute_method = analytic
 JAC_compute_method = numerical
@@ -48,16 +48,10 @@ ksp_converged_reason = 1
 ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 1
 
-[d4est_cg]
-iter = 10000
-monitor = 1
-rtol = 1e-20
-atol = 1e-20
-
 [d4est_vtk_geometry]
 ; name = cubed_sphere_inner_shell_block
-name = cubed_sphere_outer_shell_block
-; name = cubed_sphere_innerouter_shell
+; name = cubed_sphere_outer_shell_block
+name = cubed_sphere_innerouter_shell
 ; name = cubed_sphere_with_cube_hole
 R0 = 1
 R1 = 2

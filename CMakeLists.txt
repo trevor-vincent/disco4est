@@ -101,7 +101,9 @@ SET (
   SRCS
   InputParser/ini.c
   Solver/krylov_petsc.c
+  Solver/d4est_cg.c
   Solver/krylov_pc_multigrid.c
+  Solver/krylov_pc_invstiff.c
   Solver/multigrid.c
   Solver/newton_petsc.c
   Solver/newton_d4est.c
@@ -334,6 +336,7 @@ add_d4est_problem_2d(test_uniform_wedge_driver test_uniform_wedge.c UniformExamp
 add_d4est_problem_3d(test_uniform_cubedsphere_poisson_driver test_uniform_cubedsphere_poisson.c UniformExamples/CubedSpherePoisson)
 add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_driver test_uniform_cubedsphere_helmholtz.c UniformExamples/CubedSphereHelmholtz)
 add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_driver test_uniform_cubedsphere_with_hole_helmholtz.c UniformExamples/CubedSphereWithHoleHelmholtz)
+add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_multigrid_driver test_uniform_cubed_sphere_with_hole_helmholtz_multigrid.c UniformExamples/CubedSphereWithHoleHelmholtzMultigrid)
 # add_d4est_problem_2d(testmultigridmatrixop_driver testmultigridmatrixop.c TestMultigridMatrixOp)
 # add_d4est_problem_3d(testcurvedipflux_driver testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_2d(testcurvedipflux_driver_2d testcurvedipflux.c TestCurvedIPFlux)

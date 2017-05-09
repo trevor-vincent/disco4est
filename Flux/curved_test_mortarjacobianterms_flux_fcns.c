@@ -91,10 +91,10 @@ curved_test_mortarjacobianterms_dirichlet
   /*   ); */
 
 
-  mapping_type_t mapping_orig  = geom->X_mapping_type;
+  geometric_quantity_compute_method_t mapping_orig  = geom->DX_compute_method;
 
 
-  geom->X_mapping_type = MAP_ANALYTIC;
+  geom->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
   d4est_geometry_compute_geometric_data_on_mortar
     (
      e_m->tree,
@@ -238,7 +238,7 @@ curved_test_mortarjacobianterms_dirichlet
   /*    xyz_on_f_m_Gauss */
   /*   ); */
 
-  geom->X_mapping_type = mapping_orig;
+  geom->DX_compute_method = mapping_orig;
 
   /* DEBUG_PRINT_2ARR_DBL(sjvol_on_f_m_Gauss_analytic, sjvol_on_f_m_Gauss, face_nodes_m_Gauss); */
   
@@ -602,8 +602,8 @@ curved_test_mortarjacobianterms_interface
   D4EST_ALLOC_DBYD_MAT(drst_dxyz_p_on_mortar_Gauss_porder_analytic,total_nodes_mortar_Gauss);
 
 
-  mapping_type_t mapping_orig = geom->X_mapping_type;
-  geom->X_mapping_type = MAP_ANALYTIC;
+  geometric_quantity_compute_method_t mapping_orig = geom->DX_compute_method;
+  geom->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
   /* geom->X_mapping_type = MAP_ISOPARAMETRIC; */
   /* d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY */
   /*   ( */
@@ -685,7 +685,7 @@ curved_test_mortarjacobianterms_interface
     );
 
   if(geom->DX != NULL){
-  geom->X_mapping_type = MAP_ANALYTIC;
+  geom->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
   /* geom->X_mapping_type = MAP_ISOPARAMETRIC; */
   d4est_geometry_compute_geometric_data_on_mortar
     (
@@ -727,7 +727,7 @@ curved_test_mortarjacobianterms_interface
      COMPUTE_NORMAL_USING_JACOBIAN
     ); 
   }
-  geom->X_mapping_type = mapping_orig;
+  geom->DX_compute_method = mapping_orig;
   
   
   

@@ -44,6 +44,9 @@ ip_flux_params_get_string_from_h_calc
   if (h_calc == H_EQ_J_DIV_SJ){
     string = "H_EQ_J_DIV_SJ";
   }
+  else if (h_calc == H_EQ_J_DIV_SJ_MIN){
+    string = "H_EQ_J_DIV_SJ_MIN";
+  }
   else if (h_calc == H_EQ_VOLUME_DIV_AREA){
     string = "H_EQ_VOLUME_DIV_AREA";
   }
@@ -146,6 +149,9 @@ int ip_flux_params_input_handler
     mpi_assert(pconfig->ip_flux_h_calc == H_EQ_NOTSET);
     if(util_match(value, "H_EQ_J_DIV_SJ")){
       pconfig->ip_flux_h_calc = H_EQ_J_DIV_SJ;
+    }
+    else if(util_match(value, "H_EQ_J_DIV_SJ_MIN")){
+      pconfig->ip_flux_h_calc = H_EQ_J_DIV_SJ_MIN;
     }
     else if (util_match(value, "H_EQ_VOLUME_DIV_AREA")){
       pconfig->ip_flux_h_calc = H_EQ_VOLUME_DIV_AREA;

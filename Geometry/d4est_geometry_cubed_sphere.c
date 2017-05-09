@@ -1356,10 +1356,8 @@ d4est_geometry_cubed_sphere_new
   
   d4est_geom->user = sphere_attrs;
   d4est_geom->X = d4est_geometry_cubed_sphere_X;
-  if (d4est_geom->X_mapping_type == MAP_ANALYTIC)
-    d4est_geom->DX = d4est_geometry_cubed_sphere_DX;
-  else
-    d4est_geom->DX = NULL;
+  d4est_geom->DX = d4est_geometry_cubed_sphere_DX;
+  d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
   d4est_geom->p4est_conn = conn;
 
@@ -1388,10 +1386,8 @@ d4est_geometry_cubed_sphere_7tree_new
   
   d4est_geom->user = sphere_attrs;
   d4est_geom->X = d4est_geometry_cubed_sphere_7tree_X;
-  if (d4est_geom->X_mapping_type == MAP_ANALYTIC)
-    d4est_geom->DX = d4est_geometry_cubed_sphere_7tree_DX;
-  else
-    d4est_geom->DX = NULL;
+  d4est_geom->DX = d4est_geometry_cubed_sphere_7tree_DX;
+  d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
   d4est_geom->p4est_conn = conn;
 
@@ -1419,10 +1415,8 @@ d4est_geometry_cubed_sphere_innerouter_shell_new
   
   d4est_geom->user = sphere_attrs;
   d4est_geom->X = d4est_geometry_cubed_sphere_innerouter_shell_X;
-  if (d4est_geom->X_mapping_type == MAP_ANALYTIC)
-    d4est_geom->DX = d4est_geometry_cubed_sphere_innerouter_shell_DX;
-  else
-    d4est_geom->DX = NULL;
+  d4est_geom->DX = d4est_geometry_cubed_sphere_innerouter_shell_DX;
+  d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
   d4est_geom->p4est_conn = conn;
 
@@ -1451,10 +1445,10 @@ d4est_geometry_cubed_sphere_inner_shell_block_new
   
   d4est_geom->user = sphere_attrs;
   d4est_geom->X = d4est_geometry_cubed_sphere_inner_shell_block_X;
-  if (d4est_geom->X_mapping_type == MAP_ANALYTIC)
-    d4est_geom->DX = d4est_geometry_cubed_sphere_inner_shell_block_DX;
-  else
-    d4est_geom->DX = NULL;
+  /* if (d4est_geom->X_mapping_type == MAP_ANALYTIC) */
+  d4est_geom->DX = d4est_geometry_cubed_sphere_inner_shell_block_DX;
+  /* else */
+  d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
   d4est_geom->p4est_conn = conn;
 
@@ -1483,20 +1477,12 @@ d4est_geometry_cubed_sphere_outer_shell_block_new
   d4est_geom->X = d4est_geometry_cubed_sphere_outer_shell_block_X;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
   d4est_geom->p4est_conn = conn;
-  if (d4est_geom->X_mapping_type == MAP_ANALYTIC || d4est_geom->X_mapping_type == MAP_ANALYTIC_NEW){
-    d4est_geom->DX = d4est_geometry_cubed_sphere_outer_shell_block_DX;
-    d4est_geom->DRDX = d4est_geometry_cubed_sphere_outer_shell_block_DRDX;
-    d4est_geom->DRDX_JAC = d4est_geometry_cubed_sphere_outer_shell_block_DRDX_JAC;
-    d4est_geom->JAC = d4est_geometry_cubed_sphere_outer_shell_block_jac;
-    d4est_geom->JACDRDXDRDX = d4est_geometry_cubed_sphere_outer_shell_block_drdxjacdrdx;
-  }
-  else{
-    d4est_geom->DX = NULL;
-    d4est_geom->DRDX = NULL;
-    d4est_geom->JAC = NULL;
-    d4est_geom->JACDRDXDRDX = NULL;
-  }
-    
+  d4est_geom->DX = d4est_geometry_cubed_sphere_outer_shell_block_DX;
+  /* d4est_geom->DRDX = d4est_geometry_cubed_sphere_outer_shell_block_DRDX; */
+  /* d4est_geom->DRDX_JAC = d4est_geometry_cubed_sphere_outer_shell_block_DRDX_JAC; */
+  d4est_geom->JAC = d4est_geometry_cubed_sphere_outer_shell_block_jac;
+  /* d4est_geom->JACDRDXDRDX = d4est_geometry_cubed_sphere_outer_shell_block_drdxjacdrdx; */ 
+   
   if (mpirank == 0){
     printf("%s: NAME = cubed sphere outer shell block\n", printf_prefix );
     printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
@@ -1522,10 +1508,8 @@ d4est_geometry_cubed_sphere_with_cube_hole_new
   d4est_geom->user = sphere_attrs;
   d4est_geom->X = d4est_geometry_cubed_sphere_X; /* same as cubed sphere, because
 which_tree == 12 will never occur */
-  if (d4est_geom->X_mapping_type == MAP_ANALYTIC)
-    d4est_geom->DX = d4est_geometry_cubed_sphere_DX; /* same as cubed sphere, because which_tree == 12 will never occur */
-  else
-    d4est_geom->DX = NULL;
+  d4est_geom->DX = d4est_geometry_cubed_sphere_DX; /* same as cubed sphere, because which_tree == 12 will never occur */
+  d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   
   if (mpirank == 0){

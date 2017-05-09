@@ -327,10 +327,7 @@ d4est_geometry_5treedisk_new
   d4est_geom->destroy = d4est_geometry_disk_destroy;
   d4est_geom->X = d4est_geometry_5treedisk_X;
   d4est_geom->DX = NULL;
-
-  if (d4est_geom->X_mapping_type == MAP_ANALYTIC){
-    mpi_abort("[D4EST_ERROR]: Currently 5 tree disk doesn't have analytic derivatives");
-  }
+  d4est_geom->JAC = NULL;
   
   if (mpirank == 0){
     printf("%s: NAME = 5treedisk\n", printf_prefix );

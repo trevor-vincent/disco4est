@@ -844,7 +844,7 @@ curved_element_data_init_new
              elem_data->xyz_rst_integ
             );
 
-          if (d4est_geometry->X_mapping_type == MAP_ANALYTIC_NEW && d4est_geometry->JAC != NULL){
+          if (d4est_geometry->JAC_compute_method == GEOM_COMPUTE_ANALYTIC){
             d4est_geometry_compute_jac_analytic
               (
                elem_data->tree,
@@ -866,28 +866,14 @@ curved_element_data_init_new
             );
           }
 
-          if (d4est_geometry->X_mapping_type == MAP_ANALYTIC_NEW && d4est_geometry->DRDX != NULL){
-            d4est_geometry_compute_drst_dxyz_analytic
-              (
-               elem_data->tree,
-               elem_data->q,
-               elem_data->dq,
-               elem_data->deg_integ,           
-               GAUSS,
-               d4est_geometry,
-               dgmath_jit_dbase,
-               elem_data->rst_xyz_integ
-              );            
-          }
-          else {
-            d4est_geometry_compute_drst_dxyz
-              (
-               elem_data->xyz_rst_integ,
-               elem_data->J_integ,
-               elem_data->rst_xyz_integ,
-               volume_nodes_integ
-              );
-          }
+          d4est_geometry_compute_drst_dxyz
+            (
+             elem_data->xyz_rst_integ,
+             elem_data->J_integ,
+             elem_data->rst_xyz_integ,
+             volume_nodes_integ
+            );
+          
           if (set_geometric_aliases){
             elem_data->volume
               = curved_element_data_compute_element_volume
@@ -2083,37 +2069,37 @@ void curved_element_data_apply_curvedGaussStiff
   if (elem_data->deg_stiffness == elem_data->deg_integ)
     {
 
-      if (d4est_geometry->X_mapping_type == MAP_ANALYTIC_NEW &&
-          d4est_geometry->JACDRDXDRDX != NULL){
-        double volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), elem_data->deg_integ);
-        double* Jdrdxdrdx [(P4EST_DIM)][(P4EST_DIM)];
-        D4EST_ALLOC_DBYD_MAT(Jdrdxdrdx, volume_nodes_Gauss);
-        d4est_geometry_compute_Jdrdxdrdx_analytic
-          (
-           elem_data->tree,
-           elem_data->q,
-           elem_data->dq,
-           elem_data->deg_integ,           
-           GAUSS,
-           d4est_geometry,
-           dgmath_jit_dbase,
-           Jdrdxdrdx
-          );
+      /* if (d4est_geometry->X_mapping_type == MAP_ANALYTIC_NEW && */
+      /*     d4est_geometry->JACDRDXDRDX != NULL){ */
+      /*   double volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), elem_data->deg_integ); */
+      /*   double* Jdrdxdrdx [(P4EST_DIM)][(P4EST_DIM)]; */
+      /*   D4EST_ALLOC_DBYD_MAT(Jdrdxdrdx, volume_nodes_Gauss); */
+      /*   d4est_geometry_compute_Jdrdxdrdx_analytic */
+      /*     ( */
+      /*      elem_data->tree, */
+      /*      elem_data->q, */
+      /*      elem_data->dq, */
+      /*      elem_data->deg_integ,            */
+      /*      GAUSS, */
+      /*      d4est_geometry, */
+      /*      dgmath_jit_dbase, */
+      /*      Jdrdxdrdx */
+      /*     ); */
 
-        dgmath_apply_curvedGaussStiff_withJdrdxdrdx
-          (
-           dgmath_jit_dbase,
-           vec,
-           elem_data->deg,
-           Jdrdxdrdx,
-           elem_data->deg_integ,
-           (P4EST_DIM),
-           stiff_vec
-          );
+      /*   dgmath_apply_curvedGaussStiff_withJdrdxdrdx */
+      /*     ( */
+      /*      dgmath_jit_dbase, */
+      /*      vec, */
+      /*      elem_data->deg, */
+      /*      Jdrdxdrdx, */
+      /*      elem_data->deg_integ, */
+      /*      (P4EST_DIM), */
+      /*      stiff_vec */
+      /*     ); */
         
-        D4EST_FREE_DBYD_MAT(Jdrdxdrdx);
-      }
-      else{
+      /*   D4EST_FREE_DBYD_MAT(Jdrdxdrdx); */
+      /* } */
+      /* else{ */
         dgmath_apply_curvedGaussStiff
           (
            dgmath_jit_dbase,
@@ -2125,43 +2111,43 @@ void curved_element_data_apply_curvedGaussStiff
            (P4EST_DIM),
            stiff_vec
           );
-      }
+      /* } */
       
     }
   
   else if (elem_data->deg_stiffness > elem_data->deg_integ){
-    if (d4est_geometry->X_mapping_type == MAP_ANALYTIC_NEW &&
-        d4est_geometry->JACDRDXDRDX != NULL){
+    /* if (d4est_geometry->X_mapping_type == MAP_ANALYTIC_NEW && */
+    /*     d4est_geometry->JACDRDXDRDX != NULL){ */
 
-      double volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), elem_data->deg_stiffness);
-      double* Jdrdxdrdx [(P4EST_DIM)][(P4EST_DIM)];
-      D4EST_ALLOC_DBYD_MAT(Jdrdxdrdx, volume_nodes_Gauss);
-      d4est_geometry_compute_Jdrdxdrdx_analytic
-        (
-         elem_data->tree,
-         elem_data->q,
-         elem_data->dq,
-         elem_data->deg_stiffness,           
-         GAUSS,
-         d4est_geometry,
-         dgmath_jit_dbase,
-         Jdrdxdrdx
-        );
+    /*   double volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), elem_data->deg_stiffness); */
+    /*   double* Jdrdxdrdx [(P4EST_DIM)][(P4EST_DIM)]; */
+    /*   D4EST_ALLOC_DBYD_MAT(Jdrdxdrdx, volume_nodes_Gauss); */
+    /*   d4est_geometry_compute_Jdrdxdrdx_analytic */
+    /*     ( */
+    /*      elem_data->tree, */
+    /*      elem_data->q, */
+    /*      elem_data->dq, */
+    /*      elem_data->deg_stiffness,            */
+    /*      GAUSS, */
+    /*      d4est_geometry, */
+    /*      dgmath_jit_dbase, */
+    /*      Jdrdxdrdx */
+    /*     ); */
 
-      dgmath_apply_curvedGaussStiff_withJdrdxdrdx
-        (
-         dgmath_jit_dbase,
-         vec,
-         elem_data->deg,
-         Jdrdxdrdx,
-         elem_data->deg_stiffness,
-         (P4EST_DIM),
-         stiff_vec
-        );
+    /*   dgmath_apply_curvedGaussStiff_withJdrdxdrdx */
+    /*     ( */
+    /*      dgmath_jit_dbase, */
+    /*      vec, */
+    /*      elem_data->deg, */
+    /*      Jdrdxdrdx, */
+    /*      elem_data->deg_stiffness, */
+    /*      (P4EST_DIM), */
+    /*      stiff_vec */
+    /*     ); */
         
-      D4EST_FREE_DBYD_MAT(Jdrdxdrdx);
-    }
-    else {
+    /*   D4EST_FREE_DBYD_MAT(Jdrdxdrdx); */
+    /* } */
+    /* else { */
       int volume_nodes_stiffness = dgmath_get_nodes((P4EST_DIM), elem_data->deg_stiffness);
       double* J_stiffness = P4EST_ALLOC(double, volume_nodes_stiffness);
       double* xyz_rst_stiffness [(P4EST_DIM)][(P4EST_DIM)];
@@ -2256,7 +2242,7 @@ void curved_element_data_apply_curvedGaussStiff
       D4EST_FREE_DBYD_MAT(rst_xyz_stiffness);
       D4EST_FREE_DBYD_MAT(rst_xyz_times_jac_stiffness);
 
-    }
+    /* } */
   }
   else {
     mpi_abort("deg_stiffness >= elem_data->deg_integ");
