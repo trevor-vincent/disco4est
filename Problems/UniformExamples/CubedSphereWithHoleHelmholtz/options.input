@@ -7,26 +7,26 @@ fill_uniform = 1
 name = kronbichler
 ip_flux_penalty_prefactor = 2.0
 ip_flux_bc_eval = BC_EVAL_ON_LOBATTO_POINTS
-ip_flux_h_calc = H_EQ_J_DIV_SJ
+ip_flux_h_calc = H_EQ_J_DIV_SJ_MIN
 ip_flux_penalty_calculate_fcn = meanp_sqr_over_meanh
 
 [problem]
 num_unifrefs = 0
-deg_R2= 1
-deg_integ_R2= 1
-deg_stiffness_R2= 1
-deg_R1  = 1
-deg_integ_R1  = 1
-deg_stiffness_R1  = 1
-deg_R0= 2
-deg_integ_R0= 2
-deg_stiffness_R0= 2
+deg_R2= 8
+deg_integ_R2= 8
+deg_stiffness_R2= 8
+deg_R1  = 8
+deg_integ_R1  = 8
+deg_stiffness_R1  = 8
+deg_R0= 8
+deg_integ_R0= 8
+deg_stiffness_R0= 8
 rhs_compute_method = COMPUTE_RHS_ON_LOBATTO
 
 [geometry]
 ; name = cubed_sphere_inner_shell_block
-name = cubed_sphere_outer_shell_block
-; name = cubed_sphere_innerouter_shell
+; name = cubed_sphere_outer_shell_block
+name = cubed_sphere_innerouter_shell
 ; name = cubed_sphere_with_cube_hole
 R0 = 4
 R1 = 4.5
@@ -49,15 +49,15 @@ ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 1
 
 [d4est_cg]
-iter = 10000
+iter = 100000
 monitor = 1
 rtol = 1e-20
 atol = 1e-20
 
 [d4est_vtk_geometry]
 ; name = cubed_sphere_inner_shell_block
-name = cubed_sphere_outer_shell_block
-; name = cubed_sphere_innerouter_shell
+; name = cubed_sphere_outer_shell_block
+name = cubed_sphere_innerouter_shell
 ; name = cubed_sphere_with_cube_hole
 R0 = 1
 R1 = 2
