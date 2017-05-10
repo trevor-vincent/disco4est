@@ -198,7 +198,7 @@ multigrid_matrix_fofu_fofv_mass_operator_setup_deg_integ_eq_deg
 #endif
                                           };
           
-        dgmath_form_fofufofvlilj_matrix_Gaussnodes
+        dgmath_form_fofufofvlilj_matrix
           (
            dgmath_jit_dbase,
            (u == NULL) ? NULL : &u[nodal_stride],
@@ -207,6 +207,7 @@ multigrid_matrix_fofu_fofv_mass_operator_setup_deg_integ_eq_deg
            xyz_Gauss,
            jac_Gauss,
            ed->deg,
+           QUAD_GAUSS,
            (P4EST_DIM),
            &matrix_op->matrix_at0[matrix_nodal_stride],
            fofu_fcn,
@@ -236,8 +237,8 @@ multigrid_matrix_curved_fofu_fofv_mass_operator_setup_deg_integ_eq_deg
  grid_fcn_ext_t fofv_fcn,
  void* fofv_ctx,
  multigrid_matrix_op_t* matrix_op,
- int(*set_deg_Gauss)(void*, void*),
- void* set_deg_Gauss_ctx
+ int(*set_deg_quad)(void*, void*),
+ void* set_deg_quad_ctx
 )
 {
   int nodal_stride = 0;
@@ -255,14 +256,15 @@ multigrid_matrix_curved_fofu_fofv_mass_operator_setup_deg_integ_eq_deg
         int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
         int matrix_volume_nodes = volume_nodes*volume_nodes;
 
-        curved_element_data_form_fofufofvlilj_matrix_Gaussnodes
+        curved_element_data_form_fofufofvlilj_matrix
           (
            dgmath_jit_dbase,
            d4est_geom,
            (u == NULL) ? NULL : &u[nodal_stride],
            (v == NULL) ? NULL : &v[nodal_stride],
            ed,
-           set_deg_Gauss(ed, set_deg_Gauss_ctx),
+           set_deg_quad(ed, set_deg_quad_ctx),
+           d4est_geom->geom_quad_type,
            (P4EST_DIM),
            &matrix_op->matrix_at0[matrix_nodal_stride],
            fofu_fcn,

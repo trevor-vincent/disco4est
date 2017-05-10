@@ -12,6 +12,8 @@ typedef struct d4est_geometry d4est_geometry_t;
 typedef enum {COMPUTE_NORMAL_USING_JACOBIAN, COMPUTE_NORMAL_USING_CROSS_PRODUCT} normal_compute_method_t;
 typedef enum {GEOM_COMPUTE_NUMERICAL, GEOM_COMPUTE_ANALYTIC, GEOM_COMPUTE_NOT_SET} geometric_quantity_compute_method_t;
 
+
+
 /**
 * There are three types of coords used to describe a point in an element.
 * The first are the integration coords for gaussian quadrature. These are
@@ -75,6 +77,9 @@ struct d4est_geometry {
 
   p4est_connectivity_t* p4est_conn;
 
+  /* On each element we can store the geometric data on LOBATTO or GAUSS nodes*/
+  quadrature_type_t geom_quad_type;
+  
   /* Mapping from [-1,1]^3 to grid coordinates*/
   /* geometric_quantity_compute_method_t X_compute_method; /\* only analytic atm *\/ */
   geometric_quantity_compute_method_t DX_compute_method; /* analytic and numerical available */

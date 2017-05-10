@@ -19,31 +19,31 @@ ip_flux_dirichlet_new
   ip_flux->ip_flux_params = ip_flux_params_new(p4est, print_prefix, input_file);
 
   /* From Hesthavens Nodal DG book */
-  if (util_match(ip_flux->ip_flux_params->name,"hesthaven")) {
-    ip_flux->curved_flux_fcn_ptrs = 
-      curved_Gauss_primal_sipg_hesthaven_flux_dirichlet_fetch_fcns
-      (
-       bndry_fcn,
-       ip_flux->ip_flux_params
-      );
-  }
+  /* if (util_match(ip_flux->ip_flux_params->name,"hesthaven")) { */
+  /*   ip_flux->curved_flux_fcn_ptrs =  */
+  /*     curved_Gauss_primal_sipg_hesthaven_flux_dirichlet_fetch_fcns */
+  /*     ( */
+  /*      bndry_fcn, */
+  /*      ip_flux->ip_flux_params */
+  /*     ); */
+  /* } */
   /*  */
-  else if (util_match(ip_flux->ip_flux_params->name,"kronbichler")) {
+  if (util_match(ip_flux->ip_flux_params->name,"kronbichler")) {
     ip_flux->curved_flux_fcn_ptrs =
-      curved_Gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
+      curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
       (
        bndry_fcn,
        ip_flux->ip_flux_params
       );
   }
-  else if (util_match(ip_flux->ip_flux_params->name,"kronbichler_uniform")) {
-    ip_flux->curved_flux_fcn_ptrs =
-      curved_Gauss_primal_sipg_kronbichler_uniform_flux_dirichlet_fetch_fcns
-      (
-       bndry_fcn,
-       ip_flux->ip_flux_params
-      );
-  }
+  /* else if (util_match(ip_flux->ip_flux_params->name,"kronbichler_uniform")) { */
+  /*   ip_flux->curved_flux_fcn_ptrs = */
+  /*     curved_Gauss_primal_sipg_kronbichler_uniform_flux_dirichlet_fetch_fcns */
+  /*     ( */
+  /*      bndry_fcn, */
+  /*      ip_flux->ip_flux_params */
+  /*     ); */
+  /* } */
   else {
     mpi_abort("ip_flux name must be hesthaven or kronbichler");
   }

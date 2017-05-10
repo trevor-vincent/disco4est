@@ -62,8 +62,8 @@ ip_flux_params_get_string_from_bc_eval
  char string [50]
 )
 {
-  if (bc_eval == BC_EVAL_ON_GAUSS_POINTS){
-    string = "BC_EVAL_ON_GAUSS_POINTS";
+  if (bc_eval == BC_EVAL_ON_QUADRATURE_POINTS){
+    string = "BC_EVAL_ON_QUADRATURE_POINTS";
   }
   else if (bc_eval == BC_EVAL_ON_LOBATTO_POINTS){
     string = "BC_EVAL_ON_LOBATTO_POINTS";
@@ -134,15 +134,15 @@ int ip_flux_params_input_handler
   }
   else if (util_match_couple(section,"ip_flux_params",name,"ip_flux_bc_eval")) {
     mpi_assert(pconfig->ip_flux_bc_eval == BC_EVAL_NOTSET);
-    if(util_match(value, "BC_EVAL_ON_GAUSS_POINTS")){
-      pconfig->ip_flux_bc_eval = BC_EVAL_ON_GAUSS_POINTS;
+    if(util_match(value, "BC_EVAL_ON_QUADRATURE_POINTS")){
+      pconfig->ip_flux_bc_eval = BC_EVAL_ON_QUADRATURE_POINTS;
     }
     else if (util_match(value, "BC_EVAL_ON_LOBATTO_POINTS")){
       pconfig->ip_flux_bc_eval = BC_EVAL_ON_LOBATTO_POINTS;
     }
     else {
       printf("ip_flux_params_bc_eval = %s\n", value);
-      mpi_abort("ip_flux_params_bc_eval is not set to BC_EVAL_ON_LOBATTO_POINTS or BC_EVAL_ON_GAUSS_POINTS\n");
+      mpi_abort("ip_flux_params_bc_eval is not set to BC_EVAL_ON_LOBATTO_POINTS or BC_EVAL_ON_QUADRATURE_POINTS\n");
     }
   }
   else if (util_match_couple(section,"ip_flux_params",name,"ip_flux_h_calc")) {

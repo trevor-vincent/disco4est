@@ -196,7 +196,7 @@ int problem_input_handler
   else if (util_match_couple(section,"problem",name,"rhs_compute_method")) {
     mpi_assert(pconfig->rhs_compute_method[0] == '*');
     snprintf (pconfig->rhs_compute_method, sizeof(pconfig->rhs_compute_method), "%s", value);
-    mpi_assert(util_match(pconfig->rhs_compute_method, "COMPUTE_RHS_ON_GAUSS") ||
+    mpi_assert(util_match(pconfig->rhs_compute_method, "COMPUTE_RHS_ON_QUADRATURE") ||
                util_match(pconfig->rhs_compute_method, "COMPUTE_RHS_ON_LOBATTO") );
   }
   else if (util_match_couple(section,"problem",name,"deg_R0")) {
@@ -468,7 +468,7 @@ void problem_apply_lhs
        curved_element_data_t* ed = quad->p.user_data;
        int volume_nodes_Lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg);
 
-       curved_element_data_apply_fofufofvlilj_Gaussnodes
+       curved_element_data_apply_fofufofvlilj
          (
           dgmath_jit_dbase,
           d4est_geom,
@@ -477,6 +477,7 @@ void problem_apply_lhs
           NULL,
           ed,
           ed->deg_stiffness, // + params->deg_offset_for_nonlinear_integ,
+          d4est_geom->geom_quad_type,
           (P4EST_DIM),
           &M_helmf_u[nodal_stride],           
           helmholtz_fcn,
@@ -517,7 +518,7 @@ void problem_build_rhs
      d4est_geom
     );
 
-  prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
+  prob_vecs->curved_scalar_flux_fcn_data = curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
                                              (boundary_fcn, &global_ip_flux_params);
 
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -532,17 +533,18 @@ void problem_build_rhs
         curved_element_data_t* ed = quad->p.user_data;
 
         if (util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){
-        dgmath_apply_curvedGaussMass(dgbase,
-                                     &f[ed->nodal_stride],
-                                     ed->deg,
-                                     ed->J_integ,
-                                     ed->deg_integ,
-                                     (P4EST_DIM),
-                                     &prob_vecs->rhs[ed->nodal_stride]
-                                    );
+          dgmath_apply_curved_mass_matrix(dgbase,
+                                          &f[ed->nodal_stride],
+                                          ed->deg,
+                                          ed->J_integ,
+                                          ed->deg_integ,
+                                          d4est_geom->geom_quad_type,
+                                          (P4EST_DIM),
+                                          &prob_vecs->rhs[ed->nodal_stride]
+                                         );
         }
-        else if(util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_GAUSS")){
-          curved_element_data_apply_fofufofvlj_Gaussnodes
+        else if(util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_QUADRATURE")){
+          curved_element_data_apply_fofufofvlj
             (
              dgbase,
              d4est_geom,
@@ -550,6 +552,7 @@ void problem_build_rhs
              NULL,
              ed,
              ed->deg_stiffness,
+             d4est_geom->geom_quad_type,
              (P4EST_DIM),
              &prob_vecs->rhs[ed->nodal_stride],
              f_fcn_ext,
@@ -580,7 +583,7 @@ void problem_build_rhs
   prob_vecs->u = tmp;
   P4EST_FREE(u_eq_0);
 
-  prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
+  prob_vecs->curved_scalar_flux_fcn_data = curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
                                              (zero_fcn, &global_ip_flux_params);
   
   P4EST_FREE(f);
@@ -620,19 +623,20 @@ void problem_build_rhs_weakbc
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;
-
+        
         if (util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){
-        dgmath_apply_curvedGaussMass(dgbase,
-                                     &f[ed->nodal_stride],
-                                     ed->deg,
-                                     ed->J_integ,
-                                     ed->deg_integ,
-                                     (P4EST_DIM),
-                                     &prob_vecs->rhs[ed->nodal_stride]
-                                    );
+          dgmath_apply_curved_mass_matrix(dgbase,
+                                          &f[ed->nodal_stride],
+                                          ed->deg,
+                                          ed->J_integ,
+                                          ed->deg_integ,
+                                          d4est_geom->geom_quad_type,
+                                          (P4EST_DIM),
+                                          &prob_vecs->rhs[ed->nodal_stride]
+                                         );
         }
-        else if(util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_GAUSS")){
-          curved_element_data_apply_fofufofvlj_Gaussnodes
+        else if(util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_QUADRATURE")){
+          curved_element_data_apply_fofufofvlj
             (
              dgbase,
              d4est_geom,
@@ -640,6 +644,7 @@ void problem_build_rhs_weakbc
              NULL,
              ed,
              ed->deg_stiffness,
+             d4est_geom->geom_quad_type,
              (P4EST_DIM),
              &prob_vecs->rhs[ed->nodal_stride],
              f_fcn_ext,
@@ -810,7 +815,7 @@ problem_init
     prob_vecs.rhs = rhs;
     prob_vecs.local_nodes = local_nodes;
 
-    linalg_fill_vec(prob_vecs.u, 1., prob_vecs.local_nodes);
+    linalg_fill_vec(prob_vecs.u, 0., prob_vecs.local_nodes);
 
     curved_element_data_init_node_vec(
                                       p4est,
@@ -831,6 +836,7 @@ problem_init
        error,
        local_nodes,
        dgmath_jit_dbase,
+       d4est_geom->geom_quad_type,
        DO_NOT_STORE_LOCALLY
       );
     printf("Initial local l2 norm = %.25f\n", sqrt(initial_l2_norm_sqr_local));
@@ -1147,6 +1153,7 @@ problem_init
                                  error,
                                  local_nodes,
                                  dgmath_jit_dbase,
+                                 d4est_geom->geom_quad_type,
                                  DO_NOT_STORE_LOCALLY
                                 );
 

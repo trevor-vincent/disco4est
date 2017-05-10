@@ -28,6 +28,7 @@ krylov_pc_invstiff_setup
   int nodal_matrix_stride = 0;
   p4est_t* p4est = invstiff_data->p4est;
   dgmath_jit_dbase_t* dgmath_jit_dbase = invstiff_data->dgmath_jit_dbase;
+  d4est_geometry_t* d4est_geom = kpc->pc_ctx->d4est_geom;
   
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
@@ -41,13 +42,14 @@ krylov_pc_invstiff_setup
         curved_element_data_t* ed = quad->p.user_data;
         int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
 
-        dgmath_compute_curvedInverseGaussStiff
+        dgmath_compute_curved_inverse_stiffness_matrix
           (
            dgmath_jit_dbase,
            ed->deg,
            ed->J_integ,
            ed->rst_xyz_integ,
            ed->deg_integ,
+           d4est_geom->geom_quad_type,
            (P4EST_DIM),
            &invstiff_data->inv_stiff[nodal_matrix_stride]
           );

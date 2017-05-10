@@ -111,11 +111,11 @@ typedef struct {
 /* This file was automatically generated.  Do not edit! */
 void curved_element_data_get_array_of_degrees(p4est_t *p4est,int *deg_array);
 void curved_element_data_compute_jacobian_on_lgl_grid(p4est_t *p4est,d4est_geometry_t *d4est_geometry,dgmath_jit_dbase_t *dgmath_jit_dbase,double *jacobian_lgl);
-void curved_element_data_apply_curvedGaussStiff(dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,curved_element_data_t *elem_data,double *vec,double *stiff_vec);
+void curved_element_data_apply_curved_stiffness_matrix(dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,curved_element_data_t *elem_data,quadrature_type_t quad_type,double *vec,double *stiff_vec);
 int curved_element_data_get_local_matrix_nodes(p4est_t *p4est);
-void curved_element_data_form_fofufofvlilj_matrix_Gaussnodes(dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,double *u,double *v,curved_element_data_t *elem_data,int deg_Gauss,int dim,double *mat,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx);
-void curved_element_data_apply_fofufofvlj_Gaussnodes(dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,double *u,double *v,curved_element_data_t *elem_data,int deg_Gauss,int dim,double *out,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx);
-void curved_element_data_apply_fofufofvlilj_Gaussnodes(dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,double *vec,double *u,double *v,curved_element_data_t *elem_data,int deg_Gauss,int dim,double *Mvec,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx);
+void curved_element_data_form_fofufofvlilj_matrix(dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,double *u,double *v,curved_element_data_t *elem_data,int deg_quad,quadrature_type_t quad_type,int dim,double *mat,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx);
+void curved_element_data_apply_fofufofvlj(dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,double *u,double *v,curved_element_data_t *elem_data,int deg_quad,quadrature_type_t quad_type,int dim,double *out,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx);
+void curved_element_data_apply_fofufofvlilj(dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,double *vec,double *u,double *v,curved_element_data_t *elem_data,int deg_quad,quadrature_type_t quad_type,int dim,double *Mvec,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx);
 void curved_element_data_print_number_of_elements_per_tree(p4est_t *p4est);
 void curved_element_data_print_local_estimator(p4est_t *p4est);
 void curved_element_data_print_element_data_debug(p4est_t *p4est);
@@ -130,10 +130,9 @@ void curved_element_data_store_element_scalar_in_vertex_array(p4est_t *p4est,dou
 void curved_element_data_copy_from_storage_to_vec(p4est_t *p4est,double *vec);
 int curved_element_data_get_local_nodes(p4est_t *p4est);
 void curved_element_data_get_local_nodes_callback(p4est_iter_volume_info_t *info,void *user_data);
-void curved_element_compute_derivative_on_Gauss(double *vec,double *rst_xyz_Gauss[(P4EST_DIM)][(P4EST_DIM)],double *dvec[(P4EST_DIM)],int deg_Lobatto,int deg_Gauss,dgmath_jit_dbase_t *dgmath_jit_dbase);
 void curved_element_data_copy_from_vec_to_storage(p4est_t *p4est,double *vec);
 double curved_element_data_compute_dg_norm_sqr(p4est_t *p4est,double *nodal_vec,int local_nodes,ip_flux_params_t *ip_flux_params,d4est_geometry_t *d4est_geom,p4est_ghost_t *ghost,void *ghost_data,dgmath_jit_dbase_t *dgmath_jit_dbase);
-double curved_element_data_compute_l2_norm_sqr(p4est_t *p4est,double *nodal_vec,int local_nodes,dgmath_jit_dbase_t *dgmath_jit_dbase,norm_storage_option_t store_local);
+double curved_element_data_compute_l2_norm_sqr(p4est_t *p4est,double *nodal_vec,int local_nodes,dgmath_jit_dbase_t *dgmath_jit_dbase,quadrature_type_t quad_type,norm_storage_option_t store_local);
 void curved_element_data_init_new(p4est_t *p4est,geometric_factors_t *geometric_factors,dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,curved_element_data_user_fcn_t user_fcn,void *user_ctx,int compute_geometric_data,int set_geometric_aliases);
 curved_element_data_local_sizes_t curved_element_data_compute_strides_and_sizes(p4est_t *p4est,dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geometry,curved_element_data_user_fcn_t user_fcn,void *user_ctx);
 double curved_element_data_compute_element_face_area(curved_element_data_t *elem_data,dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *geom,int face,int deg);

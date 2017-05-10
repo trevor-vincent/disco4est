@@ -590,10 +590,31 @@ void dgmath_build_ref_GLL_to_GL_interp_trans_1d_inverse
 /*   } */
 /* } */
 
+void dgmath_interp
+(
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ double* u_in,
+ quadrature_type_t quad_type_in,
+ int deg_in,
+ double* u_out,
+ quadrature_type_t quad_type_out,
+ int deg_out,
+ int dim
+)
+{
+  mpi_assert(deg_in <= deg_out);
+  if (quad_type_in == QUAD_LOBATTO && quad_type_out == QUAD_LOBATTO){
+    dgmath_apply_p_prolong(dgmath_jit_dbase, u_in, deg_in, dim, deg_out, u_out);
+  }
+  else if (quad_type_in == QUAD_LOBATTO && quad_type_out == QUAD_GAUSS){
+    dgmath_interp_Lobatto_to_Gauss(dgmath_jit_dbase, u_in, deg_in, deg_out, u_out, dim);
+  }
+  else {
+    mpi_abort("[D4EST_ERROR]: Currently we only support interpolation from Lobatto to Lobatto or Lobatto to Gauss");
+  }
+}
 
-
-
-void dgmath_interp_GLL_to_GL
+void dgmath_interp_Lobatto_to_Gauss
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double* u_Lobatto_in,
@@ -660,80 +681,94 @@ void dgmath_interp_GLL_to_GL
 /* } */
 
 
-void dgmath_apply_curvedGaussMass
+void dgmath_apply_curved_mass_matrix
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double* in,
- int deg_Lobatto,
- double* jac_Gauss,
- int deg_Gauss,
+ int deg_lobatto,
+ double* jac_quad,
+ int deg_quad,
+ quadrature_type_t quad_type,
  int dim,
  double* out
 ){
   mpi_assert(dim == 1 || dim == 2 || dim == 3);
 
   /* for now assert this, can get rid of by p-prolonging then p-restricting */
-  /* mpi_assert(deg_Lobatto == deg_Gauss); */
-  int volume_nodes_Gauss = dgmath_get_nodes(dim, deg_Gauss);
+  /* mpi_assert(deg_lobatto == deg_quad); */
+  int volume_nodes_quad = dgmath_get_nodes(dim, deg_quad);
 
-  double* in_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-  double* w_j_in_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-  
-  double* Gauss_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_Gauss);
-  double* GLL_to_GL_interp_trans = dgmath_fetch_ref_GLL_to_GL_interp_trans_1d
-                                   (dgmath_jit_dbase, deg_Lobatto, deg_Gauss);
-  
-  dgmath_interp_GLL_to_GL(dgmath_jit_dbase, in, deg_Lobatto, deg_Gauss, in_Gauss, dim);
+  double* in_quad = P4EST_ALLOC(double, volume_nodes_quad);
+  double* w_j_in_quad = P4EST_ALLOC(double, volume_nodes_quad);
 
-  int nodes_Lobatto = deg_Lobatto + 1;
-  int nodes_Gauss = deg_Gauss + 1;
+  double* interp_trans = NULL;
+  double* quad_weights = NULL;
+
+  if (quad_type == QUAD_GAUSS){
+    quad_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_quad);
+    interp_trans = dgmath_fetch_ref_GLL_to_GL_interp_trans_1d
+                                   (dgmath_jit_dbase, deg_lobatto, deg_quad);  
+  }
+  else if (quad_type == QUAD_LOBATTO){
+    quad_weights = dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase, deg_quad);
+    interp_trans = dgmath_fetch_p_prolong_transpose_1d(dgmath_jit_dbase, deg_lobatto, deg_quad);
+  }
+  else {
+    mpi_abort("[D4EST_ERROR]: Not a support quad type");
+  }
+  
+  dgmath_interp(dgmath_jit_dbase, in, QUAD_LOBATTO, deg_lobatto, in_quad, quad_type, deg_quad, dim);
+  
+  int nodes_lobatto = deg_lobatto + 1;
+  int nodes_quad = deg_quad + 1;
   
   if (dim == 1){
-    linalg_kron_vec_dot_xy(Gauss_weights, jac_Gauss, in_Gauss, nodes_Gauss, w_j_in_Gauss);
-    linalg_matvec_plus_vec(1.0, GLL_to_GL_interp_trans, w_j_in_Gauss, 0., out, nodes_Lobatto, nodes_Gauss);
+    linalg_kron_vec_dot_xy(quad_weights, jac_quad, in_quad, nodes_quad, w_j_in_quad);
+    linalg_matvec_plus_vec(1.0, interp_trans, w_j_in_quad, 0., out, nodes_lobatto, nodes_quad);
   }
   else if (dim == 2) {
-    linalg_kron_vec_o_vec_dot_xy(Gauss_weights, jac_Gauss, in_Gauss, nodes_Gauss, w_j_in_Gauss);
-    linalg_kron_A1A2x_NONSQR(out, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, w_j_in_Gauss, nodes_Lobatto, nodes_Gauss,
-                             nodes_Lobatto, nodes_Gauss);
+    linalg_kron_vec_o_vec_dot_xy(quad_weights, jac_quad, in_quad, nodes_quad, w_j_in_quad);
+    linalg_kron_A1A2x_NONSQR(out, interp_trans, interp_trans, w_j_in_quad, nodes_lobatto, nodes_quad,
+                             nodes_lobatto, nodes_quad);
   } else if (dim == 3) {
-    linalg_kron_vec_o_vec_o_vec_dot_xy(Gauss_weights, jac_Gauss, in_Gauss, nodes_Gauss, w_j_in_Gauss);
-    linalg_kron_A1A2A3x_NONSQR(out, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, w_j_in_Gauss,
-                               nodes_Lobatto, nodes_Gauss, nodes_Lobatto, nodes_Gauss, nodes_Lobatto, nodes_Gauss);
+    linalg_kron_vec_o_vec_o_vec_dot_xy(quad_weights, jac_quad, in_quad, nodes_quad, w_j_in_quad);
+    linalg_kron_A1A2A3x_NONSQR(out, interp_trans, interp_trans, interp_trans, w_j_in_quad,
+                               nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad);
   } else {    
-    P4EST_FREE(w_j_in_Gauss);
-    P4EST_FREE(in_Gauss);
+    P4EST_FREE(w_j_in_quad);
+    P4EST_FREE(in_quad);
     mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
   }  
-  P4EST_FREE(w_j_in_Gauss);
-  P4EST_FREE(in_Gauss);
+  P4EST_FREE(w_j_in_quad);
+  P4EST_FREE(in_quad);
 }
 
 
-void dgmath_compute_curvedInverseGaussStiff
+void dgmath_compute_curved_inverse_stiffness_matrix
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
- int deg_Lobatto,
- double* jac_Gauss,
+ int deg_lobatto,
+ double* jac_quad,
  double* rst_xyz [(P4EST_DIM)][(P4EST_DIM)], /* must be padded with NULL if you want lower dim */
- int deg_Gauss,
+ int deg_quad,
+ quadrature_type_t quad_type,
  int dim,
  double* invS
 )
 {
-  int volume_nodes_Lobatto = dgmath_get_nodes(dim,deg_Lobatto);
+  int volume_nodes_lobatto = dgmath_get_nodes(dim,deg_lobatto);
   
-  double* S = P4EST_ALLOC(double, volume_nodes_Lobatto*volume_nodes_Lobatto);
-  double* u = P4EST_ALLOC_ZERO(double, volume_nodes_Lobatto);
-  double* Su = P4EST_ALLOC_ZERO(double, volume_nodes_Lobatto);
+  double* S = P4EST_ALLOC(double, volume_nodes_lobatto*volume_nodes_lobatto);
+  double* u = P4EST_ALLOC_ZERO(double, volume_nodes_lobatto);
+  double* Su = P4EST_ALLOC_ZERO(double, volume_nodes_lobatto);
 
-  for (int i = 0; i < volume_nodes_Lobatto; i++){
+  for (int i = 0; i < volume_nodes_lobatto; i++){
     u[i] = 1.;
-    dgmath_apply_curvedGaussStiff(dgmath_jit_dbase, u, deg_Lobatto, jac_Gauss, rst_xyz, deg_Gauss, dim, Su);
-    linalg_set_column(S, Su, i, volume_nodes_Lobatto, volume_nodes_Lobatto);
+    dgmath_apply_curved_stiffness_matrix(dgmath_jit_dbase, u, deg_lobatto, jac_quad, rst_xyz, deg_quad, quad_type, dim, Su);
+    linalg_set_column(S, Su, i, volume_nodes_lobatto, volume_nodes_lobatto);
     u[i] = 0.;
   }
-  linalg_invert_and_copy(S, invS, volume_nodes_Lobatto);
+  linalg_invert_and_copy(S, invS, volume_nodes_lobatto);
 
   P4EST_FREE(Su);
   P4EST_FREE(u);
@@ -741,60 +776,74 @@ void dgmath_compute_curvedInverseGaussStiff
 }
 
 
-void dgmath_apply_curvedGaussStiff
+void dgmath_apply_curved_stiffness_matrix
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double* in,
- int deg_Lobatto,
- double* jac_Gauss,
+ int deg_lobatto,
+ double* jac_quad,
  double* rst_xyz [(P4EST_DIM)][(P4EST_DIM)], /* must be padded with NULL if you want lower dim */
- int deg_Gauss,
+ int deg_quad,
+ quadrature_type_t quad_type,
  int dim,
  double* out
 ){
   mpi_assert(dim == 1 || dim == 2 || dim == 3);
 
   /* for now assert this, can get rid of by p-prolonging then p-restricting */
-  /* mpi_assert(deg_Lobatto == deg_Gauss); */
-  int volume_nodes_Gauss = dgmath_get_nodes(dim, deg_Gauss);
-  int volume_nodes_Lobatto = dgmath_get_nodes(dim, deg_Lobatto);
+  /* mpi_assert(deg_lobatto == deg_quad); */
+  int volume_nodes_quad = dgmath_get_nodes(dim, deg_quad);
+  int volume_nodes_lobatto = dgmath_get_nodes(dim, deg_lobatto);
 
-  double* Dl_in = P4EST_ALLOC(double, volume_nodes_Lobatto);
-  double* V_Dl_in = P4EST_ALLOC(double, volume_nodes_Gauss);
-  double* W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_Gauss);
-  double* VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_Lobatto);
-  double* DTlp_VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_Lobatto);
+  double* Dl_in = P4EST_ALLOC(double, volume_nodes_lobatto);
+  double* V_Dl_in = P4EST_ALLOC(double, volume_nodes_quad);
+  double* W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_quad);
+  double* VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_lobatto);
+  double* DTlp_VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_lobatto);
   
-  double* Gauss_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_Gauss);
-  double* GLL_to_GL_interp_trans = dgmath_fetch_ref_GLL_to_GL_interp_trans_1d
-                                   (dgmath_jit_dbase, deg_Lobatto, deg_Gauss);
+  double* interp_trans = NULL;
+  double* quad_weights = NULL;
 
-  int nodes_Lobatto = deg_Lobatto + 1;
-  int nodes_Gauss = deg_Gauss + 1;
-  linalg_fill_vec(out, 0., volume_nodes_Lobatto);
+  if (quad_type == QUAD_GAUSS){
+    quad_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_quad);
+    interp_trans = dgmath_fetch_ref_GLL_to_GL_interp_trans_1d
+                                   (dgmath_jit_dbase, deg_lobatto, deg_quad);  
+  }
+  else if (quad_type == QUAD_LOBATTO){
+    quad_weights = dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase, deg_quad);
+    interp_trans = dgmath_fetch_p_prolong_transpose_1d(dgmath_jit_dbase, deg_lobatto, deg_quad);
+  }
+  else {
+    mpi_abort("[D4EST_ERROR]: Not a support quad type");
+  }
+  
+  
+  int nodes_lobatto = deg_lobatto + 1;
+  int nodes_quad = deg_quad + 1;
+  linalg_fill_vec(out, 0., volume_nodes_lobatto);
   
   for (int k = 0; k < dim; k++){
     for (int lp = 0; lp < dim; lp++){
       for (int l = 0; l < dim; l++){
         /* Apply Dbar in lth direction */
-        dgmath_apply_Dij(dgmath_jit_dbase, in, dim, deg_Lobatto, l, Dl_in);
+        dgmath_apply_Dij(dgmath_jit_dbase, in, dim, deg_lobatto, l, Dl_in);
 
-          /* Apply Gauss quadrature vandermonde*/
-        dgmath_interp_GLL_to_GL(dgmath_jit_dbase, Dl_in, deg_Lobatto, deg_Gauss, V_Dl_in, dim);
-
+        /* Interpolate to quadrature points */
+        dgmath_interp(dgmath_jit_dbase, Dl_in, QUAD_LOBATTO, deg_lobatto, V_Dl_in, quad_type, deg_quad, dim);
+        
         if (dim == 3) {
-          linalg_kron_vec_o_vec_o_vec_dot_wxyz(Gauss_weights, jac_Gauss, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_Gauss, W_V_Dl_in);
-          linalg_kron_A1A2A3x_NONSQR(VT_W_V_Dl_in, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, W_V_Dl_in,
-                                     nodes_Lobatto, nodes_Gauss, nodes_Lobatto, nodes_Gauss, nodes_Lobatto, nodes_Gauss);
+          linalg_kron_vec_o_vec_o_vec_dot_wxyz(quad_weights, jac_quad, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_quad, W_V_Dl_in);
+          linalg_kron_A1A2A3x_NONSQR(VT_W_V_Dl_in, interp_trans, interp_trans, interp_trans, W_V_Dl_in,
+                                     nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad);
         }
         else if (dim == 2) {
-          linalg_kron_vec_o_vec_dot_wxyz(Gauss_weights, jac_Gauss, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_Gauss, W_V_Dl_in);
-          linalg_kron_A1A2x_NONSQR(VT_W_V_Dl_in, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, W_V_Dl_in, nodes_Lobatto, nodes_Gauss,
-                                   nodes_Lobatto, nodes_Gauss);
+          linalg_kron_vec_o_vec_dot_wxyz(quad_weights, jac_quad, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_quad, W_V_Dl_in);
+          linalg_kron_A1A2x_NONSQR(VT_W_V_Dl_in, interp_trans, interp_trans, W_V_Dl_in, nodes_lobatto, nodes_quad,
+                                   nodes_lobatto, nodes_quad);
         }
         else if (dim == 1){
-          linalg_kron_vec_dot_wxyz(Gauss_weights, jac_Gauss, V_Dl_in, rst_xyz[l][k], rst_xyz[lp][k], nodes_Gauss, W_V_Dl_in);
-          linalg_matvec_plus_vec(1.0, GLL_to_GL_interp_trans, W_V_Dl_in, 0., VT_W_V_Dl_in, nodes_Lobatto, nodes_Gauss);
+          linalg_kron_vec_dot_wxyz(quad_weights, jac_quad, V_Dl_in, rst_xyz[l][k], rst_xyz[lp][k], nodes_quad, W_V_Dl_in);
+          linalg_matvec_plus_vec(1.0, interp_trans, W_V_Dl_in, 0., VT_W_V_Dl_in, nodes_lobatto, nodes_quad);
         }
           
         else {    
@@ -806,8 +855,8 @@ void dgmath_apply_curvedGaussStiff
           mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
         }
 
-        dgmath_apply_Dij_transpose(dgmath_jit_dbase, VT_W_V_Dl_in, dim, deg_Lobatto, lp, DTlp_VT_W_V_Dl_in);
-        linalg_vec_axpy(1., DTlp_VT_W_V_Dl_in, out, volume_nodes_Lobatto);
+        dgmath_apply_Dij_transpose(dgmath_jit_dbase, VT_W_V_Dl_in, dim, deg_lobatto, lp, DTlp_VT_W_V_Dl_in);
+        linalg_vec_axpy(1., DTlp_VT_W_V_Dl_in, out, volume_nodes_lobatto);
       }
     }
   }
@@ -819,363 +868,199 @@ void dgmath_apply_curvedGaussStiff
   P4EST_FREE(Dl_in);
 }
 
-void dgmath_apply_curvedGaussStiff_withJdrdxdrdx
-(
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* in,
- int deg_Lobatto,
- double* Jdrdxdrdx [(P4EST_DIM)][(P4EST_DIM)],
- int deg_Gauss,
- int dim,
- double* out
-){
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
+/* void dgmath_apply_curvedGaussStiff_withJdrdxdrdx */
+/* ( */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  double* in, */
+/*  int deg_Lobatto, */
+/*  double* Jdrdxdrdx [(P4EST_DIM)][(P4EST_DIM)], */
+/*  int deg_Gauss, */
+/*  int dim, */
+/*  double* out */
+/* ){ */
+/*   mpi_assert(dim == 1 || dim == 2 || dim == 3); */
 
-  /* for now assert this, can get rid of by p-prolonging then p-restricting */
-  /* mpi_assert(deg_Lobatto == deg_Gauss); */
-  int volume_nodes_Gauss = dgmath_get_nodes(dim, deg_Gauss);
-  int volume_nodes_Lobatto = dgmath_get_nodes(dim, deg_Lobatto);
+/*   /\* for now assert this, can get rid of by p-prolonging then p-restricting *\/ */
+/*   /\* mpi_assert(deg_Lobatto == deg_Gauss); *\/ */
+/*   int volume_nodes_Gauss = dgmath_get_nodes(dim, deg_Gauss); */
+/*   int volume_nodes_Lobatto = dgmath_get_nodes(dim, deg_Lobatto); */
 
-  double* Dl_in = P4EST_ALLOC(double, volume_nodes_Lobatto);
-  double* V_Dl_in = P4EST_ALLOC(double, volume_nodes_Gauss);
-  double* W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_Gauss);
-  double* VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_Lobatto);
-  double* DTlp_VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_Lobatto);
+/*   double* Dl_in = P4EST_ALLOC(double, volume_nodes_Lobatto); */
+/*   double* V_Dl_in = P4EST_ALLOC(double, volume_nodes_Gauss); */
+/*   double* W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_Gauss); */
+/*   double* VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_Lobatto); */
+/*   double* DTlp_VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_Lobatto); */
   
-  double* Gauss_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_Gauss);
-  double* GLL_to_GL_interp_trans = dgmath_fetch_ref_GLL_to_GL_interp_trans_1d
-                                   (dgmath_jit_dbase, deg_Lobatto, deg_Gauss);
+/*   double* Gauss_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_Gauss); */
+/*   double* GLL_to_GL_interp_trans = dgmath_fetch_ref_GLL_to_GL_interp_trans_1d */
+/*                                    (dgmath_jit_dbase, deg_Lobatto, deg_Gauss); */
 
-  int nodes_Lobatto = deg_Lobatto + 1;
-  int nodes_Gauss = deg_Gauss + 1;
-  linalg_fill_vec(out, 0., volume_nodes_Lobatto);
+/*   int nodes_Lobatto = deg_Lobatto + 1; */
+/*   int nodes_Gauss = deg_Gauss + 1; */
+/*   linalg_fill_vec(out, 0., volume_nodes_Lobatto); */
   
-  for (int k = 0; k < dim; k++){
-    for (int lp = 0; lp < dim; lp++){
-      for (int l = 0; l < dim; l++){
-        /* Apply Dbar in lth direction */
-        dgmath_apply_Dij(dgmath_jit_dbase, in, dim, deg_Lobatto, l, Dl_in);
+/*   for (int k = 0; k < dim; k++){ */
+/*     for (int lp = 0; lp < dim; lp++){ */
+/*       for (int l = 0; l < dim; l++){ */
+/*         /\* Apply Dbar in lth direction *\/ */
+/*         dgmath_apply_Dij(dgmath_jit_dbase, in, dim, deg_Lobatto, l, Dl_in); */
 
-          /* Apply Gauss quadrature vandermonde*/
-        dgmath_interp_GLL_to_GL(dgmath_jit_dbase, Dl_in, deg_Lobatto, deg_Gauss, V_Dl_in, dim);
+/*           /\* Apply Gauss quadrature vandermonde*\/ */
+/*         dgmath_interp_GLL_to_GL(dgmath_jit_dbase, Dl_in, deg_Lobatto, deg_Gauss, V_Dl_in, dim); */
 
-        if (dim == 3) {
-          linalg_kron_vec_o_vec_o_vec_dot_xy(Gauss_weights, Jdrdxdrdx[l][lp], V_Dl_in, nodes_Gauss, W_V_Dl_in);
-          linalg_kron_A1A2A3x_NONSQR(VT_W_V_Dl_in, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, W_V_Dl_in,
-                                     nodes_Lobatto, nodes_Gauss, nodes_Lobatto, nodes_Gauss, nodes_Lobatto, nodes_Gauss);
-        }
-        else if (dim == 2) {
-          linalg_kron_vec_o_vec_dot_xy(Gauss_weights, Jdrdxdrdx[l][lp], V_Dl_in, nodes_Gauss, W_V_Dl_in);
-          linalg_kron_A1A2x_NONSQR(VT_W_V_Dl_in, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, W_V_Dl_in, nodes_Lobatto, nodes_Gauss,
-                                   nodes_Lobatto, nodes_Gauss);
-        }
-        else if (dim == 1){
-          linalg_kron_vec_dot_xy(Gauss_weights, Jdrdxdrdx[l][lp], V_Dl_in, nodes_Gauss, W_V_Dl_in);
-          linalg_matvec_plus_vec(1.0, GLL_to_GL_interp_trans, W_V_Dl_in, 0., VT_W_V_Dl_in, nodes_Lobatto, nodes_Gauss);
-        }
+/*         if (dim == 3) { */
+/*           linalg_kron_vec_o_vec_o_vec_dot_xy(Gauss_weights, Jdrdxdrdx[l][lp], V_Dl_in, nodes_Gauss, W_V_Dl_in); */
+/*           linalg_kron_A1A2A3x_NONSQR(VT_W_V_Dl_in, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, W_V_Dl_in, */
+/*                                      nodes_Lobatto, nodes_Gauss, nodes_Lobatto, nodes_Gauss, nodes_Lobatto, nodes_Gauss); */
+/*         } */
+/*         else if (dim == 2) { */
+/*           linalg_kron_vec_o_vec_dot_xy(Gauss_weights, Jdrdxdrdx[l][lp], V_Dl_in, nodes_Gauss, W_V_Dl_in); */
+/*           linalg_kron_A1A2x_NONSQR(VT_W_V_Dl_in, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, W_V_Dl_in, nodes_Lobatto, nodes_Gauss, */
+/*                                    nodes_Lobatto, nodes_Gauss); */
+/*         } */
+/*         else if (dim == 1){ */
+/*           linalg_kron_vec_dot_xy(Gauss_weights, Jdrdxdrdx[l][lp], V_Dl_in, nodes_Gauss, W_V_Dl_in); */
+/*           linalg_matvec_plus_vec(1.0, GLL_to_GL_interp_trans, W_V_Dl_in, 0., VT_W_V_Dl_in, nodes_Lobatto, nodes_Gauss); */
+/*         } */
           
-        else {    
-          P4EST_FREE(DTlp_VT_W_V_Dl_in);
-          P4EST_FREE(VT_W_V_Dl_in);
-          P4EST_FREE(W_V_Dl_in);
-          P4EST_FREE(V_Dl_in);
-          P4EST_FREE(Dl_in);
-          mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
-        }
+/*         else {     */
+/*           P4EST_FREE(DTlp_VT_W_V_Dl_in); */
+/*           P4EST_FREE(VT_W_V_Dl_in); */
+/*           P4EST_FREE(W_V_Dl_in); */
+/*           P4EST_FREE(V_Dl_in); */
+/*           P4EST_FREE(Dl_in); */
+/*           mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension."); */
+/*         } */
 
-        dgmath_apply_Dij_transpose(dgmath_jit_dbase, VT_W_V_Dl_in, dim, deg_Lobatto, lp, DTlp_VT_W_V_Dl_in);
-        linalg_vec_axpy(1., DTlp_VT_W_V_Dl_in, out, volume_nodes_Lobatto);
-      }
-    }
-  }
+/*         dgmath_apply_Dij_transpose(dgmath_jit_dbase, VT_W_V_Dl_in, dim, deg_Lobatto, lp, DTlp_VT_W_V_Dl_in); */
+/*         linalg_vec_axpy(1., DTlp_VT_W_V_Dl_in, out, volume_nodes_Lobatto); */
+/*       } */
+/*     } */
+/*   } */
   
-  P4EST_FREE(DTlp_VT_W_V_Dl_in);
-  P4EST_FREE(VT_W_V_Dl_in);
-  P4EST_FREE(W_V_Dl_in);
-  P4EST_FREE(V_Dl_in);
-  P4EST_FREE(Dl_in);
-}
-
-
-void dgmath_apply_curvedLobattoMass
-(
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* in,
- int deg_Lobatto,
- double* jac_Lobatto_integ,
- int deg_Lobatto_integ,
- int dim,
- double* out
-){
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
-
-  /* for now assert this, can get rid of by p-prolonging then p-restricting */
-  /* mpi_assert(deg_Lobatto == deg_Lobatto_integ); */
-  int volume_nodes_Lobatto_integ = dgmath_get_nodes(dim, deg_Lobatto_integ);
-
-  double* in_Lobatto_integ = P4EST_ALLOC(double, volume_nodes_Lobatto_integ);
-  double* w_j_in_Lobatto_integ = P4EST_ALLOC(double, volume_nodes_Lobatto_integ);
-  
-  double* Lobatto_integ_weights = dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase, deg_Lobatto_integ);
-  double* p_prolong_trans = dgmath_fetch_p_prolong_transpose_1d
-                                   (dgmath_jit_dbase, deg_Lobatto, deg_Lobatto_integ);
-  
-  dgmath_apply_p_prolong(dgmath_jit_dbase, in, deg_Lobatto, dim, deg_Lobatto_integ, in_Lobatto_integ);
-
-  int nodes_Lobatto = deg_Lobatto + 1;
-  int nodes_Lobatto_integ = deg_Lobatto_integ + 1;
-  
-  if (dim == 1){
-    linalg_kron_vec_dot_xy(Lobatto_integ_weights, jac_Lobatto_integ, in_Lobatto_integ, nodes_Lobatto_integ, w_j_in_Lobatto_integ);
-    linalg_matvec_plus_vec(1.0, p_prolong_trans, w_j_in_Lobatto_integ, 0., out, nodes_Lobatto, nodes_Lobatto_integ);
-  }
-  else if (dim == 2) {
-    linalg_kron_vec_o_vec_dot_xy(Lobatto_integ_weights, jac_Lobatto_integ, in_Lobatto_integ, nodes_Lobatto_integ, w_j_in_Lobatto_integ);
-    linalg_kron_A1A2x_NONSQR(out, p_prolong_trans, p_prolong_trans, w_j_in_Lobatto_integ, nodes_Lobatto, nodes_Lobatto_integ,
-                             nodes_Lobatto, nodes_Lobatto_integ);
-  } else if (dim == 3) {
-    linalg_kron_vec_o_vec_o_vec_dot_xy(Lobatto_integ_weights, jac_Lobatto_integ, in_Lobatto_integ, nodes_Lobatto_integ, w_j_in_Lobatto_integ);
-    linalg_kron_A1A2A3x_NONSQR(out, p_prolong_trans, p_prolong_trans, p_prolong_trans, w_j_in_Lobatto_integ,
-                               nodes_Lobatto, nodes_Lobatto_integ, nodes_Lobatto, nodes_Lobatto_integ, nodes_Lobatto, nodes_Lobatto_integ);
-  } else {    
-    P4EST_FREE(w_j_in_Lobatto_integ);
-    P4EST_FREE(in_Lobatto_integ);
-    mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
-  }  
-  P4EST_FREE(w_j_in_Lobatto_integ);
-  P4EST_FREE(in_Lobatto_integ);
-}
-
-
-/* void dgmath_apply_curvedInverseLobattoMass */
-/* ( */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
-/*  double* in, */
-/*  int deg_Lobatto, */
-/*  double* jac_Lobatto, */
-/*  int dim, */
-/*  double* out */
-/* ) */
-/* { */
-/*   mpi_assert(dim == 1 || dim == 2 || dim == 3); */
-/*   double* Lobatto_weights = dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase, deg_Lobatto); */
-/*   int nodes_Lobatto = deg_Lobatto + 1; */
-  
-/*   if (dim == 1){ */
-/*     linalg_kron_oneover_vec_dot_oneover_x_dot_y(Lobatto_weights, jac_Lobatto, in, nodes_Lobatto, out); */
-/*   } */
-/*   else if (dim == 2) { */
-/*     linalg_kron_oneover_vec_o_vec_dot_oneover_x_dot_y */
-/*       ( */
-/*        Lobatto_weights, */
-/*        jac_Lobatto, */
-/*        in, */
-/*        nodes_Lobatto, */
-/*        out */
-/*       ); */
-/*   } */
-/*   else if (dim == 3) { */
-/*     linalg_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y */
-/*       ( */
-/*        Lobatto_weights, */
-/*        jac_Lobatto, */
-/*        in, */
-/*        nodes_Lobatto, */
-/*        out */
-/*       ); */
-/*   } */
-/*   else { */
-/*     mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension."); */
-/*   } */
-/* } */
-
-/* void dgmath_apply_curvedLobattoMass */
-/* ( */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
-/*  double* in, */
-/*  int deg_Lobatto, */
-/*  double* jac_Lobatto, */
-/*  int dim, */
-/*  double* out */
-/* ) */
-/* { */
-/*   mpi_assert(dim == 1 || dim == 2 || dim == 3); */
-/*   double* Lobatto_weights = dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase, deg_Lobatto); */
-/*   int nodes_Lobatto = deg_Lobatto + 1; */
-  
-/*   if (dim == 1){ */
-/*     linalg_kron_vec_dot_xy(Lobatto_weights, jac_Lobatto, in, nodes_Lobatto, out); */
-/*   } */
-/*   else if (dim == 2) { */
-/*     linalg_kron_vec_o_vec_dot_xy(Lobatto_weights, jac_Lobatto, in, nodes_Lobatto, out); */
-/*   } */
-/*   else if (dim == 3) { */
-/*     linalg_kron_vec_o_vec_o_vec_dot_xy(Lobatto_weights, jac_Lobatto, in, nodes_Lobatto, out); */
-/*   } */
-/*   else {     */
-/*     mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension."); */
-/*   }   */
+/*   P4EST_FREE(DTlp_VT_W_V_Dl_in); */
+/*   P4EST_FREE(VT_W_V_Dl_in); */
+/*   P4EST_FREE(W_V_Dl_in); */
+/*   P4EST_FREE(V_Dl_in); */
+/*   P4EST_FREE(Dl_in); */
 /* } */
 
 
-
-void dgmath_apply_curvedGaussMass_onGaussNodeVec
+/* integral(f(x,y,z) lj) where f is some function to integrate on the quadrature nodes and lj is the j-th lagrange function*/
+void dgmath_apply_curved_galerkin_integral
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* in_Gauss,
- int deg_Lobatto,
- double* jac_Gauss,
- int deg_Gauss,
+ double* in_quad,
+ int deg_lobatto,
+ double* jac_quad,
+ int deg_quad,
+ quadrature_type_t quad_type,
  int dim,
  double* out
 ){
   mpi_assert(dim == 1 || dim == 2 || dim == 3);
-  int volume_nodes_Gauss = dgmath_get_nodes(dim, deg_Gauss);
+  int volume_nodes_quad = dgmath_get_nodes(dim, deg_quad);
 
-  /* double* in_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss); */
-  double* w_j_in_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-  
-  double* Gauss_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_Gauss);
-  double* GLL_to_GL_interp_trans = dgmath_fetch_ref_GLL_to_GL_interp_trans_1d(dgmath_jit_dbase, deg_Lobatto, deg_Gauss);
-  
-  /* dgmath_interp_GLL_to_GL(dgmath_jit_dbase, in, deg_Lobatto, deg_Gauss, in_Gauss, dim); */
+  /* double* in_quad = P4EST_ALLOC(double, volume_nodes_quad); */
+  double* w_j_in_quad = P4EST_ALLOC(double, volume_nodes_quad);
 
-  int nodes_Lobatto = deg_Lobatto + 1;
-  int nodes_Gauss = deg_Gauss + 1;
-  
-  if (dim == 1){
-    linalg_kron_vec_dot_xy(Gauss_weights, jac_Gauss, in_Gauss, nodes_Gauss, w_j_in_Gauss);
-    linalg_matvec_plus_vec(1.0, GLL_to_GL_interp_trans, w_j_in_Gauss, 0., out, nodes_Lobatto, nodes_Gauss);
+  double* interp_trans = NULL;
+  double* quad_weights = NULL;
+
+  if (quad_type == QUAD_GAUSS){
+    quad_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_quad);
+    interp_trans = dgmath_fetch_ref_GLL_to_GL_interp_trans_1d
+                                   (dgmath_jit_dbase, deg_lobatto, deg_quad);  
   }
-  else if (dim == 2) {
-    linalg_kron_vec_o_vec_dot_xy(Gauss_weights, jac_Gauss, in_Gauss, nodes_Gauss, w_j_in_Gauss);
-    linalg_kron_A1A2x_NONSQR(out, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, w_j_in_Gauss, nodes_Lobatto, nodes_Gauss,
-                             nodes_Lobatto, nodes_Gauss);
+  else if (quad_type == QUAD_LOBATTO){
+    quad_weights = dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase, deg_quad);
+    interp_trans = dgmath_fetch_p_prolong_transpose_1d(dgmath_jit_dbase, deg_lobatto, deg_quad);
   }
-  else if (dim == 3) {
-    linalg_kron_vec_o_vec_o_vec_dot_xy(Gauss_weights, jac_Gauss, in_Gauss, nodes_Gauss, w_j_in_Gauss);
-    linalg_kron_A1A2A3x_NONSQR(out, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, GLL_to_GL_interp_trans, w_j_in_Gauss,
-                               nodes_Lobatto, nodes_Gauss, nodes_Lobatto, nodes_Gauss, nodes_Lobatto, nodes_Gauss);
+  else {
+    mpi_abort("[D4EST_ERROR]: Not a support quad type");
   }
-  else {    
-    P4EST_FREE(w_j_in_Gauss);
-    P4EST_FREE(in_Gauss);
-    mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
-  }  
-  P4EST_FREE(w_j_in_Gauss);
-}
-
-void dgmath_apply_curvedLobattoMass_onLobattoIntegNodeVec
-(
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* in_Lobatto_integ,
- int deg_Lobatto,
- double* jac_Lobatto_integ,
- int deg_Lobatto_integ,
- int dim,
- double* out
-){
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
-  int volume_nodes_Lobatto_integ = dgmath_get_nodes(dim, deg_Lobatto_integ);
-
-  /* double* in_Lobatto_integ = P4EST_ALLOC(double, volume_nodes_Lobatto_integ); */
-  double* w_j_in_Lobatto_integ = P4EST_ALLOC(double, volume_nodes_Lobatto_integ);
   
-  double* Lobatto_integ_weights = dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase, deg_Lobatto_integ);
-  double* p_prolong_trans = dgmath_fetch_p_prolong_transpose_1d(dgmath_jit_dbase, deg_Lobatto, deg_Lobatto_integ);
-  
-  /* dgmath_interp_GLL_to_GL(dgmath_jit_dbase, in, deg_Lobatto, deg_Lobatto_integ, in_Lobatto_integ, dim); */
-
-  int nodes_Lobatto = deg_Lobatto + 1;
-  int nodes_Lobatto_integ = deg_Lobatto_integ + 1;
+  int nodes_lobatto = deg_lobatto + 1;
+  int nodes_quad = deg_quad + 1;
   
   if (dim == 1){
-    linalg_kron_vec_dot_xy(Lobatto_integ_weights, jac_Lobatto_integ, in_Lobatto_integ, nodes_Lobatto_integ, w_j_in_Lobatto_integ);
-    linalg_matvec_plus_vec(1.0, p_prolong_trans, w_j_in_Lobatto_integ, 0., out, nodes_Lobatto, nodes_Lobatto_integ);
+    linalg_kron_vec_dot_xy(quad_weights, jac_quad, in_quad, nodes_quad, w_j_in_quad);
+    linalg_matvec_plus_vec(1.0, interp_trans, w_j_in_quad, 0., out, nodes_lobatto, nodes_quad);
   }
   else if (dim == 2) {
-    linalg_kron_vec_o_vec_dot_xy(Lobatto_integ_weights, jac_Lobatto_integ, in_Lobatto_integ, nodes_Lobatto_integ, w_j_in_Lobatto_integ);
-    linalg_kron_A1A2x_NONSQR(out, p_prolong_trans, p_prolong_trans, w_j_in_Lobatto_integ, nodes_Lobatto, nodes_Lobatto_integ,
-                             nodes_Lobatto, nodes_Lobatto_integ);
+    linalg_kron_vec_o_vec_dot_xy(quad_weights, jac_quad, in_quad, nodes_quad, w_j_in_quad);
+    linalg_kron_A1A2x_NONSQR(out, interp_trans, interp_trans, w_j_in_quad, nodes_lobatto, nodes_quad,
+                             nodes_lobatto, nodes_quad);
   }
   else if (dim == 3) {
-    linalg_kron_vec_o_vec_o_vec_dot_xy(Lobatto_integ_weights, jac_Lobatto_integ, in_Lobatto_integ, nodes_Lobatto_integ, w_j_in_Lobatto_integ);
-    linalg_kron_A1A2A3x_NONSQR(out, p_prolong_trans, p_prolong_trans, p_prolong_trans, w_j_in_Lobatto_integ,
-                               nodes_Lobatto, nodes_Lobatto_integ, nodes_Lobatto, nodes_Lobatto_integ, nodes_Lobatto, nodes_Lobatto_integ);
+    linalg_kron_vec_o_vec_o_vec_dot_xy(quad_weights, jac_quad, in_quad, nodes_quad, w_j_in_quad);
+    linalg_kron_A1A2A3x_NONSQR(out, interp_trans, interp_trans, interp_trans, w_j_in_quad,
+                               nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad);
   }
   else {    
-    P4EST_FREE(w_j_in_Lobatto_integ);
-    P4EST_FREE(in_Lobatto_integ);
+    P4EST_FREE(w_j_in_quad);
+    P4EST_FREE(in_quad);
     mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
   }  
-  P4EST_FREE(w_j_in_Lobatto_integ);
+  P4EST_FREE(w_j_in_quad);
 }
 
-void dgmath_compute_curvedInverseGaussMass
+void dgmath_compute_curved_inverse_mass_matrix
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
- int deg_Lobatto,
- int deg_Gauss,
+ int deg_lobatto,
+ int deg_quad,
+ quadrature_type_t quad_type,
  int dim,
- double* jac_Gauss,
+ double* jac_quad,
  double* invM
 )
 {
-  int volume_nodes_Lobatto = dgmath_get_nodes(dim,deg_Lobatto);
+  int volume_nodes_lobatto = dgmath_get_nodes(dim,deg_lobatto);
   
-  double* M = P4EST_ALLOC(double, volume_nodes_Lobatto*volume_nodes_Lobatto);
-  double* u = P4EST_ALLOC_ZERO(double, volume_nodes_Lobatto);
-  double* Mu = P4EST_ALLOC_ZERO(double, volume_nodes_Lobatto);
+  double* M = P4EST_ALLOC(double, volume_nodes_lobatto*volume_nodes_lobatto);
+  double* u = P4EST_ALLOC_ZERO(double, volume_nodes_lobatto);
+  double* Mu = P4EST_ALLOC_ZERO(double, volume_nodes_lobatto);
 
-  for (int i = 0; i < volume_nodes_Lobatto; i++){
+  for (int i = 0; i < volume_nodes_lobatto; i++){
     u[i] = 1.;
-    dgmath_apply_curvedGaussMass(dgmath_jit_dbase, u, deg_Lobatto, jac_Gauss, deg_Gauss, dim, Mu);
-    linalg_set_column(M, Mu, i, volume_nodes_Lobatto, volume_nodes_Lobatto);
+    dgmath_apply_curved_mass_matrix(dgmath_jit_dbase, u, deg_lobatto, jac_quad, deg_quad, quad_type, dim, Mu);
+    linalg_set_column(M, Mu, i, volume_nodes_lobatto, volume_nodes_lobatto);
     u[i] = 0.;
   }
-  linalg_invert_and_copy(M, invM, volume_nodes_Lobatto);
+  linalg_invert_and_copy(M, invM, volume_nodes_lobatto);
 
   P4EST_FREE(Mu);
   P4EST_FREE(u);
   P4EST_FREE(M);
 }
 
-void dgmath_compute_curvedGaussMass
+void dgmath_compute_curved_mass_matrix
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
- int deg_Lobatto,
- int deg_Gauss,
+ int deg_lobatto,
+ int deg_quad,
+ quadrature_type_t quad_type,
  int dim,
- double* jac_Gauss,
+ double* jac_quad,
  double* M
 )
 {
-  int volume_nodes_Lobatto = dgmath_get_nodes(dim,deg_Lobatto);
+  int volume_nodes_lobatto = dgmath_get_nodes(dim,deg_lobatto);
   
-  double* u = P4EST_ALLOC_ZERO(double, volume_nodes_Lobatto);
-  double* Mu = P4EST_ALLOC_ZERO(double, volume_nodes_Lobatto);
+  double* u = P4EST_ALLOC_ZERO(double, volume_nodes_lobatto);
+  double* Mu = P4EST_ALLOC_ZERO(double, volume_nodes_lobatto);
 
-  for (int i = 0; i < volume_nodes_Lobatto; i++){
+  for (int i = 0; i < volume_nodes_lobatto; i++){
     u[i] = 1.;
-    dgmath_apply_curvedGaussMass(dgmath_jit_dbase, u, deg_Lobatto, jac_Gauss, deg_Gauss, dim, Mu);
-    linalg_set_column(M, Mu, i, volume_nodes_Lobatto, volume_nodes_Lobatto);
+    dgmath_apply_curved_mass_matrix(dgmath_jit_dbase, u, deg_lobatto, jac_quad, deg_quad, quad_type, dim, Mu);
+    linalg_set_column(M, Mu, i, volume_nodes_lobatto, volume_nodes_lobatto);
     u[i] = 0.;
   }
 
   P4EST_FREE(Mu);
   P4EST_FREE(u);
 }
-
-/* void dgmath_apply_hp_prolong(dgmath_jit_dbase_t* dgbase, double* in, int degH, */
-                             /* int dim, int* degh, double* out) { */
-
-/* void dgmath_apply_p_prolong(dgmath_jit_dbase_t* dgbase, double* in, int degH, */
-                            /* int dim, int degh, double* out) { */
-/* static double* dgmath_fetch_hp_prolong_transpose_1d(dgmath_jit_dbase_t* dgbase, */
-                                                    /* int degH, int degh) { */
-/* P will be \sum_i((degh_i+1)*(degH+1))^3 size */
-
-
 
 void dgmath_compute_prolong_matrix
 (
@@ -1278,15 +1163,16 @@ void dgmath_compute_PT_mat_P
   P4EST_FREE(P);
 }
 
-void dgmath_form_fofufofvlilj_matrix_Gaussnodes
+void dgmath_form_fofufofvlilj_matrix
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double* u,
  double* v,
- int deg_Lobatto,
- double* xyz_Gauss [(P4EST_DIM)],
- double* jac_Gauss,
- int deg_Gauss,
+ int deg_lobatto,
+ double* xyz_quad [(P4EST_DIM)],
+ double* jac_quad,
+ int deg_quad,
+ quadrature_type_t quad_type,
  int dim,
  double* out,
  grid_fcn_ext_t fofu_fcn,
@@ -1300,72 +1186,75 @@ void dgmath_form_fofufofvlilj_matrix_Gaussnodes
   if (fofv_fcn == NULL)
     fofv_fcn = identity_fcn;
   
-  double* u_Gauss = NULL;
-  double* v_Gauss = NULL;
+  double* u_quad = NULL;
+  double* v_quad = NULL;
 
-  int volume_nodes_Gauss = dgmath_get_nodes(dim, deg_Gauss);
+  int volume_nodes_quad = dgmath_get_nodes(dim, deg_quad);
   
   if (u != NULL){
-    u_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-    dgmath_interp_GLL_to_GL(dgmath_jit_dbase,u,deg_Lobatto,deg_Gauss,u_Gauss,dim);
+    u_quad = P4EST_ALLOC(double, volume_nodes_quad);
+    dgmath_interp(dgmath_jit_dbase, u, QUAD_LOBATTO, deg_lobatto, u_quad, quad_type, deg_quad, dim);
   }
   if (v != NULL){
-    v_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-    dgmath_interp_GLL_to_GL(dgmath_jit_dbase,v,deg_Lobatto,deg_Gauss,v_Gauss,dim);
+    v_quad = P4EST_ALLOC(double, volume_nodes_quad);
+    dgmath_interp(dgmath_jit_dbase, v, QUAD_LOBATTO, deg_lobatto, v_quad, quad_type, deg_quad, dim);
   }
   
-  double* fofu_fofv_jac = P4EST_ALLOC(double, volume_nodes_Gauss);
-  for (int i = 0; i < volume_nodes_Gauss; i++){
-    fofu_fofv_jac[i] = jac_Gauss[i];
+  double* fofu_fofv_jac = P4EST_ALLOC(double, volume_nodes_quad);
+  for (int i = 0; i < volume_nodes_quad; i++){
+    fofu_fofv_jac[i] = jac_quad[i];
     if (u != NULL || fofu_fcn != identity_fcn){
-      fofu_fofv_jac[i] *= fofu_fcn(xyz_Gauss[0][i],
-                                   xyz_Gauss[1][i],
+      fofu_fofv_jac[i] *= fofu_fcn(xyz_quad[0][i],
+                                   xyz_quad[1][i],
 #if (P4EST_DIM)==3
-                                   xyz_Gauss[2][i],
+                                   xyz_quad[2][i],
 #endif
-                                   (u != NULL) ? u_Gauss[i] : 0,
+                                   (u != NULL) ? u_quad[i] : 0,
                                    fofu_ctx);
     }
     if (v != NULL || fofv_fcn != identity_fcn){
-      fofu_fofv_jac[i] *= fofv_fcn(xyz_Gauss[0][i],
-                                   xyz_Gauss[1][i],
+      fofu_fofv_jac[i] *= fofv_fcn(xyz_quad[0][i],
+                                   xyz_quad[1][i],
 #if (P4EST_DIM)==3
-                                   xyz_Gauss[2][i],
+                                   xyz_quad[2][i],
 #endif
-                                   (v != NULL) ? v_Gauss[i] : 0,
+                                   (v != NULL) ? v_quad[i] : 0,
                                    fofv_ctx);
     }
   }
-  dgmath_compute_curvedGaussMass
+  
+  dgmath_compute_curved_mass_matrix
     (
      dgmath_jit_dbase,
-     deg_Lobatto,
-     deg_Gauss,
+     deg_lobatto,
+     deg_quad,
+     quad_type,
      dim,
      fofu_fofv_jac,
      out
     );
   
   if (u != NULL){
-    P4EST_FREE(u_Gauss);
+    P4EST_FREE(u_quad);
   }
   if (v != NULL){
-    P4EST_FREE(v_Gauss);
+    P4EST_FREE(v_quad);
   }
   
 }
 
 
-void dgmath_apply_fofufofvlilj_Gaussnodes
+void dgmath_apply_fofufofvlilj
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double* vec,
  double* u,
  double* v,
- int deg_Lobatto,
- double* jac_Gauss,
- double* xyz_Gauss [(P4EST_DIM)],
- int deg_Gauss,
+ int deg_lobatto,
+ double* jac_quad,
+ double* xyz_quad [(P4EST_DIM)],
+ int deg_quad,
+ quadrature_type_t quad_type,
  int dim,
  double* Mvec,
  grid_fcn_ext_t fofu_fcn,
@@ -1381,69 +1270,71 @@ void dgmath_apply_fofufofvlilj_Gaussnodes
     fofv_fcn = identity_fcn;
   }
   
-  double* u_Gauss = NULL;
-  double* v_Gauss = NULL;
+  double* u_quad = NULL;
+  double* v_quad = NULL;
 
-  int volume_nodes_Gauss = dgmath_get_nodes(dim, deg_Gauss);
+  int volume_nodes_quad = dgmath_get_nodes(dim, deg_quad);
   
   if (u != NULL){
-    u_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-    dgmath_interp_GLL_to_GL(dgmath_jit_dbase,u,deg_Lobatto,deg_Gauss,u_Gauss,dim);
+    u_quad = P4EST_ALLOC(double, volume_nodes_quad);
+    dgmath_interp(dgmath_jit_dbase, u, QUAD_LOBATTO, deg_lobatto, u_quad, quad_type, deg_quad, dim);
   }
   if (v != NULL){
-    v_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-    dgmath_interp_GLL_to_GL(dgmath_jit_dbase,v,deg_Lobatto,deg_Gauss,v_Gauss,dim);
+    v_quad = P4EST_ALLOC(double, volume_nodes_quad);
+    dgmath_interp(dgmath_jit_dbase, v, QUAD_LOBATTO, deg_lobatto, v_quad, quad_type, deg_quad, dim);
   }
   
-  double* fofu_fofv_jac = P4EST_ALLOC(double, volume_nodes_Gauss);
-  for (int i = 0; i < volume_nodes_Gauss; i++){
-    fofu_fofv_jac[i] = jac_Gauss[i];
+  double* fofu_fofv_jac = P4EST_ALLOC(double, volume_nodes_quad);
+  for (int i = 0; i < volume_nodes_quad; i++){
+    fofu_fofv_jac[i] = jac_quad[i];
     if (u != NULL || fofu_fcn != identity_fcn){
-      fofu_fofv_jac[i] *= fofu_fcn(xyz_Gauss[0][i],
-                                   xyz_Gauss[1][i],
+      fofu_fofv_jac[i] *= fofu_fcn(xyz_quad[0][i],
+                                   xyz_quad[1][i],
 #if (P4EST_DIM)==3
-                                   xyz_Gauss[2][i],
+                                   xyz_quad[2][i],
 #endif
-                                   (u != NULL) ? u_Gauss[i] : 0,
+                                   (u != NULL) ? u_quad[i] : 0,
                                    fofu_ctx);
     }
     if (v != NULL || fofv_fcn != identity_fcn){
-      fofu_fofv_jac[i] *= fofv_fcn(xyz_Gauss[0][i],
-                                   xyz_Gauss[1][i],
+      fofu_fofv_jac[i] *= fofv_fcn(xyz_quad[0][i],
+                                   xyz_quad[1][i],
 #if (P4EST_DIM)==3
-                                   xyz_Gauss[2][i],
+                                   xyz_quad[2][i],
 #endif
-                                   (v != NULL) ? v_Gauss[i] : 0,
+                                   (v != NULL) ? v_quad[i] : 0,
                                    fofv_ctx);
     }
   }
 
-  dgmath_apply_curvedGaussMass
+  dgmath_apply_curved_mass_matrix
     (
      dgmath_jit_dbase,
      vec,
-     deg_Lobatto,
+     deg_lobatto,
      fofu_fofv_jac,
-     deg_Gauss,
+     deg_quad,
+     quad_type,
      dim,
      Mvec
     );
   
-  P4EST_FREE(u_Gauss);
-  P4EST_FREE(v_Gauss);
+  P4EST_FREE(u_quad);
+  P4EST_FREE(v_quad);
   P4EST_FREE(fofu_fofv_jac);
   
 }
 
-void dgmath_apply_fofufofvlj_Gaussnodes
+void dgmath_apply_fofufofvlj
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double* u,
  double* v,
- int deg_Lobatto,
- double* jac_Gauss,
- double* xyz_Gauss [(P4EST_DIM)],
- int deg_Gauss,
+ int deg_lobatto,
+ double* jac_quad,
+ double* xyz_quad [(P4EST_DIM)],
+ int deg_quad,
+ quadrature_type_t quad_type,
  int dim,
  double* out,
  grid_fcn_ext_t fofu_fcn,
@@ -1459,288 +1350,289 @@ void dgmath_apply_fofufofvlj_Gaussnodes
     fofv_fcn = identity_fcn;
   }
   
-  double* u_Gauss = NULL;
-  double* v_Gauss = NULL;
+  double* u_quad = NULL;
+  double* v_quad = NULL;
 
-  int volume_nodes_Gauss = dgmath_get_nodes(dim, deg_Gauss);
+  int volume_nodes_quad = dgmath_get_nodes(dim, deg_quad);
   
   if (u != NULL){
-    u_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-    dgmath_interp_GLL_to_GL(dgmath_jit_dbase,u,deg_Lobatto,deg_Gauss,u_Gauss,dim);
+    u_quad = P4EST_ALLOC(double, volume_nodes_quad);
+    dgmath_interp(dgmath_jit_dbase, u, QUAD_LOBATTO, deg_lobatto, u_quad, quad_type, deg_quad, dim);
   }
   if (v != NULL){
-    v_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-    dgmath_interp_GLL_to_GL(dgmath_jit_dbase,v,deg_Lobatto,deg_Gauss,v_Gauss,dim);
+    v_quad = P4EST_ALLOC(double, volume_nodes_quad);
+    dgmath_interp(dgmath_jit_dbase, v, QUAD_LOBATTO, deg_lobatto, v_quad, quad_type, deg_quad, dim);
   }
   
-  double* fofu_fofv = P4EST_ALLOC(double, volume_nodes_Gauss);
-  for (int i = 0; i < volume_nodes_Gauss; i++){
+  double* fofu_fofv = P4EST_ALLOC(double, volume_nodes_quad);
+  for (int i = 0; i < volume_nodes_quad; i++){
     fofu_fofv[i] = 1.0;
     if (u != NULL || fofu_fcn != identity_fcn){
-      fofu_fofv[i] *= fofu_fcn(xyz_Gauss[0][i],
-                                   xyz_Gauss[1][i],
+      fofu_fofv[i] *= fofu_fcn(xyz_quad[0][i],
+                                   xyz_quad[1][i],
 #if (P4EST_DIM)==3
-                                   xyz_Gauss[2][i],
+                                   xyz_quad[2][i],
 #endif
-                                   (u != NULL) ? u_Gauss[i] : 0,
+                                   (u != NULL) ? u_quad[i] : 0,
                                    fofu_ctx);
-      /* printf("xyz_Gauss[0][i], xyz_Gauss[1][i], xyz_Gauss[2][i], fofu_fofv[i] = %f,%f,%f,%f\n",xyz_Gauss[0][i], xyz_Gauss[1][i], xyz_Gauss[2][i], fofu_fofv[i]); */
+      /* printf("xyz_quad[0][i], xyz_quad[1][i], xyz_quad[2][i], fofu_fofv[i] = %f,%f,%f,%f\n",xyz_quad[0][i], xyz_quad[1][i], xyz_quad[2][i], fofu_fofv[i]); */
     }
     if (v != NULL || fofv_fcn != identity_fcn){
-      fofu_fofv[i] *= fofv_fcn(xyz_Gauss[0][i],
-                                   xyz_Gauss[1][i],
+      fofu_fofv[i] *= fofv_fcn(xyz_quad[0][i],
+                                   xyz_quad[1][i],
 #if (P4EST_DIM)==3
-                                   xyz_Gauss[2][i],
+                                   xyz_quad[2][i],
 #endif
-                                   (v != NULL) ? v_Gauss[i] : 0,
+                                   (v != NULL) ? v_quad[i] : 0,
                                    fofv_ctx);
     }
 
   }
  
-  dgmath_apply_curvedGaussMass_onGaussNodeVec
+  dgmath_apply_curved_galerkin_integral
     (
      dgmath_jit_dbase,
      fofu_fofv,
-     deg_Lobatto,
-     jac_Gauss,
-     deg_Gauss,
+     deg_lobatto,
+     jac_quad,
+     deg_quad,
+     quad_type,
      dim,
      out
     );
 
-  /* DEBUG_PRINT_2ARR_DBL(fofu_fofv,jac_Gauss, dgmath_get_nodes((P4EST_DIM), deg_Gauss)); */
-  /* DEBUG_PRINT_ARR_DBL(out, dgmath_get_nodes((P4EST_DIM), deg_Lobatto)); */
+  /* DEBUG_PRINT_2ARR_DBL(fofu_fofv,jac_quad, dgmath_get_nodes((P4EST_DIM), deg_quad)); */
+  /* DEBUG_PRINT_ARR_DBL(out, dgmath_get_nodes((P4EST_DIM), deg_lobatto)); */
 
   
-  P4EST_FREE(u_Gauss);
-  P4EST_FREE(v_Gauss);
+  P4EST_FREE(u_quad);
+  P4EST_FREE(v_quad);
   P4EST_FREE(fofu_fofv);
   
 }
 
 
-void dgmath_apply_curvedInverseGaussMass
-(
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* in,
- int deg_Lobatto,
- double* jac_Gauss,
- int deg_Gauss,
- int dim,
- double* out
-){
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
-  int volume_nodes_Gauss = dgmath_get_nodes(dim, deg_Gauss);
+/* void dgmath_apply_curvedInverseGaussMass */
+/* ( */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  double* in, */
+/*  int deg_Lobatto, */
+/*  double* jac_Gauss, */
+/*  int deg_Gauss, */
+/*  int dim, */
+/*  double* out */
+/* ){ */
+/*   mpi_assert(dim == 1 || dim == 2 || dim == 3); */
+/*   int volume_nodes_Gauss = dgmath_get_nodes(dim, deg_Gauss); */
 
-  double* in_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-  double* one_over_w_j_in_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
+/*   double* in_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss); */
+/*   double* one_over_w_j_in_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss); */
   
-  double* Gauss_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_Gauss);
-  double* GLL_to_GL_interp_trans_inverse = dgmath_fetch_ref_GLL_to_GL_interp_trans_1d_inverse(dgmath_jit_dbase, deg_Lobatto, deg_Gauss);
-  double* GLL_to_GL_interp_inverse = dgmath_fetch_ref_GLL_to_GL_interp_1d_inverse(dgmath_jit_dbase, deg_Lobatto, deg_Gauss);
+/*   double* Gauss_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_Gauss); */
+/*   double* GLL_to_GL_interp_trans_inverse = dgmath_fetch_ref_GLL_to_GL_interp_trans_1d_inverse(dgmath_jit_dbase, deg_Lobatto, deg_Gauss); */
+/*   double* GLL_to_GL_interp_inverse = dgmath_fetch_ref_GLL_to_GL_interp_1d_inverse(dgmath_jit_dbase, deg_Lobatto, deg_Gauss); */
   
-  int nodes_Lobatto = deg_Lobatto + 1;
-  int nodes_Gauss = deg_Gauss + 1;
+/*   int nodes_Lobatto = deg_Lobatto + 1; */
+/*   int nodes_Gauss = deg_Gauss + 1; */
   
-  if (dim == 1){
-    linalg_matvec_plus_vec(1.0, GLL_to_GL_interp_trans_inverse, in, 0., in_Gauss, nodes_Gauss, nodes_Lobatto);
-    linalg_kron_oneover_vec_dot_oneover_x_dot_y(Gauss_weights, jac_Gauss, in_Gauss, nodes_Gauss, one_over_w_j_in_Gauss);
-    linalg_matvec_plus_vec(1.0, GLL_to_GL_interp_inverse, one_over_w_j_in_Gauss, 0., out, nodes_Lobatto, nodes_Gauss);
-  }
+/*   if (dim == 1){ */
+/*     linalg_matvec_plus_vec(1.0, GLL_to_GL_interp_trans_inverse, in, 0., in_Gauss, nodes_Gauss, nodes_Lobatto); */
+/*     linalg_kron_oneover_vec_dot_oneover_x_dot_y(Gauss_weights, jac_Gauss, in_Gauss, nodes_Gauss, one_over_w_j_in_Gauss); */
+/*     linalg_matvec_plus_vec(1.0, GLL_to_GL_interp_inverse, one_over_w_j_in_Gauss, 0., out, nodes_Lobatto, nodes_Gauss); */
+/*   } */
   
-  else if (dim == 2){
-    linalg_kron_A1A2x_NONSQR
-      (
-       in_Gauss,
-       GLL_to_GL_interp_trans_inverse,
-       GLL_to_GL_interp_trans_inverse,
-       in,
-       nodes_Gauss,
-       nodes_Lobatto,
-       nodes_Gauss,
-       nodes_Lobatto
-      );
+/*   else if (dim == 2){ */
+/*     linalg_kron_A1A2x_NONSQR */
+/*       ( */
+/*        in_Gauss, */
+/*        GLL_to_GL_interp_trans_inverse, */
+/*        GLL_to_GL_interp_trans_inverse, */
+/*        in, */
+/*        nodes_Gauss, */
+/*        nodes_Lobatto, */
+/*        nodes_Gauss, */
+/*        nodes_Lobatto */
+/*       ); */
     
-    linalg_kron_oneover_vec_o_vec_dot_oneover_x_dot_y
-      (
-       Gauss_weights,
-       jac_Gauss,
-       in_Gauss,
-       nodes_Gauss,
-       one_over_w_j_in_Gauss
-      );
+/*     linalg_kron_oneover_vec_o_vec_dot_oneover_x_dot_y */
+/*       ( */
+/*        Gauss_weights, */
+/*        jac_Gauss, */
+/*        in_Gauss, */
+/*        nodes_Gauss, */
+/*        one_over_w_j_in_Gauss */
+/*       ); */
     
-    linalg_kron_A1A2x_NONSQR
-      (
-       out,
-       GLL_to_GL_interp_inverse,
-       GLL_to_GL_interp_inverse,
-       one_over_w_j_in_Gauss,
-       nodes_Lobatto,
-       nodes_Gauss,
-       nodes_Lobatto,
-       nodes_Gauss
-      );
-  }
+/*     linalg_kron_A1A2x_NONSQR */
+/*       ( */
+/*        out, */
+/*        GLL_to_GL_interp_inverse, */
+/*        GLL_to_GL_interp_inverse, */
+/*        one_over_w_j_in_Gauss, */
+/*        nodes_Lobatto, */
+/*        nodes_Gauss, */
+/*        nodes_Lobatto, */
+/*        nodes_Gauss */
+/*       ); */
+/*   } */
   
-  else if (dim == 3) {
-    linalg_kron_A1A2A3x_NONSQR(
-                               in_Gauss,
-                               GLL_to_GL_interp_trans_inverse,
-                               GLL_to_GL_interp_trans_inverse,
-                               GLL_to_GL_interp_trans_inverse,
-                               in,
-                               nodes_Gauss,
-                               nodes_Lobatto,
-                               nodes_Gauss,
-                               nodes_Lobatto,
-                               nodes_Gauss,
-                               nodes_Lobatto
-                              );
+/*   else if (dim == 3) { */
+/*     linalg_kron_A1A2A3x_NONSQR( */
+/*                                in_Gauss, */
+/*                                GLL_to_GL_interp_trans_inverse, */
+/*                                GLL_to_GL_interp_trans_inverse, */
+/*                                GLL_to_GL_interp_trans_inverse, */
+/*                                in, */
+/*                                nodes_Gauss, */
+/*                                nodes_Lobatto, */
+/*                                nodes_Gauss, */
+/*                                nodes_Lobatto, */
+/*                                nodes_Gauss, */
+/*                                nodes_Lobatto */
+/*                               ); */
     
-    linalg_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y
-      (
-       Gauss_weights,
-       jac_Gauss,
-       in_Gauss,
-       nodes_Gauss,
-       one_over_w_j_in_Gauss
-      );
+/*     linalg_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y */
+/*       ( */
+/*        Gauss_weights, */
+/*        jac_Gauss, */
+/*        in_Gauss, */
+/*        nodes_Gauss, */
+/*        one_over_w_j_in_Gauss */
+/*       ); */
     
-    linalg_kron_A1A2A3x_NONSQR(
-                               out,
-                               GLL_to_GL_interp_inverse,
-                               GLL_to_GL_interp_inverse,
-                               GLL_to_GL_interp_inverse,
-                               one_over_w_j_in_Gauss,
-                               nodes_Lobatto,
-                               nodes_Gauss,
-                               nodes_Lobatto,
-                               nodes_Gauss,
-                               nodes_Lobatto,
-                               nodes_Gauss
-                              );
-  } else {
-    P4EST_FREE(one_over_w_j_in_Gauss);
-    P4EST_FREE(in_Gauss);
-    mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
-  }  
-  P4EST_FREE(one_over_w_j_in_Gauss);
-  P4EST_FREE(in_Gauss);
-}
+/*     linalg_kron_A1A2A3x_NONSQR( */
+/*                                out, */
+/*                                GLL_to_GL_interp_inverse, */
+/*                                GLL_to_GL_interp_inverse, */
+/*                                GLL_to_GL_interp_inverse, */
+/*                                one_over_w_j_in_Gauss, */
+/*                                nodes_Lobatto, */
+/*                                nodes_Gauss, */
+/*                                nodes_Lobatto, */
+/*                                nodes_Gauss, */
+/*                                nodes_Lobatto, */
+/*                                nodes_Gauss */
+/*                               ); */
+/*   } else { */
+/*     P4EST_FREE(one_over_w_j_in_Gauss); */
+/*     P4EST_FREE(in_Gauss); */
+/*     mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension."); */
+/*   }   */
+/*   P4EST_FREE(one_over_w_j_in_Gauss); */
+/*   P4EST_FREE(in_Gauss); */
+/* } */
 
 
 
-void dgmath_apply_curvedInverseLobattoMass
-(
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- double* in,
- int deg_Lobatto,
- double* jac_Lobatto_integ,
- int deg_Lobatto_integ,
- int dim,
- double* out
-){
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
-  int volume_nodes_Lobatto_integ = dgmath_get_nodes(dim, deg_Lobatto_integ);
+/* void dgmath_apply_curvedInverseLobattoMass */
+/* ( */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  double* in, */
+/*  int deg_Lobatto, */
+/*  double* jac_Lobatto_integ, */
+/*  int deg_Lobatto_integ, */
+/*  int dim, */
+/*  double* out */
+/* ){ */
+/*   mpi_assert(dim == 1 || dim == 2 || dim == 3); */
+/*   int volume_nodes_Lobatto_integ = dgmath_get_nodes(dim, deg_Lobatto_integ); */
 
-  double* in_Lobatto_integ = P4EST_ALLOC(double, volume_nodes_Lobatto_integ);
-  double* one_over_w_j_in_Lobatto_integ = P4EST_ALLOC(double, volume_nodes_Lobatto_integ);
+/*   double* in_Lobatto_integ = P4EST_ALLOC(double, volume_nodes_Lobatto_integ); */
+/*   double* one_over_w_j_in_Lobatto_integ = P4EST_ALLOC(double, volume_nodes_Lobatto_integ); */
   
-  double* Lobatto_integ_weights = dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase, deg_Lobatto_integ);
-  double* p_prolong_trans_inverse = dgmath_fetch_p_prolong_transpose_1d_inverse(dgmath_jit_dbase, deg_Lobatto, deg_Lobatto_integ);
-  double* p_prolong_inverse = dgmath_fetch_p_prolong_1d_inverse(dgmath_jit_dbase, deg_Lobatto, deg_Lobatto_integ);
+/*   double* Lobatto_integ_weights = dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase, deg_Lobatto_integ); */
+/*   double* p_prolong_trans_inverse = dgmath_fetch_p_prolong_transpose_1d_inverse(dgmath_jit_dbase, deg_Lobatto, deg_Lobatto_integ); */
+/*   double* p_prolong_inverse = dgmath_fetch_p_prolong_1d_inverse(dgmath_jit_dbase, deg_Lobatto, deg_Lobatto_integ); */
   
-  int nodes_Lobatto = deg_Lobatto + 1;
-  int nodes_Lobatto_integ = deg_Lobatto_integ + 1;
+/*   int nodes_Lobatto = deg_Lobatto + 1; */
+/*   int nodes_Lobatto_integ = deg_Lobatto_integ + 1; */
   
-  if (dim == 1){
-    linalg_matvec_plus_vec(1.0, p_prolong_trans_inverse, in, 0., in_Lobatto_integ, nodes_Lobatto_integ, nodes_Lobatto);
-    linalg_kron_oneover_vec_dot_oneover_x_dot_y(Lobatto_integ_weights, jac_Lobatto_integ, in_Lobatto_integ, nodes_Lobatto_integ, one_over_w_j_in_Lobatto_integ);
-    linalg_matvec_plus_vec(1.0, p_prolong_inverse, one_over_w_j_in_Lobatto_integ, 0., out, nodes_Lobatto, nodes_Lobatto_integ);
-  }
+/*   if (dim == 1){ */
+/*     linalg_matvec_plus_vec(1.0, p_prolong_trans_inverse, in, 0., in_Lobatto_integ, nodes_Lobatto_integ, nodes_Lobatto); */
+/*     linalg_kron_oneover_vec_dot_oneover_x_dot_y(Lobatto_integ_weights, jac_Lobatto_integ, in_Lobatto_integ, nodes_Lobatto_integ, one_over_w_j_in_Lobatto_integ); */
+/*     linalg_matvec_plus_vec(1.0, p_prolong_inverse, one_over_w_j_in_Lobatto_integ, 0., out, nodes_Lobatto, nodes_Lobatto_integ); */
+/*   } */
   
-  else if (dim == 2){
-    linalg_kron_A1A2x_NONSQR
-      (
-       in_Lobatto_integ,
-       p_prolong_trans_inverse,
-       p_prolong_trans_inverse,
-       in,
-       nodes_Lobatto_integ,
-       nodes_Lobatto,
-       nodes_Lobatto_integ,
-       nodes_Lobatto
-      );
+/*   else if (dim == 2){ */
+/*     linalg_kron_A1A2x_NONSQR */
+/*       ( */
+/*        in_Lobatto_integ, */
+/*        p_prolong_trans_inverse, */
+/*        p_prolong_trans_inverse, */
+/*        in, */
+/*        nodes_Lobatto_integ, */
+/*        nodes_Lobatto, */
+/*        nodes_Lobatto_integ, */
+/*        nodes_Lobatto */
+/*       ); */
     
-    linalg_kron_oneover_vec_o_vec_dot_oneover_x_dot_y
-      (
-       Lobatto_integ_weights,
-       jac_Lobatto_integ,
-       in_Lobatto_integ,
-       nodes_Lobatto_integ,
-       one_over_w_j_in_Lobatto_integ
-      );
+/*     linalg_kron_oneover_vec_o_vec_dot_oneover_x_dot_y */
+/*       ( */
+/*        Lobatto_integ_weights, */
+/*        jac_Lobatto_integ, */
+/*        in_Lobatto_integ, */
+/*        nodes_Lobatto_integ, */
+/*        one_over_w_j_in_Lobatto_integ */
+/*       ); */
     
-    linalg_kron_A1A2x_NONSQR
-      (
-       out,
-       p_prolong_inverse,
-       p_prolong_inverse,
-       one_over_w_j_in_Lobatto_integ,
-       nodes_Lobatto,
-       nodes_Lobatto_integ,
-       nodes_Lobatto,
-       nodes_Lobatto_integ
-      );
-  }
+/*     linalg_kron_A1A2x_NONSQR */
+/*       ( */
+/*        out, */
+/*        p_prolong_inverse, */
+/*        p_prolong_inverse, */
+/*        one_over_w_j_in_Lobatto_integ, */
+/*        nodes_Lobatto, */
+/*        nodes_Lobatto_integ, */
+/*        nodes_Lobatto, */
+/*        nodes_Lobatto_integ */
+/*       ); */
+/*   } */
   
-  else if (dim == 3) {
-    linalg_kron_A1A2A3x_NONSQR(
-                               in_Lobatto_integ,
-                               p_prolong_trans_inverse,
-                               p_prolong_trans_inverse,
-                               p_prolong_trans_inverse,
-                               in,
-                               nodes_Lobatto_integ,
-                               nodes_Lobatto,
-                               nodes_Lobatto_integ,
-                               nodes_Lobatto,
-                               nodes_Lobatto_integ,
-                               nodes_Lobatto
-                              );
+/*   else if (dim == 3) { */
+/*     linalg_kron_A1A2A3x_NONSQR( */
+/*                                in_Lobatto_integ, */
+/*                                p_prolong_trans_inverse, */
+/*                                p_prolong_trans_inverse, */
+/*                                p_prolong_trans_inverse, */
+/*                                in, */
+/*                                nodes_Lobatto_integ, */
+/*                                nodes_Lobatto, */
+/*                                nodes_Lobatto_integ, */
+/*                                nodes_Lobatto, */
+/*                                nodes_Lobatto_integ, */
+/*                                nodes_Lobatto */
+/*                               ); */
     
-    linalg_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y
-      (
-       Lobatto_integ_weights,
-       jac_Lobatto_integ,
-       in_Lobatto_integ,
-       nodes_Lobatto_integ,
-       one_over_w_j_in_Lobatto_integ
-      );
+/*     linalg_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y */
+/*       ( */
+/*        Lobatto_integ_weights, */
+/*        jac_Lobatto_integ, */
+/*        in_Lobatto_integ, */
+/*        nodes_Lobatto_integ, */
+/*        one_over_w_j_in_Lobatto_integ */
+/*       ); */
     
-    linalg_kron_A1A2A3x_NONSQR(
-                               out,
-                               p_prolong_inverse,
-                               p_prolong_inverse,
-                               p_prolong_inverse,
-                               one_over_w_j_in_Lobatto_integ,
-                               nodes_Lobatto,
-                               nodes_Lobatto_integ,
-                               nodes_Lobatto,
-                               nodes_Lobatto_integ,
-                               nodes_Lobatto,
-                               nodes_Lobatto_integ
-                              );
-  } else {
-    P4EST_FREE(one_over_w_j_in_Lobatto_integ);
-    P4EST_FREE(in_Lobatto_integ);
-    mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
-  }  
-  P4EST_FREE(one_over_w_j_in_Lobatto_integ);
-  P4EST_FREE(in_Lobatto_integ);
-}
+/*     linalg_kron_A1A2A3x_NONSQR( */
+/*                                out, */
+/*                                p_prolong_inverse, */
+/*                                p_prolong_inverse, */
+/*                                p_prolong_inverse, */
+/*                                one_over_w_j_in_Lobatto_integ, */
+/*                                nodes_Lobatto, */
+/*                                nodes_Lobatto_integ, */
+/*                                nodes_Lobatto, */
+/*                                nodes_Lobatto_integ, */
+/*                                nodes_Lobatto, */
+/*                                nodes_Lobatto_integ */
+/*                               ); */
+/*   } else { */
+/*     P4EST_FREE(one_over_w_j_in_Lobatto_integ); */
+/*     P4EST_FREE(in_Lobatto_integ); */
+/*     mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension."); */
+/*   }   */
+/*   P4EST_FREE(one_over_w_j_in_Lobatto_integ); */
+/*   P4EST_FREE(in_Lobatto_integ); */
+/* } */
 
 
 /* void dgmath_interp_to_GL_nodes */
@@ -4184,7 +4076,7 @@ dgmath_get_rst_points
   dgmath_rst_t rst;
   double* rsttmp [3] = {NULL};
   
-  if (type == GAUSS){
+  if (type == QUAD_GAUSS){
     for (int d = 0; d < dim; d++){
       rsttmp[d] = dgmath_fetch_Gauss_xyz_nd
                   (
@@ -4195,7 +4087,7 @@ dgmath_get_rst_points
                   );
     }
   }
-  else if (type == LOBATTO) {
+  else if (type == QUAD_LOBATTO) {
     for (int d = 0; d < dim; d++){
       rsttmp[d] = dgmath_fetch_xyz_nd
                   (
@@ -4454,58 +4346,68 @@ void dgmath_convert_nodal_to_vtk
 }
 
 /* Computes \sum w_i u_i v_i */
-double dgmath_Gauss_quadrature
+double dgmath_quadrature
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double* u,
  double* v,
- double* jac_GL,
- int deg_GL,
+ double* jac_quad,
+ int deg_quad,
+ quadrature_type_t quad_type,
  int dim
 )
 {
   mpi_assert(u != NULL);
-  int volume_nodes_GL = dgmath_get_nodes(dim, deg_GL);
-  double* integ_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_GL);
-  double* wuv = P4EST_ALLOC(double, volume_nodes_GL);
+  int volume_nodes_quad = dgmath_get_nodes(dim, deg_quad);
+  double* quad_weights;
+  if (quad_type == QUAD_GAUSS){
+    quad_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, deg_quad);
+  }
+  else if (quad_type == QUAD_LOBATTO){
+    quad_weights = dgmath_fetch_GLL_weights_1d(dgmath_jit_dbase, deg_quad);
+  }
+  else {
+    mpi_abort("[D4EST_ERROR]: This quadrature type is not support\n");
+  }
+  double* wuv = P4EST_ALLOC(double, volume_nodes_quad);
   double wdotuv = 0.;
 
   if (dim == 3){
     if (v != NULL){
-      linalg_kron_vec_o_vec_o_vec_dot_xy(integ_weights, u, v, deg_GL + 1, wuv);
+      linalg_kron_vec_o_vec_o_vec_dot_xy(quad_weights, u, v, deg_quad + 1, wuv);
     }
     else {
-      linalg_kron_vec_o_vec_o_vec_dot_x(integ_weights, u, deg_GL + 1, wuv);
+      linalg_kron_vec_o_vec_o_vec_dot_x(quad_weights, u, deg_quad + 1, wuv);
     }
   }
   else if (dim == 2){
     if (v != NULL){
-      linalg_kron_vec_o_vec_dot_xy(integ_weights, u, v, deg_GL + 1, wuv);
+      linalg_kron_vec_o_vec_dot_xy(quad_weights, u, v, deg_quad + 1, wuv);
     }
     else {
-      linalg_kron_vec_o_vec_dot_x(integ_weights, u, deg_GL + 1, wuv);
+      linalg_kron_vec_o_vec_dot_x(quad_weights, u, deg_quad + 1, wuv);
     }
   }
   else if (dim == 1){
     if (v != NULL){
-      linalg_kron_vec_dot_xy(integ_weights, u, v, deg_GL + 1, wuv);
+      linalg_kron_vec_dot_xy(quad_weights, u, v, deg_quad + 1, wuv);
     }
     else {
-      linalg_kron_vec_dot_x(integ_weights, u, deg_GL + 1, wuv);
+      linalg_kron_vec_dot_x(quad_weights, u, deg_quad + 1, wuv);
     }
   }
   else {
     mpi_abort("dim must be 1,2,3");
   }
 
-  if (jac_GL == NULL){
-    for (int i = 0; i < volume_nodes_GL; i++){
+  if (jac_quad == NULL){
+    for (int i = 0; i < volume_nodes_quad; i++){
       wdotuv += wuv[i];
     }
   }
   else {
-    for (int i = 0; i < volume_nodes_GL; i++){
-      wdotuv += jac_GL[i]*wuv[i];
+    for (int i = 0; i < volume_nodes_quad; i++){
+      wdotuv += jac_quad[i]*wuv[i];
     }
   }
   P4EST_FREE(wuv);
@@ -4549,3 +4451,48 @@ double* dgmath_fetch_vtk_rst
   }
 }
 
+
+void
+dgmath_compute_derivative_on_quadrature_points
+(
+ double* vec,
+ double* rst_xyz_quad [(P4EST_DIM)][(P4EST_DIM)],
+ double* dvec [(P4EST_DIM)],
+ int deg_lobatto,
+ int deg_quad,
+ quadrature_type_t quad_type,
+ dgmath_jit_dbase_t* dgmath_jit_dbase
+)
+{
+
+  int volume_nodes_quad = dgmath_get_nodes((P4EST_DIM), deg_quad);
+  int volume_nodes_lobatto = dgmath_get_nodes((P4EST_DIM), deg_lobatto);
+
+  double* dvec_di_prolonged = P4EST_ALLOC(double, volume_nodes_quad);
+  double* dvec_di_quad = P4EST_ALLOC(double, volume_nodes_quad);
+  double* dvec_di_lobatto = P4EST_ALLOC(double, volume_nodes_lobatto);
+
+  for (int j = 0; j < (P4EST_DIM); j++){
+    for (int k = 0; k < volume_nodes_quad; k++){
+      dvec[j][k] = 0.;
+    }
+  }
+  
+  for (int i = 0; i < (P4EST_DIM); i++){
+
+    dgmath_apply_Dij(dgmath_jit_dbase, vec, (P4EST_DIM), deg_lobatto, i, dvec_di_lobatto);
+
+    dgmath_interp(dgmath_jit_dbase, dvec_di_lobatto, QUAD_LOBATTO,
+                  deg_lobatto, dvec_di_quad, quad_type, deg_quad, (P4EST_DIM));
+
+    for (int j = 0; j < (P4EST_DIM); j++){
+      for (int k = 0; k < volume_nodes_quad; k++){
+       dvec[j][k] += rst_xyz_quad[i][j][k]*dvec_di_quad[k];
+      }
+    }
+  }
+
+  P4EST_FREE(dvec_di_prolonged);
+  P4EST_FREE(dvec_di_quad);
+  P4EST_FREE(dvec_di_lobatto);
+}

@@ -148,6 +148,7 @@ curved_bi_estimator_compute
      vecs->Au,
      vecs->local_nodes,
      dgmath_jit_dbase,
+     geom->geom_quad_type,
      STORE_LOCALLY
     );
   /* curved_element_data_print_local_estimator(p4est); */

@@ -19,6 +19,7 @@ typedef struct {
 
   const char* input_section;
   char* name;
+  quadrature_type_t geom_quad_type;
   geometric_quantity_compute_method_t DX_compute_method;
   geometric_quantity_compute_method_t JAC_compute_method;
   
@@ -51,13 +52,25 @@ int d4est_geometry_input_handler
       printf("[D4EST_ERROR]: You tried to use %s as a mapping type\n", value);
       mpi_abort("[D4EST_ERROR]: This mapping is not supported");
     }
-  }
+  } 
   else if (util_match_couple(section,pconfig->input_section,name,"JAC_compute_method")) {
     if(util_match(value, "numerical")){
       pconfig->JAC_compute_method = GEOM_COMPUTE_NUMERICAL;
     }
     else if (util_match(value, "analytic")){
       pconfig->JAC_compute_method = GEOM_COMPUTE_ANALYTIC;
+    }
+    else {
+      printf("[D4EST_ERROR]: You tried to use %s as a mapping type\n", value);
+      mpi_abort("[D4EST_ERROR]: This mapping is not supported");
+    }
+  }
+  else if (util_match_couple(section,pconfig->input_section,name,"geom_quad_type")) {
+    if(util_match(value, "Gauss")){
+      pconfig->geom_quad_type = QUAD_GAUSS;
+    }
+    else if (util_match(value, "Lobatto")){
+      pconfig->geom_quad_type = QUAD_LOBATTO;
     }
     else {
       printf("[D4EST_ERROR]: You tried to use %s as a mapping type\n", value);
@@ -85,6 +98,7 @@ d4est_geometry_input
   input.name = NULL;
   input.DX_compute_method = GEOM_COMPUTE_NOT_SET;
   input.JAC_compute_method = GEOM_COMPUTE_NOT_SET;
+  input.geom_quad_type = QUAD_NOT_SET;
   
   if (ini_parse(input_file, d4est_geometry_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
@@ -93,13 +107,22 @@ d4est_geometry_input
   D4EST_CHECK_INPUT(input_section, input.name, NULL);
   D4EST_CHECK_INPUT(input_section, input.DX_compute_method, GEOM_COMPUTE_NOT_SET);
   D4EST_CHECK_INPUT(input_section, input.JAC_compute_method, GEOM_COMPUTE_NOT_SET);
+  D4EST_CHECK_INPUT(input_section, input.geom_quad_type, QUAD_NOT_SET);
  
   printf("%s: Loading %s geometry\n", printf_prefix, input.name);
   if (input.DX_compute_method == GEOM_COMPUTE_NUMERICAL)
     printf("%s: Dx computation method = %s\n", printf_prefix, "numerical");
   if (input.DX_compute_method == GEOM_COMPUTE_ANALYTIC)
     printf("%s: Dx computation method = %s\n", printf_prefix, "analytic");
-
+  if (input.JAC_compute_method == GEOM_COMPUTE_NUMERICAL)
+    printf("%s: JAC computation method = %s\n", printf_prefix, "numerical");
+  if (input.JAC_compute_method == GEOM_COMPUTE_ANALYTIC)
+    printf("%s: JAC computation method = %s\n", printf_prefix, "analytic");
+  if (input.geom_quad_type == QUAD_GAUSS)
+    printf("%s: geometric quadrature type = %s\n", printf_prefix, "Gauss");
+  if (input.geom_quad_type == QUAD_LOBATTO)
+    printf("%s: geometric quadrature type = %s\n", printf_prefix, "Lobatto");
+  
   return input;
 }
 
@@ -115,6 +138,7 @@ d4est_geometry_new(int mpirank,
   d4est_geometry_t* d4est_geom = P4EST_ALLOC(d4est_geometry_t, 1);
   d4est_geom->DX_compute_method = input.DX_compute_method;
   d4est_geom->JAC_compute_method = input.JAC_compute_method;
+  d4est_geom->geom_quad_type = input.geom_quad_type;
   
 #if (P4EST_DIM)==3
   if (util_match(input.name,"cubed_sphere")) {
@@ -463,7 +487,7 @@ d4est_geometry_compute_dxyz_drst_isoparametric
   double abc [(P4EST_DIM)];
 
   dgmath_rst_t rst_points
-    = dgmath_get_rst_points(dgmath_jit_dbase, deg, (P4EST_DIM), LOBATTO);
+    = dgmath_get_rst_points(dgmath_jit_dbase, deg, (P4EST_DIM), QUAD_LOBATTO);
   
   for (int i = 0; i < volume_nodes; i++){
     rst[0] = rst_points.r[i];
@@ -486,10 +510,10 @@ d4est_geometry_compute_dxyz_drst_isoparametric
     }
   }
 
-  if (quad_type == GAUSS){
+  if (quad_type == QUAD_GAUSS){
     for (int d = 0; d < (P4EST_DIM); d++){
       for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-        dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &dxyz_drst[d][d1][0], deg, deg, tmp, (P4EST_DIM));
+        dgmath_interp_Lobatto_to_Gauss(dgmath_jit_dbase, &dxyz_drst[d][d1][0], deg, deg, tmp, (P4EST_DIM));
         linalg_copy_1st_to_2nd(tmp, &dxyz_drst[d][d1][0], volume_nodes);
       }
     }
@@ -737,13 +761,13 @@ d4est_geometry_compute_dxyz_drst_face_isoparametric
      q0,
      dq,
      deg,
-     LOBATTO,
+     QUAD_LOBATTO,
      d4est_geom,
      dgmath_jit_dbase,
      dxyz_drst_volume
     );
 
-  if (quad_type == GAUSS){
+  if (quad_type == QUAD_GAUSS){
 
     double* temp = P4EST_ALLOC(double, face_nodes);
     for (int i = 0; i < (P4EST_DIM); i++){
@@ -755,7 +779,7 @@ d4est_geometry_compute_dxyz_drst_face_isoparametric
                             deg,
                             temp);
       
-        dgmath_interp_GLL_to_GL
+        dgmath_interp_Lobatto_to_Gauss
           (
            dgmath_jit_dbase,
            temp,
@@ -768,7 +792,7 @@ d4est_geometry_compute_dxyz_drst_face_isoparametric
     }
     P4EST_FREE(temp);
   }
-  else if (quad_type == LOBATTO){
+  else if (quad_type == QUAD_LOBATTO){
     for (int i = 0; i < (P4EST_DIM); i++){
       for (int j = 0; j < (P4EST_DIM); j++){
         dgmath_apply_slicer(dgmath_jit_dbase,
@@ -1365,7 +1389,7 @@ d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
         dxda[d][dir] = P4EST_ALLOC(double, face_mortar_nodes);
     }
      
-    rst_points = dgmath_get_rst_points(dgmath_jit_dbase, deg_mortar[face_mortar], (P4EST_DIM)-1, LOBATTO);
+    rst_points = dgmath_get_rst_points(dgmath_jit_dbase, deg_mortar[face_mortar], (P4EST_DIM)-1, QUAD_LOBATTO);
       
     for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){
       if (dir == 0)
@@ -1409,14 +1433,14 @@ d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY
         }
       }
 
-    if (quad_type == GAUSS){
+    if (quad_type == QUAD_GAUSS){
       for (int d = 0; d < (P4EST_DIM); d++){
         if (xyz[0] != NULL){
-          dgmath_interp_GLL_to_GL(dgmath_jit_dbase, xyz[d], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1);
+          dgmath_interp_Lobatto_to_Gauss(dgmath_jit_dbase, xyz[d], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1);
           linalg_copy_1st_to_2nd(tmp, xyz[d], face_mortar_nodes);
         }
         for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){
-          dgmath_interp_GLL_to_GL(dgmath_jit_dbase, dxda[d][dir], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1);
+          dgmath_interp_Lobatto_to_Gauss(dgmath_jit_dbase, dxda[d][dir], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1);
           linalg_copy_1st_to_2nd(tmp, dxda[d][dir], face_mortar_nodes);
         }
       }

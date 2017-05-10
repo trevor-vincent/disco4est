@@ -67,46 +67,30 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
 )
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data;
+  curved_element_data_t* element_data = q->p.user_data;
 
-  curved_poisson_operator_primal_user_data_t* curved_poisson_operator_primal_user_data = (curved_poisson_operator_primal_user_data_t*) user_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = (dgmath_jit_dbase_t*) curved_poisson_operator_primal_user_data->dgmath_jit_dbase;
+  curved_poisson_operator_primal_user_data_t* curved_poisson_operator_primal_user_data =  user_data;
+  dgmath_jit_dbase_t* dgmath_jit_dbase = curved_poisson_operator_primal_user_data->dgmath_jit_dbase;
+  d4est_geometry_t* d4est_geom = curved_poisson_operator_primal_user_data->d4est_geom;
 
   
   int dim = (P4EST_DIM);
-  /* int deg = element_data->deg; */
-  int faces = 2*dim;
-  /* int face_nodes_Gauss = dgmath_get_nodes(dim-1,element_data->deg_integ); */
-  int face_nodes_Lobatto = dgmath_get_nodes(dim-1,element_data->deg);
-  int volume_nodes_Gauss = dgmath_get_nodes(dim,element_data->deg_integ);
   int volume_nodes_Lobatto = dgmath_get_nodes(dim,element_data->deg);
 
   double* stiff_u = P4EST_ALLOC(double, volume_nodes_Lobatto);
 
-  /* dgmath_apply_curvedGaussStiff */
-  /*   ( */
-  /*    dgmath_jit_dbase, */
-  /*    &element_data->u_storage[0], */
-  /*    element_data->deg, */
-  /*    element_data->J_integ, */
-  /*    element_data->rst_xyz_integ, */
-  /*    element_data->deg_stiffness, */
-  /*    (P4EST_DIM), */
-  /*    stiff_u */
-  /*   ); */
-
-  curved_element_data_apply_curvedGaussStiff
+  curved_element_data_apply_curved_stiffness_matrix
     (
      dgmath_jit_dbase,
      curved_poisson_operator_primal_user_data->d4est_geom,
      element_data,
+     d4est_geom->geom_quad_type,
      &element_data->u_storage[0],
      stiff_u
     );
   
   for (int i = 0; i < volume_nodes_Lobatto; i++){
     element_data->Au_elem[i] += stiff_u[i];
-    /* printf("blah\n"); */
   }
 
  

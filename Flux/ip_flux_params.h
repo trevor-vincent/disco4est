@@ -13,7 +13,7 @@ typedef double
  double //penalty prefactor
 );
 
-typedef enum { BC_EVAL_ON_GAUSS_POINTS, BC_EVAL_ON_LOBATTO_POINTS, BC_EVAL_NOTSET} bc_eval_t;
+typedef enum { BC_EVAL_ON_QUADRATURE_POINTS, BC_EVAL_ON_LOBATTO_POINTS, BC_EVAL_NOTSET} bc_eval_t;
 typedef enum { H_EQ_J_DIV_SJ, H_EQ_J_DIV_SJ_MIN, H_EQ_VOLUME_DIV_AREA, H_EQ_NOTSET } h_calc_method_t;
 
 typedef struct {
@@ -30,8 +30,8 @@ typedef struct {
   h_calc_method_t ip_flux_h_calc;
 
   /* Evaluate boundary function on */
-  /* 1. BC_EVAL_ON_GAUSS_POINTS -----> Gauss integration points */
-  /* 2. BC_EVAL_ON_LOBATTO_POINTS -----> Lobatto points and then interpolate to Gauss points */
+  /* 1. BC_EVAL_ON_QUADRATURE_POINTS -----> Quadrature points */
+  /* 2. BC_EVAL_ON_LOBATTO_POINTS -----> Lobatto points and then interpolate to Quadrature points */
   bc_eval_t ip_flux_bc_eval;
 
   char name [50];
