@@ -1,34 +1,36 @@
 [p4est]
 min_quadrants = -1
-min_level = 0
+min_level = 3
 fill_uniform = 1
 
 [ip_flux_params]
 name = kronbichler
-ip_flux_penalty_prefactor = 10.0
-ip_flux_bc_eval = BC_EVAL_ON_GAUSS_POINTS
-ip_flux_h_calc = H_EQ_VOLUME_DIV_AREA
+ip_flux_penalty_prefactor = 2.0
+ip_flux_bc_eval = BC_EVAL_ON_LOBATTO_POINTS
+ip_flux_h_calc = H_EQ_J_DIV_SJ_MIN
 ip_flux_penalty_calculate_fcn = meanp_sqr_over_meanh
 
 [problem]
 num_unifrefs = 1
 deg = 2
-deg_integ = 2
-deg_stiffness = 2
+deg_integ = 3
+deg_stiffness = 3
 rhs_use_Lobatto = 1
 
 [geometry]
 name = disk_outer_wedge
 R1 = 1
-R2 = 2
-compactify_outer_wedge = 0
-X_mapping_type = analytic
+R2 = 1000
+compactify_outer_wedge = 1
+DX_compute_method = analytic
+JAC_compute_method = numerical
+geom_quad_type = Gauss
 
 [krylov_petsc]
-ksp_type = cg
-ksp_atol = 1e-20
-ksp_rtol = 1e-20
-ksp_max_it = 5
+ksp_type = gmres
+ksp_atol = 1e-15
+ksp_rtol = 1e-50
+ksp_max_it = 10000
 ksp_view = 1
 ksp_monitor = 1
 ksp_converged_reason = 1
@@ -39,4 +41,6 @@ name = disk_outer_wedge
 R1 = 1
 R2 = 2
 compactify_outer_wedge = 0
-X_mapping_type = analytic
+DX_compute_method = analytic
+JAC_compute_method = numerical
+geom_quad_type = Gauss

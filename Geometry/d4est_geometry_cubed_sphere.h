@@ -27,5 +27,16 @@ void d4est_geometry_cubed_sphere_new(int mpirank,
                                      d4est_geometry_t *d4est_geom);
 p4est_connectivity_t *d4est_connectivity_new_sphere_7tree(void);
 
+void
+d4est_geometry_cubed_sphere_outer_shell_block_get_custom_quadrature
+(d4est_geometry_t* d4est_geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [3],
+ p4est_qcoord_t dq,
+ int degree,
+ long double* custom_abscissas,
+ long double* custom_weights,
+ int test_moments
+);
 
 #endif

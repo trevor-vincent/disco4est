@@ -4,6 +4,8 @@
 #include <p8est_connectivity.h>
 #include <util.h>
 #include <petscsnes.h>
+#include <arbquad.h>
+#include <d4est_geometry_cubed_sphere_inversemap_quadrature.h>
 
 /* #define P4EST_DIM 3 */
 #if (P4EST_DIM)==3
@@ -130,6 +132,77 @@ d4est_connectivity_new_sphere_with_cube_hole (void)
   return NULL;
 #endif
 }
+
+
+/* NOT DONE */
+static p4est_connectivity_t *
+d4est_connectivity_new_spherical_shell (void)
+{
+/* *INDENT-OFF* */
+/*   const p4est_topidx_t num_vertices = 8; */
+/*   const p4est_topidx_t num_trees = 6; */
+/*   const p4est_topidx_t ctt_offset = 0; */
+/*   const p4est_topidx_t ett_offset = 0; */
+/*   const double        vertices[8 * 3] = { */
+/*     -1, -1,  1, */
+/*      1, -1,  1, */
+/*     -1,  1,  1, */
+/*      1,  1,  1, */
+/*     -1, -1,  2, */
+/*      1, -1,  2, */
+/*     -1,  1,  2, */
+/*      1,  1,  2, */
+/*   }; */
+/*   const p4est_topidx_t tree_to_vertex[6 * 8] = { */
+/*     0,  1,  2,  3,  4,  5,  6,  7, */
+/*     0,  1,  2,  3,  4,  5,  6,  7, */
+/*     0,  1,  2,  3,  4,  5,  6,  7, */
+/*     0,  1,  2,  3,  4,  5,  6,  7, */
+/*     0,  1,  2,  3,  4,  5,  6,  7, */
+/*     0,  1,  2,  3,  4,  5,  6,  7, */
+/*   }; */
+/*   const p4est_topidx_t tree_to_tree[12 * 6] = { */
+/*      5,  3,  4,  1,  6,  0, */
+/*      5,  3,  0,  2,  7,  1, */
+/*      5,  3,  1,  4,  8,  2, */
+/*      2,  0,  1,  4,  9,  3, */
+/*      2,  0,  3,  5, 10,  4, */
+/*      2,  0,  4,  1, 11,  5, */
+/*     11,  9, 10,  7, 6,  0, */
+/*     11,  9,  6,  8, 7,  1, */
+/*     11,  9,  7, 10, 8,  2, */
+/*      8,  6,  7, 10, 9,  3, */
+/*      8,  6,  9, 11, 10,  4, */
+/*      8,  6, 10,  7, 11,  5, */
+/*   }; */
+/*   const int8_t        tree_to_face[12 * 6] = { */
+/*      1,  7,  7,  2,  5,  5, */
+/*      9,  8,  3,  2,  5,  5, */
+/*      6,  0,  3,  6,  5,  5, */
+/*      1,  7,  7,  2,  5,  5, */
+/*      9,  8,  3,  2,  5,  5, */
+/*      6,  0,  3,  6,  5,  5, */
+/*      1,  7,  7,  2,  4,  4, */
+/*      9,  8,  3,  2,  4,  4, */
+/*      6,  0,  3,  6, 4,  4, */
+/*      1,  7,  7,  2, 4,  4, */
+/*      9,  8,  3,  2, 4,  4, */
+/*      6,  0,  3,  6,  4,  4, */
+/*   }; */
+
+/* #if (P4EST_DIM)==3 */
+/*   return p4est_connectivity_new_copy (num_vertices, num_trees, */
+/*                                       0, 0, */
+/*                                       vertices, tree_to_vertex, */
+/*                                       tree_to_tree, tree_to_face, */
+/*                                       NULL, &ett_offset, */
+/*                                       NULL, NULL, */
+/*                                       NULL, &ctt_offset, NULL, NULL); */
+/* #else */
+/*   return NULL; */
+/* #endif */
+}
+
 
 
 p4est_connectivity_t *
@@ -280,6 +353,82 @@ d4est_geometry_cubed_sphere_inner_shell_block_X(
   xyz[1] = +q * y;
   xyz[2] = +q;
 }
+
+/* static void  */
+/* d4est_geometry_cubed_sphere_outer_shell_block_sj_sqr_div_J_sqr( */
+/*                                                  d4est_geometry_t* d4est_geom, */
+/*                                                  p4est_topidx_t which_tree, */
+/*                                                  p4est_qcoord_t q0 [(P4EST_DIM)], */
+/*                                                  p4est_qcoord_t dq, */
+/*                                                  const double rst[(P4EST_DIM)], /\* [-1,1]^3 *\/ */
+/*                                                 double sj[(P4EST_DIM)] */
+/* ) */
+/* { */
+/*   sj_sqr_div_J_sqr_vol[0] = (16*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(cos((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)))/(pow(amax - amin,2)*pow(M_PI,2)*pow(R1,2)*pow(R2,2)); */
+
+/*   sj_sqr_div_J_sqr_vol[1] = (16*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*(1 + pow(cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)))/(pow(bmax - bmin,2)*pow(M_PI,2)*pow(R1,2)*pow(R2,2)); */
+
+/*   sj_sqr_div_J_sqr_vol[2] = pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),4)/(4.*pow(cmax - cmin,2)*pow(R1,2)*pow(R1 - R2,2)*pow(R2,2)); */
+/* } */
+  
+
+
+/* static void  */
+/* d4est_geometry_cubed_sphere_outer_shell_block_sj( */
+/*                                                  d4est_geometry_t* d4est_geom, */
+/*                                                  p4est_topidx_t which_tree, */
+/*                                                  p4est_qcoord_t q0 [(P4EST_DIM)], */
+/*                                                  p4est_qcoord_t dq, */
+/*                                                  const double rst[(P4EST_DIM)], /\* [-1,1]^3 *\/ */
+/*                                                 double sj[(P4EST_DIM)] */
+/* ) */
+/* { */
+/*   int compactify_inner_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_inner_shell; */
+/*   double R0 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R0; */
+/*   double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1; */
+/*   /\* Element integration weight x-coordinates in [-1,1]^3 space of the element*\/ */
+/*   double r = rst[0]; */
+/*   double s = rst[1]; */
+/*   double t = rst[2]; */
+
+/*   /\* topological coordinates of element corners *\/ */
+/*   double amin = q0[0]; */
+/*   double amax = q0[0] + dq; */
+/*   double bmin = q0[1]; */
+/*   double bmax = q0[1] + dq; */
+/*   double cmin = q0[2]; */
+/*   double cmax = q0[2] + dq; */
+
+/*   /\* transform element corners to [0,1]^3 topological space *\/ */
+/*   amin /= (double)P4EST_ROOT_LEN; */
+/*   amax /= (double)P4EST_ROOT_LEN; */
+/*   bmin /= (double)P4EST_ROOT_LEN; */
+/*   bmax /= (double)P4EST_ROOT_LEN; */
+/*   cmin /= (double)P4EST_ROOT_LEN; */
+/*   cmax /= (double)P4EST_ROOT_LEN; */
+
+/*   /\* transform element corners to [-1,1]^2 x [1,2] topological space used in the cubed-sphere mapping*\/ */
+/*   amin = 2.*amin - 1.; */
+/*   amax = 2.*amax - 1.; */
+/*   bmin = 2.*bmin - 1.; */
+/*   bmax = 2.*bmax - 1.; */
+/*   cmin = cmin + 1.; */
+/*   cmax = cmax + 1.; */
+
+/*   double sj_sqr_vol [3]; */
+  
+/*   sj_sqr_vol[0] = (pow(bmax - bmin,2)*pow(cmax - cmin,2)*pow(M_PI,2)*pow(R1,4)*pow(R1 - R2,2)*pow(R2,4)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),4))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),6)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2)); */
+
+/*   sj_sqr_vol[1] = (pow(amax - amin,2)*pow(cmax - cmin,2)*pow(M_PI,2)*pow(R1,4)*pow(R1 - R2,2)*pow(R2,4)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),4)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),6)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2)); */
+
+/*   sj_sqr_vol[2] = (pow(amax - amin,2)*pow(bmax - bmin,2)*pow(M_PI,4)*pow(R1,4)*pow(R2,4)*pow(secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),4)*pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),4))/(256.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),4)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),3)); */
+
+/*   sj[0] = sqrt(sj_sqr_vol[0]); */
+/*   sj[1] = sqrt(sj_sqr_vol[1]); */
+/*   sj[2] = sqrt(sj_sqr_vol[2]); */
+  
+/* } */
+
 
 
 static void 
@@ -878,6 +1027,82 @@ d4est_geometry_cubed_sphere_outer_shell_block_jac(d4est_geometry_t* d4est_geom,
 /* bmin*s))/8.),2))/(16.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + */
 /* cmax + cmin + cmax*t - cmin*t),2)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s */
 /* - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2)); */
+
+
+
+void
+d4est_geometry_cubed_sphere_outer_shell_block_get_custom_quadrature
+(d4est_geometry_t* d4est_geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [3],
+ p4est_qcoord_t dq,
+ int degree,
+ long double* custom_abscissas,
+ long double* custom_weights,
+ int test_moments
+)
+{
+  double amin = q0[0];
+  double amax = q0[0] + dq;
+  double bmin = q0[1];
+  double bmax = q0[1] + dq;
+  double cmin = q0[2];
+  double cmax = q0[2] + dq;
+
+  /* transform element corners to [0,1]^3 topological space */
+  amin /= (double)P4EST_ROOT_LEN;
+  amax /= (double)P4EST_ROOT_LEN;
+  bmin /= (double)P4EST_ROOT_LEN;
+  bmax /= (double)P4EST_ROOT_LEN;
+  cmin /= (double)P4EST_ROOT_LEN;
+  cmax /= (double)P4EST_ROOT_LEN;
+
+  /* transform element corners to [-1,1]^2 x [1,2] topological space */
+  amin = 2.*amin - 1.;
+  amax = 2.*amax - 1.;
+  bmin = 2.*bmin - 1.;
+  bmax = 2.*bmax - 1.;
+  cmin = cmin + 1.;
+  cmax = cmax + 1.;
+
+
+  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
+  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
+
+  mpi_assert(compactify_outer_shell == 1);
+
+
+  inversemap_quadrature_params_t params;
+  params.cmin = cmin;
+  params.cmax = cmax;
+  params.R1 = R1;
+  params.R2 = R2;
+  
+  arbquad_get_abscissas_and_weights_use_aa_and_bb(degree+1,
+                                    custom_weights,
+                                    custom_abscissas,
+                                    inversemap_moment_fcn,
+                                    inversemap_aa_and_bb,
+                                    &params,
+                                    DIVIDE_WEIGHTS_BY_WEIGHT_FCN,
+                                    inversemap_weight_fcn
+                                   );
+
+  /* arbquad_get_abscissas_and_weights(degree+1, */
+  /*                                   custom_weights, */
+  /*                                   custom_abscissas, */
+  /*                                   inversemap_moment_fcn, */
+  /*                                   &params, */
+  /*                                   DIVIDE_WEIGHTS_BY_WEIGHT_FCN, */
+  /*                                   inversemap_weight_fcn */
+  /*                                  ); */
+
+  
+  if (test_moments)
+    arbquad_test_moments(degree+1, custom_weights, custom_abscissas, inversemap_moment_fcn, DIVIDE_WEIGHTS_BY_WEIGHT_FCN, inversemap_weight_fcn, &params);
+  
+}
 
 static void
 d4est_geometry_cubed_sphere_outer_shell_block_DX(d4est_geometry_t* d4est_geom,
@@ -1521,5 +1746,6 @@ which_tree == 12 will never occur */
     printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
   }
 }
+
 
 #endif

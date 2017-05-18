@@ -75,9 +75,9 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
 
   
   int dim = (P4EST_DIM);
-  int volume_nodes_Lobatto = dgmath_get_nodes(dim,element_data->deg);
+  int volume_nodes_lobatto = dgmath_get_nodes(dim,element_data->deg);
 
-  double* stiff_u = P4EST_ALLOC(double, volume_nodes_Lobatto);
+  double* stiff_u = P4EST_ALLOC(double, volume_nodes_lobatto);
 
   curved_element_data_apply_curved_stiffness_matrix
     (
@@ -88,8 +88,14 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
      &element_data->u_storage[0],
      stiff_u
     );
+
+#ifdef NASTY_DEBUG
+  printf("Stiffness Matrix Element id %d\n", element_data->id);
+  DEBUG_PRINT_ARR_DBL_SUM(stiff_u, volume_nodes_lobatto);
+#endif
   
-  for (int i = 0; i < volume_nodes_Lobatto; i++){
+  
+  for (int i = 0; i < volume_nodes_lobatto; i++){
     element_data->Au_elem[i] += stiff_u[i];
   }
 

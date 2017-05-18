@@ -401,6 +401,29 @@ void dgmath_build_ref_GLL_to_GL_interp_1d
   P4EST_FREE(ref_GaussVij);
 }
 
+void dgmath_build_custom_GL_interp_1d
+(
+ dgmath_jit_dbase_t* dgmath_jit_dbase,
+ double* custom_GL_interp_1d,
+ int Lobatto_degree,
+ int custom_degree,
+ double* custom_points /* size = custom_degree + 1 */
+)
+{
+  double* customVij = P4EST_ALLOC(double, (custom_degree + 1)*(Lobatto_degree+1));
+  
+  int rows = custom_degree + 1;
+  int cols = Lobatto_degree + 1;
+  
+  for (int i = 0; i < rows; i++)
+    for (int j = 0; j < cols; j++)
+      customVij[i * cols + j] = dgmath_jacobi(custom_points[i], 0., 0., j);
+
+  double* invVij = dgmath_fetch_invVij_1d(dgmath_jit_dbase, Lobatto_degree);
+  linalg_mat_multiply(customVij, invVij, custom_GL_interp_1d, custom_degree + 1, Lobatto_degree + 1, Lobatto_degree + 1);
+
+  P4EST_FREE(customVij);
+}
 
 
 /* void dgmath_build_ref_GL_to_GLL_interp_1d */
@@ -4346,7 +4369,8 @@ void dgmath_convert_nodal_to_vtk
 }
 
 /* Computes \sum w_i u_i v_i */
-double dgmath_quadrature
+double
+dgmath_quadrature
 (
  dgmath_jit_dbase_t* dgmath_jit_dbase,
  double* u,

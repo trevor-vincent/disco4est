@@ -1,6 +1,8 @@
 #ifndef PXEST_H
 #define PXEST_H 
 
+#include <global_macros.h>
+
 #ifndef DIM
 #error "DIM (dimension) not defined"
 #elif (DIM>3||DIM<2)

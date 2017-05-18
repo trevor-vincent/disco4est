@@ -139,7 +139,7 @@ newton_d4est_solve
   krylov_petsc_input(p4est,
                      input_file,
                      "krylov_petsc",
-                     "[KRYLOV_PETSC]",
+                     "[KRYLOV_PETSC_FOR_NEWTON_D4EST]",
                      &petsc_params);      
   
   int ierr = 0;

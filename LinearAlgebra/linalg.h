@@ -85,4 +85,18 @@ linalg_vec1_trans_mat_vec2
  int N
 );
 
+void
+linalg_kron_vec1_o_vec2_o_vec3_dot_x
+(
+ double *vec1,
+ double* vec2,
+ double* vec3,
+ double*x,
+ int vec1_size,
+ int vec2_size,
+ int vec3_size,
+ double* vec1vec2vec3_dot_x
+);
+
+
 #endif

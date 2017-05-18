@@ -5,7 +5,6 @@
 #include "../Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.h"
 
 
-
 static void
 curved_primal_sipg_kronbichler_flux_dirichlet
 (
@@ -393,8 +392,15 @@ curved_primal_sipg_kronbichler_flux_dirichlet
                     f_m,
                     lifted_VT_w_term3_lobatto);
 
-
-      
+#ifdef NASTY_DEBUG
+  printf("Boundary Flux Integral\n");
+  printf("Element m id = %d\n", e_m->id);
+  DEBUG_PRINT_ARR_DBL_SUM(VT_w_term1_lobatto, face_nodes_m_lobatto);
+  for (int d = 0; d < (P4EST_DIM); d++){
+    DEBUG_PRINT_ARR_DBL_SUM(VT_w_term2_lobatto[d], face_nodes_m_lobatto);
+  }
+  DEBUG_PRINT_ARR_DBL_SUM(VT_w_term3_lobatto, face_nodes_m_lobatto);
+#endif
       
   int volume_nodes_m = dgmath_get_nodes((P4EST_DIM), e_m->deg);
   for (int i = 0; i < volume_nodes_m; i++){
@@ -1136,7 +1142,17 @@ curved_primal_sipg_kronbichler_flux_interface
     }
     stride += face_nodes_m_lobatto[f];
   }   
- 
+
+#ifdef NASTY_DEBUG
+  printf("Interface Flux Integral\n");
+  printf("Element m id = %d, Element_p id = %d\n", e_m[0]->id, e_p[0]->id);
+  DEBUG_PRINT_ARR_DBL_SUM(proj_VT_w_term1_mortar_lobatto, total_nodes_mortar_lobatto);
+  for (int d = 0; d < (P4EST_DIM); d++){
+    DEBUG_PRINT_ARR_DBL_SUM(proj_VT_w_term2_mortar_lobatto[d], total_nodes_mortar_lobatto);
+  }
+  DEBUG_PRINT_ARR_DBL_SUM(proj_VT_w_term3_mortar_lobatto, total_nodes_mortar_lobatto);
+#endif
+  
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_p_on_f_p);
 
@@ -1206,3 +1222,5 @@ curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
   
   return curved_primal_sipg_kronbichler_flux_fcns;
 }
+
+
