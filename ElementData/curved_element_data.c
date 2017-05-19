@@ -276,7 +276,9 @@ geometric_factors_init
   geometric_factors->xyz_integ = NULL;
   /* geometric_factors->xyz_rst = NULL; */
   geometric_factors->xyz_rst_integ = NULL;
-  geometric_factors->xyz_rst_Lobatto_integ = NULL;
+  /* geometric_factors->custom_abscissas = NULL; */
+  /* geometric_factors->custom_weights = NULL; */
+  /* geometric_factors->custom_interp = NULL; */
   /* geometric_factors->rst_xyz = NULL; */
   geometric_factors->rst_xyz_integ = NULL;
   /* geometric_factors->invM = NULL; */
@@ -302,24 +304,20 @@ geometric_factors_reinit
   int local_nodes_integ = local_sizes.local_nodes_integ;
   int local_sqr_nodes = local_sizes.local_sqr_nodes;
   int local_sqr_trace_nodes = local_sizes.local_sqr_trace_nodes;
-  /* int local_sqr_nodes_invM = local_sizes.local_sqr_nodes_invM; */
     
   int vector_nodes = local_nodes*(P4EST_DIM); 
-  /* int matrix_nodes = local_nodes*(P4EST_DIM)*(P4EST_DIM); */
-  
-  /* geometric_factors->J = P4EST_REALLOC(geometric_factors->J,double,local_nodes); */
   geometric_factors->xyz = P4EST_REALLOC(geometric_factors->xyz,double,vector_nodes);
   geometric_factors->xyz_integ = P4EST_REALLOC(geometric_factors->xyz_integ, double, (P4EST_DIM)*local_nodes_integ);
-  /* geometric_factors->xyz_rst = P4EST_REALLOC(geometric_factors->xyz_rst,double,matrix_nodes);   */
-  /* geometric_factors->rst_xyz = P4EST_REALLOC(geometric_factors->rst_xyz,double,matrix_nodes); */
 
+  /* geometric_factors->custom_abscissas = P4EST_REALLOC(geometric_factors->custom_abscissas, double, local_1d_nodes_integ); */
+  /* geometric_factors->custom_weights = P4EST_REALLOC(geometric_factors->custom_weights, double, local_1d_nodes_integ); */
+  /* geometric_factors->custom_interp = P4EST_REALLOC(geometric_factors->custom_weights, double, local_1d_sqr_nodes_integ); */
+
+  
   int matrix_nodes_integ = local_nodes_integ*(P4EST_DIM)*(P4EST_DIM);
   geometric_factors->J_integ = P4EST_REALLOC(geometric_factors->J_integ,double,local_nodes_integ);
-  geometric_factors->xyz_rst_integ = P4EST_REALLOC(geometric_factors->xyz_rst_integ,double,matrix_nodes_integ);
-  geometric_factors->xyz_rst_Lobatto_integ = P4EST_REALLOC(geometric_factors->xyz_rst_Lobatto_integ,double,matrix_nodes_integ);
+  geometric_factors->xyz_rst_integ = P4EST_REALLOC(geometric_factors->xyz_rst_integ,double,matrix_nodes_integ);  
   geometric_factors->rst_xyz_integ = P4EST_REALLOC(geometric_factors->rst_xyz_integ,double,matrix_nodes_integ);
-  /* geometric_factors->invM = P4EST_REALLOC(geometric_factors->invM, double, local_sqr_nodes_invM); */
-  /* geometric_factors->invMface = P4EST_REALLOC(geometric_factors->invMface, double, local_sqr_trace_nodes); */
 
 }
 
@@ -336,9 +334,12 @@ geometric_factors_destroy
     P4EST_FREE(geometric_factors->xyz_integ);
     /* P4EST_FREE(geometric_factors->xyz_rst); */
     P4EST_FREE(geometric_factors->xyz_rst_integ);
-    P4EST_FREE(geometric_factors->xyz_rst_Lobatto_integ);
+    /* P4EST_FREE(geometric_factors->xyz_rst_Lobatto_integ); */
     /* P4EST_FREE(geometric_factors->rst_xyz); */
     P4EST_FREE(geometric_factors->rst_xyz_integ);
+    /* P4EST_FREE(geometric_factors->custom_abscissas); */
+    /* P4EST_FREE(geometric_factors->custom_weights); */
+    /* P4EST_FREE(geometric_factors->custom_interp); */
     /* P4EST_FREE(geometric_factors->invM); */
     /* P4EST_FREE(geometric_factors->invMface); */
     P4EST_FREE(geometric_factors);

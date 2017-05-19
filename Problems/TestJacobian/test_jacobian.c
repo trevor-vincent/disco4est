@@ -276,6 +276,84 @@ problem_input
 }
 
 
+
+/* dgmath_rst_t */
+/* problem_get_rst_points_custom */
+/* ( */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  d4est_geometry_t* d4est_geom, */
+/*  curved_element_data_t* ed, */
+/*  int deg, */
+/*  int dim, */
+/*  void* user */
+/* ){ */
+/*   dgmath_rst_t rst; */
+/*   double* rsttmp [3] = {NULL}; */
+
+
+/*   for (int d = 0; d < 2; d++){ */
+/*     rsttmp[d] = dgmath_fetch_Gauss_xyz_nd */
+/*                 ( */
+/*                  dgmath_jit_dbase, */
+/*                  dim, */
+/*                  deg, */
+/*                  d */
+/*                 ); */
+/*   } */
+
+/*   rsttmp[2] =  */
+  
+/*   rst.r = rsttmp[0]; */
+/*   rst.s = rsttmp[1]; */
+/*   rst.t = rsttmp[2];   */
+/*   return rst; */
+/* } */
+
+/* dgmath_rst_t */
+/* problem_get_weights_custom */
+/* ( */
+/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  d4est_geometry_t* d4est_geom, */
+/*  curved_element_data_t* ed, */
+/*  int deg, */
+/*  int dim, */
+/*  void* user */
+/* ){ */
+/*   dgmath_rst_t rst; */
+/*   double* rsttmp [3] = {NULL}; */
+
+/*   for (int d = 0; d < 2; d++){ */
+/*     rsttmp[d] = dgmath_fetch_Gauss_xyz_nd */
+/*                 ( */
+/*                  dgmath_jit_dbase, */
+/*                  dim, */
+/*                  deg, */
+/*                  d */
+/*                 ); */
+/*   } */
+
+/*   rsttmp[2] =  */
+  
+/*   rst.r = rsttmp[0]; */
+/*   rst.s = rsttmp[1]; */
+/*   rst.t = rsttmp[2];   */
+/*   return rst; */
+/* } */
+
+void
+problem_build_custom_weights_and_abscissas
+(
+ double* custom_weights,
+ double* custom_abscissas,
+ double* custom_interp
+)
+{
+
+
+}
+
+
+
 p4est_t*
 problem_build_p4est
 (
@@ -611,6 +689,8 @@ problem_init
                                                wgau_wgau_wgau_jac
                                               );
 
+          /* NEXT: figure out how to make points and weights for each of the faces */
+          
 
           DEBUG_PRINT_2ARR_DBL(wgau_wgau_wjac_jac, wgau_wgau_wgau_jac, volume_nodes_integ);
           
@@ -621,10 +701,58 @@ problem_init
             gauss_sum += wgau_wgau_wgau_jac[i];
           }
 
+
+          int face_nodes_integ = dgmath_get_nodes((P4EST_DIM)-1, ed->deg_integ);
+          dgmath_rst_t rst_points_face
+            = dgmath_get_rst_points(dgmath_jit_dbase, ed->deg_integ, (P4EST_DIM) - 1, QUAD_GAUSS);
+
+          double* s_points_inverse_map = P4EST_ALLOC(double, face_nodes_integ);
+          
+          linalg_kron_AoB(jacmap_abscissas_dbl,
+                          eye,
+                          s_points_inverse_map,
+                          nodes,
+                          1,
+                          nodes,
+                          1
+                         );
+          
+          for (int f = 0; f < (P4EST_FACES); f++){
+
+            dgmath_face_info_t face_info;
+            dgmath_get_face_info(f, &face_info);
+
+            printf("Face %d\n", f);
+            printf("face_info.a = %d\n", face_info.a);
+            printf("face_info.b = %d\n", face_info.b);
+            printf("face_info.c = %d\n", face_info.c);
+            printf("face_info.sgn = %f\n", face_info.sgn);
+            
+            for (int i = 0; i < face_nodes_integ; i++){
+              /* x face, r coord is gauss points */
+              if ( (f == 0 || f == 1) || (f == 2 || f == 3) ){
+                rst[face_info.a] = rst_points_face.r[i];
+                rst[face_info.b] = s_points_inverse_map[i]; /* compactified coord */
+                rst[face_info.c] = face_info.sgn;
+              }
+              /* z face, only gauss points */
+              else{
+                rst[face_info.a] = rst_points.r[i];
+                rst[face_info.b] = rst_points.s[i]; /* compactified coord */
+                rst[face_info.c] = face_info.sgn;
+              }
+              printf("face r, s, t = %.15f, %15f, %15f\n", rst[0], rst[1], rst[2]); 
+            }
+
+            
+          }
+          
+
           printf("jacmap_sum = %.25f\n", jacmap_sum);
           printf("gauss_sum = %.25f\n", gauss_sum);
           printf("theoretical = %.25f\n", (1./6.)*(4./3.)*M_PI*(R2*R2*R2 - R1*R1*R1));
-          
+
+          P4EST_FREE(s_points_inverse_map);
           P4EST_FREE(eye);
           D4EST_FREE_DIM_VEC(jacmap_rst);
           P4EST_FREE(jacmap_abscissas);

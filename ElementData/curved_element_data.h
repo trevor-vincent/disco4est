@@ -14,16 +14,16 @@ typedef enum { DIAM_APPROX, NO_DIAM_APPROX, DIAM_APPROX_CUBE} diam_compute_optio
 typedef struct {
 
   /* double* J; */
-  double* J_integ;
+
   double* xyz;
   double* xyz_integ;
-  /* double* xyz_rst; */
   double* xyz_rst_integ;
-  double* xyz_rst_Lobatto_integ;
-  /* double* rst_xyz; */
+  double* J_integ;
   double* rst_xyz_integ;
-  /* double* invM; */
-  /* double* invMface; */
+
+  /* double* custom_abscissas; */
+  /* double* custom_weights; */
+  /* double* custom_interp; */
   
 } geometric_factors_t;
 
