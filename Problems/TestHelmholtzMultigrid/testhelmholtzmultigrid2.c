@@ -181,10 +181,10 @@ void apply_helmholtz_matrix_2
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 )
 {  
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
 
   /* printf("Quadrants = %d\n", p4est->local_num_quadrants); */
   
@@ -208,10 +208,10 @@ void apply_helmholtz_matrix_2
         element_data_t* ed = quad->p.user_data;
 
         int deg_Gauss = ed->deg;
-        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss);
-        double* r_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 0);
-        double* s_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 1);
-        double* t_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 2);
+        int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), deg_Gauss);
+        double* r_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 0);
+        double* s_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 1);
+        double* t_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 2);
         double *jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
 
         double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
@@ -219,12 +219,12 @@ void apply_helmholtz_matrix_2
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
         linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
-        dgmath_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
-        dgmath_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
-        dgmath_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
         double* xyz_Gauss [3] = {x_GL, y_GL, z_GL};
 
-        int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         /* double* debug_ones = P4EST_ALLOC(double, volume_nodes); */
         /* linalg_fill_vec(debug_ones, 1., volume_nodes); */
         
@@ -260,10 +260,10 @@ void apply_helmholtz_matrix
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 )
 {    
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
 
   printf("Quadrants = %d\n", p4est->local_num_quadrants);
   
@@ -281,10 +281,10 @@ void apply_helmholtz_matrix
         element_data_t* ed = quad->p.user_data;
 
         int deg_Gauss = ed->deg;
-        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss);
-        double* r_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 0);
-        double* s_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 1);
-        double* t_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 2);
+        int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), deg_Gauss);
+        double* r_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 0);
+        double* s_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 1);
+        double* t_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 2);
         double *jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
 
         double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
@@ -292,17 +292,17 @@ void apply_helmholtz_matrix
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
         linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
-        dgmath_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
-        dgmath_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
-        dgmath_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
         double* xyz_Gauss [3] = {x_GL, y_GL, z_GL};
 
-        int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         double* matrix = P4EST_ALLOC(double, volume_nodes*volume_nodes);
 
-        dgmath_form_fofufofvlilj_matrix_Gaussnodes
+        d4est_operators_form_fofufofvlilj_matrix_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            NULL,
            NULL,
            ed->deg,
@@ -341,10 +341,10 @@ void apply_helmholtz
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 )
 {  
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
   
   double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -360,10 +360,10 @@ void apply_helmholtz
         element_data_t* ed = quad->p.user_data;
 
         int deg_Gauss = ed->deg;
-        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss);
-        double* r_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 0);
-        double* s_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 1);
-        double* t_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 2);
+        int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), deg_Gauss);
+        double* r_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 0);
+        double* s_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 1);
+        double* t_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 2);
         double *jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
 
         double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
@@ -371,14 +371,14 @@ void apply_helmholtz
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
         linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
-        dgmath_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
-        dgmath_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
-        dgmath_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
         double* xyz_Gauss [3] = {x_GL, y_GL, z_GL};
         
-        dgmath_apply_fofufofvlilj_Gaussnodes
+        d4est_operators_apply_fofufofvlilj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            &prob_vecs->u[ed->stride],
            NULL,
            NULL,
@@ -414,10 +414,10 @@ build_residual
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 )
 {
-  apply_helmholtz(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+  apply_helmholtz(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
   linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
 }
 
@@ -429,7 +429,7 @@ build_residual
 /*  p4est_ghost_t* ghost, */
 /*  curved_element_data_t* ghost_data, */
 /*  problem_data_t* prob_vecs, */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  d4est_operators_t* d4est_ops, */
 /*  d4est_geometry_t* d4est_geom */
 /* ) */
 /* {   */
@@ -437,7 +437,7 @@ build_residual
 /*                                            ghost, */
 /*                                            ghost_data, */
 /*                                            prob_vecs, */
-/*                                            dgmath_jit_dbase, */
+/*                                            d4est_ops, */
 /*                                            d4est_geom); */
   
 /*   double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes); */
@@ -452,16 +452,16 @@ build_residual
 /*       for (int q = 0; q < Q; ++q) { */
 /*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
 /*         curved_element_data_t* ed = quad->p.user_data;         */
-/*         dgmath_apply_fofufofvlilj_Gaussnodes */
+/*         d4est_operators_apply_fofufofvlilj_Gaussnodes */
 /*           ( */
-/*            dgmath_jit_dbase, */
+/*            d4est_ops, */
 /*            &prob_vecs->u[ed->nodal_stride], */
 /*            NULL, */
 /*            NULL, */
 /*            ed->deg, */
-/*            ed->J_integ, */
-/*            ed->xyz_integ, */
-/*            ed->deg_integ, */
+/*            ed->J_quad, */
+/*            ed->xyz_quad, */
+/*            ed->deg_quad, */
 /*            (P4EST_DIM), */
 /*            &M_helmf_u[ed->nodal_stride], */
 /*            helmholtz_fcn, */
@@ -487,7 +487,7 @@ void problem_build_rhs
  weakeqn_ptrs_t* prob_fcns,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- dgmath_jit_dbase_t* dgbase
+ d4est_operators_t* dgbase
 )
 {
   double* f = P4EST_ALLOC(double, prob_vecs->local_nodes);
@@ -578,7 +578,7 @@ problem_init
  const char* input_file,
  p4est_t* p4est,
  d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int proc_size,
  sc_MPI_Comm mpicomm
 )
@@ -639,7 +639,7 @@ problem_init
   
   prob_vecs.scalar_flux_fcn_data = sipg_flux_scalar_dirichlet_fetch_fcns(boundary_fcn);
   /* linalg_fill_vec(u, 0., prob_vecs.local_nodes); */
-  element_data_init_node_vec(p4est, u, analytic_solution_fcn, dgmath_jit_dbase);
+  element_data_init_node_vec(p4est, u, analytic_solution_fcn, d4est_ops);
   weakeqn_ptrs_t prob_fcns;
 
   prob_fcns.apply_lhs = apply_helmholtz_matrix_2;
@@ -653,7 +653,7 @@ problem_init
      &prob_fcns,
      ghost,
      ghost_data,
-     dgmath_jit_dbase
+     d4est_ops
     );
   
 
@@ -672,7 +672,7 @@ problem_init
   hp_amr_scheme_t* scheme_uni = hp_amr_uniform();
 
   
-  element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);    
+  element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, d4est_ops);    
   linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
     
@@ -683,7 +683,7 @@ problem_init
                                 u_analytic,
                                 zero_fcn,
                                 &ip_flux_params,
-                                dgmath_jit_dbase,
+                                d4est_ops,
                                 ghost,
                                 ghost_data
                                );
@@ -692,7 +692,7 @@ problem_init
                                 (
                                  p4est,
                                  u_analytic,
-                                 dgmath_jit_dbase
+                                 d4est_ops
                                 );
 
     double local_nodes_dbl = (double)local_nodes;
@@ -753,7 +753,7 @@ problem_init
        ip_flux_params.ip_flux_penalty_prefactor,
        ghost,
        ghost_data,
-       dgmath_jit_dbase
+       d4est_ops
       );
     
     estimator_stats_t* stats = P4EST_ALLOC(estimator_stats_t, 1);
@@ -764,7 +764,7 @@ problem_init
 
     local_eta2 = stats->total;
         
-    element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);    
+    element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, d4est_ops);    
 
     double* u_analytic_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
     double* u_error_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
@@ -833,7 +833,7 @@ problem_init
     estimator_stats_print(stats);
     
     hp_amr(p4est,
-           dgmath_jit_dbase,
+           d4est_ops,
            &u,
            &stats,
            (level > 1) ? scheme : scheme_uni,
@@ -868,7 +868,7 @@ problem_init
        &prob_fcns,
        ghost,
        ghost_data,
-       dgmath_jit_dbase
+       d4est_ops
       );    
     
     clock_t begin = 0;
@@ -926,17 +926,17 @@ problem_init
          save_vtk_snapshot,
          perform_checksum,
          RESIDUAL_INFO,
-         dgmath_jit_dbase,
+         d4est_ops,
          cg_eigs_use_zero_vec_as_initial
         );
 
       
-      multigrid_matrix_op_t* matrix_op = multigrid_matrix_operator_init(mg_data, p4est, dgmath_jit_dbase, NULL);
+      multigrid_matrix_op_t* matrix_op = multigrid_matrix_operator_init(mg_data, p4est, d4est_ops, NULL);
       
-      multigrid_matrix_fofu_fofv_mass_operator_setup_deg_integ_eq_deg(p4est, dgmath_jit_dbase, NULL, NULL, helmholtz_fcn, NULL, NULL, NULL, matrix_op);
+      multigrid_matrix_fofu_fofv_mass_operator_setup_deg_quad_eq_deg(p4est, d4est_ops, NULL, NULL, helmholtz_fcn, NULL, NULL, NULL, matrix_op);
 
 
-      element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);
+      element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, d4est_ops);
       /* util_print_matrix(u_analytic, prob_vecs.local_nodes, 1, " u_analytic = ", 0); */
 
       /* element_data_print(p4est); */
@@ -976,7 +976,7 @@ problem_init
          (void*)&prob_fcns,
          &ghost,
          (void**)&ghost_data,
-         dgmath_jit_dbase,
+         d4est_ops,
          NULL,
          input_file,
          pc
@@ -995,7 +995,7 @@ problem_init
                                 u_analytic,
                                 zero_fcn,
                                 &ip_flux_params,
-                                dgmath_jit_dbase,
+                                d4est_ops,
                                 ghost,
                                 ghost_data
                                );
@@ -1004,7 +1004,7 @@ problem_init
                                 (
                                  p4est,
                                  u_analytic,
-                                 dgmath_jit_dbase
+                                 d4est_ops
                                 );
 
     double local_nodes_dbl = (double)local_nodes;

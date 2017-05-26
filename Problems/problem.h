@@ -2,7 +2,7 @@
 #define PROBLEM_H 
 
 #include <d4est_geometry.h>
-#include <dgmath.h>
+#include <d4est_operators.h>
 #include <pXest.h>
 
 p4est_connectivity_t*
@@ -30,7 +30,7 @@ problem_init
  const char* input_file,
  p4est_t* p4est,
  d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int proc_size,
  sc_MPI_Comm mpicomm
 );

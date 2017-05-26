@@ -2,14 +2,14 @@
 #define CURVED_TEST_MORTARJACOBIANTERMS_FLUX_FCNS_H 
 
 #include <curved_compute_flux.h>
-#include <dgmath.h>
+#include <d4est_operators.h>
 
 typedef struct {
   
   double* u;
   double global_err;
   double local_eps;
-  dgmath_jit_dbase_t* dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops;
   
 } test_mortarjacobianterms_data_t;
 

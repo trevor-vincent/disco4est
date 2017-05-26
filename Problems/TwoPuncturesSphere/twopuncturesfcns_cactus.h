@@ -12,7 +12,7 @@ typedef struct {
   double par_P_minus [3];
   double par_m_plus;
   double par_m_minus;
-  int deg_offset_for_puncture_nonlinearity_integ;
+  int deg_offset_for_puncture_nonlinearity_quad;
   
 } twopunctures_cactus_params_t;
 
@@ -21,7 +21,7 @@ void
 init_cactus_puncture_data
 (
  twopunctures_cactus_params_t* params,
- int deg_offset_for_puncture_nonlinearity_integ
+ int deg_offset_for_puncture_nonlinearity_quad
 )
 {
   double M = 1.;
@@ -49,7 +49,7 @@ init_cactus_puncture_data
   params->par_S_plus[1] = 0.;
   params->par_S_plus[2] = 0.;
   
-  params->deg_offset_for_puncture_nonlinearity_integ = deg_offset_for_puncture_nonlinearity_integ;
+  params->deg_offset_for_puncture_nonlinearity_quad = deg_offset_for_puncture_nonlinearity_quad;
 }
 
 
@@ -233,7 +233,7 @@ void twopunctures_cactus_apply_jac
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -242,7 +242,7 @@ void twopunctures_cactus_apply_jac
                                            ghost,
                                            ghost_data,
                                            prob_vecs,
-                                           dgmath_jit_dbase,
+                                           d4est_ops,
                                            d4est_geom);
   
   double* M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
@@ -259,13 +259,13 @@ void twopunctures_cactus_apply_jac
         curved_element_data_t* ed = quad->p.user_data;        
         curved_element_data_apply_fofufofvlilj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            d4est_geom,
            &prob_vecs->u[ed->nodal_stride],
            &prob_vecs->u0[ed->nodal_stride],
            NULL,
            ed,
-           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           ed->deg_quad + params->deg_offset_for_puncture_nonlinearity_quad,
            (P4EST_DIM),
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
            twopunctures_cactus_plus_7o8_K2_psi_neg8,
@@ -288,12 +288,12 @@ twopunctures_cactus_build_residual
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   twopunctures_cactus_params_t* params = prob_vecs->user;
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
   double* M_neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -309,12 +309,12 @@ twopunctures_cactus_build_residual
         curved_element_data_t* ed = quad->p.user_data;        
         curved_element_data_apply_fofufofvlj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            d4est_geom,
            &prob_vecs->u[ed->nodal_stride],
            NULL,
            ed,
-           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           ed->deg_quad + params->deg_offset_for_puncture_nonlinearity_quad,
            (P4EST_DIM),
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
            twopunctures_cactus_neg_1o8_K2_psi_neg7,

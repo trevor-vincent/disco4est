@@ -3,7 +3,7 @@
 
 #include "../EllipticSystem/problem_data.h"
 #include "../EllipticSystem/problem_weakeqn_ptrs.h"
-#include "../dGMath/dgmath.h"
+#include "../dGMath/d4est_operators.h"
 
 typedef struct multigrid_data_t multigrid_data_t;
 
@@ -179,7 +179,7 @@ struct multigrid_data_t {
   
   multigrid_state_t mg_state;
   multigrid_refine_data_t* coarse_grid_refinement;
-  dgmath_jit_dbase_t* dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops;
   
   /* Helper strides */
   int stride;
@@ -238,7 +238,7 @@ multigrid_data_t*
 multigrid_data_init
 (
  p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int num_of_levels,
  multigrid_logger_t* logger,
  multigrid_user_callbacks_t* user_callbacks,

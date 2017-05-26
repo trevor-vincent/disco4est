@@ -169,13 +169,13 @@ build_residual
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 )
 {
   prob_vecs->scalar_flux_fcn_data.bndry_fcn = boundary_fcn;
   prob_vecs->vector_flux_fcn_data.bndry_fcn = boundary_fcn;
   
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);  
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops);  
 
   double* neg_2pi_rho_up1_neg5_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
   double* M_neg_2pi_rho_up1_neg5_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
@@ -186,7 +186,7 @@ build_residual
   /*    prob_vecs->u, */
   /*    neg_2pi_rho_up1_neg5_vec, */
   /*    neg_2pi_rho_up1_neg5, */
-  /*    dgmath_jit_dbase */
+  /*    d4est_ops */
   /*   ); */
 
   /* element_data_apply_Mij_on_vec */
@@ -194,7 +194,7 @@ build_residual
   /*    p4est, */
   /*    neg_2pi_rho_up1_neg5_vec, */
   /*    M_neg_2pi_rho_up1_neg5_vec, */
-  /*    dgmath_jit_dbase */
+  /*    d4est_ops */
   /*   ); */
 
   element_data_apply_Mij_on_f_of_vec
@@ -202,7 +202,7 @@ build_residual
      p4est,
      prob_vecs->u,
      M_neg_2pi_rho_up1_neg5_vec,
-     dgmath_jit_dbase,
+     d4est_ops,
      neg_2pi_rho_up1_neg5,
      1
     );
@@ -217,7 +217,7 @@ build_residual
 
 typedef struct {
 
-  int deg_offset_for_Gauss_integ;
+  int deg_offset_for_Gauss_quad;
   
 } problem_ctx_t;
 
@@ -230,13 +230,13 @@ build_residual_Gauss
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 )
 {
   prob_vecs->scalar_flux_fcn_data.bndry_fcn = boundary_fcn;
   prob_vecs->vector_flux_fcn_data.bndry_fcn = boundary_fcn;
   
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);  
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops);  
 
   double* M_neg_2pi_rho_up1_neg5_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -252,12 +252,12 @@ build_residual_Gauss
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         element_data_t* ed = quad->p.user_data;        
-        int deg_Gauss = ed->deg + ctx->deg_offset_for_Gauss_integ;
+        int deg_Gauss = ed->deg + ctx->deg_offset_for_Gauss_quad;
 
-        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss);
-        double* r_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 0);
-        double* s_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 1);
-        double* t_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 2);
+        int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), deg_Gauss);
+        double* r_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 0);
+        double* s_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 1);
+        double* t_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 2);
         double *jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
 
         double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
@@ -265,14 +265,14 @@ build_residual_Gauss
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
         linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
-        dgmath_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
-        dgmath_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
-        dgmath_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
         double* xyz_Gauss [3] = {x_GL, y_GL, z_GL};
   
-        dgmath_apply_fofufofvlj_Gaussnodes
+        d4est_operators_apply_fofufofvlj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            &prob_vecs->u[ed->stride],
            NULL,
            ed->deg,
@@ -307,13 +307,13 @@ void apply_jac_Gauss
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 )
 {
   prob_vecs->scalar_flux_fcn_data.bndry_fcn = zero_fcn;
   prob_vecs->vector_flux_fcn_data.bndry_fcn = zero_fcn;
   
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
 
   /* double* neg_10pi_rho_up1_neg4_of_u0_vec = P4EST_ALLOC(double, prob_vecs->local_nodes); */
   /* double* neg_10pi_rho_up1_neg4_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes); */
@@ -331,12 +331,12 @@ void apply_jac_Gauss
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         element_data_t* ed = quad->p.user_data;        
-        int deg_Gauss = ed->deg + ctx->deg_offset_for_Gauss_integ;
+        int deg_Gauss = ed->deg + ctx->deg_offset_for_Gauss_quad;
 
-        int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), deg_Gauss);
-        double* r_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 0);
-        double* s_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 1);
-        double* t_GL = dgmath_fetch_Gauss_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), deg_Gauss, 2);
+        int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), deg_Gauss);
+        double* r_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 0);
+        double* s_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 1);
+        double* t_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 2);
         double *jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
 
         double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
@@ -344,14 +344,14 @@ void apply_jac_Gauss
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
         linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
-        dgmath_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
-        dgmath_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
-        dgmath_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
+        d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
         double* xyz_Gauss [3] = {x_GL, y_GL, z_GL};
   
-        dgmath_apply_fofufofvlilj_Gaussnodes
+        d4est_operators_apply_fofufofvlilj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            &prob_vecs->u[ed->stride],
            &prob_vecs->u0[ed->stride],
            NULL,
@@ -379,7 +379,7 @@ void apply_jac_Gauss
   /*    prob_vecs->u0, */
   /*    prob_vecs->u, */
   /*    M_neg_10pi_rho_up1_neg4_of_u0_u_vec, */
-  /*    dgmath_jit_dbase, */
+  /*    d4est_ops, */
   /*    neg_10pi_rho_up1_neg4, */
   /*    1 */
   /*   ); */
@@ -402,13 +402,13 @@ void apply_jac
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 )
 {
   prob_vecs->scalar_flux_fcn_data.bndry_fcn = zero_fcn;
   prob_vecs->vector_flux_fcn_data.bndry_fcn = zero_fcn;
   
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase);
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
 
   /* double* neg_10pi_rho_up1_neg4_of_u0_vec = P4EST_ALLOC(double, prob_vecs->local_nodes); */
   /* double* neg_10pi_rho_up1_neg4_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes); */
@@ -420,7 +420,7 @@ void apply_jac
   /*    prob_vecs->u0, */
   /*    neg_10pi_rho_up1_neg4_of_u0_vec, */
   /*    neg_10pi_rho_up1_neg4, */
-  /*    dgmath_jit_dbase */
+  /*    d4est_ops */
   /*   ); */
 
   /* linalg_component_mult */
@@ -436,7 +436,7 @@ void apply_jac
   /*    p4est, */
   /*    neg_10pi_rho_up1_neg4_of_u0_u_vec, */
   /*    M_neg_10pi_rho_up1_neg4_of_u0_u_vec, */
-  /*    dgmath_jit_dbase */
+  /*    d4est_ops */
   /*   ); */
 
   element_data_apply_Mij_on_f_of_vec1_x_vec2
@@ -445,7 +445,7 @@ void apply_jac
      prob_vecs->u0,
      prob_vecs->u,
      M_neg_10pi_rho_up1_neg4_of_u0_u_vec,
-     dgmath_jit_dbase,
+     d4est_ops,
      neg_10pi_rho_up1_neg4,
      1
     );
@@ -530,9 +530,9 @@ typedef struct {
   double rho0_div_rhoc;
   double ip_flux_penalty;
   int percentile;
-  int use_Gauss_integ;
+  int use_Gauss_quad;
   int degmax;
-  int deg_offset_for_Gauss_integ;
+  int deg_offset_for_Gauss_quad;
   KSPType krylov_type;
   int amr_inflation_size;
   
@@ -587,13 +587,13 @@ int problem_input_handler
     mpi_assert(pconfig->domain_size == -1);
     pconfig->domain_size = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"use_Gauss_integ")) {
-    mpi_assert(pconfig->use_Gauss_integ == -1);
-    pconfig->use_Gauss_integ = atoi(value);
+  } else if (util_match_couple(section,"problem",name,"use_Gauss_quad")) {
+    mpi_assert(pconfig->use_Gauss_quad == -1);
+    pconfig->use_Gauss_quad = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"deg_offset_for_Gauss_integ")) {
-    mpi_assert(pconfig->deg_offset_for_Gauss_integ == -1);
-    pconfig->deg_offset_for_Gauss_integ = atoi(value);
+  } else if (util_match_couple(section,"problem",name,"deg_offset_for_Gauss_quad")) {
+    mpi_assert(pconfig->deg_offset_for_Gauss_quad == -1);
+    pconfig->deg_offset_for_Gauss_quad = atoi(value);
     pconfig->count += 1;
   } else if (util_match_couple(section,"amr",name,"amr_inflation_size")) {
     mpi_assert(pconfig->amr_inflation_size == -1);
@@ -624,8 +624,8 @@ problem_input
   input.ip_flux_penalty = -1;
   input.percentile = -1;
   input.rho0_div_rhoc = -1;
-  input.use_Gauss_integ = -1;
-  input.deg_offset_for_Gauss_integ = -1;
+  input.use_Gauss_quad = -1;
+  input.deg_offset_for_Gauss_quad = -1;
   input.amr_inflation_size = -1;
   input.degmax = -1;
   input.count = 0;
@@ -644,7 +644,7 @@ problem_init
  const char* input_file,
  p4est_t* p4est,
  d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int proc_size,
  sc_MPI_Comm mpicomm
 )
@@ -758,9 +758,9 @@ problem_init
 
   weakeqn_ptrs_t prob_fcns;
   problem_ctx_t prob_ctx;
-  if (input.use_Gauss_integ){
-    mpi_assert(input.deg_offset_for_Gauss_integ > -1);
-    prob_ctx.deg_offset_for_Gauss_integ = input.deg_offset_for_Gauss_integ;
+  if (input.use_Gauss_quad){
+    mpi_assert(input.deg_offset_for_Gauss_quad > -1);
+    prob_ctx.deg_offset_for_Gauss_quad = input.deg_offset_for_Gauss_quad;
     prob_fcns.apply_lhs = apply_jac_Gauss;
     prob_fcns.build_residual = build_residual_Gauss;
     prob_vecs.user = (void*)&prob_ctx;
@@ -800,7 +800,7 @@ problem_init
     /*        NULL, */
     /*        NULL, */
     /*        NULL, */
-    /*        dgmath_jit_dbase */
+    /*        d4est_ops */
     /*       ); */
 
 
@@ -851,7 +851,7 @@ problem_init
      hp_amr_smooth_pred_get_NULL_marker()
     );
   
-  element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, dgmath_jit_dbase);    
+  element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops);    
   linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
     
@@ -862,7 +862,7 @@ problem_init
                                 u_analytic,
                                 zero_fcn,
                                 &ip_flux_params,
-                                dgmath_jit_dbase,
+                                d4est_ops,
                                 ghost,
                                 ghost_data
                                );
@@ -871,7 +871,7 @@ problem_init
                                 (
                                  p4est,
                                  u_analytic,
-                                 dgmath_jit_dbase
+                                 d4est_ops
                                 );
 
     double local_nodes_dbl = (double)local_nodes;
@@ -933,7 +933,7 @@ problem_init
        ip_flux_params.ip_flux_penalty_prefactor,
        ghost,
        ghost_data,
-       dgmath_jit_dbase
+       d4est_ops
       );
     
     estimator_stats_t* stats = P4EST_ALLOC(estimator_stats_t, 1);
@@ -944,7 +944,7 @@ problem_init
 
     local_eta2 = stats->total;
         
-    element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, dgmath_jit_dbase);    
+    element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops);    
 
     double* u_analytic_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
     double* u_error_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
@@ -1026,7 +1026,7 @@ problem_init
 
     int curved = 0;
     hp_amr(p4est,
-           dgmath_jit_dbase,
+           d4est_ops,
            &u,
            &stats,
            scheme,
@@ -1072,13 +1072,13 @@ problem_init
      (void*)&prob_fcns,
      &ghost,
      (void**)&ghost_data,
-     dgmath_jit_dbase,
+     d4est_ops,
      NULL,
      input_file,
      NULL
     );
     
-    element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, dgmath_jit_dbase);    
+    element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops);    
     linalg_vec_axpy(-1., u, u_analytic, local_nodes);
     
     /* dg norm should always have the boundary fcn set to zero */
@@ -1088,7 +1088,7 @@ problem_init
                                 u_analytic,
                                 zero_fcn,
                                 &ip_flux_params,
-                                dgmath_jit_dbase,
+                                d4est_ops,
                                 ghost,
                                 ghost_data
                                );
@@ -1097,7 +1097,7 @@ problem_init
                                 (
                                  p4est,
                                  u_analytic,
-                                 dgmath_jit_dbase
+                                 d4est_ops
                                 );
 
     double local_nodes_dbl = (double)local_nodes;

@@ -69,7 +69,7 @@ multigrid_bottom_solver_cheby_d4est
      fcns,
      *(updater->ghost),
      *(updater->ghost_data),
-     mg_data->dgmath_jit_dbase,
+     mg_data->d4est_ops,
      updater->d4est_geom,
      cheby->cheby_eigs_cg_imax,
      &cheby->eig

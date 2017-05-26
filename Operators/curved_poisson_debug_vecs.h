@@ -2,13 +2,13 @@
 #define CURVED_POISSON_DEBUG_VECS_H 
 
 #include <pXest.h>
-#include <dgmath.h>
+#include <d4est_operators.h>
 
 typedef struct {
 
   int elem_id;
   int deg;
-  int deg_integ;
+  int deg_quad;
 
   double* Mdu [(P4EST_DIM)];
 
@@ -30,7 +30,7 @@ curved_poisson_debug_vecs_set_lifteduflux
 (
  double* lifteduflux [(P4EST_FACES)][(P4EST_DIM)],
  curved_poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void
@@ -38,7 +38,7 @@ curved_poisson_debug_vecs_set_liftedqflux
 (
  double* liftedqflux [(P4EST_FACES)],
  curved_poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void
@@ -46,7 +46,7 @@ curved_poisson_debug_vecs_set_Mdu
 (
  double* Mdu [(P4EST_DIM)],
  curved_poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void
@@ -54,7 +54,7 @@ curved_poisson_debug_vecs_set_Au
 (
  double* Au,
  curved_poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 
@@ -63,7 +63,7 @@ curved_poisson_debug_vecs_set_u
 (
  double* u,
  curved_poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 
@@ -72,7 +72,7 @@ curved_poisson_debug_vecs_set_Mdivq
 (
  double* Mdivq,
  curved_poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 curved_poisson_debug_vecs_t*
@@ -93,7 +93,7 @@ curved_poisson_debug_vecs_set_q
 (
  double* q [(P4EST_DIM)],
  curved_poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void
@@ -101,7 +101,7 @@ curved_poisson_debug_vecs_set_Mq
 (
  double* Mq [(P4EST_DIM)],
  curved_poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void

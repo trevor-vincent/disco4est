@@ -2,7 +2,7 @@
 #define GRAD_H 
 
 #include "../pXest/pXest.h"
-#include "../dGMath/dgmath.h"
+#include "../dGMath/d4est_operators.h"
 
 void
 grad
@@ -11,7 +11,7 @@ grad
  double* gradu [(P4EST_DIM)],
  double h,
  int deg,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void
@@ -21,7 +21,7 @@ grad_euc_norm
  double* gradu_norm,
  double h,
  int deg,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 #endif

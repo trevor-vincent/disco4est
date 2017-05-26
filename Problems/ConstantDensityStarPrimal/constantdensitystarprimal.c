@@ -42,7 +42,7 @@ double cz;
 
 typedef struct {
 
-  int deg_off_set_for_nonlinear_integ;
+  int deg_off_set_for_nonlinear_quad;
   ip_flux_params_t* ip_flux_params;
   
 } problem_ctx_t;
@@ -169,7 +169,7 @@ build_residual
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -177,7 +177,7 @@ build_residual
   
   prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (boundary_fcn, ctx->ip_flux_params);
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
   double* M_neg_2pi_rho_up1_neg5_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -195,14 +195,14 @@ build_residual
         curved_element_data_t* ed = quad->p.user_data;        
         int deg_nonlinear = ed->deg;
 
-        dgmath_apply_fofufofvlj_Gaussnodes
+        d4est_operators_apply_fofufofvlj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            &prob_vecs->u[ed->nodal_stride],
            NULL,
            ed->deg,
-           ed->J_integ,
-           ed->xyz_integ,
+           ed->J_quad,
+           ed->xyz_quad,
            deg_nonlinear,
            (P4EST_DIM),
            &M_neg_2pi_rho_up1_neg5_vec[ed->nodal_stride],
@@ -226,7 +226,7 @@ void apply_jac
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -235,7 +235,7 @@ void apply_jac
   /* apply jac must always have zero boundary conditions for du in dirichlet problems */
   prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (zero_fcn, ctx->ip_flux_params);
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
   
   double* M_neg_10pi_rho_up1_neg4_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
 
@@ -250,16 +250,16 @@ void apply_jac
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;
-        int deg_nonlinear = ed->deg;// + ctx->deg_offset_for_nonlinear_integ;
-        dgmath_apply_fofufofvlilj_Gaussnodes
+        int deg_nonlinear = ed->deg;// + ctx->deg_offset_for_nonlinear_quad;
+        d4est_operators_apply_fofufofvlilj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            &prob_vecs->u[ed->nodal_stride],
            &prob_vecs->u0[ed->nodal_stride],
            NULL,
            ed->deg,
-           ed->J_integ,
-           ed->xyz_integ,
+           ed->J_quad,
+           ed->xyz_quad,
            deg_nonlinear,
            (P4EST_DIM),
            &M_neg_10pi_rho_up1_neg4_of_u0_u_vec[ed->nodal_stride],
@@ -327,9 +327,9 @@ typedef struct {
   double rho0_div_rhoc;
   double ip_flux_penalty;
   int percentile;
-  int use_Gauss_integ;
+  int use_Gauss_quad;
   int degmax;
-  int deg_offset_for_nonlinear_integ;
+  int deg_offset_for_nonlinear_quad;
   KSPType krylov_type;
   int amr_inflation_size;
   
@@ -427,13 +427,13 @@ int problem_input_handler
     mpi_assert(pconfig->domain_size == -1);
     pconfig->domain_size = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"use_Gauss_integ")) {
-    mpi_assert(pconfig->use_Gauss_integ == -1);
-    pconfig->use_Gauss_integ = atoi(value);
+  } else if (util_match_couple(section,"problem",name,"use_Gauss_quad")) {
+    mpi_assert(pconfig->use_Gauss_quad == -1);
+    pconfig->use_Gauss_quad = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_integ")) {
-    mpi_assert(pconfig->deg_offset_for_nonlinear_integ == -1);
-    pconfig->deg_offset_for_nonlinear_integ = atoi(value);
+  } else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
+    mpi_assert(pconfig->deg_offset_for_nonlinear_quad == -1);
+    pconfig->deg_offset_for_nonlinear_quad = atoi(value);
     pconfig->count += 1;
   } else if (util_match_couple(section,"amr",name,"amr_inflation_size")) {
     mpi_assert(pconfig->amr_inflation_size == -1);
@@ -464,8 +464,8 @@ problem_input
   input.ip_flux_penalty = -1;
   input.percentile = -1;
   input.rho0_div_rhoc = -1;
-  input.use_Gauss_integ = -1;
-  input.deg_offset_for_nonlinear_integ = -1;
+  input.use_Gauss_quad = -1;
+  input.deg_offset_for_nonlinear_quad = -1;
   input.amr_inflation_size = -1;
   input.degmax = -1;
   input.count = 0;
@@ -488,7 +488,7 @@ problem_set_degrees
   curved_element_data_t* elem_data = elem_data_tmp;
   problem_input_t* input = user_ctx;
   elem_data->deg = input->degree;
-  elem_data->deg_integ = input->degree;
+  elem_data->deg_quad = input->degree;
 }
 
 void
@@ -499,14 +499,14 @@ problem_keep_degrees
 )
 {
   problem_input_t* input = user_ctx;
-  elem_data->deg_integ = elem_data->deg;
+  elem_data->deg_quad = elem_data->deg;
 }
 
 void
 problem_save_to_vtk
 (
  p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  double* u,
  double* u_analytic,
  double* u_error,
@@ -547,11 +547,11 @@ problem_save_to_vtk
     else
       sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta", "cds", level);
     
-    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, sol_save_as);
+    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, sol_save_as);
     d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
     d4est_vtk_context_set_scale(vtk_ctx, .99);
     d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
-    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);    
+    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, d4est_ops);    
     vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx,
                                              3,
                                              0,
@@ -608,7 +608,7 @@ problem_init
  const char* input_file,
  p4est_t* p4est,
  d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int proc_size,
  sc_MPI_Comm mpicomm
 )
@@ -697,7 +697,7 @@ problem_init
     
     curved_element_data_init_new(p4est,
                                  geometric_factors,
-                                 dgmath_jit_dbase,
+                                 d4est_ops,
                                  d4est_geom,
                                  problem_set_degrees,
                                  (void*)&input);
@@ -725,8 +725,8 @@ problem_init
 
   curved_weakeqn_ptrs_t prob_fcns;
   problem_ctx_t prob_ctx;
-  mpi_assert(input.deg_offset_for_nonlinear_integ > -1);
-  prob_ctx.deg_offset_for_nonlinear_integ = input.deg_offset_for_nonlinear_integ;
+  mpi_assert(input.deg_offset_for_nonlinear_quad > -1);
+  prob_ctx.deg_offset_for_nonlinear_quad = input.deg_offset_for_nonlinear_quad;
   prob_ctx.ip_flux_params = &ip_flux_params;
 
   prob_fcns.apply_lhs = apply_jac;
@@ -748,7 +748,7 @@ problem_init
      amr_marker
     );
     
-  curved_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, dgmath_jit_dbase, d4est_geom->p4est_geom);    
+  curved_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
   linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
 
     
@@ -762,7 +762,7 @@ problem_init
                                 d4est_geom,
                                 ghost,
                                 ghost_data,
-                                dgmath_jit_dbase
+                                d4est_ops
                                );
     
     double local_l2_norm_sqr =  curved_element_data_compute_l2_norm_sqr
@@ -770,7 +770,7 @@ problem_init
                                  p4est,
                                  u_error,
                                  local_nodes,
-                                 dgmath_jit_dbase,
+                                 d4est_ops,
                                  DO_NOT_STORE_LOCALLY
                                 );
 
@@ -833,7 +833,7 @@ problem_init
        ip_flux_params.ip_flux_penalty_prefactor,
        ghost,
        ghost_data,
-       dgmath_jit_dbase,
+       d4est_ops,
        d4est_geom
       );
     
@@ -845,18 +845,18 @@ problem_init
 
     local_eta2 = stats->total;
         
-    curved_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, dgmath_jit_dbase, d4est_geom->p4est_geom);    
+    curved_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
     linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
 
     int with_eta = 1;
-    problem_save_to_vtk(p4est, dgmath_jit_dbase,u, u_analytic, u_error, level, with_eta);
+    problem_save_to_vtk(p4est, d4est_ops,u, u_analytic, u_error, level, with_eta);
     
 
     printf("p4est->local_num_quadrants*p4est->mpisize < input.amr_inflation_size -> %d < %d = %d\n", p4est->local_num_quadrants*p4est->mpisize,input.amr_inflation_size, p4est->local_num_quadrants*p4est->mpisize < input.amr_inflation_size);
 
     int curved = 1;
     hp_amr(p4est,
-           dgmath_jit_dbase,
+           d4est_ops,
            &u,
            &stats,
            scheme,
@@ -872,7 +872,7 @@ problem_init
     
     curved_element_data_init_new(p4est,
                                  geometric_factors,
-                                 dgmath_jit_dbase,
+                                 d4est_ops,
                                  d4est_geom,
                                  problem_keep_degrees,
                                  (void*)&input);
@@ -907,13 +907,13 @@ problem_init
      (void*)&prob_fcns,
      &ghost,
      (void**)&ghost_data,
-     dgmath_jit_dbase,
+     d4est_ops,
      d4est_geom,
      input_file,
      NULL
     );
     
-  curved_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, dgmath_jit_dbase, d4est_geom->p4est_geom);    
+  curved_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
     linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
 
     
@@ -927,7 +927,7 @@ problem_init
                                 d4est_geom,
                                 ghost,
                                 ghost_data,
-                                dgmath_jit_dbase
+                                d4est_ops
                                );
     
     double local_l2_norm_sqr =  curved_element_data_compute_l2_norm_sqr
@@ -935,7 +935,7 @@ problem_init
                                  p4est,
                                  u_error,
                                  local_nodes,
-                                 dgmath_jit_dbase,
+                                 d4est_ops,
                                  DO_NOT_STORE_LOCALLY
                                 );
 
@@ -1019,11 +1019,11 @@ problem_init
 
 
 
-  curved_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, dgmath_jit_dbase, d4est_geom->p4est_geom);    
+  curved_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
   linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
 
   int with_eta = 0;
-  problem_save_to_vtk(p4est, dgmath_jit_dbase, u, u_analytic, u_error, level, with_eta);
+  problem_save_to_vtk(p4est, d4est_ops, u, u_analytic, u_error, level, with_eta);
   
   hp_amr_curved_smooth_pred_destroy(scheme);
   geometric_factors_destroy(geometric_factors);

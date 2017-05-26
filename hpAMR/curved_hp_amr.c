@@ -46,7 +46,7 @@ curved_hp_amr_replace_callback_default
 #endif
 
   curved_hp_amr_data_t* curved_hp_amr_data = (curved_hp_amr_data_t*)p4est->user_pointer;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = curved_hp_amr_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = curved_hp_amr_data->d4est_ops;
   curved_element_data_t* parent_data = (curved_element_data_t*) outgoing[0]->p.user_data;
   curved_element_data_t* child_data;
   
@@ -57,14 +57,14 @@ curved_hp_amr_replace_callback_default
   for (i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;
       
-  int volume_nodes = dgmath_get_nodes((P4EST_DIM), degH);
+  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), degH);
   
   /* to store h-prolongation data */
   double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN));
   
-  dgmath_apply_hp_prolong
+  d4est_operators_apply_hp_prolong
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      &(parent_data->u_elem[0]),
      degH,
      (P4EST_DIM),
@@ -92,7 +92,7 @@ curved_hp_amr_refine_callback
 {
   curved_hp_amr_data_t* curved_hp_amr_data = (curved_hp_amr_data_t*) p4est->user_pointer;
   curved_element_data_t* elem_data = (curved_element_data_t*) quadrant->p.user_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = curved_hp_amr_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = curved_hp_amr_data->d4est_ops;
   
   int* refinement_log = curved_hp_amr_data->refinement_log;
   int* refinement_log_stride = &curved_hp_amr_data->refinement_log_stride;
@@ -111,14 +111,14 @@ curved_hp_amr_refine_callback
   else {
     int degH = elem_data->deg;
     int degh = refinement_log[*refinement_log_stride];
-    int volume_nodes = dgmath_get_nodes((P4EST_DIM), degh);
+    int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), degh);
     
     double* temp_data = P4EST_ALLOC(double, volume_nodes);
     
     if (elem_data->deg < degh){
-      dgmath_apply_p_prolong
+      d4est_operators_apply_p_prolong
         (
-         dgmath_jit_dbase,
+         d4est_ops,
          &elem_data->u_elem[0],
          degH,
          (P4EST_DIM),
@@ -128,9 +128,9 @@ curved_hp_amr_refine_callback
       linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
     }
     else if (elem_data->deg > degh){
-      dgmath_apply_p_restrict
+      d4est_operators_apply_p_restrict
         (
-         dgmath_jit_dbase,
+         d4est_ops,
          &elem_data->u_elem[0],
          degH,
          (P4EST_DIM),
@@ -217,7 +217,7 @@ curved_hp_amr
  p4est_replace_t balance_replace_callback_fcn_ptr, 
  void* curved_hp_amr_scheme_data,
  estimator_stats_t* stats,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 )
 {
   curved_hp_amr_data_t curved_hp_amr_data;
@@ -225,7 +225,7 @@ curved_hp_amr
   curved_hp_amr_data.refinement_log_stride = 0;
   curved_hp_amr_data.data = *data_to_hp_refine;
   curved_hp_amr_data.curved_hp_amr_scheme_data = curved_hp_amr_scheme_data;
-  curved_hp_amr_data.dgmath_jit_dbase = dgmath_jit_dbase;
+  curved_hp_amr_data.d4est_ops = d4est_ops;
   curved_hp_amr_data.estimator_stats = stats;
   /* set defaults if NULL, the extra data stored is only the deg */
   /* util_print_matrix(*data_to_hp_refine, curved_element_data_get_local_nodes(p4est), 1, "data_to_hp_refine = ", 0); */

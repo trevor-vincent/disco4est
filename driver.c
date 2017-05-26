@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
   }
   
   /* start just-in-time dg-math */
-  dgmath_jit_dbase_t* dgmath_jit_dbase = dgmath_jit_dbase_init();  
+  d4est_operators_t* d4est_ops = d4est_ops_init();  
   
   /* Solve Problem */
   problem_init
@@ -82,12 +82,12 @@ int main(int argc, char *argv[])
      "options.input",
      p4est,
      d4est_geom,
-     dgmath_jit_dbase,
+     d4est_ops,
      proc_size,
      mpicomm
     );
   
-  dgmath_jit_dbase_destroy(dgmath_jit_dbase);
+  d4est_ops_destroy(d4est_ops);
   
   /* free pXest */
   p4est_destroy(p4est);

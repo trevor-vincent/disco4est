@@ -89,6 +89,7 @@ include_directories(${CMAKE_SOURCE_DIR}/ElementData)
 include_directories(${CMAKE_SOURCE_DIR}/Flux)
 include_directories(${CMAKE_SOURCE_DIR}/Operators)
 include_directories(${CMAKE_SOURCE_DIR}/Visualization)
+include_directories(${CMAKE_SOURCE_DIR}/Quadrature)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${MPI_C_INCLUDE_PATH})
 # include_directories(${OpenBLAS_INCLUDE_DIR})
@@ -103,22 +104,22 @@ SET (
   Solver/krylov_petsc.c
   Solver/d4est_cg.c
   Solver/krylov_pc_multigrid.c
-  Solver/krylov_pc_invstiff.c
+  # Solver/krylov_pc_invstiff.c
   Solver/multigrid.c
   Solver/newton_petsc.c
   Solver/newton_d4est.c
   Solver/cg_eigs.c
-  Solver/matrix_sym_tester.c
-  Solver/multigrid_matrix_operator.c
+  # Solver/matrix_sym_tester.c
+  # Solver/multigrid_matrix_operator.c
   EllipticSystem/problem_data.c
   Utilities/util.c
-  dGMath/dgmath.c
+  dGMath/d4est_operators.c
   GridFunctions/grid_functions.c
   LinearAlgebra/linalg.c
-  Estimators/bi_estimator.c
-  Estimators/curved_bi_estimator.c
-  Estimators/curved_bi_estimator_flux_fcns.c
-  Estimators/bi_estimator_flux_fcns.c
+  # Estimators/bi_estimator.c
+  # Estimators/curved_bi_estimator.c
+  # Estimators/curved_bi_estimator_flux_fcns.c
+  # Estimators/bi_estimator_flux_fcns.c
   Geometry/d4est_geometry_cubed_sphere.c
   # Geometry/d4est_geometry_shell.c
   Geometry/d4est_geometry_disk.c
@@ -131,19 +132,19 @@ SET (
   Estimators/estimator_stats.c
   # hpAMR/curved_hp_amr.c
   # hpAMR/curved_hp_amr_smooth_pred.c
-  hpAMR/hp_amr.c
+  # hpAMR/hp_amr.c
   Solver/cg.c
   Solver/jacobian_tester.c
   # Operators/curved_poisson_operator.c
   Operators/curved_poisson_operator_primal.c
   Operators/poisson_operator.c
-  Operators/poisson_debug_vecs.c
-  Operators/curved_poisson_debug_vecs.c
+  # Operators/poisson_debug_vecs.c
+  # Operators/curved_poisson_debug_vecs.c
   Operators/grad.c
-  hpAMR/hp_amr_smooth_pred.c
-  hpAMR/hp_amr_curved_smooth_pred.c
-  hpAMR/hp_amr_uniform.c
-  hpAMR/hp_amr_curved_uniform.c
+  # hpAMR/hp_amr_smooth_pred.c
+  # hpAMR/hp_amr_curved_smooth_pred.c
+  # hpAMR/hp_amr_uniform.c
+  # hpAMR/hp_amr_curved_uniform.c
   ElementData/curved_element_data.c
   ElementData/element_data.c
   Flux/central_flux_vector_fcns.c
@@ -152,25 +153,29 @@ SET (
   # Flux/curved_Gauss_central_flux_vector_fcns.c
   # Flux/curved_Gauss_sipg_flux_scalar_fcns.c
   # Flux/curved_Gauss_sipg_flux_vector_fcns.c
-  Solver/multigrid_bottom_solver_cg_d4est.c
-  Solver/multigrid_bottom_solver_cheby_d4est.c
-  Solver/multigrid_smoother_cheby_d4est.c
-  Solver/multigrid_smoother_krylov_petsc.c
-  Solver/multigrid_bottom_solver_krylov_petsc.c
-  Solver/multigrid_logger_residual.c
-  Solver/multigrid_element_data_updater_nocurved.c
-  Solver/multigrid_element_data_updater_curved.c
-  Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.c
+  # Solver/multigrid_bottom_solver_cg_d4est.c
+  # Solver/multigrid_bottom_solver_cheby_d4est.c
+  # Solver/multigrid_smoother_cheby_d4est.c
+  # Solver/multigrid_smoother_krylov_petsc.c
+  # Solver/multigrid_bottom_solver_krylov_petsc.c
+  # Solver/multigrid_logger_residual.c
+  # Solver/multigrid_element_data_updater_nocurved.c
+  # Solver/multigrid_element_data_updater_curved.c
+  # Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.c
   # Flux/curved_Gauss_primal_sipg_kronbichler_uniform_flux_fcns.c
   # Flux/curved_Gauss_primal_sipg_hesthaven_flux_fcns.c
+  Quadrature/d4est_quadrature.c
+  Quadrature/d4est_quadrature_gauss_legendre.c
+  Quadrature/d4est_quadrature_gauss_lobatto.c
+  Geometry/d4est_mortars.c
   Flux/ip_flux.c
   Flux/ip_flux_params.c
-  Flux/curved_test_mortarjacobianterms_flux_fcns.c
-  Flux/dg_norm.c
-  Flux/curved_dg_norm.c
-  Flux/sipg_flux_scalar_fcns.c
-  Flux/sipg_flux_vector_fcns.c
-  Visualization/hacked_p4est_vtk.c
+  # Flux/curved_test_mortarjacobianterms_flux_fcns.c
+  # Flux/dg_norm.c
+  # Flux/curved_dg_norm.c
+  # Flux/sipg_flux_scalar_fcns.c
+  # Flux/sipg_flux_vector_fcns.c
+  # Visualization/hacked_p4est_vtk.c
   Visualization/d4est_vtk.c
   )
 
@@ -336,10 +341,10 @@ endfunction()
 # add_d4est_problem_2d(test_uniform_wedge_multigrid_driver test_uniform_wedge_multigrid.c UniformExamples/WedgeMultigrid)
 # add_d4est_problem_3d(test_uniform_cubedsphere_poisson_driver test_uniform_cubedsphere_poisson.c UniformExamples/CubedSpherePoisson)
 # add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_driver test_uniform_cubedsphere_helmholtz.c UniformExamples/CubedSphereHelmholtz)
-# add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_driver test_uniform_cubedsphere_with_hole_helmholtz.c UniformExamples/CubedSphereWithHoleHelmholtz)
+add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_driver test_uniform_cubedsphere_with_hole_helmholtz.c UniformExamples/CubedSphereWithHoleHelmholtz)
 # add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_multigrid_driver test_uniform_cubed_sphere_with_hole_helmholtz_multigrid.c UniformExamples/CubedSphereWithHoleHelmholtzMultigrid)
 # add_d4est_problem_3d(test_uniform_kidder_driver test_uniform_kidder.c UniformExamples/Kidder)
-add_d4est_problem_3d(test_jacobian_driver test_jacobian.c TestJacobian)
+# add_d4est_problem_3d(test_jacobian_driver test_jacobian.c TestJacobian)
 # add_d4est_problem_2d(testmultigridmatrixop_driver testmultigridmatrixop.c TestMultigridMatrixOp)
 # add_d4est_problem_3d(testcurvedipflux_driver testcurvedipflux.c TestCurvedIPFlux)
 # add_d4est_problem_2d(testcurvedipflux_driver_2d testcurvedipflux.c TestCurvedIPFlux)

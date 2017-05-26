@@ -3,7 +3,7 @@
 
 #include <p8est_connectivity.h>
 #include <pXest.h>
-#include <dgmath.h>
+#include <d4est_operators.h>
 
 
 /** This object encapsulates a custom geometry transformation. */
@@ -77,9 +77,6 @@ struct d4est_geometry {
 
   p4est_connectivity_t* p4est_conn;
 
-  /* On each element we can store the geometric data on LOBATTO or GAUSS nodes*/
-  quadrature_type_t geom_quad_type;
-  
   /* Mapping from [-1,1]^3 to grid coordinates*/
   /* geometric_quantity_compute_method_t X_compute_method; /\* only analytic atm *\/ */
   geometric_quantity_compute_method_t DX_compute_method; /* analytic and numerical available */
@@ -102,29 +99,19 @@ struct d4est_geometry {
 int d4est_geometry_is_face_on_boundary(p4est_t *p4est,p4est_quadrant_t *q,int which_tree,int face);
 int d4est_geometry_does_element_touch_boundary(p4est_t *p4est,p4est_quadrant_t *q,int which_tree);
 void d4est_geometry_get_tree_coords_in_range_0_to_1(p4est_qcoord_t q0[3],p4est_qcoord_t dq,const double coords[3],coords_type_t coords_type,double tcoords[3]);
-void d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY(p4est_topidx_t e0_tree,p4est_qcoord_t e0_q[(P4EST_DIM)],p4est_qcoord_t e0_dq,int num_faces_side,int num_faces_mortar,int *deg_mortar,int face_side,quadrature_type_t quad_type,double *n[(P4EST_DIM)],double *sj,d4est_geometry_t *d4est_geom,dgmath_jit_dbase_t *dgmath_jit_dbase,double *xyz_storage[(P4EST_DIM)]);
-void d4est_geometry_compute_xyz(dgmath_jit_dbase_t *dgmath_jit_dbase,d4est_geometry_t *d4est_geom,int which_tree,int deg,quadrature_type_t type,p4est_qcoord_t q[(P4EST_DIM)],p4est_qcoord_t dq,double *xyz[(P4EST_DIM)]);
-void d4est_geometry_compute_geometric_data_on_mortar(p4est_topidx_t e0_tree,p4est_qcoord_t e0_q[(P4EST_DIM)],p4est_qcoord_t e0_dq,int num_faces_side,int num_faces_mortar,int *deg_mortar_integ,int face,double *drst_dxyz_on_mortar_integ[(P4EST_DIM)][(P4EST_DIM)],double *sj_on_mortar_integ,double *n_on_mortar_integ[(P4EST_DIM)],double *n_sj_on_mortar_integ[(P4EST_DIM)],double *j_div_sj_mortar_integ,quadrature_type_t quad_type,d4est_geometry_t *d4est_geom,dgmath_jit_dbase_t *dgmath_jit_dbase,normal_compute_method_t n_compute_method);
+void d4est_geometry_compute_xyz(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_rst_t rst_points,int which_tree,int deg,p4est_qcoord_t q[(P4EST_DIM)],p4est_qcoord_t dq,double *xyz[(P4EST_DIM)]);
+void d4est_geometry_compute_qcoords_on_mortar(p4est_topidx_t e0_tree,p4est_qcoord_t e0_q[(P4EST_DIM)],p4est_qcoord_t e0_dq,int num_faces_side,int num_faces_mortar,int face,p4est_qcoord_t mortar_q0[(P4EST_HALF)][(P4EST_DIM)],p4est_qcoord_t *mortar_dq);
 void d4est_geometry_compute_drst_dxyz_times_jacobian(double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)],double *drst_dxyz_times_jac[(P4EST_DIM)][(P4EST_DIM)],int volume_nodes);
 void d4est_geometry_compute_drst_dxyz(double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)],double *jac,double *drst_dxyz[(P4EST_DIM)][(P4EST_DIM)],int volume_nodes);
 void d4est_geometry_compute_jacobian(double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)],double *jac,int volume_nodes);
-void d4est_geometry_compute_dxyz_drst_face_isoparametric(dgmath_jit_dbase_t *dgmath_jit_dbase,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int which_tree,int face,d4est_geometry_t *d4est_geom,quadrature_type_t quad_type,int deg,double *dxyz_drst_on_face[(P4EST_DIM)][(P4EST_DIM)]);
-void d4est_geometry_compute_xyz_face_analytic(dgmath_jit_dbase_t *dgmath_jit_dbase,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int which_tree,int face,d4est_geometry_t *d4est_geom,quadrature_type_t quad_type,int deg,double *xyz[(P4EST_DIM)]);
-void d4est_geometry_compute_jac_face_analytic(dgmath_jit_dbase_t *dgmath_jit_dbase,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int which_tree,int face,d4est_geometry_t *d4est_geom,quadrature_type_t quad_type,int deg,double *jac);
-void d4est_geometry_compute_drst_dxyz_times_jac_face_analytic(dgmath_jit_dbase_t *dgmath_jit_dbase,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int which_tree,int face,d4est_geometry_t *d4est_geom,quadrature_type_t quad_type,int deg,double *drst_dxyz_times_jac[(P4EST_DIM)][(P4EST_DIM)]);
-void d4est_geometry_compute_drst_dxyz_face_analytic(dgmath_jit_dbase_t *dgmath_jit_dbase,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int which_tree,int face,d4est_geometry_t *d4est_geom,quadrature_type_t quad_type,int deg,double *drst_dxyz[(P4EST_DIM)][(P4EST_DIM)]);
-void d4est_geometry_compute_dxyz_drst_face_analytic(dgmath_jit_dbase_t *dgmath_jit_dbase,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int which_tree,int face,d4est_geometry_t *d4est_geom,quadrature_type_t quad_type,int deg,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
-void d4est_geometry_compute_dxyz_drst_isoparametric(p4est_topidx_t which_tree,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int deg,quadrature_type_t quad_type,d4est_geometry_t *d4est_geom,dgmath_jit_dbase_t *dgmath_jit_dbase,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
-void d4est_geometry_compute_dxyz_drst(p4est_topidx_t which_tree,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int deg,quadrature_type_t quad_type,d4est_geometry_t *d4est_geom,dgmath_jit_dbase_t *dgmath_jit_dbase,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
-void d4est_geometry_compute_jac_analytic(p4est_topidx_t which_tree,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int deg,quadrature_type_t quad_type,d4est_geometry_t *d4est_geom,dgmath_jit_dbase_t *dgmath_jit_dbase,double *jac);
-void d4est_geometry_compute_drst_dxyz_analytic(p4est_topidx_t which_tree,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int deg,quadrature_type_t quad_type,d4est_geometry_t *d4est_geom,dgmath_jit_dbase_t *dgmath_jit_dbase,double *drst_dxyz[(P4EST_DIM)][(P4EST_DIM)]);
-void d4est_geometry_compute_Jdrdxdrdx_analytic(p4est_topidx_t which_tree,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int deg,quadrature_type_t quad_type,d4est_geometry_t *d4est_geom,dgmath_jit_dbase_t *dgmath_jit_dbase,double *Jdrdxdrdx[(P4EST_DIM)][(P4EST_DIM)]);
-void d4est_geometry_compute_dxyz_drst_analytic(p4est_topidx_t which_tree,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int deg,quadrature_type_t quad_type,d4est_geometry_t *d4est_geom,dgmath_jit_dbase_t *dgmath_jit_dbase,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
+void d4est_geometry_compute_xyz_face_analytic(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_rst_t rst_points,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int which_tree,int face,int deg,double *xyz[(P4EST_DIM)]);
+void d4est_geometry_compute_dxyz_drst_face_analytic(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_rst_t rst_points,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int which_tree,int face,int deg,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
+void d4est_geometry_compute_dxyz_drst(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_rst_t rst_points,p4est_topidx_t which_tree,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int deg,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
+void d4est_geometry_compute_dxyz_drst_analytic(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_rst_t rst_points,p4est_topidx_t which_tree,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int deg,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
 void d4est_geometry_quadtree_to_vertex(p4est_connectivity_t *connectivity,p4est_topidx_t which_tree,const double abc[3],double xyz[3]);
 void d4est_geometry_octree_to_vertex(p8est_connectivity_t *connectivity,p4est_topidx_t which_tree,const double abc[3],double xyz[3]);
 void d4est_geometry_destroy(d4est_geometry_t *d4est_geom);
 d4est_geometry_t *d4est_geometry_new(int mpirank,const char *input_file,const char *input_section,const char *printf_prefix);
-
 
 #endif
 

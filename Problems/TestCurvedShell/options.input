@@ -13,7 +13,7 @@ use_ip_flux = 0
 
 [problem]
 deg = 4
-deg_integ = 4
+deg_quad = 4
 
 [geometry]
 name = shell

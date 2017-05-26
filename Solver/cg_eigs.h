@@ -3,7 +3,7 @@
 
 #include "../EllipticSystem/problem_data.h"
 #include "../EllipticSystem/problem_weakeqn_ptrs.h"
-#include "../dGMath/dgmath.h"
+#include "../dGMath/d4est_operators.h"
 
 void
 cg_eigs
@@ -13,7 +13,7 @@ cg_eigs
  weakeqn_ptrs_t* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  int imax,
  double* eig_max

@@ -146,12 +146,12 @@ typedef struct {
   int num_of_amr_levels;
 
   int deg_R0;
-  int deg_integ_R0;
+  int deg_quad_R0;
   int deg_R1;
-  int deg_integ_R1;
+  int deg_quad_R1;
   int deg_R2;
-  int deg_integ_R2;
-  int deg_offset_for_nonlinear_integ;
+  int deg_quad_R2;
+  int deg_offset_for_nonlinear_quad;
   double ip_flux_penalty;
   int use_cactus;
   int count;
@@ -194,9 +194,9 @@ int problem_input_handler
     pconfig->use_cactus = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R0")) {
-    mpi_assert(pconfig->deg_integ_R0 == -1);
-    pconfig->deg_integ_R0 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
+    mpi_assert(pconfig->deg_quad_R0 == -1);
+    pconfig->deg_quad_R0 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_R1")) {
@@ -204,9 +204,9 @@ int problem_input_handler
     pconfig->deg_R1 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R1")) {
-    mpi_assert(pconfig->deg_integ_R1 == -1);
-    pconfig->deg_integ_R1 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
+    mpi_assert(pconfig->deg_quad_R1 == -1);
+    pconfig->deg_quad_R1 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_R2")) {
@@ -214,14 +214,14 @@ int problem_input_handler
     pconfig->deg_R2 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R2")) {
-    mpi_assert(pconfig->deg_integ_R2 == -1);
-    pconfig->deg_integ_R2 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
+    mpi_assert(pconfig->deg_quad_R2 == -1);
+    pconfig->deg_quad_R2 = atoi(value);
     pconfig->count += 1;
   }  
-  else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_integ")) {
-    mpi_assert(pconfig->deg_offset_for_nonlinear_integ == -1);
-    pconfig->deg_offset_for_nonlinear_integ = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
+    mpi_assert(pconfig->deg_offset_for_nonlinear_quad == -1);
+    pconfig->deg_offset_for_nonlinear_quad = atoi(value);
     pconfig->count += 1;
   }  
 
@@ -247,12 +247,12 @@ problem_input
   input.ip_flux_penalty = -1;
   input.use_cactus = -1;
   input.deg_R0 = -1;
-  input.deg_integ_R0 = -1;
+  input.deg_quad_R0 = -1;
   input.deg_R1 = -1;
-  input.deg_integ_R1 = -1;
+  input.deg_quad_R1 = -1;
   input.deg_R2 = -1;
-  input.deg_integ_R2 = -1; 
-  input.deg_offset_for_nonlinear_integ = -1;
+  input.deg_quad_R2 = -1; 
+  input.deg_offset_for_nonlinear_quad = -1;
   
   input.count = 0;
   
@@ -372,20 +372,20 @@ problem_set_degrees
   /* outer shell */
   if (elem_data->tree < 6){
     elem_data->deg = input->deg_R2;
-    elem_data->deg_integ = input->deg_integ_R2;
-    elem_data->deg_stiffness = input->deg_integ_R2;
+    elem_data->deg_quad = input->deg_quad_R2;
+    elem_data->deg_stiffness = input->deg_quad_R2;
   }
   /* inner shell */
   else if(elem_data->tree < 12){
     elem_data->deg = input->deg_R1;
-    elem_data->deg_integ = input->deg_integ_R1;
-        elem_data->deg_stiffness = input->deg_integ_R1;
+    elem_data->deg_quad = input->deg_quad_R1;
+        elem_data->deg_stiffness = input->deg_quad_R1;
   }
   /* center cube */
   else {
     elem_data->deg = input->deg_R0;
-    elem_data->deg_integ = input->deg_integ_R0;
-    elem_data->deg_stiffness = input->deg_integ_R0;
+    elem_data->deg_quad = input->deg_quad_R0;
+    elem_data->deg_stiffness = input->deg_quad_R0;
   } 
 }
 
@@ -394,7 +394,7 @@ void
 problem_save_to_vtk
 (
  p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  double* u,
  int level,
  int with_eta,
@@ -449,11 +449,11 @@ problem_save_to_vtk
     else
       sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta", "puncture", level);
     
-    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, sol_save_as);
+    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, sol_save_as);
     d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
     d4est_vtk_context_set_scale(vtk_ctx, .99);
     d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
-    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);    
+    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, d4est_ops);    
     vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx,
                                              1,
                                              0,
@@ -506,7 +506,7 @@ problem_init
  const char* input_file,
  p4est_t* p4est,
  d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int proc_size,
  sc_MPI_Comm mpicomm
 )
@@ -550,11 +550,11 @@ problem_init
 
   /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
   twopunctures_params_t tp_params;
-  init_twopunctures_data(&tp_params, input.deg_offset_for_nonlinear_integ);
-  /* init_S_puncture_data(p4est, &tp_params, input.deg_offset_for_nonlinear_integ); */
+  init_twopunctures_data(&tp_params, input.deg_offset_for_nonlinear_quad);
+  /* init_S_puncture_data(p4est, &tp_params, input.deg_offset_for_nonlinear_quad); */
 
   twopunctures_cactus_params_t tp_cactus_params;
-  init_cactus_puncture_data(&tp_cactus_params, input.deg_offset_for_nonlinear_integ);
+  init_cactus_puncture_data(&tp_cactus_params, input.deg_offset_for_nonlinear_quad);
 
   
   problem_data_t prob_vecs;
@@ -623,7 +623,7 @@ problem_init
 
       curved_element_data_init_new(p4est,
                                    geometric_factors,
-                                   dgmath_jit_dbase,
+                                   d4est_ops,
                                    d4est_geom,
                                    problem_set_degrees,
                                    (void*)&input,
@@ -657,7 +657,7 @@ problem_init
       /*    ip_flux_params.ip_flux_penalty_prefactor, */
       /*    ghost, */
       /*    ghost_data, */
-      /*    dgmath_jit_dbase, */
+      /*    d4est_ops, */
       /*    d4est_geom */
       /*   ); */
 
@@ -679,10 +679,10 @@ problem_init
 
   
   /* d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;     */
-  /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
+  /* curved_element_data_init(p4est, geometric_factors, d4est_ops, d4est_geom, degree, input.gauss_quad_deg); */
   curved_element_data_init_new(p4est,
                                geometric_factors,
-                               dgmath_jit_dbase,
+                               d4est_ops,
                                d4est_geom,
                                problem_set_degrees,
                                (void*)&input,1,1);
@@ -737,7 +737,7 @@ problem_init
        ip_flux_params.ip_flux_penalty_prefactor,
        ghost,
        ghost_data,
-       dgmath_jit_dbase,
+       d4est_ops,
        d4est_geom
       );
 
@@ -776,11 +776,11 @@ problem_init
    /*  d4est_geometry_t* d4est_geom_vtk = d4est_geometry */
   /*   p4est_connectivity_t* conn_vtk = p8est_connectivity_new_sphere(); */
   /*   p4est_geometry_t* geom_vtk = p8est_geometry_new_sphere(conn_vtk, R0*3, R0*2, R0); */
-  /*   d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, "puncture-sphere"); */
+  /*   d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, "puncture-sphere"); */
   /*   d4est_vtk_context_set_geom(vtk_ctx, geom_vtk); */
   /*   d4est_vtk_context_set_scale(vtk_ctx, .99); */
   /*   d4est_vtk_context_set_deg_array(vtk_ctx, deg_array); */
-  /*   vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase); */
+  /*   vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, d4est_ops); */
   /*   vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx, 1, 0, "u",u, vtk_ctx); */
   /*   vtk_ctx = d4est_vtk_write_dg_cell_dataf */
   /*             ( */
@@ -808,7 +808,7 @@ problem_init
     problem_save_to_vtk
       (
        p4est,
-       dgmath_jit_dbase,
+       d4est_ops,
        u,
        level,
        1,
@@ -822,7 +822,7 @@ problem_init
   
     
     hp_amr(p4est,
-           dgmath_jit_dbase,
+           d4est_ops,
            &u,
            &stats[0],
            scheme,
@@ -841,7 +841,7 @@ problem_init
     
     curved_element_data_init_new(p4est,
                                  geometric_factors,
-                                 dgmath_jit_dbase,
+                                 d4est_ops,
                                  d4est_geom,
                                  problem_set_degrees,
                                  (void*)&input,1,1);
@@ -869,7 +869,7 @@ problem_init
     /*    p4est, */
     /*    ghost, */
     /*    ghost_data, */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    d4est_geom, */
     /*    &prob_fcns, */
     /*    &prob_vecs */
@@ -907,7 +907,7 @@ problem_init
     /*    ghost, */
     /*    ghost_data, */
     /*    &prob_vecs_spec, */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    d4est_geom */
     /*   ); */
 
@@ -917,7 +917,7 @@ problem_init
     /*    ghost, */
     /*    ghost_data, */
     /*    &prob_vecs_me, */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    d4est_geom */
     /*   ); */
     
@@ -929,7 +929,7 @@ problem_init
     /*    ghost, */
     /*    ghost_data, */
     /*    &prob_vecs_cactus, */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    d4est_geom */
     /*   ); */
 
@@ -952,7 +952,7 @@ problem_init
     /*    (void*)&prob_fcns, */
     /*    &ghost, */
     /*    (void**)&ghost_data, */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    d4est_geom, */
     /*    input_file, */
     /*    NULL */
@@ -982,7 +982,7 @@ problem_init
     /*    &ghost_data, */
     /*    geometric_factors, */
     /*    d4est_geom, */
-    /*    set_deg_integ, */
+    /*    set_deg_quad, */
     /*    &input */
     /*   ); */
 
@@ -990,13 +990,13 @@ problem_init
     /*                                                   ( */
     /*                                                    p4est, */
     /*                                                    num_of_levels, */
-    /*                                                    dgmath_jit_dbase, */
+    /*                                                    d4est_ops, */
     /*                                                    curved_element_data_get_local_matrix_nodes, */
     /*                                                    NULL */
     /*                                                   ); */
     
     /* multigrid_data_t* mg_data = multigrid_data_init(p4est, */
-    /*                                                 dgmath_jit_dbase, */
+    /*                                                 d4est_ops, */
     /*                                                 num_of_levels, */
     /*                                                 logger, */
     /*                                                 /\* NULL, //matrix_op_callbacks, *\/ */
@@ -1028,7 +1028,7 @@ problem_init
        (void*)&prob_fcns,
        &ghost,
        (void**)&ghost_data,
-       dgmath_jit_dbase,
+       d4est_ops,
        d4est_geom,
        &krylov_petsc_params,
        &newton_petsc_params,
@@ -1050,7 +1050,7 @@ problem_init
     /*    (void*)&prob_fcns, */
     /*    &ghost, */
     /*    (void**)&ghost_data, */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    d4est_geom, */
     /*    input_file, */
     /*    NULL */
@@ -1063,7 +1063,7 @@ problem_init
     /*    &prob_fcns, */
     /*    ghost, */
     /*    ghost_data, */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    d4est_geom, */
     /*    1, */
     /*    20 */
@@ -1076,7 +1076,7 @@ problem_init
     /*    &prob_fcns, */
     /*    ghost, */
     /*    ghost_data, */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    d4est_geom, */
     /*    1, */
     /*    20, */
@@ -1090,7 +1090,7 @@ problem_init
                                  p4est,
                                  u_prev,
                                  local_nodes,
-                                 dgmath_jit_dbase,
+                                 d4est_ops,
                                  DO_NOT_STORE_LOCALLY
                                 );
     

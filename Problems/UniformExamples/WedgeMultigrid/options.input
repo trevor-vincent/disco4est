@@ -13,7 +13,7 @@ ip_flux_penalty_calculate_fcn = meanp_sqr_over_meanh
 [problem]
 num_unifrefs = 1
 deg = 2
-deg_integ = 2
+deg_quad = 2
 deg_stiffness = 2
 rhs_use_Lobatto = 1
 solve_with_multigrid = 1

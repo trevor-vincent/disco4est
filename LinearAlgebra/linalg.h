@@ -19,6 +19,7 @@ void dsyev_(const char *, const char *, const int *, double *, const int *,
             double *, double *, int *, int *);
 
 /* This file was automatically generated.  Do not edit! */
+double linalg_vec1_trans_mat_vec2(double *vec1,double *mat,double *vec2,int N);
 double linalg_vec_sum(double *vec,int N);
 void linalg_cross_prod(double ax,double ay,double az,double bx,double by,double bz,double *axb_x,double *axb_y,double *axb_z);
 void linalg_component_div(double *x,double *y,double *xdivy,int N);
@@ -73,30 +74,13 @@ void linalg_kron_vec_dot_xy(double *vec,double *x,double *y,int vec_size,double 
 void linalg_kron_oneover_vec_o_vec_dot_oneover_x_dot_y(double *vec,double *x,double *y,int vec_size,double *vecvec_dot_xy);
 void linalg_kron_vec_o_vec_dot_wxyz(double *vec,double *w,double *x,double *y,double *z,int vec_size,double *vecvec_dot_wxyz);
 void linalg_kron_vec_o_vec_dot_xy(double *vec,double *x,double *y,int vec_size,double *vecvec_dot_xy);
+void linalg_kron_vec1_o_vec2_o_vec3_dot_wxyz(double *vec1,double *vec2,double *vec3,double *w,double *x,double *y,double *z,int vec1_size,int vec2_size,int vec3_size,double *vec1vec2vec3_dot_x);
+void linalg_kron_vec1_o_vec2_o_vec3_dot_xy(double *vec1,double *vec2,double *vec3,double *x,double *y,int vec1_size,int vec2_size,int vec3_size,double *vec1vec2vec3_dot_x);
+void linalg_kron_vec1_o_vec2_o_vec3_dot_x(double *vec1,double *vec2,double *vec3,double *x,int vec1_size,int vec2_size,int vec3_size,double *vec1vec2vec3_dot_x);
+void linalg_kron_vec1_o_vec2_dot_wxyz(double *vec1,double *vec2,double *w,double *x,double *y,double *z,int vec1_size,int vec2_size,double *vec1vec2_dot_x);
+void linalg_kron_vec1_o_vec2_dot_xy(double *vec1,double *vec2,double *x,double *y,int vec1_size,int vec2_size,double *vec1vec2_dot_x);
+void linalg_kron_vec1_o_vec2_dot_x(double *vec1,double *vec2,double *x,int vec1_size,int vec2_size,double *vec1vec2_dot_x);
 void linalg_kron_vec_o_vec_dot_x(double *vec,double *x,int vec_size,double *vecvec_dot_x);
 void linalg_kron_AoB(double *A,double *B,double *C,int a_rows,int a_cols,int b_rows,int b_cols);
-
-double
-linalg_vec1_trans_mat_vec2
-(
- double* vec1,
- double* mat,
- double* vec2,
- int N
-);
-
-void
-linalg_kron_vec1_o_vec2_o_vec3_dot_x
-(
- double *vec1,
- double* vec2,
- double* vec3,
- double*x,
- int vec1_size,
- int vec2_size,
- int vec3_size,
- double* vec1vec2vec3_dot_x
-);
-
 
 #endif

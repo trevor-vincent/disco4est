@@ -1,17 +1,17 @@
 #include "../Operators/grad.h"
 #include "../pXest/pXest.h"
-#include "../dGMath/dgmath.h"
+#include "../dGMath/d4est_operators.h"
 #include "../LinearAlgebra/linalg.h"
 
 
 void
-grad(double*u, double* gradu [(P4EST_DIM)], double h, int deg, dgmath_jit_dbase_t* dgmath_jit_dbase)
+grad(double*u, double* gradu [(P4EST_DIM)], double h, int deg, d4est_operators_t* d4est_ops)
 {
-  int vol_nodes = dgmath_get_nodes((P4EST_DIM),deg);
+  int vol_nodes = d4est_operators_get_nodes((P4EST_DIM),deg);
   int i;
   for (i = 0; i < (P4EST_DIM); i++){
-    dgmath_apply_Dij(
-                     dgmath_jit_dbase,
+    d4est_operators_apply_Dij(
+                     d4est_ops,
                      u,
                      (P4EST_DIM),
                      deg,
@@ -23,16 +23,16 @@ grad(double*u, double* gradu [(P4EST_DIM)], double h, int deg, dgmath_jit_dbase_
 }
 
 void
-grad_euc_norm(double* u, double* gradu_norm,  double h, int deg, dgmath_jit_dbase_t* dgmath_jit_dbase)
+grad_euc_norm(double* u, double* gradu_norm,  double h, int deg, d4est_operators_t* d4est_ops)
 {
-  int vol_nodes = dgmath_get_nodes((P4EST_DIM),deg);
+  int vol_nodes = d4est_operators_get_nodes((P4EST_DIM),deg);
 
   double* gradu [(P4EST_DIM)];
   int i,j;
   for (i = 0; i < (P4EST_DIM); i++)
     gradu[i] = P4EST_ALLOC(double, vol_nodes);
 
-  grad(u, gradu, h, deg, dgmath_jit_dbase);
+  grad(u, gradu, h, deg, d4est_ops);
   
   for (i = 0; i < vol_nodes; i++){
     gradu_norm[i] = 0.;

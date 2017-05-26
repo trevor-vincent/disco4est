@@ -2,7 +2,7 @@
 #include "../pXest/pXest.h"
 #include "../LinearAlgebra/linalg.h"
 #include "../Utilities/util.h"
-#include "../dGMath/dgmath.h"
+#include "../dGMath/d4est_operators.h"
 #include "../Solver/multigrid.h"
 #include "../Solver/cg_eigs.h"
 #include "../hpAMR/hp_amr.h"
@@ -254,7 +254,7 @@ multigrid_data_t*
 multigrid_data_init
 (
  p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int num_of_levels,
  multigrid_logger_t* logger,
  multigrid_user_callbacks_t* user_callbacks,
@@ -265,7 +265,7 @@ multigrid_data_init
   multigrid_data_t* mg_data = P4EST_ALLOC(multigrid_data_t, 1);
   mpi_assert(num_of_levels > 0);
 
-  mg_data->dgmath_jit_dbase = dgmath_jit_dbase;
+  mg_data->d4est_ops = d4est_ops;
   mg_data->num_of_levels = num_of_levels;
   mg_data->vcycle_atol = -1;
   mg_data->vcycle_rtol = -1;
@@ -857,7 +857,7 @@ multigrid_compute_residual
     Au = vecs->Au;
     rhs = vecs->rhs;
     double* r = P4EST_ALLOC(double, vecs->local_nodes);
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, mg_data->dgmath_jit_dbase, d4est_geom);  
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, mg_data->d4est_ops, d4est_geom);  
     linalg_vec_axpyeqz(-1., Au, rhs, r, local_nodes);
     double r2_0_local = linalg_vec_dot(r,r,local_nodes);  
     P4EST_FREE(r);

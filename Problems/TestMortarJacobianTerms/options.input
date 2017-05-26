@@ -12,11 +12,11 @@ ip_flux_penalty = 2.0
 
 [problem]
 deg_R2 = 5
-deg_integ_R2 = 5
+deg_quad_R2 = 5
 deg_R1 = 5
-deg_integ_R1 = 5
+deg_quad_R1 = 5
 deg_R0 = 5
-deg_integ_R0 = 5
+deg_quad_R0 = 5
 
 [geometry]
 name = cubed_sphere_outer_shell_block

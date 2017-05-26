@@ -14,7 +14,7 @@
 
 #include "../GridFunctions/grid_functions.h"
 #include "../Flux/ip_flux.h"
-#include "../dGMath/dgmath.h"
+#include "../dGMath/d4est_operators.h"
 
 typedef struct {
 
@@ -71,7 +71,7 @@ typedef struct {
   int deg;
 
   /* degree for Gauss integration if needed for non-linear terms */
-  int deg_integ;
+  int deg_quad;
   
 } element_data_t;
 
@@ -101,41 +101,41 @@ typedef struct {
 } slice_data_t;
 
 void element_data_get_slice_data(p4est_t *p4est, slice_data_t *slice_data,
-                                 dgmath_jit_dbase_t *dgmath_jit_dbase);
+                                 d4est_operators_t *d4est_ops);
 
 void element_data_get_slice_data_count(p4est_t *p4est,
                                        slice_data_t *slice_data);
 
 void element_data_init_node_vec(p4est_t *p4est, double *nodal_vec,
                                 grid_fcn_t init_fcn,
-                                dgmath_jit_dbase_t *dgmath_jit_dgbase);
+                                d4est_operators_t *d4est_operators_jit_dgbase);
 
 double element_data_compute_l2_norm_sqr(p4est_t *p4est, double *nodal_vec,
-                                        dgmath_jit_dbase_t *dgmath_jit_dbase);
+                                        d4est_operators_t *d4est_ops);
 
 void element_data_init(p4est_t *p4est, int deg);
 
 int element_data_get_local_nodes(p4est_t *p4est);
 
 void
-element_data_integrate_auv_andaddto
+element_data_quadrate_auv_andaddto
 (
  p4est_t* p4est,
  double a,
  double* u,
  double* v,
  double* a_uv,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
-void element_data_integrate_au_andaddto(p4est_t *p4est, double a, double *u,
+void element_data_quadrate_au_andaddto(p4est_t *p4est, double a, double *u,
                                         double *a_u,
-                                        dgmath_jit_dbase_t *dgmath_jit_dbase);
+                                        d4est_operators_t *d4est_ops);
 
-void element_data_integrate_fofuv_andaddto(
+void element_data_quadrate_fofuv_andaddto(
     p4est_t *p4est, double *u, double *v, double *out,
     /* int nonlin_deg, */
-    grid_fcn_ext_t f, dgmath_jit_dbase_t *dgmath_jit_dbase);
+    grid_fcn_ext_t f, d4est_operators_t *d4est_ops);
 
 void
 element_data_print_node_vec
@@ -145,14 +145,14 @@ element_data_print_node_vec
  char* name_string,
  int mpi_rank,
  int save_to_file,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void element_data_init_quadid(p4est_t *p4est);
 
 double
 element_data_compute_l2_norm_sqr_no_local(p4est_t *p4est, double *nodal_vec,
-                                          dgmath_jit_dbase_t *dgmath_jit_dbase);
+                                          d4est_operators_t *d4est_ops);
 
 void element_data_get_xyz(p4est_t *p4est, double *xyz[(P4EST_DIM)]);
 
@@ -165,7 +165,7 @@ element_data_compute_DG_norm_sqr
  double* nodal_vec,
  grid_fcn_t bndry_fcn,
  ip_flux_params_t* ip_flux_params,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data
 );
@@ -195,7 +195,7 @@ element_data_compute_f_of_uxyz
  double* f,
  double* u,
  grid_fcn_ext_t f_fcn,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void
@@ -204,35 +204,35 @@ element_data_apply_Mij_on_vec
  p4est_t* p4est,
  double* u,
  double* Mu,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 
 typedef double
-(*boundary_integral_fcn_t)
+(*boundary_quadral_fcn_t)
 (
  element_data_t*,
  int,
  void*,
- dgmath_jit_dbase_t*
+ d4est_operators_t*
 );
 
 typedef struct {
 
-  boundary_integral_fcn_t boundary_integral_fcn;
+  boundary_quadral_fcn_t boundary_quadral_fcn;
   void* ctx;
-  double* boundary_integral;
+  double* boundary_quadral;
 
-} boundary_integral_data_t;
+} boundary_quadral_data_t;
 
 
 double
-element_data_compute_boundary_integral
+element_data_compute_boundary_quadral
 (
  p4est_t* p4est,
- boundary_integral_fcn_t boundary_integral_fcn,
+ boundary_quadral_fcn_t boundary_quadral_fcn,
  void* ctx,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void
@@ -256,7 +256,7 @@ element_data_apply_Mij_on_f_of_vec1_x_vec2
  double* vec1,
  double* vec2,
  double* M_f_of_vec1_x_vec2,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  grid_fcn_ext_t f_fcn,
  int proj_deltap 
 );
@@ -267,7 +267,7 @@ element_data_apply_Mij_on_f_of_vec
  p4est_t* p4est,
  double* u,
  double* Mu,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  grid_fcn_ext_t f_fcn,
  int proj_deltap 
 );
@@ -302,7 +302,7 @@ element_data_compute_l2_norm_error_no_local
  double* vec,
  int nodes,
  grid_fcn_t analytical_solution,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 int element_data_get_local_matrix_nodes
@@ -314,7 +314,7 @@ void element_data_init_ext
 (
  p4est_t* p4est,
  int set_deg,
- int set_deg_integ
+ int set_deg_quad
 );
 
 int

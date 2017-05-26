@@ -345,7 +345,7 @@ hp_amr_smooth_pred_balance_replace_callback (
   mpi_assert(num_outgoing == 1);
 #endif
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = hp_amr_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
   hp_amr_smooth_pred_data_t* smooth_pred_data = (hp_amr_smooth_pred_data_t*) (hp_amr_data->hp_amr_scheme_data);
   
   element_data_t* parent_data = (element_data_t*) outgoing[0]->p.user_data;
@@ -358,7 +358,7 @@ hp_amr_smooth_pred_balance_replace_callback (
   for (i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;
 
-  int volume_nodes = dgmath_get_nodes((P4EST_DIM), degH);
+  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), degH);
     
   int h_pow = -1;
   /* if (smooth_pred_data->norm_type == l2_norm_type) */
@@ -369,9 +369,9 @@ hp_amr_smooth_pred_balance_replace_callback (
     /* mpi_abort("[ERROR]: hp_amr_smooth_pred norm_type not supported"); */
 
   double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN));
-  dgmath_apply_hp_prolong
+  d4est_operators_apply_hp_prolong
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      &(parent_data->u_storage[0]),
      degH,
      (P4EST_DIM),
@@ -405,7 +405,7 @@ hp_amr_smooth_pred_refine_replace_callback (
   mpi_assert(num_outgoing == 1);
 #endif
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = hp_amr_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
   /* hp_amr_smooth_pred_data_t* smooth_pred_data = (hp_amr_smooth_pred_data_t*) (hp_amr_data->hp_amr_scheme_data); */
 
   
@@ -419,7 +419,7 @@ hp_amr_smooth_pred_refine_replace_callback (
   for (i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;
 
-  int volume_nodes = dgmath_get_nodes((P4EST_DIM), degH);
+  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), degH);
     
   /* int h_pow = -1; */
   /* if (smooth_pred_data->norm_type == l2_norm_type) */
@@ -431,9 +431,9 @@ hp_amr_smooth_pred_refine_replace_callback (
   /*   h_pow *= -1.; /\* remove warnings *\/ */
   /* } */
   double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN));
-  dgmath_apply_hp_prolong
+  d4est_operators_apply_hp_prolong
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      &(parent_data->u_storage[0]),
      degH,
      (P4EST_DIM),

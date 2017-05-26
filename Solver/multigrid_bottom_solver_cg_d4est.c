@@ -64,7 +64,7 @@ multigrid_bottom_solver_cg_d4est
   double delta_new, delta_0, delta_old, beta, alpha;
 
   multigrid_bottom_solver_cg_d4est_t* cg_params = mg_data->bottom_solver->user;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = mg_data->d4est_ops;
 
   double* Au; 
   double* u;
@@ -85,7 +85,7 @@ multigrid_bottom_solver_cg_d4est
   d = P4EST_ALLOC(double, local_nodes);
   
   /* first iteration data, store Au in r */ 
-  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, d4est_geom);
+  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
 
   linalg_copy_1st_to_2nd(Au, r, local_nodes);
   
@@ -116,7 +116,7 @@ multigrid_bottom_solver_cg_d4est
   for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++){
   
     /* Au = A*d; */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, d4est_geom);
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
     /* sc_MPI_Barrier(sc_MPI_COMM_WORLD); */
 
     d_dot_Au = linalg_vec_dot(d,Au,local_nodes);

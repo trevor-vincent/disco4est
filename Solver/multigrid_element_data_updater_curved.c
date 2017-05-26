@@ -84,7 +84,7 @@ multigrid_element_data_updater_curved_update
   if (mg_data->mg_state == DOWNV_POST_COARSEN){
     curved_element_data_init_new(p4est,
                                  NULL,
-                                 mg_data->dgmath_jit_dbase,
+                                 mg_data->d4est_ops,
                                  updater->d4est_geom,
                                  updater->element_data_init_user_fcn,
                                  updater->user,
@@ -99,7 +99,7 @@ multigrid_element_data_updater_curved_update
     }
     curved_element_data_init_new(p4est,
                                  updater->geometric_factors[level - 1],
-                                 mg_data->dgmath_jit_dbase,
+                                 mg_data->d4est_ops,
                                  updater->d4est_geom,
                                  updater->element_data_init_user_fcn,
                                  updater->user,
@@ -123,7 +123,7 @@ multigrid_element_data_updater_curved_update
                                           (*(updater->ghost))->ghosts.elem_count); 
     curved_element_data_init_new(p4est,
                                  updater->geometric_factors[level + 1],
-                                 mg_data->dgmath_jit_dbase,
+                                 mg_data->d4est_ops,
                                  updater->d4est_geom,
                                  updater->element_data_init_user_fcn,
                                  updater->user,

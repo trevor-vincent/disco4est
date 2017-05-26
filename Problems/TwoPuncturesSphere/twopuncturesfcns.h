@@ -16,7 +16,7 @@ typedef struct {
   double M_bh [MAX_PUNCTURES];
   int num_punctures;
   double puncture_eps;
-  int deg_offset_for_puncture_nonlinearity_integ;
+  int deg_offset_for_puncture_nonlinearity_quad;
   
 } twopunctures_params_t;
 
@@ -25,7 +25,7 @@ void
 init_onepuncture_data
 (
  twopunctures_params_t* params,
- int deg_offset_for_puncture_nonlinearity_integ
+ int deg_offset_for_puncture_nonlinearity_quad
 )
 {
   double M = 1.;
@@ -47,8 +47,8 @@ init_onepuncture_data
   params->S_bh[0][1] = 0.;
   params->S_bh[0][2] = 0.2*M;
   
-  params->deg_offset_for_puncture_nonlinearity_integ
-    = deg_offset_for_puncture_nonlinearity_integ;
+  params->deg_offset_for_puncture_nonlinearity_quad
+    = deg_offset_for_puncture_nonlinearity_quad;
   
 }
 
@@ -58,7 +58,7 @@ void
 init_twopunctures_data
 (
  twopunctures_params_t* params,
- int deg_offset_for_puncture_nonlinearity_integ
+ int deg_offset_for_puncture_nonlinearity_quad
 )
 {
   double M = 1.;
@@ -93,8 +93,8 @@ init_twopunctures_data
   params->S_bh[1][1] = 0.;
   params->S_bh[1][2] = 0.;
 
-  params->deg_offset_for_puncture_nonlinearity_integ
-    = deg_offset_for_puncture_nonlinearity_integ;
+  params->deg_offset_for_puncture_nonlinearity_quad
+    = deg_offset_for_puncture_nonlinearity_quad;
   
 }
 
@@ -108,7 +108,7 @@ init_random_puncture_data
  p4est_t* p4est,
  twopunctures_params_t* params,
  int num_punctures,
- int deg_offset_for_puncture_nonlinearity_integ
+ int deg_offset_for_puncture_nonlinearity_quad
 )
 {
   mpi_assert(num_punctures < (MAX_PUNCTURES));
@@ -154,8 +154,8 @@ init_random_puncture_data
     
   }
 
-  params->deg_offset_for_puncture_nonlinearity_integ
-    = deg_offset_for_puncture_nonlinearity_integ;
+  params->deg_offset_for_puncture_nonlinearity_quad
+    = deg_offset_for_puncture_nonlinearity_quad;
 }
 
 static
@@ -338,7 +338,7 @@ void twopunctures_apply_jac
  p4est_ghost_t* ghost,
  void* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -347,7 +347,7 @@ void twopunctures_apply_jac
                                            ghost,
                                            ghost_data,
                                            prob_vecs,
-                                           dgmath_jit_dbase,
+                                           d4est_ops,
                                            d4est_geom);
   
   double* M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
@@ -364,13 +364,13 @@ void twopunctures_apply_jac
         curved_element_data_t* ed = quad->p.user_data;        
         curved_element_data_apply_fofufofvlilj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            d4est_geom,
            &prob_vecs->u[ed->nodal_stride],
            &prob_vecs->u0[ed->nodal_stride],
            NULL,
            ed,
-           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           ed->deg_quad + params->deg_offset_for_puncture_nonlinearity_quad,
            (P4EST_DIM),
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
            twopunctures_plus_7o8_K2_psi_neg8,
@@ -391,7 +391,7 @@ void
 twopunctures_compute_jac_matrix_operator
 (
  p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  double* u0,
  multigrid_matrix_op_t* matrix_op
@@ -412,17 +412,17 @@ twopunctures_compute_jac_matrix_operator
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;
-        int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         int matrix_volume_nodes = volume_nodes*volume_nodes;
         
         curved_element_data_form_fofufofvlilj_matrix_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            d4est_geom,
            u0,
            NULL,
            ed,
-           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           ed->deg_quad + params->deg_offset_for_puncture_nonlinearity_quad,
            (P4EST_DIM),
            &matrix_op->matrix_at0[matrix_nodal_stride],
            twopunctures_plus_7o8_K2_psi_neg8,
@@ -452,7 +452,7 @@ twopunctures_compute_jac_matrix_operator_for_pc
   twopunctures_compute_jac_matrix_operator
     (
      pc_ctx->p4est,
-     pc_ctx->dgmath_jit_dbase,
+     pc_ctx->d4est_ops,
      pc_ctx->d4est_geom,
      pc_ctx->vecs->u0,
      matrix_op
@@ -466,13 +466,13 @@ twopunctures_build_residual_mg
  p4est_ghost_t* ghost,
  void* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   twopunctures_params_t* params = ((multigrid_matrix_op_t*)prob_vecs->user)->user;
   /* twopunctures_params_t* params = prob_vecs->user; */
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
   double* M_neg_1o8_K2_psi_neg7_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -488,12 +488,12 @@ twopunctures_build_residual_mg
         curved_element_data_t* ed = quad->p.user_data;
         curved_element_data_apply_fofufofvlj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            d4est_geom,
            &prob_vecs->u[ed->nodal_stride],
            NULL,
            ed,
-           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           ed->deg_quad + params->deg_offset_for_puncture_nonlinearity_quad,
            (P4EST_DIM),
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
            twopunctures_neg_1o8_K2_psi_neg7,
@@ -504,11 +504,11 @@ twopunctures_build_residual_mg
 
         /* DEBUG_PRINT_ARR_DBL */
         
-        /* int volume_nodes_Lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg); */
-        /* int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), ed->deg_integ); */
+        /* int volume_nodes_Lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg); */
+        /* int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad); */
         /* double* u_tmp = &prob_vecs->u[ed->nodal_stride]; */
         /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_Lobatto); */
-        /* DEBUG_PRINT_ARR_DBL(ed->J_integ, volume_nodes_Gauss); */
+        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_Gauss); */
         
       }
     }
@@ -528,7 +528,7 @@ void twopunctures_apply_jac_mg
  p4est_ghost_t* ghost,
  void* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -537,7 +537,7 @@ void twopunctures_apply_jac_mg
                                            ghost,
                                            ghost_data,
                                            prob_vecs,
-                                           dgmath_jit_dbase,
+                                           d4est_ops,
                                            d4est_geom);
   
   double* M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
@@ -552,16 +552,16 @@ void twopunctures_apply_jac_mg
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;
-        int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         /* curved_element_data_apply_fofufofvlilj_Gaussnodes */
         /*   ( */
-        /*    dgmath_jit_dbase, */
+        /*    d4est_ops, */
         /*    d4est_geom, */
         /*    &prob_vecs->u[ed->nodal_stride], */
         /*    &prob_vecs->u0[ed->nodal_stride], */
         /*    NULL, */
         /*    ed, */
-        /*    ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ, */
+        /*    ed->deg_quad + params->deg_offset_for_puncture_nonlinearity_quad, */
         /*    (P4EST_DIM), */
         /*    &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride], */
         /*    twopunctures_plus_7o8_K2_psi_neg8, */
@@ -591,7 +591,7 @@ void twopunctures_apply_jac_Lobatto
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -600,7 +600,7 @@ void twopunctures_apply_jac_Lobatto
                                            ghost,
                                            ghost_data,
                                            prob_vecs,
-                                           dgmath_jit_dbase,
+                                           d4est_ops,
                                            d4est_geom);
   
   double* M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
@@ -616,7 +616,7 @@ void twopunctures_apply_jac_Lobatto
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;
-        int volume_nodes_lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes_lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         for (int i = 0; i < volume_nodes_lobatto; i++){
           double x = ed->xyz[0][i];
           double y = ed->xyz[1][i];
@@ -634,13 +634,13 @@ void twopunctures_apply_jac_Lobatto
         
         curved_element_data_apply_fofufofvlilj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            d4est_geom,
            &prob_vecs->u[ed->nodal_stride],
            &plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
            NULL,
            ed,
-           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           ed->deg_quad + params->deg_offset_for_puncture_nonlinearity_quad,
            (P4EST_DIM),
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
            NULL,
@@ -663,12 +663,12 @@ twopunctures_build_residual
  p4est_ghost_t* ghost,
  void* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   twopunctures_params_t* params = prob_vecs->user;
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
   double* M_neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -684,12 +684,12 @@ twopunctures_build_residual
         curved_element_data_t* ed = quad->p.user_data;
         curved_element_data_apply_fofufofvlj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            d4est_geom,
            &prob_vecs->u[ed->nodal_stride],
            NULL,
            ed,
-           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           ed->deg_quad + params->deg_offset_for_puncture_nonlinearity_quad,
            (P4EST_DIM),
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
            twopunctures_neg_1o8_K2_psi_neg7,
@@ -700,11 +700,11 @@ twopunctures_build_residual
 
         /* DEBUG_PRINT_ARR_DBL */
         
-        /* int volume_nodes_Lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg); */
-        /* int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), ed->deg_integ); */
+        /* int volume_nodes_Lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg); */
+        /* int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad); */
         /* double* u_tmp = &prob_vecs->u[ed->nodal_stride]; */
         /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_Lobatto); */
-        /* DEBUG_PRINT_ARR_DBL(ed->J_integ, volume_nodes_Gauss); */
+        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_Gauss); */
         
       }
     }
@@ -726,12 +726,12 @@ twopunctures_build_residual_Lobatto
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   twopunctures_params_t* params = prob_vecs->user;
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
   double* M_neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
   double* neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
@@ -746,7 +746,7 @@ twopunctures_build_residual_Lobatto
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;
-        int volume_nodes_lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes_lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         for (int i = 0; i < volume_nodes_lobatto; i++){
           double x = ed->xyz[0][i];
           double y = ed->xyz[1][i];
@@ -763,12 +763,12 @@ twopunctures_build_residual_Lobatto
 
         curved_element_data_apply_fofufofvlj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            d4est_geom,
            &neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
            NULL,
            ed,
-           ed->deg_integ + params->deg_offset_for_puncture_nonlinearity_integ,
+           ed->deg_quad + params->deg_offset_for_puncture_nonlinearity_quad,
            (P4EST_DIM),
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
            NULL,
@@ -779,11 +779,11 @@ twopunctures_build_residual_Lobatto
 
         /* DEBUG_PRINT_ARR_DBL */
         
-        /* int volume_nodes_Lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg); */
-        /* int volume_nodes_Gauss = dgmath_get_nodes((P4EST_DIM), ed->deg_integ); */
+        /* int volume_nodes_Lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg); */
+        /* int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad); */
         /* double* u_tmp = &prob_vecs->u[ed->nodal_stride]; */
         /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_Lobatto); */
-        /* DEBUG_PRINT_ARR_DBL(ed->J_integ, volume_nodes_Gauss); */
+        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_Gauss); */
         
       }
     }

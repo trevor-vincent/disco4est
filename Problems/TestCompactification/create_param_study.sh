@@ -38,11 +38,11 @@ ip_flux_penalty = $2
 
 [problem]
 deg_R2 = $3
-deg_integ_R2 = $4
+deg_quad_R2 = $4
 deg_R1 = $5
-deg_integ_R1 = $6
+deg_quad_R1 = $6
 deg_R0 = $7
-deg_integ_R0 = $7
+deg_quad_R0 = $7
 
 R0 = 10
 R1 = $8

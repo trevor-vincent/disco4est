@@ -91,13 +91,13 @@ typedef struct {
 
   int num_unifrefs;
   int deg_R0;
-  int deg_integ_R0;
+  int deg_quad_R0;
   int deg_stiffness_R0;
   int deg_R1;
-  int deg_integ_R1;
+  int deg_quad_R1;
   int deg_stiffness_R1;
   int deg_R2;
-  int deg_integ_R2;
+  int deg_quad_R2;
   int deg_stiffness_R2;
   char rhs_compute_method [50];
   
@@ -127,9 +127,9 @@ int problem_input_handler
     mpi_assert(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R0")) {
-    mpi_assert(pconfig->deg_integ_R0 == -1);
-    pconfig->deg_integ_R0 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
+    mpi_assert(pconfig->deg_quad_R0 == -1);
+    pconfig->deg_quad_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R0")) {
     mpi_assert(pconfig->deg_stiffness_R0 == -1);
@@ -139,9 +139,9 @@ int problem_input_handler
     mpi_assert(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R1")) {
-    mpi_assert(pconfig->deg_integ_R1 == -1);
-    pconfig->deg_integ_R1 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
+    mpi_assert(pconfig->deg_quad_R1 == -1);
+    pconfig->deg_quad_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R1")) {
     mpi_assert(pconfig->deg_stiffness_R1 == -1);
@@ -151,9 +151,9 @@ int problem_input_handler
     mpi_assert(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R2")) {
-    mpi_assert(pconfig->deg_integ_R2 == -1);
-    pconfig->deg_integ_R2 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
+    mpi_assert(pconfig->deg_quad_R2 == -1);
+    pconfig->deg_quad_R2 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R2")) {
     mpi_assert(pconfig->deg_stiffness_R2 == -1);
@@ -177,13 +177,13 @@ problem_input
   problem_input_t input;
   input.num_unifrefs = -1;
   input.deg_R0 = -1;
-  input.deg_integ_R0 = -1;
+  input.deg_quad_R0 = -1;
   input.deg_stiffness_R0 = -1;
   input.deg_R1 = -1;
-  input.deg_integ_R1 = -1;
+  input.deg_quad_R1 = -1;
   input.deg_stiffness_R1 = -1;
   input.deg_R2 = -1;
-  input.deg_integ_R2 = -1; 
+  input.deg_quad_R2 = -1; 
   input.deg_stiffness_R2 = -1; 
   input.rhs_compute_method[0] = '*'; 
 
@@ -193,13 +193,13 @@ problem_input
 
   D4EST_CHECK_INPUT("problem", input.num_unifrefs, -1);
   D4EST_CHECK_INPUT("problem", input.deg_R0, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_integ_R0, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_quad_R0, -1);
   D4EST_CHECK_INPUT("problem", input.deg_stiffness_R0, -1);
   D4EST_CHECK_INPUT("problem", input.deg_R1, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_integ_R1, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_quad_R1, -1);
   D4EST_CHECK_INPUT("problem", input.deg_stiffness_R1, -1);
   D4EST_CHECK_INPUT("problem", input.deg_R2, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_integ_R2, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_quad_R2, -1);
   D4EST_CHECK_INPUT("problem", input.deg_stiffness_R2, -1);  
   D4EST_CHECK_INPUT("problem", input.rhs_compute_method[0], '*');  
 
@@ -247,19 +247,19 @@ problem_set_degrees
   /* outer shell */
   if (elem_data->tree < 6){
     elem_data->deg = input->deg_R2;
-    elem_data->deg_integ = input->deg_integ_R2;
+    elem_data->deg_quad = input->deg_quad_R2;
     elem_data->deg_stiffness = input->deg_stiffness_R2;
   }
   /* inner shell */
   else if(elem_data->tree < 12){
     elem_data->deg = input->deg_R1;
-    elem_data->deg_integ = input->deg_integ_R1;
+    elem_data->deg_quad = input->deg_quad_R1;
     elem_data->deg_stiffness = input->deg_stiffness_R1;
   }
   /* center cube */
   else {
     elem_data->deg = input->deg_R0;
-    elem_data->deg_integ = input->deg_integ_R0;
+    elem_data->deg_quad = input->deg_quad_R0;
     elem_data->deg_stiffness = input->deg_stiffness_R0;
   } 
 }
@@ -339,14 +339,14 @@ void problem_apply_lhs
  p4est_ghost_t* ghost,
  void* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   /* prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns */
                                              /* (zero_fcn, &global_ip_flux_params); */
 
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
  double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -362,17 +362,17 @@ void problem_apply_lhs
      for (int q = 0; q < Q; ++q) {
        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
        curved_element_data_t* ed = quad->p.user_data;
-       int volume_nodes_Lobatto = dgmath_get_nodes((P4EST_DIM), ed->deg);
+       int volume_nodes_Lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
 
        curved_element_data_apply_fofufofvlilj_Gaussnodes
          (
-          dgmath_jit_dbase,
+          d4est_ops,
           d4est_geom,
           &prob_vecs->u[nodal_stride],
           NULL,
           NULL,
           ed,
-          ed->deg_stiffness, // + params->deg_offset_for_nonlinear_integ,
+          ed->deg_stiffness, // + params->deg_offset_for_nonlinear_quad,
           (P4EST_DIM),
           &M_helmf_u[nodal_stride],           
           helmholtz_fcn,
@@ -396,7 +396,7 @@ void problem_build_rhs
  weakeqn_ptrs_t* prob_fcns,
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
- dgmath_jit_dbase_t* dgbase,
+ d4est_operators_t* dgbase,
  d4est_geometry_t* d4est_geom,
  problem_input_t* input,
  void* user
@@ -427,11 +427,11 @@ void problem_build_rhs
         curved_element_data_t* ed = quad->p.user_data;
 
         if (util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){
-        dgmath_apply_curvedGaussMass(dgbase,
+        d4est_operators_apply_curvedGaussMass(dgbase,
                                      &f[ed->nodal_stride],
                                      ed->deg,
-                                     ed->J_integ,
-                                     ed->deg_integ,
+                                     ed->J_quad,
+                                     ed->deg_quad,
                                      (P4EST_DIM),
                                      &prob_vecs->rhs[ed->nodal_stride]
                                     );
@@ -458,7 +458,7 @@ void problem_build_rhs
         }
 
 
-        printf("elem_id, rhs sum = %d %.25f\n", ed->id, linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], dgmath_get_nodes((P4EST_DIM), ed->deg)));
+        printf("elem_id, rhs sum = %d %.25f\n", ed->id, linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg)));
         
         
       }
@@ -491,11 +491,11 @@ problem_build_residual
  p4est_ghost_t* ghost,
  void* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
-  problem_apply_lhs(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+  problem_apply_lhs(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
   linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
 }
 
@@ -506,7 +506,7 @@ problem_init
  const char* input_file,
  p4est_t* p4est,
  d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int proc_size,
  sc_MPI_Comm mpicomm
 )
@@ -586,7 +586,7 @@ problem_init
 
       curved_element_data_init_new(p4est,
                                    geometric_factors,
-                                   dgmath_jit_dbase,
+                                   d4est_ops,
                                    d4est_geom,
                                    problem_set_degrees,
                                    (void*)&input, 1, 1);
@@ -606,7 +606,7 @@ problem_init
 
   curved_element_data_init_new(p4est,
                                geometric_factors,
-                               dgmath_jit_dbase,
+                               d4est_ops,
                                d4est_geom,
                                problem_set_degrees,
                                (void*)&input,
@@ -634,7 +634,7 @@ problem_init
                                       p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
-                                      dgmath_jit_dbase,
+                                      d4est_ops,
                                       d4est_geom
     );  
     linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
@@ -648,7 +648,7 @@ problem_init
        p4est,
        error,
        local_nodes,
-       dgmath_jit_dbase,
+       d4est_ops,
        DO_NOT_STORE_LOCALLY
       );
     printf("Initial local l2 norm = %.25f\n", sqrt(initial_l2_norm_sqr_local));
@@ -662,7 +662,7 @@ problem_init
        &prob_fcns,
        ghost,
        ghost_data,
-       dgmath_jit_dbase,
+       d4est_ops,
        d4est_geom,
        &input,
        NULL
@@ -687,7 +687,7 @@ problem_init
        (void*)&prob_fcns,
        &ghost,
        (void**)&ghost_data,
-       dgmath_jit_dbase,
+       d4est_ops,
        d4est_geom,
        &petsc_params,
        NULL
@@ -697,7 +697,7 @@ problem_init
                                       p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
-                                      dgmath_jit_dbase,
+                                      d4est_ops,
                                       d4est_geom
                                      );  
     linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
@@ -708,13 +708,13 @@ problem_init
                                  p4est,
                                  error,
                                  local_nodes,
-                                 dgmath_jit_dbase,
+                                 d4est_ops,
                                  DO_NOT_STORE_LOCALLY
                                 );
 
     
     double* jacobian_lgl = P4EST_ALLOC(double, local_nodes);
-    curved_element_data_compute_jacobian_on_lgl_grid(p4est,d4est_geom, dgmath_jit_dbase, jacobian_lgl);
+    curved_element_data_compute_jacobian_on_lgl_grid(p4est,d4est_geom, d4est_ops, jacobian_lgl);
 
 
     linalg_vec_fabs(error, local_nodes); /* not needed, except for vtk output */
@@ -735,7 +735,7 @@ problem_init
       (
        save_as,
        p4est,
-       dgmath_jit_dbase,
+       d4est_ops,
        deg_array,
        input_file,
        "d4est_vtk_geometry",

@@ -115,7 +115,7 @@ void
  * @param params 
  * @param ghost 
  * @param ghost_data 
- * @param dgmath_jit_dbase 
+ * @param d4est_ops 
  * @param krylov_solve 
  * 
  * @return 
@@ -128,7 +128,7 @@ newton_d4est_solve
  weakeqn_ptrs_t* fcns,
  p4est_ghost_t** ghost,
  void** ghost_data, 
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  const char* input_file,
  krylov_pc_t* krylov_pc
@@ -173,7 +173,7 @@ newton_d4est_solve
   vecs_for_res_build.u = x;
   
   /* build initial residual vector */
-  fcns->build_residual(p4est, *ghost, *ghost_data, &vecs_for_res_build, dgmath_jit_dbase, d4est_geom);
+  fcns->build_residual(p4est, *ghost, *ghost_data, &vecs_for_res_build, d4est_ops, d4est_geom);
   
   double fnrm = linalg_vec_dot(f0,f0,n);
   double fnrm_global;
@@ -222,7 +222,7 @@ newton_d4est_solve
     /*   petsc_ctx.fcns = fcns; */
     /*   petsc_ctx.ghost = ghost; */
     /*   petsc_ctx.ghost_data = ghost_data; */
-    /*   petsc_ctx.dgmath_jit_dbase = dgmath_jit_dbase; */
+    /*   petsc_ctx.d4est_ops = d4est_ops; */
     /*   petsc_ctx.d4est_geom = d4est_geom; */
     /*   krylov_pc->pc_ctx = &petsc_ctx; */
     /*   if(krylov_pc->pc_setup != NULL){ */
@@ -237,7 +237,7 @@ newton_d4est_solve
        fcns,
        ghost,
        ghost_data,
-       dgmath_jit_dbase,
+       d4est_ops,
        d4est_geom,
        &petsc_params,
        krylov_pc
@@ -249,7 +249,7 @@ newton_d4est_solve
     /* calculate new residual vector */
     vecs_for_res_build.u = xt;
     vecs_for_res_build.Au = ft;
-    fcns->build_residual(p4est, *ghost, *ghost_data, &vecs_for_res_build, dgmath_jit_dbase, d4est_geom);    
+    fcns->build_residual(p4est, *ghost, *ghost_data, &vecs_for_res_build, d4est_ops, d4est_geom);    
 
     /* flip pointers */
     double* tmp = x;

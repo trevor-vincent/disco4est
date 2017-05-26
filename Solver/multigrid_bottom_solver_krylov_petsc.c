@@ -22,7 +22,7 @@ multigrid_bottom_solver_krylov_petsc
                      fcns,
                      updater->ghost,
                      updater->ghost_data,
-                     mg_data->dgmath_jit_dbase,
+                     mg_data->d4est_ops,
                      d4est_geom,
                      params,
                      NULL);
@@ -34,7 +34,7 @@ multigrid_bottom_solver_krylov_petsc
   /* Au = vecs->Au; */
   /* rhs = vecs->rhs; */
 
-  /* fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, d4est_geom); */
+  /* fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom); */
   /* linalg_copy_1st_to_2nd(Au, r, local_nodes);   */
   /* linalg_vec_xpby(rhs, -1., r, local_nodes); */
 }

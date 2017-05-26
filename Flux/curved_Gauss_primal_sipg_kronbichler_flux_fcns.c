@@ -1,5 +1,5 @@
 #include "../Utilities/util.h"
-#include "../dGMath/dgmath.h"
+#include "../dGMath/d4est_operators.h"
 #include "../ElementData/curved_element_data.h"
 #include "../LinearAlgebra/linalg.h"
 #include "../Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.h"
@@ -11,7 +11,7 @@ curved_primal_sipg_kronbichler_flux_dirichlet
  curved_element_data_t* e_m,
  int f_m,
  grid_fcn_t bndry_fcn,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  void* params
 )
@@ -22,8 +22,8 @@ curved_primal_sipg_kronbichler_flux_dirichlet
 
   
   grid_fcn_t u_at_bndry = bndry_fcn;
-  int face_nodes_m_lobatto = dgmath_get_nodes((P4EST_DIM) - 1, e_m->deg);
-  int face_nodes_m_quad = dgmath_get_nodes((P4EST_DIM) - 1, e_m->deg_integ);
+  int face_nodes_m_lobatto = d4est_operators_get_nodes((P4EST_DIM) - 1, e_m->deg);
+  int face_nodes_m_quad = d4est_operators_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
 
   double* u_m_on_f_m = P4EST_ALLOC(double, face_nodes_m_lobatto);
   double* u_m_on_f_m_quad = P4EST_ALLOC(double, face_nodes_m_quad);
@@ -52,7 +52,7 @@ curved_primal_sipg_kronbichler_flux_dirichlet
   double* u_at_bndry_quad = P4EST_ALLOC(double, face_nodes_m_quad);
 
 
-  int volume_nodes_m_lobatto = dgmath_get_nodes((P4EST_DIM), e_m->deg);
+  int volume_nodes_m_lobatto = d4est_operators_get_nodes((P4EST_DIM), e_m->deg);
   
   double* ones_quad = P4EST_ALLOC(double, face_nodes_m_quad);
   linalg_fill_vec(ones_quad, 1., face_nodes_m_quad);
@@ -82,16 +82,16 @@ curved_primal_sipg_kronbichler_flux_dirichlet
      e_m->dq,
      1,
      1,
-     &e_m->deg_integ,
+     &e_m->deg_quad,
      f_m,
      drst_dxyz_quad,
      sj_on_f_m_quad,
      n_on_f_m_quad,
      n_sj_on_f_m_quad,
      J_div_SJ_quad,
-     geom->geom_quad_type,
+     quadrature,
      geom,
-     dgmath_jit_dbase,
+     d4est_ops,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
   
@@ -130,9 +130,9 @@ curved_primal_sipg_kronbichler_flux_dirichlet
   
   for (int d = 0; d < (P4EST_DIM); d++){
     
-    dgmath_apply_slicer
+    d4est_operators_apply_slicer
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        e_m->dudr_elem[d],
        (P4EST_DIM),
        f_m,
@@ -140,20 +140,24 @@ curved_primal_sipg_kronbichler_flux_dirichlet
        dudr_m_on_f_m[d]
       );
 
-    dgmath_interp(dgmath_jit_dbase,
-                  dudr_m_on_f_m[d],
-                  QUAD_LOBATTO,
-                  e_m->deg,
-                  dudr_m_on_f_m_quad[d],
-                  geom->geom_quad_type,
-                  e_m->deg_integ,
-                  (P4EST_DIM)-1);
+    d4est_quadrature_interpolate
+      (
+       d4est_ops,
+       d4est_quad,
+       d4est_geom,
+       (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = e_m->q, .dq = e_m->dq, .tree = e-m->tree, .face = f_m},
+       dudr_m_on_f_m[d],
+       e_m->deg,
+       dudr_m_on_f_m_quad[d],
+       e_m->deg_quad
+    );
+    
    
   }
 
 
   
-  dgmath_apply_slicer(dgmath_jit_dbase, e_m->u_storage, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
+  d4est_operators_apply_slicer(d4est_ops, e_m->u_storage, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
   for (int d = 0; d < (P4EST_DIM); d++){
     linalg_fill_vec
       (
@@ -179,7 +183,7 @@ curved_primal_sipg_kronbichler_flux_dirichlet
     
     for (int d = 0; d < (P4EST_DIM); d++){
 
-      dgmath_apply_slicer(dgmath_jit_dbase,
+      d4est_operators_apply_slicer(d4est_ops,
                           e_m->xyz[d],
                           (P4EST_DIM),
                           f_m,
@@ -204,26 +208,29 @@ curved_primal_sipg_kronbichler_flux_dirichlet
     }
     
 
-    dgmath_interp(dgmath_jit_dbase,
-                  u_m_on_f_m_min_u_at_bndry_lobatto,
-                  QUAD_LOBATTO,
-                  e_m->deg,
-                  u_m_on_f_m_min_u_at_bndry_quad,
-                  geom->geom_quad_type,
-                  e_m->deg_integ,
-                  (P4EST_DIM)-1);
-    
+   d4est_quadrature_interpolate
+      (
+       d4est_ops,
+       d4est_quad,
+       d4est_geom,
+       (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = e_m->q, .dq = e_m->dq, .tree = e_m->tree, .face = f_m},
+       u_m_on_f_m_min_u_at_bndry_lobatto,
+       e_m->deg,
+       u_m_on_f_m_min_u_at_bndry_quad,
+       e_m->deg_quad
+    );
 
-    dgmath_interp(dgmath_jit_dbase,
-                  u_at_bndry_lobatto,
-                  QUAD_LOBATTO,
-                  e_m->deg,
-                  u_at_bndry_quad,
-                  geom->geom_quad_type,
-                  e_m->deg_integ,
-                  (P4EST_DIM)-1);
-    
-    
+   d4est_quadrature_interpolate
+      (
+       d4est_ops,
+       d4est_quad,
+       d4est_geom,
+       (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = e_m->q, .dq = e_m->dq, .tree = e_m->tree, .face = f_m},
+       u_at_bndry_lobatto,
+       e_m->deg,
+       u_at_bndry_quad,
+       e_m->deg_quad
+    );
 
     D4EST_FREE_DIM_VEC(xyz_on_f_m);
   }
@@ -232,27 +239,30 @@ curved_primal_sipg_kronbichler_flux_dirichlet
     double* xyz_on_f_m_quad [(P4EST_DIM)];
     D4EST_ALLOC_DIM_VEC(xyz_on_f_m_quad, face_nodes_m_quad);
     
+   d4est_quadrature_interpolate
+      (
+       d4est_ops,
+       d4est_quad,
+       d4est_geom,
+       (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = e_m->q, .dq = e_m->dq, .tree = e_m->tree, .face = f_m},
+       u_m_on_f_m,
+       e_m->deg,
+       u_m_on_f_m_quad,
+       e_m->deg_quad
+    );
 
-    dgmath_interp(dgmath_jit_dbase,
-                  u_m_on_f_m,
-                  QUAD_LOBATTO,
-                  e_m->deg,
-                  u_m_on_f_m_quad,
-                  geom->geom_quad_type,
-                  e_m->deg_integ,
-                  (P4EST_DIM)-1);
-    
+
     
     d4est_geometry_compute_xyz_face_analytic
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        e_m->q,
        e_m->dq,
        e_m->tree,
        f_m,
        geom,
        geom->geom_quad_type,
-       e_m->deg_integ,
+       e_m->deg_quad,
        xyz_on_f_m_quad
       );
 
@@ -314,49 +324,51 @@ curved_primal_sipg_kronbichler_flux_dirichlet
                      *sigma[i]
                      *2.*u_m_on_f_m_min_u_at_bndry_quad[i];
   }
-
-  dgmath_apply_curved_galerkin_integral
+  
+  d4est_quadrature_apply_galerkin_quadral
     (
-     dgmath_jit_dbase,
+     d4est_ops,
+     d4est_geom,
+     d4est_quadrature,
+     (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = e_m->q, .dq = e_m->dq, .tree = e-m->tree, .face = face},
      term1_quad,
      e_m->deg,
      ones_quad,
-     e_m->deg_integ,
-     geom->geom_quad_type,
-     (P4EST_DIM)-1,
+     e_m->deg_quad,
      VT_w_term1_lobatto
     );
 
   
   for (int d = 0; d < (P4EST_DIM); d++){
-    dgmath_apply_curved_galerkin_integral
+    d4est_quadrature_apply_galerkin_quadral
       (
-       dgmath_jit_dbase,
+       d4est_ops,
+       d4est_geom,
+       d4est_quadrature,
+       (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = e_m->q, .dq = e_m->dq, .tree = e-m->tree, .face = face},
        term2_quad[d],
        e_m->deg,
        ones_quad,
-       e_m->deg_integ,
-       geom->geom_quad_type,
-       (P4EST_DIM)-1,
+       e_m->deg_quad,
        VT_w_term2_lobatto[d]
       );
   }
 
-  
-    dgmath_apply_curved_galerkin_integral
+  d4est_quadrature_apply_galerkin_quadral
     (
-     dgmath_jit_dbase,
+     d4est_ops,
+     d4est_geom,
+     d4est_quadrature,
+     (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = e_m->q, .dq = e_m->dq, .tree = e-m->tree, .face = face},
      term3_quad,
      e_m->deg,
      ones_quad,
-     e_m->deg_integ,
-     geom->geom_quad_type,
-     (P4EST_DIM)-1,
+     e_m->deg_quad,
      VT_w_term3_lobatto
-    );  
+    );
   
-  dgmath_apply_LIFT(
-                    dgmath_jit_dbase,
+  d4est_operators_apply_LIFT(
+                    d4est_ops,
                     VT_w_term1_lobatto,
                     (P4EST_DIM),
                     e_m->deg,
@@ -365,15 +377,15 @@ curved_primal_sipg_kronbichler_flux_dirichlet
 
 
   for (int d = 0; d < (P4EST_DIM); d++){
-    dgmath_apply_LIFT(
-                      dgmath_jit_dbase,
+    d4est_operators_apply_LIFT(
+                      d4est_ops,
                       VT_w_term2_lobatto[d],
                       (P4EST_DIM),
                       e_m->deg,
                       f_m,
                       lifted_VT_w_term2_lobatto[d]);
 
-    dgmath_apply_Dij_transpose(dgmath_jit_dbase,
+    d4est_operators_apply_Dij_transpose(d4est_ops,
                                lifted_VT_w_term2_lobatto[d],
                                (P4EST_DIM),
                                e_m->deg,
@@ -384,8 +396,8 @@ curved_primal_sipg_kronbichler_flux_dirichlet
   }
         
 
-  dgmath_apply_LIFT(
-                    dgmath_jit_dbase,
+  d4est_operators_apply_LIFT(
+                    d4est_ops,
                     VT_w_term3_lobatto,
                     (P4EST_DIM),
                     e_m->deg,
@@ -402,7 +414,7 @@ curved_primal_sipg_kronbichler_flux_dirichlet
   DEBUG_PRINT_ARR_DBL_SUM(VT_w_term3_lobatto, face_nodes_m_lobatto);
 #endif
       
-  int volume_nodes_m = dgmath_get_nodes((P4EST_DIM), e_m->deg);
+  int volume_nodes_m = d4est_operators_get_nodes((P4EST_DIM), e_m->deg);
   for (int i = 0; i < volume_nodes_m; i++){
     for (int d = 0; d < (P4EST_DIM); d++){
       e_m->Au_elem[i] += DT_lifted_VT_w_term2_lobatto[d][i];
@@ -453,7 +465,7 @@ curved_primal_sipg_kronbichler_flux_interface
  int f_p,
  int* e_m_is_ghost,
  int orientation,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  void* params
 )
@@ -491,11 +503,11 @@ curved_primal_sipg_kronbichler_flux_interface
   for (int i = 0; i < faces_m; i++){
     deg_m_lobatto[i] = e_m[i]->deg;
 
-    int volume_nodes_m_lobatto = dgmath_get_nodes((P4EST_DIM), e_m[i]->deg);
+    int volume_nodes_m_lobatto = d4est_operators_get_nodes((P4EST_DIM), e_m[i]->deg);
     max_volume_nodes_m_lobatto = (volume_nodes_m_lobatto > max_volume_nodes_m_lobatto) ? volume_nodes_m_lobatto : max_volume_nodes_m_lobatto;
     
-    face_nodes_m_lobatto[i] = dgmath_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
-    face_nodes_m_quad[i] = dgmath_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg_integ);
+    face_nodes_m_lobatto[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
+    face_nodes_m_quad[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg_quad);
     
     total_side_nodes_m_lobatto += face_nodes_m_lobatto[i];
     total_side_nodes_m_quad += face_nodes_m_quad[i];
@@ -507,10 +519,10 @@ curved_primal_sipg_kronbichler_flux_interface
   for (int i = 0; i < faces_p; i++){
     deg_p_lobatto[i] = e_p_oriented[i]->deg;
     deg_p_lobatto_porder[i] = e_p[i]->deg;
-    /* deg_p_quad[i] = e_p_oriented[i]->deg_integ; */
+    /* deg_p_quad[i] = e_p_oriented[i]->deg_quad; */
 
-    face_nodes_p_lobatto[i] = dgmath_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
-    face_nodes_p_quad[i] = dgmath_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg_integ);
+    face_nodes_p_lobatto[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
+    face_nodes_p_quad[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg_quad);
     
     total_side_nodes_p_lobatto += face_nodes_p_lobatto[i];
     total_side_nodes_p_quad += face_nodes_p_quad[i];
@@ -522,12 +534,12 @@ curved_primal_sipg_kronbichler_flux_interface
   for (int i = 0; i < faces_m; i++)
     for (int j = 0; j < faces_p; j++){
       /* find max degree for each face pair of the two sides*/
-      deg_mortar_quad[i+j] = util_max_int( e_m[i]->deg_integ,
-                                            e_p_oriented[j]->deg_integ);
+      deg_mortar_quad[i+j] = util_max_int( e_m[i]->deg_quad,
+                                            e_p_oriented[j]->deg_quad);
       deg_mortar_lobatto[i+j] = util_max_int( e_m[i]->deg,
                                               e_p_oriented[j]->deg );      
-      nodes_mortar_quad[i+j] = dgmath_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
-      nodes_mortar_lobatto[i+j] = dgmath_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
+      nodes_mortar_quad[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
+      nodes_mortar_lobatto[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
       total_nodes_mortar_quad += nodes_mortar_quad[i+j];
       total_nodes_mortar_lobatto += nodes_mortar_lobatto[i+j];
       penalty_mortar[i+j] = sipg_kronbichler_flux_penalty_calculate_fcn
@@ -547,7 +559,7 @@ curved_primal_sipg_kronbichler_flux_interface
   for(int i = 0; i < faces_mortar; i++){
     int inew = i;
     if (faces_mortar == (P4EST_HALF)){
-      inew = dgmath_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, i);
+      inew = d4est_operators_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, i);
     }
     deg_mortar_quad_porder[inew] = deg_mortar_quad[i];
     nodes_mortar_quad_porder[inew] = nodes_mortar_quad[i];
@@ -622,9 +634,9 @@ curved_primal_sipg_kronbichler_flux_interface
   
   stride = 0;
   for (int i = 0; i < faces_m; i++){
-    dgmath_apply_slicer
+    d4est_operators_apply_slicer
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        &(e_m[i]->u_storage[0]),
        (P4EST_DIM),
        f_m,
@@ -637,9 +649,9 @@ curved_primal_sipg_kronbichler_flux_interface
  
   stride = 0;
   for (int i = 0; i < faces_p; i++){
-    dgmath_apply_slicer
+    d4est_operators_apply_slicer
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        &(e_p_oriented[i]->u_storage[0]),
        (P4EST_DIM),
        f_p,
@@ -647,9 +659,9 @@ curved_primal_sipg_kronbichler_flux_interface
        tmp
       );
     
-    dgmath_reorient_face_data
+    d4est_operators_reorient_face_data
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        tmp,
        ((P4EST_DIM) - 1),
        e_p_oriented[i]->deg,
@@ -664,9 +676,9 @@ curved_primal_sipg_kronbichler_flux_interface
 
 
   /* project (-)-side u trace vector onto mortar space */
-  dgmath_project_side_onto_mortar_space
+  d4est_operators_project_side_onto_mortar_space
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      u_m_on_f_m,
      faces_m,
      deg_m_lobatto,
@@ -676,9 +688,9 @@ curved_primal_sipg_kronbichler_flux_interface
     );
 
   /* project (+)-side u trace vector onto mortar space */
-  dgmath_project_side_onto_mortar_space
+  d4est_operators_project_side_onto_mortar_space
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      u_p_on_f_p,
      faces_p,
      deg_p_lobatto,
@@ -688,25 +700,73 @@ curved_primal_sipg_kronbichler_flux_interface
     );
   
   stride = 0;
-  for (int f = 0; f < faces_mortar; f++){
-    dgmath_interp(dgmath_jit_dbase,
-                  &u_m_on_f_m_mortar[stride],
-                  QUAD_LOBATTO,
-                  deg_mortar_quad[f],
-                  &u_m_on_f_m_mortar_quad[stride],
-                  geom->geom_quad_type,
-                  deg_mortar_quad[f],
-                  (P4EST_DIM)-1);
 
-    dgmath_interp(dgmath_jit_dbase,
-                  &u_p_on_f_p_mortar[stride],
-                  QUAD_LOBATTO,
-                  deg_mortar_quad[f],
-                  &u_p_on_f_p_mortar_quad[stride],
-                  geom->geom_quad_type,
-                  deg_mortar_quad[f],
-                  (P4EST_DIM)-1);
-      
+  p4est_qcoord_t mortar_q0_forder [(P4EST_HALF)][(P4EST_DIM)];
+  p4est_qcoord_t mortar_q0_forder_i [(P4EST_DIM)];
+  p4est_qcoord_t mortar_dq_forder;
+
+  d4est_geometry_compute_qcoords_on_mortar
+    (
+     e_m[0]->tree,
+     e_m[0]->q,
+     e_m[0]->dq,
+     faces_m,
+     faces_mortar,
+     f_m,
+     mortar_q0,
+     &mortar_dq
+    );
+
+
+  p4est_qcoord_t mortar_q0_porder [(P4EST_HALF)][(P4EST_DIM)];
+  p4est_qcoord_t mortar_q0_porder_i [(P4EST_DIM)];
+  p4est_qcoord_t mortar_dq_porder;
+
+  d4est_geometry_compute_qcoords_on_mortar
+    (
+     e_p[0]->tree,
+     e_p[0]->q,
+     e_p[0]->dq,
+     faces_p,
+     faces_mortar,
+     f_p,
+     mortar_q0_porder,
+     &mortar_dq_porder
+    );
+
+  
+  
+  for (int f = 0; f < faces_mortar; f++){
+
+    for (int d = 0; d < (P4EST_DIM); d++){
+      mortar_q0_f[d] = mortar_q0[f][d];
+    }
+    
+   d4est_quadrature_interpolate
+      (
+       d4est_ops,
+       d4est_quad,
+       d4est_geom,
+       (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = mortar_q0_f, .dq = mortar_dq, .tree = e_m[0]->tree, .face = f_m},
+       &u_m_on_f_m_mortar[stride],
+       deg_mortar_quad[f],
+       &u_m_on_f_m_mortar_quad[stride],
+       deg_mortar_quad[f]
+    );
+    
+   d4est_quadrature_interpolate
+      (
+       d4est_ops,
+       d4est_quad,
+       d4est_geom,
+       (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = mortar_q0_f, .dq = mortar_dq, .tree = e_m[0]->tree, .face = f_m},
+       &u_p_on_f_p_mortar[stride],
+       deg_mortar_quad[f],
+       &u_p_on_f_p_mortar_quad[stride],
+       deg_mortar_quad[f]
+    );
+
+    
     stride += nodes_mortar_quad[f];
   }
 
@@ -716,39 +776,35 @@ curved_primal_sipg_kronbichler_flux_interface
 
     stride = 0;
     for (int i = 0; i < faces_m; i++){    
-
-      dgmath_apply_slicer
+      d4est_operators_apply_slicer
         (
-         dgmath_jit_dbase,
+         d4est_ops,
          &e_m[i]->dudr_elem[d][0],
          (P4EST_DIM),
          f_m,
          e_m[i]->deg,
          &dudr_m_on_f_m[d][stride]
         );
-      
-
       stride += face_nodes_m_lobatto[i];
     }
     
     stride = 0;
     for (int i = 0; i < faces_p; i++){
-      dgmath_apply_slicer
+      d4est_operators_apply_slicer
         (
-         dgmath_jit_dbase,
+         d4est_ops,
          &e_p[i]->dudr_elem[d][0],
          (P4EST_DIM),
          f_p,
          e_p[i]->deg,
          &dudr_p_on_f_p_porder[d][stride]
         );
-      stride += dgmath_get_nodes((P4EST_DIM)-1, e_p[i]->deg);
+      stride += d4est_operators_get_nodes((P4EST_DIM)-1, e_p[i]->deg);
     }
 
-
-    dgmath_project_side_onto_mortar_space
+    d4est_operators_project_side_onto_mortar_space
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        dudr_p_on_f_p_porder[d],
        faces_p,
        deg_p_lobatto_porder,
@@ -756,11 +812,10 @@ curved_primal_sipg_kronbichler_flux_interface
        faces_mortar,
        deg_mortar_quad_porder
       );
-  
 
-    dgmath_project_side_onto_mortar_space
+    d4est_operators_project_side_onto_mortar_space
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        dudr_m_on_f_m[d],
        faces_m,
        deg_m_lobatto,
@@ -773,31 +828,44 @@ curved_primal_sipg_kronbichler_flux_interface
     stride = 0;
     for (int f = 0; f < faces_mortar; f++){
 
-    dgmath_interp(dgmath_jit_dbase,
-                  &dudr_m_on_f_m_mortar[d][stride],
-                  QUAD_LOBATTO,
-                  deg_mortar_quad[f],
-                  &dudr_m_on_f_m_mortar_quad[d][stride],
-                  geom->geom_quad_type,
-                  deg_mortar_quad[f],
-                  (P4EST_DIM)-1);
-
-      
+      for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+        mortar_q0_forder_i[d1] = mortar_q0_forder[f][d1];
+      }
+    
+      d4est_quadrature_interpolate
+        (
+         d4est_ops,
+         d4est_quad,
+         d4est_geom,
+         (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = mortar_q0_forder_i, .dq = mortar_dq_forder, .tree = e_m[0]->tree, .face = f_m},
+         &dudr_m_on_f_m_mortar[d][stride],
+         deg_mortar_quad[f],
+         &dudr_m_on_f_m_mortar[d][stride],
+         deg_mortar_quad[f]
+        );
+    
       stride += nodes_mortar_quad[f];
     }
 
     stride = 0;
     for (int f = 0; f < faces_mortar; f++){
 
-      dgmath_interp(dgmath_jit_dbase,
-                    &dudr_p_on_f_p_mortar_porder[d][stride],
-                    QUAD_LOBATTO,
-                    deg_mortar_quad_porder[f],
-                    &dudr_p_on_f_p_mortar_quad_porder[d][stride],
-                    geom->geom_quad_type,
-                    deg_mortar_quad_porder[f],
-                    (P4EST_DIM)-1);
-        
+     for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+        mortar_q0_porder_i[d1] = mortar_q0_porder[f][d1];
+      }
+    
+      d4est_quadrature_interpolate
+        (
+         d4est_ops,
+         d4est_quad,
+         d4est_geom,
+         (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = mortar_q0_porder_i, .dq = mortar_dq_porder, .tree = e_p[0]->tree, .face = f_p},
+         &dudr_p_on_f_p_mortar_porder[d][stride],
+         deg_mortar_quad_porder[f],
+         &dudr_p_on_f_p_mortar_quad_porder[d][stride],
+         deg_mortar_quad_porder[f],
+        );
+             
       stride += nodes_mortar_quad_porder[f];
     }
   }
@@ -828,7 +896,7 @@ curved_primal_sipg_kronbichler_flux_interface
      j_div_sj_on_f_m_mortar_quad,
      geom->geom_quad_type,
      geom,
-     dgmath_jit_dbase,
+     d4est_ops,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
 
@@ -848,7 +916,7 @@ curved_primal_sipg_kronbichler_flux_interface
      j_div_sj_on_f_p_mortar_quad_porder,
      geom->geom_quad_type,
      geom,
-     dgmath_jit_dbase,
+     d4est_ops,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
 
@@ -883,18 +951,18 @@ curved_primal_sipg_kronbichler_flux_interface
   for (int face = 0; face < faces_mortar; face++){
     int face_p = face;
     if (faces_mortar == (P4EST_HALF))
-      face_p = dgmath_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, face);
+      face_p = d4est_operators_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, face);
 
     int oriented_face_mortar_stride = 0;
     for (int b = 0; b < face_p; b++){
-      oriented_face_mortar_stride += dgmath_get_nodes((P4EST_DIM)-1, deg_mortar_quad_porder[b]);
+      oriented_face_mortar_stride += d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar_quad_porder[b]);
     }
 
 
     for (int d = 0; d < (P4EST_DIM); d++){
-      dgmath_reorient_face_data
+      d4est_operators_reorient_face_data
         (
-         dgmath_jit_dbase,
+         d4est_ops,
          &dudx_p_on_f_p_mortar_quad_porder[d][oriented_face_mortar_stride],
          (P4EST_DIM)-1,
          deg_mortar_quad[face],
@@ -906,9 +974,9 @@ curved_primal_sipg_kronbichler_flux_interface
     }
 
     if (j_div_sj_on_f_p_mortar_quad_porder != NULL){
-    dgmath_reorient_face_data
+    d4est_operators_reorient_face_data
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        &j_div_sj_on_f_p_mortar_quad_porder[oriented_face_mortar_stride],
        (P4EST_DIM)-1,
        deg_mortar_quad[face],
@@ -920,7 +988,7 @@ curved_primal_sipg_kronbichler_flux_interface
     }    
     
     
-    face_mortar_stride += dgmath_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
+    face_mortar_stride += d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
   }
 
   double hm_min, hp_min;
@@ -969,8 +1037,6 @@ curved_primal_sipg_kronbichler_flux_interface
     stride += nodes_mortar_quad[f];
   }
 
-
-
   
   stride = 0;
   int stride_lobatto = 0;
@@ -1008,43 +1074,83 @@ curved_primal_sipg_kronbichler_flux_interface
 
 
     
-   dgmath_apply_curved_galerkin_integral
+   /* d4est_operators_apply_curved_galerkin_quadral */
+   /*    ( */
+   /*     d4est_ops, */
+   /*     &term1_mortar_quad[stride], */
+   /*     deg_mortar_lobatto[f], */
+   /*     &ones_mortar_quad[stride], */
+   /*     deg_mortar_quad[f], */
+   /*     geom->geom_quad_type, */
+   /*     (P4EST_DIM)-1, */
+   /*     &VT_w_term1_mortar_lobatto[stride_lobatto] */
+   /*    ); */
+
+
+
+    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+      mortar_q0_forder_i[d1] = mortar_q0_forder[f][d1];
+    }
+    
+     
+    d4est_quadrature_apply_galerkin_quadral
       (
-       dgmath_jit_dbase,
+       d4est_ops,
+       d4est_geom,
+       d4est_quadrature,
+       (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = mortar_q0_forder_i, .dq = mortar_dq_forder, .tree = e_m[0]->tree, .face = f_m},
        &term1_mortar_quad[stride],
-       deg_mortar_lobatto[f],
+       eg_mortar_lobatto[f],
        &ones_mortar_quad[stride],
        deg_mortar_quad[f],
-       geom->geom_quad_type,
-       (P4EST_DIM)-1,
        &VT_w_term1_mortar_lobatto[stride_lobatto]
       );
-    
+
+
+   
     for (int d = 0; d < (P4EST_DIM); d++){
-      dgmath_apply_curved_galerkin_integral
-        (
-         dgmath_jit_dbase,
-         &term2_mortar_quad[d][stride],
-         deg_mortar_lobatto[f],
-         &ones_mortar_quad[stride],
-         deg_mortar_quad[f],
-         geom->geom_quad_type,
-         (P4EST_DIM)-1,
-         &VT_w_term2_mortar_lobatto[d][stride_lobatto]
-        );
-    }
-      
-      dgmath_apply_curved_galerkin_integral
+      /* d4est_operators_apply_curved_galerkin_quadral */
+      /*   ( */
+      /*    d4est_ops, */
+      /*    &term2_mortar_quad[d][stride], */
+      /*    deg_mortar_lobatto[f], */
+      /*    &ones_mortar_quad[stride], */
+      /*    deg_mortar_quad[f], */
+      /*    geom->geom_quad_type, */
+      /*    (P4EST_DIM)-1, */
+      /*    &VT_w_term2_mortar_lobatto[d][stride_lobatto] */
+      /*   ); */
+
+
+     
+    d4est_quadrature_apply_galerkin_quadral
       (
-       dgmath_jit_dbase,
-       &term3_mortar_quad[stride],
-       deg_mortar_lobatto[f],
+       d4est_ops,
+       d4est_geom,
+       d4est_quadrature,
+       (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = mortar_q0_forder_i, .dq = mortar_dq_forder, .tree = e_m[0]->tree, .face = f_m},
+       &term2_mortar_quad[d][stride],
+       eg_mortar_lobatto[f],
        &ones_mortar_quad[stride],
        deg_mortar_quad[f],
-       geom->geom_quad_type,
-       (P4EST_DIM)-1,
+         &VT_w_term2_mortar_lobatto[d][stride_lobatto]
+      );
+      
+    }
+
+    d4est_quadrature_apply_galerkin_quadral
+      (
+       d4est_ops,
+       d4est_geom,
+       d4est_quadrature,
+       (d4est_mesh_object_t){.type = ELEMENT_FACE, .q = mortar_q0_forder_i, .dq = mortar_dq_forder, .tree = e_m[0]->tree, .face = f_m},
+       &term3_mortar_quad[stride],
+       eg_mortar_lobatto[f],
+       &ones_mortar_quad[stride],
+       deg_mortar_quad[f],
        &VT_w_term3_mortar_lobatto[stride_lobatto]
       );
+      
 
     stride += nodes_mortar_quad[f];
     stride_lobatto += nodes_mortar_lobatto[f];
@@ -1052,9 +1158,9 @@ curved_primal_sipg_kronbichler_flux_interface
   
 
   for (int d = 0; d < (P4EST_DIM); d++){
-    dgmath_project_mass_mortar_onto_side
+    d4est_operators_project_mass_mortar_onto_side
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        VT_w_term2_mortar_lobatto[d],
        faces_mortar,
        deg_mortar_lobatto,
@@ -1064,9 +1170,9 @@ curved_primal_sipg_kronbichler_flux_interface
       );
   }
 
-  dgmath_project_mass_mortar_onto_side
+  d4est_operators_project_mass_mortar_onto_side
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      VT_w_term1_mortar_lobatto,
      faces_mortar,
      deg_mortar_lobatto,
@@ -1075,9 +1181,9 @@ curved_primal_sipg_kronbichler_flux_interface
      deg_m_lobatto
     );
 
-  dgmath_project_mass_mortar_onto_side
+  d4est_operators_project_mass_mortar_onto_side
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      VT_w_term3_mortar_lobatto,
      faces_mortar,
      deg_mortar_lobatto,
@@ -1091,8 +1197,8 @@ curved_primal_sipg_kronbichler_flux_interface
   for (int f = 0; f < faces_m; f++){
     if (e_m_is_ghost[f] == 0){
 
-      dgmath_apply_LIFT(
-                        dgmath_jit_dbase,
+      d4est_operators_apply_LIFT(
+                        d4est_ops,
                         &proj_VT_w_term1_mortar_lobatto[stride],
                         (P4EST_DIM),
                         e_m[f]->deg,
@@ -1101,15 +1207,15 @@ curved_primal_sipg_kronbichler_flux_interface
 
 
       for (int d = 0; d < (P4EST_DIM); d++){
-        dgmath_apply_LIFT(
-                          dgmath_jit_dbase,
+        d4est_operators_apply_LIFT(
+                          d4est_ops,
                           &proj_VT_w_term2_mortar_lobatto[d][stride],
                           (P4EST_DIM),
                           e_m[f]->deg,
                           f_m,
                           lifted_proj_VT_w_term2_mortar_lobatto[d]);
 
-        dgmath_apply_Dij_transpose(dgmath_jit_dbase,
+        d4est_operators_apply_Dij_transpose(d4est_ops,
                                    lifted_proj_VT_w_term2_mortar_lobatto[d],
                                    (P4EST_DIM),
                                    e_m[f]->deg,
@@ -1120,8 +1226,8 @@ curved_primal_sipg_kronbichler_flux_interface
       }
         
 
-      dgmath_apply_LIFT(
-                        dgmath_jit_dbase,
+      d4est_operators_apply_LIFT(
+                        d4est_ops,
                         &proj_VT_w_term3_mortar_lobatto[stride],
                         (P4EST_DIM),
                         e_m[f]->deg,
@@ -1131,7 +1237,7 @@ curved_primal_sipg_kronbichler_flux_interface
 
 
         
-      int volume_nodes_m = dgmath_get_nodes((P4EST_DIM), e_m[f]->deg);
+      int volume_nodes_m = d4est_operators_get_nodes((P4EST_DIM), e_m[f]->deg);
       for (int i = 0; i < volume_nodes_m; i++){
         for (int d = 0; d < (P4EST_DIM); d++){
           e_m[f]->Au_elem[i] += DT_lifted_proj_VT_w_term2_mortar_lobatto[d][i];

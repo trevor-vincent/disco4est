@@ -12,7 +12,7 @@
 
 typedef struct {
   
-  dgmath_jit_dbase_t* dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops;
   problem_data_t* problem_data;
   double* bi_estimator_local_eta2;
   
@@ -33,7 +33,7 @@ bi_estimator_init
 
   bi_estimator_user_data_t* bi_estimator_user_data = (bi_estimator_user_data_t*) user_data;
   problem_data_t* problem_data = bi_estimator_user_data->problem_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = bi_estimator_user_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = bi_estimator_user_data->d4est_ops;
 
   
   double h = element_data->h;
@@ -41,16 +41,16 @@ bi_estimator_init
   int deg = element_data->deg;
   int i;
 
-  element_data->ustar_min_u = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*dgmath_get_nodes(dim-1, deg));
+  element_data->ustar_min_u = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_operators_get_nodes(dim-1, deg));
   
   for (i = 0; i < (P4EST_DIM); i++){
-    element_data->qstar_min_q[i] = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*dgmath_get_nodes(dim-1, deg));
-    element_data->du_elem[i] = P4EST_ALLOC_ZERO(double, dgmath_get_nodes(dim, deg));   
+    element_data->qstar_min_q[i] = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_operators_get_nodes(dim-1, deg));
+    element_data->du_elem[i] = P4EST_ALLOC_ZERO(double, d4est_operators_get_nodes(dim, deg));   
   }
 
   element_data->u_elem = &(problem_data->u[element_data->stride]);
 
-  int volume_nodes = dgmath_get_nodes(dim,deg);
+  int volume_nodes = d4est_operators_get_nodes(dim,deg);
 
   linalg_copy_1st_to_2nd(
   element_data->u_elem,
@@ -59,7 +59,7 @@ bi_estimator_init
     );
 
   for (i = 0; i < (P4EST_DIM); i++){
-    dgmath_apply_Dij(dgmath_jit_dbase, element_data->u_elem, dim, deg, i, element_data->du_elem[i]);
+    d4est_operators_apply_Dij(d4est_ops, element_data->u_elem, dim, deg, i, element_data->du_elem[i]);
     linalg_vec_scale(2./h, element_data->du_elem[i], volume_nodes);
   }
 }
@@ -75,13 +75,13 @@ void* user_data
   element_data_t* element_data = (element_data_t*) q->p.user_data;
 
   bi_estimator_user_data_t* bi_estimator_user_data = (bi_estimator_user_data_t*) user_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = bi_estimator_user_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = bi_estimator_user_data->d4est_ops;
   double* bi_estimator_local_eta2 = bi_estimator_user_data->bi_estimator_local_eta2;
   
   int dim = (P4EST_DIM);
   int deg = element_data->deg;
   int faces = 2*dim;
-  int face_nodes = dgmath_get_nodes(dim-1,deg);
+  int face_nodes = d4est_operators_get_nodes(dim-1,deg);
 
   double surface_jacobian = element_data->surface_jacobian;
   double h = element_data->h;
@@ -153,7 +153,7 @@ bi_estimator_compute
  double penalty_prefactor,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 )
 {
   double bi_estimator_local_eta2 = 0.;
@@ -164,25 +164,25 @@ bi_estimator_compute
      ghost,
      ghost_data,
      vecs,
-     dgmath_jit_dbase
+     d4est_ops
     );
 
 
   
   /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
   
-  element_data_compute_l2_norm_sqr(p4est,vecs->Au, dgmath_jit_dbase);
+  element_data_compute_l2_norm_sqr(p4est,vecs->Au, d4est_ops);
   element_data_print_local_estimator(p4est);
   
 
   /* /\* element_data_t* ghost *\/_data; */
   bi_estimator_user_data_t bi_estimator_user_data;
-  bi_estimator_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
+  bi_estimator_user_data.d4est_ops = d4est_ops;
   bi_estimator_user_data.problem_data = vecs;
   bi_estimator_user_data.bi_estimator_local_eta2 = &bi_estimator_local_eta2;
 
   compute_flux_user_data_t compute_flux_user_data;
-  compute_flux_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
+  compute_flux_user_data.d4est_ops = d4est_ops;
 
   /* subtract  off numerical solution*/
   void* tmpptr = p4est->user_pointer;

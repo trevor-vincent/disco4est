@@ -175,7 +175,7 @@ void apply_helmholtz
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {  
@@ -183,7 +183,7 @@ void apply_helmholtz
                                            ghost,
                                            ghost_data,
                                            prob_vecs,
-                                           dgmath_jit_dbase,
+                                           d4est_ops,
                                            d4est_geom);
   
   double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes);
@@ -198,16 +198,16 @@ void apply_helmholtz
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;        
-        dgmath_apply_fofufofvlilj_Gaussnodes
+        d4est_operators_apply_fofufofvlilj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            &prob_vecs->u[ed->nodal_stride],
            NULL,
            NULL,
            ed->deg,
-           ed->J_integ,
-           ed->xyz_integ,
-           ed->deg_integ,
+           ed->J_quad,
+           ed->xyz_quad,
+           ed->deg_quad,
            (P4EST_DIM),
            &M_helmf_u[ed->nodal_stride],
            helmholtz_fcn,
@@ -230,7 +230,7 @@ void apply_helmholtz
 /*  p4est_ghost_t* ghost, */
 /*  curved_element_data_t* ghost_data, */
 /*  problem_data_t* prob_vecs, */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  d4est_operators_t* d4est_ops, */
 /*  d4est_geometry_t* d4est_geom */
 /* ) */
 /* {   */
@@ -238,7 +238,7 @@ void apply_helmholtz
 /*                                            ghost, */
 /*                                            ghost_data, */
 /*                                            prob_vecs, */
-/*                                            dgmath_jit_dbase, */
+/*                                            d4est_ops, */
 /*                                            d4est_geom); */
   
 /*   double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes); */
@@ -253,16 +253,16 @@ void apply_helmholtz
 /*       for (int q = 0; q < Q; ++q) { */
 /*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
 /*         curved_element_data_t* ed = quad->p.user_data;         */
-/*         dgmath_apply_fofufofvlilj_Gaussnodes */
+/*         d4est_operators_apply_fofufofvlilj_Gaussnodes */
 /*           ( */
-/*            dgmath_jit_dbase, */
+/*            d4est_ops, */
 /*            &prob_vecs->u[ed->nodal_stride], */
 /*            NULL, */
 /*            NULL, */
 /*            ed->deg, */
-/*            ed->J_integ, */
-/*            ed->xyz_integ, */
-/*            ed->deg_integ, */
+/*            ed->J_quad, */
+/*            ed->xyz_quad, */
+/*            ed->deg_quad, */
 /*            (P4EST_DIM), */
 /*            &M_helmf_u[ed->nodal_stride], */
 /*            helmholtz_fcn, */
@@ -288,7 +288,7 @@ void problem_build_rhs
  curved_weakeqn_ptrs_t* prob_fcns,
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
- dgmath_jit_dbase_t* dgbase,
+ d4est_operators_t* dgbase,
  d4est_geometry_t* d4est_geom,
  problem_input_t* input,
  void* user
@@ -321,11 +321,11 @@ void problem_build_rhs
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;
-        dgmath_apply_curvedGaussMass(dgbase,
+        d4est_operators_apply_curvedGaussMass(dgbase,
                                      &f[ed->nodal_stride],
                                       ed->deg,
-                                     ed->J_integ,
-                                     ed->deg_integ,
+                                     ed->J_quad,
+                                     ed->deg_quad,
                                      (P4EST_DIM),
                                      &prob_vecs->rhs[ed->nodal_stride]
                                     );
@@ -430,7 +430,7 @@ problem_set_degrees
 {
   problem_input_t* input = user_ctx;
   elem_data->deg = input->deg;
-  elem_data->deg_integ = input->deg;
+  elem_data->deg_quad = input->deg;
 }
 
 
@@ -441,7 +441,7 @@ problem_init
  const char* input_file,
  p4est_t* p4est,
  d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int proc_size,
  sc_MPI_Comm mpicomm
 )
@@ -528,10 +528,10 @@ problem_init
 
 
     d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
-    /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
+    /* curved_element_data_init(p4est, geometric_factors, d4est_ops, d4est_geom, degree, input.gauss_quad_deg); */
     curved_element_data_init_new(p4est,
                              geometric_factors,
-                             dgmath_jit_dbase,
+                             d4est_ops,
                              d4est_geom,
                              problem_set_degrees,
                                  (void*)&input);
@@ -568,7 +568,7 @@ problem_init
 
      curved_element_data_init_new(p4est,
                              geometric_factors,
-                             dgmath_jit_dbase,
+                             d4est_ops,
                              d4est_geom,
                              problem_set_degrees,
                                  (void*)&input);
@@ -578,7 +578,7 @@ problem_init
 
   /* curved_element_data_init(p4est, */
   /*                          geometric_factors, */
-  /*                          dgmath_jit_dbase, */
+  /*                          d4est_ops, */
   /*                          d4est_geom, degree, */
   /*                          degree_Gauss_diff[0], */
   /*                          GAUSS_INTEG); */
@@ -604,7 +604,7 @@ problem_init
                                              (zero_fcn,&ip_flux_params);
     
     /* linalg_fill_vec(u, 0., local_nodes); */
-    /* curved_element_data_init_node_vec(p4est,f,f_fcn,dgmath_jit_dbase); */
+    /* curved_element_data_init_node_vec(p4est,f,f_fcn,d4est_ops); */
 
     /* double total_volume = 0.; */
     /* for (p4est_topidx_t tt = p4est->first_local_tree; */
@@ -631,7 +631,7 @@ problem_init
     /*    &prob_vecs, /\* only needed for # of nodes *\/ */
     /*    (void*)&prob_fcns, */
     /*    .0000000001, */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    1, /\* is it curved *\/ */
     /*    2, /\* should we print *\/ */
     /*    d4est_geom */
@@ -645,7 +645,7 @@ problem_init
     /*    &prob_fcns, */
     /*    ghost, */
     /*    ghost_data, */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    d4est_geom, */
     /*    1, */
     /*    20 */
@@ -670,7 +670,7 @@ problem_init
   /*    p4est, */
   /*    u, */
   /*    analytic_fcn, */
-  /*    dgmath_jit_dbase */
+  /*    d4est_ops */
   /*   ); */
 
     /* linalg_fill_vec(u, 0., local_nodes); */
@@ -688,7 +688,7 @@ problem_init
         &prob_fcns,
         ghost,
         ghost_data,
-        dgmath_jit_dbase,
+        d4est_ops,
         d4est_geom,
         &input,
         &ip_flux_params
@@ -705,7 +705,7 @@ problem_init
         (void*)&prob_fcns,
         &ghost,
         (void**)&ghost_data,
-        dgmath_jit_dbase,
+        d4est_ops,
         d4est_geom,
         input_file,
         NULL
@@ -720,7 +720,7 @@ problem_init
                                     p4est,
                                     analytic,
                                     analytic_fcn,
-                                    dgmath_jit_dbase,
+                                    d4est_ops,
                                     d4est_geom->p4est_geom
                                    );
 
@@ -739,7 +739,7 @@ problem_init
                                error,
                                /* u_analytic, */
                                local_nodes,
-                               dgmath_jit_dbase,
+                               d4est_ops,
                                DO_NOT_STORE_LOCALLY
                               );
 

@@ -41,7 +41,7 @@ krylov_petsc_solve
  void* fcns,
  p4est_ghost_t** ghost,
  void** ghost_data, 
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  krylov_petsc_params_t* params,
  krylov_pc_t* krylov_pc

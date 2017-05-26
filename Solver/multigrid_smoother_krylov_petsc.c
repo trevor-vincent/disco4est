@@ -14,7 +14,7 @@ multigrid_smoother_krylov_petsc
 {
 
   multigrid_data_t* mg_data = p4est->user_pointer;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = mg_data->d4est_ops;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   krylov_petsc_params_t* params = mg_data->smoother->user;
   p4est_ghost_t** ghost = (updater->ghost);
@@ -26,7 +26,7 @@ multigrid_smoother_krylov_petsc
                      fcns,
                      ghost,
                      ghost_data,
-                     dgmath_jit_dbase,
+                     d4est_ops,
                      d4est_geom,
                      params,
                      NULL);
@@ -37,7 +37,7 @@ multigrid_smoother_krylov_petsc
   Au = vecs->Au;
   rhs = vecs->rhs;
 
-  fcns->apply_lhs(p4est, *ghost, *ghost_data, vecs, dgmath_jit_dbase, d4est_geom);
+  fcns->apply_lhs(p4est, *ghost, *ghost_data, vecs, d4est_ops, d4est_geom);
   linalg_copy_1st_to_2nd(Au, r, local_nodes);
   linalg_vec_xpby(rhs, -1., r, local_nodes);
 }

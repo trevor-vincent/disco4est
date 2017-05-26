@@ -83,7 +83,7 @@ multigrid_smoother_cheby_d4est_iterate
   /* const double lmax = cheby_params->lmax; */
 
   multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = mg_data->d4est_ops;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   p4est_ghost_t* ghost = *(updater->ghost);
   void* ghost_data = *(updater->ghost_data);
@@ -105,7 +105,7 @@ multigrid_smoother_cheby_d4est_iterate
   linalg_fill_vec(p, 0., local_nodes);
   for (i = 0; i < iter; i++){
     /* calculate residual r = rhs - Au */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, d4est_geom);
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
     linalg_copy_1st_to_2nd(Au, r, local_nodes);
     linalg_vec_xpby(rhs, -1., r, local_nodes);
 
@@ -128,7 +128,7 @@ multigrid_smoother_cheby_d4est_iterate
   }
 
   /* calculate the residual */
-  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, d4est_geom);
+  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
   linalg_copy_1st_to_2nd(Au, r, local_nodes);
   linalg_vec_xpby(rhs, -1., r, local_nodes);
 
@@ -148,7 +148,7 @@ multigrid_smoother_cheby_d4est_update
   multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
   multigrid_smoother_cheby_d4est_t* cheby = mg_data->smoother->user;
   
-  /* dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase; */
+  /* d4est_operators_t* d4est_ops = mg_data->d4est_ops; */
   /* multigrid_element_data_updater_t* updater = mg_data->elem_data_updater; */
   /* p4est_ghost_t* ghost = *(updater->ghost); */
   /* void* ghost_data = *(updater->ghost_data); */
@@ -209,7 +209,7 @@ multigrid_smoother_cheby_d4est
          fcns,
          *(updater->ghost),
          *(updater->ghost_data),
-         mg_data->dgmath_jit_dbase,
+         mg_data->d4est_ops,
          updater->d4est_geom,
          cheby->cheby_eigs_cg_imax,
          &cheby->eigs[level]

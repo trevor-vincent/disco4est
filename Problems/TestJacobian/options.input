@@ -13,13 +13,13 @@ ip_flux_penalty_calculate_fcn = meanp_sqr_over_meanh
 [problem]
 num_unifrefs = 0
 deg_R2= 2
-deg_integ_R2= 2
+deg_quad_R2= 2
 deg_stiffness_R2= 2
 deg_R1  = 2
-deg_integ_R1  = 2
+deg_quad_R1  = 2
 deg_stiffness_R1  = 2
 deg_R0= 2
-deg_integ_R0= 2
+deg_quad_R0= 2
 deg_stiffness_R0= 2
 rhs_compute_method = COMPUTE_RHS_ON_LOBATTO
 

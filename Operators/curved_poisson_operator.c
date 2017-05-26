@@ -1,7 +1,7 @@
 #include <pXest.h>
 #include <curved_element_data.h>
 #include <problem_data.h>
-#include <dgmath.h>
+#include <d4est_operators.h>
 #include <linalg.h>
 #include <curved_poisson_operator.h>
 #include <grid_functions.h>
@@ -12,7 +12,7 @@
 
 typedef struct {
   
-  dgmath_jit_dbase_t* dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops;
   problem_data_t* problem_data;
 #ifndef NDEBUG
   curved_poisson_debug_vecs_t* debug_vecs;
@@ -31,14 +31,14 @@ void curved_Gauss_poisson_init_vecs
 
   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data;
   problem_data_t* problem_data = (problem_data_t*) curved_Gauss_poisson_user_data->problem_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = (dgmath_jit_dbase_t*) curved_Gauss_poisson_user_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_Gauss_poisson_user_data->d4est_ops;
   
   int dim = (P4EST_DIM);
   int deg = elem_data->deg;
-  int volume_nodes_Lobatto = dgmath_get_nodes(dim,deg);
-  int face_nodes_Lobatto = dgmath_get_nodes(dim-1,deg);
-  int volume_nodes_Gauss = dgmath_get_nodes(dim, elem_data->deg_integ);
-  /* int face_nodes_Gauss = dgmath_get_nodes(dim-1, elem_data->deg_integ); */
+  int volume_nodes_Lobatto = d4est_operators_get_nodes(dim,deg);
+  int face_nodes_Lobatto = d4est_operators_get_nodes(dim-1,deg);
+  int volume_nodes_Gauss = d4est_operators_get_nodes(dim, elem_data->deg_quad);
+  /* int face_nodes_Gauss = d4est_operators_get_nodes(dim-1, elem_data->deg_quad); */
 
   
   int i,j,k;
@@ -76,28 +76,28 @@ void curved_Gauss_poisson_init_vecs
   for (i = 0; i < (P4EST_DIM); i++){
 
     /* PROLONG u here first, then take derivative, then interpolate to Gauss, this is most consistent */
-    /* dgmath_apply_p_prolong(dgmath_jit_dbase, &(problem_data->u[elem_data->nodal_stride]), deg, (P4EST_DIM), elem_data->deg_integ, u_prolonged); */
+    /* d4est_operators_apply_p_prolong(d4est_ops, &(problem_data->u[elem_data->nodal_stride]), deg, (P4EST_DIM), elem_data->deg_quad, u_prolonged); */
     
-    /* dgmath_apply_Dij(dgmath_jit_dbase, u_prolonged, dim, elem_data->deg_integ, i, &elem_data->dudr_elem[i][0]); */
-    /* dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &elem_data->dudr_elem[i][0], elem_data->deg_integ, elem_data->deg_integ, du_di_Gauss, (P4EST_DIM)); */
+    /* d4est_operators_apply_Dij(d4est_ops, u_prolonged, dim, elem_data->deg_quad, i, &elem_data->dudr_elem[i][0]); */
+    /* d4est_operators_interp_GLL_to_GL(d4est_ops, &elem_data->dudr_elem[i][0], elem_data->deg_quad, elem_data->deg_quad, du_di_Gauss, (P4EST_DIM)); */
 
-    /* dgmath_apply_p_prolong(dgmath_jit_dbase, &(problem_data->u[elem_data->nodal_stride]), deg, (P4EST_DIM), elem_data->deg_integ, u_prolonged); */
-    dgmath_apply_Dij(dgmath_jit_dbase, &(problem_data->u[elem_data->nodal_stride]), dim, elem_data->deg, i, &elem_data->dudr_elem[i][0]);
+    /* d4est_operators_apply_p_prolong(d4est_ops, &(problem_data->u[elem_data->nodal_stride]), deg, (P4EST_DIM), elem_data->deg_quad, u_prolonged); */
+    d4est_operators_apply_Dij(d4est_ops, &(problem_data->u[elem_data->nodal_stride]), dim, elem_data->deg, i, &elem_data->dudr_elem[i][0]);
     
-    dgmath_apply_p_prolong(dgmath_jit_dbase, &elem_data->dudr_elem[i][0], deg, (P4EST_DIM), elem_data->deg_integ, du_di_prolonged);
+    d4est_operators_apply_p_prolong(d4est_ops, &elem_data->dudr_elem[i][0], deg, (P4EST_DIM), elem_data->deg_quad, du_di_prolonged);
 
-    dgmath_interp_GLL_to_GL(dgmath_jit_dbase, du_di_prolonged, elem_data->deg_integ, elem_data->deg_integ, du_di_Gauss, (P4EST_DIM));
+    d4est_operators_interp_GLL_to_GL(d4est_ops, du_di_prolonged, elem_data->deg_quad, elem_data->deg_quad, du_di_Gauss, (P4EST_DIM));
 
 
     for (j = 0; j < (P4EST_DIM); j++){
       for (k = 0; k < volume_nodes_Gauss; k++){
-        elem_data->du_elem[j][k] += elem_data->rst_xyz_integ[i][j][k]*du_di_Gauss[k];
+        elem_data->du_elem[j][k] += elem_data->rst_xyz_quad[i][j][k]*du_di_Gauss[k];
       }
     }    
   }
 
   /* double* tmp_ptr = &elem_data->dudr_elem[0][0]; */
-  /* DEBUG_PRINT_ARR_DBL(tmp_ptr, dgmath_get_nodes((P4EST_DIM),elem_data->deg_integ)); */
+  /* DEBUG_PRINT_ARR_DBL(tmp_ptr, d4est_operators_get_nodes((P4EST_DIM),elem_data->deg_quad)); */
 
   
   P4EST_FREE(du_di_prolonged);
@@ -115,12 +115,12 @@ void curved_Gauss_poisson_init_vecs
 /*   curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data; */
 
 /*   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data; */
-/*   dgmath_jit_dbase_t* dgmath_jit_dbase = (dgmath_jit_dbase_t*) curved_Gauss_poisson_user_data->dgmath_jit_dbase; */
+/*   d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_Gauss_poisson_user_data->d4est_ops; */
 /*   int dim = (P4EST_DIM); */
 /*   int deg = element_data->deg; */
 /*   int faces = 2*dim; */
-/*   int face_nodes_Gauss = dgmath_get_nodes(dim-1, elem_data->deg_integ); */
-/*   int volume_nodes_Gauss = dgmath_get_nodes(dim, elem_data->deg_integ); */
+/*   int face_nodes_Gauss = d4est_operators_get_nodes(dim-1, elem_data->deg_quad); */
+/*   int volume_nodes_Gauss = d4est_operators_get_nodes(dim, elem_data->deg_quad); */
 /*   /\* double* u_elem = element_data->u_storage; *\/ */
 /*   double* vol_tmp = P4EST_ALLOC(double, volume_nodes_Gauss); */
 /*   double* Si_u [(P4EST_DIM)]; */
@@ -131,24 +131,24 @@ void curved_Gauss_poisson_init_vecs
 /*   } */
   
 /*   for (int i = 0; i < (P4EST_DIM); i++){ */
-/*     dgmath_apply_curvedGaussMass_onGaussNodeVec(dgmath_jit_dbase, */
+/*     d4est_operators_apply_curvedGaussMass_onGaussNodeVec(d4est_ops, */
 /*                                                 element_data->du_elem[i], */
-/*                                                 elem_data->deg_integ, */
-/*                                                 element_data->J_integ, */
-/*                                                 elem_data->deg_integ, */
+/*                                                 elem_data->deg_quad, */
+/*                                                 element_data->J_quad, */
+/*                                                 elem_data->deg_quad, */
 /*                                                 (P4EST_DIM), */
 /*                                                 Si_u[i]); */
 /*   } */
   
 /*   for (int d = 0; d < (P4EST_DIM); d++){ */
 /*     for (int f = 0; f < faces; f++){ */
-/*       dgmath_apply_LIFT(dgmath_jit_dbase, &element_data->M_ustar_min_u_n[d][f*face_nodes], dim, elem_data->deg_integ, f, vol_tmp); */
+/*       d4est_operators_apply_LIFT(d4est_ops, &element_data->M_ustar_min_u_n[d][f*face_nodes], dim, elem_data->deg_quad, f, vol_tmp); */
 /*       linalg_vec_axpy(1.0, vol_tmp, Si_u[d], volume_nodes_Gauss); */
 /*     } */
 /*   } */
 
 /*   for (int i = 0; i < (P4EST_DIM); i++){ */
-/*     dgmath_apply_curvedInverseGaussMass(dgmath_jit_dbase, Si_u[i], elem_data->deg_integ, element_data->J_integ, elem_data->deg_integ, (P4EST_DIM), element_data->q_elem[i]); */
+/*     d4est_operators_apply_curvedInverseGaussMass(d4est_ops, Si_u[i], elem_data->deg_quad, element_data->J_quad, elem_data->deg_quad, (P4EST_DIM), element_data->q_elem[i]); */
 /*   } */
    
 /*   for (i = 0; i < (P4EST_DIM); i++){ */
@@ -167,14 +167,14 @@ void curved_Gauss_poisson_compute_q_elem
   curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data;
 
   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = (dgmath_jit_dbase_t*) curved_Gauss_poisson_user_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_Gauss_poisson_user_data->d4est_ops;
   int dim = (P4EST_DIM);
   /* int deg = element_data->deg; */
   int faces = 2*dim;
-  /* int face_nodes_Gauss = dgmath_get_nodes(dim-1,element_data->deg_integ); */
-  int face_nodes_Lobatto = dgmath_get_nodes(dim-1,element_data->deg);
-  /* int volume_nodes_Gauss = dgmath_get_nodes(dim,element_data->deg_integ); */
-  int volume_nodes_Lobatto = dgmath_get_nodes(dim,element_data->deg);
+  /* int face_nodes_Gauss = d4est_operators_get_nodes(dim-1,element_data->deg_quad); */
+  int face_nodes_Lobatto = d4est_operators_get_nodes(dim-1,element_data->deg);
+  /* int volume_nodes_Gauss = d4est_operators_get_nodes(dim,element_data->deg_quad); */
+  int volume_nodes_Lobatto = d4est_operators_get_nodes(dim,element_data->deg);
   /* double* u_elem = element_data->u_storage; */
 
   double* Si_u [(P4EST_DIM)];
@@ -187,8 +187,8 @@ void curved_Gauss_poisson_compute_q_elem
 /* #endif */
 
 
-  /* int volume_nodes_integ = dgmath_get_nodes((P4EST_DIM), element_data->deg_integ); */
-  /* DEBUG_PRINT_2ARR_DBL(element_data->du_elem[0], element_data->du_elem[1], volume_nodes_integ); */
+  /* int volume_nodes_quad = d4est_operators_get_nodes((P4EST_DIM), element_data->deg_quad); */
+  /* DEBUG_PRINT_2ARR_DBL(element_data->du_elem[0], element_data->du_elem[1], volume_nodes_quad); */
   
   
   for (int i = 0; i < (P4EST_FACES); i++)
@@ -203,11 +203,11 @@ void curved_Gauss_poisson_compute_q_elem
   }
   
   for (int i = 0; i < (P4EST_DIM); i++){
-    dgmath_apply_curvedGaussMass_onGaussNodeVec(dgmath_jit_dbase,
+    d4est_operators_apply_curvedGaussMass_onGaussNodeVec(d4est_ops,
                                                 element_data->du_elem[i],
                                                 element_data->deg,
-                                                element_data->J_integ,
-                                                element_data->deg_integ,
+                                                element_data->J_quad,
+                                                element_data->deg_quad,
                                                 (P4EST_DIM),
                                                 Si_u[i]);
 
@@ -217,7 +217,7 @@ void curved_Gauss_poisson_compute_q_elem
 
   double* u_ptr = &element_data->u_storage[0];
   /* DEBUG_PRINT_4ARR_DBL(u_ptr, Si_u[0], Si_u[1], Si_u[2],volume_nodes_Lobatto); */
-  /* DEBUG_PRINT_3ARR_DBL(element_data->u, element_data->J_integ, Si_u[0], volume_nodes_Lobatto); */
+  /* DEBUG_PRINT_3ARR_DBL(element_data->u, element_data->J_quad, Si_u[0], volume_nodes_Lobatto); */
 
   /* double* Minv_Mustar_min_u_n = P4EST_ALLOC(double, face_nodes_Lobatto); */
 
@@ -232,16 +232,16 @@ void curved_Gauss_poisson_compute_q_elem
       /*                        face_nodes_Lobatto, */
       /*                        face_nodes_Lobatto); */
 
-      /* dgmath_apply_LIFT( */
-      /*                   dgmath_jit_dbase, */
+      /* d4est_operators_apply_LIFT( */
+      /*                   d4est_ops, */
       /*                   Minv_Mustar_min_u_n, */
       /*                   dim, */
       /*                   element_data->deg, */
       /*                   f, */
       /*                   lifted_ustar_min_u[f][d] */
       /* ); */
-      dgmath_apply_LIFT(
-                        dgmath_jit_dbase,
+      d4est_operators_apply_LIFT(
+                        d4est_ops,
                         &element_data->M_ustar_min_u_n[d][f*face_nodes_Lobatto],
                         dim,
                         element_data->deg,
@@ -269,8 +269,8 @@ void curved_Gauss_poisson_compute_q_elem
 
   
   for (int i = 0; i < (P4EST_DIM); i++){
-    if (element_data->deg == element_data->deg_integ){
-      dgmath_apply_curvedInverseGaussMass(dgmath_jit_dbase, Mq[i], element_data->deg, element_data->J_integ, element_data->deg_integ, (P4EST_DIM), element_data->q_elem[i]);
+    if (element_data->deg == element_data->deg_quad){
+      d4est_operators_apply_curvedInverseGaussMass(d4est_ops, Mq[i], element_data->deg, element_data->J_quad, element_data->deg_quad, (P4EST_DIM), element_data->q_elem[i]);
     }
     else {
       mpi_abort("invM is deprecated");
@@ -289,8 +289,8 @@ void curved_Gauss_poisson_compute_q_elem
   /* } */
 
   /* double* testinvMq = P4EST_ALLOC(double, volume_nodes_Lobatto); */
-  /* dgmath_apply_invMij(dgmath_jit_dbase, Mq[0], (P4EST_DIM), element_data->deg, testinvMq); */
-  /* linalg_vec_scale(1./element_data->J_integ[0], testinvMq, volume_nodes_Lobatto); */
+  /* d4est_operators_apply_invMij(d4est_ops, Mq[0], (P4EST_DIM), element_data->deg, testinvMq); */
+  /* linalg_vec_scale(1./element_data->J_quad[0], testinvMq, volume_nodes_Lobatto); */
 
 
   /* DEBUG_PRINT_3ARR_DBL( */
@@ -315,8 +315,8 @@ void curved_Gauss_poisson_compute_q_elem
 #ifndef NDEBUG
   curved_poisson_debug_vecs_t* debug_vecs = (curved_poisson_debug_vecs_t*)curved_Gauss_poisson_user_data->debug_vecs;
   if(debug_vecs != NULL && debug_vecs->elem_id == element_data->id){
-  curved_poisson_debug_vecs_set_Mdu(Si_u, debug_vecs, dgmath_jit_dbase);
-  curved_poisson_debug_vecs_set_u(&element_data->u_storage[0], debug_vecs, dgmath_jit_dbase);
+  curved_poisson_debug_vecs_set_Mdu(Si_u, debug_vecs, d4est_ops);
+  curved_poisson_debug_vecs_set_u(&element_data->u_storage[0], debug_vecs, d4est_ops);
 
 
     double* qptrs [(P4EST_DIM)];
@@ -327,10 +327,10 @@ void curved_Gauss_poisson_compute_q_elem
     qptrs[2] = &element_data->q_elem[2][0];
 #endif
     
-    curved_poisson_debug_vecs_set_q(qptrs, debug_vecs, dgmath_jit_dbase);
+    curved_poisson_debug_vecs_set_q(qptrs, debug_vecs, d4est_ops);
 
-  curved_poisson_debug_vecs_set_Mq(Mq, debug_vecs, dgmath_jit_dbase);
-  curved_poisson_debug_vecs_set_lifteduflux(lifted_ustar_min_u, debug_vecs, dgmath_jit_dbase);
+  curved_poisson_debug_vecs_set_Mq(Mq, debug_vecs, d4est_ops);
+  curved_poisson_debug_vecs_set_lifteduflux(lifted_ustar_min_u, debug_vecs, d4est_ops);
   /* printf("element_id = %d\n", element_data->id); */
   /* DEBUG_PRINT_ARR_DBL(element_data->q_elem[0], volume_nodes_Lobatto); */
   /* DEBUG_PRINT_ARR_DBL(element_data->q_elem[1], volume_nodes_Lobatto); */
@@ -357,43 +357,43 @@ void curved_Gauss_poisson_compute_q_elem
 /*   curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data; */
 
 /*   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data; */
-/*   dgmath_jit_dbase_t* dgmath_jit_dbase = (dgmath_jit_dbase_t*) curved_Gauss_poisson_user_data->dgmath_jit_dbase; */
+/*   d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_Gauss_poisson_user_data->d4est_ops; */
   
 /*   int dim = (P4EST_DIM); */
 /*   int deg = element_data->deg; */
 /*   int faces = 2*dim; */
-/*   int face_nodes = dgmath_get_nodes(dim-1,deg); */
-/*   int volume_nodes = dgmath_get_nodes(dim,deg); */
+/*   int face_nodes = d4est_operators_get_nodes(dim-1,deg); */
+/*   int volume_nodes = d4est_operators_get_nodes(dim,deg); */
 
 /*   double* Au = element_data->Au_elem; */
 /*   linalg_fill_vec(Au, 0., volume_nodes); */
   
-/*   double* dq = P4EST_ALLOC(double, dgmath_get_nodes(dim,deg)); */
-/*   double* dq_Gauss = P4EST_ALLOC(double, dgmath_get_nodes(dim,deg)); */
-/*   double* vol_tmp = P4EST_ALLOC_ZERO(double, dgmath_get_nodes(dim,deg)); */
+/*   double* dq = P4EST_ALLOC(double, d4est_operators_get_nodes(dim,deg)); */
+/*   double* dq_Gauss = P4EST_ALLOC(double, d4est_operators_get_nodes(dim,deg)); */
+/*   double* vol_tmp = P4EST_ALLOC_ZERO(double, d4est_operators_get_nodes(dim,deg)); */
 
 /*   /\* compute  *\/ */
 /*   int i,j,k; */
 /*   for (i = 0; i < (P4EST_DIM); i++){ */
 /*     for (j = 0; j < (P4EST_DIM); j++){ */
-/*       dgmath_apply_Dij(dgmath_jit_dbase, &element_data->q_elem[i][0], dim, deg, j, dq); */
-/*       dgmath_interp_GLL_to_GL(dgmath_jit_dbase, dq, deg, deg, dq_Gauss, (P4EST_DIM)); */
+/*       d4est_operators_apply_Dij(d4est_ops, &element_data->q_elem[i][0], dim, deg, j, dq); */
+/*       d4est_operators_interp_GLL_to_GL(d4est_ops, dq, deg, deg, dq_Gauss, (P4EST_DIM)); */
 /*       for (k = 0; k < volume_nodes; k++){ */
-/*         vol_tmp[k] += element_data->rst_xyz_integ[j][i][k]*dq_Gauss[k]; */
+/*         vol_tmp[k] += element_data->rst_xyz_quad[j][i][k]*dq_Gauss[k]; */
 /*       } */
 /*     }     */
 /*   } */
   
 /*   /\* linalg_component_mult(vol_tmp2, element_data->J, vol_tmp, volume_nodes); *\/ */
-/*   /\* dgmath_apply_Mij(dgmath_jit_dbase, vol_tmp, dim, deg, Au); *\/ */
+/*   /\* d4est_operators_apply_Mij(d4est_ops, vol_tmp, dim, deg, Au); *\/ */
 
-/*   dgmath_apply_curvedGaussMass_onGaussNodeVec(dgmath_jit_dbase, vol_tmp, deg, element_data->J_integ, deg, (P4EST_DIM), Au); */
+/*   d4est_operators_apply_curvedGaussMass_onGaussNodeVec(d4est_ops, vol_tmp, deg, element_data->J_quad, deg, (P4EST_DIM), Au); */
   
-/*   /\* compute surface_integral[ n dot M*(q - q*) ] over boundary *\/ */
+/*   /\* compute surface_quadral[ n dot M*(q - q*) ] over boundary *\/ */
 /*   /\* int f; *\/ */
   
 /*   for (int f = 0; f < faces; f++){ */
-/*     dgmath_apply_LIFT(dgmath_jit_dbase, &element_data->M_qstar_min_q_dot_n[f*face_nodes], dim, deg, f, vol_tmp); */
+/*     d4est_operators_apply_LIFT(d4est_ops, &element_data->M_qstar_min_q_dot_n[f*face_nodes], dim, deg, f, vol_tmp); */
 /*     /\* printf("element = %d, face = %d, dim = %d, x,y,z = %f,%f\n", element_data->id, f, d, element_data->xyz[0][0], element_data->xyz[1][0]); *\/ */
 /*     /\* printf("element = %d, face = %d, x,y,z = %f,%f\n", element_data->id, f, element_data->xyz[0][0], element_data->xyz[1][0]); *\/ */
 /*     /\* util_print_matrix(vol_tmp, volume_nodes, 1, "Mqstar_min_q", 0); *\/ */
@@ -423,16 +423,16 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
   curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data;
 
   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = (dgmath_jit_dbase_t*) curved_Gauss_poisson_user_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_Gauss_poisson_user_data->d4est_ops;
 
   
   int dim = (P4EST_DIM);
   /* int deg = element_data->deg; */
   int faces = 2*dim;
-  /* int face_nodes_Gauss = dgmath_get_nodes(dim-1,element_data->deg_integ); */
-  int face_nodes_Lobatto = dgmath_get_nodes(dim-1,element_data->deg);
-  int volume_nodes_Gauss = dgmath_get_nodes(dim,element_data->deg_integ);
-  int volume_nodes_Lobatto = dgmath_get_nodes(dim,element_data->deg);
+  /* int face_nodes_Gauss = d4est_operators_get_nodes(dim-1,element_data->deg_quad); */
+  int face_nodes_Lobatto = d4est_operators_get_nodes(dim-1,element_data->deg);
+  int volume_nodes_Gauss = d4est_operators_get_nodes(dim,element_data->deg_quad);
+  int volume_nodes_Lobatto = d4est_operators_get_nodes(dim,element_data->deg);
 
   double* Au = element_data->Au_elem;
   linalg_fill_vec(Au, 0., volume_nodes_Lobatto);
@@ -455,10 +455,10 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
   for (i = 0; i < (P4EST_DIM); i++){
     for (j = 0; j < (P4EST_DIM); j++){
       /* mpi_abort("q_elem no longer supported"); */
-      dgmath_apply_Dij(dgmath_jit_dbase, &element_data->q_elem[i][0], dim, element_data->deg, j, dq);
-      dgmath_interp_GLL_to_GL(dgmath_jit_dbase, dq, element_data->deg, element_data->deg_integ, dq_Gauss, (P4EST_DIM));
+      d4est_operators_apply_Dij(d4est_ops, &element_data->q_elem[i][0], dim, element_data->deg, j, dq);
+      d4est_operators_interp_GLL_to_GL(d4est_ops, dq, element_data->deg, element_data->deg_quad, dq_Gauss, (P4EST_DIM));
       for (k = 0; k < volume_nodes_Gauss; k++){
-        dxq_Gauss[k] += element_data->rst_xyz_integ[j][i][k]*dq_Gauss[k];
+        dxq_Gauss[k] += element_data->rst_xyz_quad[j][i][k]*dq_Gauss[k];
       }
     }    
   }
@@ -466,12 +466,12 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
   /* DEBUG_PRINT_ARR_DBL(dxq_Gauss, volume_nodes_Gauss); */
   
   
-  dgmath_apply_curvedGaussMass_onGaussNodeVec(
-                                              dgmath_jit_dbase,
+  d4est_operators_apply_curvedGaussMass_onGaussNodeVec(
+                                              d4est_ops,
                                               dxq_Gauss,
                                               element_data->deg,
-                                              element_data->J_integ,
-                                              element_data->deg_integ,
+                                              element_data->J_quad,
+                                              element_data->deg_quad,
                                               (P4EST_DIM),
                                               Mdq
                                              );
@@ -492,8 +492,8 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
     /*                        face_nodes_Lobatto); */
 
     
-    dgmath_apply_LIFT(
-                      dgmath_jit_dbase,
+    d4est_operators_apply_LIFT(
+                      d4est_ops,
                       &element_data->M_qstar_min_q_dot_n[f*face_nodes_Lobatto],
                       dim,
                       element_data->deg,
@@ -503,8 +503,8 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
     /* double* tmp = &element_data->M_qstar_min_q_dot_n[f*face_nodes_Lobatto]; */
     /* DEBUG_PRINT_ARR_DBL(tmp, face_nodes_Lobatto); */
     
-    /* dgmath_apply_LIFT( */
-    /*                   dgmath_jit_dbase, */
+    /* d4est_operators_apply_LIFT( */
+    /*                   d4est_ops, */
     /*                   Minv_Mqstar_min_q_dot_n, */
     /*                   dim, */
     /*                   element_data->deg, */
@@ -513,12 +513,12 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
 
 
 
-    /* dgmath_apply_curvedGaussMass( */
-    /*                              dgmath_jit_dbase, */
+    /* d4est_operators_apply_curvedGaussMass( */
+    /*                              d4est_ops, */
     /*                              lifted_qstar_min_q[f], */
     /*                              element_data->deg, */
-    /*                              element_data->J_integ, */
-    /*                              element_data->deg_integ, */
+    /*                              element_data->J_quad, */
+    /*                              element_data->deg_quad, */
                                  /* (P4EST_DIM), */
     /*                              M_lifted_qstar_min_q[f] */
     /* );     */
@@ -543,11 +543,11 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
 
 
 
-  /* DEBUG_PRINT_ARR_DBL(Au_integ, volume_nodes_Gauss); */
+  /* DEBUG_PRINT_ARR_DBL(Au_quad, volume_nodes_Gauss); */
 
 
   
-  /* dgmath_apply_p_prolong_transpose(dgmath_jit_dbase, Au_integ, element_data->deg_integ, (P4EST_DIM), deg, Au); */
+  /* d4est_operators_apply_p_prolong_transpose(d4est_ops, Au_quad, element_data->deg_quad, (P4EST_DIM), deg, Au); */
 
    
   /* Au *= -1 because Au matrix is negative definite before this! */
@@ -555,7 +555,7 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
 
   /* printf("volume_nodes_Lobatto = %d\n", volume_nodes_Lobatto); */
   /* printf("element_data->deg = %d\n", element_data->deg); */
-  /* printf("element_data->deg_integ = %d\n", element_data->deg_integ); */
+  /* printf("element_data->deg_quad = %d\n", element_data->deg_quad); */
   /* DEBUG_PRINT_ARR_DBL(Au, volume_nodes_Lobatto); */
 
   
@@ -563,9 +563,9 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
   curved_poisson_debug_vecs_t* debug_vecs = (curved_poisson_debug_vecs_t*)curved_Gauss_poisson_user_data->debug_vecs;
 
   if (debug_vecs != NULL && debug_vecs->elem_id == element_data->id){
-    curved_poisson_debug_vecs_set_Mdivq(Mdq, debug_vecs, dgmath_jit_dbase);
-    curved_poisson_debug_vecs_set_liftedqflux(lifted_qstar_min_q, debug_vecs, dgmath_jit_dbase);
-    curved_poisson_debug_vecs_set_Au(Au, debug_vecs, dgmath_jit_dbase);
+    curved_poisson_debug_vecs_set_Mdivq(Mdq, debug_vecs, d4est_ops);
+    curved_poisson_debug_vecs_set_liftedqflux(lifted_qstar_min_q, debug_vecs, d4est_ops);
+    curved_poisson_debug_vecs_set_Au(Au, debug_vecs, d4est_ops);
     
   }
 #endif
@@ -588,43 +588,43 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
 /*   curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data; */
 
 /*   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data; */
-/*   dgmath_jit_dbase_t* dgmath_jit_dbase = (dgmath_jit_dbase_t*) curved_Gauss_poisson_user_data->dgmath_jit_dbase; */
+/*   d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_Gauss_poisson_user_data->d4est_ops; */
   
 /*   int dim = (P4EST_DIM); */
 /*   int deg = element_data->deg; */
 /*   int faces = 2*dim; */
-/*   int face_nodes = dgmath_get_nodes(dim-1,deg); */
-/*   int volume_nodes = dgmath_get_nodes(dim,deg); */
+/*   int face_nodes = d4est_operators_get_nodes(dim-1,deg); */
+/*   int volume_nodes = d4est_operators_get_nodes(dim,deg); */
 
 /*   double* Au = element_data->Au_elem; */
 /*   linalg_fill_vec(Au, 0., volume_nodes); */
   
-/*   double* dq = P4EST_ALLOC(double, dgmath_get_nodes(dim,deg)); */
-/*   double* dq_Gauss = P4EST_ALLOC(double, dgmath_get_nodes(dim,deg)); */
-/*   double* vol_tmp = P4EST_ALLOC_ZERO(double, dgmath_get_nodes(dim,deg)); */
+/*   double* dq = P4EST_ALLOC(double, d4est_operators_get_nodes(dim,deg)); */
+/*   double* dq_Gauss = P4EST_ALLOC(double, d4est_operators_get_nodes(dim,deg)); */
+/*   double* vol_tmp = P4EST_ALLOC_ZERO(double, d4est_operators_get_nodes(dim,deg)); */
 
 /*   /\* compute  *\/ */
 /*   int i,j,k; */
 /*   for (i = 0; i < (P4EST_DIM); i++){ */
 /*     for (j = 0; j < (P4EST_DIM); j++){ */
-/*       dgmath_apply_Dij(dgmath_jit_dbase, &element_data->q_elem[i][0], dim, deg, j, dq); */
-/*       dgmath_interp_GLL_to_GL(dgmath_jit_dbase, dq, deg, deg, dq_Gauss, (P4EST_DIM)); */
+/*       d4est_operators_apply_Dij(d4est_ops, &element_data->q_elem[i][0], dim, deg, j, dq); */
+/*       d4est_operators_interp_GLL_to_GL(d4est_ops, dq, deg, deg, dq_Gauss, (P4EST_DIM)); */
 /*       for (k = 0; k < volume_nodes; k++){ */
-/*         vol_tmp[k] += element_data->rst_xyz_integ[j][i][k]*dq_Gauss[k]; */
+/*         vol_tmp[k] += element_data->rst_xyz_quad[j][i][k]*dq_Gauss[k]; */
 /*       } */
 /*     }     */
 /*   } */
   
 /*   /\* linalg_component_mult(vol_tmp2, element_data->J, vol_tmp, volume_nodes); *\/ */
-/*   /\* dgmath_apply_Mij(dgmath_jit_dbase, vol_tmp, dim, deg, Au); *\/ */
+/*   /\* d4est_operators_apply_Mij(d4est_ops, vol_tmp, dim, deg, Au); *\/ */
 
-/*   dgmath_apply_curvedGaussMass_onGaussNodeVec(dgmath_jit_dbase, vol_tmp, deg, element_data->J_integ, deg, (P4EST_DIM), Au); */
+/*   d4est_operators_apply_curvedGaussMass_onGaussNodeVec(d4est_ops, vol_tmp, deg, element_data->J_quad, deg, (P4EST_DIM), Au); */
   
-/*   /\* compute surface_integral[ n dot M*(q - q*) ] over boundary *\/ */
+/*   /\* compute surface_quadral[ n dot M*(q - q*) ] over boundary *\/ */
 /*   /\* int f; *\/ */
   
 /*   for (int f = 0; f < faces; f++){ */
-/*     dgmath_apply_LIFT(dgmath_jit_dbase, &element_data->M_qstar_min_q_dot_n[f*face_nodes], dim, deg, f, vol_tmp); */
+/*     d4est_operators_apply_LIFT(d4est_ops, &element_data->M_qstar_min_q_dot_n[f*face_nodes], dim, deg, f, vol_tmp); */
 /*     /\* printf("element = %d, face = %d, dim = %d, x,y,z = %f,%f\n", element_data->id, f, d, element_data->xyz[0][0], element_data->xyz[1][0]); *\/ */
 /*     /\* printf("element = %d, face = %d, x,y,z = %f,%f\n", element_data->id, f, element_data->xyz[0][0], element_data->xyz[1][0]); *\/ */
 /*     /\* util_print_matrix(vol_tmp, volume_nodes, 1, "Mqstar_min_q", 0); *\/ */
@@ -673,19 +673,19 @@ curved_Gauss_poisson_apply_aij
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom
 )
 {
   curved_Gauss_poisson_user_data_t curved_Gauss_poisson_user_data;
-  curved_Gauss_poisson_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
+  curved_Gauss_poisson_user_data.d4est_ops = d4est_ops;
   curved_Gauss_poisson_user_data.problem_data = prob_vecs;
 #ifndef NDEBUG
   curved_Gauss_poisson_user_data.debug_vecs = NULL;
 #endif
   
   curved_compute_flux_user_data_t curved_compute_flux_user_data;
-  curved_compute_flux_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
+  curved_compute_flux_user_data.d4est_ops = d4est_ops;
   curved_compute_flux_user_data.geom = geom;
   
   void* tmpptr = p4est->user_pointer;
@@ -772,13 +772,13 @@ curved_poisson_apply_aij_debug
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  int local_element_id
 )
 {
   curved_Gauss_poisson_user_data_t curved_Gauss_poisson_user_data;
-  curved_Gauss_poisson_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
+  curved_Gauss_poisson_user_data.d4est_ops = d4est_ops;
   curved_Gauss_poisson_user_data.problem_data = prob_vecs;
 
 
@@ -790,7 +790,7 @@ curved_poisson_apply_aij_debug
   mpi_assert(curved_Gauss_poisson_user_data.debug_vecs != NULL);
   
   curved_compute_flux_user_data_t curved_compute_flux_user_data;
-  curved_compute_flux_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
+  curved_compute_flux_user_data.d4est_ops = d4est_ops;
   curved_compute_flux_user_data.geom = geom;
   
   

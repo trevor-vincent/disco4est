@@ -13,11 +13,14 @@ void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
   curved_flux_fcn_ptrs_t *flux_fcn_ptrs =
       (curved_flux_fcn_ptrs_t *)curved_compute_flux_user_data->flux_fcn_ptrs;
   
-  dgmath_jit_dbase_t *dgmath_jit_dbase =
-      (dgmath_jit_dbase_t *)curved_compute_flux_user_data->dgmath_jit_dbase;
+  d4est_operators_t *d4est_ops =
+      (d4est_operators_t *)curved_compute_flux_user_data->d4est_ops;
 
   d4est_geometry_t* geom =
     (d4est_geometry_t *)curved_compute_flux_user_data->geom;
+
+  d4est_quadrature_t* d4est_quad =
+    (d4est_quadrature_t *)curved_compute_flux_user_data->d4est_quad;
   
   curved_element_data_t *ghost_data = (curved_element_data_t *)user_data;
   curved_element_data_t *e_p[(P4EST_HALF)];
@@ -86,7 +89,7 @@ void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
         if (sum_ghost_array < (P4EST_HALF)) {
           flux_fcn_ptrs->flux_interface_fcn(
               e_m, (P4EST_HALF), side[s_m]->face, e_p, 1, side[s_p]->face,
-              e_m_is_ghost, info->orientation, dgmath_jit_dbase, geom,
+              e_m_is_ghost, info->orientation, d4est_ops, geom, d4est_quad,
               flux_fcn_ptrs->params);
         }
 
@@ -112,7 +115,7 @@ void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
 
             flux_fcn_ptrs->flux_interface_fcn(
                 e_m, 1, side[s_m]->face, e_p, (P4EST_HALF), side[s_p]->face,
-                e_m_is_ghost, info->orientation, dgmath_jit_dbase, geom,
+                e_m_is_ghost, info->orientation, d4est_ops, geom, d4est_quad,
                 flux_fcn_ptrs->params);
 
           }
@@ -128,7 +131,7 @@ void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
 
             flux_fcn_ptrs->flux_interface_fcn(
                 e_m, 1, side[s_m]->face, e_p, 1, side[s_p]->face, e_m_is_ghost,
-                info->orientation, dgmath_jit_dbase, geom, flux_fcn_ptrs->params);
+                info->orientation, d4est_ops, geom, d4est_quad, flux_fcn_ptrs->params);
           }
         }
       }
@@ -144,7 +147,7 @@ void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
     /* printf("e_m[0]->deg = %d\n", e_m[0]->deg); */
     /* #endif */
     flux_fcn_ptrs->flux_boundary_fcn(e_m[0], side->face,
-                                     flux_fcn_ptrs->bndry_fcn, dgmath_jit_dbase, geom,
+                                     flux_fcn_ptrs->bndry_fcn, d4est_ops, geom, d4est_quad,
                                      flux_fcn_ptrs->params);
   }
 }

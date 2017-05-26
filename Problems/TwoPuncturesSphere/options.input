@@ -11,15 +11,15 @@ num_of_amr_levels = 8
 ip_flux_penalty = 2.0
 
 [problem]
-deg_offset_for_nonlinear_integ = 0
+deg_offset_for_nonlinear_quad = 0
 deg_R2 = 2
-deg_integ_R2 = 2
+deg_quad_R2 = 2
 deg_stiffness_R2 = 2
 deg_R1 = 2
-deg_integ_R1 = 2
+deg_quad_R1 = 2
 deg_stiffness_R1 = 2
 deg_R0 = 2
-deg_integ_R0 = 2
+deg_quad_R0 = 2
 deg_stiffness_R0 = 2
 use_cactus = 0
 

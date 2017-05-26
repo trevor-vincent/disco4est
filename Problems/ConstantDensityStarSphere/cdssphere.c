@@ -221,17 +221,17 @@ problem_set_degrees
   /* outer shell */
   if (elem_data->tree < 6){
     elem_data->deg = input->deg_R2;
-    elem_data->deg_integ = input->deg_integ_R2;
+    elem_data->deg_quad = input->deg_quad_R2;
   }
   /* inner shell */
   else if(elem_data->tree < 12){
     elem_data->deg = input->deg_R1;
-    elem_data->deg_integ = input->deg_integ_R1;
+    elem_data->deg_quad = input->deg_quad_R1;
   }
   /* center cube */
   else {
     elem_data->deg = input->deg_R0;
-    elem_data->deg_integ = input->deg_integ_R0;
+    elem_data->deg_quad = input->deg_quad_R0;
   } 
 }
 
@@ -240,7 +240,7 @@ void
 problem_save_to_vtk
 (
  p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  double* u,
  double* u_analytic,
  double* error,
@@ -290,11 +290,11 @@ problem_save_to_vtk
     else
       sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta", "cds", level);
     
-    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, sol_save_as);
+    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, sol_save_as);
     d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
     d4est_vtk_context_set_scale(vtk_ctx, .99);
     d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
-    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);    
+    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, d4est_ops);    
     vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx,
                                              3,
                                              0,
@@ -352,7 +352,7 @@ problem_init
  const char* input_file,
  p4est_t* p4est,
  d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int proc_size,
  sc_MPI_Comm mpicomm
 )
@@ -441,7 +441,7 @@ problem_init
 
       curved_element_data_init_new(p4est,
                                    geometric_factors,
-                                   dgmath_jit_dbase,
+                                   d4est_ops,
                                    d4est_geom,
                                    problem_set_degrees,
                                    (void*)&input,
@@ -474,7 +474,7 @@ problem_init
       /*    ip_flux_params.ip_flux_penalty_prefactor, */
       /*    ghost, */
       /*    ghost_data, */
-      /*    dgmath_jit_dbase, */
+      /*    d4est_ops, */
       /*    d4est_geom */
       /*   ); */
 
@@ -496,10 +496,10 @@ problem_init
 
   
   d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
-  /* curved_element_data_init(p4est, geometric_factors, dgmath_jit_dbase, d4est_geom, degree, input.gauss_integ_deg); */
+  /* curved_element_data_init(p4est, geometric_factors, d4est_ops, d4est_geom, degree, input.gauss_quad_deg); */
   curved_element_data_init_new(p4est,
                                geometric_factors,
-                               dgmath_jit_dbase,
+                               d4est_ops,
                                d4est_geom,
                                problem_set_degrees,
                                (void*)&input,1,1);
@@ -556,7 +556,7 @@ problem_init
        (input.ip_flux_params)->ip_flux_penalty_prefactor,
        ghost,
        ghost_data,
-       dgmath_jit_dbase,
+       d4est_ops,
        d4est_geom
       );
 
@@ -595,11 +595,11 @@ problem_init
    /*  d4est_geometry_t* d4est_geom_vtk = d4est_geometry */
   /*   p4est_connectivity_t* conn_vtk = p8est_connectivity_new_sphere(); */
   /*   p4est_geometry_t* geom_vtk = p8est_geometry_new_sphere(conn_vtk, R0*3, R0*2, R0); */
-  /*   d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, "puncture-sphere"); */
+  /*   d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, "puncture-sphere"); */
   /*   d4est_vtk_context_set_geom(vtk_ctx, geom_vtk); */
   /*   d4est_vtk_context_set_scale(vtk_ctx, .99); */
   /*   d4est_vtk_context_set_deg_array(vtk_ctx, deg_array); */
-  /*   vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase); */
+  /*   vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, d4est_ops); */
   /*   vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx, 1, 0, "u",u, vtk_ctx); */
   /*   vtk_ctx = d4est_vtk_write_dg_cell_dataf */
   /*             ( */
@@ -628,7 +628,7 @@ problem_init
     curved_element_data_init_node_vec(p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
-                                      dgmath_jit_dbase,
+                                      d4est_ops,
                                       d4est_geom->p4est_geom);
     
     linalg_vec_axpyeqz(-1., prob_vecs.u, u_analytic, error, local_nodes);
@@ -637,7 +637,7 @@ problem_init
     problem_save_to_vtk
       (
        p4est,
-       dgmath_jit_dbase,
+       d4est_ops,
        u,
        u_analytic,
        error,
@@ -648,7 +648,7 @@ problem_init
   
     
     hp_amr(p4est,
-           dgmath_jit_dbase,
+           d4est_ops,
            &u,
            &stats[0],
            scheme,
@@ -667,7 +667,7 @@ problem_init
     
     curved_element_data_init_new(p4est,
                                  geometric_factors,
-                                 dgmath_jit_dbase,
+                                 d4est_ops,
                                  d4est_geom,
                                  problem_set_degrees,
                                  (void*)&input,1,1);
@@ -696,7 +696,7 @@ problem_init
        (void*)&prob_fcns,
        &ghost,
        (void**)&ghost_data,
-       dgmath_jit_dbase,
+       d4est_ops,
        d4est_geom,
        input_file,
        NULL
@@ -706,7 +706,7 @@ problem_init
     curved_element_data_init_node_vec(p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
-                                      dgmath_jit_dbase,
+                                      d4est_ops,
                                       d4est_geom->p4est_geom);
     
     linalg_vec_axpyeqz(-1., prob_vecs.u, u_analytic, error, local_nodes);
@@ -716,7 +716,7 @@ problem_init
                                  p4est,
                                  error,
                                  local_nodes,
-                                 dgmath_jit_dbase,
+                                 d4est_ops,
                                  DO_NOT_STORE_LOCALLY
                                 );
     

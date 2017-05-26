@@ -2,7 +2,7 @@
 #define WEAKEQN_PTRS_H 
 
 #include "problem_data.h"
-#include "../dGMath/dgmath.h"
+#include "../dGMath/d4est_operators.h"
 
 typedef
 void (*problem_apply_op_fcn_t)
@@ -11,7 +11,7 @@ void (*problem_apply_op_fcn_t)
  p4est_ghost_t*,
  void*, /* element_data */
  problem_data_t*,
- dgmath_jit_dbase_t*,
+ d4est_operators_t*,
  d4est_geometry_t*
 );
 

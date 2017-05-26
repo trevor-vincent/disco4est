@@ -2,7 +2,7 @@
 #define HP_AMR_H 
 
 #include "../pXest/pXest.h"
-#include "../dGMath/dgmath.h"
+#include "../dGMath/d4est_operators.h"
 #include "../Estimators/estimator_stats.h"
 
 
@@ -46,7 +46,7 @@ typedef struct {
   int* refinement_log;
   int refinement_log_stride;
   void* hp_amr_scheme_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase;  
+  d4est_operators_t* d4est_ops;  
   p4est_replace_t refine_replace_callback_fcn_ptr;
   p4est_replace_t balance_replace_callback_fcn_ptr;
   estimator_stats_t** estimator_stats;
@@ -59,7 +59,7 @@ void
 hp_amr
 (
  p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  double** data_to_hp_refine,
  estimator_stats_t** stats,
  hp_amr_scheme_t* scheme,

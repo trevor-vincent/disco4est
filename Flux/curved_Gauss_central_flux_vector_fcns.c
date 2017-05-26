@@ -1,5 +1,5 @@
 #include "../Utilities/util.h"
-#include "../dGMath/dgmath.h"
+#include "../dGMath/d4est_operators.h"
 #include "../ElementData/curved_element_data.h"
 #include "../LinearAlgebra/linalg.h"
 #include "../Flux/curved_Gauss_central_flux_vector_fcns.h"
@@ -12,20 +12,20 @@ curved_Gauss_central_flux_vector_dirichlet
  curved_element_data_t* e_m,
  int f_m,
  grid_fcn_t bndry_fcn,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  void* params
 )
 {
 
-  /* int deg_face_Gauss_integ = e_m->deg_integ; */
+  /* int deg_face_Gauss_quad = e_m->deg_quad; */
   
   central_flux_params_t* central_params = (central_flux_params_t*) params;
   double penalty = central_params->central_flux_penalty_prefactor;
   
   grid_fcn_t u_at_bndry = bndry_fcn;
-  int face_nodes_m_Lobatto = dgmath_get_nodes((P4EST_DIM) - 1, e_m->deg);
-  int face_nodes_m_Gauss = dgmath_get_nodes((P4EST_DIM) - 1, e_m->deg_integ);
+  int face_nodes_m_Lobatto = d4est_operators_get_nodes((P4EST_DIM) - 1, e_m->deg);
+  int face_nodes_m_Gauss = d4est_operators_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
 
   double* u_m_on_f_m = P4EST_ALLOC(double, face_nodes_m_Lobatto);
   double* u_m_on_f_m_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
@@ -57,27 +57,27 @@ curved_Gauss_central_flux_vector_dirichlet
   }
 
   for (int d = 0; d < (P4EST_DIM); d++){
-    dgmath_apply_slicer(dgmath_jit_dbase,
+    d4est_operators_apply_slicer(d4est_ops,
                         e_m->xyz[d],
                         (P4EST_DIM),
                         f_m,
                         e_m->deg,
                         xyz_on_f_m[d]);
     
-    /* dgmath_interp_GLL_to_GL */
+    /* d4est_operators_interp_GLL_to_GL */
     /*   ( */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    xyz_on_f_m[d], */
     /*    /\* e_m->deg, *\/ */
-    /*    e_m->deg_integ, */
-    /*    e_m->deg_integ, */
+    /*    e_m->deg_quad, */
+    /*    e_m->deg_quad, */
     /*    xyz_on_f_m_Gauss[d], */
     /*    (P4EST_DIM)-1 */
     /*   ); */
     
-    dgmath_apply_slicer
+    d4est_operators_apply_slicer
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        e_m->q_elem[d],
        (P4EST_DIM),
        f_m,
@@ -85,25 +85,25 @@ curved_Gauss_central_flux_vector_dirichlet
        q_m_on_f_m[d]
       );
 
-   dgmath_interp_GLL_to_GL
+   d4est_operators_interp_GLL_to_GL
      (
-      dgmath_jit_dbase,
+      d4est_ops,
       q_m_on_f_m[d],
       e_m->deg,
-      e_m->deg_integ,
+      e_m->deg_quad,
       q_m_on_f_m_Gauss[d],
       (P4EST_DIM)-1
      );
     
   }
 
-  dgmath_apply_slicer(dgmath_jit_dbase, e_m->u_storage, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
-  dgmath_interp_GLL_to_GL
+  d4est_operators_apply_slicer(d4est_ops, e_m->u_storage, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
+  d4est_operators_interp_GLL_to_GL
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      u_m_on_f_m,
      e_m->deg,
-     e_m->deg_integ,
+     e_m->deg_quad,
      u_m_on_f_m_Gauss,
      (P4EST_DIM)-1
     );
@@ -113,14 +113,14 @@ curved_Gauss_central_flux_vector_dirichlet
      &e_m,
      1,
      1,
-     &e_m->deg_integ,
+     &e_m->deg_quad,
      f_m,
      geom->dxdr_method,
      1,
      n_on_f_m_Gauss,
      sj_on_f_m_Gauss,
      geom,
-     dgmath_jit_dbase,
+     d4est_ops,
      (double* [(P4EST_DIM)]){NULL, NULL
 #if (P4EST_DIM)==3
          , NULL
@@ -147,12 +147,12 @@ curved_Gauss_central_flux_vector_dirichlet
                                              /* )); */
   }
   
-  dgmath_interp_GLL_to_GL
+  d4est_operators_interp_GLL_to_GL
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      u_on_f_m_min_u_at_bndry_Lobatto,
      e_m->deg,
-     e_m->deg_integ,
+     e_m->deg_quad,
      u_on_f_m_min_u_at_bndry_Gauss,
      (P4EST_DIM)-1
     );
@@ -173,11 +173,11 @@ curved_Gauss_central_flux_vector_dirichlet
   }
   
   for (int d = 0; d < (P4EST_DIM); d++){
-    dgmath_apply_curvedGaussMass_onGaussNodeVec(dgmath_jit_dbase,
+    d4est_operators_apply_curvedGaussMass_onGaussNodeVec(d4est_ops,
                                                 qstar_min_q_Gauss[d],
                                                 e_m->deg,
                                                 sj_n_on_f_m_Gauss[d],
-                                                e_m->deg_integ,
+                                                e_m->deg_quad,
                                                 (P4EST_DIM)-1,
                                                 M_qstar_min_q_n);
     
@@ -219,7 +219,7 @@ curved_Gauss_central_flux_vector_interface
  int f_p,
  int* e_m_is_ghost,
  int orientation,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  void* params
 )
@@ -253,10 +253,10 @@ curved_Gauss_central_flux_vector_interface
   int total_side_nodes_m_Gauss = 0;
   for (int i = 0; i < faces_m; i++){
     deg_m_Lobatto[i] = e_m[i]->deg;
-    /* deg_m_Gauss[i] = e_m[i]->deg_integ; */
+    /* deg_m_Gauss[i] = e_m[i]->deg_quad; */
     
-    face_nodes_m_Lobatto[i] = dgmath_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
-    face_nodes_m_Gauss[i] = dgmath_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg_integ);
+    face_nodes_m_Lobatto[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
+    face_nodes_m_Gauss[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg_quad);
     
     total_side_nodes_m_Lobatto += face_nodes_m_Lobatto[i];
     total_side_nodes_m_Gauss += face_nodes_m_Gauss[i];
@@ -267,10 +267,10 @@ curved_Gauss_central_flux_vector_interface
   int total_side_nodes_p_Gauss = 0;
   for (int i = 0; i < faces_p; i++){
     deg_p_Lobatto[i] = e_p_oriented[i]->deg;
-    /* deg_p_Gauss[i] = e_p_oriented[i]->deg_integ; */
+    /* deg_p_Gauss[i] = e_p_oriented[i]->deg_quad; */
 
-    face_nodes_p_Lobatto[i] = dgmath_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
-    face_nodes_p_Gauss[i] = dgmath_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg_integ);
+    face_nodes_p_Lobatto[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
+    face_nodes_p_Gauss[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg_quad);
     
     total_side_nodes_p_Lobatto += face_nodes_p_Lobatto[i];
     total_side_nodes_p_Gauss += face_nodes_p_Gauss[i];
@@ -282,12 +282,12 @@ curved_Gauss_central_flux_vector_interface
   for (int i = 0; i < faces_m; i++)
     for (int j = 0; j < faces_p; j++){
       /* find max degree for each face pair of the two sides*/
-      deg_mortar_Gauss[i+j] = util_max_int( e_m[i]->deg_integ,
-                                            e_p_oriented[j]->deg_integ);
+      deg_mortar_Gauss[i+j] = util_max_int( e_m[i]->deg_quad,
+                                            e_p_oriented[j]->deg_quad);
       deg_mortar_Lobatto[i+j] = util_max_int( e_m[i]->deg,
                                             e_p_oriented[j]->deg );      
-      nodes_mortar_Gauss[i+j] = dgmath_get_nodes( (P4EST_DIM) - 1, deg_mortar_Gauss[i+j] );     
-      nodes_mortar_Lobatto[i+j] = dgmath_get_nodes( (P4EST_DIM) - 1, deg_mortar_Lobatto[i+j] );     
+      nodes_mortar_Gauss[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar_Gauss[i+j] );     
+      nodes_mortar_Lobatto[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar_Lobatto[i+j] );     
       total_nodes_mortar_Gauss += nodes_mortar_Gauss[i+j];
       total_nodes_mortar_Lobatto += nodes_mortar_Lobatto[i+j];
     }
@@ -341,9 +341,9 @@ curved_Gauss_central_flux_vector_interface
   
   stride = 0;
   for (int i = 0; i < faces_m; i++){
-    dgmath_apply_slicer
+    d4est_operators_apply_slicer
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        &(e_m[i]->u_storage[0]),
        (P4EST_DIM),
        f_m,
@@ -356,9 +356,9 @@ curved_Gauss_central_flux_vector_interface
  
   stride = 0;
   for (int i = 0; i < faces_p; i++){
-    dgmath_apply_slicer
+    d4est_operators_apply_slicer
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        &(e_p_oriented[i]->u_storage[0]),
        (P4EST_DIM),
        f_p,
@@ -366,9 +366,9 @@ curved_Gauss_central_flux_vector_interface
        tmp
       );
     
-    dgmath_reorient_face_data
+    d4est_operators_reorient_face_data
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        tmp,
        ((P4EST_DIM) - 1),
        e_p_oriented[i]->deg,
@@ -383,9 +383,9 @@ curved_Gauss_central_flux_vector_interface
 
 
   /* project (-)-side u trace vector onto mortar space */
-  dgmath_project_side_onto_mortar_space
+  d4est_operators_project_side_onto_mortar_space
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      u_m_on_f_m,
      faces_m,
      deg_m_Lobatto,
@@ -395,9 +395,9 @@ curved_Gauss_central_flux_vector_interface
     );
 
   /* project (+)-side u trace vector onto mortar space */
-  dgmath_project_side_onto_mortar_space
+  d4est_operators_project_side_onto_mortar_space
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      u_p_on_f_p,
      faces_p,
      deg_p_Lobatto,
@@ -408,8 +408,8 @@ curved_Gauss_central_flux_vector_interface
   
   stride = 0;
   for (int f = 0; f < faces_mortar; f++){
-    dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &u_m_on_f_m_mortar[stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &u_m_on_f_m_mortar_Gauss[stride], (P4EST_DIM)-1);
-    dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &u_p_on_f_p_mortar[stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &u_p_on_f_p_mortar_Gauss[stride], (P4EST_DIM)-1);
+    d4est_operators_interp_GLL_to_GL(d4est_ops, &u_m_on_f_m_mortar[stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &u_m_on_f_m_mortar_Gauss[stride], (P4EST_DIM)-1);
+    d4est_operators_interp_GLL_to_GL(d4est_ops, &u_p_on_f_p_mortar[stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &u_p_on_f_p_mortar_Gauss[stride], (P4EST_DIM)-1);
     stride += nodes_mortar_Gauss[f];
   }
 
@@ -420,9 +420,9 @@ curved_Gauss_central_flux_vector_interface
     /* project (-)-u-derivative on the (-)-side faces and project q onto the (-)-side faces */
     stride = 0;
     for (int i = 0; i < faces_m; i++){    
-      dgmath_apply_slicer
+      d4est_operators_apply_slicer
         (
-         dgmath_jit_dbase,
+         d4est_ops,
          e_m[i]->q_elem[d],
          (P4EST_DIM),
          f_m,
@@ -437,9 +437,9 @@ curved_Gauss_central_flux_vector_interface
    * and project on the (+)-side faces and project q onto the (+)-side faces */
     stride = 0;
     for (int i = 0; i < faces_p; i++){
-      dgmath_apply_slicer
+      d4est_operators_apply_slicer
         (
-         dgmath_jit_dbase,
+         d4est_ops,
          &e_p_oriented[i]->q_elem[d][0],
          (P4EST_DIM),
          f_p,
@@ -447,9 +447,9 @@ curved_Gauss_central_flux_vector_interface
          tmp
         );
 
-      dgmath_reorient_face_data
+      d4est_operators_reorient_face_data
         (
-         dgmath_jit_dbase,
+         d4est_ops,
          tmp,
          ((P4EST_DIM) - 1),
          e_p_oriented[i]->deg,
@@ -462,9 +462,9 @@ curved_Gauss_central_flux_vector_interface
       stride += face_nodes_p_Lobatto[i];
     }
 
-    dgmath_project_side_onto_mortar_space
+    d4est_operators_project_side_onto_mortar_space
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        q_p_on_f_p[d],
        faces_p,
        deg_p_Lobatto,
@@ -474,9 +474,9 @@ curved_Gauss_central_flux_vector_interface
       );
 
     /* project q from the (-) side onto the mortar space */
-    dgmath_project_side_onto_mortar_space
+    d4est_operators_project_side_onto_mortar_space
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        q_m_on_f_m[d],
        faces_m,
        deg_m_Lobatto,
@@ -487,8 +487,8 @@ curved_Gauss_central_flux_vector_interface
 
     stride = 0;
     for (int f = 0; f < faces_mortar; f++){
-      dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &q_m_on_f_m_mortar[d][stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &q_m_on_f_m_mortar_Gauss[d][stride], (P4EST_DIM)-1);
-      dgmath_interp_GLL_to_GL(dgmath_jit_dbase, &q_p_on_f_p_mortar[d][stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &q_p_on_f_p_mortar_Gauss[d][stride], (P4EST_DIM)-1);
+      d4est_operators_interp_GLL_to_GL(d4est_ops, &q_m_on_f_m_mortar[d][stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &q_m_on_f_m_mortar_Gauss[d][stride], (P4EST_DIM)-1);
+      d4est_operators_interp_GLL_to_GL(d4est_ops, &q_p_on_f_p_mortar[d][stride], deg_mortar_Gauss[f], deg_mortar_Gauss[f], &q_p_on_f_p_mortar_Gauss[d][stride], (P4EST_DIM)-1);
       stride += nodes_mortar_Gauss[f];
     }
   }
@@ -507,7 +507,7 @@ curved_Gauss_central_flux_vector_interface
      n_on_f_m_mortar_Gauss,
      sj_on_f_m_mortar_Gauss,
      geom,
-     dgmath_jit_dbase,
+     d4est_ops,
      tmpxyz
     );
   D4EST_FREE_DIM_VEC(tmpxyz);
@@ -531,8 +531,8 @@ curved_Gauss_central_flux_vector_interface
       }
   
       for (int d = 0; d < (P4EST_DIM); d++){
-        dgmath_apply_curvedGaussMass_onGaussNodeVec(
-                                     dgmath_jit_dbase,
+        d4est_operators_apply_curvedGaussMass_onGaussNodeVec(
+                                     d4est_ops,
                                      &qstar_min_q_mortar_Gauss[d][stride],
                                      deg_mortar_Lobatto[f],
                                      &sj_n_on_f_m_mortar_Gauss[d][stride],
@@ -547,15 +547,15 @@ curved_Gauss_central_flux_vector_interface
       }
       stride += nodes_mortar_Gauss[f];
       stride_Lobatto += nodes_mortar_Lobatto[f];
-      /* stride_Lobatto += dgmath_get_nodes((P4EST_DIM)-1, e_m[f]->deg); */
+      /* stride_Lobatto += d4est_operators_get_nodes((P4EST_DIM)-1, e_m[f]->deg); */
     }
 
     /* if (faces_mortar == P4EST_HALF) */
       /* mpi_abort("Only testing p-nonconforming atm"); */
     
-    dgmath_project_mass_mortar_onto_side
+    d4est_operators_project_mass_mortar_onto_side
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        M_qstar_min_q_dot_n_mortar,
        faces_mortar,
        deg_mortar_Lobatto,

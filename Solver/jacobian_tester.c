@@ -9,7 +9,7 @@ jacobian_tester
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  weakeqn_ptrs_t* prob_fcns,
  problem_data_t* prob_vecs
@@ -60,7 +60,7 @@ jacobian_tester
        ghost,
        ghost_data,
        &prob_vecs_jac,
-       dgmath_jit_dbase,
+       d4est_ops,
        d4est_geom
       );
 
@@ -73,7 +73,7 @@ jacobian_tester
        ghost,
        ghost_data,
        &prob_vecs_F_u0,
-       dgmath_jit_dbase,
+       d4est_ops,
        d4est_geom
       );
 
@@ -83,7 +83,7 @@ jacobian_tester
        ghost,
        ghost_data,
        &prob_vecs_F_u0_p_u,
-       dgmath_jit_dbase,
+       d4est_ops,
        d4est_geom
       );
 

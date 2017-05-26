@@ -23,7 +23,7 @@ typedef void (*flux_interface_fcn_t)
  int faces_p,
  int f_p,
  int* e_m_is_ghost,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  void*
 );
 
@@ -34,7 +34,7 @@ typedef void (*flux_boundary_fcn_t)
  element_data_t*,
  int,
  grid_fcn_t,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  void*
 );
 
@@ -49,7 +49,7 @@ typedef struct {
 
 typedef struct {
 
-  dgmath_jit_dbase_t* dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops;
   flux_fcn_ptrs_t* flux_fcn_ptrs;
 
 } compute_flux_user_data_t;

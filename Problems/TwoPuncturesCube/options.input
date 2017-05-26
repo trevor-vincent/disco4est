@@ -20,8 +20,8 @@ ip_flux_penalty = 2.0
 [problem]
 hrefine_til_inview = 1
 domain_size = 5.0 
-use_Gauss_integ = 1
-deg_offset_for_Gauss_integ = 1
+use_Gauss_quad = 1
+deg_offset_for_Gauss_quad = 1
 
 [solver]
 krylov_type = cg

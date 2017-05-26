@@ -131,7 +131,7 @@ multigrid_apply_restriction
 {
   multigrid_data_t* mg_data = (multigrid_data_t*) info->p4est->user_pointer;
   multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = mg_data->d4est_ops;
 
   
   double* x = mg_data->intergrid_ptr;
@@ -152,9 +152,9 @@ multigrid_apply_restriction
       mg_data->user_callbacks->mg_restrict_user_callback(info, user_data, &degh, degH, 1);
     }
     
-    dgmath_apply_p_prolong_transpose
+    d4est_operators_apply_p_prolong_transpose
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        x_children,
        degh,
        (P4EST_DIM),
@@ -163,8 +163,8 @@ multigrid_apply_restriction
       );
 
     (*stride)++;
-    (*fine_stride)+=dgmath_get_nodes((P4EST_DIM), degh);
-    (*coarse_stride)+=dgmath_get_nodes((P4EST_DIM), degH);
+    (*fine_stride)+=d4est_operators_get_nodes((P4EST_DIM), degh);
+    (*coarse_stride)+=d4est_operators_get_nodes((P4EST_DIM), degH);
   }
   
   else if (coarse_grid_refinement[(*stride)].hrefine == 1){
@@ -175,9 +175,9 @@ multigrid_apply_restriction
       mg_data->user_callbacks->mg_restrict_user_callback(info, user_data, degh, degH, (P4EST_CHILDREN));
     }
     
-    dgmath_apply_hp_prolong_transpose
+    d4est_operators_apply_hp_prolong_transpose
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        x_children,
        degh,
        (P4EST_DIM),
@@ -187,9 +187,9 @@ multigrid_apply_restriction
 
     (*stride)++;
     for (int i = 0; i < (P4EST_CHILDREN); i++){
-      (*fine_stride) += dgmath_get_nodes( (P4EST_DIM) , degh[i] );
+      (*fine_stride) += d4est_operators_get_nodes( (P4EST_DIM) , degh[i] );
     }
-    (*coarse_stride) += dgmath_get_nodes( (P4EST_DIM) , degH);
+    (*coarse_stride) += d4est_operators_get_nodes( (P4EST_DIM) , degH);
   }
   else {
     int deg = coarse_grid_refinement[(*stride)].degh[*temp_stride];
@@ -198,7 +198,7 @@ multigrid_apply_restriction
       mg_data->user_callbacks->mg_restrict_user_callback(info, user_data, &deg, deg, 1);
     }
     
-    int nodes = dgmath_get_nodes( (P4EST_DIM) , deg );
+    int nodes = d4est_operators_get_nodes( (P4EST_DIM) , deg );
     linalg_copy_1st_to_2nd(x_children,
                            x_parent,
                            nodes
@@ -267,7 +267,7 @@ multigrid_refine_and_apply_prolongation
 {  
   multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
   multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = mg_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = mg_data->d4est_ops;
 
   if(mg_data->user_callbacks != NULL && mg_data->user_callbacks->mg_prolong_user_callback != NULL){
     mg_data->user_callbacks->mg_prolong_user_callback(p4est,which_tree,quadrant);
@@ -287,9 +287,9 @@ multigrid_refine_and_apply_prolongation
   if (coarse_grid_refinement[(*stride)].hrefine == 0){
     int degh = coarse_grid_refinement[(*stride)].degh[0];
     int degH = coarse_grid_refinement[(*stride)].degH;
-    dgmath_apply_p_prolong
+    d4est_operators_apply_p_prolong
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        x_parent,
        degH,
        (P4EST_DIM),
@@ -298,8 +298,8 @@ multigrid_refine_and_apply_prolongation
       );
     
     (*stride)++;
-    (*fine_stride)+=dgmath_get_nodes((P4EST_DIM), degh);
-    (*coarse_stride)+=dgmath_get_nodes((P4EST_DIM), degH);
+    (*fine_stride)+=d4est_operators_get_nodes((P4EST_DIM), degh);
+    (*coarse_stride)+=d4est_operators_get_nodes((P4EST_DIM), degH);
     
     return 0;
   }
@@ -308,9 +308,9 @@ multigrid_refine_and_apply_prolongation
    int* degh = &(coarse_grid_refinement[(*stride)].degh[0]);
    int degH = coarse_grid_refinement[(*stride)].degH;
 
-    dgmath_apply_hp_prolong
+    d4est_operators_apply_hp_prolong
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        x_parent,
        degH,
        (P4EST_DIM),
@@ -321,14 +321,14 @@ multigrid_refine_and_apply_prolongation
     (*stride)++;
     int i;
     for (i = 0; i < (P4EST_CHILDREN); i++)
-      (*fine_stride) += dgmath_get_nodes( (P4EST_DIM) , degh[i] );
-    (*coarse_stride) += dgmath_get_nodes( (P4EST_DIM) , degH);
+      (*fine_stride) += d4est_operators_get_nodes( (P4EST_DIM) , degh[i] );
+    (*coarse_stride) += d4est_operators_get_nodes( (P4EST_DIM) , degH);
 
     return 1;
   }
   else {
     int deg = coarse_grid_refinement[(*stride)].degh[*temp_stride];
-    int nodes = dgmath_get_nodes( (P4EST_DIM) , deg );
+    int nodes = d4est_operators_get_nodes( (P4EST_DIM) , deg );
     
     linalg_copy_1st_to_2nd(x_parent,
                            x_children,

@@ -10,7 +10,7 @@ curved_Gauss_poisson_apply_aij
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom
 );
 
@@ -22,7 +22,7 @@ curved_poisson_apply_aij_debug
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  int local_element_id
 );
@@ -34,7 +34,7 @@ curved_Gauss_poisson_build_rhs_with_strongbc
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void curved_Gauss_poisson_init_vecs

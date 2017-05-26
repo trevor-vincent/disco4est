@@ -93,6 +93,50 @@ linalg_kron_vec1_o_vec2_dot_x
 }
 
 void
+linalg_kron_vec1_o_vec2_dot_xy
+(
+ double *vec1,
+ double* vec2,
+ double*x,
+ double*y,
+ int vec1_size,
+ int vec2_size,
+ double* vec1vec2_dot_x
+)
+{
+  for (int i = 0; i < vec1_size; i++){
+    for (int k = 0; k < vec2_size; k++){
+      int stride = k + i * vec2_size;
+      vec1vec2_dot_x[stride] =
+        vec1[i] * vec2[k] * x[stride] * y[stride];
+    }
+  }
+}
+
+void
+linalg_kron_vec1_o_vec2_dot_wxyz
+(
+ double *vec1,
+ double* vec2,
+ double*w,
+ double*x,
+ double*y,
+ double*z,
+ int vec1_size,
+ int vec2_size,
+ double* vec1vec2_dot_x
+)
+{
+  for (int i = 0; i < vec1_size; i++){
+    for (int k = 0; k < vec2_size; k++){
+      int stride = k + i * vec2_size;
+      vec1vec2_dot_x[stride] =
+        vec1[i] * vec2[k] * w[stride] * x[stride] * y[stride] * z[stride];
+    }
+  }
+}
+
+void
 linalg_kron_vec1_o_vec2_o_vec3_dot_x
 (
  double *vec1,
@@ -115,6 +159,60 @@ linalg_kron_vec1_o_vec2_o_vec3_dot_x
     }
   }  
 }
+
+void
+linalg_kron_vec1_o_vec2_o_vec3_dot_xy
+(
+ double *vec1,
+ double* vec2,
+ double* vec3,
+ double*x,
+ double*y,
+ int vec1_size,
+ int vec2_size,
+ int vec3_size,
+ double* vec1vec2vec3_dot_x
+)
+{
+  for (int i = 0; i < vec1_size; i++){
+    for (int k = 0; k < vec2_size; k++){   
+      for (int m = 0; m < vec3_size; m++){
+        int stride = (m + (k + i * vec2_size) * vec3_size);
+        vec1vec2vec3_dot_x[stride] =
+          vec1[i] * vec2[k] * vec3[m] * x[stride] * y[stride];
+      }
+    }
+  }  
+}
+
+
+void
+linalg_kron_vec1_o_vec2_o_vec3_dot_wxyz
+(
+ double *vec1,
+ double* vec2,
+ double* vec3,
+ double*w,
+ double*x,
+ double*y,
+ double*z,
+ int vec1_size,
+ int vec2_size,
+ int vec3_size,
+ double* vec1vec2vec3_dot_x
+)
+{
+  for (int i = 0; i < vec1_size; i++){
+    for (int k = 0; k < vec2_size; k++){   
+      for (int m = 0; m < vec3_size; m++){
+        int stride = (m + (k + i * vec2_size) * vec3_size);
+        vec1vec2vec3_dot_x[stride] =
+          vec1[i] * vec2[k] * vec3[m] * w[stride] * x[stride] * y[stride] * z[stride];
+      }
+    }
+  }  
+}
+
 
 void
 linalg_kron_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* vecvec_dot_xy)

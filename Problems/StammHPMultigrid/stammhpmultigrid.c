@@ -145,7 +145,7 @@ void problem_build_rhs
  weakeqn_ptrs_t* prob_fcns,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- dgmath_jit_dbase_t* dgbase
+ d4est_operators_t* dgbase
 )
 {
   prob_vecs->scalar_flux_fcn_data.bndry_fcn = boundary_fcn;
@@ -198,11 +198,11 @@ build_residual
  p4est_ghost_t* ghost,
  void* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, NULL);
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, NULL);
   linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
 }
  
@@ -381,7 +381,7 @@ problem_init
  const char* input_file,
  p4est_t* p4est,
  d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int proc_size,
  sc_MPI_Comm mpicomm
 )
@@ -464,7 +464,7 @@ problem_init
      &prob_fcns,
      ghost,
      ghost_data,
-     dgmath_jit_dbase
+     d4est_ops
     );
   
  
@@ -483,7 +483,7 @@ problem_init
   hp_amr_scheme_t* scheme_uni = hp_amr_uniform();
 
   
-  element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);    
+  element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, d4est_ops);    
   linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
     
@@ -494,7 +494,7 @@ problem_init
                                 u_analytic,
                                 zero_fcn,
                                 &ip_flux_params,
-                                dgmath_jit_dbase,
+                                d4est_ops,
                                 ghost,
                                 ghost_data
                                );
@@ -503,7 +503,7 @@ problem_init
                                 (
                                  p4est,
                                  u_analytic,
-                                 dgmath_jit_dbase
+                                 d4est_ops
                                 );
 
     double local_nodes_dbl = (double)local_nodes;
@@ -564,7 +564,7 @@ problem_init
        ip_flux_params.ip_flux_penalty_prefactor,
        ghost,
        ghost_data,
-       dgmath_jit_dbase
+       d4est_ops
       );
     
     estimator_stats_t* stats = P4EST_ALLOC(estimator_stats_t, 1);
@@ -575,7 +575,7 @@ problem_init
 
     local_eta2 = stats->total;
         
-    element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);    
+    element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, d4est_ops);    
 
     double* u_analytic_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
     double* u_error_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
@@ -646,7 +646,7 @@ problem_init
     
     int curved = 0;
     hp_amr(p4est,
-           dgmath_jit_dbase,
+           d4est_ops,
            &u,
            &stats,
            (level > 1) ? scheme : scheme_uni,
@@ -680,7 +680,7 @@ problem_init
        &prob_fcns,
        ghost,
        ghost_data,
-       dgmath_jit_dbase
+       d4est_ops
       );    
     
     clock_t begin = 0;
@@ -739,7 +739,7 @@ problem_init
 
     
     multigrid_data_t* mg_data = multigrid_data_init(p4est,
-                                                    dgmath_jit_dbase,
+                                                    d4est_ops,
                                                     num_of_levels,
                                                     smoother,
                                                     bottom_solver,
@@ -750,7 +750,7 @@ problem_init
                                                    );
 
 
-      element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, dgmath_jit_dbase);
+      element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, d4est_ops);
 
       multigrid_solve
         (
@@ -780,7 +780,7 @@ problem_init
                                 u_analytic,
                                 zero_fcn,
                                 &ip_flux_params,
-                                dgmath_jit_dbase,
+                                d4est_ops,
                                 ghost,
                                 ghost_data
                                );
@@ -789,7 +789,7 @@ problem_init
                                 (
                                  p4est,
                                  u_analytic,
-                                 dgmath_jit_dbase
+                                 d4est_ops
                                 );
 
     double local_nodes_dbl = (double)local_nodes;

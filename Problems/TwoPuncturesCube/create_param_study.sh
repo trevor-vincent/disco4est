@@ -44,8 +44,8 @@ ip_flux_penalty = $4
 [problem]
 hrefine_til_inview = $5
 domain_size = $6 
-use_Gauss_integ = 1
-deg_offset_for_Gauss_integ = $7
+use_Gauss_quad = 1
+deg_offset_for_Gauss_quad = $7
 
 [solver]
 krylov_type = cg

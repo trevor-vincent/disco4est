@@ -1,17 +1,19 @@
 #include <pXest.h>
 #include <curved_element_data.h>
 #include <problem_data.h>
-#include <dgmath.h>
+#include <d4est_operators.h>
 #include <linalg.h>
 #include <curved_poisson_operator_primal.h>
 #include <curved_poisson_debug_vecs.h>
 #include <grid_functions.h>
+#include <d4est_quadrature.h>
 #include <util.h>
 
 typedef struct {
 
   d4est_geometry_t* d4est_geom;
-  dgmath_jit_dbase_t* dgmath_jit_dbase;
+  d4est_quadrature_t* d4est_quad;
+  d4est_operators_t* d4est_ops;
   problem_data_t* problem_data;
 #ifndef NDEBUG
   curved_poisson_debug_vecs_t* debug_vecs;
@@ -29,13 +31,13 @@ void curved_poisson_operator_primal_init_vecs
 
   curved_poisson_operator_primal_user_data_t* curved_poisson_operator_primal_user_data = (curved_poisson_operator_primal_user_data_t*) user_data;
   problem_data_t* problem_data = (problem_data_t*) curved_poisson_operator_primal_user_data->problem_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = (dgmath_jit_dbase_t*) curved_poisson_operator_primal_user_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_poisson_operator_primal_user_data->d4est_ops;
   
   int dim = (P4EST_DIM);
   int deg = elem_data->deg;
-  int volume_nodes_Lobatto = dgmath_get_nodes(dim,deg);
-  /* int face_nodes_Lobatto = dgmath_get_nodes(dim-1,deg); */
-  /* int volume_nodes_Gauss = dgmath_get_nodes(dim, elem_data->deg_integ); */
+  int volume_nodes_Lobatto = d4est_operators_get_nodes(dim,deg);
+  /* int face_nodes_Lobatto = d4est_operators_get_nodes(dim-1,deg); */
+  /* int volume_nodes_Gauss = d4est_operators_get_nodes(dim, elem_data->deg_quad); */
   
   elem_data->Au_elem = &(problem_data->Au[elem_data->nodal_stride]);
   
@@ -54,7 +56,7 @@ void curved_poisson_operator_primal_init_vecs
     );
   
   for (int i = 0; i < (P4EST_DIM); i++){
-    dgmath_apply_Dij(dgmath_jit_dbase, &(problem_data->u[elem_data->nodal_stride]), dim, elem_data->deg, i, &elem_data->dudr_elem[i][0]);
+    d4est_operators_apply_Dij(d4est_ops, &(problem_data->u[elem_data->nodal_stride]), dim, elem_data->deg, i, &elem_data->dudr_elem[i][0]);
   }
 
 }
@@ -70,25 +72,46 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
   curved_element_data_t* element_data = q->p.user_data;
 
   curved_poisson_operator_primal_user_data_t* curved_poisson_operator_primal_user_data =  user_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = curved_poisson_operator_primal_user_data->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = curved_poisson_operator_primal_user_data->d4est_ops;
   d4est_geometry_t* d4est_geom = curved_poisson_operator_primal_user_data->d4est_geom;
-
+  d4est_quadrature_t* d4est_quad =
+    curved_poisson_operator_primal_user_data->d4est_quad;
+  
   
   int dim = (P4EST_DIM);
-  int volume_nodes_lobatto = dgmath_get_nodes(dim,element_data->deg);
+  int volume_nodes_lobatto = d4est_operators_get_nodes(dim,element_data->deg);
 
   double* stiff_u = P4EST_ALLOC(double, volume_nodes_lobatto);
 
-  curved_element_data_apply_curved_stiffness_matrix
+  /* curved_element_data_apply_curved_stiffness_matrix */
+  /*   ( */
+  /*    d4est_ops, */
+  /*    curved_poisson_operator_primal_user_data->d4est_geom, */
+  /*    element_data, */
+  /*    d4est_geom->geom_quad_type, */
+  /*    &element_data->u_storage[0], */
+  /*    stiff_u */
+  /*   ); */
+
+  d4est_mesh_object_t mesh_vol = {.type = ELEMENT_VOLUME, .dq = element_data->dq, .tree = element_data->tree};
+
+  for (int i = 0; i < (P4EST_DIM); i++)
+    mesh_vol.q[i] = element_data->q[i];
+  
+  d4est_quadrature_apply_stiffness_matrix
     (
-     dgmath_jit_dbase,
-     curved_poisson_operator_primal_user_data->d4est_geom,
-     element_data,
-     d4est_geom->geom_quad_type,
+     d4est_ops,
+     d4est_quad,
+     d4est_geom,
+     mesh_vol,
      &element_data->u_storage[0],
+     element_data->deg,
+     element_data->J_quad,
+     element_data->rst_xyz_quad,
+     element_data->deg_quad,
      stiff_u
     );
-
+  
 #ifdef NASTY_DEBUG
   printf("Stiffness Matrix Element id %d\n", element_data->id);
   DEBUG_PRINT_ARR_DBL_SUM(stiff_u, volume_nodes_lobatto);
@@ -114,21 +137,24 @@ curved_poisson_operator_primal_apply_aij
  p4est_ghost_t* ghost,
  void* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
- d4est_geometry_t* geom
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* geom,
+ d4est_quadrature_t* d4est_quad
 )
 {
   curved_poisson_operator_primal_user_data_t curved_poisson_operator_primal_user_data;
-  curved_poisson_operator_primal_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
+  curved_poisson_operator_primal_user_data.d4est_ops = d4est_ops;
   curved_poisson_operator_primal_user_data.problem_data = prob_vecs;
   curved_poisson_operator_primal_user_data.d4est_geom = geom;
+  curved_poisson_operator_primal_user_data.d4est_quad = d4est_quad;
 #ifndef NDEBUG
   curved_poisson_operator_primal_user_data.debug_vecs = NULL;
 #endif
   
   curved_compute_flux_user_data_t curved_compute_flux_user_data;
-  curved_compute_flux_user_data.dgmath_jit_dbase = dgmath_jit_dbase;
+  curved_compute_flux_user_data.d4est_ops = d4est_ops;
   curved_compute_flux_user_data.geom = geom;
+  curved_compute_flux_user_data.d4est_quad = d4est_quad;
   
   void* tmpptr = p4est->user_pointer;
   

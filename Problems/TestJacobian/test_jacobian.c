@@ -156,13 +156,13 @@ typedef struct {
 
   int num_unifrefs;
   int deg_R0;
-  int deg_integ_R0;
+  int deg_quad_R0;
   int deg_stiffness_R0;
   int deg_R1;
-  int deg_integ_R1;
+  int deg_quad_R1;
   int deg_stiffness_R1;
   int deg_R2;
-  int deg_integ_R2;
+  int deg_quad_R2;
   int deg_stiffness_R2;
   char rhs_compute_method [50];
   
@@ -192,9 +192,9 @@ int problem_input_handler
     mpi_assert(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R0")) {
-    mpi_assert(pconfig->deg_integ_R0 == -1);
-    pconfig->deg_integ_R0 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
+    mpi_assert(pconfig->deg_quad_R0 == -1);
+    pconfig->deg_quad_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R0")) {
     mpi_assert(pconfig->deg_stiffness_R0 == -1);
@@ -204,9 +204,9 @@ int problem_input_handler
     mpi_assert(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R1")) {
-    mpi_assert(pconfig->deg_integ_R1 == -1);
-    pconfig->deg_integ_R1 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
+    mpi_assert(pconfig->deg_quad_R1 == -1);
+    pconfig->deg_quad_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R1")) {
     mpi_assert(pconfig->deg_stiffness_R1 == -1);
@@ -216,9 +216,9 @@ int problem_input_handler
     mpi_assert(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R2")) {
-    mpi_assert(pconfig->deg_integ_R2 == -1);
-    pconfig->deg_integ_R2 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
+    mpi_assert(pconfig->deg_quad_R2 == -1);
+    pconfig->deg_quad_R2 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R2")) {
     mpi_assert(pconfig->deg_stiffness_R2 == -1);
@@ -242,13 +242,13 @@ problem_input
   problem_input_t input;
   input.num_unifrefs = -1;
   input.deg_R0 = -1;
-  input.deg_integ_R0 = -1;
+  input.deg_quad_R0 = -1;
   input.deg_stiffness_R0 = -1;
   input.deg_R1 = -1;
-  input.deg_integ_R1 = -1;
+  input.deg_quad_R1 = -1;
   input.deg_stiffness_R1 = -1;
   input.deg_R2 = -1;
-  input.deg_integ_R2 = -1; 
+  input.deg_quad_R2 = -1; 
   input.deg_stiffness_R2 = -1; 
   input.rhs_compute_method[0] = '*'; 
 
@@ -258,13 +258,13 @@ problem_input
 
   D4EST_CHECK_INPUT("problem", input.num_unifrefs, -1);
   D4EST_CHECK_INPUT("problem", input.deg_R0, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_integ_R0, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_quad_R0, -1);
   D4EST_CHECK_INPUT("problem", input.deg_stiffness_R0, -1);
   D4EST_CHECK_INPUT("problem", input.deg_R1, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_integ_R1, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_quad_R1, -1);
   D4EST_CHECK_INPUT("problem", input.deg_stiffness_R1, -1);
   D4EST_CHECK_INPUT("problem", input.deg_R2, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_integ_R2, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_quad_R2, -1);
   D4EST_CHECK_INPUT("problem", input.deg_stiffness_R2, -1);  
   D4EST_CHECK_INPUT("problem", input.rhs_compute_method[0], '*');  
 
@@ -277,24 +277,24 @@ problem_input
 
 
 
-/* dgmath_rst_t */
+/* d4est_rst_t */
 /* problem_get_rst_points_custom */
 /* ( */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  d4est_operators_t* d4est_ops, */
 /*  d4est_geometry_t* d4est_geom, */
 /*  curved_element_data_t* ed, */
 /*  int deg, */
 /*  int dim, */
 /*  void* user */
 /* ){ */
-/*   dgmath_rst_t rst; */
+/*   d4est_rst_t rst; */
 /*   double* rsttmp [3] = {NULL}; */
 
 
 /*   for (int d = 0; d < 2; d++){ */
-/*     rsttmp[d] = dgmath_fetch_Gauss_xyz_nd */
+/*     rsttmp[d] = d4est_operators_fetch_Gauss_xyz_nd */
 /*                 ( */
-/*                  dgmath_jit_dbase, */
+/*                  d4est_ops, */
 /*                  dim, */
 /*                  deg, */
 /*                  d */
@@ -309,23 +309,23 @@ problem_input
 /*   return rst; */
 /* } */
 
-/* dgmath_rst_t */
+/* d4est_rst_t */
 /* problem_get_weights_custom */
 /* ( */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  d4est_operators_t* d4est_ops, */
 /*  d4est_geometry_t* d4est_geom, */
 /*  curved_element_data_t* ed, */
 /*  int deg, */
 /*  int dim, */
 /*  void* user */
 /* ){ */
-/*   dgmath_rst_t rst; */
+/*   d4est_rst_t rst; */
 /*   double* rsttmp [3] = {NULL}; */
 
 /*   for (int d = 0; d < 2; d++){ */
-/*     rsttmp[d] = dgmath_fetch_Gauss_xyz_nd */
+/*     rsttmp[d] = d4est_operators_fetch_Gauss_xyz_nd */
 /*                 ( */
-/*                  dgmath_jit_dbase, */
+/*                  d4est_ops, */
 /*                  dim, */
 /*                  deg, */
 /*                  d */
@@ -390,19 +390,19 @@ problem_set_degrees
   /* outer shell */
   if (elem_data->tree < 6){
     elem_data->deg = input->deg_R2;
-    elem_data->deg_integ = input->deg_integ_R2;
+    elem_data->deg_quad = input->deg_quad_R2;
     elem_data->deg_stiffness = input->deg_stiffness_R2;
   }
   /* inner shell */
   else if(elem_data->tree < 12){
     elem_data->deg = input->deg_R1;
-    elem_data->deg_integ = input->deg_integ_R1;
+    elem_data->deg_quad = input->deg_quad_R1;
     elem_data->deg_stiffness = input->deg_stiffness_R1;
   }
   /* center cube */
   else {
     elem_data->deg = input->deg_R0;
-    elem_data->deg_integ = input->deg_integ_R0;
+    elem_data->deg_quad = input->deg_quad_R0;
     elem_data->deg_stiffness = input->deg_stiffness_R0;
   } 
 }
@@ -416,7 +416,7 @@ problem_init
  const char* input_file,
  p4est_t* p4est,
  d4est_geometry_t* d4est_geom,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int proc_size,
  sc_MPI_Comm mpicomm
 )
@@ -497,7 +497,7 @@ problem_init
 
       curved_element_data_init_new(p4est,
                                    geometric_factors,
-                                   dgmath_jit_dbase,
+                                   d4est_ops,
                                    d4est_geom,
                                    problem_set_degrees,
                                    (void*)&input, 1, 1);
@@ -517,7 +517,7 @@ problem_init
 
   curved_element_data_init_new(p4est,
                                geometric_factors,
-                               dgmath_jit_dbase,
+                               d4est_ops,
                                d4est_geom,
                                problem_set_degrees,
                                (void*)&input,
@@ -538,7 +538,7 @@ problem_init
         for (int qq = 0; qq < QQ; ++qq) {
           p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
           curved_element_data_t* ed = (curved_element_data_t*)(quad->p.user_data);
-          int volume_nodes_integ = dgmath_get_nodes((P4EST_DIM), ed->deg_integ);
+          int volume_nodes_quad = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad);
           
           double amin = ed->q[0];
           double amax = ed->q[0] + ed->dq;
@@ -570,8 +570,8 @@ problem_init
           printf("R1 - cmin R1 + (-2 + cmin) R2 = %f\n", R1 - cmin*R1 + (-2 + cmin)*R2);
           printf("R1 - cmax R1 + (-2 + cmax) R2 = %f\n", R1 - cmax*R1 + (-2 + cmax)*R2);
 
-          dgmath_rst_t rst_points = dgmath_get_rst_points(dgmath_jit_dbase,
-                                                          ed->deg_integ,
+          d4est_rst_t rst_points = d4est_operators_get_rst_points(d4est_ops,
+                                                          ed->deg_quad,
                                                           (P4EST_DIM),
                                                           QUAD_GAUSS);
 
@@ -584,14 +584,14 @@ problem_init
           printf("cmin = %.15f\n",cmin);
 
 
-          double* gauss_weights = dgmath_fetch_GL_weights_1d(dgmath_jit_dbase, ed->deg_integ);
-          double* gauss_nodes = dgmath_fetch_GL_nodes_1d(dgmath_jit_dbase, ed->deg_integ);
-          long double* jacmap_abscissas = P4EST_ALLOC(long double, ed->deg_integ + 1);
-          long double* jacmap_weights = P4EST_ALLOC(long double, ed->deg_integ + 1);
-          double* jacmap_abscissas_dbl = P4EST_ALLOC(double, ed->deg_integ + 1);
-          double* jacmap_weights_dbl = P4EST_ALLOC(double, ed->deg_integ + 1);
+          double* gauss_weights = d4est_operators_fetch_GL_weights_1d(d4est_ops, ed->deg_quad);
+          double* gauss_nodes = d4est_operators_fetch_GL_nodes_1d(d4est_ops, ed->deg_quad);
+          long double* jacmap_abscissas = P4EST_ALLOC(long double, ed->deg_quad + 1);
+          long double* jacmap_weights = P4EST_ALLOC(long double, ed->deg_quad + 1);
+          double* jacmap_abscissas_dbl = P4EST_ALLOC(double, ed->deg_quad + 1);
+          double* jacmap_weights_dbl = P4EST_ALLOC(double, ed->deg_quad + 1);
           double* jacmap_rst [(P4EST_DIM)];
-          D4EST_ALLOC_DIM_VEC(jacmap_rst, volume_nodes_integ);
+          D4EST_ALLOC_DIM_VEC(jacmap_rst, volume_nodes_quad);
 
 
           d4est_geometry_cubed_sphere_outer_shell_block_get_custom_quadrature
@@ -600,13 +600,13 @@ problem_init
              tt,
              ed->q,
              ed->dq,
-             ed->deg_integ,
+             ed->deg_quad,
              jacmap_abscissas,
              jacmap_weights,
              1
             );
 
-          int nodes =  ed->deg_integ + 1;
+          int nodes =  ed->deg_quad + 1;
           for (int i = 0; i<nodes; i++){
             jacmap_abscissas_dbl[i] = (double)jacmap_abscissas[i];
             jacmap_weights_dbl[i] = (double)jacmap_weights[i];
@@ -617,7 +617,7 @@ problem_init
           }
 
 
-          /* int nodes =  ed->deg_integ + 1; */
+          /* int nodes =  ed->deg_quad + 1; */
           for (int i = 0; i<nodes; i++){
             /* jacmap_abscissas_dbl[i] = (double)jacmap_abscissas[i]; */
             /* jacmap_weights_dbl[i] = (double)jacmap_weights[i]; */
@@ -652,20 +652,20 @@ problem_init
           double a = (R2-R1)*(cmax-cmin);
           double b = (R2-R1)*(cmax+cmin) - 4*R2 + 2*R1;
           
-          double* jac = P4EST_ALLOC(double, volume_nodes_integ);
-          double* jac_times_apbtto4 = P4EST_ALLOC(double, volume_nodes_integ);
-          double* wgau_wgau_wjac_jac = P4EST_ALLOC(double, volume_nodes_integ);
-          double* wgau_wgau_wgau_jac = P4EST_ALLOC(double, volume_nodes_integ);
+          double* jac = P4EST_ALLOC(double, volume_nodes_quad);
+          double* jac_times_apbtto4 = P4EST_ALLOC(double, volume_nodes_quad);
+          double* wgau_wgau_wjac_jac = P4EST_ALLOC(double, volume_nodes_quad);
+          double* wgau_wgau_wgau_jac = P4EST_ALLOC(double, volume_nodes_quad);
           double rst [(P4EST_DIM)];
           
-          for (int i = 0; i < volume_nodes_integ; i++){
+          for (int i = 0; i < volume_nodes_quad; i++){
             rst[0] = jacmap_rst[0][i];
             rst[1] = jacmap_rst[1][i];
             rst[2] = jacmap_rst[2][i];
             d4est_geom->JAC(d4est_geom, tt, ed->q, ed->dq, rst, &jac[i]);
           /*   jac_times_apbtto4[i] = jac[i]*powl(a*rst[2] + b,4); */
           /*   printf("r,s,t = %f,%f,%f jac = %f, jac*(at+b)^4 = %f\n", rst[0], rst[1], rst[2], jac[i], jac_times_apbtto4[i]); */
-            printf("%d,r,s,t,jac,jac_gauss = %.16f, %.16f, %.16f, %.16f, %.16f\n", i, rst[0], rst[1], rst[2], jac[i], ed->J_integ[i]);
+            printf("%d,r,s,t,jac,jac_gauss = %.16f, %.16f, %.16f, %.16f, %.16f\n", i, rst[0], rst[1], rst[2], jac[i], ed->J_quad[i]);
           }
 
     
@@ -673,40 +673,40 @@ problem_init
                                                gauss_weights,
                                                gauss_weights,
                                                jac,
-                                               ed->deg_integ + 1,
-                                               ed->deg_integ + 1,
-                                               ed->deg_integ + 1,
+                                               ed->deg_quad + 1,
+                                               ed->deg_quad + 1,
+                                               ed->deg_quad + 1,
                                                wgau_wgau_wjac_jac
                                               );
 
           linalg_kron_vec1_o_vec2_o_vec3_dot_x(gauss_weights,
                                                gauss_weights,
                                                gauss_weights,
-                                               ed->J_integ,
-                                               ed->deg_integ + 1,
-                                               ed->deg_integ + 1,
-                                               ed->deg_integ + 1,
+                                               ed->J_quad,
+                                               ed->deg_quad + 1,
+                                               ed->deg_quad + 1,
+                                               ed->deg_quad + 1,
                                                wgau_wgau_wgau_jac
                                               );
 
           /* NEXT: figure out how to make points and weights for each of the faces */
           
 
-          DEBUG_PRINT_2ARR_DBL(wgau_wgau_wjac_jac, wgau_wgau_wgau_jac, volume_nodes_integ);
+          DEBUG_PRINT_2ARR_DBL(wgau_wgau_wjac_jac, wgau_wgau_wgau_jac, volume_nodes_quad);
           
           double jacmap_sum = 0.;
           double gauss_sum = 0.;
-          for (int i = 0; i < volume_nodes_integ; i++){
+          for (int i = 0; i < volume_nodes_quad; i++){
             jacmap_sum += wgau_wgau_wjac_jac[i];
             gauss_sum += wgau_wgau_wgau_jac[i];
           }
 
 
-          int face_nodes_integ = dgmath_get_nodes((P4EST_DIM)-1, ed->deg_integ);
-          dgmath_rst_t rst_points_face
-            = dgmath_get_rst_points(dgmath_jit_dbase, ed->deg_integ, (P4EST_DIM) - 1, QUAD_GAUSS);
+          int face_nodes_quad = d4est_operators_get_nodes((P4EST_DIM)-1, ed->deg_quad);
+          d4est_rst_t rst_points_face
+            = d4est_operators_get_rst_points(d4est_ops, ed->deg_quad, (P4EST_DIM) - 1, QUAD_GAUSS);
 
-          double* s_points_inverse_map = P4EST_ALLOC(double, face_nodes_integ);
+          double* s_points_inverse_map = P4EST_ALLOC(double, face_nodes_quad);
           
           linalg_kron_AoB(jacmap_abscissas_dbl,
                           eye,
@@ -719,8 +719,8 @@ problem_init
           
           for (int f = 0; f < (P4EST_FACES); f++){
 
-            dgmath_face_info_t face_info;
-            dgmath_get_face_info(f, &face_info);
+            d4est_operators_face_info_t face_info;
+            d4est_operators_get_face_info(f, &face_info);
 
             printf("Face %d\n", f);
             printf("face_info.a = %d\n", face_info.a);
@@ -728,7 +728,7 @@ problem_init
             printf("face_info.c = %d\n", face_info.c);
             printf("face_info.sgn = %f\n", face_info.sgn);
             
-            for (int i = 0; i < face_nodes_integ; i++){
+            for (int i = 0; i < face_nodes_quad; i++){
               /* x face, r coord is gauss points */
               if ( (f == 0 || f == 1) || (f == 2 || f == 3) ){
                 rst[face_info.a] = rst_points_face.r[i];
@@ -767,7 +767,7 @@ problem_init
     
 
        
-          /* for (int i = 0; i < volume_nodes_integ; i++){ */
+          /* for (int i = 0; i < volume_nodes_quad; i++){ */
 
           /*   double fac = pow(R2*(-4 + cmax + cmin + cmax*rst_points.t[i] - cmin*rst_points.t[i]) - R1*(-2 + cmax */
           /*                                                                                 + cmin + cmax*rst_points.t[i] - cmin*rst_points.t[i]),4); */
@@ -777,14 +777,14 @@ problem_init
             
           /*   printf(" i, x, y, z, t, J, J*(t+c)^4 J*fac= %d %.15f %.15f %.15f %.15f %.15f %.15f %f %f\n", */
           /*          i, */
-          /*          ed->xyz_integ[0][i], */
-          /*          ed->xyz_integ[1][i], */
-          /*          ed->xyz_integ[2][i], */
+          /*          ed->xyz_quad[0][i], */
+          /*          ed->xyz_quad[1][i], */
+          /*          ed->xyz_quad[2][i], */
           /*          rst_points.t[i], */
-          /*          ed->J_integ[i], */
-          /*          (double)(ed->J_integ[i]*powl(rst_points.t[i] + c, 4)), */
-          /*          ed->J_integ[i]*fac, */
-          /*          (double)(ed->J_integ[i]*powl(a*rst_points.t[i] + b, 4)) */
+          /*          ed->J_quad[i], */
+          /*          (double)(ed->J_quad[i]*powl(rst_points.t[i] + c, 4)), */
+          /*          ed->J_quad[i]*fac, */
+          /*          (double)(ed->J_quad[i]*powl(a*rst_points.t[i] + b, 4)) */
           /*         ); */
           /* } */
 
@@ -799,7 +799,7 @@ problem_init
 
     
     /* double* jacobian_lgl = P4EST_ALLOC(double, local_nodes); */
-    /* curved_element_data_compute_jacobian_on_lgl_grid(p4est,d4est_geom, dgmath_jit_dbase, jacobian_lgl); */
+    /* curved_element_data_compute_jacobian_on_lgl_grid(p4est,d4est_geom, d4est_ops, jacobian_lgl); */
 
 
     /* DEBUG_PRINT_ARR_DBL(jacobian_lgl, local_nodes); */
@@ -822,7 +822,7 @@ problem_init
     /*   ( */
     /*    save_as, */
     /*    p4est, */
-    /*    dgmath_jit_dbase, */
+    /*    d4est_ops, */
     /*    deg_array, */
     /*    input_file, */
     /*    "d4est_vtk_geometry", */

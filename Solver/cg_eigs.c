@@ -45,7 +45,7 @@ cg_eigs
  weakeqn_ptrs_t* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  int imax,
  double* eig_max
@@ -62,7 +62,7 @@ cg_eigs
   /* ghost_data = P4EST_ALLOC (element_data_t, */
                             /* ghost->ghosts.elem_count); */
 
-  /* int max_nodes = dgmath_get_nodes((P4EST_DIM), dgmath_fetch_max_degree_used()); */
+  /* int max_nodes = d4est_operators_get_nodes((P4EST_DIM), d4est_operators_fetch_max_degree_used()); */
   /* ghost_data = malloc( (sizeof(element_data_t) + */
                         /* sizeof(double)*(max_nodes-1))*ghost->ghosts.elem_count ); */
   int local_nodes;
@@ -103,7 +103,7 @@ cg_eigs
   /* debug("Build RHS in CG solve ends"); */
   
   /* first iteration data, store Au in r */
-  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, d4est_geom);
+  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
   linalg_copy_1st_to_2nd(Au, r, local_nodes);
   /* r = f - Au ; Au is stored in r so r = rhs - r */
   linalg_vec_xpby(rhs, -1., r, local_nodes);
@@ -142,7 +142,7 @@ cg_eigs
     /* util_print_matrix( u, vecs->local_nodes, 1, "u = ", 0); */
     
     /* Au = A*d; */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, d4est_geom);
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
 
     /* printf("i = %d, cg_eigs Au sum at i = %.25f\n",i, linalg_vec_sum(vecs->Au, vecs->local_nodes)); */
     /* printf("cg_eigs u sum at i = %.25f\n", linalg_vec_sum(vecs->u, vecs->local_nodes)); */

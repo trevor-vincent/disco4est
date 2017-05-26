@@ -13,11 +13,11 @@ use_ip_flux = 0
 
 [problem]
 deg_R2 = 2
-deg_integ_R2 = 2
+deg_quad_R2 = 2
 deg_R1 = 2
-deg_integ_R1 = 2
+deg_quad_R1 = 2
 deg_R0 = 2
-deg_integ_R0 = 2
+deg_quad_R0 = 2
 
 [geometry]
 name = sphere

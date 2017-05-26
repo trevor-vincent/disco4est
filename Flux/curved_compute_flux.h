@@ -1,6 +1,8 @@
 #ifndef CURVED_COMPUTE_FLUX_H
 #define CURVED_COMPUTE_FLUX_H 
 
+
+
 /**
  * @file   compute_flux.h
  * @author Trevor Vincent <tvincent@cita.utoronto.ca>
@@ -13,6 +15,7 @@
 
 #include "../ElementData/curved_element_data.h"
 #include <d4est_geometry.h>
+#include <d4est_quadrature.h>
 
 /* No problem specific data needed */
 typedef void (*curved_flux_interface_fcn_t)
@@ -25,8 +28,9 @@ typedef void (*curved_flux_interface_fcn_t)
  int f_p,
  int* e_m_is_ghost,
  int orientation,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
+ d4est_quadrature_t* d4est_quad,
  void* params
 );
 
@@ -36,8 +40,9 @@ typedef void (*curved_flux_boundary_fcn_t)
  curved_element_data_t*,
  int,
  grid_fcn_t,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
+ d4est_quadrature_t* d4est_quad,
  void* params
 );
 
@@ -52,7 +57,8 @@ typedef struct {
 
 typedef struct {
 
-  dgmath_jit_dbase_t* dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops;
+  d4est_quadrature_t* d4est_quad;
   curved_flux_fcn_ptrs_t* flux_fcn_ptrs;
   d4est_geometry_t* geom;
 

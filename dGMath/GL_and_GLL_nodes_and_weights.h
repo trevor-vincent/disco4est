@@ -3,7 +3,7 @@
 
 #include <util.h>
 
-void dgmath_GL_nodes_and_weights ( int n, double x[], double w[] )
+void d4est_operators_GL_nodes_and_weights ( int n, double x[], double w[] )
 
 /******************************************************************************/
 /*
@@ -4079,7 +4079,7 @@ void dgmath_GL_nodes_and_weights ( int n, double x[], double w[] )
 
 
 
-void dgmath_GLL_nodes_and_weights ( int n, double xtab[], double weight[] )
+void d4est_operators_GLL_nodes_and_weights ( int n, double xtab[], double weight[] )
 
 /******************************************************************************/
 /*

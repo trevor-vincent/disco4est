@@ -32,7 +32,7 @@
 #ifndef D4EST_VTK_H
 #define D4EST_VTK_H
 
-#include <dgmath.h>
+#include <d4est_operators.h>
 #include <pXest.h>
 #include <d4est_geometry.h>
 /* SC_EXTERN_C_BEGIN; */
@@ -276,7 +276,7 @@ d4est_vtk_context_t *d4est_vtk_write_point_dataf (d4est_vtk_context_t * cont,
 int                 d4est_vtk_write_footer (d4est_vtk_context_t * cont);
 
 d4est_vtk_context_t *
-d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, dgmath_jit_dbase_t* dgmath_jit_dbase);
+d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, d4est_operators_t* d4est_ops);
 d4est_vtk_context_t *
 d4est_vtk_write_dg_cell_dataf (d4est_vtk_context_t * cont,
                             int write_tree, int write_level,
@@ -292,7 +292,7 @@ d4est_vtk_write_dg_point_dataf (d4est_vtk_context_t * cont,
                                 int num_point_scalars, int num_point_vectors,
                                 ...);
 d4est_vtk_context_t *
-d4est_vtk_dg_context_new (p4est_t * p4est, dgmath_jit_dbase_t* dgbase, const char *filename);
+d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* dgbase, const char *filename);
 
 
 void
@@ -300,7 +300,7 @@ d4est_vtk_save_geometry_and_dg_fields
 (
  const char* save_as_filename,
  p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int* deg_array,
  const char* input_file,
  const char* input_section,

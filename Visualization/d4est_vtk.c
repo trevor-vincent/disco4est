@@ -186,7 +186,7 @@ struct d4est_vtk_context
   p4est_t            *p4est;       /**< The p4est structure must be alive. */
   char               *filename;    /**< Original filename provided is copied. */
   int* deg_array; /* for writing discontinuous Galerkin data */
-  dgmath_jit_dbase_t* dgbase;
+  d4est_operators_t* dgbase;
   
   /* parameters that can optionally be set in a context */
   d4est_geometry_t   *geom;        /**< The geometry may be NULL. */
@@ -234,7 +234,7 @@ d4est_vtk_context_new (p4est_t * p4est, const char *filename)
 }
 
 d4est_vtk_context_t *
-d4est_vtk_dg_context_new (p4est_t * p4est, dgmath_jit_dbase_t* dgbase, const char *filename)
+d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* dgbase, const char *filename)
 {
 #ifdef D4EST_VTK_DEBUG
   printf("[D4EST_VTK]: Starting d4est_vtk_context_new \n");
@@ -947,7 +947,7 @@ d4est_vtk_write_point_datav (d4est_vtk_context_t * cont,
 
 
 d4est_vtk_context_t *
-d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, dgmath_jit_dbase_t* dgmath_jit_dbase)
+d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, d4est_operators_t* d4est_ops)
 {
 #ifdef D4EST_VTK_DEBUG
   printf("[D4EST_VTK]: Starting d4est_vtk_write_header \n");
@@ -1113,9 +1113,9 @@ d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, dgmath_jit_dbase_t* dgmat
       for (zz = 0; zz < num_quads; ++zz, ++quad_count) {
 
 
-        double* vtk_rst = dgmath_fetch_vtk_rst
+        double* vtk_rst = d4est_operators_fetch_vtk_rst
                           (
-                           dgmath_jit_dbase,
+                           d4est_ops,
                            deg_array[quad_count],
                            (P4EST_DIM)
                           );
@@ -1129,9 +1129,9 @@ d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, dgmath_jit_dbase_t* dgmat
         for (int ec = 0; ec < num_cells_in_element; ec++) {
           for (int corn = 0; corn < (P4EST_CHILDREN); corn++){
 
-            double r_01 = dgmath_rtox(vtk_rst[0 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
-            double s_01 = dgmath_rtox(vtk_rst[1 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
-            double t_01 = dgmath_rtox(vtk_rst[2 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
+            double r_01 = d4est_operators_rtox(vtk_rst[0 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
+            double s_01 = d4est_operators_rtox(vtk_rst[1 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
+            double t_01 = d4est_operators_rtox(vtk_rst[2 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
             eta_x = intsize * quad->x + h2 * (1. + (r_01 * 2 - 1) * scale);
             eta_y = intsize * quad->y + h2 * (1. + (s_01 * 2 - 1) * scale);
             eta_z = 0.;
@@ -2380,7 +2380,7 @@ d4est_vtk_write_dg_cell_dataf (d4est_vtk_context_t * cont,
 double*
 d4est_vtk_convert_nodal_to_vtk(p4est_t* p4est,
                                d4est_vtk_context_t* cont,
-                               dgmath_jit_dbase_t* dgbase,
+                               d4est_operators_t* dgbase,
                                double* values)
 {
 
@@ -2403,7 +2403,7 @@ d4est_vtk_convert_nodal_to_vtk(p4est_t* p4est,
     for (zz = 0; zz < num_quads; ++zz, ++il) {
       int num_points_in_element = util_int_pow_int(cont->deg_array[il], (P4EST_DIM))*(P4EST_CHILDREN);
       int num_nodes_in_element = util_int_pow_int(cont->deg_array[il] + 1, (P4EST_DIM));
-      dgmath_convert_nodal_to_vtk(
+      d4est_operators_convert_nodal_to_vtk(
                                   dgbase,
                                   &values[nodal_stride],
                                   (P4EST_DIM),
@@ -2695,7 +2695,7 @@ d4est_vtk_save_geometry_and_dg_fields
 (
  const char* save_as_filename,
  p4est_t* p4est,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int* deg_array,
  const char* input_file,
  const char* input_section,
@@ -2712,11 +2712,11 @@ d4est_vtk_save_geometry_and_dg_fields
                                   "[D4EST_VTK_GEOMETRY]"
                                  );
 
-    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, dgmath_jit_dbase, save_as_filename);
+    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, save_as_filename);
     d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
     d4est_vtk_context_set_scale(vtk_ctx, .99);
     d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
-    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, dgmath_jit_dbase);    
+    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, d4est_ops);    
 
     d4est_vtk_user_fcn(
                        vtk_ctx,

@@ -26,7 +26,7 @@
 /*  problem_data_t* vecs, /\* only needed for # of nodes *\/ */
 /*  curved_weakeqn_ptrs_t* fcns, */
 /*  int print, */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase */
+/*  d4est_operators_t* d4est_ops */
 /* ) */
 /* { */
 /*   curved_element_data_t *ghost_data; */
@@ -46,7 +46,7 @@
   
 /*   for (i = 0; i < vecs->local_nodes; i++){ */
 /*     vecs->u[i] = 1.; */
-/*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase); */
+/*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops); */
 /*     linalg_set_column(a_mat, vecs->Au, i, vecs->local_nodes, vecs->local_nodes); */
 /*     vecs->u[i] = 0.; */
 /*   } */
@@ -96,7 +96,7 @@
 /*  int test_PD, /\* test if positive definite *\/ */
 /*  double sym_eps, */
 /*  int normalize, */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase */
+/*  d4est_operators_t* d4est_ops */
 /* ) */
 /* { */
 /*   element_data_t *ghost_data; */
@@ -148,7 +148,7 @@
     
 /*     vecs->u = u; */
 /*     double* Au = vecs->Au; */
-/*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase); */
+/*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops); */
 
 /*     /\* util_print_matrices(vecs->u, vecs->Au, vecs->local_nodes, 1, "u, Au = "); *\/ */
 
@@ -168,7 +168,7 @@
     
 /*     vecs->u = v; */
 /*     double* Av = vecs->Au; */
-/*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase); */
+/*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops); */
 /*     uTAv_local = linalg_vec_dot(u, Av, vecs->local_nodes); */
 
 /*     sc_reduce */
@@ -232,7 +232,7 @@
 /*  double sym_eps, */
 /*  int random, */
 /*  int normalize, */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase */
+/*  d4est_operators_t* d4est_ops */
 /* ) */
 /* { */
 /*   curved_element_data_t *ghost_data; */
@@ -292,7 +292,7 @@
 /*     /\* linalg_fill_vec(vecs->Au, 0., vecs->local_nodes); *\/ */
     
 /*     double* Au = vecs->Au; */
-/*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase); */
+/*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops); */
 
 /*     /\* util_print_matrices(vecs->u, vecs->Au, vecs->local_nodes, 1, "u, Au = "); *\/ */
 
@@ -311,7 +311,7 @@
     
 /*     vecs->u = v; */
 /*     double* Av = vecs->Au; */
-/*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase); */
+/*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops); */
 /*     uTAv_local = linalg_vec_dot(u, Av, vecs->local_nodes); */
 
     
@@ -385,7 +385,7 @@ serial_matrix_sym_tester
  problem_data_t* vecs, /* only needed for # of nodes */
  weakeqn_ptrs_t* fcns,
  double sym_eps,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  int print,
  d4est_geometry_t* geom
 )
@@ -417,9 +417,9 @@ serial_matrix_sym_tester
   for (i = 0; i < vecs->local_nodes; i++){
     vecs->u[i] = 1.;
     /* if (curved) */
-      /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, vecs, dgmath_jit_dbase, geom); */
+      /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, vecs, d4est_ops, geom); */
     /* else */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgmath_jit_dbase, geom);
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, geom);
 
     /* to make parallel send stride as well */
     linalg_set_column(a_mat, vecs->Au, i, vecs->local_nodes, vecs->local_nodes);
@@ -522,7 +522,7 @@ serial_matrix_sym_tester
 /*  problem_data_t* vecs, /\* only needed for # of nodes *\/ */
 /*  void* fcns, */
 /*  double sym_eps, */
-/*  dgmath_jit_dbase_t* dgmath_jit_dbase, */
+/*  d4est_operators_t* d4est_ops, */
 /*  int curved, */
 /*  int print */
 /* ) */
@@ -591,9 +591,9 @@ serial_matrix_sym_tester
 /*       vecs->u[c - rstart] = 1.; */
     
 /*     if (curved) */
-/*       ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, vecs, dgmath_jit_dbase, geom); */
+/*       ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, vecs, d4est_ops, geom); */
 /*     else */
-/*       ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (element_data_t*)ghost_data, vecs, dgmath_jit_dbase); */
+/*       ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (element_data_t*)ghost_data, vecs, d4est_ops); */
 
 /*     /\* to make parallel send stride as well *\/ */
 /*     linalg_set_column_opt(a_mat, vecs->Au, c, vecs->local_nodes, global_nodes); */
@@ -670,7 +670,7 @@ matrix_sym_tester_parallel
  void* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  int print,
  int num_tests,
@@ -695,7 +695,7 @@ matrix_sym_tester_parallel
          fcns,
          ghost,
          ghost_data,
-         dgmath_jit_dbase,
+         d4est_ops,
          d4est_geom,
          i,
          0,
@@ -739,7 +739,7 @@ matrix_spd_tester_parallel
  void* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  int print,
  int num_tests
@@ -763,7 +763,7 @@ matrix_spd_tester_parallel
          fcns,
          ghost,
          ghost_data,
-         dgmath_jit_dbase,
+         d4est_ops,
          d4est_geom,
          i,
          0,
@@ -802,7 +802,7 @@ matrix_sym_tester_parallel_aux
  void* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  int i, /* local node on mpirank_i */
  int mpirank_i,
@@ -845,7 +845,7 @@ matrix_sym_tester_parallel_aux
                                               /* ghost, */
                                               /* (curved_element_data_t*)ghost_data, */
                                               /* &vecs_for_sym_test, */
-                                              /* dgmath_jit_dbase, */
+                                              /* d4est_ops, */
                                               /* d4est_geom */
                                              /* ); */
   /* }   */
@@ -855,7 +855,7 @@ matrix_sym_tester_parallel_aux
                                        ghost,
                                        ghost_data,
                                        &vecs_for_sym_test,
-                                       dgmath_jit_dbase,
+                                       d4est_ops,
                                        d4est_geom
                                       );
   /* } */
@@ -868,9 +868,9 @@ matrix_sym_tester_parallel_aux
   vecs_for_sym_test.Au = A_uj;
     
   /* if (d4est_geom != NULL) */
-    /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, &vecs_for_sym_test, dgmath_jit_dbase, d4est_geom); */
+    /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, &vecs_for_sym_test, d4est_ops, d4est_geom); */
   /* else */
-    ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, ghost_data, &vecs_for_sym_test, dgmath_jit_dbase, d4est_geom);
+    ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, ghost_data, &vecs_for_sym_test, d4est_ops, d4est_geom);
     
   ui_A_uj_local = linalg_vec_dot(ui, A_uj, vecs->local_nodes);
 

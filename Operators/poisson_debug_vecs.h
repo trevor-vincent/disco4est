@@ -2,7 +2,7 @@
 #define POISSON_DEBUG_VECS_H 
 
 #include <pXest.h>
-#include <dgmath.h>
+#include <d4est_operators.h>
 
 typedef struct {
 
@@ -38,7 +38,7 @@ poisson_debug_vecs_set_Mdivq
 (
  double* Mdivq,
  poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 
@@ -47,7 +47,7 @@ poisson_debug_vecs_set_Mdu
 (
  double* Mdu [(P4EST_DIM)],
  poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void
@@ -55,7 +55,7 @@ poisson_debug_vecs_set_Au
 (
  double* Au,
  poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 ); 
 
 void
@@ -63,7 +63,7 @@ poisson_debug_vecs_set_liftedqflux
 (
  double* liftedqflux [(P4EST_FACES)],
  poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void
@@ -71,7 +71,7 @@ poisson_debug_vecs_set_lifteduflux
 (
  double* lifteduflux [(P4EST_FACES)][(P4EST_DIM)],
  poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void
@@ -79,7 +79,7 @@ poisson_debug_vecs_set_q
 (
  double* q [(P4EST_DIM)],
  poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 void
@@ -87,7 +87,7 @@ poisson_debug_vecs_set_Mq
 (
  double* Mq [(P4EST_DIM)],
  poisson_debug_vecs_t* debug_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase
+ d4est_operators_t* d4est_ops
 );
 
 #endif

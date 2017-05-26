@@ -18,7 +18,7 @@ void compute_flux_on_local_elements(p4est_iter_face_info_t * info, void *user_da
  
   compute_flux_user_data_t* compute_flux_user_data = (compute_flux_user_data_t*) info->p4est->user_pointer;
   flux_fcn_ptrs_t* flux_fcn_ptrs = (flux_fcn_ptrs_t*) compute_flux_user_data->flux_fcn_ptrs;
-  dgmath_jit_dbase_t * dgmath_jit_dbase = (dgmath_jit_dbase_t*) compute_flux_user_data->dgmath_jit_dbase;
+  d4est_operators_t * d4est_ops = (d4est_operators_t*) compute_flux_user_data->d4est_ops;
 
  
   element_data_t *ghost_data = (element_data_t *) user_data;
@@ -90,7 +90,7 @@ void compute_flux_on_local_elements(p4est_iter_face_info_t * info, void *user_da
              1,
              side[s_p]->face,
              e_m_is_ghost,
-             dgmath_jit_dbase,
+             d4est_ops,
              flux_fcn_ptrs->params
             );
         }
@@ -118,7 +118,7 @@ void compute_flux_on_local_elements(p4est_iter_face_info_t * info, void *user_da
                (P4EST_HALF),
                side[s_p]->face,
                e_m_is_ghost,
-               dgmath_jit_dbase,
+               d4est_ops,
                flux_fcn_ptrs->params
               );    
             
@@ -141,7 +141,7 @@ void compute_flux_on_local_elements(p4est_iter_face_info_t * info, void *user_da
                1,
                side[s_p]->face,
                e_m_is_ghost,
-               dgmath_jit_dbase,
+               d4est_ops,
                flux_fcn_ptrs->params
               );  
 	  }
@@ -161,7 +161,7 @@ void compute_flux_on_local_elements(p4est_iter_face_info_t * info, void *user_da
     flux_fcn_ptrs->flux_boundary_fcn(e_m[0],
                                      side->face,
                                      flux_fcn_ptrs->bndry_fcn,
-                                     dgmath_jit_dbase,
+                                     d4est_ops,
                                      flux_fcn_ptrs->params
                                     );
   }

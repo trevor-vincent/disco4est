@@ -3,7 +3,7 @@
 
 #include <pXest.h>
 #include <problem_data.h>
-#include <dgmath.h>
+#include <d4est_operators.h>
 #include <petscsnes.h>
 
 typedef struct {
@@ -13,7 +13,7 @@ typedef struct {
   void* fcns;
   p4est_ghost_t** ghost;
   void** ghost_data;
-  dgmath_jit_dbase_t* dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops;
   d4est_geometry_t* d4est_geom;
   
 } petsc_ctx_t;

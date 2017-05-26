@@ -1,6 +1,6 @@
 #include "../Flux/sipg_flux_scalar_fcns.h"
 #include "../Utilities/util.h"
-#include "../dGMath/dgmath.h"
+#include "../dGMath/d4est_operators.h"
 #include "../LinearAlgebra/linalg.h"
 
 static void
@@ -9,29 +9,29 @@ sipg_flux_scalar_dirichlet
  element_data_t* e_m,
  int f_m,
  grid_fcn_t bndry_fcn,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  void* params
 )
 {
   grid_fcn_t u_at_bndry = bndry_fcn;
-  /* int vol_nodes_m = dgmath_get_nodes( (P4EST_DIM), e_m->deg); */
-  int face_nodes_m = dgmath_get_nodes( (P4EST_DIM) - 1, e_m->deg);
+  /* int vol_nodes_m = d4est_operators_get_nodes( (P4EST_DIM), e_m->deg); */
+  int face_nodes_m = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m->deg);
   double* tmp = P4EST_ALLOC(double, face_nodes_m);
   double* xyz_on_f_m [(P4EST_DIM)];
   int dir, i;
   double* u_m_on_f_m = P4EST_ALLOC(double,
-                                   dgmath_get_nodes((P4EST_DIM)-1, e_m->deg)
+                                   d4est_operators_get_nodes((P4EST_DIM)-1, e_m->deg)
                                   );
 
-  dgmath_apply_slicer(dgmath_jit_dbase, e_m->u_elem, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
+  d4est_operators_apply_slicer(d4est_ops, e_m->u_elem, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
   
   for (dir = 0; dir < (P4EST_DIM); dir++){
     xyz_on_f_m[dir] = P4EST_ALLOC(double, face_nodes_m);
 
-    double* rst = dgmath_fetch_xyz_nd(dgmath_jit_dbase, (P4EST_DIM), e_m->deg, dir);
-    dgmath_apply_slicer(dgmath_jit_dbase, rst, (P4EST_DIM), f_m, e_m->deg, tmp);
+    double* rst = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), e_m->deg, dir);
+    d4est_operators_apply_slicer(d4est_ops, rst, (P4EST_DIM), f_m, e_m->deg, tmp);
 
-    dgmath_rtox_array(tmp,
+    d4est_operators_rtox_array(tmp,
                       e_m->xyz_corner[dir],
                       e_m->h,
                       xyz_on_f_m[dir],
@@ -71,7 +71,7 @@ sipg_flux_scalar_interface
  int faces_p,
  int f_p,
  int* e_m_is_ghost,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  void* params
 )
 {
@@ -88,7 +88,7 @@ sipg_flux_scalar_interface
   int faces_mortar = (faces_m > faces_p) ? faces_m : faces_p;
 
   double n [(P4EST_DIM)];
-  dgmath_get_normal(f_m, (P4EST_DIM), &n[0]);
+  d4est_operators_get_normal(f_m, (P4EST_DIM), &n[0]);
   
   int i,j;
   
@@ -99,7 +99,7 @@ sipg_flux_scalar_interface
     /* if (sum_ghost_array != 0) */
       /* printf(" sum_ghost_array = %d, deg_m[i] = %d\n" , sum_ghost_array, deg_m[i]); */
     if (e_m[i]->deg > max_deg_m) max_deg_m = e_m[i]->deg;
-    face_nodes_m[i] = dgmath_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg );
+    face_nodes_m[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg );
     total_side_nodes_m += face_nodes_m[i];
   }
   
@@ -108,7 +108,7 @@ sipg_flux_scalar_interface
   for (i = 0; i < faces_p; i++){
     deg_p[i] = e_p[i]->deg;
     if (e_p[i]->deg > max_deg_p) max_deg_p = e_p[i]->deg;
-    face_nodes_p[i] = dgmath_get_nodes( (P4EST_DIM) - 1, e_p[i]->deg );
+    face_nodes_p[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p[i]->deg );
     total_side_nodes_p += face_nodes_p[i];
   }    
 
@@ -118,8 +118,8 @@ sipg_flux_scalar_interface
     for (j = 0; j < faces_p; j++){
       /* find max degree for each face pair of the two sides*/
       deg_mortar[i+j] = util_max_int( e_m[i]->deg, e_p[j]->deg );
-      nodes_mortar[i+j] = dgmath_get_nodes ( (P4EST_DIM) - 1, deg_mortar[i+j] );
-      total_nodes_mortar += dgmath_get_nodes( (P4EST_DIM) - 1, deg_mortar[i+j] );
+      nodes_mortar[i+j] = d4est_operators_get_nodes ( (P4EST_DIM) - 1, deg_mortar[i+j] );
+      total_nodes_mortar += d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar[i+j] );
     }
 
   /* scalar and scalar fields on each of the (-) and (+) elements */
@@ -133,9 +133,9 @@ sipg_flux_scalar_interface
 
   stride = 0;
   for (i = 0; i < faces_m; i++){
-    dgmath_apply_slicer
+    d4est_operators_apply_slicer
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        &(e_m[i]->u_storage[0]),
        (P4EST_DIM),
        f_m,
@@ -147,9 +147,9 @@ sipg_flux_scalar_interface
     
   stride = 0;
   for (i = 0; i < faces_p; i++){
-    dgmath_apply_slicer
+    d4est_operators_apply_slicer
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        &(e_p[i]->u_storage[0]),
        (P4EST_DIM),
        f_p,
@@ -160,9 +160,9 @@ sipg_flux_scalar_interface
   }
   
   /* project (-)-side u trace scalar onto mortar space */ 
-  dgmath_project_side_onto_mortar_space
+  d4est_operators_project_side_onto_mortar_space
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      u_m_on_f_m,
      faces_m,
      deg_m,
@@ -172,9 +172,9 @@ sipg_flux_scalar_interface
     );
 
   /* project (+)-side u trace scalar onto mortar space */
-  dgmath_project_side_onto_mortar_space
+  d4est_operators_project_side_onto_mortar_space
     (
-     dgmath_jit_dbase,
+     d4est_ops,
      u_p_on_f_p,
      faces_p,
      deg_p,
@@ -197,9 +197,9 @@ sipg_flux_scalar_interface
     }
 
     /* project mortar data back onto the (-) side */
-    dgmath_project_mortar_onto_side
+    d4est_operators_project_mortar_onto_side
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        ustar_min_u_mortar,
        faces_mortar,
        deg_mortar,

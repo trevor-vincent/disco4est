@@ -17,7 +17,7 @@ curved_bi_estimator_compute
  double penalty_prefactor,
  p4est_ghost_t* ghost,
  curved_element_data_t* ghost_data,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom
 );
 

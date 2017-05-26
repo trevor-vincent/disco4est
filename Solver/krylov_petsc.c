@@ -235,7 +235,7 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   /* weakeqn_ptrs_t* fcns = petsc_ctx->fcns; */
   p4est_t* p4est = petsc_ctx->p4est;
   p4est_ghost_t* ghost = *petsc_ctx->ghost;
-  dgmath_jit_dbase_t* dgmath_jit_dbase = petsc_ctx->dgmath_jit_dbase;
+  d4est_operators_t* d4est_ops = petsc_ctx->d4est_ops;
 
   problem_data_t vecs_for_aij;
   problem_data_copy_ptrs(petsc_ctx->vecs, &vecs_for_aij);
@@ -247,7 +247,7 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
                                                   ghost,
                                                   (*petsc_ctx->ghost_data),
                                                   &vecs_for_aij,
-                                                  dgmath_jit_dbase,
+                                                  d4est_ops,
                                                   petsc_ctx->d4est_geom);
 
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
@@ -263,7 +263,7 @@ krylov_petsc_solve
  void* fcns,
  p4est_ghost_t** ghost,
  void** ghost_data, 
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  krylov_petsc_params_t* krylov_petsc_params,
  krylov_pc_t* krylov_pc
@@ -287,7 +287,7 @@ krylov_petsc_solve
   petsc_ctx.fcns = fcns;
   petsc_ctx.ghost = ghost;
   petsc_ctx.ghost_data = ghost_data;
-  petsc_ctx.dgmath_jit_dbase = dgmath_jit_dbase;
+  petsc_ctx.d4est_ops = d4est_ops;
   petsc_ctx.d4est_geom = d4est_geom;
 
   int local_nodes = vecs->local_nodes;

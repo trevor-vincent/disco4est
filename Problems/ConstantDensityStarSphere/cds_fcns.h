@@ -22,11 +22,11 @@ typedef struct {
   int num_unifrefs;
   int num_of_amr_levels;
   int deg_R0;
-  int deg_integ_R0;
+  int deg_quad_R0;
   int deg_R1;
-  int deg_integ_R1;
+  int deg_quad_R1;
   int deg_R2;
-  int deg_integ_R2; 
+  int deg_quad_R2; 
   double rho0_div_rhoc;
   double ip_flux_penalty;
 
@@ -85,25 +85,25 @@ int problem_input_handler
     mpi_assert(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R0")) {
-    mpi_assert(pconfig->deg_integ_R0 == -1);
-    pconfig->deg_integ_R0 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
+    mpi_assert(pconfig->deg_quad_R0 == -1);
+    pconfig->deg_quad_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R1")) {
     mpi_assert(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R1")) {
-    mpi_assert(pconfig->deg_integ_R1 == -1);
-    pconfig->deg_integ_R1 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
+    mpi_assert(pconfig->deg_quad_R1 == -1);
+    pconfig->deg_quad_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R2")) {
     mpi_assert(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_integ_R2")) {
-    mpi_assert(pconfig->deg_integ_R2 == -1);
-    pconfig->deg_integ_R2 = atoi(value);
+  else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
+    mpi_assert(pconfig->deg_quad_R2 == -1);
+    pconfig->deg_quad_R2 = atoi(value);
   }  
   else if (util_match_couple(section,"problem",name,"rho0_div_rhoc")) {
     mpi_assert(pconfig->rho0_div_rhoc == -1);
@@ -147,11 +147,11 @@ constantdensitystar_input
   input.num_of_amr_levels = -1;
   input.ip_flux_penalty = -1;
   input.deg_R0 = -1;
-  input.deg_integ_R0 = -1;
+  input.deg_quad_R0 = -1;
   input.deg_R1 = -1;
-  input.deg_integ_R1 = -1;
+  input.deg_quad_R1 = -1;
   input.deg_R2 = -1;
-  input.deg_integ_R2 = -1; 
+  input.deg_quad_R2 = -1; 
  
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
@@ -161,11 +161,11 @@ constantdensitystar_input
   D4EST_CHECK_INPUT("problem", input.num_of_amr_levels, -1);
   D4EST_CHECK_INPUT("problem", input.ip_flux_penalty, -1);
   D4EST_CHECK_INPUT("problem", input.deg_R0, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_integ_R0, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_quad_R0, -1);
   D4EST_CHECK_INPUT("problem", input.deg_R1, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_integ_R1, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_quad_R1, -1);
   D4EST_CHECK_INPUT("problem", input.deg_R2, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_integ_R2, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_quad_R2, -1);
 
   ip_flux_params_t ip_flux_params;
   ip_flux_params.ip_flux_penalty_prefactor = input.ip_flux_penalty;
@@ -334,7 +334,7 @@ cds_build_residual
  p4est_ghost_t* ghost,
  void* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -342,7 +342,7 @@ cds_build_residual
   
   prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (boundary_fcn, ctx->ip_flux_params);
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
   double* M_neg_2pi_rho_up1_neg5_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -358,17 +358,17 @@ cds_build_residual
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;        
-        int deg_nonlinear = ed->deg;// + ctx->deg_offset_for_nonlinear_integ;
+        int deg_nonlinear = ed->deg;// + ctx->deg_offset_for_nonlinear_quad;
 
-        dgmath_apply_fofufofvlj_Gaussnodes
+        d4est_operators_apply_fofufofvlj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            &prob_vecs->u[ed->nodal_stride],
            NULL,
            ed->deg,
-           ed->J_integ,
-           ed->xyz_integ,
-           ed->deg_integ,
+           ed->J_quad,
+           ed->xyz_quad,
+           ed->deg_quad,
            (P4EST_DIM),
            &M_neg_2pi_rho_up1_neg5_vec[ed->nodal_stride],
            neg_2pi_rho_up1_neg5,
@@ -391,7 +391,7 @@ void cds_apply_jac
  p4est_ghost_t* ghost,
  void* ghost_data,
  problem_data_t* prob_vecs,
- dgmath_jit_dbase_t* dgmath_jit_dbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -400,7 +400,7 @@ void cds_apply_jac
   /* apply jac must always have zero boundary conditions for du in dirichlet problems */
   prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (zero_fcn, ctx->ip_flux_params);
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgmath_jit_dbase, d4est_geom);
+  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
   
   double* M_neg_10pi_rho_up1_neg4_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
 
@@ -415,16 +415,16 @@ void cds_apply_jac
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         curved_element_data_t* ed = quad->p.user_data;
-        int deg_nonlinear = ed->deg;// + ctx->deg_offset_for_nonlinear_integ;
-        dgmath_apply_fofufofvlilj_Gaussnodes
+        int deg_nonlinear = ed->deg;// + ctx->deg_offset_for_nonlinear_quad;
+        d4est_operators_apply_fofufofvlilj_Gaussnodes
           (
-           dgmath_jit_dbase,
+           d4est_ops,
            &prob_vecs->u[ed->nodal_stride],
            &prob_vecs->u0[ed->nodal_stride],
            NULL,
            ed->deg,
-           ed->J_integ,
-           ed->xyz_integ,
+           ed->J_quad,
+           ed->xyz_quad,
            deg_nonlinear,
            (P4EST_DIM),
            &M_neg_10pi_rho_up1_neg4_of_u0_u_vec[ed->nodal_stride],

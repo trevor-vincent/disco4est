@@ -12,11 +12,11 @@ ip_flux_penalty = 2.0
 
 [problem]
 deg_R2 = 16
-deg_integ_R2 = 16
+deg_quad_R2 = 16
 deg_R1 = 10
-deg_integ_R1 = 10
+deg_quad_R1 = 10
 deg_R0 = 3
-deg_integ_R0 = 3
+deg_quad_R0 = 3
 
 R0 = 10
 R1 = 50
