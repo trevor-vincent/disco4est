@@ -12,7 +12,7 @@ penalty_calc_t curved_bi_est_gradu_prefactor_calculate_fcn;
 static void
 curved_bi_est_dirichlet
 (
- curved_element_data_t* e_m,
+ d4est_element_data_t* e_m,
  int f_m,
  grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
@@ -57,7 +57,7 @@ curved_bi_est_dirichlet
   
   
   d4est_operators_apply_slicer(d4est_ops,
-                      e_m->u_storage,
+                      e_m->u_elem,
                       (P4EST_DIM),
                       f_m,
                       e_m->deg,
@@ -73,7 +73,7 @@ curved_bi_est_dirichlet
   /*    (P4EST_DIM)-1 */
   /*   ); */
  
-  /* curved_element_data_compute_mortar_normal_and_sj_using_face_data */
+  /* d4est_element_data_compute_mortar_normal_and_sj_using_face_data */
   /*   ( */
   /*    &e_m, */
   /*    1, */
@@ -203,10 +203,10 @@ curved_bi_est_dirichlet
 static void
 curved_bi_est_interface
 (
- curved_element_data_t** e_m,
+ d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
- curved_element_data_t** e_p,
+ d4est_element_data_t** e_p,
  int faces_p,
  int f_p,
  int* e_m_is_ghost,
@@ -231,8 +231,8 @@ curved_bi_est_interface
   double Je1_prefactor_mortar [(P4EST_HALF)];
   double Je2_prefactor_mortar [(P4EST_HALF)];
   int deg_p_lobatto_porder [(P4EST_HALF)];
-  curved_element_data_t* e_p_oriented [(P4EST_HALF)];
-  curved_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
+  d4est_element_data_t* e_p_oriented [(P4EST_HALF)];
+  d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
   
   int total_side_nodes_m_lobatto = 0;
   int total_side_nodes_m_quad = 0;
@@ -367,7 +367,7 @@ curved_bi_est_interface
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &(e_m[i]->u_storage[0]),
+       &(e_m[i]->u_elem[0]),
        (P4EST_DIM),
        f_m,
        e_m[i]->deg,
@@ -381,7 +381,7 @@ curved_bi_est_interface
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &(e_p_oriented[i]->u_storage[0]),
+       &(e_p_oriented[i]->u_elem[0]),
        (P4EST_DIM),
        f_p,
        e_p_oriented[i]->deg,
@@ -712,7 +712,7 @@ curved_bi_est_interface
   
   /* double* tmpxyz [(P4EST_DIM)]; */
   /* D4EST_ALLOC_DIM_VEC(tmpxyz,total_nodes_mortar_quad); */
-  /* curved_element_data_compute_mortar_normal_and_sj_using_face_data */
+  /* d4est_element_data_compute_mortar_normal_and_sj_using_face_data */
   /*   ( */
   /*    e_m, */
   /*    faces_m, */

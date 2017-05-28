@@ -56,7 +56,7 @@ typedef struct {
   /* int p_J; /\* max{|p - pneighbour|} over all neighbours *\/ */
 
   /* storage for MPI transfers */
-  double u_storage[MAX_NODES];
+  double u_elem[MAX_NODES];
 
 #ifdef D4EST_DEBUG
   /* only for the central flux */
@@ -65,7 +65,7 @@ typedef struct {
 
   
   /* storage for varying coefficient problems */
-  /* double mu_storage [MAX_NODES]; */
+  /* double mu_elem [MAX_NODES]; */
 
   /* nodal degree */
   int deg;
@@ -108,7 +108,7 @@ void element_data_get_slice_data_count(p4est_t *p4est,
 
 void element_data_init_node_vec(p4est_t *p4est, double *nodal_vec,
                                 grid_fcn_t init_fcn,
-                                d4est_operators_t *d4est_operators_jit_dgbase);
+                                d4est_operators_t *d4est_operators_jit_d4est_ops);
 
 double element_data_compute_l2_norm_sqr(p4est_t *p4est, double *nodal_vec,
                                         d4est_operators_t *d4est_ops);

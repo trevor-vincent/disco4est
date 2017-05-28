@@ -154,24 +154,24 @@ element_data_init_node_vec_callback
   grid_fcn_t init_fcn = inv_user_data->init_fcn;
   double* vec = inv_user_data->vec;
     
-  d4est_operators_t* dgbase = (d4est_operators_t*)info->p4est->user_pointer;
+  d4est_operators_t* d4est_ops = (d4est_operators_t*)info->p4est->user_pointer;
   
   int stride = elem_data->stride;
   int volume_nodes = d4est_operators_get_nodes( (P4EST_DIM), elem_data->deg );
   double h = elem_data->h;
   
   int i;
-  double* x = d4est_operators_fetch_xyz_nd( dgbase, (P4EST_DIM),
+  double* x = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
                                    elem_data->deg,
                                    0);
   double xl = elem_data->xyz_corner[0];
   
-  double* y = d4est_operators_fetch_xyz_nd( dgbase, (P4EST_DIM),
+  double* y = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
                                    elem_data->deg,
                                    1);
   double yl = elem_data->xyz_corner[1];
 #if (P4EST_DIM)==3
-  double* z = d4est_operators_fetch_xyz_nd( dgbase, (P4EST_DIM),
+  double* z = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
                                    elem_data->deg,
                                    2);
   double zl = elem_data->xyz_corner[2];
@@ -712,7 +712,7 @@ element_data_DG_norm_sqr_init_vecs_callback
 
   linalg_copy_1st_to_2nd(
   element_data->u_elem,
-    &(element_data->u_storage)[0],
+    &(element_data->u_elem)[0],
     d4est_operators_get_nodes(dim, deg)
   );
 }
@@ -772,7 +772,7 @@ element_data_compute_DG_norm_sqr
 
   double dg_norm_sqr = 0.;
 
-  /* init q_flux in element_data to store [[u]], and copy node vec u to u_storage*/
+  /* init q_flux in element_data to store [[u]], and copy node vec u to u_elem*/
   p4est_iterate(p4est,
 		NULL,
 		(void *) nodal_vec,
@@ -783,7 +783,7 @@ element_data_compute_DG_norm_sqr
 #endif                
 		NULL);
 
-  /* exchange u_storage */
+  /* exchange u_elem */
   p4est_ghost_exchange_data(p4est,ghost,ghost_data);  
 
   flux_fcn_ptrs_t dg_norm_sqr_flux_fcn_ptrs = dg_norm_ip_flux_dirichlet_fetch_fcns(
@@ -2143,7 +2143,7 @@ element_data_copy_from_vec_to_storage_callback
   linalg_copy_1st_to_2nd
     (
      &u[*stride],
-     &(element_data->u_storage)[0],
+     &(element_data->u_elem)[0],
      volume_nodes
     );
 
@@ -2191,7 +2191,7 @@ element_data_copy_from_storage_to_vec_callback
   
   linalg_copy_1st_to_2nd
     (
-     &(element_data->u_storage)[0],
+     &(element_data->u_elem)[0],
      &u[*stride],
      volume_nodes
     );

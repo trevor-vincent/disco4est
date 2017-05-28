@@ -2,7 +2,7 @@
 #include <linalg.h>
 #include <grid_functions.h>
 #include <element_data.h>
-#include <curved_element_data.h>
+#include <d4est_element_data.h>
 #include <multigrid_matrix_operator.h>
 
 static void
@@ -252,11 +252,11 @@ multigrid_matrix_curved_fofu_fofv_mass_operator_setup_deg_quad_eq_deg
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         int matrix_volume_nodes = volume_nodes*volume_nodes;
 
-        curved_element_data_form_fofufofvlilj_matrix
+        d4est_element_data_form_fofufofvlilj_matrix
           (
            d4est_ops,
            d4est_geom,

@@ -179,7 +179,7 @@ dg_norm_ip_flux_interface
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &(e_m[i]->u_storage[0]),
+       &(e_m[i]->u_elem[0]),
        (P4EST_DIM),
        f_m,
        e_m[i]->deg,
@@ -193,7 +193,7 @@ dg_norm_ip_flux_interface
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &(e_p[i]->u_storage[0]),
+       &(e_p[i]->u_elem[0]),
        (P4EST_DIM),
        f_p,
        e_p[i]->deg,
@@ -252,7 +252,7 @@ dg_norm_ip_flux_interface
     /* compute the (+)-u-derivative and project on the (+)-side faces and project q onto the (+)-side faces */
     stride = 0;
     for (i = 0; i < faces_p; i++){
-      d4est_operators_apply_Dij(d4est_ops, &(e_p[i]->u_storage[0]), (P4EST_DIM), e_p[i]->deg, dir, du_p);
+      d4est_operators_apply_Dij(d4est_ops, &(e_p[i]->u_elem[0]), (P4EST_DIM), e_p[i]->deg, dir, du_p);
       linalg_vec_scale(2./e_p[i]->h, du_p, d4est_operators_get_nodes((P4EST_DIM), e_p[i]->deg));
 
       d4est_operators_apply_slicer

@@ -54,7 +54,7 @@ bi_estimator_init
 
   linalg_copy_1st_to_2nd(
   element_data->u_elem,
-    &(element_data->u_storage)[0],
+    &(element_data->u_elem)[0],
     volume_nodes
     );
 

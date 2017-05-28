@@ -63,7 +63,7 @@ static int
 random_h_refine(p4est_t * p4est, p4est_topidx_t which_tree,
                  p4est_quadrant_t * quadrant)
 {
-  /* curved_element_data_t* data = (curved_element_data_t*) quadrant->p.user_data; */
+  /* d4est_element_data_t* data = (d4est_element_data_t*) quadrant->p.user_data; */
   return rand()%2;
 }
 
@@ -179,7 +179,7 @@ void problem_build_rhs
  weakeqn_ptrs_t* prob_fcns,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- d4est_operators_t* dgbase,
+ d4est_operators_t* d4est_ops,
  void* user
 )
 {
@@ -191,7 +191,7 @@ void problem_build_rhs
      p4est,
      f,
      f_fcn,
-     dgbase
+     d4est_ops
     );
 
   /* DEBUG_PRINT_ARR_DBL(f, prob_vecs->local_nodes); */
@@ -211,7 +211,7 @@ void problem_build_rhs
      p4est,
      f,
      prob_vecs->rhs,
-     dgbase
+     d4est_ops
     );
   
   linalg_vec_scale(-1., prob_vecs->rhs, prob_vecs->local_nodes);
@@ -221,7 +221,7 @@ void problem_build_rhs
   double* tmp = prob_vecs->u;
   
   prob_vecs->u = u_eq_0; 
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgbase);
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
   linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
 
   prob_vecs->u = tmp;
@@ -387,7 +387,7 @@ problem_init
 
   p4est_partition(p4est, 0, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
-  /* geometric_factors_t* geometric_factors = geometric_factors_init(p4est); */
+  /* d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
 
   /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
@@ -454,7 +454,7 @@ problem_init
       ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE);
       ghost_data = P4EST_ALLOC(element_data_t, ghost->ghosts.elem_count);
 
-    /* curved_element_data_init_new(p4est, geometric_factors, d4est_ops, &dgeom, degree, input.gauss_quad_deg); */
+    /* d4est_element_data_init_new(p4est, geometric_factors, d4est_ops, &dgeom, degree, input.gauss_quad_deg); */
 
       
   }
@@ -468,7 +468,7 @@ problem_init
   prob_fcns.build_residual = build_residual;
 
      
-  /* geometric_factors_t* geometric_factors = geometric_factors_init(p4est); */
+  /* d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
 
   /* d4est_geometry_t dgeom; */

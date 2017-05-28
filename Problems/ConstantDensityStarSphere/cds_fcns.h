@@ -357,7 +357,7 @@ cds_build_residual
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;        
+        d4est_element_data_t* ed = quad->p.user_data;        
         int deg_nonlinear = ed->deg;// + ctx->deg_offset_for_nonlinear_quad;
 
         d4est_operators_apply_fofufofvlj_Gaussnodes
@@ -414,7 +414,7 @@ void cds_apply_jac
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int deg_nonlinear = ed->deg;// + ctx->deg_offset_for_nonlinear_quad;
         d4est_operators_apply_fofufofvlilj_Gaussnodes
           (

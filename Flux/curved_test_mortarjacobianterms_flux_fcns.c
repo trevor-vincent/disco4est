@@ -1,6 +1,6 @@
 #include "../Utilities/util.h"
 #include "../dGMath/d4est_operators.h"
-#include "../ElementData/curved_element_data.h"
+#include "../ElementData/d4est_element_data.h"
 #include "../LinearAlgebra/linalg.h"
 #include "../Flux/curved_test_mortarjacobianterms_flux_fcns.h"
 
@@ -11,7 +11,7 @@ void curved_test_mortarjacobianterms_init_vecs
 )
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* elem_data = (curved_element_data_t *) q->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t *) q->p.user_data;
   test_mortarjacobianterms_data_t* test_data = (test_mortarjacobianterms_data_t*) user_data;
   d4est_operators_t* d4est_ops = test_data->d4est_ops;
   
@@ -35,7 +35,7 @@ void curved_test_mortarjacobianterms_init_vecs
   linalg_copy_1st_to_2nd
     (
      &(test_data->u[elem_data->nodal_stride]),
-     &(elem_data->u_storage)[0],
+     &(elem_data->u_elem)[0],
      volume_nodes_lobatto
     );
   
@@ -45,7 +45,7 @@ void curved_test_mortarjacobianterms_init_vecs
 static void
 curved_test_mortarjacobianterms_dirichlet
 (
- curved_element_data_t* e_m,
+ d4est_element_data_t* e_m,
  int f_m,
  grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
@@ -74,7 +74,7 @@ curved_test_mortarjacobianterms_dirichlet
   D4EST_ALLOC_DBYD_MAT(drst_dxyz_on_f_m_quad_analytic,face_nodes_m_quad);
 
   /* mpi_assert(geom->X_mapping_type == MAP_ISOPARAMETRIC); */
-  /* curved_element_data_compute_mortar_normal_and_sj_using_face_data */
+  /* d4est_element_data_compute_mortar_normal_and_sj_using_face_data */
   /*   ( */
   /*    &e_m, */
   /*    1, */
@@ -307,10 +307,10 @@ curved_test_mortarjacobianterms_dirichlet
 static void
 curved_test_mortarjacobianterms_interface
 (
- curved_element_data_t** e_m,
+ d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
- curved_element_data_t** e_p,
+ d4est_element_data_t** e_p,
  int faces_p,
  int f_p,
  int* e_m_is_ghost,
@@ -342,8 +342,8 @@ curved_test_mortarjacobianterms_interface
   double penalty_mortar [(P4EST_HALF)];
 
 
-  curved_element_data_t* e_p_oriented [(P4EST_HALF)];
-  curved_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
+  d4est_element_data_t* e_p_oriented [(P4EST_HALF)];
+  d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
   
   /* calculate degs and nodes of each face of (-) side */
   int total_side_nodes_m_lobatto = 0;
@@ -469,7 +469,7 @@ curved_test_mortarjacobianterms_interface
       d4est_operators_apply_slicer
         (
          d4est_ops,
-         &e_m[i]->u_storage[0],
+         &e_m[i]->u_elem[0],
          (P4EST_DIM),
          f_m,
          e_m[i]->deg,
@@ -503,7 +503,7 @@ curved_test_mortarjacobianterms_interface
       d4est_operators_apply_slicer
         (
          d4est_ops,
-         &e_p[i]->u_storage[0],
+         &e_p[i]->u_elem[0],
          (P4EST_DIM),
          f_p,
          e_p[i]->deg,

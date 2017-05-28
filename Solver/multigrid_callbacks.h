@@ -23,7 +23,7 @@ multigrid_coarsen (
     }
     else {
       for (i = 0; i < (P4EST_CHILDREN); i++){
-        coarse_grid_refinement[*stride].degh[i] = ((curved_element_data_t*)children[i]->p.user_data)->deg;
+        coarse_grid_refinement[*stride].degh[i] = ((d4est_element_data_t*)children[i]->p.user_data)->deg;
       }
     }
   }
@@ -34,8 +34,8 @@ multigrid_coarsen (
       coarse_grid_refinement[*stride].degH = ((element_data_t*)children[0]->p.user_data)->deg;
     }
     else {
-      coarse_grid_refinement[*stride].degh[0] = ((curved_element_data_t*)children[0]->p.user_data)->deg;
-      coarse_grid_refinement[*stride].degH = ((curved_element_data_t*)children[0]->p.user_data)->deg;
+      coarse_grid_refinement[*stride].degh[0] = ((d4est_element_data_t*)children[0]->p.user_data)->deg;
+      coarse_grid_refinement[*stride].degH = ((d4est_element_data_t*)children[0]->p.user_data)->deg;
     }
   }
   (*stride)++;
@@ -71,7 +71,7 @@ multigrid_coarsen_init
   if (d4est_geom == NULL)
     ((element_data_t*)quadrant->p.user_data)->deg = min_deg;
   else
-    ((curved_element_data_t*)quadrant->p.user_data)->deg = min_deg;
+    ((d4est_element_data_t*)quadrant->p.user_data)->deg = min_deg;
 
 
   coarse_grid_refinement[*stride - 1].degH = min_deg;
@@ -103,7 +103,7 @@ multigrid_store_balance_changes
     parent_id = ((element_data_t*) outgoing[0]->p.user_data)->id;
   }
   else {
-    parent_id = ((curved_element_data_t*) outgoing[0]->p.user_data)->id;
+    parent_id = ((d4est_element_data_t*) outgoing[0]->p.user_data)->id;
   }
   
   int stride = mg_data->stride;
@@ -116,7 +116,7 @@ multigrid_store_balance_changes
       child_data->deg = coarse_grid_refinement[stride + parent_id].degh[i];
     }
     else {
-      curved_element_data_t* child_data = (curved_element_data_t*) incoming[i]->p.user_data;
+      d4est_element_data_t* child_data = (d4est_element_data_t*) incoming[i]->p.user_data;
       child_data->deg = coarse_grid_refinement[stride + parent_id].degh[i];
     }
   }
@@ -251,7 +251,7 @@ multigrid_refine_and_apply_prolongation_replace
     child_data->deg = coarse_grid_refinement[stride].degh[i];
     }
     else {
-    curved_element_data_t* child_data = (curved_element_data_t*) incoming[i]->p.user_data;
+    d4est_element_data_t* child_data = (d4est_element_data_t*) incoming[i]->p.user_data;
     child_data->deg = coarse_grid_refinement[stride].degh[i];
     }
   }

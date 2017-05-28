@@ -1,5 +1,5 @@
 #include "../pXest/pXest.h"
-#include "../ElementData/curved_element_data.h"
+#include "../ElementData/d4est_element_data.h"
 #include "../EllipticSystem/problem_data.h"
 #include "../EllipticSystem/problem_weakeqn_ptrs.h"
 #include "../LinearAlgebra/linalg.h"
@@ -29,7 +29,7 @@ hp_amr_curved_smooth_pred_print
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         printf("Element %d predictor = %.25f\n", ed->id, ed->local_predictor);
       }
     }
@@ -104,7 +104,7 @@ hp_amr_curved_smooth_pred_pre_refine_callback
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         ed->local_predictor = smooth_pred_data->predictors[pred_stride];
         pred_stride++;
       }
@@ -136,7 +136,7 @@ hp_amr_curved_smooth_pred_post_balance_callback
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         smooth_pred_data->predictors[pred_stride] = ed->local_predictor;
         pred_stride++;
       }
@@ -263,7 +263,7 @@ hp_amr_curved_smooth_pred_set_refinement
 {
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) info->p4est->user_pointer;
   hp_amr_curved_smooth_pred_data_t* smooth_pred_data = (hp_amr_curved_smooth_pred_data_t*) (hp_amr_data->hp_amr_scheme_data);
-  curved_element_data_t* elem_data = (curved_element_data_t*) info->quad->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
   estimator_stats_t** stats = hp_amr_data->estimator_stats;
   
   double eta2 = elem_data->local_estimator;
@@ -333,8 +333,8 @@ hp_amr_curved_smooth_pred_balance_replace_callback (
   d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
   hp_amr_curved_smooth_pred_data_t* smooth_pred_data = (hp_amr_curved_smooth_pred_data_t*) (hp_amr_data->hp_amr_scheme_data);
   estimator_stats_t** stats = hp_amr_data->estimator_stats;
-  curved_element_data_t* parent_data = (curved_element_data_t*) outgoing[0]->p.user_data;
-  curved_element_data_t* child_data;
+  d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
+  d4est_element_data_t* child_data;
   int i;
 
   int degh [(P4EST_CHILDREN)];
@@ -360,7 +360,7 @@ hp_amr_curved_smooth_pred_balance_replace_callback (
   d4est_operators_apply_hp_prolong
     (
      d4est_ops,
-     &(parent_data->u_storage[0]),
+     &(parent_data->u_elem[0]),
      degH,
      (P4EST_DIM),
      &degh[0],
@@ -368,10 +368,10 @@ hp_amr_curved_smooth_pred_balance_replace_callback (
     );
   
   for (i = 0; i < (P4EST_CHILDREN); i++){
-    child_data = (curved_element_data_t*) incoming[i]->p.user_data;   
+    child_data = (d4est_element_data_t*) incoming[i]->p.user_data;   
     child_data->deg = parent_data->deg;
     child_data->local_predictor = (ONE_OVER_CHILDREN)*gamma_hpn.gamma_h*util_dbl_pow_int(.5, 2*(h_pow))*parent_data->local_predictor;
-    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_storage[0], volume_nodes);
+    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
   P4EST_FREE(temp_data);
@@ -395,8 +395,8 @@ hp_amr_curved_smooth_pred_refine_replace_callback (
   d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
   /* hp_amr_curved_smooth_pred_data_t* smooth_pred_data = (hp_amr_curved_smooth_pred_data_t*) (hp_amr_data->hp_amr_scheme_data); */
   
-  curved_element_data_t* parent_data = (curved_element_data_t*) outgoing[0]->p.user_data;
-  curved_element_data_t* child_data;
+  d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
+  d4est_element_data_t* child_data;
   int i;
 
   int degh [(P4EST_CHILDREN)];
@@ -411,7 +411,7 @@ hp_amr_curved_smooth_pred_refine_replace_callback (
   d4est_operators_apply_hp_prolong
     (
      d4est_ops,
-     &(parent_data->u_storage[0]),
+     &(parent_data->u_elem[0]),
      degH,
      (P4EST_DIM),
      &degh[0],
@@ -419,10 +419,10 @@ hp_amr_curved_smooth_pred_refine_replace_callback (
     );
   
   for (i = 0; i < (P4EST_CHILDREN); i++){
-    child_data = (curved_element_data_t*) incoming[i]->p.user_data;
+    child_data = (d4est_element_data_t*) incoming[i]->p.user_data;
     child_data->deg = parent_data->deg;
     child_data->local_predictor = parent_data->local_predictor;
-    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_storage[0], volume_nodes);
+    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
   P4EST_FREE(temp_data);

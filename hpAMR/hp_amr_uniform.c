@@ -46,7 +46,7 @@ hp_amr_uniform_refine_replace_callback (
   d4est_operators_apply_hp_prolong
     (
      d4est_ops,
-     &(parent_data->u_storage[0]),
+     &(parent_data->u_elem[0]),
      degH,
      (P4EST_DIM),
      &degh[0],
@@ -58,7 +58,7 @@ hp_amr_uniform_refine_replace_callback (
     child_data->deg = parent_data->deg;
     /* printf("child_data->deg = %d\n", child_data->deg); */
     child_data->local_predictor = parent_data->local_predictor;
-    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_storage[0], volume_nodes);
+    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
   P4EST_FREE(temp_data);
@@ -106,7 +106,7 @@ hp_amr_uniform_balance_replace_callback (
   d4est_operators_apply_hp_prolong
     (
      d4est_ops,
-     &(parent_data->u_storage[0]),
+     &(parent_data->u_elem[0]),
      degH,
      (P4EST_DIM),
      &degh[0],
@@ -116,7 +116,7 @@ hp_amr_uniform_balance_replace_callback (
   for (i = 0; i < (P4EST_CHILDREN); i++){
     child_data = (element_data_t*) incoming[i]->p.user_data;
     child_data->deg = parent_data->deg;
-    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_storage[0], volume_nodes);
+    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
   P4EST_FREE(temp_data);

@@ -1,6 +1,6 @@
 #include <util.h>
 #include "curved_poisson_debug_vecs.h"
-#include <curved_element_data.h>
+#include <d4est_element_data.h>
 #include <linalg.h>
 
 
@@ -131,8 +131,8 @@ curved_poisson_debug_vecs_init
 {
   curved_poisson_debug_vecs_t* debug_vecs
     = P4EST_ALLOC(curved_poisson_debug_vecs_t, 1);
-  curved_element_data_t* elem_data
-    = curved_element_data_get_element_data
+  d4est_element_data_t* elem_data
+    = d4est_element_data_get_element_data
     (
      p4est,
      local_element_id

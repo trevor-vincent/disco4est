@@ -2,7 +2,7 @@
 #define CURVED_POISSON_OPERATOR_PRIMAL_H 
 
 #include <pXest.h>
-#include <curved_element_data.h>
+#include <d4est_element_data.h>
 #include <problem_data.h>
 #include <d4est_operators.h>
 #include <linalg.h>

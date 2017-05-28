@@ -82,6 +82,7 @@ void d4est_cg_solve
  void** ghost_data, 
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  d4est_cg_params_t* params
 )
 { 
@@ -109,7 +110,7 @@ void d4est_cg_solve
   r = P4EST_ALLOC(double, local_nodes);
 
   /* first iteration data, store Au in r */
-  fcns->apply_lhs(p4est, *ghost, *ghost_data, vecs, d4est_ops, d4est_geom);
+  fcns->apply_lhs(p4est, *ghost, *ghost_data, vecs, d4est_ops, d4est_geom, d4est_quad);
 
   /* DEBUG_PRINT_2ARR_DBL(vecs->u, vecs->Au, vecs->local_nodes); */
   
@@ -142,7 +143,7 @@ void d4est_cg_solve
 
   for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++) {
     /* Au = A*d; */
-    fcns->apply_lhs(p4est, *ghost, *ghost_data, vecs, d4est_ops, d4est_geom);
+    fcns->apply_lhs(p4est, *ghost, *ghost_data, vecs, d4est_ops, d4est_geom, d4est_quad);
     d_dot_Au = linalg_vec_dot(d, Au, local_nodes);
 
     sc_allreduce(&d_dot_Au, &d_dot_Au_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,

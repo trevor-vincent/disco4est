@@ -29,14 +29,14 @@
 /*  d4est_operators_t* d4est_ops */
 /* ) */
 /* { */
-/*   curved_element_data_t *ghost_data; */
+/*   d4est_element_data_t *ghost_data; */
 /*   p4est_ghost_t *ghost; */
 /*   int i, local_nodes; */
 /*   local_nodes = vecs->local_nodes; */
 /*   double* a_mat = P4EST_ALLOC(double, local_nodes*local_nodes); */
 /*   double* a_mat_trans = P4EST_ALLOC(double, local_nodes*local_nodes); */
 /*   ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE); */
-/*   ghost_data = P4EST_ALLOC (curved_element_data_t, ghost->ghosts.elem_count); */
+/*   ghost_data = P4EST_ALLOC (d4est_element_data_t, ghost->ghosts.elem_count); */
 
 /*   double* u_temp = P4EST_ALLOC(double, local_nodes); */
 /*   double* tmp = vecs->u; */
@@ -235,10 +235,10 @@
 /*  d4est_operators_t* d4est_ops */
 /* ) */
 /* { */
-/*   curved_element_data_t *ghost_data; */
+/*   d4est_element_data_t *ghost_data; */
 /*   p4est_ghost_t *ghost;   */
 /*   ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE); */
-/*   ghost_data = P4EST_ALLOC (curved_element_data_t, ghost->ghosts.elem_count); */
+/*   ghost_data = P4EST_ALLOC (d4est_element_data_t, ghost->ghosts.elem_count); */
 
 /*   double* tmp = vecs->u; */
 
@@ -401,7 +401,7 @@ serial_matrix_sym_tester
   ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
 
   if (geom != NULL)
-    ghost_data = (void*)P4EST_ALLOC (curved_element_data_t, ghost->ghosts.elem_count);
+    ghost_data = (void*)P4EST_ALLOC (d4est_element_data_t, ghost->ghosts.elem_count);
   else
     ghost_data = (void*)P4EST_ALLOC (element_data_t, ghost->ghosts.elem_count);
 
@@ -417,7 +417,7 @@ serial_matrix_sym_tester
   for (i = 0; i < vecs->local_nodes; i++){
     vecs->u[i] = 1.;
     /* if (curved) */
-      /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, vecs, d4est_ops, geom); */
+      /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (d4est_element_data_t*)ghost_data, vecs, d4est_ops, geom); */
     /* else */
     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, geom);
 
@@ -474,10 +474,10 @@ serial_matrix_sym_tester
     for (int i = 0; i < local_nodes; i++){
       for (int j = 0; j <= i; j++){
         if (fabs(a_mat[i*local_nodes + j] - a_mat_trans[i*local_nodes + j]) > sym_eps) {
-          int e1 = curved_element_data_debug_find_node(p4est, i);
-          int e2 = curved_element_data_debug_find_node(p4est, j);
-          /* curved_element_data_t* e1_data = curved_element_data_get_element_data(p4est, e1); */
-          /* curved_element_data_t* e2_data = curved_elemenet_data_get_element_data(p4est, e2); */
+          int e1 = d4est_element_data_debug_find_node(p4est, i);
+          int e2 = d4est_element_data_debug_find_node(p4est, j);
+          /* d4est_element_data_t* e1_data = d4est_element_data_get_element_data(p4est, e1); */
+          /* d4est_element_data_t* e2_data = curved_elemenet_data_get_element_data(p4est, e2); */
           printf("node %d in element %d, node %d in element %d, A/A^t/ERR: %.20f %.20f %.20f\n", i, e1, j, e2, a_mat[i*local_nodes + j], a_mat_trans[i*local_nodes + j], fabs(a_mat[i*local_nodes + j] - a_mat_trans[i*local_nodes + j]));
         }
       }
@@ -490,10 +490,10 @@ serial_matrix_sym_tester
     for (int i = 0; i < local_nodes; i++){
       for (int j = 0; j <= i; j++){
         if (fabs(a_mat[i*local_nodes + j] - a_mat_trans[i*local_nodes + j]) > sym_eps) {
-          int e1 = curved_element_data_debug_find_node(p4est, i);
-          int e2 = curved_element_data_debug_find_node(p4est, j);
-          curved_element_data_t* e1_data = curved_element_data_get_element_data(p4est, e1);
-          curved_element_data_t* e2_data = curved_element_data_get_element_data(p4est, e2);
+          int e1 = d4est_element_data_debug_find_node(p4est, i);
+          int e2 = d4est_element_data_debug_find_node(p4est, j);
+          d4est_element_data_t* e1_data = d4est_element_data_get_element_data(p4est, e1);
+          d4est_element_data_t* e2_data = d4est_element_data_get_element_data(p4est, e2);
           printf("node %d in element %d (x,y,z = %f,%f,%f), node %d in element %d (x,y,z = %f,%f,%f), A/A^t/ERR: %.20f %.20f %.20f\n", i, e1, e1_data->xyz[0][0],e1_data->xyz[1][0],  0., j, e2, e2_data->xyz[0][0],e2_data->xyz[1][0], 0., a_mat[i*local_nodes + j], a_mat_trans[i*local_nodes + j], fabs(a_mat[i*local_nodes + j] - a_mat_trans[i*local_nodes + j]));
         }
       }
@@ -535,7 +535,7 @@ serial_matrix_sym_tester
 /*   ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE); */
 
 /*   if (curved) */
-/*     ghost_data = (void*)P4EST_ALLOC (curved_element_data_t, ghost->ghosts.elem_count); */
+/*     ghost_data = (void*)P4EST_ALLOC (d4est_element_data_t, ghost->ghosts.elem_count); */
 /*   else */
 /*     ghost_data = (void*)P4EST_ALLOC (element_data_t, ghost->ghosts.elem_count); */
 
@@ -591,7 +591,7 @@ serial_matrix_sym_tester
 /*       vecs->u[c - rstart] = 1.; */
     
 /*     if (curved) */
-/*       ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, vecs, d4est_ops, geom); */
+/*       ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (d4est_element_data_t*)ghost_data, vecs, d4est_ops, geom); */
 /*     else */
 /*       ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (element_data_t*)ghost_data, vecs, d4est_ops); */
 
@@ -843,7 +843,7 @@ matrix_sym_tester_parallel_aux
     /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs( */
                                               /* p4est, */
                                               /* ghost, */
-                                              /* (curved_element_data_t*)ghost_data, */
+                                              /* (d4est_element_data_t*)ghost_data, */
                                               /* &vecs_for_sym_test, */
                                               /* d4est_ops, */
                                               /* d4est_geom */
@@ -868,7 +868,7 @@ matrix_sym_tester_parallel_aux
   vecs_for_sym_test.Au = A_uj;
     
   /* if (d4est_geom != NULL) */
-    /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (curved_element_data_t*)ghost_data, &vecs_for_sym_test, d4est_ops, d4est_geom); */
+    /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (d4est_element_data_t*)ghost_data, &vecs_for_sym_test, d4est_ops, d4est_geom); */
   /* else */
     ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, ghost_data, &vecs_for_sym_test, d4est_ops, d4est_geom);
     

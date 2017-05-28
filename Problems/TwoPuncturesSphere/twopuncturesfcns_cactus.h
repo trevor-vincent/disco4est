@@ -231,7 +231,7 @@ void twopunctures_cactus_apply_jac
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
+ d4est_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
@@ -256,8 +256,8 @@ void twopunctures_cactus_apply_jac
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;        
-        curved_element_data_apply_fofufofvlilj_Gaussnodes
+        d4est_element_data_t* ed = quad->p.user_data;        
+        d4est_element_data_apply_fofufofvlilj_Gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -286,7 +286,7 @@ twopunctures_cactus_build_residual
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
+ d4est_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
@@ -306,8 +306,8 @@ twopunctures_cactus_build_residual
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;        
-        curved_element_data_apply_fofufofvlj_Gaussnodes
+        d4est_element_data_t* ed = quad->p.user_data;        
+        d4est_element_data_apply_fofufofvlj_Gaussnodes
           (
            d4est_ops,
            d4est_geom,

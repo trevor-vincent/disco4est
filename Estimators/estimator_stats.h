@@ -2,7 +2,7 @@
 #define ESTIMATOR_STATS_H 
 
 #include <pXest.h>
-#include <curved_element_data.h>
+#include <d4est_element_data.h>
 #define MAX_BINS 50
 
 typedef struct {
@@ -56,7 +56,7 @@ estimator_stats_compute_per_bin
  p4est_t* p4est,
  estimator_stats_t** stats,
  int num_bins,
- int(*in_bin)(curved_element_data_t*,int)
+ int(*in_bin)(d4est_element_data_t*,int)
 );
 
 #endif

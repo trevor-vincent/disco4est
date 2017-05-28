@@ -130,6 +130,7 @@ newton_d4est_solve
  void** ghost_data, 
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  const char* input_file,
  krylov_pc_t* krylov_pc
 )
@@ -173,7 +174,7 @@ newton_d4est_solve
   vecs_for_res_build.u = x;
   
   /* build initial residual vector */
-  fcns->build_residual(p4est, *ghost, *ghost_data, &vecs_for_res_build, d4est_ops, d4est_geom);
+  fcns->build_residual(p4est, *ghost, *ghost_data, &vecs_for_res_build, d4est_ops, d4est_geom, d4est_quad);
   
   double fnrm = linalg_vec_dot(f0,f0,n);
   double fnrm_global;
@@ -249,7 +250,7 @@ newton_d4est_solve
     /* calculate new residual vector */
     vecs_for_res_build.u = xt;
     vecs_for_res_build.Au = ft;
-    fcns->build_residual(p4est, *ghost, *ghost_data, &vecs_for_res_build, d4est_ops, d4est_geom);    
+    fcns->build_residual(p4est, *ghost, *ghost_data, &vecs_for_res_build, d4est_ops, d4est_geom, d4est_quad);    
 
     /* flip pointers */
     double* tmp = x;

@@ -1,6 +1,6 @@
 #include "../hpAMR/hp_amr.h"
 #include "../hpAMR/hp_amr_curved_uniform.h"
-#include "../ElementData/curved_element_data.h"
+#include "../ElementData/d4est_element_data.h"
 #include <linalg.h>
 
 static void
@@ -21,8 +21,8 @@ hp_amr_curved_uniform_refine_replace_callback (
   /* hp_amr_curved_smooth_pred_data_t* smooth_pred_data = (hp_amr_curved_smooth_pred_data_t*) (hp_amr_data->hp_amr_curved_scheme_data); */
 
   
-  curved_element_data_t* parent_data = (curved_element_data_t*) outgoing[0]->p.user_data;
-  curved_element_data_t* child_data;
+  d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
+  d4est_element_data_t* child_data;
   int i;
 
   int degh [(P4EST_CHILDREN)];
@@ -46,7 +46,7 @@ hp_amr_curved_uniform_refine_replace_callback (
   d4est_operators_apply_hp_prolong
     (
      d4est_ops,
-     &(parent_data->u_storage[0]),
+     &(parent_data->u_elem[0]),
      degH,
      (P4EST_DIM),
      &degh[0],
@@ -54,11 +54,11 @@ hp_amr_curved_uniform_refine_replace_callback (
     );
   
   for (i = 0; i < (P4EST_CHILDREN); i++){
-    child_data = (curved_element_data_t*) incoming[i]->p.user_data;
+    child_data = (d4est_element_data_t*) incoming[i]->p.user_data;
     child_data->deg = parent_data->deg;
     /* printf("child_data->deg = %d\n", child_data->deg); */
     child_data->local_predictor = parent_data->local_predictor;
-    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_storage[0], volume_nodes);
+    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
   P4EST_FREE(temp_data);
@@ -82,8 +82,8 @@ hp_amr_curved_uniform_balance_replace_callback (
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
   d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
   
-  curved_element_data_t* parent_data = (curved_element_data_t*) outgoing[0]->p.user_data;
-  curved_element_data_t* child_data;
+  d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
+  d4est_element_data_t* child_data;
   int i;
 
   int degh [(P4EST_CHILDREN)];
@@ -106,7 +106,7 @@ hp_amr_curved_uniform_balance_replace_callback (
   d4est_operators_apply_hp_prolong
     (
      d4est_ops,
-     &(parent_data->u_storage[0]),
+     &(parent_data->u_elem[0]),
      degH,
      (P4EST_DIM),
      &degh[0],
@@ -114,9 +114,9 @@ hp_amr_curved_uniform_balance_replace_callback (
     );
   
   for (i = 0; i < (P4EST_CHILDREN); i++){
-    child_data = (curved_element_data_t*) incoming[i]->p.user_data;
+    child_data = (d4est_element_data_t*) incoming[i]->p.user_data;
     child_data->deg = parent_data->deg;
-    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_storage[0], volume_nodes);
+    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
   P4EST_FREE(temp_data);
@@ -131,7 +131,7 @@ hp_amr_curved_uniform_set_refinement
 )
 {
   hp_amr_data_t* amr_data = (hp_amr_data_t*) info->p4est->user_pointer;
-  curved_element_data_t* elem_data = (curved_element_data_t*) info->quad->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
   amr_data->refinement_log[elem_data->id] = -elem_data->deg;
 }
 

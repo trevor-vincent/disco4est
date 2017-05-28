@@ -186,7 +186,7 @@ struct d4est_vtk_context
   p4est_t            *p4est;       /**< The p4est structure must be alive. */
   char               *filename;    /**< Original filename provided is copied. */
   int* deg_array; /* for writing discontinuous Galerkin data */
-  d4est_operators_t* dgbase;
+  d4est_operators_t* d4est_ops;
   
   /* parameters that can optionally be set in a context */
   d4est_geometry_t   *geom;        /**< The geometry may be NULL. */
@@ -234,7 +234,7 @@ d4est_vtk_context_new (p4est_t * p4est, const char *filename)
 }
 
 d4est_vtk_context_t *
-d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* dgbase, const char *filename)
+d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* d4est_ops, const char *filename)
 {
 #ifdef D4EST_VTK_DEBUG
   printf("[D4EST_VTK]: Starting d4est_vtk_context_new \n");
@@ -247,7 +247,7 @@ d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* dgbase, const char
 
   /* Allocate, initialize the vtk context.  Important to zero all fields. */
   cont = P4EST_ALLOC_ZERO (d4est_vtk_context_t, 1);
-  cont->dgbase = dgbase;
+  cont->d4est_ops = d4est_ops;
   cont->p4est = p4est;
   cont->filename = P4EST_STRDUP (filename);
   cont->deg_array = NULL;
@@ -2380,7 +2380,7 @@ d4est_vtk_write_dg_cell_dataf (d4est_vtk_context_t * cont,
 double*
 d4est_vtk_convert_nodal_to_vtk(p4est_t* p4est,
                                d4est_vtk_context_t* cont,
-                               d4est_operators_t* dgbase,
+                               d4est_operators_t* d4est_ops,
                                double* values)
 {
 
@@ -2404,7 +2404,7 @@ d4est_vtk_convert_nodal_to_vtk(p4est_t* p4est,
       int num_points_in_element = util_int_pow_int(cont->deg_array[il], (P4EST_DIM))*(P4EST_CHILDREN);
       int num_nodes_in_element = util_int_pow_int(cont->deg_array[il] + 1, (P4EST_DIM));
       d4est_operators_convert_nodal_to_vtk(
-                                  dgbase,
+                                  d4est_ops,
                                   &values[nodal_stride],
                                   (P4EST_DIM),
                                   cont->deg_array[il],
@@ -2468,7 +2468,7 @@ d4est_vtk_write_dg_point_scalar (d4est_vtk_context_t * cont,
                       (
                        cont->p4est,
                        cont,
-                       cont->dgbase,
+                       cont->d4est_ops,
                        values
                       );
 

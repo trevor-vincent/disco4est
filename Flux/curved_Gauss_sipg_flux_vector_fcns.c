@@ -1,6 +1,6 @@
 #include "../Utilities/util.h"
 #include "../dGMath/d4est_operators.h"
-#include "../ElementData/curved_element_data.h"
+#include "../ElementData/d4est_element_data.h"
 #include "../LinearAlgebra/linalg.h"
 #include "../Flux/curved_Gauss_sipg_flux_vector_fcns.h"
 
@@ -9,7 +9,7 @@
 static void
 curved_Gauss_sipg_flux_vector_dirichlet
 (
- curved_element_data_t* e_m,
+ d4est_element_data_t* e_m,
  int f_m,
  grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
@@ -139,7 +139,7 @@ curved_Gauss_sipg_flux_vector_dirichlet
     );
 
   
-  /* curved_element_data_compute_physical_derivatives_on_face_Gauss_nodes */
+  /* d4est_element_data_compute_physical_derivatives_on_face_Gauss_nodes */
   /*   ( */
   /*    dudr_m_on_f_m_Gauss, /\* should be of mortar length, but not individually rotated *\/ */
   /*    &e_m, */
@@ -156,7 +156,7 @@ curved_Gauss_sipg_flux_vector_dirichlet
   /* DEBUG_PRINT_ARR_DBL(dudx_m_on_f_m_Gauss[0], d4est_operators_get_nodes((P4EST_DIM-1), e_m->deg_quad)); */
 
   
-  d4est_operators_apply_slicer(d4est_ops, e_m->u_storage, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
+  d4est_operators_apply_slicer(d4est_ops, e_m->u_elem, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
   for (int d = 0; d < (P4EST_DIM); d++){
       linalg_fill_vec
       (
@@ -255,10 +255,10 @@ curved_Gauss_sipg_flux_vector_dirichlet
 static void
 curved_Gauss_sipg_flux_vector_interface
 (
- curved_element_data_t** e_m,
+ d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
- curved_element_data_t** e_p,
+ d4est_element_data_t** e_p,
  int faces_p,
  int f_p,
  int* e_m_is_ghost,
@@ -291,8 +291,8 @@ curved_Gauss_sipg_flux_vector_interface
   int faces_mortar = (faces_m > faces_p) ? faces_m : faces_p;
   double penalty_mortar [(P4EST_HALF)];
 
-  curved_element_data_t* e_p_oriented [(P4EST_HALF)];
-  curved_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
+  d4est_element_data_t* e_p_oriented [(P4EST_HALF)];
+  d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
   
   /* calculate degs and nodes of each face of (-) side */
   int total_side_nodes_m_Lobatto = 0;
@@ -435,7 +435,7 @@ curved_Gauss_sipg_flux_vector_interface
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &(e_m[i]->u_storage[0]),
+       &(e_m[i]->u_elem[0]),
        (P4EST_DIM),
        f_m,
        e_m[i]->deg,
@@ -450,7 +450,7 @@ curved_Gauss_sipg_flux_vector_interface
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &(e_p_oriented[i]->u_storage[0]),
+       &(e_p_oriented[i]->u_elem[0]),
        (P4EST_DIM),
        f_p,
        e_p_oriented[i]->deg,
@@ -700,7 +700,7 @@ curved_Gauss_sipg_flux_vector_interface
   
   /* double* tmpxyz [(P4EST_DIM)]; */
   /* D4EST_ALLOC_DIM_VEC(tmpxyz,total_nodes_mortar_Gauss); */
-  /* curved_element_data_compute_mortar_normal_and_sj_using_face_data */
+  /* d4est_element_data_compute_mortar_normal_and_sj_using_face_data */
   /*   ( */
   /*    e_m, */
   /*    faces_m, */

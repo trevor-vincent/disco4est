@@ -1,7 +1,7 @@
 #ifndef TWOPUNCTURESFCNS_H
 #define TWOPUNCTURESFCNS_H 
 
-#include <curved_element_data.h>
+#include <d4est_element_data.h>
 #include <multigrid.h>
 #include <multigrid_matrix_operator.h>
 #include <krylov_pc_multigrid.h>
@@ -361,8 +361,8 @@ void twopunctures_apply_jac
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;        
-        curved_element_data_apply_fofufofvlilj_Gaussnodes
+        d4est_element_data_t* ed = quad->p.user_data;        
+        d4est_element_data_apply_fofufofvlilj_Gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -411,11 +411,11 @@ twopunctures_compute_jac_matrix_operator
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         int matrix_volume_nodes = volume_nodes*volume_nodes;
         
-        curved_element_data_form_fofufofvlilj_matrix_Gaussnodes
+        d4est_element_data_form_fofufofvlilj_matrix_Gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -485,8 +485,8 @@ twopunctures_build_residual_mg
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
-        curved_element_data_apply_fofufofvlj_Gaussnodes
+        d4est_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_apply_fofufofvlj_Gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -551,9 +551,9 @@ void twopunctures_apply_jac_mg
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
-        /* curved_element_data_apply_fofufofvlilj_Gaussnodes */
+        /* d4est_element_data_apply_fofufofvlilj_Gaussnodes */
         /*   ( */
         /*    d4est_ops, */
         /*    d4est_geom, */
@@ -589,7 +589,7 @@ void twopunctures_apply_jac_Lobatto
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
+ d4est_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
@@ -615,7 +615,7 @@ void twopunctures_apply_jac_Lobatto
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes_lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         for (int i = 0; i < volume_nodes_lobatto; i++){
           double x = ed->xyz[0][i];
@@ -632,7 +632,7 @@ void twopunctures_apply_jac_Lobatto
         }
 
         
-        curved_element_data_apply_fofufofvlilj_Gaussnodes
+        d4est_element_data_apply_fofufofvlilj_Gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -681,8 +681,8 @@ twopunctures_build_residual
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
-        curved_element_data_apply_fofufofvlj_Gaussnodes
+        d4est_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_apply_fofufofvlj_Gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -724,7 +724,7 @@ twopunctures_build_residual_Lobatto
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
+ d4est_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
@@ -745,7 +745,7 @@ twopunctures_build_residual_Lobatto
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes_lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         for (int i = 0; i < volume_nodes_lobatto; i++){
           double x = ed->xyz[0][i];
@@ -761,7 +761,7 @@ twopunctures_build_residual_Lobatto
                                             );
         }
 
-        curved_element_data_apply_fofufofvlj_Gaussnodes
+        d4est_element_data_apply_fofufofvlj_Gaussnodes
           (
            d4est_ops,
            d4est_geom,

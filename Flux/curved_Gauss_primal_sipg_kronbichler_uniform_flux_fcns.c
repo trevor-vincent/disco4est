@@ -1,6 +1,6 @@
 #include "../Utilities/util.h"
 #include "../dGMath/d4est_operators.h"
-#include "../ElementData/curved_element_data.h"
+#include "../ElementData/d4est_element_data.h"
 #include "../LinearAlgebra/linalg.h"
 #include "../Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.h"
 
@@ -9,7 +9,7 @@
 static void
 curved_Gauss_primal_sipg_kronbichler_uniform_flux_dirichlet
 (
- curved_element_data_t* e_m,
+ d4est_element_data_t* e_m,
  int f_m,
  grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
@@ -148,7 +148,7 @@ curved_Gauss_primal_sipg_kronbichler_uniform_flux_dirichlet
 
 
   
-  d4est_operators_apply_slicer(d4est_ops, e_m->u_storage, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
+  d4est_operators_apply_slicer(d4est_ops, e_m->u_elem, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
   for (int d = 0; d < (P4EST_DIM); d++){
     linalg_fill_vec
       (
@@ -430,10 +430,10 @@ curved_Gauss_primal_sipg_kronbichler_uniform_flux_dirichlet
 static void
 curved_Gauss_primal_sipg_kronbichler_uniform_flux_interface
 (
- curved_element_data_t** e_m,
+ d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
- curved_element_data_t** e_p,
+ d4est_element_data_t** e_p,
  int faces_p,
  int f_p,
  int* e_m_is_ghost,
@@ -510,7 +510,7 @@ curved_Gauss_primal_sipg_kronbichler_uniform_flux_interface
   d4est_operators_apply_slicer
     (
      d4est_ops,
-     &(e_m[0]->u_storage[0]),
+     &(e_m[0]->u_elem[0]),
      (P4EST_DIM),
      f_m,
      e_m[0]->deg,
@@ -520,7 +520,7 @@ curved_Gauss_primal_sipg_kronbichler_uniform_flux_interface
   d4est_operators_apply_slicer
     (
      d4est_ops,
-     &(e_p[0]->u_storage[0]),
+     &(e_p[0]->u_elem[0]),
      (P4EST_DIM),
      f_p,
      e_p[0]->deg,

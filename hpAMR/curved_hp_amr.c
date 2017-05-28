@@ -5,7 +5,7 @@
 #include "../GridFunctions/grid_functions.h"
 #include "../Utilities/util.h"
 #include "../LinearAlgebra/linalg.h"
-#include "../ElementData/curved_element_data.h"
+#include "../ElementData/d4est_element_data.h"
 #include "../Support/Visualization/curved_hacked_p4est_vtk.h"
 
 /**
@@ -47,8 +47,8 @@ curved_hp_amr_replace_callback_default
 
   curved_hp_amr_data_t* curved_hp_amr_data = (curved_hp_amr_data_t*)p4est->user_pointer;
   d4est_operators_t* d4est_ops = curved_hp_amr_data->d4est_ops;
-  curved_element_data_t* parent_data = (curved_element_data_t*) outgoing[0]->p.user_data;
-  curved_element_data_t* child_data;
+  d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
+  d4est_element_data_t* child_data;
   
   int degh [(P4EST_CHILDREN)];
   int degH = parent_data->deg;
@@ -73,7 +73,7 @@ curved_hp_amr_replace_callback_default
     );
 
   for (i = 0; i < (P4EST_CHILDREN); i++){
-    child_data = (curved_element_data_t*) incoming[i]->p.user_data;
+    child_data = (d4est_element_data_t*) incoming[i]->p.user_data;
     child_data->deg = parent_data->deg;
     linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
@@ -91,7 +91,7 @@ curved_hp_amr_refine_callback
 )
 {
   curved_hp_amr_data_t* curved_hp_amr_data = (curved_hp_amr_data_t*) p4est->user_pointer;
-  curved_element_data_t* elem_data = (curved_element_data_t*) quadrant->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) quadrant->p.user_data;
   d4est_operators_t* d4est_ops = curved_hp_amr_data->d4est_ops;
   
   int* refinement_log = curved_hp_amr_data->refinement_log;
@@ -160,7 +160,7 @@ curved_hp_amr_refine_callback
 /*   if (save_local_est == 1){ */
 /*     /\* mpi_abort("NOT SUPPORTED YET"); *\/ */
 /*     /\* double* eta_corner = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN)); *\/ */
-/*     /\* curved_element_data_store_local_estimator_in_corner_array *\/ */
+/*     /\* d4est_element_data_store_local_estimator_in_corner_array *\/ */
 /*     /\*   ( *\/ */
 /*     /\*    p4est, *\/ */
 /*     /\*    eta_corner *\/ */
@@ -228,7 +228,7 @@ curved_hp_amr
   curved_hp_amr_data.d4est_ops = d4est_ops;
   curved_hp_amr_data.estimator_stats = stats;
   /* set defaults if NULL, the extra data stored is only the deg */
-  /* util_print_matrix(*data_to_hp_refine, curved_element_data_get_local_nodes(p4est), 1, "data_to_hp_refine = ", 0); */
+  /* util_print_matrix(*data_to_hp_refine, d4est_element_data_get_local_nodes(p4est), 1, "data_to_hp_refine = ", 0); */
   
   if (refine_replace_callback_fcn_ptr == NULL){
     curved_hp_amr_data.refine_replace_callback_fcn_ptr
@@ -251,7 +251,7 @@ curved_hp_amr
   }
   
   /* store vector */
-  curved_element_data_copy_from_vec_to_storage
+  d4est_element_data_copy_from_vec_to_storage
     (
      p4est,
      *data_to_hp_refine
@@ -303,14 +303,14 @@ curved_hp_amr
   /* restore pointer back to original state */
   p4est->user_pointer = tmp;
 
-  int new_nodes = curved_element_data_get_local_nodes(p4est);
+  int new_nodes = d4est_element_data_get_local_nodes(p4est);
   /* realloc room for new refined mesh data */
   *data_to_hp_refine = P4EST_REALLOC(*data_to_hp_refine,
                                      double,
                                      new_nodes
                                     );
   
-  curved_element_data_copy_from_storage_to_vec
+  d4est_element_data_copy_from_storage_to_vec
     (
      p4est,
      *data_to_hp_refine

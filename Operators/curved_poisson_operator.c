@@ -1,5 +1,5 @@
 #include <pXest.h>
-#include <curved_element_data.h>
+#include <d4est_element_data.h>
 #include <problem_data.h>
 #include <d4est_operators.h>
 #include <linalg.h>
@@ -27,7 +27,7 @@ void curved_Gauss_poisson_init_vecs
 )
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* elem_data = (curved_element_data_t *) q->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t *) q->p.user_data;
 
   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data;
   problem_data_t* problem_data = (problem_data_t*) curved_Gauss_poisson_user_data->problem_data;
@@ -54,7 +54,7 @@ void curved_Gauss_poisson_init_vecs
   linalg_copy_1st_to_2nd
     (
      &(problem_data->u[elem_data->nodal_stride]),
-     &(elem_data->u_storage)[0],
+     &(elem_data->u_elem)[0],
      volume_nodes_Lobatto
     );
   /*  */
@@ -66,7 +66,7 @@ void curved_Gauss_poisson_init_vecs
     );
 
   double* u_array =&(problem_data->u[elem_data->nodal_stride]);
-  double* u_elem = &(elem_data->u_storage)[0];
+  double* u_elem = &(elem_data->u_elem)[0];
   /* DEBUG_PRINT_2ARR_DBL(u_array, u_elem, volume_nodes_Lobatto); */
   
   /* double* du_di = P4EST_ALLOC(double, volume_nodes_Gauss); */
@@ -112,7 +112,7 @@ void curved_Gauss_poisson_init_vecs
 /* ) */
 /* { */
 /*   p4est_quadrant_t *q = info->quad; */
-/*   curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data; */
+/*   d4est_element_data_t* element_data = (d4est_element_data_t*) q->p.user_data; */
 
 /*   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data; */
 /*   d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_Gauss_poisson_user_data->d4est_ops; */
@@ -121,7 +121,7 @@ void curved_Gauss_poisson_init_vecs
 /*   int faces = 2*dim; */
 /*   int face_nodes_Gauss = d4est_operators_get_nodes(dim-1, elem_data->deg_quad); */
 /*   int volume_nodes_Gauss = d4est_operators_get_nodes(dim, elem_data->deg_quad); */
-/*   /\* double* u_elem = element_data->u_storage; *\/ */
+/*   /\* double* u_elem = element_data->u_elem; *\/ */
 /*   double* vol_tmp = P4EST_ALLOC(double, volume_nodes_Gauss); */
 /*   double* Si_u [(P4EST_DIM)]; */
 /*   int i; */
@@ -164,7 +164,7 @@ void curved_Gauss_poisson_compute_q_elem
 )
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data;
+  d4est_element_data_t* element_data = (d4est_element_data_t*) q->p.user_data;
 
   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data;
   d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_Gauss_poisson_user_data->d4est_ops;
@@ -175,7 +175,7 @@ void curved_Gauss_poisson_compute_q_elem
   int face_nodes_Lobatto = d4est_operators_get_nodes(dim-1,element_data->deg);
   /* int volume_nodes_Gauss = d4est_operators_get_nodes(dim,element_data->deg_quad); */
   int volume_nodes_Lobatto = d4est_operators_get_nodes(dim,element_data->deg);
-  /* double* u_elem = element_data->u_storage; */
+  /* double* u_elem = element_data->u_elem; */
 
   double* Si_u [(P4EST_DIM)];
   double* Mq [(P4EST_DIM)];
@@ -215,7 +215,7 @@ void curved_Gauss_poisson_compute_q_elem
   }
 
 
-  double* u_ptr = &element_data->u_storage[0];
+  double* u_ptr = &element_data->u_elem[0];
   /* DEBUG_PRINT_4ARR_DBL(u_ptr, Si_u[0], Si_u[1], Si_u[2],volume_nodes_Lobatto); */
   /* DEBUG_PRINT_3ARR_DBL(element_data->u, element_data->J_quad, Si_u[0], volume_nodes_Lobatto); */
 
@@ -316,7 +316,7 @@ void curved_Gauss_poisson_compute_q_elem
   curved_poisson_debug_vecs_t* debug_vecs = (curved_poisson_debug_vecs_t*)curved_Gauss_poisson_user_data->debug_vecs;
   if(debug_vecs != NULL && debug_vecs->elem_id == element_data->id){
   curved_poisson_debug_vecs_set_Mdu(Si_u, debug_vecs, d4est_ops);
-  curved_poisson_debug_vecs_set_u(&element_data->u_storage[0], debug_vecs, d4est_ops);
+  curved_poisson_debug_vecs_set_u(&element_data->u_elem[0], debug_vecs, d4est_ops);
 
 
     double* qptrs [(P4EST_DIM)];
@@ -354,7 +354,7 @@ void curved_Gauss_poisson_compute_q_elem
 /* void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* user_data) */
 /* { */
 /*   p4est_quadrant_t *q = info->quad; */
-/*   curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data; */
+/*   d4est_element_data_t* element_data = (d4est_element_data_t*) q->p.user_data; */
 
 /*   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data; */
 /*   d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_Gauss_poisson_user_data->d4est_ops; */
@@ -420,7 +420,7 @@ void curved_Gauss_poisson_compute_q_elem
 void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* user_data)
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data;
+  d4est_element_data_t* element_data = (d4est_element_data_t*) q->p.user_data;
 
   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data;
   d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_Gauss_poisson_user_data->d4est_ops;
@@ -585,7 +585,7 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
 /* void curved_Gauss_poisson_compute_Au_elem_old(p4est_iter_volume_info_t* info, void* user_data) */
 /* { */
 /*   p4est_quadrant_t *q = info->quad; */
-/*   curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data; */
+/*   d4est_element_data_t* element_data = (d4est_element_data_t*) q->p.user_data; */
 
 /*   curved_Gauss_poisson_user_data_t* curved_Gauss_poisson_user_data = (curved_Gauss_poisson_user_data_t*) user_data; */
 /*   d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_Gauss_poisson_user_data->d4est_ops; */
@@ -653,7 +653,7 @@ void
 curved_Gauss_poisson_destroy_vecs(p4est_iter_volume_info_t * info, void *user_data)
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* element_data = (curved_element_data_t *) q->p.user_data;
+  d4est_element_data_t* element_data = (d4est_element_data_t *) q->p.user_data;
   
   int i;
   for (i = 0; i < (P4EST_DIM); i++){
@@ -671,7 +671,7 @@ curved_Gauss_poisson_apply_aij
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
+ d4est_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom
@@ -770,7 +770,7 @@ curved_poisson_apply_aij_debug
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
+ d4est_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,

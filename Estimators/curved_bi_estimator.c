@@ -28,7 +28,7 @@ curved_bi_estimator_init
 )
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* elem_data = (curved_element_data_t *) q->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t *) q->p.user_data;
   curved_bi_estimator_user_data_t* curved_bi_estimator_user_data = (curved_bi_estimator_user_data_t*) user_data;
   problem_data_t* problem_data = curved_bi_estimator_user_data->problem_data;
   d4est_operators_t* d4est_ops = curved_bi_estimator_user_data->d4est_ops;
@@ -43,7 +43,7 @@ curved_bi_estimator_init
   linalg_copy_1st_to_2nd
     (
      &(problem_data->u[elem_data->nodal_stride]),
-     &(elem_data->u_storage)[0],
+     &(elem_data->u_elem)[0],
      volume_nodes_Lobatto
     );
   
@@ -81,7 +81,7 @@ void* user_data
 )
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* element_data = (curved_element_data_t*) q->p.user_data;
+  d4est_element_data_t* element_data = (d4est_element_data_t*) q->p.user_data;
 
   int deg = element_data->deg;
   double* eta2 = &(element_data->local_estimator);
@@ -102,7 +102,7 @@ void* user_data
 /* ) */
 /* { */
 /*   p4est_quadrant_t *q = info->quad; */
-/*   curved_element_data_t* elem_data = (curved_element_data_t *) q->p.user_data; */
+/*   d4est_element_data_t* elem_data = (d4est_element_data_t *) q->p.user_data; */
 /*   curved_bi_estimator_user_data_t* curved_bi_estimator_user_data = (curved_bi_estimator_user_data_t*) user_data; */
 
 /*   *(curved_bi_estimator_user_data->curved_bi_estimator_local_eta2) += elem_data->local_estimator; */
@@ -120,7 +120,7 @@ curved_bi_estimator_compute
  grid_fcn_t u_bndry_fcn,
  double penalty_prefactor,
  p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
+ d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom
 )
@@ -142,7 +142,7 @@ curved_bi_estimator_compute
   /* DEBUG_PRINT_ARR_DBL(vecs->Au, vecs->local_nodes); */
  /* x */
   /* double check = */
-  curved_element_data_compute_l2_norm_sqr
+  d4est_element_data_compute_l2_norm_sqr
     (
      p4est,
      vecs->Au,
@@ -150,7 +150,7 @@ curved_bi_estimator_compute
      d4est_ops,
      STORE_LOCALLY
     );
-  /* curved_element_data_print_local_estimator(p4est); */
+  /* d4est_element_data_print_local_estimator(p4est); */
 
   curved_bi_estimator_user_data_t curved_bi_estimator_user_data;
   curved_bi_estimator_user_data.d4est_ops = d4est_ops;
@@ -241,7 +241,7 @@ curved_bi_estimator_compute
   /* P4EST_FREE(ghost_data); */
 
   /* printf("local eta2 = %.25f\n",curved_bi_estimator_local_eta2); */
-  /* curved_element_data_print_local_estimator(p4est); */
+  /* d4est_element_data_print_local_estimator(p4est); */
 
   /* return curved_bi_estimator_local_eta2; */
 }

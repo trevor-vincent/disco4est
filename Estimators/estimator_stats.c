@@ -1,6 +1,6 @@
 #define _GNU_SOURCE
 #include "estimator_stats.h"
-#include "../ElementData/curved_element_data.h"
+#include "../ElementData/d4est_element_data.h"
 #include "../ElementData/element_data.h"
 #include "../Utilities/util.h"
 #include <stdlib.h>
@@ -26,7 +26,7 @@ void estimator_stats_compute(p4est_t* p4est, estimator_stats_t* stats, int curve
       for (int q = 0; q < Q; ++q, ++k) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         if(curved)
-          eta2[k] = (((curved_element_data_t*)(quad->p.user_data))->local_estimator);
+          eta2[k] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
         else{
           eta2[k] = (((element_data_t*)(quad->p.user_data))->local_estimator);
         }
@@ -53,7 +53,7 @@ estimator_stats_compute_per_bin
  p4est_t* p4est,
  estimator_stats_t** stats,
  int num_bins,
- int(*in_bin)(curved_element_data_t*,int)
+ int(*in_bin)(d4est_element_data_t*,int)
 )
 {
   double* eta2 = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
@@ -73,8 +73,8 @@ estimator_stats_compute_per_bin
 
         for (int q = 0; q < Q; ++q) {
           p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-          if(in_bin((curved_element_data_t*)(quad->p.user_data),b)){
-            eta2[bsize] = (((curved_element_data_t*)(quad->p.user_data))->local_estimator);
+          if(in_bin((d4est_element_data_t*)(quad->p.user_data),b)){
+            eta2[bsize] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
             total_eta2_per_bin += eta2[bsize];
             local_eta2 += eta2[bsize];
             bsize++;
@@ -114,7 +114,7 @@ double estimator_stats_compute_per_tree(p4est_t* p4est, estimator_stats_t** stat
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         if(curved)
-          eta2[q] = (((curved_element_data_t*)(quad->p.user_data))->local_estimator);
+          eta2[q] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
         else{
           mpi_abort("Soon to be deprecated\n");
         }
@@ -424,7 +424,7 @@ void estimator_stats_write_to_file
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         if(curved)
-          fprintf(file_est, "%.20f\n", ((curved_element_data_t*)(quad->p.user_data))->local_estimator);
+          fprintf(file_est, "%.20f\n", ((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
         else
           fprintf(file_est, "%.20f\n", ((element_data_t*)(quad->p.user_data))->local_estimator);
       }

@@ -1,5 +1,5 @@
 #include <pXest.h>
-#include <curved_element_data.h>
+#include <d4est_element_data.h>
 #include <problem_data.h>
 #include <d4est_operators.h>
 #include <linalg.h>
@@ -27,7 +27,7 @@ void curved_poisson_operator_primal_init_vecs
 )
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* elem_data = (curved_element_data_t *) q->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t *) q->p.user_data;
 
   curved_poisson_operator_primal_user_data_t* curved_poisson_operator_primal_user_data = (curved_poisson_operator_primal_user_data_t*) user_data;
   problem_data_t* problem_data = (problem_data_t*) curved_poisson_operator_primal_user_data->problem_data;
@@ -44,7 +44,7 @@ void curved_poisson_operator_primal_init_vecs
   linalg_copy_1st_to_2nd
     (
      &(problem_data->u[elem_data->nodal_stride]),
-     &(elem_data->u_storage)[0],
+     &(elem_data->u_elem)[0],
      volume_nodes_Lobatto
     );
 
@@ -69,7 +69,7 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
 )
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* element_data = q->p.user_data;
+  d4est_element_data_t* element_data = q->p.user_data;
 
   curved_poisson_operator_primal_user_data_t* curved_poisson_operator_primal_user_data =  user_data;
   d4est_operators_t* d4est_ops = curved_poisson_operator_primal_user_data->d4est_ops;
@@ -83,13 +83,13 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
 
   double* stiff_u = P4EST_ALLOC(double, volume_nodes_lobatto);
 
-  /* curved_element_data_apply_curved_stiffness_matrix */
+  /* d4est_element_data_apply_curved_stiffness_matrix */
   /*   ( */
   /*    d4est_ops, */
   /*    curved_poisson_operator_primal_user_data->d4est_geom, */
   /*    element_data, */
   /*    d4est_geom->geom_quad_type, */
-  /*    &element_data->u_storage[0], */
+  /*    &element_data->u_elem[0], */
   /*    stiff_u */
   /*   ); */
 
@@ -104,7 +104,7 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
      d4est_quad,
      d4est_geom,
      mesh_vol,
-     &element_data->u_storage[0],
+     &element_data->u_elem[0],
      element_data->deg,
      element_data->J_quad,
      element_data->rst_xyz_quad,

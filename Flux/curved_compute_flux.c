@@ -1,5 +1,5 @@
 #include "../Flux/curved_compute_flux.h"
-#include "../ElementData/curved_element_data.h"
+#include "../ElementData/d4est_element_data.h"
 #include "../Utilities/util.h"
 
 void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
@@ -22,9 +22,9 @@ void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
   d4est_quadrature_t* d4est_quad =
     (d4est_quadrature_t *)curved_compute_flux_user_data->d4est_quad;
   
-  curved_element_data_t *ghost_data = (curved_element_data_t *)user_data;
-  curved_element_data_t *e_p[(P4EST_HALF)];
-  curved_element_data_t *e_m[(P4EST_HALF)];
+  d4est_element_data_t *ghost_data = (d4est_element_data_t *)user_data;
+  d4est_element_data_t *e_p[(P4EST_HALF)];
+  d4est_element_data_t *e_m[(P4EST_HALF)];
   int e_m_is_ghost[(P4EST_HALF)];
 
   sc_array_t *sides = &(info->sides);
@@ -50,13 +50,13 @@ void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
         for (i = 0; i < (P4EST_HALF); i++) {
           /* we skip ghosts, b.c those are handled by other processes */
           if (!side[s_m]->is.hanging.is_ghost[i]) {
-            e_m[i] = (curved_element_data_t *)side[s_m]
+            e_m[i] = (d4est_element_data_t *)side[s_m]
                          ->is.hanging.quad[i]
                          ->p.user_data;
             e_m_is_ghost[i] = 0;
           } else {
             /* e_m[i] = NULL; */
-            e_m[i] = (curved_element_data_t
+            e_m[i] = (d4est_element_data_t
                           *)&ghost_data[side[s_m]->is.hanging.quadid[i]];
             /* printf("ghost_id = %d, ghost e_m[i]->deg = %d\n",
              * side[s_m]->is.hanging.quadid[i],  e_m[i]->deg); */
@@ -69,10 +69,10 @@ void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
          * case */
         if (side[s_p]->is.full.is_ghost)
           e_p[0] =
-              (curved_element_data_t *)&ghost_data[side[s_p]->is.full.quadid];
+              (d4est_element_data_t *)&ghost_data[side[s_p]->is.full.quadid];
         else
           e_p[0] =
-              (curved_element_data_t *)side[s_p]->is.full.quad->p.user_data;
+              (d4est_element_data_t *)side[s_p]->is.full.quad->p.user_data;
 
         int sum_ghost_array = util_sum_array_int(e_m_is_ghost, (P4EST_HALF));
 
@@ -100,15 +100,15 @@ void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
         /* We only do calculations if the side is not a ghost */
         if (!side[s_m]->is.full.is_ghost) {
           e_m[0] =
-              (curved_element_data_t *)side[s_m]->is.full.quad->p.user_data;
+              (d4est_element_data_t *)side[s_m]->is.full.quad->p.user_data;
           // if + side is hanging
           if (side[s_p]->is_hanging) {
             for (i = 0; i < (P4EST_HALF); i++) {
               if (side[s_p]->is.hanging.is_ghost[i])
-                e_p[i] = (curved_element_data_t
+                e_p[i] = (d4est_element_data_t
                               *)&ghost_data[side[s_p]->is.hanging.quadid[i]];
               else
-                e_p[i] = (curved_element_data_t *)side[s_p]
+                e_p[i] = (d4est_element_data_t *)side[s_p]
                              ->is.hanging.quad[i]
                              ->p.user_data;
             }
@@ -123,11 +123,11 @@ void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
           // if + side is full
           else {
             if (side[s_p]->is.full.is_ghost) {
-              e_p[0] = (curved_element_data_t
+              e_p[0] = (d4est_element_data_t
                             *)&ghost_data[side[s_p]->is.full.quadid];
             } else
               e_p[0] =
-                  (curved_element_data_t *)side[s_p]->is.full.quad->p.user_data;
+                  (d4est_element_data_t *)side[s_p]->is.full.quad->p.user_data;
 
             flux_fcn_ptrs->flux_interface_fcn(
                 e_m, 1, side[s_m]->face, e_p, 1, side[s_p]->face, e_m_is_ghost,
@@ -142,7 +142,7 @@ void curved_compute_flux_on_local_elements(p4est_iter_face_info_t *info,
   else {
     p4est_iter_face_side_t *side;
     side = p4est_iter_fside_array_index_int(sides, 0);
-    e_m[0] = (curved_element_data_t *)side->is.full.quad->p.user_data;
+    e_m[0] = (d4est_element_data_t *)side->is.full.quad->p.user_data;
     /* #ifndef NDEBUG */
     /* printf("e_m[0]->deg = %d\n", e_m[0]->deg); */
     /* #endif */

@@ -12,7 +12,15 @@ typedef struct d4est_geometry d4est_geometry_t;
 typedef enum {COMPUTE_NORMAL_USING_JACOBIAN, COMPUTE_NORMAL_USING_CROSS_PRODUCT} normal_compute_method_t;
 typedef enum {GEOM_COMPUTE_NUMERICAL, GEOM_COMPUTE_ANALYTIC, GEOM_COMPUTE_NOT_SET} geometric_quantity_compute_method_t;
 
+typedef struct {
 
+  double* xyz;
+  double* xyz_quad;
+  double* xyz_rst_quad;
+  double* J_quad;
+  double* rst_xyz_quad;
+
+} d4est_geometry_storage_t;
 
 /**
 * There are three types of coords used to describe a point in an element.
@@ -112,6 +120,9 @@ void d4est_geometry_quadtree_to_vertex(p4est_connectivity_t *connectivity,p4est_
 void d4est_geometry_octree_to_vertex(p8est_connectivity_t *connectivity,p4est_topidx_t which_tree,const double abc[3],double xyz[3]);
 void d4est_geometry_destroy(d4est_geometry_t *d4est_geom);
 d4est_geometry_t *d4est_geometry_new(int mpirank,const char *input_file,const char *input_section,const char *printf_prefix);
+void d4est_geometry_storage_destroy(d4est_geometry_storage_t *geometric_factors);
+void d4est_geometry_storage_reinit(p4est_t *p4est,d4est_geometry_storage_t *geometric_factors,d4est_local_sizes_t local_sizes);
+d4est_geometry_storage_t *d4est_geometry_storage_init();
 
 #endif
 

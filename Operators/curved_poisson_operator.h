@@ -8,7 +8,7 @@ curved_Gauss_poisson_apply_aij
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
+ d4est_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom
@@ -20,7 +20,7 @@ curved_poisson_apply_aij_debug
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
+ d4est_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
@@ -32,7 +32,7 @@ curved_Gauss_poisson_build_rhs_with_strongbc
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
+ d4est_element_data_t* ghost_data,
  problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 );

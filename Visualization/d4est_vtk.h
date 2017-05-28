@@ -292,7 +292,7 @@ d4est_vtk_write_dg_point_dataf (d4est_vtk_context_t * cont,
                                 int num_point_scalars, int num_point_vectors,
                                 ...);
 d4est_vtk_context_t *
-d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* dgbase, const char *filename);
+d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* d4est_ops, const char *filename);
 
 
 void

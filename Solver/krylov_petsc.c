@@ -248,7 +248,9 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
                                                   (*petsc_ctx->ghost_data),
                                                   &vecs_for_aij,
                                                   d4est_ops,
-                                                  petsc_ctx->d4est_geom);
+                                                  petsc_ctx->d4est_geom,
+                                                  petsc_ctx->d4est_quad
+                                                 );
 
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecRestoreArray( y, &py ); CHKERRQ(ierr);

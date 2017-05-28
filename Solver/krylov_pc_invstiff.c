@@ -7,7 +7,7 @@ krylov_pc_invstiff_create(p4est_t* p4est, d4est_operators_t* d4est_ops){
   krylov_pc_t* pc = P4EST_ALLOC(krylov_pc_t, 1);
   krylov_pc_invstiff_data_t* pc_data = P4EST_ALLOC(krylov_pc_invstiff_data_t, 1);
   
-  pc_data->local_matrix_nodes = curved_element_data_get_local_matrix_nodes(p4est);
+  pc_data->local_matrix_nodes = d4est_element_data_get_local_matrix_nodes(p4est);
   pc_data->inv_stiff = P4EST_ALLOC(double, pc_data->local_matrix_nodes);
   pc_data->p4est = p4est;
   pc_data->d4est_ops = d4est_ops;
@@ -39,7 +39,7 @@ krylov_pc_invstiff_setup
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
 
         d4est_operators_compute_curved_inverse_stiffness_matrix
@@ -89,7 +89,7 @@ krylov_pc_invstiff_apply(krylov_pc_t* kpc, double* xp, double* yp)
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
 
         linalg_matvec_plus_vec(1.0, &pc_data->inv_stiff[nodal_matrix_stride], &xp[nodal_stride],

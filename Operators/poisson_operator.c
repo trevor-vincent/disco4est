@@ -44,7 +44,7 @@ void poisson_init_vecs(p4est_iter_volume_info_t * info, void *user_data)
   element_data->u_elem = &(problem_data->u[element_data->stride]);
   element_data->Au_elem = &(problem_data->Au[element_data->stride]);
 
-  linalg_copy_1st_to_2nd(element_data->u_elem, &(element_data->u_storage)[0], d4est_operators_get_nodes(dim, deg));
+  linalg_copy_1st_to_2nd(element_data->u_elem, &(element_data->u_elem)[0], d4est_operators_get_nodes(dim, deg));
   
   for (i = 0; i < (P4EST_DIM); i++){
     d4est_operators_apply_Dij(d4est_ops, element_data->u_elem, dim, deg, i, element_data->du_elem[i]);
@@ -341,7 +341,7 @@ void poisson_destroy_vecs(p4est_iter_volume_info_t * info, void *user_data)
     P4EST_FREE(element_data->qstar_min_q[i]);
     P4EST_FREE(element_data->du_elem[i]);
   }
-  /* P4EST_FREE(element_data->u_storage); */
+  /* P4EST_FREE(element_data->u_elem); */
   P4EST_FREE(element_data->ustar_min_u);
 }
 

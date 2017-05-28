@@ -145,7 +145,7 @@ void problem_build_rhs
  weakeqn_ptrs_t* prob_fcns,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- d4est_operators_t* dgbase
+ d4est_operators_t* d4est_ops
 )
 {
   prob_vecs->scalar_flux_fcn_data.bndry_fcn = boundary_fcn;
@@ -157,7 +157,7 @@ void problem_build_rhs
      p4est,
      f,
      f_fcn,
-     dgbase
+     d4est_ops
     );
   
   element_data_apply_Mij_on_vec
@@ -165,7 +165,7 @@ void problem_build_rhs
      p4est,
      f,
      prob_vecs->rhs,
-     dgbase
+     d4est_ops
     );
   
   linalg_vec_scale(-1., prob_vecs->rhs, prob_vecs->local_nodes);
@@ -177,7 +177,7 @@ void problem_build_rhs
   double* tmp = prob_vecs->u;
   
   prob_vecs->u = u_eq_0;
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, dgbase, NULL);
+  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, NULL);
   linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
 
   /* DEBUG_PRINT_ARR_DBL(prob_vecs->Au, prob_vecs->local_nodes); */

@@ -103,12 +103,12 @@ SET (
   InputParser/ini.c
   Solver/krylov_petsc.c
   Solver/d4est_cg.c
-  Solver/krylov_pc_multigrid.c
+  # Solver/krylov_pc_multigrid.c
   # Solver/krylov_pc_invstiff.c
-  Solver/multigrid.c
+  # Solver/multigrid.c
   Solver/newton_petsc.c
   Solver/newton_d4est.c
-  Solver/cg_eigs.c
+  # Solver/cg_eigs.c
   # Solver/matrix_sym_tester.c
   # Solver/multigrid_matrix_operator.c
   EllipticSystem/problem_data.c
@@ -129,15 +129,15 @@ SET (
   Geometry/d4est_geometry.c
   # Estimators/curved_bi_estimator.c
   # Estimators/curved_bi_estimator_flux_fcns.c
-  Estimators/estimator_stats.c
+  # Estimators/estimator_stats.c
   # hpAMR/curved_hp_amr.c
   # hpAMR/curved_hp_amr_smooth_pred.c
   # hpAMR/hp_amr.c
-  Solver/cg.c
-  Solver/jacobian_tester.c
+  # Solver/cg.c
+  # Solver/jacobian_tester.c
   # Operators/curved_poisson_operator.c
   Operators/curved_poisson_operator_primal.c
-  Operators/poisson_operator.c
+  # Operators/poisson_operator.c
   # Operators/poisson_debug_vecs.c
   # Operators/curved_poisson_debug_vecs.c
   Operators/grad.c
@@ -145,10 +145,10 @@ SET (
   # hpAMR/hp_amr_curved_smooth_pred.c
   # hpAMR/hp_amr_uniform.c
   # hpAMR/hp_amr_curved_uniform.c
-  ElementData/curved_element_data.c
-  ElementData/element_data.c
-  Flux/central_flux_vector_fcns.c
-  Flux/compute_flux.c
+  ElementData/d4est_element_data.c
+  # ElementData/element_data.c
+  # Flux/central_flux_vector_fcns.c
+  # Flux/compute_flux.c
   Flux/curved_compute_flux.c
   # Flux/curved_Gauss_central_flux_vector_fcns.c
   # Flux/curved_Gauss_sipg_flux_scalar_fcns.c
@@ -161,7 +161,7 @@ SET (
   # Solver/multigrid_logger_residual.c
   # Solver/multigrid_element_data_updater_nocurved.c
   # Solver/multigrid_element_data_updater_curved.c
-  # Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.c
+  Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.c
   # Flux/curved_Gauss_primal_sipg_kronbichler_uniform_flux_fcns.c
   # Flux/curved_Gauss_primal_sipg_hesthaven_flux_fcns.c
   Quadrature/d4est_quadrature.c

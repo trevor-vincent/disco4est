@@ -30,7 +30,7 @@ static int
 random_h_refine(p4est_t * p4est, p4est_topidx_t which_tree,
                  p4est_quadrant_t * quadrant)
 {
-  /* curved_element_data_t* data = (curved_element_data_t*) quadrant->p.user_data; */
+  /* d4est_element_data_t* data = (d4est_element_data_t*) quadrant->p.user_data; */
   return rand()%2;
 }
 
@@ -427,7 +427,7 @@ build_residual
 /* ( */
 /*  p4est_t* p4est, */
 /*  p4est_ghost_t* ghost, */
-/*  curved_element_data_t* ghost_data, */
+/*  d4est_element_data_t* ghost_data, */
 /*  problem_data_t* prob_vecs, */
 /*  d4est_operators_t* d4est_ops, */
 /*  d4est_geometry_t* d4est_geom */
@@ -451,7 +451,7 @@ build_residual
 /*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
 /*       for (int q = 0; q < Q; ++q) { */
 /*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-/*         curved_element_data_t* ed = quad->p.user_data;         */
+/*         d4est_element_data_t* ed = quad->p.user_data;         */
 /*         d4est_operators_apply_fofufofvlilj_Gaussnodes */
 /*           ( */
 /*            d4est_ops, */
@@ -487,7 +487,7 @@ void problem_build_rhs
  weakeqn_ptrs_t* prob_fcns,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- d4est_operators_t* dgbase
+ d4est_operators_t* d4est_ops
 )
 {
   double* f = P4EST_ALLOC(double, prob_vecs->local_nodes);
@@ -496,7 +496,7 @@ void problem_build_rhs
      p4est,
      f,
      f_fcn,
-     dgbase
+     d4est_ops
     );
   
   element_data_apply_Mij_on_vec
@@ -504,7 +504,7 @@ void problem_build_rhs
      p4est,
      f,
      prob_vecs->rhs,
-     dgbase
+     d4est_ops
     );
   
   int local_nodes = prob_vecs->local_nodes;
@@ -512,7 +512,7 @@ void problem_build_rhs
   double* tmp = prob_vecs->u;
   
   prob_vecs->u = u_eq_0;
-  apply_helmholtz(p4est, ghost, ghost_data, prob_vecs, dgbase);
+  apply_helmholtz(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
   linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
 
   prob_vecs->u = tmp;

@@ -40,7 +40,7 @@ krylov_pc_jacobi_setup
       ((weakeqn_ptrs_t*)(pc_ctx->fcns))->apply_lhs(pc_ctx->p4est, *(pc_ctx->ghost), *(element_data_t**)(pc_ctx->ghost_data), pc_ctx->vecs, pc_ctx->d4est_ops);
     }
     else{
-      ((curved_weakeqn_ptrs_t*)(pc_ctx->fcns))->apply_lhs(pc_ctx->p4est, *(pc_ctx->ghost), *(curved_element_data_t**)(pc_ctx->ghost_data), pc_ctx->vecs, pc_ctx->d4est_ops, pc_ctx->d4est_geom);
+      ((curved_weakeqn_ptrs_t*)(pc_ctx->fcns))->apply_lhs(pc_ctx->p4est, *(pc_ctx->ghost), *(d4est_element_data_t**)(pc_ctx->ghost_data), pc_ctx->vecs, pc_ctx->d4est_ops, pc_ctx->d4est_geom);
     }
     
     jacobi_data->inv_aii[i] = 1./(pc_ctx->vecs->Au[i]);

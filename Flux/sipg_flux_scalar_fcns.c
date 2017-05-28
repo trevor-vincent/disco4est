@@ -136,7 +136,7 @@ sipg_flux_scalar_interface
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &(e_m[i]->u_storage[0]),
+       &(e_m[i]->u_elem[0]),
        (P4EST_DIM),
        f_m,
        e_m[i]->deg,
@@ -150,7 +150,7 @@ sipg_flux_scalar_interface
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &(e_p[i]->u_storage[0]),
+       &(e_p[i]->u_elem[0]),
        (P4EST_DIM),
        f_p,
        e_p[i]->deg,

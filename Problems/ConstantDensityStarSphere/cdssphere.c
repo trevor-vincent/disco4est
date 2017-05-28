@@ -2,7 +2,7 @@
 #include <pXest.h>
 #include <util.h>
 #include <linalg.h>
-#include <curved_element_data.h>
+#include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <curved_Gauss_primal_sipg_flux_fcns.h>
 #include <problem.h>
@@ -41,7 +41,7 @@ amr_mark_element
  p4est_t* p4est,
  double eta2,
  estimator_stats_t** stats,
- curved_element_data_t* elem_data,
+ d4est_element_data_t* elem_data,
  void* user
 )
 {
@@ -81,7 +81,7 @@ amr_set_element_gamma
  p4est_t* p4est,
  double eta2,
  estimator_stats_t** stats,
- curved_element_data_t* elem_data,
+ d4est_element_data_t* elem_data,
  void* user
 )
 {
@@ -154,7 +154,7 @@ problem_build_p4est
      min_quadrants,
      min_level,
      fill_uniform,
-     sizeof(curved_element_data_t),
+     sizeof(d4est_element_data_t),
      NULL,
      NULL
     );
@@ -173,7 +173,7 @@ problem_load_p4est_from_checkpoint
   
   return p4est_load_ext (filename,
                 mpicomm,
-                sizeof(curved_element_data_t),
+                sizeof(d4est_element_data_t),
                 load_data,
                 autopartition,
                 broadcasthead,
@@ -185,7 +185,7 @@ problem_load_p4est_from_checkpoint
 int
 in_bin_fcn
 (
- curved_element_data_t* elem_data,
+ d4est_element_data_t* elem_data,
  int bin
 )
 {
@@ -216,7 +216,7 @@ problem_set_degrees
  void* user_ctx
 )
 {
-  curved_element_data_t* elem_data = elem_data_tmp;
+  d4est_element_data_t* elem_data = elem_data_tmp;
   constantdensitystar_params_t* input = user_ctx;
   /* outer shell */
   if (elem_data->tree < 6){
@@ -264,7 +264,7 @@ problem_save_to_vtk
         for (int q = 0; q < Q; ++q) {
           /* k++; */
           p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-          curved_element_data_t* ed = quad->p.user_data;
+          d4est_element_data_t* ed = quad->p.user_data;
           deg_array[stride] = ed->deg;
           eta_array[stride] = ed->local_estimator;
           vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
@@ -382,7 +382,7 @@ problem_init
 
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   /* create space for storing the ghost data */
-  curved_element_data_t* ghost_data = P4EST_ALLOC (curved_element_data_t,
+  d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
                                                    ghost->ghosts.elem_count);
 
   p4est_partition(p4est, 0, NULL);
@@ -403,7 +403,7 @@ problem_init
   prob_fcns.build_residual = cds_build_residual;
   prob_fcns.apply_lhs = cds_apply_jac;
   
-  geometric_factors_t* geometric_factors = geometric_factors_init(p4est);
+  d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
 
   /* printf("[D4EST_INFO]: Initial number of elements = %d\n", p4est->local_num_quadrants); */
 
@@ -434,12 +434,12 @@ problem_init
       P4EST_FREE(ghost_data);
 
       ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE);
-      ghost_data = P4EST_ALLOC(curved_element_data_t, ghost->ghosts.elem_count);
+      ghost_data = P4EST_ALLOC(d4est_element_data_t, ghost->ghosts.elem_count);
 
 
 
 
-      curved_element_data_init_new(p4est,
+      d4est_element_data_init_new(p4est,
                                    geometric_factors,
                                    d4est_ops,
                                    d4est_geom,
@@ -452,7 +452,7 @@ problem_init
 
 
     
-      local_nodes = curved_element_data_get_local_nodes(p4est);
+      local_nodes = d4est_element_data_get_local_nodes(p4est);
 
       Au = P4EST_REALLOC(Au, double, local_nodes);
       u = P4EST_REALLOC(u, double, local_nodes);
@@ -496,8 +496,8 @@ problem_init
 
   
   d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
-  /* curved_element_data_init(p4est, geometric_factors, d4est_ops, d4est_geom, degree, input.gauss_quad_deg); */
-  curved_element_data_init_new(p4est,
+  /* d4est_element_data_init(p4est, geometric_factors, d4est_ops, d4est_geom, degree, input.gauss_quad_deg); */
+  d4est_element_data_init_new(p4est,
                                geometric_factors,
                                d4est_ops,
                                d4est_geom,
@@ -506,7 +506,7 @@ problem_init
 
 
     
-    local_nodes = curved_element_data_get_local_nodes(p4est);
+    local_nodes = d4est_element_data_get_local_nodes(p4est);
 
     Au = P4EST_REALLOC(Au, double, local_nodes);
     u = P4EST_REALLOC(u, double, local_nodes);
@@ -574,7 +574,7 @@ problem_init
                          in_bin_fcn
                         );
 
-    curved_element_data_print_number_of_elements_per_tree(p4est);
+    d4est_element_data_print_number_of_elements_per_tree(p4est);
     
     estimator_stats_compute_max_percentiles_across_proc
       (
@@ -625,7 +625,7 @@ problem_init
   /* p8est_geometry_destroy(geom_vtk); */
 
 
-    curved_element_data_init_node_vec(p4est,
+    d4est_element_data_init_node_vec(p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
                                       d4est_ops,
@@ -663,16 +663,16 @@ problem_init
     P4EST_FREE(ghost_data);
 
     ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE);
-    ghost_data = P4EST_ALLOC(curved_element_data_t, ghost->ghosts.elem_count);
+    ghost_data = P4EST_ALLOC(d4est_element_data_t, ghost->ghosts.elem_count);
     
-    curved_element_data_init_new(p4est,
+    d4est_element_data_init_new(p4est,
                                  geometric_factors,
                                  d4est_ops,
                                  d4est_geom,
                                  problem_set_degrees,
                                  (void*)&input,1,1);
     
-    local_nodes = curved_element_data_get_local_nodes(p4est);
+    local_nodes = d4est_element_data_get_local_nodes(p4est);
 
     u_analytic = P4EST_REALLOC(u_analytic, double, local_nodes);
     Au = P4EST_REALLOC(Au, double, local_nodes);
@@ -703,7 +703,7 @@ problem_init
       );
 
     
-    curved_element_data_init_node_vec(p4est,
+    d4est_element_data_init_node_vec(p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
                                       d4est_ops,
@@ -711,7 +711,7 @@ problem_init
     
     linalg_vec_axpyeqz(-1., prob_vecs.u, u_analytic, error, local_nodes);
     
-    double local_l2_norm_sqr = curved_element_data_compute_l2_norm_sqr
+    double local_l2_norm_sqr = d4est_element_data_compute_l2_norm_sqr
                                 (
                                  p4est,
                                  error,

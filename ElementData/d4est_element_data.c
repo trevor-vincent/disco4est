@@ -1,5 +1,5 @@
 
-#include "../ElementData/curved_element_data.h"
+#include "../ElementData/d4est_element_data.h"
 #include "../GridFunctions/grid_functions.h"
 #include "../Utilities/util.h"
 #include "../LinearAlgebra/linalg.h"
@@ -24,18 +24,18 @@ typedef struct {
 } compute_norm_user_data_t;
 
 /* static void */
-/* curved_element_data_init_node_vec_callback */
+/* d4est_element_data_init_node_vec_callback */
 /* ( */
 /*  p4est_iter_volume_info_t* info, */
 /*  void* user_data */
 /* ) */
 /* { */
 /*   p4est_quadrant_t* q = info->quad; */
-/*   curved_element_data_t* elem_data = (curved_element_data_t*) q->p.user_data; */
+/*   d4est_element_data_t* elem_data = (d4est_element_data_t*) q->p.user_data; */
 /*   init_node_vec_user_data_t* inv_user_data = (init_node_vec_user_data_t*) user_data; */
 /*   grid_fcn_t init_fcn = inv_user_data->init_fcn; */
 /*   double* vec = inv_user_data->vec; */
-/*   /\* d4est_operators_t* dgbase = (d4est_operators_t*)info->p4est->user_pointer; *\/ */
+/*   /\* d4est_operators_t* d4est_ops = (d4est_operators_t*)info->p4est->user_pointer; *\/ */
   
 /*   int* stride = inv_user_data->stride; */
 /*   int volume_nodes = d4est_operators_get_nodes( (P4EST_DIM), elem_data->deg ); */
@@ -55,9 +55,9 @@ typedef struct {
 /*   *stride += volume_nodes; */
 /* } */
 
-/* must be run after the degrees have been set by curved_element_data_init for example */
+/* must be run after the degrees have been set by d4est_element_data_init for example */
 void
-curved_element_data_set_degrees
+d4est_element_data_set_degrees
 (
  p4est_t* p4est,
  int (*set_deg_fcn)(int, int, int)
@@ -74,7 +74,7 @@ curved_element_data_set_degrees
       for (int q = 0; q < Q; ++q) {
         k++;
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         ed->deg = set_deg_fcn(tt,k,ed->deg);
       }
     }    
@@ -82,7 +82,7 @@ curved_element_data_set_degrees
 
 
 void
-curved_element_data_init_node_vec
+d4est_element_data_init_node_vec
 (
  p4est_t* p4est,
  double* node_vec,
@@ -107,7 +107,7 @@ curved_element_data_init_node_vec
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;        
+        d4est_element_data_t* ed = quad->p.user_data;        
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
 
         d4est_rst_t rst_points;
@@ -157,7 +157,7 @@ curved_element_data_init_node_vec
 
 
 void
-curved_element_data_init_node_vec_ext
+d4est_element_data_init_node_vec_ext
 (
  p4est_t* p4est,
  double* node_vec,
@@ -184,7 +184,7 @@ curved_element_data_init_node_vec_ext
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;        
+        d4est_element_data_t* ed = quad->p.user_data;        
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
 
 
@@ -218,12 +218,7 @@ curved_element_data_init_node_vec_ext
                                                     fofxyzv_user
                                                    );
 
-          /* printf(" %d %.15f %.15f %.15f %.15f\n",ed->id, xyz_temp[0][i], xyz_temp[1][i], xyz_temp[2][i], node_vec[ed->nodal_stride + i]); */
         }
-
-        
-
-        
       }
     }
 
@@ -239,139 +234,34 @@ curved_element_data_init_node_vec_ext
 typedef struct {
 
   d4est_operators_t* d4est_ops;
-  /* p4est_geometry_t* p4est_geometry; */
   d4est_geometry_t* d4est_geometry;
-  geometric_factors_t* geometric_factors;
+  d4est_geometry_storage_t* geometric_factors;
   int sqr_nodal_stride;
   int sqr_trace_stride;
   int nodal_stride;
-  int integ_stride;
+  int quad_stride;
 
   int id_stride;
   int deg;
   int deg_quad;
-  /* integ_type_t integ_type; */ /* deprecated */
   int local_nodes;
   int local_sqr_nodes;
   int local_sqr_trace_nodes;
   int local_nodes_quad;
   
-} curved_element_data_init_ctx_t;
+} d4est_element_data_init_ctx_t;
 
 
-/* static void */
-/* curved_element_data_destroy_callback */
-/* ( */
-/*  p4est_iter_volume_info_t * info, */
-/*  void *user_data */
-/* ) */
-/* {  */
-/*   p4est_quadrant_t* q = info->quad; */
-/*   curved_element_data_t* elem_data = (curved_element_data_t *) q->p.user_data; */
-/*   /\* p4est_connectivity_t* pconnect = info->p4est->connectivity; *\/ */
-
-/*   int i,j; */
-/*   P4EST_FREE(elem_data->J); */
-/*   for (i = 0; i < (P4EST_DIM); i++){ */
-/*     P4EST_FREE(elem_data->xyz[i]); */
-/*     for (j = 0; j < (P4EST_DIM); j++){ */
-/*       P4EST_FREE(elem_data->xyz_rst[i][j]); */
-/*     } */
-/*   } */
-/* } */
-
-geometric_factors_t*
-geometric_factors_init
-(
- p4est_t* p4est
-)
-{
-  geometric_factors_t* geometric_factors = P4EST_ALLOC(geometric_factors_t, 1);
-  /* geometric_factors->J = NULL; */
-  geometric_factors->J_quad = NULL; 
-  geometric_factors->xyz = NULL;
-  geometric_factors->xyz_quad = NULL;
-  /* geometric_factors->xyz_rst = NULL; */
-  geometric_factors->xyz_rst_quad = NULL;
-  /* geometric_factors->custom_abscissas = NULL; */
-  /* geometric_factors->custom_weights = NULL; */
-  /* geometric_factors->custom_interp = NULL; */
-  /* geometric_factors->rst_xyz = NULL; */
-  geometric_factors->rst_xyz_quad = NULL;
-  /* geometric_factors->invM = NULL; */
-  /* geometric_factors->invMface = NULL; */
-
-  return geometric_factors;
-}
-
-void
-geometric_factors_reinit
-(
- p4est_t* p4est,
- geometric_factors_t* geometric_factors,
- curved_element_data_local_sizes_t local_sizes
- /* int local_nodes, */
- /* int local_nodes_quad, */
- /* int local_sqr_nodes, */
- /* int local_sqr_trace_nodes */
-)
-{
-
-  int local_nodes = local_sizes.local_nodes;
-  int local_nodes_quad = local_sizes.local_nodes_quad;
-  int local_sqr_nodes = local_sizes.local_sqr_nodes;
-  int local_sqr_trace_nodes = local_sizes.local_sqr_trace_nodes;
-    
-  int vector_nodes = local_nodes*(P4EST_DIM); 
-  geometric_factors->xyz = P4EST_REALLOC(geometric_factors->xyz,double,vector_nodes);
-  geometric_factors->xyz_quad = P4EST_REALLOC(geometric_factors->xyz_quad, double, (P4EST_DIM)*local_nodes_quad);
-
-  /* geometric_factors->custom_abscissas = P4EST_REALLOC(geometric_factors->custom_abscissas, double, local_1d_nodes_quad); */
-  /* geometric_factors->custom_weights = P4EST_REALLOC(geometric_factors->custom_weights, double, local_1d_nodes_quad); */
-  /* geometric_factors->custom_interp = P4EST_REALLOC(geometric_factors->custom_weights, double, local_1d_sqr_nodes_quad); */
-
-  
-  int matrix_nodes_quad = local_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
-  geometric_factors->J_quad = P4EST_REALLOC(geometric_factors->J_quad,double,local_nodes_quad);
-  geometric_factors->xyz_rst_quad = P4EST_REALLOC(geometric_factors->xyz_rst_quad,double,matrix_nodes_quad);  
-  geometric_factors->rst_xyz_quad = P4EST_REALLOC(geometric_factors->rst_xyz_quad,double,matrix_nodes_quad);
-
-}
-
-void
-geometric_factors_destroy
-(
- geometric_factors_t* geometric_factors
-)
-{
-  /* P4EST_FREE(geometric_factors->J); */
-  if (geometric_factors != NULL){
-    P4EST_FREE(geometric_factors->J_quad);
-    P4EST_FREE(geometric_factors->xyz);
-    P4EST_FREE(geometric_factors->xyz_quad);
-    /* P4EST_FREE(geometric_factors->xyz_rst); */
-    P4EST_FREE(geometric_factors->xyz_rst_quad);
-    /* P4EST_FREE(geometric_factors->xyz_rst_Lobatto_quad); */
-    /* P4EST_FREE(geometric_factors->rst_xyz); */
-    P4EST_FREE(geometric_factors->rst_xyz_quad);
-    /* P4EST_FREE(geometric_factors->custom_abscissas); */
-    /* P4EST_FREE(geometric_factors->custom_weights); */
-    /* P4EST_FREE(geometric_factors->custom_interp); */
-    /* P4EST_FREE(geometric_factors->invM); */
-    /* P4EST_FREE(geometric_factors->invMface); */
-    P4EST_FREE(geometric_factors);
-  }
-}
 
 static void
-curved_element_data_print_node_vec_callback
+d4est_element_data_print_node_vec_callback
 (
  p4est_iter_volume_info_t * info,
  void *user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  curved_element_data_t* elem_data = (curved_element_data_t *) q->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t *) q->p.user_data;
   double* vec = (double*)user_data;
   int volume_nodes = d4est_operators_get_nodes(
                                       (P4EST_DIM),
@@ -406,14 +296,14 @@ typedef struct {
 } debug_print_node_vecs_t;
 
 static void
-curved_element_data_debug_print_node_vecs_callback
+d4est_element_data_debug_print_node_vecs_callback
 (
  p4est_iter_volume_info_t * info,
  void *user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  curved_element_data_t* elem_data = (curved_element_data_t *) q->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t *) q->p.user_data;
   debug_print_node_vecs_t* dpnv = (debug_print_node_vecs_t*)user_data;
   
   int volume_nodes = d4est_operators_get_nodes(
@@ -460,7 +350,7 @@ curved_element_data_debug_print_node_vecs_callback
 }
 
 void
-curved_element_data_print_node_vec
+d4est_element_data_print_node_vec
 (
  p4est_t* p4est,
  double* vec
@@ -470,7 +360,7 @@ curved_element_data_print_node_vec
                 p4est,
                 NULL,
                 (void*) vec,
-                curved_element_data_print_node_vec_callback,
+                d4est_element_data_print_node_vec_callback,
                 NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -480,7 +370,7 @@ curved_element_data_print_node_vec
 }
 
 void
-curved_element_data_debug_print_node_vecs
+d4est_element_data_debug_print_node_vecs
 (
  p4est_t* p4est,
  double** vecs,
@@ -499,7 +389,7 @@ curved_element_data_debug_print_node_vecs
                 p4est,
                 NULL,
                 (void*) &dpnv,
-                curved_element_data_debug_print_node_vecs_callback,
+                d4est_element_data_debug_print_node_vecs_callback,
                 NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -510,7 +400,7 @@ curved_element_data_debug_print_node_vecs
 
 
 double
-curved_element_data_compute_diam
+d4est_element_data_compute_diam
 (
  double* xyz [(P4EST_DIM)],
  int deg,
@@ -559,7 +449,7 @@ curved_element_data_compute_diam
 }
 
 void
-curved_element_data_compute_grid_volume_and_surface_area
+d4est_element_data_compute_grid_volume_and_surface_area
 (
  p4est_t* p4est,
  double* volume,
@@ -578,7 +468,7 @@ curved_element_data_compute_grid_volume_and_surface_area
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* elem_data = (curved_element_data_t*)(quad->p.user_data);
+        d4est_element_data_t* elem_data = (d4est_element_data_t*)(quad->p.user_data);
         for (int i = 0; i < (P4EST_FACES); i++){
           if (d4est_geometry_is_face_on_boundary(p4est, quad, elem_data->tree, i)){
             *surface_area += elem_data->surface_area[i];
@@ -591,7 +481,7 @@ curved_element_data_compute_grid_volume_and_surface_area
 
 
 double
-curved_element_data_compute_element_volume
+d4est_element_data_compute_element_volume
 (
  d4est_operators_t* d4est_ops,
  int deg_GL,
@@ -620,9 +510,9 @@ curved_element_data_compute_element_volume
 }
 
 double
-curved_element_data_compute_element_face_area
+d4est_element_data_compute_element_face_area
 (
- curved_element_data_t* elem_data,
+ d4est_element_data_t* elem_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -684,13 +574,13 @@ curved_element_data_compute_element_face_area
   return area;
 }
 
-curved_element_data_local_sizes_t
-curved_element_data_compute_strides_and_sizes
+d4est_local_sizes_t
+d4est_element_data_compute_strides_and_sizes
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geometry,
- curved_element_data_user_fcn_t user_fcn,
+ d4est_element_data_user_fcn_t user_fcn,
  void* user_ctx
 )
 {
@@ -705,7 +595,7 @@ curved_element_data_compute_strides_and_sizes
   int sqr_nodal_stride = 0;
   int sqr_trace_stride = 0;
   int nodal_stride = 0;
-  int integ_stride = 0;
+  int quad_stride = 0;
   int id_stride = 0;  
   
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -717,7 +607,7 @@ curved_element_data_compute_strides_and_sizes
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* elem_data = (curved_element_data_t*)(quad->p.user_data);
+        d4est_element_data_t* elem_data = (d4est_element_data_t*)(quad->p.user_data);
         elem_data->tree = tt;
         elem_data->tree_quadid = q;
         elem_data->dq = P4EST_QUADRANT_LEN(quad->level);
@@ -737,7 +627,7 @@ curved_element_data_compute_strides_and_sizes
         elem_data->sqr_nodal_stride = sqr_nodal_stride;
         elem_data->sqr_trace_stride = sqr_trace_stride;
         elem_data->nodal_stride = nodal_stride;
-        elem_data->integ_stride = integ_stride;
+        elem_data->quad_stride = quad_stride;
         
         int nodes = d4est_operators_get_nodes((P4EST_DIM), elem_data->deg);
         int nodes_quad = d4est_operators_get_nodes((P4EST_DIM), elem_data->deg_quad);
@@ -754,12 +644,12 @@ curved_element_data_compute_strides_and_sizes
         sqr_nodal_stride += nodes*nodes;
         sqr_trace_stride += face_nodes*face_nodes*(P4EST_FACES);
         nodal_stride += nodes;
-        integ_stride += nodes_quad;
+        quad_stride += nodes_quad;
         id_stride += 1;
       }
     }
 
-  curved_element_data_local_sizes_t local_sizes;
+  d4est_local_sizes_t local_sizes;
   local_sizes.local_nodes = local_nodes;
   local_sizes.local_sqr_nodes = local_sqr_nodes;
   local_sizes.local_sqr_trace_nodes = local_sqr_trace_nodes;
@@ -772,32 +662,28 @@ curved_element_data_compute_strides_and_sizes
 
 
 void
-curved_element_data_init_new
+d4est_element_data_init_new
 (
  p4est_t* p4est,
- geometric_factors_t* geometric_factors,
+ d4est_geometry_storage_t* geometric_factors,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- curved_element_data_user_fcn_t user_fcn,
+ d4est_element_data_user_fcn_t user_fcn,
  void* user_ctx,
  int compute_geometric_data,
  int set_geometric_aliases
 )
 {
-  curved_element_data_local_sizes_t local_sizes
-    = curved_element_data_compute_strides_and_sizes(p4est, d4est_ops, d4est_geom, user_fcn, user_ctx);
+  d4est_local_sizes_t local_sizes
+    = d4est_element_data_compute_strides_and_sizes(p4est, d4est_ops, d4est_geom, user_fcn, user_ctx);
 
   if (compute_geometric_data){
-    geometric_factors_reinit
+    d4est_geometry_storage_reinit
       (
        p4est,
        geometric_factors,
        local_sizes
-       /* local_sizes.local_nodes, */
-       /* local_sizes.local_nodes_quad, */
-       /* local_sizes.local_sqr_nodes, */
-       /* local_sizes.local_sqr_trace_nodes */
       );
   }
   
@@ -811,16 +697,16 @@ curved_element_data_init_new
       int QQ = (p4est_locidx_t) tquadrants->elem_count;
       for (int qq = 0; qq < QQ; ++qq) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
-        curved_element_data_t* elem_data = (curved_element_data_t*)(quad->p.user_data);
+        d4est_element_data_t* elem_data = (d4est_element_data_t*)(quad->p.user_data);
 
         if (set_geometric_aliases){
-          elem_data->J_quad = &geometric_factors->J_quad[elem_data->integ_stride];  
+          elem_data->J_quad = &geometric_factors->J_quad[elem_data->quad_stride];  
           for (int i = 0; i < (P4EST_DIM); i++){
             elem_data->xyz[i] = &geometric_factors->xyz[i*local_sizes.local_nodes + elem_data->nodal_stride];
-            elem_data->xyz_quad[i] = &geometric_factors->xyz_quad[i*local_sizes.local_nodes_quad + elem_data->integ_stride];
+            elem_data->xyz_quad[i] = &geometric_factors->xyz_quad[i*local_sizes.local_nodes_quad + elem_data->quad_stride];
             for (int j = 0; j < (P4EST_DIM); j++){
-              elem_data->xyz_rst_quad[i][j] = &geometric_factors->xyz_rst_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->integ_stride];
-              elem_data->rst_xyz_quad[i][j] = &geometric_factors->rst_xyz_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->integ_stride];
+              elem_data->xyz_rst_quad[i][j] = &geometric_factors->xyz_rst_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride];
+              elem_data->rst_xyz_quad[i][j] = &geometric_factors->rst_xyz_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride];
             }
           }
         }
@@ -929,7 +815,7 @@ curved_element_data_init_new
           
           if (set_geometric_aliases){
             elem_data->volume
-              = curved_element_data_compute_element_volume
+              = d4est_element_data_compute_element_volume
               (
                d4est_ops,
                elem_data->deg_quad,
@@ -937,14 +823,14 @@ curved_element_data_init_new
               );
         
             for (int face = 0; face < (P4EST_FACES); face++){
-              elem_data->surface_area[face] = curved_element_data_compute_element_face_area(elem_data,
+              elem_data->surface_area[face] = d4est_element_data_compute_element_face_area(elem_data,
                                                                                             d4est_ops,
                                                                                             d4est_geom,
                                                                                             d4est_quad,
                                                                                             face,
                                                                                             elem_data->deg_quad);
             }
-            elem_data->diam = curved_element_data_compute_diam(elem_data->xyz, elem_data->deg, DIAM_APPROX_CUBE);
+            elem_data->diam = d4est_element_data_compute_diam(elem_data->xyz, elem_data->deg, DIAM_APPROX_CUBE);
           }
         
         }
@@ -955,7 +841,7 @@ curved_element_data_init_new
 
 
 double
-curved_element_data_compute_l2_norm_sqr
+d4est_element_data_compute_l2_norm_sqr
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -977,7 +863,7 @@ curved_element_data_compute_l2_norm_sqr
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
 
 
@@ -1019,7 +905,7 @@ curved_element_data_compute_l2_norm_sqr
 
 
 /* double */
-/* curved_element_data_compute_dg_norm_sqr */
+/* d4est_element_data_compute_dg_norm_sqr */
 /* ( */
 /*  p4est_t* p4est, */
 /*  double* nodal_vec, */
@@ -1031,7 +917,7 @@ curved_element_data_compute_l2_norm_sqr
 /*  d4est_operators_t* d4est_ops */
 /* ) */
 /* { */
-/*   curved_element_data_copy_from_vec_to_storage */
+/*   d4est_element_data_copy_from_vec_to_storage */
 /*     ( */
 /*      p4est, */
 /*      nodal_vec */
@@ -1047,7 +933,7 @@ curved_element_data_compute_l2_norm_sqr
 /*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
 /*       for (int q = 0; q < Q; ++q) { */
 /*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-/*         curved_element_data_t* ed = quad->p.user_data; */
+/*         d4est_element_data_t* ed = quad->p.user_data; */
 /*         int volume_nodes_quad = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad); */
 /*         int volume_nodes_lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg); */
 /*         double* dnodal_vec [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(dnodal_vec, volume_nodes_quad); */
@@ -1117,27 +1003,27 @@ curved_element_data_compute_l2_norm_sqr
 /* } */
 
 void
-curved_element_data_get_local_nodes_callback
+d4est_element_data_get_local_nodes_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  curved_element_data_t* elem_data = (curved_element_data_t*) q->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) q->p.user_data;
   int* local_nodes = (int*) user_data;
   *local_nodes += d4est_operators_get_nodes( (P4EST_DIM),
                                     elem_data->deg);
 }
 
-int curved_element_data_get_local_nodes(p4est_t* p4est)
+int d4est_element_data_get_local_nodes(p4est_t* p4est)
 {
   int local_nodes = 0;
   
   p4est_iterate(p4est,
                 NULL,
                 (void *) (&local_nodes),
-                curved_element_data_get_local_nodes_callback,
+                d4est_element_data_get_local_nodes_callback,
                 NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -1148,25 +1034,25 @@ int curved_element_data_get_local_nodes(p4est_t* p4est)
 }
 
 static void
-curved_element_data_copy_from_vec_to_storage_callback
+d4est_element_data_copy_from_vec_to_storage_callback
 (
  p4est_iter_volume_info_t * info,
  void *user_data
 )
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* curved_element_data = (curved_element_data_t *) q->p.user_data;
+  d4est_element_data_t* d4est_element_data = (d4est_element_data_t *) q->p.user_data;
   double* u = (double*) info->p4est->user_pointer;
   int* stride = (int*) user_data;
   
   int dim = (P4EST_DIM);
-  int deg = curved_element_data->deg;
+  int deg = d4est_element_data->deg;
   int volume_nodes = d4est_operators_get_nodes(dim,deg);
   
   linalg_copy_1st_to_2nd
     (
      &u[*stride],
-     &(curved_element_data->u_storage)[0],
+     &(d4est_element_data->u_elem)[0],
      volume_nodes
     );
 
@@ -1174,7 +1060,7 @@ curved_element_data_copy_from_vec_to_storage_callback
 }
 
 void
-curved_element_data_copy_from_vec_to_storage(
+d4est_element_data_copy_from_vec_to_storage(
                                              p4est_t* p4est,
                                              double* vec
 )
@@ -1186,7 +1072,7 @@ curved_element_data_copy_from_vec_to_storage(
   p4est_iterate(p4est,
                 NULL,
                 (void*)&stride,
-                curved_element_data_copy_from_vec_to_storage_callback,
+                d4est_element_data_copy_from_vec_to_storage_callback,
                 NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -1197,24 +1083,24 @@ curved_element_data_copy_from_vec_to_storage(
 }
 
 static void
-curved_element_data_copy_from_storage_to_vec_callback
+d4est_element_data_copy_from_storage_to_vec_callback
 (
  p4est_iter_volume_info_t * info,
  void *user_data
 )
 {
   p4est_quadrant_t *q = info->quad;
-  curved_element_data_t* curved_element_data = (curved_element_data_t *) q->p.user_data;
+  d4est_element_data_t* d4est_element_data = (d4est_element_data_t *) q->p.user_data;
   double* u = (double*) info->p4est->user_pointer;
   int* stride = (int*) user_data;
   
   int dim = (P4EST_DIM);
-  int deg = curved_element_data->deg;
+  int deg = d4est_element_data->deg;
   int volume_nodes = d4est_operators_get_nodes(dim,deg);
   
   linalg_copy_1st_to_2nd
     (
-     &(curved_element_data->u_storage)[0],
+     &(d4est_element_data->u_elem)[0],
      &u[*stride],
      volume_nodes
     );
@@ -1224,7 +1110,7 @@ curved_element_data_copy_from_storage_to_vec_callback
 
 
 void
-curved_element_data_copy_from_storage_to_vec
+d4est_element_data_copy_from_storage_to_vec
 (
  p4est_t* p4est,
  double* vec
@@ -1237,7 +1123,7 @@ curved_element_data_copy_from_storage_to_vec
   p4est_iterate(p4est,
                 NULL,
                 (void*)&stride,
-                curved_element_data_copy_from_storage_to_vec_callback,
+                d4est_element_data_copy_from_storage_to_vec_callback,
                 NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -1248,16 +1134,16 @@ curved_element_data_copy_from_storage_to_vec
 }
 
 static void
-curved_element_data_store_element_scalar_in_vertex_array_callback
+d4est_element_data_store_element_scalar_in_vertex_array_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  curved_element_data_t* elem_data = (curved_element_data_t*) q->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) q->p.user_data;
   double* vertex_array_vec = (double*)user_data;
-  double (*get_local_scalar_fcn)(curved_element_data_t*) = (double (*)(curved_element_data_t*))info->p4est->user_pointer;  
+  double (*get_local_scalar_fcn)(d4est_element_data_t*) = (double (*)(d4est_element_data_t*))info->p4est->user_pointer;  
 
   p4est_topidx_t      which_tree = info->treeid;
   p4est_locidx_t      local_id = info->quadid; 
@@ -1278,11 +1164,11 @@ curved_element_data_store_element_scalar_in_vertex_array_callback
 }
 
 void
-curved_element_data_store_element_scalar_in_vertex_array
+d4est_element_data_store_element_scalar_in_vertex_array
 (
  p4est_t* p4est,
  double* vertex_array,
- double (*get_local_scalar_fcn)(curved_element_data_t*)
+ double (*get_local_scalar_fcn)(d4est_element_data_t*)
 )
 {
   void* tmp = p4est->user_pointer;
@@ -1291,7 +1177,7 @@ curved_element_data_store_element_scalar_in_vertex_array
   p4est_iterate(p4est,
                 NULL,
                 (void*)vertex_array,
-                curved_element_data_store_element_scalar_in_vertex_array_callback,
+                d4est_element_data_store_element_scalar_in_vertex_array_callback,
                 NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -1303,14 +1189,14 @@ curved_element_data_store_element_scalar_in_vertex_array
 
 
 static void
-curved_element_data_store_nodal_vec_in_vertex_array_callback
+d4est_element_data_store_nodal_vec_in_vertex_array_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  curved_element_data_t* elem_data = (curved_element_data_t*) q->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) q->p.user_data;
 
   double* nodal_vec = (double*)user_data;
   double* vertex_vec = (double*) info->p4est->user_pointer;
@@ -1347,10 +1233,10 @@ typedef struct{
 
 typedef struct {
 
-  d4est_operators_t* dgbase;
+  d4est_operators_t* d4est_ops;
   double* vec;
 
-} dgbase_and_vec_t;
+} d4est_ops_and_vec_t;
 
 
 /* Return value meaning */
@@ -1358,7 +1244,7 @@ typedef struct {
 /* 0  The element pointed by p1 is equivalent to the element pointed by p2 */
 /* >0 The element pointed by p1 goes after the element pointed by p2 */
 static
-int curved_element_data_debug_sphere_compare
+int d4est_element_data_debug_sphere_compare
 (
  const void *p1,
  const void *p2
@@ -1373,7 +1259,7 @@ int curved_element_data_debug_sphere_compare
 
 
 static void
-curved_element_data_debug_spheresym_callback
+d4est_element_data_debug_spheresym_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
@@ -1382,13 +1268,13 @@ curved_element_data_debug_spheresym_callback
   mpi_abort("deprecated");
 
   p4est_quadrant_t* q = info->quad;
-  curved_element_data_t* elem_data = (curved_element_data_t*) q->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) q->p.user_data;
 
-  dgbase_and_vec_t* dgbase_and_vec = (dgbase_and_vec_t*)user_data;
+  d4est_ops_and_vec_t* d4est_ops_and_vec = (d4est_ops_and_vec_t*)user_data;
   debug_spheresym_t* debug = (debug_spheresym_t*) info->p4est->user_pointer;
 
-  double* vec = dgbase_and_vec->vec;
-  d4est_operators_t* dgbase = dgbase_and_vec->dgbase;
+  double* vec = d4est_ops_and_vec->vec;
+  d4est_operators_t* d4est_ops = d4est_ops_and_vec->d4est_ops;
   
   int id = elem_data->id;
   int stride = elem_data->nodal_stride;
@@ -1402,7 +1288,7 @@ curved_element_data_debug_spheresym_callback
   }
 
   double* Mvec = P4EST_ALLOC(double, volume_nodes);
-  d4est_operators_apply_Mij(dgbase, Jvec, (P4EST_DIM), elem_data->deg, Mvec);
+  d4est_operators_apply_Mij(d4est_ops, Jvec, (P4EST_DIM), elem_data->deg, Mvec);
   debug[id].vec_norm = sqrt(linalg_vec_dot(&vec[stride], Mvec, volume_nodes));
   debug[id].id = id;
 
@@ -1438,25 +1324,25 @@ curved_element_data_debug_spheresym_callback
 
 
 void
-curved_element_data_debug_spheresym
+d4est_element_data_debug_spheresym
 (
  p4est_t* p4est,
- d4est_operators_t* dgbase,
+ d4est_operators_t* d4est_ops,
  double* vec
 )
 {
   debug_spheresym_t* debug_sphere = P4EST_ALLOC(debug_spheresym_t, p4est->local_num_quadrants);
-  dgbase_and_vec_t dgbase_and_vec;
-  dgbase_and_vec.dgbase = dgbase;
-  dgbase_and_vec.vec = vec;
+  d4est_ops_and_vec_t d4est_ops_and_vec;
+  d4est_ops_and_vec.d4est_ops = d4est_ops;
+  d4est_ops_and_vec.vec = vec;
   
   void* tmp = p4est->user_pointer;
   p4est->user_pointer = debug_sphere;
   
   p4est_iterate(p4est,
                 NULL,
-                (void*)&dgbase_and_vec,
-                curved_element_data_debug_spheresym_callback,
+                (void*)&d4est_ops_and_vec,
+                d4est_element_data_debug_spheresym_callback,
                 NULL,
 #if (P4EST_DIM)==3
                 NULL,
@@ -1464,7 +1350,7 @@ curved_element_data_debug_spheresym
                 NULL);
 
   p4est->user_pointer = tmp;
-  qsort(debug_sphere, p4est->local_num_quadrants, sizeof(debug_spheresym_t), curved_element_data_debug_sphere_compare);
+  qsort(debug_sphere, p4est->local_num_quadrants, sizeof(debug_spheresym_t), d4est_element_data_debug_sphere_compare);
 
   int i;
   double r_temp = -1;
@@ -1486,7 +1372,7 @@ curved_element_data_debug_spheresym
 }
 
 void
-curved_element_data_store_nodal_vec_in_vertex_array
+d4est_element_data_store_nodal_vec_in_vertex_array
 (
  p4est_t* p4est,
  double* nodal_vec,
@@ -1499,7 +1385,7 @@ curved_element_data_store_nodal_vec_in_vertex_array
   p4est_iterate(p4est,
                 NULL,
                 nodal_vec,
-                curved_element_data_store_nodal_vec_in_vertex_array_callback,
+                d4est_element_data_store_nodal_vec_in_vertex_array_callback,
                 NULL,
 #if (P4EST_DIM)==3
                 NULL,
@@ -1511,15 +1397,15 @@ curved_element_data_store_nodal_vec_in_vertex_array
 
  
 void
-curved_element_data_reorient_f_p_elements_to_f_m_order
+d4est_element_data_reorient_f_p_elements_to_f_m_order
 (
- curved_element_data_t** e_p,
+ d4est_element_data_t** e_p,
  int face_dim,
  int f_m,
  int f_p,
  int o,
  int faces_p,
- curved_element_data_t* e_p_oriented [(P4EST_HALF)]
+ d4est_element_data_t* e_p_oriented [(P4EST_HALF)]
 )
 {
 
@@ -1535,7 +1421,7 @@ curved_element_data_reorient_f_p_elements_to_f_m_order
  
 /* only for serial use */
 int
-curved_element_data_debug_find_node
+d4est_element_data_debug_find_node
 (
  p4est_t* p4est,
  int node
@@ -1550,7 +1436,7 @@ curved_element_data_debug_find_node
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         if(node >= ed->nodal_stride && node < (ed->nodal_stride + volume_nodes))
           return ed->id;
@@ -1560,7 +1446,7 @@ curved_element_data_debug_find_node
 }
 
 int
-curved_element_data_global_node_to_local_node
+d4est_element_data_global_node_to_local_node
 (
  p4est_t* p4est,
  int global_node
@@ -1575,7 +1461,7 @@ curved_element_data_global_node_to_local_node
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         if(global_node >= ed->nodal_stride && global_node < (ed->nodal_stride + volume_nodes))
           return global_node - ed->nodal_stride;
@@ -1585,8 +1471,8 @@ curved_element_data_global_node_to_local_node
 }
 
 
-curved_element_data_t*
-curved_element_data_get_element_data
+d4est_element_data_t*
+d4est_element_data_get_element_data
 (
  p4est_t* p4est,
  int local_element_id
@@ -1601,7 +1487,7 @@ curved_element_data_get_element_data
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         if (ed->id == local_element_id)
           return ed;
       }
@@ -1610,7 +1496,7 @@ curved_element_data_get_element_data
 }
 
 int
-curved_element_data_count_boundary_elements
+d4est_element_data_count_boundary_elements
 (
  p4est_t* p4est
 )
@@ -1625,7 +1511,7 @@ curved_element_data_count_boundary_elements
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         belems += ed->on_bdry;
       }
     }  
@@ -1633,7 +1519,7 @@ curved_element_data_count_boundary_elements
 }
 
 void
-curved_element_data_print_element_data_debug
+d4est_element_data_print_element_data_debug
 (
  p4est_t* p4est
 )
@@ -1652,7 +1538,7 @@ curved_element_data_print_element_data_debug
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
 
         printf("** Element %d **\n", ed->id);
         printf("deg, deg_quad = %d, %d\n", ed->deg, ed->deg_quad);
@@ -1681,20 +1567,20 @@ curved_element_data_print_element_data_debug
 }
 
 static void
-curved_element_data_print_local_estimator_callback
+d4est_element_data_print_local_estimator_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  curved_element_data_t* elem_data = (curved_element_data_t*) q->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) q->p.user_data;
   printf("Quad %d: Local estimator %.20f, p = %d\n", elem_data->id, elem_data->local_estimator, elem_data->deg);
 }
 
 
 void
-curved_element_data_print_local_estimator
+d4est_element_data_print_local_estimator
 (
  p4est_t* p4est
 )
@@ -1702,7 +1588,7 @@ curved_element_data_print_local_estimator
   p4est_iterate(p4est,
 		NULL,
 		NULL,
-		curved_element_data_print_local_estimator_callback,
+		d4est_element_data_print_local_estimator_callback,
 		NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -1712,7 +1598,7 @@ curved_element_data_print_local_estimator
 
 
 void
-curved_element_data_print_number_of_elements_per_tree
+d4est_element_data_print_number_of_elements_per_tree
 (
  p4est_t* p4est
 )
@@ -1752,14 +1638,14 @@ curved_element_data_print_number_of_elements_per_tree
   P4EST_FREE(elements_per_tree_global);
 }
 
-/* void curved_element_data_apply_fofufofvlilj */
+/* void d4est_element_data_apply_fofufofvlilj */
 /* ( */
 /*  d4est_operators_t* d4est_ops, */
 /*  d4est_geometry_t* d4est_geometry, */
 /*  double* vec, */
 /*  double* u, */
 /*  double* v, */
-/*  curved_element_data_t* elem_data, */
+/*  d4est_element_data_t* elem_data, */
 /*  int deg_quad, */
 /*  quadrature_type_t quad_type, */
 /*  int dim, */
@@ -1878,13 +1764,13 @@ curved_element_data_print_number_of_elements_per_tree
 /* } */
 
 
-/* void curved_element_data_apply_fofufofvlj */
+/* void d4est_element_data_apply_fofufofvlj */
 /* ( */
 /*  d4est_operators_t* d4est_ops, */
 /*  d4est_geometry_t* d4est_geometry, */
 /*  double* u, */
 /*  double* v, */
-/*  curved_element_data_t* elem_data, */
+/*  d4est_element_data_t* elem_data, */
 /*  int deg_quad, */
 /*  quadrature_type_t quad_type, */
 /*  int dim, */
@@ -1994,13 +1880,13 @@ curved_element_data_print_number_of_elements_per_tree
 /* } */
 
 
-/* void curved_element_data_form_fofufofvlilj_matrix */
+/* void d4est_element_data_form_fofufofvlilj_matrix */
 /* ( */
 /*  d4est_operators_t* d4est_ops, */
 /*  d4est_geometry_t* d4est_geometry, */
 /*  double* u, */
 /*  double* v, */
-/*  curved_element_data_t* elem_data, */
+/*  d4est_element_data_t* elem_data, */
 /*  int deg_quad, */
 /*  quadrature_type_t quad_type, */
 /*  int dim, */
@@ -2108,7 +1994,7 @@ curved_element_data_print_number_of_elements_per_tree
 /*   } */
 /* } */
 
-int curved_element_data_get_local_matrix_nodes(p4est_t* p4est){
+int d4est_element_data_get_local_matrix_nodes(p4est_t* p4est){
 
   int local_matrix_nodes = 0;
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -2120,7 +2006,7 @@ int curved_element_data_get_local_matrix_nodes(p4est_t* p4est){
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        curved_element_data_t* ed = quad->p.user_data;
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         local_matrix_nodes += volume_nodes*volume_nodes;
       }
@@ -2128,11 +2014,11 @@ int curved_element_data_get_local_matrix_nodes(p4est_t* p4est){
   return local_matrix_nodes;
 }
 
-/* void curved_element_data_apply_curved_stiffness_matrix */
+/* void d4est_element_data_apply_curved_stiffness_matrix */
 /* ( */
 /*  d4est_operators_t* d4est_ops, */
 /*  d4est_geometry_t* d4est_geometry, */
-/*  curved_element_data_t* elem_data, */
+/*  d4est_element_data_t* elem_data, */
 /*  quadrature_type_t quad_type, */
 /*  double* vec, */
 /*  double* stiff_vec */
@@ -2326,7 +2212,7 @@ int curved_element_data_get_local_matrix_nodes(p4est_t* p4est){
 /* } */
 
 void
-curved_element_data_compute_jacobian_on_lgl_grid
+d4est_element_data_compute_jacobian_on_lgl_grid
 (
  p4est_t* p4est,
  d4est_geometry_t* d4est_geometry,
@@ -2347,7 +2233,7 @@ curved_element_data_compute_jacobian_on_lgl_grid
       int QQ = (p4est_locidx_t) tquadrants->elem_count;
       for (int qq = 0; qq < QQ; ++qq) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
-        curved_element_data_t* elem_data = (curved_element_data_t*)(quad->p.user_data);
+        d4est_element_data_t* elem_data = (d4est_element_data_t*)(quad->p.user_data);
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), elem_data->deg);
 
 
@@ -2398,7 +2284,7 @@ curved_element_data_compute_jacobian_on_lgl_grid
 }
 
 void
-curved_element_data_get_array_of_degrees
+d4est_element_data_get_array_of_degrees
 (
  p4est_t* p4est,
  int* deg_array
@@ -2416,7 +2302,7 @@ curved_element_data_get_array_of_degrees
         int Q = (p4est_locidx_t) tquadrants->elem_count;
         for (int q = 0; q < Q; ++q) {
           p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-          curved_element_data_t* ed = quad->p.user_data;
+          d4est_element_data_t* ed = quad->p.user_data;
           deg_array[stride] = ed->deg;
           vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
           stride++;

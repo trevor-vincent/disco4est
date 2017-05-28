@@ -93,6 +93,16 @@ typedef struct {
   
 } d4est_rst_t;
 
+
+typedef struct {
+  
+  int local_nodes;
+  int local_sqr_nodes;
+  int local_sqr_trace_nodes;
+  int local_nodes_quad;
+  
+} d4est_local_sizes_t;
+
 /* This file was automatically generated.  Do not edit! */
 double *d4est_operators_fetch_vtk_rst(d4est_operators_t *d4est_ops,int deg,int dim);
 void d4est_operators_convert_nodal_to_vtk(d4est_operators_t *d4est_ops,double *vec,int dim,int deg,double *vtk_vec);

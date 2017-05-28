@@ -6,7 +6,7 @@
 #include "../Utilities/util.h"
 #include "../LinearAlgebra/linalg.h"
 #include "../ElementData/element_data.h"
-#include "../ElementData/curved_element_data.h"
+#include "../ElementData/d4est_element_data.h"
 #include <hacked_p4est_vtk.h>
 
 
@@ -47,25 +47,25 @@ hp_amr_refine_callback
       d4est_operators_apply_p_prolong
         (
          d4est_ops,
-         &elem_data->u_storage[0],
+         &elem_data->u_elem[0],
          degH,
          (P4EST_DIM),
          degh,
          temp_data        
         );
-      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_storage[0], volume_nodes);
+      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
     }
     else if (elem_data->deg > degh){
       d4est_operators_apply_p_restrict
         (
          d4est_ops,
-         &elem_data->u_storage[0],
+         &elem_data->u_elem[0],
          degH,
          (P4EST_DIM),
          degh,
          temp_data
         );
-      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_storage[0], volume_nodes);
+      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
     }     
 
     elem_data->deg = degh;
@@ -84,7 +84,7 @@ hp_amr_curved_refine_callback
 )
 {
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
-  curved_element_data_t* elem_data = (curved_element_data_t*) quadrant->p.user_data;
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) quadrant->p.user_data;
   d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
   
   int* refinement_log = hp_amr_data->refinement_log;
@@ -111,25 +111,25 @@ hp_amr_curved_refine_callback
       d4est_operators_apply_p_prolong
         (
          d4est_ops,
-         &elem_data->u_storage[0],
+         &elem_data->u_elem[0],
          degH,
          (P4EST_DIM),
          degh,
          temp_data        
         );
-      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_storage[0], volume_nodes);
+      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
     }
     else if (elem_data->deg > degh){
       d4est_operators_apply_p_restrict
         (
          d4est_ops,
-         &elem_data->u_storage[0],
+         &elem_data->u_elem[0],
          degH,
          (P4EST_DIM),
          degh,
          temp_data
         );
-      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_storage[0], volume_nodes);
+      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
     }     
 
     elem_data->deg = degh;
@@ -187,7 +187,7 @@ hp_amr
     );
   }
   else {
-    curved_element_data_copy_from_vec_to_storage
+    d4est_element_data_copy_from_vec_to_storage
       (
        p4est,
        *data_to_hp_refine
@@ -249,7 +249,7 @@ hp_amr
     new_nodes = element_data_get_local_nodes(p4est);
   }
   else {
-    new_nodes = curved_element_data_get_local_nodes(p4est);
+    new_nodes = d4est_element_data_get_local_nodes(p4est);
   }
   
   /* realloc room for new refined mesh data */
@@ -266,7 +266,7 @@ hp_amr
       );
   }
   else {
-    curved_element_data_copy_from_storage_to_vec
+    d4est_element_data_copy_from_storage_to_vec
       (
        p4est,
        *data_to_hp_refine

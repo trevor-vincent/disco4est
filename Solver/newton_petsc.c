@@ -198,6 +198,7 @@ PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
   p4est_ghost_t* ghost = *petsc_ctx->ghost;
   d4est_operators_t* d4est_ops = petsc_ctx->d4est_ops;
   d4est_geometry_t* d4est_geom = petsc_ctx->d4est_geom;
+  d4est_quadrature_t* d4est_quad = petsc_ctx->d4est_quad;
   
   problem_data_t vecs_for_res_build;
   problem_data_copy_ptrs(vecs, &vecs_for_res_build);
@@ -206,10 +207,10 @@ PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
   vecs_for_res_build.Au = ftemp;
 
   /* if (d4est_geom != NULL){ */
-  /*   ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (curved_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_res_build, d4est_ops,d4est_geom); */
+  /*   ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (d4est_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_res_build, d4est_ops,d4est_geom); */
   /* } */
   /* else { */
-  ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (petsc_ctx->ghost_data), &vecs_for_res_build, d4est_ops, d4est_geom);
+  ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (petsc_ctx->ghost_data), &vecs_for_res_build, d4est_ops, d4est_geom, d4est_quad);
   /* } */
   VecRestoreArray(f,&ftemp);//CHKERRQ(ierr);
   VecRestoreArrayRead(x,&xx);
@@ -240,6 +241,7 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
   p4est_ghost_t* ghost = *petsc_ctx->ghost;
   d4est_operators_t* d4est_ops = petsc_ctx->d4est_ops;
   d4est_geometry_t* d4est_geom = petsc_ctx->d4est_geom;
+  d4est_quadrature_t* d4est_quad = petsc_ctx->d4est_quad;
 
 
   /* int i; */
@@ -257,10 +259,17 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
 
 
   /* if (d4est_geom != NULL){ */
-    /* ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (curved_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_jac, d4est_ops,d4est_geom); */
+    /* ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (d4est_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_jac, d4est_ops,d4est_geom); */
   /* } */
   /* else { */
-((weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (petsc_ctx->ghost_data), &vecs_for_jac, d4est_ops, d4est_geom);
+((weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
+                                                ghost,
+                                                (petsc_ctx->ghost_data),
+                                                &vecs_for_jac,
+                                                d4est_ops,
+                                                d4est_geom,
+                                                d4est_quad
+                                               );
   /* } */
   
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);

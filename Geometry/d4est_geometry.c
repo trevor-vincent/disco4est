@@ -2,6 +2,7 @@
 #include <ini.h>
 #include <d4est_geometry.h>
 #include <d4est_operators.h>
+#include <d4est_element_data.h>
 #include <linalg.h>
 #include <util.h>
 
@@ -24,6 +25,61 @@ typedef struct {
   
 } d4est_geometry_input_t;
 
+
+
+
+d4est_geometry_storage_t*
+d4est_geometry_storage_init()
+{
+  d4est_geometry_storage_t* geometric_factors = P4EST_ALLOC(d4est_geometry_storage_t, 1);
+  geometric_factors->J_quad = NULL; 
+  geometric_factors->xyz = NULL;
+  geometric_factors->xyz_quad = NULL;
+  geometric_factors->xyz_rst_quad = NULL;
+  geometric_factors->rst_xyz_quad = NULL;
+
+  return geometric_factors;
+}
+
+void
+d4est_geometry_storage_reinit
+(
+ p4est_t* p4est,
+ d4est_geometry_storage_t* geometric_factors,
+ d4est_local_sizes_t local_sizes
+)
+{
+  int local_nodes = local_sizes.local_nodes;
+  int local_nodes_quad = local_sizes.local_nodes_quad;
+  int local_sqr_nodes = local_sizes.local_sqr_nodes;
+  int local_sqr_trace_nodes = local_sizes.local_sqr_trace_nodes;
+    
+  int vector_nodes = local_nodes*(P4EST_DIM); 
+  geometric_factors->xyz = P4EST_REALLOC(geometric_factors->xyz,double,vector_nodes);
+  geometric_factors->xyz_quad = P4EST_REALLOC(geometric_factors->xyz_quad, double, (P4EST_DIM)*local_nodes_quad);
+
+  int matrix_nodes_quad = local_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
+  geometric_factors->J_quad = P4EST_REALLOC(geometric_factors->J_quad,double,local_nodes_quad);
+  geometric_factors->xyz_rst_quad = P4EST_REALLOC(geometric_factors->xyz_rst_quad,double,matrix_nodes_quad);  
+  geometric_factors->rst_xyz_quad = P4EST_REALLOC(geometric_factors->rst_xyz_quad,double,matrix_nodes_quad);
+
+}
+
+void
+d4est_geometry_storage_destroy
+(
+ d4est_geometry_storage_t* geometric_factors
+)
+{
+  if (geometric_factors != NULL){
+    P4EST_FREE(geometric_factors->J_quad);
+    P4EST_FREE(geometric_factors->xyz);
+    P4EST_FREE(geometric_factors->xyz_quad);
+    P4EST_FREE(geometric_factors->xyz_rst_quad);
+    P4EST_FREE(geometric_factors->rst_xyz_quad);
+    P4EST_FREE(geometric_factors);
+  }
+}
 
 static
 int d4est_geometry_input_handler
@@ -1024,56 +1080,6 @@ d4est_geometry_compute_drst_dxyz_times_jacobian
   }  
 }
 
-void
-d4est_geometry_compute_qcoords_on_mortar
-(
- p4est_topidx_t e0_tree,
- p4est_qcoord_t e0_q [(P4EST_DIM)], /* qcoord of first element of side */
- p4est_qcoord_t e0_dq, /* qcoord vector spanning first element of side */
- int num_faces_side, 
- int num_faces_mortar,
- int face,
- p4est_qcoord_t mortar_q0 [(P4EST_HALF)][(P4EST_DIM)],
- p4est_qcoord_t* mortar_dq
-)
-{
-  for (int j = 0; j < (P4EST_HALF); j++){
-    int c = p4est_face_corners[face][j];
-    for (int d = 0; d < (P4EST_DIM); d++){
-      int cd = d4est_operators_is_child_left_or_right(c, d);
-      mortar_q0[j][d] = e0_q[d] + cd*e0_dq;
-    }
-  }
-  
-  p4est_qcoord_t dqa [((P4EST_DIM)-1)][(P4EST_DIM)];
-  
-  for (int d = 0; d < (P4EST_DIM); d++){
-    for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){
-      dqa[dir][d] = (mortar_q0[(dir+1)][d] - mortar_q0[0][d]);
-      if (num_faces_side != num_faces_mortar)
-        dqa[dir][d] /= 2;
-    }
-  }    
-
-  p4est_qcoord_t dq0mf0 [(P4EST_DIM)];
-  for (int d = 0; d < (P4EST_DIM); d++){
-    dq0mf0[d] = (mortar_q0[0][d] - e0_q[d])/2;
-  }
-    
-  for (int d = 0; d < (P4EST_DIM); d++){
-    for (int c = 0; c < (P4EST_HALF); c++){
-      mortar_q0[c][d] = e0_q[d];
-      if (num_faces_side != num_faces_mortar)
-        mortar_q0[c][d] += dq0mf0[d];
-      for (int dir = 0; dir < (P4EST_DIM) - 1; dir++){
-        int cd = d4est_operators_is_child_left_or_right(c, dir);
-        mortar_q0[c][d] += cd*dqa[dir][d];
-      }
-    }
-  }
-
-  *mortar_dq = (num_faces_side == num_faces_mortar) ? e0_dq : e0_dq/2;
-}
 
 
 

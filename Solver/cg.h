@@ -40,7 +40,7 @@ cg_solve
  p4est_t* p4est,
  problem_data_t* vecs,
  weakeqn_ptrs_t* fcns,
- d4est_operators_t* dgbase,
+ d4est_operators_t* d4est_ops,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
  cg_solver_params_t* params
@@ -51,10 +51,10 @@ void curved_cg_solve
  p4est_t* p4est,
  problem_data_t* vecs,
  weakeqn_ptrs_t* fcns,
- d4est_operators_t* dgbase,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  p4est_ghost_t* ghost,
- curved_element_data_t* ghost_data,
+ d4est_element_data_t* ghost_data,
  cg_solver_params_t* params
 );
 

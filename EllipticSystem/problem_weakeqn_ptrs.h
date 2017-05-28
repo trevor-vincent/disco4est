@@ -12,7 +12,8 @@ void (*problem_apply_op_fcn_t)
  void*, /* element_data */
  problem_data_t*,
  d4est_operators_t*,
- d4est_geometry_t*
+ d4est_geometry_t*,
+ d4est_quadrature_t*
 );
 
 typedef struct {

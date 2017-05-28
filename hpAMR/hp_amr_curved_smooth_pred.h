@@ -23,7 +23,7 @@ typedef struct {
    p4est_t*,
    double, /* eta2 */
    estimator_stats_t**,
-   curved_element_data_t*,
+   d4est_element_data_t*,
    void* /* user ptr */
   );
   
@@ -32,7 +32,7 @@ typedef struct {
    p4est_t*,
    double, /* eta2 */
    estimator_stats_t**,
-   curved_element_data_t*,
+   d4est_element_data_t*,
    void* /* user ptr */
   );
   

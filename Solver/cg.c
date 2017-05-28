@@ -45,7 +45,7 @@ cg_nr_solve
 }
 
 void cg_solve(p4est_t* p4est, problem_data_t* vecs, weakeqn_ptrs_t* fcns,
-              d4est_operators_t* dgbase, p4est_ghost_t* ghost,
+              d4est_operators_t* d4est_ops, p4est_ghost_t* ghost,
               element_data_t* ghost_data, cg_solver_params_t* params) {
 
   int local_nodes;
@@ -72,7 +72,7 @@ void cg_solve(p4est_t* p4est, problem_data_t* vecs, weakeqn_ptrs_t* fcns,
   r = P4EST_ALLOC(double, local_nodes);
 
   /* first iteration data, store Au in r */
-  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgbase, NULL);
+  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, NULL);
 
 
   
@@ -102,7 +102,7 @@ void cg_solve(p4est_t* p4est, problem_data_t* vecs, weakeqn_ptrs_t* fcns,
 
   for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++) {
     /* Au = A*d; */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgbase, NULL);
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, NULL);
     d_dot_Au = linalg_vec_dot(d, Au, local_nodes);
 
     sc_allreduce(&d_dot_Au, &d_dot_Au_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,
@@ -145,10 +145,10 @@ void curved_cg_solve(
                      p4est_t* p4est,
                      problem_data_t* vecs,
                      weakeqn_ptrs_t* fcns,
-                     d4est_operators_t* dgbase,
+                     d4est_operators_t* d4est_ops,
                      d4est_geometry_t* geom,
                      p4est_ghost_t* ghost,
-                     curved_element_data_t* ghost_data,
+                     d4est_element_data_t* ghost_data,
                      cg_solver_params_t* params) {
 
   int local_nodes;
@@ -175,7 +175,7 @@ void curved_cg_solve(
   r = P4EST_ALLOC(double, local_nodes);
 
   /* first iteration data, store Au in r */
-  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgbase, geom);
+  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, geom);
 
   /* DEBUG_PRINT_2ARR_DBL(vecs->u, vecs->Au, vecs->local_nodes); */
   
@@ -204,7 +204,7 @@ void curved_cg_solve(
 
   for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++) {
     /* Au = A*d; */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, dgbase, geom);
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, geom);
     d_dot_Au = linalg_vec_dot(d, Au, local_nodes);
 
     sc_allreduce(&d_dot_Au, &d_dot_Au_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,

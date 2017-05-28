@@ -1,5 +1,5 @@
 #include "../GridFunctions/grid_functions.h"
-#include "../ElementData/curved_element_data.h"
+#include "../ElementData/d4est_element_data.h"
 #include "../dGMath/d4est_operators.h"
 #include "../LinearAlgebra/linalg.h"
 #include "../Utilities/util.h"
@@ -12,7 +12,7 @@
 static void
 curved_dg_norm_boundary
 (
- curved_element_data_t* e_m,
+ d4est_element_data_t* e_m,
  int f_m,
  grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
@@ -49,7 +49,7 @@ curved_dg_norm_boundary
   }
   
   d4est_operators_apply_slicer(d4est_ops,
-                      e_m->u_storage,
+                      e_m->u_elem,
                       (P4EST_DIM),
                       f_m,
                       e_m->deg,
@@ -141,10 +141,10 @@ curved_dg_norm_boundary
 static void
 curved_dg_norm_interface
 (
- curved_element_data_t** e_m,
+ d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
- curved_element_data_t** e_p,
+ d4est_element_data_t** e_p,
  int faces_p,
  int f_p,
  int* e_m_is_ghost,
@@ -173,8 +173,8 @@ curved_dg_norm_interface
   int faces_mortar = (faces_m > faces_p) ? faces_m : faces_p;
   double faceterm_prefactor_mortar [(P4EST_HALF)];
   int deg_p_lobatto_porder [(P4EST_HALF)];
-  curved_element_data_t* e_p_oriented [(P4EST_HALF)];
-  curved_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
+  d4est_element_data_t* e_p_oriented [(P4EST_HALF)];
+  d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
   
   int total_side_nodes_m_lobatto = 0;
   int total_side_nodes_m_quad = 0;
@@ -274,7 +274,7 @@ curved_dg_norm_interface
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &(e_m[i]->u_storage[0]),
+       &(e_m[i]->u_elem[0]),
        (P4EST_DIM),
        f_m,
        e_m[i]->deg,
@@ -288,7 +288,7 @@ curved_dg_norm_interface
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &(e_p_oriented[i]->u_storage[0]),
+       &(e_p_oriented[i]->u_elem[0]),
        (P4EST_DIM),
        f_p,
        e_p_oriented[i]->deg,
