@@ -455,58 +455,70 @@ void problem_build_rhs
      d4est_ops,
      d4est_geom
     );
-
+  
   prob_vecs->curved_scalar_flux_fcn_data = curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
                                              (boundary_fcn, &global_ip_flux_params);
 
-  /* for (p4est_topidx_t tt = p4est->first_local_tree; */
-  /*      tt <= p4est->last_local_tree; */
-  /*      ++tt) */
-  /*   { */
-  /*     p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-  /*     sc_array_t* tquadrants = &tree->quadrants; */
-  /*     int Q = (p4est_locidx_t) tquadrants->elem_count; */
-  /*     for (int q = 0; q < Q; ++q) { */
-  /*       p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-  /*       d4est_element_data_t* ed = quad->p.user_data; */
-
-  /*       if (util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){ */
-  /*       d4est_operators_apply_curvedGaussMass(d4est_ops, */
-  /*                                    &f[ed->nodal_stride], */
-  /*                                    ed->deg, */
-  /*                                    ed->J_quad, */
-  /*                                    ed->deg_quad, */
-  /*                                    (P4EST_DIM), */
-  /*                                    &prob_vecs->rhs[ed->nodal_stride] */
-  /*                                   ); */
-  /*       } */
-  /*       else if(util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_GAUSS")){ */
-  /*         d4est_element_data_apply_fofufofvlj_Gaussnodes */
-  /*           ( */
-  /*            d4est_ops, */
-  /*            d4est_geom, */
-  /*            NULL, */
-  /*            NULL, */
-  /*            ed, */
-  /*            ed->deg_stiffness, */
-  /*            (P4EST_DIM), */
-  /*            &prob_vecs->rhs[ed->nodal_stride], */
-  /*            f_fcn_ext, */
-  /*            NULL, */
-  /*            NULL, */
-  /*            NULL */
-  /*           ); */
-  /*       } */
-  /*       else { */
-  /*         mpi_abort("Should not happen\n"); */
-  /*       } */
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data;
 
 
-  /*       printf("elem_id, rhs sum = %d %.25f\n", ed->id, linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg))); */
+        d4est_mesh_object_t mesh_object;
+        mesh_object.type = ELEMENT_VOLUME;
+        mesh_object.dq = ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
+#if (P4EST_DIM)==3
+        mesh_object.q[2] = ed->q[2];
+#endif
+        
+        d4est_quadrature_apply_mass_matrix(d4est_ops,
+                                           d4est_geom,
+                                           d4est_quad,
+                                           mesh_object,
+                                     &f[ed->nodal_stride],
+                                     ed->deg,
+                                     ed->J_quad,
+                                     ed->deg_quad,
+                                     &prob_vecs->rhs[ed->nodal_stride]
+                                    );
+        /* } */
+        /* else if(util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_GAUSS")){ */
+        /*   d4est_element_data_apply_fofufofvlj_Gaussnodes */
+        /*     ( */
+        /*      d4est_ops, */
+        /*      d4est_geom, */
+        /*      NULL, */
+        /*      NULL, */
+        /*      ed, */
+        /*      ed->deg_stiffness, */
+        /*      (P4EST_DIM), */
+        /*      &prob_vecs->rhs[ed->nodal_stride], */
+        /*      f_fcn_ext, */
+        /*      NULL, */
+        /*      NULL, */
+        /*      NULL */
+        /*     ); */
+        /* } */
+        /* else { */
+        /*   mpi_abort("Should not happen\n"); */
+        /* } */
+
+
+        /* printf("elem_id, rhs sum = %d %.25f\n", ed->id, linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg))); */
         
         
-  /*     } */
-  /*   } */
+      }
+    }
 
   int local_nodes = prob_vecs->local_nodes;
   double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
@@ -518,8 +530,11 @@ void problem_build_rhs
 
   prob_vecs->u = tmp;
   P4EST_FREE(u_eq_0);
-
+  
   prob_vecs->curved_scalar_flux_fcn_data = curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns(zero_fcn, &global_ip_flux_params);
+
+  /* DEBUG_PRINT_ARR_DBL(prob_vecs->rhs, local_nodes); */
+  /* DEBUG_PRINT_ARR_DBL(prob_vecs->Au, local_nodes); */
   
   P4EST_FREE(f);
 }
@@ -902,7 +917,6 @@ problem_init
                 
 /*       } */
 /*     } */
-
 
 
     d4est_cg_params_t cg_params;

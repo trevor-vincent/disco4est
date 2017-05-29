@@ -38,7 +38,7 @@
     for (int i = 0; i < n; i++) {                     \
       sum += a[i];                                    \
     }                                                 \
-    printf("%s = %.25f\n",#a, sum);                   \
+    printf("%s sum = %.25f\n",#a, sum);                   \
   } while(0)
 
 

@@ -79,11 +79,12 @@ struct d4est_quadrature {
   d4est_quadrature_change_fcn_t reinit;
   
 };
+
 /* This file was automatically generated.  Do not edit! */
 double d4est_quadrature_innerproduct(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_object_t object,double *u,double *v,double *jac_quad,int deg_quad);
 void d4est_quadrature_interpolate(d4est_operators_t *d4est_ops,d4est_quadrature_t *d4est_quadrature,d4est_geometry_t *d4est_geometry,d4est_mesh_object_t object,double *u_lobatto_in,int deg_lobatto,double *u_quad_out,int deg_quad);
 d4est_rst_t d4est_quadrature_get_rst_points(d4est_operators_t *d4est_ops,d4est_quadrature_t *d4est_quadrature,d4est_geometry_t *d4est_geometry,d4est_mesh_object_t object,int degree);
-void d4est_quadrature_apply_mass_matrix(d4est_operators_t *d4est_ops,d4est_quadrature_t *d4est_quadrature,d4est_geometry_t *d4est_geometry,d4est_mesh_object_t d4est_object,double *in,int deg_lobatto,double *jac_quad,int deg_quad,double *out);
+void d4est_quadrature_apply_mass_matrix(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geometry,d4est_quadrature_t *d4est_quadrature,d4est_mesh_object_t d4est_object,double *in,int deg_lobatto,double *jac_quad,int deg_quad,double *out);
 void d4est_quadrature_apply_stiffness_matrix(d4est_operators_t *d4est_ops,d4est_quadrature_t *d4est_quadrature,d4est_geometry_t *d4est_geometry,d4est_mesh_object_t object,double *in,int deg_lobatto,double *jac_quad,double *rst_xyz[(P4EST_DIM)][(P4EST_DIM)],int deg_quad,double *out);
 void d4est_quadrature_apply_galerkin_integral(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geometry,d4est_quadrature_t *d4est_quadrature,d4est_mesh_object_t object,double *in_quad,int deg_lobatto,double *jac_quad,int deg_quad,double *out);
 void d4est_quadrature_destroy(d4est_quadrature_t *d4est_quad);

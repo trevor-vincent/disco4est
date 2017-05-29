@@ -161,7 +161,7 @@ d4est_geometry_input
     printf("%s: JAC computation method = %s\n", printf_prefix, "analytic");
 
 
-  free(input.name);
+
   
   return input;
 }

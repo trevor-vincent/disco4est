@@ -9,6 +9,8 @@
 #include <d4est_quadrature.h>
 #include <util.h>
 
+/* #define NASTY_DEBUG */
+
 typedef struct {
 
   d4est_geometry_t* d4est_geom;
@@ -111,16 +113,20 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
      element_data->deg_quad,
      stiff_u
     );
-  
-#ifdef NASTY_DEBUG
-  printf("Stiffness Matrix Element id %d\n", element_data->id);
-  DEBUG_PRINT_ARR_DBL_SUM(stiff_u, volume_nodes_lobatto);
-#endif
-  
+
+
   
   for (int i = 0; i < volume_nodes_lobatto; i++){
     element_data->Au_elem[i] += stiff_u[i];
   }
+  
+#ifdef NASTY_DEBUG
+  printf("Stiffness Matrix Element id %d\n", element_data->id);
+  DEBUG_PRINT_ARR_DBL_SUM(stiff_u, volume_nodes_lobatto);
+  DEBUG_PRINT_ARR_DBL_SUM(element_data->Au_elem, volume_nodes_lobatto);
+#endif
+  
+
 
  
   

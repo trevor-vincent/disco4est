@@ -880,8 +880,8 @@ d4est_element_data_compute_l2_norm_sqr
         d4est_quadrature_apply_mass_matrix
           (
            d4est_ops,
-           d4est_quad,
            d4est_geom,
+           d4est_quad,
            mesh_object,
            &nodal_vec[ed->nodal_stride],
            ed->deg,

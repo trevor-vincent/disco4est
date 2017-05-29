@@ -55,6 +55,8 @@ d4est_quadrature_input
 
   D4EST_CHECK_INPUT(input_section, input.name, NULL); 
   printf("%s: Loading %s quadrature\n", printf_prefix, input.name);
+
+  return input;
 }
 
 
@@ -71,11 +73,11 @@ d4est_quadrature_new
   d4est_quadrature_input_t input = d4est_quadrature_input(input_file, input_section, printf_prefix);
   d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t, 1);
 
-  if (util_match(input.name,"gauss_legendre")) {
+  if (util_match(input.name,"legendre")) {
     d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE;
     d4est_quadrature_gauss_legendre_new(d4est_quad, d4est_geom, input_file);
   }
-  else if (util_match(input.name,"gauss_lobatto")) {
+  else if (util_match(input.name,"lobatto")) {
     d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE_LOBATTO;
     d4est_quadrature_gauss_lobatto_new(d4est_quad, d4est_geom, input_file);
   }
@@ -346,8 +348,8 @@ void d4est_quadrature_apply_stiffness_matrix
 void d4est_quadrature_apply_mass_matrix
 (
  d4est_operators_t* d4est_ops,
- d4est_quadrature_t* d4est_quadrature,
  d4est_geometry_t* d4est_geometry,
+ d4est_quadrature_t* d4est_quadrature,
  d4est_mesh_object_t d4est_object,
  double* in,
  int deg_lobatto,

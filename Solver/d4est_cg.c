@@ -140,8 +140,10 @@ void d4est_cg_solve
   /* printf("imax = %d\n", imax); */
   /* printf("monitor = %d\n", params->monitor); */
   /* printf("delta_new > atol*atol + delta_0 * rtol * rtol = %d\n", delta_new > atol*atol + delta_0 * rtol * rtol); */
-
+    
   for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++) {
+
+    
     /* Au = A*d; */
     fcns->apply_lhs(p4est, *ghost, *ghost_data, vecs, d4est_ops, d4est_geom, d4est_quad);
     d_dot_Au = linalg_vec_dot(d, Au, local_nodes);

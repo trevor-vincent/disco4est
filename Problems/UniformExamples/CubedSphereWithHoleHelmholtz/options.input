@@ -12,21 +12,21 @@ ip_flux_penalty_calculate_fcn = meanp_sqr_over_meanh
 
 [problem]
 num_unifrefs = 0
-deg_R2= 8
-deg_quad_R2= 8
-deg_stiffness_R2= 8
-deg_R1  = 8
-deg_quad_R1  = 8
-deg_stiffness_R1  = 8
-deg_R0= 8
-deg_quad_R0= 8
-deg_stiffness_R0= 8
+deg_R2= 2
+deg_quad_R2= 2
+deg_stiffness_R2= 2
+deg_R1  = 2
+deg_quad_R1  = 2
+deg_stiffness_R1  = 2
+deg_R0= 2
+deg_quad_R0= 2
+deg_stiffness_R0= 2
 rhs_compute_method = COMPUTE_RHS_ON_LOBATTO
 
 [geometry]
 ; name = cubed_sphere_inner_shell_block
-; name = cubed_sphere_outer_shell_block
-name = cubed_sphere_innerouter_shell
+name = cubed_sphere_outer_shell_block
+; name = cubed_sphere_innerouter_shell
 ; name = cubed_sphere_with_cube_hole
 R0 = 4
 R1 = 4.5
@@ -55,9 +55,7 @@ rtol = 1e-20
 atol = 1e-20
 
 [d4est_vtk_geometry]
-; name = cubed_sphere_inner_shell_block
-; name = cubed_sphere_outer_shell_block
-name = cubed_sphere_innerouter_shell
+name = cubed_sphere_outer_shell_block
 ; name = cubed_sphere_with_cube_hole
 R0 = 1
 R1 = 2
@@ -67,3 +65,6 @@ DX_compute_method = analytic
 JAC_compute_method = numerical
 compactify_outer_shell = 1
 compactify_inner_shell = 0
+
+[quadrature]
+name = legendre
