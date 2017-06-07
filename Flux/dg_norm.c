@@ -1,7 +1,7 @@
 #include "../GridFunctions/grid_functions.h"
 #include "../ElementData/element_data.h"
 #include "../dGMath/d4est_operators.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../Flux/compute_flux.h"
 
@@ -203,7 +203,7 @@ dg_norm_ip_flux_interface
   }
   
   /* project (-)-side u trace vector onto mortar space */ 
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_m_on_f_m,
@@ -215,7 +215,7 @@ dg_norm_ip_flux_interface
     );
 
   /* project (+)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_p_on_f_p,
@@ -234,7 +234,7 @@ dg_norm_ip_flux_interface
     stride = 0;
     for (i = 0; i < faces_m; i++){
       d4est_operators_apply_Dij(d4est_ops, e_m[i]->u_elem, (P4EST_DIM), e_m[i]->deg, dir, du_m);
-      linalg_vec_scale(2./e_m[i]->h, du_m, d4est_operators_get_nodes((P4EST_DIM), e_m[i]->deg));
+      d4est_linalg_vec_scale(2./e_m[i]->h, du_m, d4est_operators_get_nodes((P4EST_DIM), e_m[i]->deg));
 
       d4est_operators_apply_slicer
         (
@@ -253,7 +253,7 @@ dg_norm_ip_flux_interface
     stride = 0;
     for (i = 0; i < faces_p; i++){
       d4est_operators_apply_Dij(d4est_ops, &(e_p[i]->u_elem[0]), (P4EST_DIM), e_p[i]->deg, dir, du_p);
-      linalg_vec_scale(2./e_p[i]->h, du_p, d4est_operators_get_nodes((P4EST_DIM), e_p[i]->deg));
+      d4est_linalg_vec_scale(2./e_p[i]->h, du_p, d4est_operators_get_nodes((P4EST_DIM), e_p[i]->deg));
 
       d4est_operators_apply_slicer
         (
@@ -269,7 +269,7 @@ dg_norm_ip_flux_interface
     }
 
     /* project the derivatives from (-) and (+) sides onto the mortar space */
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        du_m_on_f_m,
@@ -280,7 +280,7 @@ dg_norm_ip_flux_interface
        deg_mortar
       );
 
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        du_p_on_f_p,
@@ -307,7 +307,7 @@ dg_norm_ip_flux_interface
     }
 
     /* project mortar data back onto the (-) side */
-    d4est_operators_project_mortar_onto_side
+    d4est_mortars_project_mortar_onto_side
       (
        d4est_ops,
        qstar_min_q_mortar,
@@ -322,7 +322,7 @@ dg_norm_ip_flux_interface
     stride = 0;
     for (i = 0; i < faces_m; i++){
       if(e_m_is_ghost[i] == 0)
-        linalg_copy_1st_to_2nd
+        d4est_linalg_copy_1st_to_2nd
           (
            &qstar_min_q_m[stride],
            &(e_m[i]->qstar_min_q[dir][f_m*face_nodes_m[i]]),

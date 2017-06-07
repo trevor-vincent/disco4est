@@ -1,5 +1,5 @@
 #include <multigrid_smoother_cheby_d4est.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <ini.h>
 #include <util.h>
 #include <cg_eigs.h>
@@ -102,15 +102,15 @@ multigrid_smoother_cheby_d4est_iterate
   double alpha,beta;
   p = P4EST_ALLOC(double, local_nodes);
   
-  linalg_fill_vec(p, 0., local_nodes);
+  d4est_linalg_fill_vec(p, 0., local_nodes);
   for (i = 0; i < iter; i++){
     /* calculate residual r = rhs - Au */
     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
-    linalg_copy_1st_to_2nd(Au, r, local_nodes);
-    linalg_vec_xpby(rhs, -1., r, local_nodes);
+    d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
+    d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
 
     if(print_residual_norm && p4est->mpirank == 0){
-      printf("[CHEBYSHEV]: iter, residual = %d, %.25f\n", i, linalg_vec_dot(r,r,local_nodes));
+      printf("[CHEBYSHEV]: iter, residual = %d, %.25f\n", i, d4est_linalg_vec_dot(r,r,local_nodes));
     }
     
     if (i == 0)
@@ -122,15 +122,15 @@ multigrid_smoother_cheby_d4est_iterate
 
     beta = alpha*d - 1.;
    
-    linalg_vec_scale(alpha,r,local_nodes);
-    linalg_vec_xpby(&r[0], beta, &p[0], local_nodes);   
-    linalg_vec_axpy(1., p, u, local_nodes);
+    d4est_linalg_vec_scale(alpha,r,local_nodes);
+    d4est_linalg_vec_xpby(&r[0], beta, &p[0], local_nodes);   
+    d4est_linalg_vec_axpy(1., p, u, local_nodes);
   }
 
   /* calculate the residual */
   fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
-  linalg_copy_1st_to_2nd(Au, r, local_nodes);
-  linalg_vec_xpby(rhs, -1., r, local_nodes);
+  d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
+  d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
 
   P4EST_FREE(p);
   /* P4EST_FREE(ghost_data); */

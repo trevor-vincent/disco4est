@@ -1,5 +1,5 @@
 #include "../Estimators/bi_estimator_flux_fcns.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 
 double bi_est_sipg_flux_penalty_prefactor;
 penalty_calc_t bi_est_u_prefactor_calculate_fcn;
@@ -88,7 +88,7 @@ bi_est_dirichlet
 
 
     d4est_operators_apply_Mij(d4est_ops, Je2, (P4EST_DIM)-1, e_m->deg, MJe2);
-    double Je2MJe2 = linalg_vec_dot(Je2, MJe2, face_nodes_m);
+    double Je2MJe2 = d4est_linalg_vec_dot(Je2, MJe2, face_nodes_m);
     Je2MJe2 *= e_m->surface_jacobian;
     e_m->local_estimator += Je2MJe2;
   }
@@ -242,7 +242,7 @@ bi_est_interface
   }
   
   /* project (-)-side u trace vector onto mortar space */ 
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_m_on_f_m,
@@ -254,7 +254,7 @@ bi_est_interface
     );
 
   /* project (+)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_p_on_f_p,
@@ -282,7 +282,7 @@ bi_est_interface
          du_m
         );
       
-      linalg_vec_scale(2./e_m[i]->h, du_m, d4est_operators_get_nodes((P4EST_DIM), e_m[i]->deg));
+      d4est_linalg_vec_scale(2./e_m[i]->h, du_m, d4est_operators_get_nodes((P4EST_DIM), e_m[i]->deg));
 
       d4est_operators_apply_slicer
         (
@@ -301,7 +301,7 @@ bi_est_interface
     stride = 0;
     for (i = 0; i < faces_p; i++){
       d4est_operators_apply_Dij(d4est_ops, &(e_p[i]->u_elem[0]), (P4EST_DIM), e_p[i]->deg, dir, du_p);
-      linalg_vec_scale(2./e_p[i]->h, du_p, d4est_operators_get_nodes((P4EST_DIM), e_p[i]->deg));
+      d4est_linalg_vec_scale(2./e_p[i]->h, du_p, d4est_operators_get_nodes((P4EST_DIM), e_p[i]->deg));
 
       d4est_operators_apply_slicer
         (
@@ -317,7 +317,7 @@ bi_est_interface
     }
 
     /* project the derivatives from (-) and (+) sides onto the mortar space */
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        du_m_on_f_m,
@@ -328,7 +328,7 @@ bi_est_interface
        deg_mortar
       );
 
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        du_p_on_f_p,
@@ -413,7 +413,7 @@ bi_est_interface
                          deg_mortar[f],
                          &MJe2[stride]);
         
-        double Je2MJe2 = sj_mortar*linalg_vec_dot(&Je2[d][stride], &MJe2[stride], nodes_mortar[f]);
+        double Je2MJe2 = sj_mortar*d4est_linalg_vec_dot(&Je2[d][stride], &MJe2[stride], nodes_mortar[f]);
 
         if(faces_m == (P4EST_HALF)){
           e_m[f]->local_estimator += Je2MJe2;
@@ -435,7 +435,7 @@ bi_est_interface
                        deg_mortar[f],
                        &MJe1[stride]);
         
-      double Je1MJe1 = sj_mortar*linalg_vec_dot(&Je1[stride],
+      double Je1MJe1 = sj_mortar*d4est_linalg_vec_dot(&Je1[stride],
                                                 &MJe1[stride],
                                                 nodes_mortar[f]);
 

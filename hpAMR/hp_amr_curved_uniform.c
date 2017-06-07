@@ -1,7 +1,7 @@
 #include "../hpAMR/hp_amr.h"
 #include "../hpAMR/hp_amr_curved_uniform.h"
 #include "../ElementData/d4est_element_data.h"
-#include <linalg.h>
+#include <d4est_linalg.h>
 
 static void
 hp_amr_curved_uniform_refine_replace_callback ( 
@@ -58,7 +58,7 @@ hp_amr_curved_uniform_refine_replace_callback (
     child_data->deg = parent_data->deg;
     /* printf("child_data->deg = %d\n", child_data->deg); */
     child_data->local_predictor = parent_data->local_predictor;
-    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
+    d4est_linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
   P4EST_FREE(temp_data);
@@ -116,7 +116,7 @@ hp_amr_curved_uniform_balance_replace_callback (
   for (i = 0; i < (P4EST_CHILDREN); i++){
     child_data = (d4est_element_data_t*) incoming[i]->p.user_data;
     child_data->deg = parent_data->deg;
-    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
+    d4est_linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
   P4EST_FREE(temp_data);

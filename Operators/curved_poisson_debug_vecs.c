@@ -1,7 +1,7 @@
 #include <util.h>
 #include "curved_poisson_debug_vecs.h"
 #include <d4est_element_data.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 
 
 void
@@ -15,7 +15,7 @@ curved_poisson_debug_vecs_set_lifteduflux
   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int d = 0; d < (P4EST_DIM); d++){
     for (int f = 0; f < (P4EST_FACES); f++){
-      linalg_copy_1st_to_2nd
+      d4est_linalg_copy_1st_to_2nd
         (
          lifteduflux[f][d],
          debug_vecs->lifteduflux[f][d],
@@ -35,7 +35,7 @@ curved_poisson_debug_vecs_set_liftedqflux
 {
   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int f = 0; f < (P4EST_FACES); f++){
-    linalg_copy_1st_to_2nd(liftedqflux[f], debug_vecs->liftedqflux[f], volume_nodes);
+    d4est_linalg_copy_1st_to_2nd(liftedqflux[f], debug_vecs->liftedqflux[f], volume_nodes);
   }
 }
 
@@ -49,7 +49,7 @@ curved_poisson_debug_vecs_set_Mdu
 {
   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int d = 0; d < (P4EST_DIM); d++){
-    linalg_copy_1st_to_2nd(Mdu[d], debug_vecs->Mdu[d], volume_nodes);
+    d4est_linalg_copy_1st_to_2nd(Mdu[d], debug_vecs->Mdu[d], volume_nodes);
   }
 }
 
@@ -65,7 +65,7 @@ curved_poisson_debug_vecs_set_Mq
 {
   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int d = 0; d < (P4EST_DIM); d++){
-    linalg_copy_1st_to_2nd(Mq[d], debug_vecs->Mq[d], volume_nodes);
+    d4est_linalg_copy_1st_to_2nd(Mq[d], debug_vecs->Mq[d], volume_nodes);
   }
 }
 
@@ -80,7 +80,7 @@ curved_poisson_debug_vecs_set_q
   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
   /* printf("[WARNING] set_q only valid for constant jacobian meshes\n"); */
   for (int d = 0; d < (P4EST_DIM); d++){
-    linalg_copy_1st_to_2nd(q[d], debug_vecs->q[d], volume_nodes);    
+    d4est_linalg_copy_1st_to_2nd(q[d], debug_vecs->q[d], volume_nodes);    
   }
 }
 
@@ -94,7 +94,7 @@ curved_poisson_debug_vecs_set_Au
 )
 {
   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
-  linalg_copy_1st_to_2nd(Au, debug_vecs->Au, volume_nodes);
+  d4est_linalg_copy_1st_to_2nd(Au, debug_vecs->Au, volume_nodes);
 }
 
 
@@ -107,7 +107,7 @@ curved_poisson_debug_vecs_set_u
 )
 {
   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
-  linalg_copy_1st_to_2nd(u, debug_vecs->u, volume_nodes);
+  d4est_linalg_copy_1st_to_2nd(u, debug_vecs->u, volume_nodes);
 }
 
 void
@@ -119,7 +119,7 @@ curved_poisson_debug_vecs_set_Mdivq
 )
 {
   int volume_nodes_quad = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg_quad);
-  linalg_copy_1st_to_2nd(Mdivq, debug_vecs->Mdivq, volume_nodes_quad);
+  d4est_linalg_copy_1st_to_2nd(Mdivq, debug_vecs->Mdivq, volume_nodes_quad);
 }
 
 curved_poisson_debug_vecs_t*

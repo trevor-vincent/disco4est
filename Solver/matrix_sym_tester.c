@@ -11,7 +11,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include "../Solver/matrix_sym_tester.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include <sc_reduce.h>
 #include <sc_allgather.h>
@@ -42,16 +42,16 @@
 /*   double* tmp = vecs->u; */
 /*   vecs->u = u_temp; */
   
-/*   linalg_fill_vec(vecs->u, 0., vecs->local_nodes); */
+/*   d4est_linalg_fill_vec(vecs->u, 0., vecs->local_nodes); */
   
 /*   for (i = 0; i < vecs->local_nodes; i++){ */
 /*     vecs->u[i] = 1.; */
 /*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops); */
-/*     linalg_set_column(a_mat, vecs->Au, i, vecs->local_nodes, vecs->local_nodes); */
+/*     d4est_linalg_set_column(a_mat, vecs->Au, i, vecs->local_nodes, vecs->local_nodes); */
 /*     vecs->u[i] = 0.; */
 /*   } */
 
-/*   linalg_mat_transpose(a_mat, a_mat_trans, local_nodes); */
+/*   d4est_linalg_mat_transpose(a_mat, a_mat_trans, local_nodes); */
 /*   int compare = util_compare_vecs(a_mat, a_mat_trans, local_nodes, .000001); */
 
 /*   if (compare == 1) */
@@ -137,13 +137,13 @@
 /*     double rand1 = 1.32*(i+1); */
 /*     double rand2 = 1.453*(i+1); */
     
-/*     linalg_fill_vec(u, rand1, vecs->local_nodes); */
-/*     linalg_fill_vec(v, rand2, vecs->local_nodes); */
+/*     d4est_linalg_fill_vec(u, rand1, vecs->local_nodes); */
+/*     d4est_linalg_fill_vec(v, rand2, vecs->local_nodes); */
 /* #endif    */
 
 /*     if (normalize == 1){ */
-/*       linalg_vec_normalize(u, vecs->local_nodes); */
-/*       linalg_vec_normalize(v, vecs->local_nodes); */
+/*       d4est_linalg_vec_normalize(u, vecs->local_nodes); */
+/*       d4est_linalg_vec_normalize(v, vecs->local_nodes); */
 /*     } */
     
 /*     vecs->u = u; */
@@ -153,7 +153,7 @@
 /*     /\* util_print_matrices(vecs->u, vecs->Au, vecs->local_nodes, 1, "u, Au = "); *\/ */
 
     
-/*     vTAu_local = linalg_vec_dot(v, Au, vecs->local_nodes); */
+/*     vTAu_local = d4est_linalg_vec_dot(v, Au, vecs->local_nodes); */
 
 /*     sc_reduce */
 /*       ( */
@@ -169,7 +169,7 @@
 /*     vecs->u = v; */
 /*     double* Av = vecs->Au; */
 /*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops); */
-/*     uTAv_local = linalg_vec_dot(u, Av, vecs->local_nodes); */
+/*     uTAv_local = d4est_linalg_vec_dot(u, Av, vecs->local_nodes); */
 
 /*     sc_reduce */
 /*       ( */
@@ -270,13 +270,13 @@
 /*     else { */
 /*       double rand1 = 1.32*(i+1); */
 /*       double rand2 = 1.453*(i+1); */
-/*       linalg_fill_vec(u, rand1, vecs->local_nodes); */
-/*       linalg_fill_vec(v, rand2, vecs->local_nodes); */
+/*       d4est_linalg_fill_vec(u, rand1, vecs->local_nodes); */
+/*       d4est_linalg_fill_vec(v, rand2, vecs->local_nodes); */
 /*     } */
 
 /*     if (normalize == 1){ */
-/*       linalg_vec_normalize(u, vecs->local_nodes); */
-/*       linalg_vec_normalize(v, vecs->local_nodes); */
+/*       d4est_linalg_vec_normalize(u, vecs->local_nodes); */
+/*       d4est_linalg_vec_normalize(v, vecs->local_nodes); */
 /*     } */
     
     
@@ -289,14 +289,14 @@
 /*     /\* } *\/ */
 /*     /\* printf("}\n"); *\/ */
 
-/*     /\* linalg_fill_vec(vecs->Au, 0., vecs->local_nodes); *\/ */
+/*     /\* d4est_linalg_fill_vec(vecs->Au, 0., vecs->local_nodes); *\/ */
     
 /*     double* Au = vecs->Au; */
 /*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops); */
 
 /*     /\* util_print_matrices(vecs->u, vecs->Au, vecs->local_nodes, 1, "u, Au = "); *\/ */
 
-/*     vTAu_local = linalg_vec_dot(v, Au, vecs->local_nodes); */
+/*     vTAu_local = d4est_linalg_vec_dot(v, Au, vecs->local_nodes); */
 
 /*     sc_reduce */
 /*       ( */
@@ -312,7 +312,7 @@
 /*     vecs->u = v; */
 /*     double* Av = vecs->Au; */
 /*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops); */
-/*     uTAv_local = linalg_vec_dot(u, Av, vecs->local_nodes); */
+/*     uTAv_local = d4est_linalg_vec_dot(u, Av, vecs->local_nodes); */
 
     
 /*     /\* printf("\ni = %d\n", i); *\/ */
@@ -412,7 +412,7 @@ serial_matrix_sym_tester
   vecs->u = u_temp;
   vecs->Au = Au_temp;
   
-  linalg_fill_vec(vecs->u, 0., vecs->local_nodes);
+  d4est_linalg_fill_vec(vecs->u, 0., vecs->local_nodes);
   
   for (i = 0; i < vecs->local_nodes; i++){
     vecs->u[i] = 1.;
@@ -422,13 +422,13 @@ serial_matrix_sym_tester
     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, geom);
 
     /* to make parallel send stride as well */
-    linalg_set_column(a_mat, vecs->Au, i, vecs->local_nodes, vecs->local_nodes);
+    d4est_linalg_set_column(a_mat, vecs->Au, i, vecs->local_nodes, vecs->local_nodes);
 
     /* util_print_matrix(vecs->Au, vecs->local_nodes, 1, "Au = ", 0); */
     vecs->u[i] = 0.;
   }
 
-  linalg_mat_transpose(a_mat, a_mat_trans, local_nodes);
+  d4est_linalg_mat_transpose(a_mat, a_mat_trans, local_nodes);
 
 
   /* printf("sym_eps = %.25f\n", sym_eps); */
@@ -549,7 +549,7 @@ serial_matrix_sym_tester
   
 /*   /\* seed 1467819770 produces ghosts with 2 elements*\/   */
 
-/*   linalg_fill_vec(vecs->u, 0., vecs->local_nodes); */
+/*   d4est_linalg_fill_vec(vecs->u, 0., vecs->local_nodes); */
 
 /*   int* local_nodes_array = P4EST_ALLOC_ZERO(int, p4est->mpisize); */
 /*   int* local_strides_array = P4EST_ALLOC_ZERO(int, p4est->mpisize + 1); */
@@ -596,7 +596,7 @@ serial_matrix_sym_tester
 /*       ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (element_data_t*)ghost_data, vecs, d4est_ops); */
 
 /*     /\* to make parallel send stride as well *\/ */
-/*     linalg_set_column_opt(a_mat, vecs->Au, c, vecs->local_nodes, global_nodes); */
+/*     d4est_linalg_set_column_opt(a_mat, vecs->Au, c, vecs->local_nodes, global_nodes); */
     
 /*     if (c >= rstart && c < rend) */
 /*       vecs->u[c - rstart] = 0.; */
@@ -620,7 +620,7 @@ serial_matrix_sym_tester
 
 
 /*   if (p4est->mpirank == 0){ */
-/*     linalg_mat_transpose(amat_global, amat_trans_global, global_nodes); */
+/*     d4est_linalg_mat_transpose(amat_global, amat_trans_global, global_nodes); */
 /*     int compare = util_compare_vecs(amat_global, amat_trans_global, global_nodes*global_nodes, sym_eps); */
 
 /*     double biggest_err; */
@@ -859,7 +859,7 @@ matrix_sym_tester_parallel_aux
                                        d4est_geom
                                       );
   /* } */
-  uj_A_ui_local = linalg_vec_dot(uj, A_ui, vecs->local_nodes);
+  uj_A_ui_local = d4est_linalg_vec_dot(uj, A_ui, vecs->local_nodes);
 
  
     
@@ -872,7 +872,7 @@ matrix_sym_tester_parallel_aux
   /* else */
     ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, ghost_data, &vecs_for_sym_test, d4est_ops, d4est_geom);
     
-  ui_A_uj_local = linalg_vec_dot(ui, A_uj, vecs->local_nodes);
+  ui_A_uj_local = d4est_linalg_vec_dot(ui, A_uj, vecs->local_nodes);
 
   double vAu_locals [2];
   double vAu_globals [2] = {0,0};

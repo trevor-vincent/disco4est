@@ -2,7 +2,7 @@
 #include "../ElementData/element_data.h"
 #include "../EllipticSystem/problem_data.h"
 #include "../EllipticSystem/problem_weakeqn_ptrs.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../hpAMR/hp_amr.h"
 #include "../Estimators/bi_estimator_flux_fcns.h"
@@ -52,7 +52,7 @@ bi_estimator_init
 
   int volume_nodes = d4est_operators_get_nodes(dim,deg);
 
-  linalg_copy_1st_to_2nd(
+  d4est_linalg_copy_1st_to_2nd(
   element_data->u_elem,
     &(element_data->u_elem)[0],
     volume_nodes
@@ -60,7 +60,7 @@ bi_estimator_init
 
   for (i = 0; i < (P4EST_DIM); i++){
     d4est_operators_apply_Dij(d4est_ops, element_data->u_elem, dim, deg, i, element_data->du_elem[i]);
-    linalg_vec_scale(2./h, element_data->du_elem[i], volume_nodes);
+    d4est_linalg_vec_scale(2./h, element_data->du_elem[i], volume_nodes);
   }
 }
 

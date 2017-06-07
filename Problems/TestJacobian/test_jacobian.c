@@ -1,7 +1,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <problem.h>
@@ -461,7 +461,7 @@ problem_init
   prob_vecs.user = &input;
 
   
-  d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
+  d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
 
 
   for (level = 0; level < input.num_unifrefs; ++level){
@@ -641,11 +641,11 @@ problem_init
 
           double* eye = P4EST_ALLOC_ZERO(double, nodes);
           for (int i = 0; i < nodes; i++) eye[i] = 1.;
-          linalg_kron_AoBoC(eye, eye, gauss_nodes, jacmap_rst[0], nodes, 1, nodes, 1, nodes,
+          d4est_linalg_kron_AoBoC(eye, eye, gauss_nodes, jacmap_rst[0], nodes, 1, nodes, 1, nodes,
                             1);
-          linalg_kron_AoBoC(eye, gauss_nodes, eye, jacmap_rst[1], nodes, 1, nodes, 1,
+          d4est_linalg_kron_AoBoC(eye, gauss_nodes, eye, jacmap_rst[1], nodes, 1, nodes, 1,
                             nodes, 1);
-          linalg_kron_AoBoC(jacmap_abscissas_dbl, eye, eye, jacmap_rst[2], nodes, 1,
+          d4est_linalg_kron_AoBoC(jacmap_abscissas_dbl, eye, eye, jacmap_rst[2], nodes, 1,
                             nodes, 1, nodes, 1);
 
 
@@ -669,7 +669,7 @@ problem_init
           }
 
     
-          linalg_kron_vec1_o_vec2_o_vec3_dot_x(jacmap_weights_dbl,
+          d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_x(jacmap_weights_dbl,
                                                gauss_weights,
                                                gauss_weights,
                                                jac,
@@ -679,7 +679,7 @@ problem_init
                                                wgau_wgau_wjac_jac
                                               );
 
-          linalg_kron_vec1_o_vec2_o_vec3_dot_x(gauss_weights,
+          d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_x(gauss_weights,
                                                gauss_weights,
                                                gauss_weights,
                                                ed->J_quad,
@@ -708,7 +708,7 @@ problem_init
 
           double* s_points_inverse_map = P4EST_ALLOC(double, face_nodes_quad);
           
-          linalg_kron_AoB(jacmap_abscissas_dbl,
+          d4est_linalg_kron_AoB(jacmap_abscissas_dbl,
                           eye,
                           s_points_inverse_map,
                           nodes,
@@ -719,8 +719,8 @@ problem_init
           
           for (int f = 0; f < (P4EST_FACES); f++){
 
-            d4est_operators_face_info_t face_info;
-            d4est_operators_get_face_info(f, &face_info);
+            d4est_geometry_face_info_t face_info;
+            d4est_geometry_get_face_info(f, &face_info);
 
             printf("Face %d\n", f);
             printf("face_info.a = %d\n", face_info.a);
@@ -804,7 +804,7 @@ problem_init
 
     /* DEBUG_PRINT_ARR_DBL(jacobian_lgl, local_nodes); */
     
-    /* linalg_vec_fabs(error, local_nodes); /\* not needed, except for vtk output *\/ */
+    /* d4est_linalg_vec_fabs(error, local_nodes); /\* not needed, except for vtk output *\/ */
     /* vtk_nodal_vecs_t vtk_nodal_vecs; */
     /* vtk_nodal_vecs.u = u; */
     /* vtk_nodal_vecs.u_analytic = u_analytic; */

@@ -5,7 +5,7 @@
 #include <d4est_element_data.h>
 #include <problem_data.h>
 #include <d4est_operators.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <grid_functions.h>
 #include <d4est_quadrature.h>
 #include <util.h>

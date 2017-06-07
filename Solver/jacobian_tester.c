@@ -1,6 +1,6 @@
 #include <pXest.h>
 #include <jacobian_tester.h>
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 
 void
@@ -45,7 +45,7 @@ jacobian_tester
   
   int num_vecs_to_try = 5;
   double eps = .0001;
-  linalg_fill_vec(u0, 0., local_nodes);
+  d4est_linalg_fill_vec(u0, 0., local_nodes);
   mpi_assert(num_vecs_to_try <= local_nodes);
 
   double max_err = -1;
@@ -64,8 +64,8 @@ jacobian_tester
        d4est_geom
       );
 
-    /* double sum1 = linalg_vec_sum(J_u,local_nodes); */
-    linalg_vec_axpyeqz(eps, u, u0, u0_p_u, local_nodes);
+    /* double sum1 = d4est_linalg_vec_sum(J_u,local_nodes); */
+    d4est_linalg_vec_axpyeqz(eps, u, u0, u0_p_u, local_nodes);
     
     prob_fcns->build_residual
       (
@@ -95,7 +95,7 @@ jacobian_tester
       max_err = (err > max_err) ? err : max_err;
     }
 
-    /* double sum2 = linalg_vec_sum(J_u_from_res,local_nodes);     */
+    /* double sum2 = d4est_linalg_vec_sum(J_u_from_res,local_nodes);     */
 
     /* printf("J_u sum = %.25f\n", sum1); */
     /* printf("J_u_from_res sum = %.25f\n", sum2); */

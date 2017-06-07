@@ -2,7 +2,7 @@
 #include <d4est_element_data.h>
 #include <problem_data.h>
 #include <d4est_operators.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <curved_poisson_operator_primal.h>
 #include <curved_poisson_debug_vecs.h>
 #include <grid_functions.h>
@@ -43,14 +43,14 @@ void curved_poisson_operator_primal_init_vecs
   
   elem_data->Au_elem = &(problem_data->Au[elem_data->nodal_stride]);
   
-  linalg_copy_1st_to_2nd
+  d4est_linalg_copy_1st_to_2nd
     (
      &(problem_data->u[elem_data->nodal_stride]),
      &(elem_data->u_elem)[0],
      volume_nodes_Lobatto
     );
 
-  linalg_fill_vec
+  d4est_linalg_fill_vec
     (
      elem_data->Au_elem,
      0.0,
@@ -84,18 +84,10 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
   int volume_nodes_lobatto = d4est_operators_get_nodes(dim,element_data->deg);
 
   double* stiff_u = P4EST_ALLOC(double, volume_nodes_lobatto);
-
-  /* d4est_element_data_apply_curved_stiffness_matrix */
-  /*   ( */
-  /*    d4est_ops, */
-  /*    curved_poisson_operator_primal_user_data->d4est_geom, */
-  /*    element_data, */
-  /*    d4est_geom->geom_quad_type, */
-  /*    &element_data->u_elem[0], */
-  /*    stiff_u */
-  /*   ); */
-
-  d4est_mesh_object_t mesh_vol = {.type = ELEMENT_VOLUME, .dq = element_data->dq, .tree = element_data->tree};
+  d4est_quadrature_volume_t mesh_vol = {.dq = element_data->dq,
+                                        .tree = element_data->tree,
+                                        .element_id = element_data->id
+                                       };
 
   for (int i = 0; i < (P4EST_DIM); i++)
     mesh_vol.q[i] = element_data->q[i];
@@ -105,7 +97,9 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
      d4est_ops,
      d4est_quad,
      d4est_geom,
-     mesh_vol,
+     &mesh_vol,
+     QUAD_VOLUME,
+     QUAD_DRDX_JAC_DRDX_TIMES_POLY_INTEGRAND,
      &element_data->u_elem[0],
      element_data->deg,
      element_data->J_quad,
@@ -113,8 +107,6 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
      element_data->deg_quad,
      stiff_u
     );
-
-
   
   for (int i = 0; i < volume_nodes_lobatto; i++){
     element_data->Au_elem[i] += stiff_u[i];
@@ -126,11 +118,6 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
   DEBUG_PRINT_ARR_DBL_SUM(element_data->Au_elem, volume_nodes_lobatto);
 #endif
   
-
-
- 
-  
-
   P4EST_FREE(stiff_u);
 }
 
@@ -144,25 +131,18 @@ curved_poisson_operator_primal_apply_aij
  void* ghost_data,
  problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
- d4est_geometry_t* geom,
+ d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad
 )
 {
   curved_poisson_operator_primal_user_data_t curved_poisson_operator_primal_user_data;
   curved_poisson_operator_primal_user_data.d4est_ops = d4est_ops;
   curved_poisson_operator_primal_user_data.problem_data = prob_vecs;
-  curved_poisson_operator_primal_user_data.d4est_geom = geom;
+  curved_poisson_operator_primal_user_data.d4est_geom = d4est_geom;
   curved_poisson_operator_primal_user_data.d4est_quad = d4est_quad;
 #ifndef NDEBUG
   curved_poisson_operator_primal_user_data.debug_vecs = NULL;
 #endif
-  
-  curved_compute_flux_user_data_t curved_compute_flux_user_data;
-  curved_compute_flux_user_data.d4est_ops = d4est_ops;
-  curved_compute_flux_user_data.geom = geom;
-  curved_compute_flux_user_data.d4est_quad = d4est_quad;
-  
-  void* tmpptr = p4est->user_pointer;
   
   p4est_iterate(p4est,
 		NULL,
@@ -174,22 +154,19 @@ curved_poisson_operator_primal_apply_aij
 #endif
 		NULL);
 
-  p4est_ghost_exchange_data(p4est,ghost,ghost_data);
  
-  curved_compute_flux_user_data.flux_fcn_ptrs = &prob_vecs->curved_scalar_flux_fcn_data;
-  p4est->user_pointer = &curved_compute_flux_user_data;
-
-  p4est_iterate(p4est,
-		ghost,
-		(void*) ghost_data,
-		NULL,
-		curved_compute_flux_on_local_elements,
-#if (P4EST_DIM)==3
-                NULL,
-#endif
-		NULL);
- 
-  
+  curved_compute_flux_on_local_elements
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     &prob_vecs->curved_scalar_flux_fcn_data,
+     EXCHANGE_GHOST_DATA
+    );
+     
   p4est_iterate (p4est,
   		 NULL,
                  (void*)&curved_poisson_operator_primal_user_data,
@@ -200,5 +177,6 @@ curved_poisson_operator_primal_apply_aij
 #endif
 		NULL);
   
-  p4est->user_pointer = tmpptr;
+
+
 }

@@ -1,7 +1,7 @@
 #include "../Utilities/util.h"
 #include "../dGMath/d4est_operators.h"
 #include "../ElementData/d4est_element_data.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Flux/curved_test_mortarjacobianterms_flux_fcns.h"
 
 void curved_test_mortarjacobianterms_init_vecs
@@ -32,7 +32,7 @@ void curved_test_mortarjacobianterms_init_vecs
 
 
 
-  linalg_copy_1st_to_2nd
+  d4est_linalg_copy_1st_to_2nd
     (
      &(test_data->u[elem_data->nodal_stride]),
      &(elem_data->u_elem)[0],
@@ -523,7 +523,7 @@ curved_test_mortarjacobianterms_interface
   
 
   for (int d = 0; d < (P4EST_DIM); d++){
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      dudr_p_on_f_p_porder[d],
@@ -535,7 +535,7 @@ curved_test_mortarjacobianterms_interface
     );
   
 
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      dudr_m_on_f_m[d],
@@ -749,7 +749,7 @@ curved_test_mortarjacobianterms_interface
   
 
   for (int d = 0; d < (P4EST_DIM); d++){
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_m_on_f_m_mortar_quad[d],
        0.0,
@@ -757,7 +757,7 @@ curved_test_mortarjacobianterms_interface
       );
 
 
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_p_on_f_p_mortar_quad_porder[d],
        0.0,
@@ -765,7 +765,7 @@ curved_test_mortarjacobianterms_interface
       );
 
 
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_m_on_f_m_mortar_quad_analytic[d],
        0.0,
@@ -773,7 +773,7 @@ curved_test_mortarjacobianterms_interface
       );
 
 
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_p_on_f_p_mortar_quad_porder_analytic[d],
        0.0,
@@ -942,10 +942,10 @@ curved_test_mortarjacobianterms_interface
   }
       
 
-      linalg_vec_scale(-1., &nvol_p_on_f_p_mortar_quad_reoriented[d][face_mortar_stride], d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]));
+      d4est_linalg_vec_scale(-1., &nvol_p_on_f_p_mortar_quad_reoriented[d][face_mortar_stride], d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]));
 
 
-      linalg_vec_scale(-1., &nvol_p_on_f_p_mortar_quad_reoriented_analytic[d][face_mortar_stride], d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]));
+      d4est_linalg_vec_scale(-1., &nvol_p_on_f_p_mortar_quad_reoriented_analytic[d][face_mortar_stride], d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]));
       
     }
     

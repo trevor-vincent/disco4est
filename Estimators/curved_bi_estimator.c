@@ -2,7 +2,7 @@
 #include "../ElementData/element_data.h"
 #include "../EllipticSystem/problem_data.h"
 #include "../EllipticSystem/problem_weakeqn_ptrs.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../hpAMR/hp_amr.h"
 #include "../Estimators/curved_bi_estimator_flux_fcns.h"
@@ -40,7 +40,7 @@ curved_bi_estimator_init
   int volume_nodes_Gauss = d4est_operators_get_nodes(dim, elem_data->deg_quad);
   /* int face_nodes_Gauss = d4est_operators_get_nodes(dim-1, elem_data->deg_quad); */
   
-  linalg_copy_1st_to_2nd
+  d4est_linalg_copy_1st_to_2nd
     (
      &(problem_data->u[elem_data->nodal_stride]),
      &(elem_data->u_elem)[0],

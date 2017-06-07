@@ -1,7 +1,7 @@
 #include "../Flux/sipg_flux_scalar_fcns.h"
 #include "../Utilities/util.h"
 #include "../dGMath/d4est_operators.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 
 static void
 sipg_flux_scalar_dirichlet
@@ -160,7 +160,7 @@ sipg_flux_scalar_interface
   }
   
   /* project (-)-side u trace scalar onto mortar space */ 
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_m_on_f_m,
@@ -172,7 +172,7 @@ sipg_flux_scalar_interface
     );
 
   /* project (+)-side u trace scalar onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_p_on_f_p,
@@ -197,7 +197,7 @@ sipg_flux_scalar_interface
     }
 
     /* project mortar data back onto the (-) side */
-    d4est_operators_project_mortar_onto_side
+    d4est_mortars_project_mortar_onto_side
       (
        d4est_ops,
        ustar_min_u_mortar,
@@ -212,7 +212,7 @@ sipg_flux_scalar_interface
     stride = 0;
     for (i = 0; i < faces_m; i++){
       if(e_m_is_ghost[i] == 0)
-        linalg_copy_1st_to_2nd
+        d4est_linalg_copy_1st_to_2nd
           (
            &ustar_min_u_m[stride],
            &(e_m[i]->ustar_min_u[f_m*face_nodes_m[i]]),

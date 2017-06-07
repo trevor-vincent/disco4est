@@ -1,5 +1,5 @@
 #include <pXest.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <grid_functions.h>
 #include <element_data.h>
 #include <d4est_element_data.h>
@@ -176,7 +176,7 @@ multigrid_matrix_fofu_fofv_mass_operator_setup_deg_quad_eq_deg
         int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
 
         double* jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-        linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);
+        d4est_linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);
 
         double* r_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), ed->deg, 0);
         double* s_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), ed->deg, 1);

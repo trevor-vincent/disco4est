@@ -157,7 +157,7 @@ typedef struct {
   /* extra stuff for use with curved infrastructure */
   d4est_geometry_t* d4est_geom;
   void(*element_data_init_user_fcn)(void*,void*);
-  d4est_geometry_storage_t** geometric_factors;
+  d4est_mesh_geometry_storage_t** geometric_factors;
   
 } multigrid_element_data_updater_t;
 

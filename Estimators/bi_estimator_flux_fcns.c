@@ -1,5 +1,5 @@
 #include "../Estimators/bi_estimator_flux_fcns.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 
 double bi_est_sipg_flux_penalty_prefactor;
 penalty_calc_t bi_est_u_prefactor_calculate_fcn;
@@ -221,7 +221,7 @@ bi_est_interface
   }
   
   /* project (-)-side u trace vector onto mortar space */ 
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_m_on_f_m,
@@ -233,7 +233,7 @@ bi_est_interface
     );
 
   /* project (+)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_p_on_f_p,
@@ -261,7 +261,7 @@ bi_est_interface
          du_m
         );
       
-      linalg_vec_scale(2./e_m[i]->h, du_m, d4est_operators_get_nodes((P4EST_DIM), e_m[i]->deg));
+      d4est_linalg_vec_scale(2./e_m[i]->h, du_m, d4est_operators_get_nodes((P4EST_DIM), e_m[i]->deg));
 
       d4est_operators_apply_slicer
         (
@@ -280,7 +280,7 @@ bi_est_interface
     stride = 0;
     for (i = 0; i < faces_p; i++){
       d4est_operators_apply_Dij(d4est_ops, &(e_p[i]->u_elem[0]), (P4EST_DIM), e_p[i]->deg, dir, du_p);
-      linalg_vec_scale(2./e_p[i]->h, du_p, d4est_operators_get_nodes((P4EST_DIM), e_p[i]->deg));
+      d4est_linalg_vec_scale(2./e_p[i]->h, du_p, d4est_operators_get_nodes((P4EST_DIM), e_p[i]->deg));
 
       d4est_operators_apply_slicer
         (
@@ -296,7 +296,7 @@ bi_est_interface
     }
 
     /* project the derivatives from (-) and (+) sides onto the mortar space */
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        du_m_on_f_m,
@@ -307,7 +307,7 @@ bi_est_interface
        deg_mortar
       );
 
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        du_p_on_f_p,
@@ -372,7 +372,7 @@ bi_est_interface
     /* DEBUG_PRINT_ARR_DBL(ustar_min_u_mortar, total_nodes_mortar); */
     
     /* project mortar data back onto the (-) side */
-    d4est_operators_project_mortar_onto_side
+    d4est_mortars_project_mortar_onto_side
       (
        d4est_ops,
        qstar_min_q_mortar,
@@ -383,7 +383,7 @@ bi_est_interface
        deg_m
       );
 
-    d4est_operators_project_mortar_onto_side
+    d4est_mortars_project_mortar_onto_side
       (
        d4est_ops,
        ustar_min_u_mortar,
@@ -398,13 +398,13 @@ bi_est_interface
     stride = 0;
     for (i = 0; i < faces_m; i++){
       if(e_m_is_ghost[i] == 0){
-        linalg_copy_1st_to_2nd
+        d4est_linalg_copy_1st_to_2nd
           (
            &qstar_min_q_m[stride],
            &(e_m[i]->qstar_min_q[dir][f_m*face_nodes_m[i]]),
            face_nodes_m[i]
           );
-        linalg_copy_1st_to_2nd
+        d4est_linalg_copy_1st_to_2nd
           (
            &ustar_min_u_m[stride],
            &(e_m[i]->ustar_min_u[f_m*face_nodes_m[i]]),

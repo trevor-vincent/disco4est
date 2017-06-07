@@ -8,7 +8,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <sipg_flux_scalar_fcns.h>
@@ -168,7 +168,7 @@ double two_punctures_adm_quadral_face_contribution
   }
 
   d4est_operators_apply_Mij(d4est_ops, grad_psi_face_dot_n, (P4EST_DIM)-1, elem_data->deg, M_grad_psi_face_dot_n);
-  linalg_vec_scale(elem_data->surface_jacobian, M_grad_psi_face_dot_n, face_nodes);
+  d4est_linalg_vec_scale(elem_data->surface_jacobian, M_grad_psi_face_dot_n, face_nodes);
   
   double face_contrib = 0.;
   for (int fn = 0; fn < face_nodes; fn++){
@@ -445,7 +445,7 @@ build_residual
      1
     );
 
-  linalg_vec_axpy(1.0, M_neg_1o8_K2_psi_neg7_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_neg_1o8_K2_psi_neg7_vec, prob_vecs->Au, prob_vecs->local_nodes);
 
   /* P4EST_FREE(neg_1o8_K2_psi_neg7_vec); */
   P4EST_FREE(M_neg_1o8_K2_psi_neg7_vec);
@@ -494,7 +494,7 @@ build_residual_Gauss
         double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
-        linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
+        d4est_linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
         d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
@@ -525,7 +525,7 @@ build_residual_Gauss
     }
 
 
-  linalg_vec_axpy(1.0, M_neg_1o8_K2_psi_neg7_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_neg_1o8_K2_psi_neg7_vec, prob_vecs->Au, prob_vecs->local_nodes);
 
   P4EST_FREE(M_neg_1o8_K2_psi_neg7_vec); 
 }
@@ -572,7 +572,7 @@ void apply_jac
   /*    d4est_ops */
   /*   ); */
 
-  /* linalg_component_mult */
+  /* d4est_linalg_component_mult */
   /*   ( */
   /*    plus_7o8_K2_psi_neg8_of_u0_vec, */
   /*    prob_vecs->u, */
@@ -600,7 +600,7 @@ void apply_jac
      1
     );
   
-  linalg_vec_axpy(1.0, M_plus_7o8_K2_psi_neg8_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_plus_7o8_K2_psi_neg8_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
 
   /* P4EST_FREE(plus_7o8_K2_psi_neg8_of_u0_u_vec); */
   /* P4EST_FREE(plus_7o8_K2_psi_neg8_of_u0_vec); */
@@ -651,7 +651,7 @@ void apply_jac_Gauss
         double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
-        linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
+        d4est_linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
         d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
@@ -681,7 +681,7 @@ void apply_jac_Gauss
       }
     }
 
-  linalg_vec_axpy(1.0, M_plus_7o8_K2_psi_neg8_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_plus_7o8_K2_psi_neg8_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
 
   P4EST_FREE(M_plus_7o8_K2_psi_neg8_of_u0_u_vec);
 
@@ -702,7 +702,7 @@ void apply_jac_Gauss
 /*  double sipg_flux_prefactor */
 /* ) */
 /* { */
-/*   linalg_fill_vec(prob_vecs->rhs,0.0,prob_vecs->local_nodes);   */
+/*   d4est_linalg_fill_vec(prob_vecs->rhs,0.0,prob_vecs->local_nodes);   */
 /* } */
 
 p4est_connectivity_t*
@@ -1019,7 +1019,7 @@ problem_init
   /* double* f = P4EST_ALLOC_ZERO(double, local_nodes); */
   double* u_prev = P4EST_ALLOC_ZERO(double, local_nodes);
 
-  linalg_fill_vec(u, 0., local_nodes);
+  d4est_linalg_fill_vec(u, 0., local_nodes);
 
   double local_eta2 = -1.;
 
@@ -1387,7 +1387,7 @@ problem_init
     /*    d4est_ops */
     /*   );    */
 
-    linalg_copy_1st_to_2nd(u, u_prev, local_nodes);
+    d4est_linalg_copy_1st_to_2nd(u, u_prev, local_nodes);
     
     /* newton_krylov_nols_solver_params_t params; */
     /* params.atol = 1e-18; */
@@ -1443,7 +1443,7 @@ problem_init
     
     
     
-    linalg_vec_axpy(-1., u, u_prev, local_nodes);
+    d4est_linalg_vec_axpy(-1., u, u_prev, local_nodes);
 
     
     double local_adm_energy = element_data_compute_boundary_quadral

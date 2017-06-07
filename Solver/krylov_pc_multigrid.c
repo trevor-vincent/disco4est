@@ -1,6 +1,6 @@
 #include <krylov_pc_multigrid.h>
 #include <multigrid.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 
 void
 krylov_pc_multigrid_setup
@@ -33,7 +33,7 @@ krylov_pc_multigrid_apply(krylov_pc_t* kpc, double* xp, double* yp)
   petsc_ctx_t* kct = kpc->pc_ctx;
   int local_nodes = kct->vecs->local_nodes;
   
-  linalg_fill_vec(yp, 0., local_nodes);
+  d4est_linalg_fill_vec(yp, 0., local_nodes);
 
   double* Au = P4EST_ALLOC(double, local_nodes);
   

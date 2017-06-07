@@ -1,6 +1,6 @@
 #include "../pXest/pXest.h"
 #include "../Solver/cg_eigs.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "sc_reduce.h"
 #include <signal.h>
@@ -104,11 +104,11 @@ cg_eigs
   
   /* first iteration data, store Au in r */
   fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
-  linalg_copy_1st_to_2nd(Au, r, local_nodes);
+  d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
   /* r = f - Au ; Au is stored in r so r = rhs - r */
-  linalg_vec_xpby(rhs, -1., r, local_nodes);
-  linalg_copy_1st_to_2nd(r, d, local_nodes);
-  delta_new = linalg_vec_dot(r,r,local_nodes);
+  d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
+  d4est_linalg_copy_1st_to_2nd(r, d, local_nodes);
+  delta_new = d4est_linalg_vec_dot(r,r,local_nodes);
   /* delta_new = (element_data_compute_l2_norm(p4est, r)); */
 
   double delta_new_global = -1;
@@ -144,13 +144,13 @@ cg_eigs
     /* Au = A*d; */
     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
 
-    /* printf("i = %d, cg_eigs Au sum at i = %.25f\n",i, linalg_vec_sum(vecs->Au, vecs->local_nodes)); */
-    /* printf("cg_eigs u sum at i = %.25f\n", linalg_vec_sum(vecs->u, vecs->local_nodes)); */
-    /* printf("cg_eigs rhs sum at i = %.25f\n", linalg_vec_sum(vecs->rhs, vecs->local_nodes)); */
+    /* printf("i = %d, cg_eigs Au sum at i = %.25f\n",i, d4est_linalg_vec_sum(vecs->Au, vecs->local_nodes)); */
+    /* printf("cg_eigs u sum at i = %.25f\n", d4est_linalg_vec_sum(vecs->u, vecs->local_nodes)); */
+    /* printf("cg_eigs rhs sum at i = %.25f\n", d4est_linalg_vec_sum(vecs->rhs, vecs->local_nodes)); */
     
     /* sc_MPI_Barrier(sc_MPI_COMM_WORLD); */
 
-    d_dot_Au = linalg_vec_dot(d,Au,local_nodes);
+    d_dot_Au = d4est_linalg_vec_dot(d,Au,local_nodes);
 
     sc_allreduce
       (
@@ -166,13 +166,13 @@ cg_eigs
     alpha_old = alpha;
     alpha = delta_new/d_dot_Au;
     
-    linalg_vec_axpy(alpha, d, u, local_nodes);
+    d4est_linalg_vec_axpy(alpha, d, u, local_nodes);
 
     /* r = r - Au*alpha */
-    linalg_vec_axpy(-alpha, Au, r, local_nodes);
+    d4est_linalg_vec_axpy(-alpha, Au, r, local_nodes);
 
     delta_old = delta_new;
-    delta_new = linalg_vec_dot(r, r, local_nodes);
+    delta_new = d4est_linalg_vec_dot(r, r, local_nodes);
 
     sc_allreduce
       (
@@ -187,7 +187,7 @@ cg_eigs
 
     beta_old = beta;
     beta = delta_new/delta_old;
-    linalg_vec_xpby(r, beta, d, local_nodes);
+    d4est_linalg_vec_xpby(r, beta, d, local_nodes);
     /* if (print_residual_norm){ */
     /*   printf ("%03d: r'r %g alpha %g beta %g\n", */
     /*           i, delta_new, alpha, beta); */

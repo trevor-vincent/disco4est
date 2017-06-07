@@ -1,7 +1,7 @@
 #include "../GridFunctions/grid_functions.h"
 #include "../ElementData/d4est_element_data.h"
 #include "../dGMath/d4est_operators.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../Flux/curved_compute_flux.h"
 #include <curved_dg_norm.h>
@@ -312,7 +312,7 @@ curved_dg_norm_interface
   P4EST_FREE(tmp);
 
   /* project (-)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_m_on_f_m,
@@ -324,7 +324,7 @@ curved_dg_norm_interface
     );
 
   /* project (+)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_p_on_f_p,

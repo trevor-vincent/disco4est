@@ -2,7 +2,7 @@
 #include <element_data.h>
 #include <problem_data.h>
 #include <d4est_operators.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <poisson_operator.h>
 #include <grid_functions.h>
 #include <util.h>
@@ -44,11 +44,11 @@ void poisson_init_vecs(p4est_iter_volume_info_t * info, void *user_data)
   element_data->u_elem = &(problem_data->u[element_data->stride]);
   element_data->Au_elem = &(problem_data->Au[element_data->stride]);
 
-  linalg_copy_1st_to_2nd(element_data->u_elem, &(element_data->u_elem)[0], d4est_operators_get_nodes(dim, deg));
+  d4est_linalg_copy_1st_to_2nd(element_data->u_elem, &(element_data->u_elem)[0], d4est_operators_get_nodes(dim, deg));
   
   for (i = 0; i < (P4EST_DIM); i++){
     d4est_operators_apply_Dij(d4est_ops, element_data->u_elem, dim, deg, i, element_data->du_elem[i]);
-    linalg_vec_scale(2./h, element_data->du_elem[i], d4est_operators_get_nodes(dim, deg));
+    d4est_linalg_vec_scale(2./h, element_data->du_elem[i], d4est_operators_get_nodes(dim, deg));
 
     /* util_print_matrix */
     /*   ( */
@@ -97,9 +97,9 @@ void poisson_compute_q_elem(p4est_iter_volume_info_t * info, void *user_data)
   /* compute vol_temp2[i] = S_i * u */
   for (i = 0; i < (P4EST_DIM); i++){
     d4est_operators_apply_Dij(d4est_ops, u_elem, dim, deg, i, vol_tmp);
-    linalg_vec_scale(2./h, vol_tmp, vol_nodes);
+    d4est_linalg_vec_scale(2./h, vol_tmp, vol_nodes);
     d4est_operators_apply_Mij(d4est_ops, vol_tmp, dim, deg, Si_u[i]);
-    linalg_vec_scale(jacobian, Si_u[i], vol_nodes);
+    d4est_linalg_vec_scale(jacobian, Si_u[i], vol_nodes);
 /* #ifndef NDEBUG */
 
     /* util_print_matrix(Si_u[i], vol_nodes, 1, "Si_u[i] = ", 0); */
@@ -133,9 +133,9 @@ void poisson_compute_q_elem(p4est_iter_volume_info_t * info, void *user_data)
     /* util_print_matrix( &u_flux[f*face_nodes], face_nodes, 1,"u_flux = ",0); */
     /* util_print_matrix(&element_data->ustar_min_u[f*face_nodes], face_nodes, 1,"ustar_min_u = ",0); */
     
-    /* linalg_vec_xpby(&u_flux[f*face_nodes], -1., &ustar_minus_u[f*face_nodes], face_nodes); */
+    /* d4est_linalg_vec_xpby(&u_flux[f*face_nodes], -1., &ustar_minus_u[f*face_nodes], face_nodes); */
     d4est_operators_apply_Mij(d4est_ops, &element_data->ustar_min_u[f*face_nodes], dim - 1, deg, &M_ustar_minus_u[f*face_nodes]);
-    linalg_vec_scale( surface_jacobian, &M_ustar_minus_u[f*face_nodes], face_nodes);
+    d4est_linalg_vec_scale( surface_jacobian, &M_ustar_minus_u[f*face_nodes], face_nodes);
  
     d4est_operators_apply_LIFT(d4est_ops, &M_ustar_minus_u[f*face_nodes], dim, deg, f, vol_tmp);
 
@@ -148,10 +148,10 @@ void poisson_compute_q_elem(p4est_iter_volume_info_t * info, void *user_data)
     d4est_operators_get_normal(f, dim, &n[0]);
 
 #ifdef D4EST_DEBUG
-    linalg_vec_axpy(n[d], vol_tmp, lifted_ustar_min_u[f][d], vol_nodes);
+    d4est_linalg_vec_axpy(n[d], vol_tmp, lifted_ustar_min_u[f][d], vol_nodes);
 #endif
     
-    linalg_vec_axpy(n[d], vol_tmp, Si_u[d], vol_nodes);
+    d4est_linalg_vec_axpy(n[d], vol_tmp, Si_u[d], vol_nodes);
   }
   /* util_print_matrix(Si_u[d], vol_nodes, 1, "Sd_u[d] = ", 0); */
   }
@@ -164,7 +164,7 @@ void poisson_compute_q_elem(p4est_iter_volume_info_t * info, void *user_data)
   
   for (d = 0; d < (P4EST_DIM); d++){
     d4est_operators_apply_invMij(d4est_ops, Si_u[d], dim, deg, element_data->q_elem[d]);
-    linalg_vec_scale(1./jacobian, element_data->q_elem[d], vol_nodes);
+    d4est_linalg_vec_scale(1./jacobian, element_data->q_elem[d], vol_nodes);
 /* #ifndef NDEBUG */
 /* #endif */
 
@@ -208,8 +208,8 @@ void poisson_compute_q_elem(p4est_iter_volume_info_t * info, void *user_data)
   /* P4EST_FREE(ustar_minus_u); */
   P4EST_FREE(M_ustar_minus_u);
 
-  /* linalg_fill_vec(&element_data->q_storage[0], 0., MAX_NODES); */
-  /* linalg_copy_1st_to_2nd(element_data->q_elem, &(element_data->q_storage[0]), d4est_operators_get_nodes(dim, deg)); */
+  /* d4est_linalg_fill_vec(&element_data->q_storage[0], 0., MAX_NODES); */
+  /* d4est_linalg_copy_1st_to_2nd(element_data->q_elem, &(element_data->q_storage[0]), d4est_operators_get_nodes(dim, deg)); */
 }
 
 
@@ -233,7 +233,7 @@ void poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* user_data)
   double h = element_data->h;
   
   double* Au = element_data->Au_elem;
-  linalg_fill_vec(Au, 0., vol_nodes);
+  d4est_linalg_fill_vec(Au, 0., vol_nodes);
   
   double* vol_tmp = P4EST_ALLOC(double, d4est_operators_get_nodes(dim,deg));
   double* vol_tmp2 = P4EST_ALLOC(double, d4est_operators_get_nodes(dim,deg));
@@ -251,7 +251,7 @@ void poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* user_data)
   int i;
   for (i = 0; i < (P4EST_DIM); i++){
     d4est_operators_apply_Dij(d4est_ops, element_data->q_elem[i], dim, deg, i, vol_tmp);
-    linalg_vec_scale(2./h, vol_tmp, vol_nodes);
+    d4est_linalg_vec_scale(2./h, vol_tmp, vol_nodes);
 
 #ifdef D4EST_DEBUG
     if (debug_vecs != NULL && element_data->id == debug_vecs->elem_id){
@@ -261,8 +261,8 @@ void poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* user_data)
 #endif
     
     d4est_operators_apply_Mij(d4est_ops, vol_tmp, dim, deg, vol_tmp2);
-    linalg_vec_scale(jacobian, vol_tmp2, vol_nodes);
-    linalg_vec_axpy(1.0, vol_tmp2, Au, vol_nodes);
+    d4est_linalg_vec_scale(jacobian, vol_tmp2, vol_nodes);
+    d4est_linalg_vec_axpy(1.0, vol_tmp2, Au, vol_nodes);
   }
 
 #ifdef D4EST_DEBUG
@@ -285,26 +285,26 @@ void poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* user_data)
   for (d = 0; d < (P4EST_DIM); d++){
     for (f = 0; f < faces; f++){
        /* d4est_operators_apply_slicer(element_data->q_elem[d], dim, f, deg, &qstar_minus_qi[f*face_nodes]); */
-       /* linalg_vec_xpby( &(element_data->q_flux[d][f*face_nodes]), -1., &qstar_minus_qi[f*face_nodes], face_nodes); */
+       /* d4est_linalg_vec_xpby( &(element_data->q_flux[d][f*face_nodes]), -1., &qstar_minus_qi[f*face_nodes], face_nodes); */
        d4est_operators_apply_Mij(d4est_ops, &element_data->qstar_min_q[d][f*face_nodes], dim - 1, deg, &M_qstar_minus_qi[f*face_nodes]);
 
        d4est_operators_get_normal(f, dim, &n[0]);
-       linalg_vec_scale(n[d]*surface_jacobian, &M_qstar_minus_qi[f*face_nodes], face_nodes);
+       d4est_linalg_vec_scale(n[d]*surface_jacobian, &M_qstar_minus_qi[f*face_nodes], face_nodes);
 
       /* lift face integral and dot with normal */
       d4est_operators_apply_LIFT(d4est_ops, &M_qstar_minus_qi[f*face_nodes], dim, deg, f, vol_tmp);
 
 #ifdef D4EST_DEBUG
-      linalg_vec_axpy(1., vol_tmp, lifted_qstar_min_q[f], vol_nodes);
+      d4est_linalg_vec_axpy(1., vol_tmp, lifted_qstar_min_q[f], vol_nodes);
 #endif
       
       /* util_print_matrix(vol_tmp, vol_nodes, 1, "Mqstar_min_q lifted = ", 0); */
-      linalg_vec_axpy(1., vol_tmp, Au, vol_nodes);
+      d4est_linalg_vec_axpy(1., vol_tmp, Au, vol_nodes);
     }
   }
 
   /* Au *= -1 because matrix is negative definite! */
-  linalg_vec_scale(-1., Au, vol_nodes);
+  d4est_linalg_vec_scale(-1., Au, vol_nodes);
 
   /* DEBUG_PRINT_ARR_DBL(Au, vol_nodes); */
   
@@ -375,7 +375,7 @@ void poisson_destroy_vecs(p4est_iter_volume_info_t * info, void *user_data)
   
 /*   /\* We will be multiplying Au by -1 since its negative definite so we must do the */
 /*    * the same for the rhs vector *\/ */
-/*   linalg_vec_scale(-1.*elem_data->jacobian, rhs_elem, d4est_operators_get_nodes(dim, deg)); */
+/*   d4est_linalg_vec_scale(-1.*elem_data->jacobian, rhs_elem, d4est_operators_get_nodes(dim, deg)); */
 /* } */
 
 /* void */
@@ -411,7 +411,7 @@ void poisson_destroy_vecs(p4est_iter_volume_info_t * info, void *user_data)
 /*   prob_vecs->u = u_eq_0;  */
 
 /*   poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops); */
-/*   linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes); */
+/*   d4est_linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes); */
   
 /*   prob_vecs->u = tmp; */
 

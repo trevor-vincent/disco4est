@@ -1,7 +1,7 @@
 #include "../Operators/grad.h"
 #include "../pXest/pXest.h"
 #include "../dGMath/d4est_operators.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 
 
 void
@@ -18,7 +18,7 @@ grad(double*u, double* gradu [(P4EST_DIM)], double h, int deg, d4est_operators_t
                      i,
                      gradu[i]
                     );
-    linalg_vec_scale(2./h, gradu[i], vol_nodes);
+    d4est_linalg_vec_scale(2./h, gradu[i], vol_nodes);
   }
 }
 

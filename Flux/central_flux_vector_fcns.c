@@ -1,7 +1,7 @@
 #include "../Flux/central_flux_vector_fcns.h"
 #include "../Utilities/util.h"
 #include "../dGMath/d4est_operators.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 
 static void
 central_flux_vector_dirichlet
@@ -179,7 +179,7 @@ central_flux_vector_interface
   }
   
   /* project (-)-side u trace vector onto mortar space */ 
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_m_on_f_m,
@@ -191,7 +191,7 @@ central_flux_vector_interface
     );
 
   /* project (+)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_p_on_f_p,
@@ -244,7 +244,7 @@ central_flux_vector_interface
     }
 
      /* project q from the (-) side onto the mortar space */
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        q_m_on_f_m,
@@ -256,7 +256,7 @@ central_flux_vector_interface
       );
 
 
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        q_p_on_f_p,
@@ -287,7 +287,7 @@ central_flux_vector_interface
     }
 
     /* project mortar data back onto the (-) side */
-    d4est_operators_project_mortar_onto_side
+    d4est_mortars_project_mortar_onto_side
       (
        d4est_ops,
        qstar_min_q_mortar,
@@ -302,7 +302,7 @@ central_flux_vector_interface
     stride = 0;
     for (i = 0; i < faces_m; i++){
       if(e_m_is_ghost[i] == 0)
-        linalg_copy_1st_to_2nd
+        d4est_linalg_copy_1st_to_2nd
           (
            &qstar_min_q_m[stride],
            &(e_m[i]->qstar_min_q[dir][f_m*face_nodes_m[i]]),

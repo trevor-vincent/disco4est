@@ -1,9 +1,10 @@
 #define _GNU_SOURCE
 #include <d4est_quadrature.h>
-#include <d4est_quadrature_gauss_legendre.h>
-#include <d4est_quadrature_gauss_lobatto.h>
+#include <d4est_quadrature_legendre.h>
+#include <d4est_quadrature_lobatto.h>
+#include <d4est_quadrature_compactified.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <ini.h>
 
 typedef struct {
@@ -63,6 +64,8 @@ d4est_quadrature_input
 d4est_quadrature_t*
 d4est_quadrature_new
 (
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  const char* input_file,
  const char* input_section,
@@ -75,16 +78,16 @@ d4est_quadrature_new
 
   if (util_match(input.name,"legendre")) {
     d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE;
-    d4est_quadrature_gauss_legendre_new(d4est_quad, d4est_geom, input_file);
+    d4est_quadrature_legendre_new(d4est_quad, d4est_geom, input_file);
   }
   else if (util_match(input.name,"lobatto")) {
     d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE_LOBATTO;
-    d4est_quadrature_gauss_lobatto_new(d4est_quad, d4est_geom, input_file);
+    d4est_quadrature_lobatto_new(d4est_quad, d4est_geom, input_file);
   }
-  /* else if (util_match(input.name,"gauss_legendre_compactified")){ */
-  /*   d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE_COMPACTIFIED; */
-  /*   d4est_quadrature_gauss_legendre_compactified_new(d4est_quad, d4est_geom, input_file); */
-  /* } */
+  else if (util_match(input.name,"legendre_compactified")){
+    d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE_COMPACTIFIED;
+    d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file);
+  }
   else if (util_match(input.name,"none")){
   }
   else {
@@ -98,15 +101,22 @@ d4est_quadrature_new
 }
 
 void
-d4est_quadrature_reinit(d4est_quadrature_t* d4est_quad){
-  if (d4est_quad->reinit != NULL)
-    d4est_quad->reinit(d4est_quad);
+d4est_quadrature_reinit(p4est_t* p4est,
+                        d4est_operators_t* d4est_ops,
+                        d4est_geometry_t* d4est_geom,
+                        d4est_quadrature_t* d4est_quad)
+{
+  if (d4est_quad->user_reinit != NULL)
+    d4est_quad->user_reinit(p4est, d4est_ops, d4est_geom, d4est_quad);
 }
   
 void
-d4est_quadrature_destroy(d4est_quadrature_t* d4est_quad){
-  if (d4est_quad->destroy != NULL)
-    d4est_quad->destroy(d4est_quad);
+d4est_quadrature_destroy(p4est_t* p4est,
+                        d4est_operators_t* d4est_ops,
+                        d4est_geometry_t* d4est_geom,
+                        d4est_quadrature_t* d4est_quad){
+  if (d4est_quad->user_destroy != NULL)
+    d4est_quad->user_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   P4EST_FREE(d4est_quad);
 }
 
@@ -116,19 +126,19 @@ void d4est_quadrature_apply_galerkin_integral
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geometry,
  d4est_quadrature_t* d4est_quadrature,
- d4est_mesh_object_t object,
+ void* object,
+ d4est_quadrature_object_type_t object_type,
+ d4est_quadrature_integrand_type_t integrand_type,
  double* in_quad,
  int deg_lobatto,
  double* jac_quad,
  int deg_quad,
  double* out
 ){
-
-
   double* quad_weights [(P4EST_DIM)];
   double* interp_lobatto_to_quad_trans [(P4EST_DIM)];
 
-  int dim = (object.type == ELEMENT_FACE) ? ((P4EST_DIM)-1) : (P4EST_DIM);
+  int dim = (object_type == D4EST_QUAD_FACE) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   int nodes_lobatto = deg_lobatto + 1;
   int nodes_quad = deg_quad + 1;
   int volume_nodes_quad = d4est_operators_get_nodes(dim, deg_quad);
@@ -138,9 +148,11 @@ void d4est_quadrature_apply_galerkin_integral
      quad_weights[dir] = d4est_quadrature->get_weights
                          (
                           d4est_ops,
-                          d4est_quadrature,
                           d4est_geometry,
+                          d4est_quadrature,
                           object,
+                          object_type,
+                          integrand_type,
                           deg_quad,
                           dir
                          );
@@ -148,9 +160,11 @@ void d4est_quadrature_apply_galerkin_integral
      interp_lobatto_to_quad_trans[dir] = d4est_quadrature->get_interp_trans
                                        (
                                         d4est_ops,
-                                        d4est_quadrature,
                                         d4est_geometry,
+                                        d4est_quadrature,
                                         object,
+                                        object_type,
+                                        integrand_type,
                                         deg_lobatto,
                                         deg_quad,
                                         dir
@@ -158,18 +172,18 @@ void d4est_quadrature_apply_galerkin_integral
   }
 
   if (dim == 3){
-    linalg_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, nodes_quad, w_j_in_quad);
-    linalg_kron_A1A2A3x_NONSQR(out, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad,
+    d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, nodes_quad, w_j_in_quad);
+    d4est_linalg_kron_A1A2A3x_nonsqr(out, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad,
                                nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad);
   }
   else if (dim == 2) {
-    linalg_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, w_j_in_quad);
-    linalg_kron_A1A2x_NONSQR(out, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad, nodes_lobatto, nodes_quad,
+    d4est_linalg_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, w_j_in_quad);
+    d4est_linalg_kron_A1A2x_nonsqr(out, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad, nodes_lobatto, nodes_quad,
                              nodes_lobatto, nodes_quad);
   }
   else if (dim == 1){
-    linalg_kron_vec_dot_xy(quad_weights[0], jac_quad, in_quad, nodes_quad, w_j_in_quad);
-    linalg_matvec_plus_vec(1.0, interp_lobatto_to_quad_trans[0], w_j_in_quad, 0., out, nodes_lobatto, nodes_quad);
+    d4est_linalg_kron_vec_dot_xy(quad_weights[0], jac_quad, in_quad, nodes_quad, w_j_in_quad);
+    d4est_linalg_matvec_plus_vec(1.0, interp_lobatto_to_quad_trans[0], w_j_in_quad, 0., out, nodes_lobatto, nodes_quad);
   }
   
   else {    
@@ -218,7 +232,7 @@ void d4est_quadrature_apply_galerkin_integral
 /*        dim, */
 /*        Mu */
 /*       ); */
-/*     linalg_set_column(M, Mu, i, volume_nodes_lobatto, volume_nodes_lobatto); */
+/*     d4est_linalg_set_column(M, Mu, i, volume_nodes_lobatto, volume_nodes_lobatto); */
 /*     u[i] = 0.; */
 /*   } */
 
@@ -233,7 +247,9 @@ void d4est_quadrature_apply_stiffness_matrix
  d4est_operators_t* d4est_ops,
  d4est_quadrature_t* d4est_quadrature,
  d4est_geometry_t* d4est_geometry,
- d4est_mesh_object_t object, 
+ void* object,
+ d4est_quadrature_object_type_t object_type,
+ d4est_quadrature_integrand_type_t integrand_type,
  double* in,
  int deg_lobatto,
  double* jac_quad,
@@ -241,7 +257,7 @@ void d4est_quadrature_apply_stiffness_matrix
  int deg_quad,
  double* out
 ){
-  mpi_assert (object.type == ELEMENT_VOLUME);
+  mpi_assert (object_type == D4EST_QUAD_VOLUME);
   /* for now assert this, can get rid of by p-prolonging then p-restricting */
 
 
@@ -260,9 +276,11 @@ void d4est_quadrature_apply_stiffness_matrix
     interp_lobatto_to_quad[dir] = d4est_quadrature->get_interp
                                 (
                                  d4est_ops,
-                                 d4est_quadrature,
                                  d4est_geometry,
+                                 d4est_quadrature,
                                  object,
+                                 object_type,
+                                 integrand_type,
                                  deg_lobatto,
                                  deg_quad,
                                  dir
@@ -271,9 +289,11 @@ void d4est_quadrature_apply_stiffness_matrix
    interp_lobatto_to_quad_trans[dir] = d4est_quadrature->get_interp_trans
                                        (
                                         d4est_ops,
-                                        d4est_quadrature,
                                         d4est_geometry,
+                                        d4est_quadrature,
                                         object,
+                                        object_type,
+                                        integrand_type,
                                         deg_lobatto,
                                         deg_quad,
                                         dir
@@ -283,9 +303,11 @@ void d4est_quadrature_apply_stiffness_matrix
    quad_weights[dir] = d4est_quadrature->get_weights
                                        (
                                         d4est_ops,
-                                        d4est_quadrature,
                                         d4est_geometry,
+                                        d4est_quadrature,
                                         object,
+                                        object_type,
+                                        integrand_type,
                                         deg_quad,
                                         dir
                                        );
@@ -297,7 +319,7 @@ void d4est_quadrature_apply_stiffness_matrix
   double* VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_lobatto);
   double* DTlp_VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_lobatto);
   
-  linalg_fill_vec(out, 0., volume_nodes_lobatto);
+  d4est_linalg_fill_vec(out, 0., volume_nodes_lobatto);
   
   for (int k = 0; k < dim; k++){
     for (int lp = 0; lp < dim; lp++){
@@ -307,19 +329,19 @@ void d4est_quadrature_apply_stiffness_matrix
 
         if ((P4EST_DIM) == 3) {
 
-              linalg_kron_A1A2A3x_NONSQR(V_Dl_in, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], Dl_in,
+              d4est_linalg_kron_A1A2A3x_nonsqr(V_Dl_in, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], Dl_in,
                                nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto);
               
-              linalg_kron_vec1_o_vec2_o_vec3_dot_wxyz(quad_weights[2],quad_weights[1],quad_weights[0], jac_quad, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_quad, nodes_quad, nodes_quad, W_V_Dl_in);
-          linalg_kron_A1A2A3x_NONSQR(VT_W_V_Dl_in, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], W_V_Dl_in,
+              d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_wxyz(quad_weights[2],quad_weights[1],quad_weights[0], jac_quad, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_quad, nodes_quad, nodes_quad, W_V_Dl_in);
+          d4est_linalg_kron_A1A2A3x_nonsqr(VT_W_V_Dl_in, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], W_V_Dl_in,
                                      nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad);
         }
         else if ((P4EST_DIM) == 2) {
-          linalg_kron_A1A2x_NONSQR(V_Dl_in, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], Dl_in, nodes_quad, nodes_lobatto,
+          d4est_linalg_kron_A1A2x_nonsqr(V_Dl_in, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], Dl_in, nodes_quad, nodes_lobatto,
                             nodes_quad, nodes_lobatto);
           
-          linalg_kron_vec1_o_vec2_dot_wxyz(quad_weights[1], quad_weights[0], jac_quad, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_quad, nodes_quad, W_V_Dl_in);
-          linalg_kron_A1A2x_NONSQR(VT_W_V_Dl_in, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], W_V_Dl_in, nodes_lobatto, nodes_quad,
+          d4est_linalg_kron_vec1_o_vec2_dot_wxyz(quad_weights[1], quad_weights[0], jac_quad, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_quad, nodes_quad, W_V_Dl_in);
+          d4est_linalg_kron_A1A2x_nonsqr(VT_W_V_Dl_in, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], W_V_Dl_in, nodes_lobatto, nodes_quad,
                                    nodes_lobatto, nodes_quad);
         }
         else {
@@ -332,7 +354,7 @@ void d4est_quadrature_apply_stiffness_matrix
         }
 
         d4est_operators_apply_Dij_transpose(d4est_ops, VT_W_V_Dl_in, dim, deg_lobatto, lp, DTlp_VT_W_V_Dl_in);
-        linalg_vec_axpy(1., DTlp_VT_W_V_Dl_in, out, volume_nodes_lobatto);
+        d4est_linalg_vec_axpy(1., DTlp_VT_W_V_Dl_in, out, volume_nodes_lobatto);
       }
     }
   }
@@ -350,7 +372,9 @@ void d4est_quadrature_apply_mass_matrix
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geometry,
  d4est_quadrature_t* d4est_quadrature,
- d4est_mesh_object_t d4est_object,
+ void* object,
+ d4est_quadrature_object_type_t object_type,
+ d4est_quadrature_integrand_type_t integrand_type,
  double* in,
  int deg_lobatto,
  double* jac_quad,
@@ -358,7 +382,7 @@ void d4est_quadrature_apply_mass_matrix
  double* out
 ){
 
-  mpi_assert(d4est_object.type == ELEMENT_VOLUME);
+  mpi_assert(object_type == D4EST_QUAD_VOLUME);
 
   double* quad_weights [(P4EST_DIM)];
   double* interp_lobatto_to_quad_trans [(P4EST_DIM)];
@@ -377,9 +401,11 @@ void d4est_quadrature_apply_mass_matrix
     interp_lobatto_to_quad[dir] = d4est_quadrature->get_interp
                                   (
                                    d4est_ops,
-                                   d4est_quadrature,
                                    d4est_geometry,
-                                   d4est_object,
+                                   d4est_quadrature,
+                                   object,
+                                   object_type,
+                                   integrand_type,
                                    deg_lobatto,
                                    deg_quad,
                                    dir
@@ -388,9 +414,11 @@ void d4est_quadrature_apply_mass_matrix
    interp_lobatto_to_quad_trans[dir] = d4est_quadrature->get_interp_trans
                                        (
                                         d4est_ops,
-                                        d4est_quadrature,
                                         d4est_geometry,
-                                        d4est_object,
+                                        d4est_quadrature,
+                                        object,
+                                        object_type,
+                                        integrand_type,
                                         deg_lobatto,
                                         deg_quad,
                                         dir
@@ -400,26 +428,28 @@ void d4est_quadrature_apply_mass_matrix
    quad_weights[dir] = d4est_quadrature->get_weights
                                        (
                                         d4est_ops,
-                                        d4est_quadrature,
                                         d4est_geometry,
-                                        d4est_object,
+                                        d4est_quadrature,
+                                        object,
+                                        object_type,
+                                        integrand_type,
                                         deg_quad,
                                         dir
                                        );
   }
   
   if (dim == 2) {
-    linalg_kron_A1A2x_NONSQR(in_quad, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], in, nodes_quad, nodes_lobatto,
+    d4est_linalg_kron_A1A2x_nonsqr(in_quad, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], in, nodes_quad, nodes_lobatto,
                              nodes_quad, nodes_lobatto);
-    linalg_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, w_j_in_quad);
-    linalg_kron_A1A2x_NONSQR(out, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad, nodes_lobatto, nodes_quad,
+    d4est_linalg_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, w_j_in_quad);
+    d4est_linalg_kron_A1A2x_nonsqr(out, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad, nodes_lobatto, nodes_quad,
                              nodes_lobatto, nodes_quad);
   }
   else if (dim == 3){
-    linalg_kron_A1A2A3x_NONSQR(in_quad, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], in,
+    d4est_linalg_kron_A1A2A3x_nonsqr(in_quad, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], in,
                                nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto);
-    linalg_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, nodes_quad, w_j_in_quad);
-    linalg_kron_A1A2A3x_NONSQR(out, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad,
+    d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, nodes_quad, w_j_in_quad);
+    d4est_linalg_kron_A1A2A3x_nonsqr(out, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad,
                                nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad);
   }
   else {
@@ -550,7 +580,7 @@ void d4est_quadrature_apply_mass_matrix
 /*  d4est_operators_t* d4est_ops, */
 /*  d4est_quadrature_t* d4est_quadrature, */
 /*  d4est_geometry_t* d4est_geometry, */
-/*  d4est_mesh_object_t d4est_object, */
+/*  d4est_geometry_object_t d4est_object, */
 /*  double* vec, */
 /*  double* u, */
 /*  double* v, */
@@ -661,7 +691,7 @@ void d4est_quadrature_apply_mass_matrix
 /*  d4est_operators_t* d4est_ops, */
 /*  d4est_quadrature_t* d4est_quadrature, */
 /*  d4est_geometry_t* d4est_geometry, */
-/*  d4est_mesh_object_t d4est_object, */
+/*  d4est_geometry_object_t d4est_object, */
 /*  double* u, */
 /*  double* v, */
 /*  int deg_lobatto, */
@@ -774,16 +804,18 @@ d4est_quadrature_get_rst_points
  d4est_operators_t* d4est_ops,
  d4est_quadrature_t* d4est_quadrature,
  d4est_geometry_t* d4est_geometry,
- d4est_mesh_object_t object, 
+ void* object,
+ d4est_quadrature_object_type_t object_type,
+ d4est_quadrature_integrand_type_t integrand_type,
  int degree
 )
 {
-  int dim = (object.type == ELEMENT_FACE) ? ((P4EST_DIM)-1) : (P4EST_DIM);
+  int dim = (object_type == D4EST_QUAD_FACE) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   d4est_rst_t rst_points;
-  rst_points.r = d4est_quadrature->get_rst(d4est_ops, d4est_quadrature, d4est_geometry, object, degree, 0);
-  rst_points.s = d4est_quadrature->get_rst(d4est_ops, d4est_quadrature, d4est_geometry, object, degree, 1);
+  rst_points.r = d4est_quadrature->get_rst(d4est_ops, d4est_geometry, d4est_quadrature,object,object_type, integrand_type, degree, 0);
+  rst_points.s = d4est_quadrature->get_rst(d4est_ops, d4est_geometry, d4est_quadrature,  object, object_type, integrand_type, degree, 1);
   if (dim == 3)
-    rst_points.t = d4est_quadrature->get_rst(d4est_ops, d4est_quadrature, d4est_geometry, object, degree, 2);
+    rst_points.t = d4est_quadrature->get_rst(d4est_ops, d4est_geometry, d4est_quadrature,  object, object_type, integrand_type, degree, 2);
   else
     rst_points.t = NULL;
   return rst_points;
@@ -796,16 +828,18 @@ d4est_quadrature_interpolate
  d4est_operators_t* d4est_ops,
  d4est_quadrature_t* d4est_quadrature,
  d4est_geometry_t* d4est_geometry,
- d4est_mesh_object_t object,
+ void* object,
+ d4est_quadrature_object_type_t object_type,
+ d4est_quadrature_integrand_type_t integrand_type,
  double* u_lobatto_in,
  int deg_lobatto,
  double* u_quad_out,
  int deg_quad
 )
 {
-  /* mpi_assert(object.type == ELEMENT_FACE || object.type == ELEMENT_VOLUME); */
+  /* mpi_assert(object_type == D4EST_QUAD_FACE || object_type == D4EST_QUAD_VOLUME); */
   double* interp_lobatto_to_quad [(P4EST_DIM)]; 
-  int dim = (object.type == ELEMENT_FACE) ? ((P4EST_DIM)-1) : (P4EST_DIM);
+  int dim = (object_type == D4EST_QUAD_FACE) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   int nodes_lobatto = deg_lobatto + 1;
   int nodes_quad = deg_quad + 1;
 
@@ -813,9 +847,11 @@ d4est_quadrature_interpolate
     interp_lobatto_to_quad[dir] = d4est_quadrature->get_interp
                                 (
                                  d4est_ops,
-                                 d4est_quadrature,
                                  d4est_geometry,
+                                 d4est_quadrature,
                                  object,
+                                 object_type,
+                                 integrand_type, 
                                  deg_lobatto,
                                  deg_quad,
                                  dir
@@ -823,20 +859,19 @@ d4est_quadrature_interpolate
   }
   
   if (dim == 3){
-    linalg_kron_A1A2A3x_NONSQR(u_quad_out, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], u_lobatto_in,
+    d4est_linalg_kron_A1A2A3x_nonsqr(u_quad_out, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], u_lobatto_in,
                                nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto);
   }
   else if (dim == 2){
-    linalg_kron_A1A2x_NONSQR(u_quad_out, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], u_lobatto_in, nodes_quad, nodes_lobatto,
+    d4est_linalg_kron_A1A2x_nonsqr(u_quad_out, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], u_lobatto_in, nodes_quad, nodes_lobatto,
                              nodes_quad, nodes_lobatto);
   }
   else if (dim == 1){
-    linalg_matvec_plus_vec(1.0,interp_lobatto_to_quad[0], u_lobatto_in, 0., u_quad_out, nodes_quad, nodes_lobatto);
+    d4est_linalg_matvec_plus_vec(1.0,interp_lobatto_to_quad[0], u_lobatto_in, 0., u_quad_out, nodes_quad, nodes_lobatto);
   }
   else {
     mpi_abort("[D4EST_ERROR]: dim = 1, 2 or 3\n");
-  }
-  
+  }  
 }
 
 /* Computes \sum w_i u_i v_i */
@@ -846,7 +881,9 @@ d4est_quadrature_innerproduct
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_object_t object,
+ void* object,
+ d4est_quadrature_object_type_t object_type,
+ d4est_quadrature_integrand_type_t integrand_type, 
  double* u,
  double* v,
  double* jac_quad,
@@ -856,7 +893,7 @@ d4est_quadrature_innerproduct
 
   double* quad_weights [(P4EST_DIM)];
 
-  int dim = (object.type == ELEMENT_FACE) ? ((P4EST_DIM)-1) : (P4EST_DIM);
+  int dim = (object_type == D4EST_QUAD_FACE) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   int nodes_quad = deg_quad+1;  
   
   for (int dir = 0; dir < dim; dir++)
@@ -864,9 +901,11 @@ d4est_quadrature_innerproduct
       quad_weights[dir] = d4est_quad->get_weights
                           (
                            d4est_ops,
-                           d4est_quad,
                            d4est_geom,
+                           d4est_quad,
                            object,
+                           object_type,
+                           integrand_type, 
                            deg_quad,
                            dir
                           );
@@ -879,26 +918,26 @@ d4est_quadrature_innerproduct
 
   if (dim == 3){
     if (v != NULL){
-      linalg_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], u, v, nodes_quad, nodes_quad, nodes_quad, wuv);
+      d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], u, v, nodes_quad, nodes_quad, nodes_quad, wuv);
     }
     else {
-      linalg_kron_vec1_o_vec2_o_vec3_dot_x(quad_weights[2], quad_weights[1], quad_weights[0], u,nodes_quad,nodes_quad,nodes_quad,wuv);
+      d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_x(quad_weights[2], quad_weights[1], quad_weights[0], u,nodes_quad,nodes_quad,nodes_quad,wuv);
     }
   }
   else if (dim == 2){
     if (v != NULL){
-      linalg_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0],  u, v, nodes_quad, nodes_quad, wuv);
+      d4est_linalg_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0],  u, v, nodes_quad, nodes_quad, wuv);
     }
     else {
-      linalg_kron_vec1_o_vec2_dot_x(quad_weights[1], quad_weights[0], u, nodes_quad, nodes_quad, wuv);
+      d4est_linalg_kron_vec1_o_vec2_dot_x(quad_weights[1], quad_weights[0], u, nodes_quad, nodes_quad, wuv);
     }
   }
   else if (dim == 1){
     if (v != NULL){
-      linalg_kron_vec_dot_xy(quad_weights[0], u, v, deg_quad + 1, wuv);
+      d4est_linalg_kron_vec_dot_xy(quad_weights[0], u, v, deg_quad + 1, wuv);
     }
     else {
-      linalg_kron_vec_dot_x(quad_weights[0], u, deg_quad + 1, wuv);
+      d4est_linalg_kron_vec_dot_x(quad_weights[0], u, deg_quad + 1, wuv);
     }
   }
   else {

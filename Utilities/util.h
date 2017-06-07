@@ -4,7 +4,6 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 
-
 #ifndef NDEBUG
 
 #define DEBUG_PRINT_INT(x) printf("%s = %d\n", #x, x)  

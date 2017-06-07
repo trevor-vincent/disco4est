@@ -4,7 +4,7 @@
 #include "../hpAMR/hp_amr.h"
 #include "../GridFunctions/grid_functions.h"
 #include "../Utilities/util.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../ElementData/element_data.h"
 #include "../ElementData/d4est_element_data.h"
 #include <hacked_p4est_vtk.h>
@@ -53,7 +53,7 @@ hp_amr_refine_callback
          degh,
          temp_data        
         );
-      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
+      d4est_linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
     }
     else if (elem_data->deg > degh){
       d4est_operators_apply_p_restrict
@@ -65,7 +65,7 @@ hp_amr_refine_callback
          degh,
          temp_data
         );
-      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
+      d4est_linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
     }     
 
     elem_data->deg = degh;
@@ -117,7 +117,7 @@ hp_amr_curved_refine_callback
          degh,
          temp_data        
         );
-      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
+      d4est_linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
     }
     else if (elem_data->deg > degh){
       d4est_operators_apply_p_restrict
@@ -129,7 +129,7 @@ hp_amr_curved_refine_callback
          degh,
          temp_data
         );
-      linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
+      d4est_linalg_copy_1st_to_2nd(temp_data, &elem_data->u_elem[0], volume_nodes);
     }     
 
     elem_data->deg = degh;

@@ -1,7 +1,7 @@
 #include "../Utilities/util.h"
 #include "../dGMath/d4est_operators.h"
 #include "../ElementData/d4est_element_data.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Flux/curved_Gauss_central_flux_vector_fcns.h"
 
 /* #define DEALIASING */
@@ -383,7 +383,7 @@ curved_Gauss_central_flux_vector_interface
 
 
   /* project (-)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_m_on_f_m,
@@ -395,7 +395,7 @@ curved_Gauss_central_flux_vector_interface
     );
 
   /* project (+)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_p_on_f_p,
@@ -462,7 +462,7 @@ curved_Gauss_central_flux_vector_interface
       stride += face_nodes_p_Lobatto[i];
     }
 
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        q_p_on_f_p[d],
@@ -474,7 +474,7 @@ curved_Gauss_central_flux_vector_interface
       );
 
     /* project q from the (-) side onto the mortar space */
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        q_m_on_f_m[d],
@@ -553,7 +553,7 @@ curved_Gauss_central_flux_vector_interface
     /* if (faces_mortar == P4EST_HALF) */
       /* mpi_abort("Only testing p-nonconforming atm"); */
     
-    d4est_operators_project_mass_mortar_onto_side
+    d4est_mortars_project_mass_mortar_onto_side
       (
        d4est_ops,
        M_qstar_min_q_dot_n_mortar,
@@ -568,7 +568,7 @@ curved_Gauss_central_flux_vector_interface
   stride = 0;
   for (int i = 0; i < faces_m; i++){
     if(e_m_is_ghost[i] == 0)
-      linalg_copy_1st_to_2nd
+      d4est_linalg_copy_1st_to_2nd
         (
          &proj_M_qstar_min_q_dot_n_mortar[stride],
          &(e_m[i]->M_qstar_min_q_dot_n[f_m*face_nodes_m_Lobatto[i]]),
@@ -580,7 +580,7 @@ curved_Gauss_central_flux_vector_interface
   /* stride = 0; */
   /* for (int i = 0; i < faces_m; i++){ */
   /*   if(e_m_is_ghost[i] == 0) */
-  /*     linalg_copy_1st_to_2nd */
+  /*     d4est_linalg_copy_1st_to_2nd */
   /*       ( */
   /*        &M_qstar_min_q_dot_n_mortar[stride], */
   /*        &(e_m[i]->M_qstar_min_q_dot_n[f_m*face_nodes_m_Lobatto[i]]), */

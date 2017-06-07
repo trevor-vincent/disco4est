@@ -1,7 +1,7 @@
 #include "../Utilities/util.h"
 #include "../dGMath/d4est_operators.h"
 #include "../ElementData/d4est_element_data.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Flux/curved_Gauss_primal_sipg_hesthaven_flux_fcns.h"
 
 static void
@@ -53,7 +53,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_dirichlet_withbcterms
   int volume_nodes_m_Lobatto = d4est_operators_get_nodes((P4EST_DIM), e_m->deg);
   
   double* ones_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
-  linalg_fill_vec(ones_Gauss, 1., face_nodes_m_Gauss);
+  d4est_linalg_fill_vec(ones_Gauss, 1., face_nodes_m_Gauss);
   
   double* term2_Gauss [P4EST_DIM]; D4EST_ALLOC_DIM_VEC(term2_Gauss, face_nodes_m_Gauss);
   double* VT_w_term2_Lobatto [P4EST_DIM]; D4EST_ALLOC_DIM_VEC(VT_w_term2_Lobatto, face_nodes_m_Lobatto);
@@ -145,7 +145,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_dirichlet_withbcterms
   
   d4est_operators_apply_slicer(d4est_ops, e_m->u_elem, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
   for (int d = 0; d < (P4EST_DIM); d++){
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_m_on_f_m_Gauss[d],
        0.0,
@@ -526,7 +526,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
   }
 
   double* ones_mortar_Gauss = P4EST_ALLOC(double, total_nodes_mortar_Gauss);
-  linalg_fill_vec(ones_mortar_Gauss, 1., total_nodes_mortar_Gauss);
+  d4est_linalg_fill_vec(ones_mortar_Gauss, 1., total_nodes_mortar_Gauss);
   
   double* lifted_proj_VT_w_term1_mortar_Lobatto = P4EST_ALLOC(double, max_volume_nodes_m_Lobatto);
   double* proj_VT_w_term1_mortar_Lobatto = P4EST_ALLOC(double, total_side_nodes_m_Lobatto);
@@ -600,7 +600,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
 
 
   /* project (-)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_m_on_f_m,
@@ -612,7 +612,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
     );
 
   /* project (+)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_p_on_f_p,
@@ -668,7 +668,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
     }
 
 
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        dudr_p_on_f_p_porder[d],
@@ -680,7 +680,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
       );
   
 
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        dudr_m_on_f_m[d],
@@ -758,7 +758,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
     );
 
   for (int d = 0; d < (P4EST_DIM); d++){
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_m_on_f_m_mortar_Gauss[d],
        0.0,
@@ -766,7 +766,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
       );
 
 
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_p_on_f_p_mortar_Gauss_porder[d],
        0.0,
@@ -936,7 +936,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
   }
 
   for (int d = 0; d < (P4EST_DIM); d++){
-    d4est_operators_project_mass_mortar_onto_side
+    d4est_mortars_project_mass_mortar_onto_side
       (
        d4est_ops,
        VT_w_term2_mortar_Lobatto[d],
@@ -948,7 +948,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
       );
   }
 
-  d4est_operators_project_mass_mortar_onto_side
+  d4est_mortars_project_mass_mortar_onto_side
     (
      d4est_ops,
      VT_w_term1_mortar_Lobatto,
@@ -959,7 +959,7 @@ curved_Gauss_primal_sipg_hesthaven_flux_interface
      deg_m_Lobatto
     );
 
-  d4est_operators_project_mass_mortar_onto_side
+  d4est_mortars_project_mass_mortar_onto_side
     (
      d4est_ops,
      VT_w_term3_mortar_Lobatto,

@@ -7,7 +7,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 
 #include <d4est_element_data.h>
 #include <curved_Gauss_primal_sipg_flux_fcns.h>
@@ -214,7 +214,7 @@ build_residual
       }
     }
 
-  linalg_vec_axpy(1.0, M_neg_2pi_rho_up1_neg5_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_neg_2pi_rho_up1_neg5_vec, prob_vecs->Au, prob_vecs->local_nodes);
 
   P4EST_FREE(M_neg_2pi_rho_up1_neg5_vec); 
 }
@@ -272,7 +272,7 @@ void apply_jac
     }
 
 
-  linalg_vec_axpy(1.0, M_neg_10pi_rho_up1_neg4_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_neg_10pi_rho_up1_neg4_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
 
   P4EST_FREE(M_neg_10pi_rho_up1_neg4_of_u0_u_vec);
 
@@ -693,7 +693,7 @@ problem_init
     p4est_reset_data(p4est, sizeof(d4est_element_data_t), NULL, NULL);
 
 
-  d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
+  d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
     
     d4est_element_data_init_new(p4est,
                                  geometric_factors,
@@ -721,7 +721,7 @@ problem_init
                                            (boundary_fcn,
                                             &ip_flux_params);
 
-  linalg_fill_vec(u, 1., prob_vecs.local_nodes);
+  d4est_linalg_fill_vec(u, 1., prob_vecs.local_nodes);
 
   curved_weakeqn_ptrs_t prob_fcns;
   problem_ctx_t prob_ctx;
@@ -748,8 +748,8 @@ problem_init
      amr_marker
     );
     
-  d4est_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
-  linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
+  d4est_mesh_init_field(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
+  d4est_linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
 
     
     /* dg norm should always have the boundary fcn set to zero */
@@ -845,8 +845,8 @@ problem_init
 
     local_eta2 = stats->total;
         
-    d4est_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
-    linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
+    d4est_mesh_init_field(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
+    d4est_linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
 
     int with_eta = 1;
     problem_save_to_vtk(p4est, d4est_ops,u, u_analytic, u_error, level, with_eta);
@@ -913,8 +913,8 @@ problem_init
      NULL
     );
     
-  d4est_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
-    linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
+  d4est_mesh_init_field(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
+    d4est_linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
 
     
     /* dg norm should always have the boundary fcn set to zero */
@@ -1019,8 +1019,8 @@ problem_init
 
 
 
-  d4est_element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
-  linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
+  d4est_mesh_init_field(p4est, u_analytic, analytical_solution_fcn, d4est_ops, d4est_geom->p4est_geom);    
+  d4est_linalg_vec_axpyeqz(-1., u, u_analytic, u_error, local_nodes);
 
   int with_eta = 0;
   problem_save_to_vtk(p4est, d4est_ops, u, u_analytic, u_error, level, with_eta);

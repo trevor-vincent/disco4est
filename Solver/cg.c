@@ -1,7 +1,7 @@
 #define CG_VERBOSE
 
 #include "../Solver/cg.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../pXest/pXest.h"
 #include "sc_reduce.h"
@@ -76,12 +76,12 @@ void cg_solve(p4est_t* p4est, problem_data_t* vecs, weakeqn_ptrs_t* fcns,
 
 
   
-  linalg_copy_1st_to_2nd(Au, r, local_nodes);
+  d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
 
   /* r = f - Au ; Au is stored in r so r = rhs - r */
-  linalg_vec_xpby(rhs, -1., r, local_nodes);
-  linalg_copy_1st_to_2nd(r, d, local_nodes);
-  delta_new = linalg_vec_dot(r, r, local_nodes);
+  d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
+  d4est_linalg_copy_1st_to_2nd(r, d, local_nodes);
+  delta_new = d4est_linalg_vec_dot(r, r, local_nodes);
 
   double delta_new_global;
   double d_dot_Au_global;
@@ -96,14 +96,14 @@ void cg_solve(p4est_t* p4est, problem_data_t* vecs, weakeqn_ptrs_t* fcns,
   vecs->u = d;
 
   /* DEBUG_PRINT_2ARR_DBL(d, rhs, vecs->local_nodes); */
-  /* printf("d sum = %.25f\n", linalg_vec_sum(d, vecs->local_nodes)); */
+  /* printf("d sum = %.25f\n", d4est_linalg_vec_sum(d, vecs->local_nodes)); */
   
   int i;
 
   for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++) {
     /* Au = A*d; */
     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, NULL);
-    d_dot_Au = linalg_vec_dot(d, Au, local_nodes);
+    d_dot_Au = d4est_linalg_vec_dot(d, Au, local_nodes);
 
     sc_allreduce(&d_dot_Au, &d_dot_Au_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,
                  sc_MPI_COMM_WORLD);
@@ -111,20 +111,20 @@ void cg_solve(p4est_t* p4est, problem_data_t* vecs, weakeqn_ptrs_t* fcns,
     d_dot_Au = d_dot_Au_global;
     alpha = delta_new / d_dot_Au;
 
-    linalg_vec_axpy(alpha, d, u, local_nodes);
+    d4est_linalg_vec_axpy(alpha, d, u, local_nodes);
 
     /* r = r - Au*alpha */
-    linalg_vec_axpy(-alpha, Au, r, local_nodes);
+    d4est_linalg_vec_axpy(-alpha, Au, r, local_nodes);
 
     delta_old = delta_new;
-    delta_new = linalg_vec_dot(r, r, local_nodes);
+    delta_new = d4est_linalg_vec_dot(r, r, local_nodes);
 
     sc_allreduce(&delta_new, &delta_new_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,
                  sc_MPI_COMM_WORLD);
     delta_new = delta_new_global;
 
     beta = delta_new / delta_old;
-    linalg_vec_xpby(r, beta, d, local_nodes);
+    d4est_linalg_vec_xpby(r, beta, d, local_nodes);
 
     if (params->mpi_rank == 0 && params->monitor == 1)
       printf("[CG_SOLVER]: ITER %03d FNRMSQR %.30f\n", i, delta_new);
@@ -179,12 +179,12 @@ void curved_cg_solve(
 
   /* DEBUG_PRINT_2ARR_DBL(vecs->u, vecs->Au, vecs->local_nodes); */
   
-  linalg_copy_1st_to_2nd(Au, r, local_nodes);
+  d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
 
   /* r = f - Au ; Au is stored in r so r = rhs - r */
-  linalg_vec_xpby(rhs, -1., r, local_nodes);
-  linalg_copy_1st_to_2nd(r, d, local_nodes);
-  delta_new = linalg_vec_dot(r, r, local_nodes);
+  d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
+  d4est_linalg_copy_1st_to_2nd(r, d, local_nodes);
+  delta_new = d4est_linalg_vec_dot(r, r, local_nodes);
 
   double delta_new_global;
   double d_dot_Au_global;
@@ -198,14 +198,14 @@ void curved_cg_solve(
   /* start working on d */
   vecs->u = d;
   /* DEBUG_PRINT_2ARR_DBL(d, rhs, vecs->local_nodes); */
-  /* printf("d sum = %.25f\n", linalg_vec_sum(d, vecs->local_nodes)); */
+  /* printf("d sum = %.25f\n", d4est_linalg_vec_sum(d, vecs->local_nodes)); */
   
   int i;
 
   for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++) {
     /* Au = A*d; */
     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, geom);
-    d_dot_Au = linalg_vec_dot(d, Au, local_nodes);
+    d_dot_Au = d4est_linalg_vec_dot(d, Au, local_nodes);
 
     sc_allreduce(&d_dot_Au, &d_dot_Au_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,
                  sc_MPI_COMM_WORLD);
@@ -213,20 +213,20 @@ void curved_cg_solve(
     d_dot_Au = d_dot_Au_global;
     alpha = delta_new / d_dot_Au;
 
-    linalg_vec_axpy(alpha, d, u, local_nodes);
+    d4est_linalg_vec_axpy(alpha, d, u, local_nodes);
 
     /* r = r - Au*alpha */
-    linalg_vec_axpy(-alpha, Au, r, local_nodes);
+    d4est_linalg_vec_axpy(-alpha, Au, r, local_nodes);
 
     delta_old = delta_new;
-    delta_new = linalg_vec_dot(r, r, local_nodes);
+    delta_new = d4est_linalg_vec_dot(r, r, local_nodes);
 
     sc_allreduce(&delta_new, &delta_new_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,
                  sc_MPI_COMM_WORLD);
     delta_new = delta_new_global;
 
     beta = delta_new / delta_old;
-    linalg_vec_xpby(r, beta, d, local_nodes);
+    d4est_linalg_vec_xpby(r, beta, d, local_nodes);
 
     if (params->mpi_rank == 0 && params->monitor == 1)
       printf("[CG_SOLVER]: ITER %03d FNRMSQR %.30f\n", i, delta_new);

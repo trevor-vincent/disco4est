@@ -1,5 +1,5 @@
 #include "../pXest/pXest.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../Solver/matrix_sym_tester.h"
 #include <ini.h>
@@ -176,7 +176,7 @@ newton_d4est_solve
   /* build initial residual vector */
   fcns->build_residual(p4est, *ghost, *ghost_data, &vecs_for_res_build, d4est_ops, d4est_geom, d4est_quad);
   
-  double fnrm = linalg_vec_dot(f0,f0,n);
+  double fnrm = d4est_linalg_vec_dot(f0,f0,n);
   double fnrm_global;
   
   sc_allreduce
@@ -206,7 +206,7 @@ newton_d4est_solve
     /* double ratio = fnrm/fnrmo; */
     fnrmo = fnrm;
     itc++;
-    linalg_vec_scale(-1., f0, n);
+    d4est_linalg_vec_scale(-1., f0, n);
     
     vecs_for_linsolve.u0 = x;
     vecs_for_linsolve.rhs = f0;
@@ -214,7 +214,7 @@ newton_d4est_solve
     vecs_for_linsolve.Au = Jstep;
 
     /* set initial guess */
-    linalg_fill_vec(vecs_for_linsolve.u, 0., n);
+    d4est_linalg_fill_vec(vecs_for_linsolve.u, 0., n);
 
     /* petsc_ctx_t petsc_ctx; */
     /* if(krylov_pc != NULL){ */
@@ -240,12 +240,13 @@ newton_d4est_solve
        ghost_data,
        d4est_ops,
        d4est_geom,
+       d4est_quad,
        &petsc_params,
        krylov_pc
       );
     
     /* xt = x + lambda*step */
-    linalg_vec_axpyeqz(1.0, step, x, xt, n);
+    d4est_linalg_vec_axpyeqz(1.0, step, x, xt, n);
 
     /* calculate new residual vector */
     vecs_for_res_build.u = xt;
@@ -261,7 +262,7 @@ newton_d4est_solve
     ft = tmp;
 
     /* calculate new residual norm */
-    fnrm = linalg_vec_dot(f0,f0,n);
+    fnrm = d4est_linalg_vec_dot(f0,f0,n);
 
     sc_allreduce
       (
@@ -291,7 +292,7 @@ newton_d4est_solve
 
   if(vecs->u != x){
     /* vecs->u = x; */
-    linalg_copy_1st_to_2nd(x, vecs->u, vecs->local_nodes);
+    d4est_linalg_copy_1st_to_2nd(x, vecs->u, vecs->local_nodes);
     P4EST_FREE(x);
   }
   else {

@@ -1,7 +1,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <curved_Gauss_sipg_flux_scalar_fcns.h>
@@ -173,7 +173,7 @@ void problem_build_rhs
 
   double* f = P4EST_ALLOC(double, prob_vecs->local_nodes);
   
-  d4est_element_data_init_node_vec
+  d4est_mesh_init_field
     (
      p4est,
      f,
@@ -229,7 +229,7 @@ void problem_build_rhs
       }
     }    
   
-  linalg_vec_scale(-1., prob_vecs->rhs, prob_vecs->local_nodes);
+  d4est_linalg_vec_scale(-1., prob_vecs->rhs, prob_vecs->local_nodes);
 
   int local_nodes = prob_vecs->local_nodes;
   double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
@@ -237,7 +237,7 @@ void problem_build_rhs
   
   prob_vecs->u = u_eq_0; 
   curved_Gauss_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
-  linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
+  d4est_linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
 
   prob_vecs->u = tmp;
   P4EST_FREE(u_eq_0);
@@ -422,7 +422,7 @@ problem_init
 
   p4est_partition(p4est, 0, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
-  /* d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
+  /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
 
   /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
@@ -466,7 +466,7 @@ problem_init
   prob_fcns.apply_lhs = curved_Gauss_poisson_apply_aij;
 
      
-    d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
+    d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
 
 
     d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
@@ -560,7 +560,7 @@ problem_init
     
    
 
-    /* d4est_element_data_init_node_vec */
+    /* d4est_mesh_init_field */
   /*   ( */
   /*    p4est, */
   /*    u, */
@@ -568,7 +568,7 @@ problem_init
   /*    d4est_ops */
   /*   ); */
 
-    /* linalg_fill_vec(u, 0., local_nodes); */
+    /* d4est_linalg_fill_vec(u, 0., local_nodes); */
     
      /* p4est_vtk_write_file */
      /*   (p4est, */
@@ -598,7 +598,7 @@ problem_init
   /*   u[i] = util_uniform_rand(14234232, 0., 1.); */
   /* } */
   
-  linalg_fill_vec(prob_vecs.u, 0., local_nodes);
+  d4est_linalg_fill_vec(prob_vecs.u, 0., local_nodes);
   
   /* prob_fcns.apply_lhs(p4est, ghost, ghost_data, &prob_vecs, d4est_ops, d4est_geom); */
   /* DEBUG_PRINT_3ARR_DBL(prob_vecs.u, prob_vecs.rhs, prob_vecs.Au, prob_vecs.local_nodes); */
@@ -627,7 +627,7 @@ problem_init
   double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
   double* analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
   
-  d4est_element_data_init_node_vec(p4est, analytic, analytic_fcn, d4est_ops, d4est_geom->p4est_geom);
+  d4est_mesh_init_field(p4est, analytic, analytic_fcn, d4est_ops, d4est_geom->p4est_geom);
 
   for (int i = 0; i < local_nodes; i++){
     error[i] = prob_vecs.u[i] - analytic[i];

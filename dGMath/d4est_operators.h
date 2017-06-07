@@ -65,26 +65,6 @@ typedef void (*d4est_operators_hp_prolong_fcn_t)(d4est_operators_t *, double *, 
 typedef void (*d4est_operators_p_prolong_fcn_t)(d4est_operators_t *, double *, int, int,
                                        int, double *);
 
-//         +----------------------+
-//         |			  |
-//         |			  |	     b
-//         |			  |	     |
-//         |			  |	     |
-//         |	   face f	  |	     |
-//         |	       	       	  |  	     |
-//         |			  |	     /---------	a
-//         |			  |	    /
-//         |			  |	   /
-//         |			  |	  c
-//         |----------------------+
-
-typedef struct {
-  int a;      /* "x" coord on this face (z-ordering) */
-  int b;      /* "y" coord on this face (z-ordering) */
-  int c;      /* "normal" coord on this face (z-ordering) */
-  double sgn; /* is the normal in the - or +  c-direction */
-} d4est_operators_face_info_t;
-
 typedef struct {
 
   double* r;
@@ -93,17 +73,6 @@ typedef struct {
   
 } d4est_rst_t;
 
-
-typedef struct {
-  
-  int local_nodes;
-  int local_sqr_nodes;
-  int local_sqr_trace_nodes;
-  int local_nodes_quad;
-  
-} d4est_local_sizes_t;
-
-/* This file was automatically generated.  Do not edit! */
 double *d4est_operators_fetch_vtk_rst(d4est_operators_t *d4est_ops,int deg,int dim);
 void d4est_operators_convert_nodal_to_vtk(d4est_operators_t *d4est_ops,double *vec,int dim,int deg,double *vtk_vec);
 void d4est_operators_apply_vtk_interp(d4est_operators_t *d4est_ops,double *in,int dim,int deg,int c,double *out);
@@ -113,12 +82,8 @@ int d4est_operators_reorient_face_order(int face_dim,int f_m,int f_p,int o,int i
 void d4est_operators_apply_FLIP(d4est_operators_t *d4est_ops,double *in,int dim,int deg,int dir,double *out);
 void d4est_operators_compute_invM_vec_wo_aliasing(d4est_operators_t *d4est_ops,double *xyz_rst[(P4EST_DIM)][P4EST_DIM],double *vec,int degH,double *invMvec,int degh);
 void d4est_operators_compute_M_vec_wo_aliasing(d4est_operators_t *d4est_ops,double *xyz_rst[(P4EST_DIM)][P4EST_DIM],double *vec,int degH,double *MJvec,int degh);
-void d4est_operators_get_face_info(int f,d4est_operators_face_info_t *face_info);
 void d4est_operators_apply_p_restrict_interp(d4est_operators_t *d4est_ops,double *in,int degh,int dim,int degH,double *out);
 void d4est_operators_apply_hp_restrict_interp(d4est_operators_t *d4est_ops,double *in,int *degh,int dim,int degH,double *out);
-void d4est_operators_project_mortar_onto_side(d4est_operators_t *d4est_ops,double *in_mortar,int faces_mortar,int *deg_mortar,double *out_side,int faces_side,int *deg_side);
-void d4est_operators_project_mass_mortar_onto_side(d4est_operators_t *dgmath,double *in_mortar,int faces_mortar,int *deg_mortar,double *out_side,int faces_side,int *deg_side);
-void d4est_operators_project_side_onto_mortar_space(d4est_operators_t *d4est_ops,double *in_side,int faces_side,int *deg_side,double *out_mortar,int faces_mortar,int *deg_mortar);
 void d4est_operators_apply_p_prolong_transpose(d4est_operators_t *d4est_ops,double *in,int degh,int dim,int degH,double *out);
 void d4est_operators_apply_hp_prolong_transpose(d4est_operators_t *d4est_ops,double *in,int *degh,int dim,int degH,double *out);
 double *d4est_operators_fetch_p_prolong_transpose_1d_inverse(d4est_operators_t *d4est_ops,int degH,int degh);
@@ -167,7 +132,7 @@ void d4est_operators_build_ref_GLL_to_GL_interp_trans_1d(d4est_operators_t *d4es
 void d4est_operators_build_ref_GLL_to_GL_interp_1d_inverse(d4est_operators_t *d4est_ops,double *ref_GLL_to_GL_interp_1d_inverse,int Lobatto_degree,int Gauss_degree);
 double *d4est_operators_fetch_ref_GLL_to_GL_interp_1d_inverse(d4est_operators_t *d4est_ops,int deg_Lobatto,int deg_Gauss);
 double *d4est_operators_fetch_ref_GLL_to_GL_interp_1d(d4est_operators_t *d4est_ops,int deg_Lobatto,int deg_Gauss);
-void d4est_operators_build_custom_GL_interp_1d(d4est_operators_t *d4est_ops,double *custom_GL_interp_1d,int Lobatto_degree,int custom_degree,double *custom_points);
+void d4est_operators_build_custom_GLL_interp_1d(d4est_operators_t *d4est_ops,double *custom_GLL_interp_1d,int Lobatto_degree,int custom_degree,double *custom_points);
 void d4est_operators_build_ref_GLL_to_GL_interp_1d(d4est_operators_t *d4est_ops,double *ref_GLL_to_GL_interp_1d,int Lobatto_degree,int Gauss_degree);
 double *d4est_operators_fetch_invGaussVij_1d(d4est_operators_t *d4est_ops,int deg);
 void d4est_operators_build_ref_invGaussVij_1d(d4est_operators_t *d4est_ops,double *ref_invGaussVij_1d,int Gauss_degree);

@@ -1,7 +1,7 @@
 #include <util.h>
 #include <ip_flux.h>
 #include "../pXest/pXest.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Solver/krylov_petsc.h"
 #include "petscsnes.h"
 #include <krylov_pc.h>
@@ -267,6 +267,7 @@ krylov_petsc_solve
  void** ghost_data, 
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  krylov_petsc_params_t* krylov_petsc_params,
  krylov_pc_t* krylov_pc
 )
@@ -291,6 +292,7 @@ krylov_petsc_solve
   petsc_ctx.ghost_data = ghost_data;
   petsc_ctx.d4est_ops = d4est_ops;
   petsc_ctx.d4est_geom = d4est_geom;
+  petsc_ctx.d4est_quad = d4est_quad;
 
   int local_nodes = vecs->local_nodes;
   double* u = vecs->u;

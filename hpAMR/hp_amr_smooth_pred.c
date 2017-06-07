@@ -2,7 +2,7 @@
 #include "../ElementData/element_data.h"
 #include "../EllipticSystem/problem_data.h"
 #include "../EllipticSystem/problem_weakeqn_ptrs.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../hpAMR/hp_amr.h"
 #include "../hpAMR/hp_amr_smooth_pred.h"
@@ -100,7 +100,7 @@ hp_amr_smooth_pred_pre_refine_callback
                                     double,
                                     p4est->local_num_quadrants
                                    );
-    linalg_fill_vec(smooth_pred_data->predictors, 0., p4est->local_num_quadrants);
+    d4est_linalg_fill_vec(smooth_pred_data->predictors, 0., p4est->local_num_quadrants);
   }
   
   int pred_stride = 0;
@@ -384,7 +384,7 @@ hp_amr_smooth_pred_balance_replace_callback (
     child_data->deg = parent_data->deg;
     /* printf("child_data->deg = %d\n", child_data->deg); */
     child_data->local_predictor = (ONE_OVER_CHILDREN)*smooth_pred_data->gamma_h*util_dbl_pow_int(.5, 2*(h_pow))*parent_data->local_predictor;
-    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
+    d4est_linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
   P4EST_FREE(temp_data);
@@ -446,7 +446,7 @@ hp_amr_smooth_pred_refine_replace_callback (
     child_data->deg = parent_data->deg;
     /* printf("child_data->deg = %d\n", child_data->deg); */
     child_data->local_predictor = parent_data->local_predictor;
-    linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
+    d4est_linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
   P4EST_FREE(temp_data);

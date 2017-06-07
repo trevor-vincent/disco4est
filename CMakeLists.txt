@@ -115,7 +115,7 @@ SET (
   Utilities/util.c
   dGMath/d4est_operators.c
   GridFunctions/grid_functions.c
-  LinearAlgebra/linalg.c
+  LinearAlgebra/d4est_linalg.c
   # Estimators/bi_estimator.c
   # Estimators/curved_bi_estimator.c
   # Estimators/curved_bi_estimator_flux_fcns.c
@@ -146,6 +146,8 @@ SET (
   # hpAMR/hp_amr_uniform.c
   # hpAMR/hp_amr_curved_uniform.c
   ElementData/d4est_element_data.c
+  ElementData/d4est_mesh.c
+  Quadrature/d4est_quadrature_compactified.c
   # ElementData/element_data.c
   # Flux/central_flux_vector_fcns.c
   # Flux/compute_flux.c
@@ -165,8 +167,8 @@ SET (
   # Flux/curved_Gauss_primal_sipg_kronbichler_uniform_flux_fcns.c
   # Flux/curved_Gauss_primal_sipg_hesthaven_flux_fcns.c
   Quadrature/d4est_quadrature.c
-  Quadrature/d4est_quadrature_gauss_legendre.c
-  Quadrature/d4est_quadrature_gauss_lobatto.c
+  Quadrature/d4est_quadrature_legendre.c
+  Quadrature/d4est_quadrature_lobatto.c
   Geometry/d4est_mortars.c
   Flux/ip_flux.c
   Flux/ip_flux_params.c
@@ -331,6 +333,31 @@ function(add_d4est_problem_2d exec src parent_dir)
 endfunction()
 
 
+##
+## Tests
+##
+enable_testing()
+set(CTEST_MEMORYCHECK_COMMAND /usr/bin/valgrind)
+# set( MEMORYCHECK_SUPPRESSIONS_FILE "/usr/share/openmpi/openmpi-valgrind.supp" )
+# set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=/usr/share/openmpi/openmpi-valgrind.supp" )
+set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/suppressions.txt" )
+
+add_executable(test_d4est_linalg Tests/test_d4est_linalg.c)
+target_link_libraries(test_d4est_linalg d4est)
+add_test(test_d4est_linalg_test test_d4est_linalg)
+target_compile_definitions(test_d4est_linalg PRIVATE NDEBUG)
+
+add_executable(test_d4est_quadrature_compactified Tests/test_d4est_quadrature_compactified.c)
+target_link_libraries(test_d4est_quadrature_compactified d8est)
+add_test(test_d4est_quadrature_compactified_test test_d4est_quadrature_compactified)
+target_compile_definitions(test_d4est_quadrature_compactified PRIVATE DIM=3)
+
+# add_executable(test_d4est_dictionary Tests/test_d4est_dictionary.c)
+# target_link_libraries(test_d4est_dictionary d4est)
+# add_test(test_d4est_dictionary_test test_d4est_dictionary)
+# target_compile_definitions(test_d4est_dictionary PRIVATE D4EST_DIM=3 D4EST_SERIAL D4EST_DEBUG)
+
+
 # get_directory_property( DirDefs COMPILE_DEFINITIONS )
 # message( "DUCK COMPILE_DEFINITIONS = ${DirDefs}" )
 # add_d4est_problem_3d(testcompile1 testcompile.c TestCompile)
@@ -341,8 +368,8 @@ endfunction()
 # add_d4est_problem_2d(test_uniform_wedge_multigrid_driver test_uniform_wedge_multigrid.c UniformExamples/WedgeMultigrid)
 # add_d4est_problem_3d(test_uniform_cubedsphere_poisson_driver test_uniform_cubedsphere_poisson.c UniformExamples/CubedSpherePoisson)
 # add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_driver test_uniform_cubedsphere_helmholtz.c UniformExamples/CubedSphereHelmholtz)
-add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_driver test_uniform_cubedsphere_with_hole_helmholtz.c UniformExamples/CubedSphereWithHoleHelmholtz)
-# add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_multigrid_driver test_uniform_cubed_sphere_with_hole_helmholtz_multigrid.c UniformExamples/CubedSphereWithHoleHelmholtzMultigrid)
+# add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_driver test_uniform_cubedsphere_with_hole_helmholtz.c UniformExamples/CubedSphereWithHoleHelmholtz)
+add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_multigrid_driver test_uniform_cubed_sphere_with_hole_helmholtz_multigrid.c UniformExamples/CubedSphereWithHoleHelmholtzMultigrid)
 # add_d4est_problem_3d(test_uniform_kidder_driver test_uniform_kidder.c UniformExamples/Kidder)
 # add_d4est_problem_3d(test_jacobian_driver test_jacobian.c TestJacobian)
 # add_d4est_problem_2d(testmultigridmatrixop_driver testmultigridmatrixop.c TestMultigridMatrixOp)

@@ -1,6 +1,6 @@
 #include <multigrid_bottom_solver_cheby_d4est.h>
 #include <multigrid_smoother_cheby_d4est.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <ini.h>
 #include <util.h>
 #include <cg_eigs.h>

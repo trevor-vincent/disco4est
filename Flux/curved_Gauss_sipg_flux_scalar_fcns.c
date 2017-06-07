@@ -1,7 +1,7 @@
 #include "../Flux/curved_Gauss_sipg_flux_scalar_fcns.h"
 #include "../Utilities/util.h"
 #include "../dGMath/d4est_operators.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 
 /* TODO: Add in dealiasing to scalar_dirichlet */
 /* #define DEALIASING */
@@ -292,7 +292,7 @@ curved_Gauss_sipg_flux_scalar_interface
   P4EST_FREE(tmp);
   
   /* project (-)-side u trace scalar onto mortar space */ 
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_m_on_f_m,
@@ -304,7 +304,7 @@ curved_Gauss_sipg_flux_scalar_interface
     );
 
   /* project (+)-side u trace scalar onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_p_on_f_p,
@@ -396,7 +396,7 @@ curved_Gauss_sipg_flux_scalar_interface
     
 
     /* project mortar data back onto the (-) side */
-    d4est_operators_project_mass_mortar_onto_side
+    d4est_mortars_project_mass_mortar_onto_side
       (
        d4est_ops,
        M_sj_n_ustar_min_u_mortar,
@@ -411,7 +411,7 @@ curved_Gauss_sipg_flux_scalar_interface
     stride = 0;
     for (int i = 0; i < faces_m; i++){
       if(e_m_is_ghost[i] == 0)
-        linalg_copy_1st_to_2nd
+        d4est_linalg_copy_1st_to_2nd
           (
            &proj_M_sj_n_ustar_min_u_mortar[stride],
            &(e_m[i]->M_ustar_min_u_n[d][f_m*face_nodes_m_Lobatto[i]]),
@@ -423,7 +423,7 @@ curved_Gauss_sipg_flux_scalar_interface
 
     /* for (int i = 0; i < faces_m; i++){ */
     /*   if(e_m_is_ghost[i] == 0) */
-    /*     linalg_copy_1st_to_2nd */
+    /*     d4est_linalg_copy_1st_to_2nd */
     /*       ( */
     /*        &M_sj_n_ustar_min_u_mortar[stride], */
     /*        &(e_m[i]->M_ustar_min_u_n[d][f_m*face_nodes_m_Lobatto[i]]), */

@@ -8,7 +8,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 
 #include <element_data.h>
 #include <sipg_flux_vector_fcns.h>
@@ -208,7 +208,7 @@ build_residual
     );
   
 
-  linalg_vec_axpy(1.0, M_neg_2pi_rho_up1_neg5_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_neg_2pi_rho_up1_neg5_vec, prob_vecs->Au, prob_vecs->local_nodes);
 
   P4EST_FREE(neg_2pi_rho_up1_neg5_vec);
   P4EST_FREE(M_neg_2pi_rho_up1_neg5_vec); 
@@ -264,7 +264,7 @@ build_residual_Gauss
         double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
-        linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
+        d4est_linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
         d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
@@ -295,7 +295,7 @@ build_residual_Gauss
     }
 
 
-  linalg_vec_axpy(1.0, M_neg_2pi_rho_up1_neg5_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_neg_2pi_rho_up1_neg5_vec, prob_vecs->Au, prob_vecs->local_nodes);
 
   P4EST_FREE(M_neg_2pi_rho_up1_neg5_vec); 
 }
@@ -343,7 +343,7 @@ void apply_jac_Gauss
         double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
-        linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
+        d4est_linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
         d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
@@ -385,7 +385,7 @@ void apply_jac_Gauss
   /*   ); */
   
 
-  linalg_vec_axpy(1.0, M_neg_10pi_rho_up1_neg4_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_neg_10pi_rho_up1_neg4_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
 
   /* P4EST_FREE(neg_10pi_rho_up1_neg4_of_u0_u_vec); */
   /* P4EST_FREE(neg_10pi_rho_up1_neg4_of_u0_vec); */
@@ -423,7 +423,7 @@ void apply_jac
   /*    d4est_ops */
   /*   ); */
 
-  /* linalg_component_mult */
+  /* d4est_linalg_component_mult */
   /*   ( */
   /*    neg_10pi_rho_up1_neg4_of_u0_vec, */
   /*    prob_vecs->u, */
@@ -451,7 +451,7 @@ void apply_jac
     );
   
 
-  linalg_vec_axpy(1.0, M_neg_10pi_rho_up1_neg4_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_neg_10pi_rho_up1_neg4_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
 
   /* P4EST_FREE(neg_10pi_rho_up1_neg4_of_u0_u_vec); */
   /* P4EST_FREE(neg_10pi_rho_up1_neg4_of_u0_vec); */
@@ -752,7 +752,7 @@ problem_init
 
 
   /* if (!load_from_checkpoint) */
-    linalg_fill_vec(u, 1., prob_vecs.local_nodes);
+    d4est_linalg_fill_vec(u, 1., prob_vecs.local_nodes);
   /* else */
     /* element_data_copy_from_storage_to_vec(p4est, u); */
 
@@ -852,7 +852,7 @@ problem_init
     );
   
   element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops);    
-  linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+  d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
     
     /* dg norm should always have the boundary fcn set to zero */
@@ -970,7 +970,7 @@ problem_init
        u_vertex
       );
     
-    linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+    d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
     element_data_store_nodal_vec_in_vertex_array
       (
@@ -979,7 +979,7 @@ problem_init
        u_error_vertex
       );
 
-    linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
+    d4est_linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
     
     char sol_save_as [500];
     sprintf(sol_save_as, "%s_hp_amr_level_%d_sols", P4EST_STRING, level);
@@ -1079,7 +1079,7 @@ problem_init
     );
     
     element_data_init_node_vec(p4est, u_analytic, analytical_solution_fcn, d4est_ops);    
-    linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+    d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
     
     /* dg norm should always have the boundary fcn set to zero */
     double local_dg_norm_sqr = element_data_compute_DG_norm_sqr
@@ -1196,7 +1196,7 @@ problem_init
      u_vertex
     );
     
-  linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+  d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
   element_data_store_nodal_vec_in_vertex_array
     (
@@ -1205,7 +1205,7 @@ problem_init
      u_error_vertex
     );
 
-  linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
+  d4est_linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
   
   char sol_save_as [500];
   sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta22", P4EST_STRING, level);

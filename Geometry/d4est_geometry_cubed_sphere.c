@@ -1037,8 +1037,8 @@ d4est_geometry_cubed_sphere_outer_shell_block_get_custom_quadrature
  p4est_qcoord_t q0 [3],
  p4est_qcoord_t dq,
  int degree,
- long double* custom_abscissas,
- long double* custom_weights,
+ double* custom_abscissas_dbl,
+ double* custom_weights_dbl,
  int test_moments
 )
 {
@@ -1078,6 +1078,9 @@ d4est_geometry_cubed_sphere_outer_shell_block_get_custom_quadrature
   params.cmax = cmax;
   params.R1 = R1;
   params.R2 = R2;
+
+  long double* custom_weights = P4EST_ALLOC(long double, degree + 1);
+  long double* custom_abscissas = P4EST_ALLOC(long double, degree + 1);
   
   arbquad_get_abscissas_and_weights_use_aa_and_bb(degree+1,
                                     custom_weights,
@@ -1098,9 +1101,17 @@ d4est_geometry_cubed_sphere_outer_shell_block_get_custom_quadrature
   /*                                   inversemap_weight_fcn */
   /*                                  ); */
 
+  for (int i = 0; i < degree + 1; i++){
+    custom_weights_dbl[i] = (double)custom_weights[i];
+    custom_abscissas_dbl[i] = (double)custom_abscissas[i];
+  }
+  
   
   if (test_moments)
     arbquad_test_moments(degree+1, custom_weights, custom_abscissas, inversemap_moment_fcn, DIVIDE_WEIGHTS_BY_WEIGHT_FCN, inversemap_weight_fcn, &params);
+
+  P4EST_FREE(custom_weights);
+  P4EST_FREE(custom_abscissas);
   
 }
 
@@ -1685,6 +1696,25 @@ d4est_geometry_cubed_sphere_inner_shell_block_new
   }
 }
 
+
+void
+d4est_geometry_cubed_sphere_outer_shell_block_new_aux
+(
+ d4est_geometry_t* d4est_geom,
+ d4est_geometry_cubed_sphere_attr_t* sphere_attrs
+)
+{
+  p4est_connectivity_t* conn = p8est_connectivity_new_unitcube();
+  
+  d4est_geom->user = sphere_attrs;
+  d4est_geom->X = d4est_geometry_cubed_sphere_outer_shell_block_X;
+  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
+  d4est_geom->p4est_conn = conn;
+  d4est_geom->DX = d4est_geometry_cubed_sphere_outer_shell_block_DX;
+  d4est_geom->JAC = d4est_geometry_cubed_sphere_outer_shell_block_jac;
+
+}
+
 void
 d4est_geometry_cubed_sphere_outer_shell_block_new
 (
@@ -1696,18 +1726,8 @@ d4est_geometry_cubed_sphere_outer_shell_block_new
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_outer_shell_input(input_file, input_section);
-  p4est_connectivity_t* conn = p8est_connectivity_new_unitcube();
+  d4est_geometry_cubed_sphere_outer_shell_block_new_aux(d4est_geom, sphere_attrs);
   
-  d4est_geom->user = sphere_attrs;
-  d4est_geom->X = d4est_geometry_cubed_sphere_outer_shell_block_X;
-  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
-  d4est_geom->p4est_conn = conn;
-  d4est_geom->DX = d4est_geometry_cubed_sphere_outer_shell_block_DX;
-  /* d4est_geom->DRDX = d4est_geometry_cubed_sphere_outer_shell_block_DRDX; */
-  /* d4est_geom->DRDX_JAC = d4est_geometry_cubed_sphere_outer_shell_block_DRDX_JAC; */
-  d4est_geom->JAC = d4est_geometry_cubed_sphere_outer_shell_block_jac;
-  /* d4est_geom->JACDRDXDRDX = d4est_geometry_cubed_sphere_outer_shell_block_drdxjacdrdx; */ 
-   
   if (mpirank == 0){
     printf("%s: NAME = cubed sphere outer shell block\n", printf_prefix );
     printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
@@ -1749,3 +1769,4 @@ which_tree == 12 will never occur */
 
 
 #endif
+

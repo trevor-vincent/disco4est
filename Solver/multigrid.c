@@ -1,6 +1,6 @@
 #include "sc_reduce.h"
 #include "../pXest/pXest.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../dGMath/d4est_operators.h"
 #include "../Solver/multigrid.h"
@@ -398,7 +398,7 @@ multigrid_vcycle
   problem_data_copy_ptrs(vecs, &vecs_for_bottom_solve);
   
   /* initialize error to zero */
-  /* linalg_fill_vec(mg_data->err, 0., mg_data->fine_nodes); */
+  /* d4est_linalg_fill_vec(mg_data->err, 0., mg_data->fine_nodes); */
 
   /* initialize stride */
   mg_data->stride = 0;
@@ -435,7 +435,7 @@ multigrid_vcycle
     /**********************************************************/  
     
     /* set initial guess for error */
-    linalg_fill_vec(&err_at0[stride_to_fine_data], 0., nodes_on_level_of_multigrid[level]);//mg_data->fine_nodes);
+    d4est_linalg_fill_vec(&err_at0[stride_to_fine_data], 0., nodes_on_level_of_multigrid[level]);//mg_data->fine_nodes);
 
     if (level == toplevel){
       vecs_for_smooth.Au = vecs->Au;
@@ -629,7 +629,7 @@ multigrid_vcycle
     
     mg_data->mg_state = DOWNV_POST_RESTRICTION; multigrid_update_components(p4est, level, NULL);   
 
-    linalg_copy_1st_to_2nd
+    d4est_linalg_copy_1st_to_2nd
       (
        &(rres_at0)[stride_to_fine_data + mg_data->fine_nodes],
        &(res_at0)[stride_to_fine_data + mg_data->fine_nodes],
@@ -654,7 +654,7 @@ multigrid_vcycle
   /**********************************************************/
 
   /* set initial guess for error */
-  linalg_fill_vec(&err_at0[stride_to_fine_data], 0., nodes_on_level_of_multigrid[bottomlevel]);
+  d4est_linalg_fill_vec(&err_at0[stride_to_fine_data], 0., nodes_on_level_of_multigrid[bottomlevel]);
   
   /* vecs_for_bottom_solve.Au = mg_data->Ae;//[mg_data->fine_nodes]; */
   vecs_for_bottom_solve.Au = &Ae_at0[stride_to_fine_data];//[mg_data->fine_nodes];
@@ -706,7 +706,7 @@ multigrid_vcycle
     mg_data->temp_stride = 0;
 
     
-    linalg_copy_1st_to_2nd(&err_at0[stride_to_fine_data + mg_data->fine_nodes],//&(mg_data->err)[mg_data->fine_nodes],
+    d4est_linalg_copy_1st_to_2nd(&err_at0[stride_to_fine_data + mg_data->fine_nodes],//&(mg_data->err)[mg_data->fine_nodes],
                            &rres_at0[stride_to_fine_data + mg_data->fine_nodes],//&(mg_data->rres)[mg_data->fine_nodes],
                            nodes_on_level_of_multigrid[coarse_level]);
 
@@ -768,7 +768,7 @@ multigrid_vcycle
       vecs_for_smooth.local_nodes = mg_data->fine_nodes;
     }
      
-    linalg_vec_axpy(1.0, &rres_at0[stride_to_fine_data], vecs_for_smooth.u, mg_data->fine_nodes);
+    d4est_linalg_vec_axpy(1.0, &rres_at0[stride_to_fine_data], vecs_for_smooth.u, mg_data->fine_nodes);
 
 
 
@@ -814,7 +814,7 @@ multigrid_vcycle
 
 
   
-  mg_data->vcycle_r2_local_current = linalg_vec_dot(&rres_at0[stride_to_fine_data],
+  mg_data->vcycle_r2_local_current = d4est_linalg_vec_dot(&rres_at0[stride_to_fine_data],
                                            &rres_at0[stride_to_fine_data],
                                            mg_data->fine_nodes);
   
@@ -858,8 +858,8 @@ multigrid_compute_residual
     rhs = vecs->rhs;
     double* r = P4EST_ALLOC(double, vecs->local_nodes);
     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, mg_data->d4est_ops, d4est_geom);  
-    linalg_vec_axpyeqz(-1., Au, rhs, r, local_nodes);
-    double r2_0_local = linalg_vec_dot(r,r,local_nodes);  
+    d4est_linalg_vec_axpyeqz(-1., Au, rhs, r, local_nodes);
+    double r2_0_local = d4est_linalg_vec_dot(r,r,local_nodes);  
     P4EST_FREE(r);
   
     double r2_0_global = -1;

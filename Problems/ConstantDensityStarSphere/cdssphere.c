@@ -1,7 +1,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <curved_Gauss_primal_sipg_flux_fcns.h>
@@ -403,7 +403,7 @@ problem_init
   prob_fcns.build_residual = cds_build_residual;
   prob_fcns.apply_lhs = cds_apply_jac;
   
-  d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
+  d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
 
   /* printf("[D4EST_INFO]: Initial number of elements = %d\n", p4est->local_num_quadrants); */
 
@@ -492,7 +492,7 @@ problem_init
   }
 
 
-  /* linalg_fill_vec(prob_vecs.u, 0., local_nodes); */
+  /* d4est_linalg_fill_vec(prob_vecs.u, 0., local_nodes); */
 
   
   d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    
@@ -533,8 +533,8 @@ problem_init
        amr_marker
       );
 
-    /* linalg_fill_vec(prob_vecs.u, 0.001, prob_vecs.local_nodes); */
-    linalg_fill_vec(prob_vecs.u, 0, prob_vecs.local_nodes);
+    /* d4est_linalg_fill_vec(prob_vecs.u, 0.001, prob_vecs.local_nodes); */
+    d4est_linalg_fill_vec(prob_vecs.u, 0, prob_vecs.local_nodes);
     
 
     
@@ -625,14 +625,14 @@ problem_init
   /* p8est_geometry_destroy(geom_vtk); */
 
 
-    d4est_element_data_init_node_vec(p4est,
+    d4est_mesh_init_field(p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
                                       d4est_ops,
                                       d4est_geom->p4est_geom);
     
-    linalg_vec_axpyeqz(-1., prob_vecs.u, u_analytic, error, local_nodes);
-    linalg_vec_fabs(error, local_nodes);
+    d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_analytic, error, local_nodes);
+    d4est_linalg_vec_fabs(error, local_nodes);
     
     problem_save_to_vtk
       (
@@ -703,13 +703,13 @@ problem_init
       );
 
     
-    d4est_element_data_init_node_vec(p4est,
+    d4est_mesh_init_field(p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
                                       d4est_ops,
                                       d4est_geom->p4est_geom);
     
-    linalg_vec_axpyeqz(-1., prob_vecs.u, u_analytic, error, local_nodes);
+    d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_analytic, error, local_nodes);
     
     double local_l2_norm_sqr = d4est_element_data_compute_l2_norm_sqr
                                 (

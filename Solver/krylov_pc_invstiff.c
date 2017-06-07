@@ -1,5 +1,5 @@
 #include <krylov_pc_invstiff.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 
 krylov_pc_t*
 krylov_pc_invstiff_create(p4est_t* p4est, d4est_operators_t* d4est_ops){
@@ -92,7 +92,7 @@ krylov_pc_invstiff_apply(krylov_pc_t* kpc, double* xp, double* yp)
         d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
 
-        linalg_matvec_plus_vec(1.0, &pc_data->inv_stiff[nodal_matrix_stride], &xp[nodal_stride],
+        d4est_linalg_matvec_plus_vec(1.0, &pc_data->inv_stiff[nodal_matrix_stride], &xp[nodal_stride],
                                0, &yp[nodal_stride], volume_nodes, volume_nodes);
         
         nodal_stride += volume_nodes;

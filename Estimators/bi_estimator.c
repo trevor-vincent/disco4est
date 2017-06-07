@@ -2,7 +2,7 @@
 #include "../ElementData/element_data.h"
 #include "../EllipticSystem/problem_data.h"
 #include "../EllipticSystem/problem_weakeqn_ptrs.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../hpAMR/hp_amr.h"
 #include "../Estimators/bi_estimator_flux_fcns.h"
@@ -52,7 +52,7 @@ bi_estimator_init
 
   int volume_nodes = d4est_operators_get_nodes(dim,deg);
 
-  linalg_copy_1st_to_2nd(
+  d4est_linalg_copy_1st_to_2nd(
   element_data->u_elem,
     &(element_data->u_elem)[0],
     volume_nodes
@@ -60,7 +60,7 @@ bi_estimator_init
 
   for (i = 0; i < (P4EST_DIM); i++){
     d4est_operators_apply_Dij(d4est_ops, element_data->u_elem, dim, deg, i, element_data->du_elem[i]);
-    linalg_vec_scale(2./h, element_data->du_elem[i], volume_nodes);
+    d4est_linalg_vec_scale(2./h, element_data->du_elem[i], volume_nodes);
   }
 }
 
@@ -104,24 +104,24 @@ void* user_data
     /* calculate Ne1_sqr term */
     Je1 =  &(element_data->ustar_min_u[f*face_nodes]);
     d4est_operators_apply_Mij(d4est_ops, Je1, dim - 1, deg, MJe1);
-    linalg_vec_scale(surface_jacobian, MJe1, face_nodes);
-    Nsqre1 += linalg_vec_dot(Je1, MJe1, face_nodes);
+    d4est_linalg_vec_scale(surface_jacobian, MJe1, face_nodes);
+    Nsqre1 += d4est_linalg_vec_dot(Je1, MJe1, face_nodes);
 
 /* #ifndef NDEBUG */
 /*     if (element_data->id == 1) */
-/*       printf("id, face, Je1MJe1 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je1, MJe1, face_nodes)); */
+/*       printf("id, face, Je1MJe1 = %d,%d,%.25f\n", element_data->id, f, d4est_linalg_vec_dot(Je1, MJe1, face_nodes)); */
 /* #endif */
     
     /* calculate Ne2_sqr term */
     for (d = 0; d < (P4EST_DIM); d++){
       Je2 = &(element_data->qstar_min_q[d][f*face_nodes]);
       d4est_operators_apply_Mij(d4est_ops, Je2, dim - 1, deg, MJe2);
-      linalg_vec_scale(surface_jacobian, MJe2, face_nodes);
-      Nsqre2 += linalg_vec_dot(Je2, MJe2, face_nodes);
+      d4est_linalg_vec_scale(surface_jacobian, MJe2, face_nodes);
+      Nsqre2 += d4est_linalg_vec_dot(Je2, MJe2, face_nodes);
 
 /* #ifndef NDEBUG */
 /*       if (element_data->id == 1) */
-/*         printf("id, face, Je2MJe2 = %d,%d,%.25f\n", element_data->id, f, linalg_vec_dot(Je2, MJe2, face_nodes)); */
+/*         printf("id, face, Je2MJe2 = %d,%d,%.25f\n", element_data->id, f, d4est_linalg_vec_dot(Je2, MJe2, face_nodes)); */
 /* #endif */
       
     }

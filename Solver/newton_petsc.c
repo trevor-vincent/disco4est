@@ -1,6 +1,6 @@
 #include "../pXest/pXest.h"
 
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../Solver/newton_petsc.h"
 #include "../Solver/krylov_petsc.h"
@@ -457,14 +457,14 @@ void newton_petsc_solve
   /* MatCreateSNESMF(snes, &J); */
   SNESSetJacobian(snes,J,J,newton_petsc_save_x0,(void*)&petsc_ctx);
 
-  /* linalg_copy_1st_to_2nd(vecs->u, u_temp, vecs->local_nodes); */
+  /* d4est_linalg_copy_1st_to_2nd(vecs->u, u_temp, vecs->local_nodes); */
 
   VecPlaceArray(x, vecs->u);
  
   
   SNESSolve(snes,NULL,x);
 
-  /* linalg_copy_1st_to_2nd(u_temp, vecs->u, vecs->local_nodes); */
+  /* d4est_linalg_copy_1st_to_2nd(u_temp, vecs->u, vecs->local_nodes); */
 
   P4EST_FREE(u0);
   /* VecRestoreArray(x,&u_temp); */

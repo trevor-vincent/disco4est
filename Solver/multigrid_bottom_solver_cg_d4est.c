@@ -1,7 +1,7 @@
 #include <multigrid_bottom_solver_cg_d4est.h>
 #include <util.h>
 #include <ini.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <sc_reduce.h>
 
 static int
@@ -87,14 +87,14 @@ multigrid_bottom_solver_cg_d4est
   /* first iteration data, store Au in r */ 
   fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
 
-  linalg_copy_1st_to_2nd(Au, r, local_nodes);
+  d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
   
   /* r = f - Au ; Au is stored in r so r = rhs - r */
-  linalg_vec_xpby(rhs, -1., r, local_nodes);
+  d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
 
-  linalg_copy_1st_to_2nd(r, d, local_nodes);
+  d4est_linalg_copy_1st_to_2nd(r, d, local_nodes);
  
-  delta_new = linalg_vec_dot(r,r,local_nodes);
+  delta_new = d4est_linalg_vec_dot(r,r,local_nodes);
   /* delta_new = (element_data_compute_l2_norm(p4est, r)); */
   double delta_new_global;
   sc_allreduce
@@ -119,7 +119,7 @@ multigrid_bottom_solver_cg_d4est
     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
     /* sc_MPI_Barrier(sc_MPI_COMM_WORLD); */
 
-    d_dot_Au = linalg_vec_dot(d,Au,local_nodes);
+    d_dot_Au = d4est_linalg_vec_dot(d,Au,local_nodes);
     double d_dot_Au_global;
     
     sc_allreduce
@@ -133,13 +133,13 @@ multigrid_bottom_solver_cg_d4est
     );
     d_dot_Au = d_dot_Au_global;
     alpha = delta_new/d_dot_Au;
-    linalg_vec_axpy(alpha, d, u, local_nodes);
+    d4est_linalg_vec_axpy(alpha, d, u, local_nodes);
 
     /* r = r - Au*alpha */
-    linalg_vec_axpy(-alpha, Au, r, local_nodes);
+    d4est_linalg_vec_axpy(-alpha, Au, r, local_nodes);
 
     delta_old = delta_new;
-    delta_new = linalg_vec_dot(r, r, local_nodes);
+    delta_new = d4est_linalg_vec_dot(r, r, local_nodes);
     
     sc_allreduce
       (
@@ -154,7 +154,7 @@ multigrid_bottom_solver_cg_d4est
     delta_new = delta_new_global;
     
     beta = delta_new/delta_old;
-    linalg_vec_xpby(r, beta, d, local_nodes);
+    d4est_linalg_vec_xpby(r, beta, d, local_nodes);
 
     if (p4est->mpirank == 0 && cg_params->bottom_print_residual_norm == 1){
       printf("[MG_BOTTOM_SOLVER_CG_D4EST]: ITER %03d RNRMSQR %.25f\n", i, delta_new);

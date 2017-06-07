@@ -12,15 +12,43 @@ typedef struct d4est_geometry d4est_geometry_t;
 typedef enum {COMPUTE_NORMAL_USING_JACOBIAN, COMPUTE_NORMAL_USING_CROSS_PRODUCT} normal_compute_method_t;
 typedef enum {GEOM_COMPUTE_NUMERICAL, GEOM_COMPUTE_ANALYTIC, GEOM_COMPUTE_NOT_SET} geometric_quantity_compute_method_t;
 
+typedef enum { DIAM_APPROX, NO_DIAM_APPROX, DIAM_APPROX_CUBE} diam_compute_option_t;
+
+
+
+
+
+//         +----------------------+
+//         |			  |
+//         |			  |	     b
+//         |			  |	     |
+//         |			  |	     |
+//         |	   face f	  |	     |
+//         |	       	       	  |  	     |
+//         |			  |	     /---------	a
+//         |			  |	    /
+//         |			  |	   /
+//         |			  |	  c
+//         |----------------------+
+
 typedef struct {
+  int a;      /* "x" coord on this face (z-ordering) */
+  int b;      /* "y" coord on this face (z-ordering) */
+  int c;      /* "normal" coord on this face (z-ordering) */
+  double sgn; /* is the normal in the - or +  c-direction */
+} d4est_geometry_face_info_t;
 
-  double* xyz;
-  double* xyz_quad;
-  double* xyz_rst_quad;
-  double* J_quad;
-  double* rst_xyz_quad;
 
-} d4est_geometry_storage_t;
+
+typedef enum {GEOM_CUBED_SPHERE_13TREE,
+              GEOM_CUBED_SPHERE_7TREE,
+              GEOM_CUBED_SPHERE_OUTER_SHELL,
+              GEOM_CUBED_SPHERE_INNER_SHELL,
+              GEOM_CUBED_SPHERE_INNEROUTER_SHELL,
+              GEOM_CUBED_SPHERE_WITH_CUBE_HOLE,
+              GEOM_DISK,
+              GEOM_DISK_OUTER_WEDGE,
+              GEOM_NONE} d4est_geometry_type_t;
 
 /**
 * There are three types of coords used to describe a point in an element.
@@ -74,17 +102,11 @@ typedef void        (*d4est_geometry_SCA_t) (d4est_geometry_t*,
  */
 typedef void        (*d4est_geometry_destroy_t) (d4est_geometry_t * geom);
 
-typedef struct {
-  int a;      /* "x" coord on this face (z-ordering) */
-  int b;      /* "y" coord on this face (z-ordering) */
-  int c;      /* "normal" coord on this face (z-ordering) */
-  double sgn; /* is the normal in the - or +  c-direction */
-} d4est_geometry_face_info_t;
-
 struct d4est_geometry {
 
   p4est_connectivity_t* p4est_conn;
-
+  d4est_geometry_type_t geom_type;
+  
   /* Mapping from [-1,1]^3 to grid coordinates*/
   /* geometric_quantity_compute_method_t X_compute_method; /\* only analytic atm *\/ */
   geometric_quantity_compute_method_t DX_compute_method; /* analytic and numerical available */
@@ -120,9 +142,6 @@ void d4est_geometry_quadtree_to_vertex(p4est_connectivity_t *connectivity,p4est_
 void d4est_geometry_octree_to_vertex(p8est_connectivity_t *connectivity,p4est_topidx_t which_tree,const double abc[3],double xyz[3]);
 void d4est_geometry_destroy(d4est_geometry_t *d4est_geom);
 d4est_geometry_t *d4est_geometry_new(int mpirank,const char *input_file,const char *input_section,const char *printf_prefix);
-void d4est_geometry_storage_destroy(d4est_geometry_storage_t *geometric_factors);
-void d4est_geometry_storage_reinit(p4est_t *p4est,d4est_geometry_storage_t *geometric_factors,d4est_local_sizes_t local_sizes);
-d4est_geometry_storage_t *d4est_geometry_storage_init();
-
+void d4est_geometry_get_face_info(int f,d4est_geometry_face_info_t *face_info);
 #endif
 

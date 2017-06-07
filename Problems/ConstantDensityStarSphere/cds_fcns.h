@@ -379,7 +379,7 @@ cds_build_residual
       }
     }
 
-  linalg_vec_axpy(1.0, M_neg_2pi_rho_up1_neg5_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_neg_2pi_rho_up1_neg5_vec, prob_vecs->Au, prob_vecs->local_nodes);
 
   P4EST_FREE(M_neg_2pi_rho_up1_neg5_vec); 
 }
@@ -436,7 +436,7 @@ void cds_apply_jac
       }
     }
 
-  linalg_vec_axpy(1.0, M_neg_10pi_rho_up1_neg4_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_neg_10pi_rho_up1_neg4_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
   P4EST_FREE(M_neg_10pi_rho_up1_neg4_of_u0_u_vec);
 }
 

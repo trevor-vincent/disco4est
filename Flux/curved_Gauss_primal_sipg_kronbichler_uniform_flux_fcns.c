@@ -1,7 +1,7 @@
 #include "../Utilities/util.h"
 #include "../dGMath/d4est_operators.h"
 #include "../ElementData/d4est_element_data.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.h"
 
 
@@ -55,7 +55,7 @@ curved_Gauss_primal_sipg_kronbichler_uniform_flux_dirichlet
   int volume_nodes_m_Lobatto = d4est_operators_get_nodes((P4EST_DIM), e_m->deg);
   
   double* ones_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
-  linalg_fill_vec(ones_Gauss, 1., face_nodes_m_Gauss);
+  d4est_linalg_fill_vec(ones_Gauss, 1., face_nodes_m_Gauss);
   
   double* term1_Gauss = P4EST_ALLOC(double, face_nodes_m_Gauss);
   double* VT_w_term1_Lobatto = P4EST_ALLOC(double, face_nodes_m_Lobatto);
@@ -150,7 +150,7 @@ curved_Gauss_primal_sipg_kronbichler_uniform_flux_dirichlet
   
   d4est_operators_apply_slicer(d4est_ops, e_m->u_elem, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
   for (int d = 0; d < (P4EST_DIM); d++){
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_m_on_f_m_Gauss[d],
        0.0,
@@ -505,7 +505,7 @@ curved_Gauss_primal_sipg_kronbichler_uniform_flux_interface
   D4EST_ALLOC_DBYD_MAT(drst_dxyz_p_on_Gauss_porder, face_nodes_Gauss);
 
   
-  linalg_fill_vec(ones_Gauss, 1., face_nodes_Gauss);
+  d4est_linalg_fill_vec(ones_Gauss, 1., face_nodes_Gauss);
 
   d4est_operators_apply_slicer
     (
@@ -650,7 +650,7 @@ curved_Gauss_primal_sipg_kronbichler_uniform_flux_interface
     );
 
   for (int d = 0; d < (P4EST_DIM); d++){
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_m_on_f_m_Gauss[d],
        0.0,
@@ -658,7 +658,7 @@ curved_Gauss_primal_sipg_kronbichler_uniform_flux_interface
       );
 
 
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_p_on_f_p_Gauss_porder[d],
        0.0,

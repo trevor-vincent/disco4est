@@ -8,7 +8,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <sipg_flux_scalar_fcns.h>
@@ -169,7 +169,7 @@ void problem_build_rhs
      d4est_ops
     );
   
-  linalg_vec_scale(-1., prob_vecs->rhs, prob_vecs->local_nodes);
+  d4est_linalg_vec_scale(-1., prob_vecs->rhs, prob_vecs->local_nodes);
 
   /* DEBUG_PRINT_ARR_DBL(prob_vecs->rhs, prob_vecs->local_nodes); */
   
@@ -179,7 +179,7 @@ void problem_build_rhs
   
   prob_vecs->u = u_eq_0;
   poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
-  linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
+  d4est_linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
 
   /* DEBUG_PRINT_ARR_DBL(prob_vecs->Au, prob_vecs->local_nodes); */
   
@@ -203,7 +203,7 @@ build_residual
 )
 {
   poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
-  linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
 }
 
 p4est_connectivity_t*
@@ -453,7 +453,7 @@ problem_init
                                           );
   
   prob_vecs.scalar_flux_fcn_data = sipg_flux_scalar_dirichlet_fetch_fcns(boundary_fcn);
-  linalg_fill_vec(u, 100., prob_vecs.local_nodes);
+  d4est_linalg_fill_vec(u, 100., prob_vecs.local_nodes);
   
   weakeqn_ptrs_t prob_fcns;
 
@@ -492,7 +492,7 @@ problem_init
 
   
   element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, d4est_ops);    
-  linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+  d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
     
     /* dg norm should always have the boundary fcn set to zero */
@@ -609,7 +609,7 @@ problem_init
        u_vertex
       );
     
-    linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+    d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
     element_data_store_nodal_vec_in_vertex_array
       (
@@ -618,7 +618,7 @@ problem_init
        u_error_vertex
       );
 
-    linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
+    d4est_linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
     
     char sol_save_as [500];
     sprintf(sol_save_as, "%s_hp_amr_level_%d_sols", P4EST_STRING, level);
@@ -794,7 +794,7 @@ problem_init
       multigrid_data_destroy(mg_data);
      
 
-    linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+    d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
     
     /* dg norm should always have the boundary fcn set to zero */
     double local_dg_norm_sqr = element_data_compute_DG_norm_sqr
@@ -897,7 +897,7 @@ problem_init
      u_vertex
     );
     
-  linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+  d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
   element_data_store_nodal_vec_in_vertex_array
     (
@@ -906,7 +906,7 @@ problem_init
      u_error_vertex
     );
 
-  linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
+  d4est_linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
   
   char sol_save_as [500];
   sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta2", P4EST_STRING, level);

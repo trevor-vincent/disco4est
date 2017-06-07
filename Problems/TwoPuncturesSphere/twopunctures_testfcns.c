@@ -1,7 +1,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <curved_Gauss_primal_sipg_flux_fcns.h>
@@ -635,7 +635,7 @@ problem_init
 
   p4est_partition(p4est, 0, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
-  /* d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
+  /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
 
   /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
@@ -675,7 +675,7 @@ problem_init
     prob_fcns.apply_lhs = twopunctures_apply_jac;
   }
   
-  d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
+  d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
 
   /* printf("[D4EST_INFO]: Initial number of elements = %d\n", p4est->local_num_quadrants); */
 
@@ -738,7 +738,7 @@ problem_init
   }
 
 
-  /* linalg_fill_vec(prob_vecs.u, 0., local_nodes); */
+  /* d4est_linalg_fill_vec(prob_vecs.u, 0., local_nodes); */
 
   
   d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;    

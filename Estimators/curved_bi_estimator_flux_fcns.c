@@ -1,6 +1,6 @@
 #include "../Estimators/curved_bi_estimator_flux_fcns.h"
 #include "../Estimators/bi_estimator_flux_fcns.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 
 /* #define D4EST_DEBUG */
 
@@ -166,7 +166,7 @@ curved_bi_est_dirichlet
     /*                                             MJe2); */
     
 
-    /* double Je2MJe2 = linalg_vec_dot(Je2, MJe2, face_nodes_m_quad); */
+    /* double Je2MJe2 = d4est_linalg_vec_dot(Je2, MJe2, face_nodes_m_quad); */
     
 
     double Je2MJe2 = d4est_operators_quadrature(
@@ -405,7 +405,7 @@ curved_bi_est_interface
   P4EST_FREE(tmp);
 
   /* project (-)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_m_on_f_m,
@@ -417,7 +417,7 @@ curved_bi_est_interface
     );
 
   /* project (+)-side u trace vector onto mortar space */
-  d4est_operators_project_side_onto_mortar_space
+  d4est_mortars_project_side_onto_mortar_space
     (
      d4est_ops,
      u_p_on_f_p,
@@ -490,7 +490,7 @@ curved_bi_est_interface
     }
 
     /* project the derivatives from (-) and (+) sides onto the mortar space */
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        dudr_p_on_f_p_porder[d],
@@ -501,7 +501,7 @@ curved_bi_est_interface
        deg_mortar_quad_porder
       );
   
-    d4est_operators_project_side_onto_mortar_space
+    d4est_mortars_project_side_onto_mortar_space
       (
        d4est_ops,
        dudr_m_on_f_m[d],
@@ -605,14 +605,14 @@ curved_bi_est_interface
   
 
   for (int d = 0; d < (P4EST_DIM); d++){
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_m_on_f_m_mortar_quad[d],
        0.0,
        total_nodes_mortar_quad
       );
 
-    linalg_fill_vec
+    d4est_linalg_fill_vec
       (
        dudx_p_on_f_p_mortar_quad_porder[d],
        0.0,
@@ -826,7 +826,7 @@ curved_bi_est_interface
     /*    &MJe1[stride] */
     /*   ); */
 
-    /* double Je1MJe1 = linalg_vec_dot(&Je1[stride], &MJe1[stride], nodes_mortar_quad[f]); */
+    /* double Je1MJe1 = d4est_linalg_vec_dot(&Je1[stride], &MJe1[stride], nodes_mortar_quad[f]); */
 
     double Je1MJe1 = d4est_operators_quadrature(
                                              d4est_ops,
@@ -839,8 +839,8 @@ curved_bi_est_interface
 
 
     /* d4est_operators_apply_Mij(d4est_ops, &Je1_test_mortar[stride], (P4EST_DIM)-1, deg_mortar_quad[f], &MJe1_test_mortar[stride]); */
-    /* linalg_vec_scale(sj_on_f_m_mortar_quad[0], &MJe1_test_mortar[stride], nodes_mortar_quad[f]); */
-    /* double Je1MJe1_test = linalg_vec_dot(&Je1_test_mortar[stride], &MJe1_test_mortar[stride], nodes_mortar_quad[f]); */
+    /* d4est_linalg_vec_scale(sj_on_f_m_mortar_quad[0], &MJe1_test_mortar[stride], nodes_mortar_quad[f]); */
+    /* double Je1MJe1_test = d4est_linalg_vec_dot(&Je1_test_mortar[stride], &MJe1_test_mortar[stride], nodes_mortar_quad[f]); */
 
 
     /* if (fabs(Je1MJe1 - Je1MJe1_test) > .00001){ */

@@ -1,7 +1,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <sipg_flux_scalar_fcns.h>
@@ -218,7 +218,7 @@ void apply_helmholtz_matrix_2
         double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
-        linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
+        d4est_linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
         d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
@@ -226,14 +226,14 @@ void apply_helmholtz_matrix_2
 
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         /* double* debug_ones = P4EST_ALLOC(double, volume_nodes); */
-        /* linalg_fill_vec(debug_ones, 1., volume_nodes); */
+        /* d4est_linalg_fill_vec(debug_ones, 1., volume_nodes); */
         
-        linalg_matvec_plus_vec(1.,&((multigrid_matrix_op_t*)prob_vecs->user)->matrix[matrix_stride], &prob_vecs->u[ed->stride], 0., &M_helmf_u[ed->stride], volume_nodes, volume_nodes);
+        d4est_linalg_matvec_plus_vec(1.,&((multigrid_matrix_op_t*)prob_vecs->user)->matrix[matrix_stride], &prob_vecs->u[ed->stride], 0., &M_helmf_u[ed->stride], volume_nodes, volume_nodes);
 
 
         /* double* matrix = &((multigrid_matrix_op_t*)prob_vecs->user)->matrix[matrix_stride]; */
         /* DEBUG_PRINT_ARR_DBL(matrix, volume_nodes*volume_nodes); */
-        /* debug_sum += linalg_vec1_trans_mat_vec2(debug_ones, matrix, debug_ones, volume_nodes); */
+        /* debug_sum += d4est_linalg_vec1_trans_mat_vec2(debug_ones, matrix, debug_ones, volume_nodes); */
         
         
         P4EST_FREE(z_GL);
@@ -247,7 +247,7 @@ void apply_helmholtz_matrix_2
     }
 
   /* printf("debug_sum = %.25f\n", debug_sum); */
-  linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
   P4EST_FREE(M_helmf_u);
 }
 
@@ -291,7 +291,7 @@ void apply_helmholtz_matrix
         double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
-        linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
+        d4est_linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
         d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
@@ -319,7 +319,7 @@ void apply_helmholtz_matrix
 
         DEBUG_PRINT_ARR_DBL(matrix, volume_nodes*volume_nodes);
         
-        linalg_matvec_plus_vec(1., matrix, &prob_vecs->u[ed->stride], 0., &M_helmf_u[ed->stride], volume_nodes, volume_nodes);
+        d4est_linalg_matvec_plus_vec(1., matrix, &prob_vecs->u[ed->stride], 0., &M_helmf_u[ed->stride], volume_nodes, volume_nodes);
 
         
         P4EST_FREE(z_GL);
@@ -329,7 +329,7 @@ void apply_helmholtz_matrix
       }
     }
   
-  linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
   P4EST_FREE(M_helmf_u);
 }
 
@@ -370,7 +370,7 @@ void apply_helmholtz
         double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
         double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
 
-        linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
+        d4est_linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
         d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
         d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
@@ -401,7 +401,7 @@ void apply_helmholtz
       }
     }
   
-  linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
   P4EST_FREE(M_helmf_u);
 }
 
@@ -418,7 +418,7 @@ build_residual
 )
 {
   apply_helmholtz(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
-  linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
 }
 
 
@@ -472,7 +472,7 @@ build_residual
 /*       } */
 /*     } */
   
-/*   linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes); */
+/*   d4est_linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes); */
 /*   P4EST_FREE(M_helmf_u); */
 /* } */
 
@@ -513,7 +513,7 @@ void problem_build_rhs
   
   prob_vecs->u = u_eq_0;
   apply_helmholtz(p4est, ghost, ghost_data, prob_vecs, d4est_ops);
-  linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
+  d4est_linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
 
   prob_vecs->u = tmp;
   P4EST_FREE(u_eq_0);
@@ -638,7 +638,7 @@ problem_init
                                           );
   
   prob_vecs.scalar_flux_fcn_data = sipg_flux_scalar_dirichlet_fetch_fcns(boundary_fcn);
-  /* linalg_fill_vec(u, 0., prob_vecs.local_nodes); */
+  /* d4est_linalg_fill_vec(u, 0., prob_vecs.local_nodes); */
   element_data_init_node_vec(p4est, u, analytic_solution_fcn, d4est_ops);
   weakeqn_ptrs_t prob_fcns;
 
@@ -673,7 +673,7 @@ problem_init
 
   
   element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, d4est_ops);    
-  linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+  d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
     
     /* dg norm should always have the boundary fcn set to zero */
@@ -790,7 +790,7 @@ problem_init
        u_vertex
       );
     
-    linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+    d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
     element_data_store_nodal_vec_in_vertex_array
       (
@@ -799,7 +799,7 @@ problem_init
        u_error_vertex
       );
 
-    linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
+    d4est_linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
     
     char sol_save_as [500];
     sprintf(sol_save_as, "%s_hp_amr_level_%d_sols", P4EST_STRING, level);
@@ -986,7 +986,7 @@ problem_init
       multigrid_matrix_operator_destroy(matrix_op);
       krylov_pc_multigrid_destroy(pc);      
 
-    linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+    d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
     
     /* dg norm should always have the boundary fcn set to zero */
     double local_dg_norm_sqr = element_data_compute_DG_norm_sqr
@@ -1089,7 +1089,7 @@ problem_init
      u_vertex
     );
     
-  linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+  d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
 
   element_data_store_nodal_vec_in_vertex_array
     (
@@ -1098,7 +1098,7 @@ problem_init
      u_error_vertex
     );
 
-  linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
+  d4est_linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
   
   char sol_save_as [500];
   sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta2", P4EST_STRING, level);

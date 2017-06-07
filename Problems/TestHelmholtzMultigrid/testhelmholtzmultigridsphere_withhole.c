@@ -1,7 +1,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <problem.h>
@@ -789,7 +789,7 @@ void apply_helmholtz
       }
     }
   
-  linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
   P4EST_FREE(M_helmf_u);
 }
 
@@ -842,13 +842,13 @@ void apply_helmholtz_matrix
            NULL
           );
 
-          linalg_matvec_plus_vec(1., matrix, &prob_vecs->u[ed->nodal_stride], 0., &M_helmf_u[ed->nodal_stride], volume_nodes, volume_nodes);
+          d4est_linalg_matvec_plus_vec(1., matrix, &prob_vecs->u[ed->nodal_stride], 0., &M_helmf_u[ed->nodal_stride], volume_nodes, volume_nodes);
 
  
       }
     }
   
-  linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
   P4EST_FREE(M_helmf_u);
   P4EST_FREE(matrix);
 }
@@ -883,13 +883,13 @@ void apply_helmholtz_matrix_2
         int deg_Gauss = ed->deg_quad;
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
         
-        linalg_matvec_plus_vec(1.,&((multigrid_matrix_op_t*)prob_vecs->user)->matrix[matrix_stride], &prob_vecs->u[ed->nodal_stride], 0., &M_helmf_u[ed->nodal_stride], volume_nodes, volume_nodes);
+        d4est_linalg_matvec_plus_vec(1.,&((multigrid_matrix_op_t*)prob_vecs->user)->matrix[matrix_stride], &prob_vecs->u[ed->nodal_stride], 0., &M_helmf_u[ed->nodal_stride], volume_nodes, volume_nodes);
 
          matrix_stride += volume_nodes*volume_nodes;
       }
     }
   
-  linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_helmf_u, prob_vecs->Au, prob_vecs->local_nodes);
   P4EST_FREE(M_helmf_u);
 }
 
@@ -911,7 +911,7 @@ void problem_build_rhs
 {
 
   double* f = P4EST_ALLOC(double, prob_vecs->local_nodes);
-  d4est_element_data_init_node_vec
+  d4est_mesh_init_field
     (
      p4est,
      f,
@@ -941,7 +941,7 @@ void problem_build_rhs
                                      &prob_vecs->rhs[ed->nodal_stride]
                                     );
 
-        /* printf("elem_id, rhs sum = %d %.25f\n", ed->id, linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg))); */
+        /* printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg))); */
         /* double* tmp1 = &f[ed->nodal_stride]; */
         /* double* tmp2 = &prob_vecs->rhs[ed->nodal_stride]; */
         /* DEBUG_PRINT_3ARR_DBL(tmp1,tmp2,ed->J_quad,d4est_operators_get_nodes((P4EST_DIM), ed->deg)); */
@@ -958,7 +958,7 @@ void problem_build_rhs
   
   prob_vecs->u = u_eq_0; 
   curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
-  linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
+  d4est_linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
 
   /* printf("rhs after aij added to rhs\n"); */
   /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs->rhs, local_nodes); */
@@ -989,7 +989,7 @@ void problem_build_rhs_Gauss
 {
 
   /* double* f = P4EST_ALLOC(double, prob_vecs->local_nodes); */
-  /* d4est_element_data_init_node_vec */
+  /* d4est_mesh_init_field */
   /*   ( */
   /*    p4est, */
   /*    f, */
@@ -1039,7 +1039,7 @@ void problem_build_rhs_Gauss
         /*                              &prob_vecs->rhs[ed->nodal_stride] */
         /*                             ); */
 
-        /* printf("elem_id, rhs sum = %d %.25f\n", ed->id, linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg))); */
+        /* printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg))); */
         /* double* tmp1 = &f[ed->nodal_stride]; */
         /* double* tmp2 = &prob_vecs->rhs[ed->nodal_stride]; */
         /* DEBUG_PRINT_3ARR_DBL(tmp1,tmp2,ed->J_quad,d4est_operators_get_nodes((P4EST_DIM), ed->deg)); */
@@ -1056,7 +1056,7 @@ void problem_build_rhs_Gauss
   
   prob_vecs->u = u_eq_0; 
   curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
-  linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
+  d4est_linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
 
   /* printf("rhs after aij added to rhs\n"); */
   /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs->rhs, local_nodes); */
@@ -1104,7 +1104,7 @@ build_residual
 )
 {
   apply_helmholtz(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
-  linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
 }
 
 
@@ -1150,7 +1150,7 @@ problem_init
 
   p4est_partition(p4est, 0, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
-  /* d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
+  /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
   /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
   /* twopunctures_params_t tp_params; */
@@ -1196,7 +1196,7 @@ problem_init
   }
   /* } */
   
-  d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
+  d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
 
   /* printf("[D4EST_INFO]: Initial number of elements = %d\n", p4est->local_num_quadrants); */
 
@@ -1284,7 +1284,7 @@ problem_init
   }
 
 
-  /* linalg_fill_vec(prob_vecs.u, 0., local_nodes); */
+  /* d4est_linalg_fill_vec(prob_vecs.u, 0., local_nodes); */
 
   
   /* d4est_geom->dxdr_method = INTERP_X_ON_LOBATTO;     */
@@ -1325,9 +1325,9 @@ problem_init
        /* amr_marker */
       /* ); */
 
-    /* linalg_fill_vec(prob_vecs.u, 0.001, prob_vecs.local_nodes); */
-    linalg_fill_vec(prob_vecs.u, 0, prob_vecs.local_nodes);
-    /* d4est_element_data_init_node_vec( */
+    /* d4est_linalg_fill_vec(prob_vecs.u, 0.001, prob_vecs.local_nodes); */
+    d4est_linalg_fill_vec(prob_vecs.u, 0, prob_vecs.local_nodes);
+    /* d4est_mesh_init_field( */
     /*                                   p4est, */
     /*                                   u, */
     /*                                   analytic_solution_fcn, */
@@ -1335,14 +1335,14 @@ problem_init
     /*                                   d4est_geom */
     /* );   */
 
-    d4est_element_data_init_node_vec(
+    d4est_mesh_init_field(
                                       p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
                                       d4est_ops,
                                       d4est_geom
     );  
-    linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
+    d4est_linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
     double initial_l2_norm_sqr_local = d4est_element_data_compute_l2_norm_sqr
       (
        p4est,
@@ -1455,15 +1455,15 @@ problem_init
   /* p8est_geometry_destroy(geom_vtk); */
 
 
-    d4est_element_data_init_node_vec(
+    d4est_mesh_init_field(
                                       p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
                                       d4est_ops,
                                       d4est_geom
                                      );  
-    linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
-    linalg_vec_fabs(error, local_nodes);
+    d4est_linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
+    d4est_linalg_vec_fabs(error, local_nodes);
     
     problem_save_to_vtk
       (
@@ -1520,7 +1520,7 @@ problem_init
     prob_vecs.u0 = u;
     prob_vecs.local_nodes = local_nodes;
 
-    /* linalg_copy_1st_to_2nd(u, u_prev, local_nodes); */
+    /* d4est_linalg_copy_1st_to_2nd(u, u_prev, local_nodes); */
 
     clock_t begin = 0;
     clock_t end = -1;
@@ -1821,14 +1821,14 @@ problem_init
 
      }
     
-    d4est_element_data_init_node_vec(
+    d4est_mesh_init_field(
                                       p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
                                       d4est_ops,
                                       d4est_geom
                                      );  
-    linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
+    d4est_linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
 
     /* matrix_spd_tester_parallel */
     /*   ( */
@@ -1857,7 +1857,7 @@ problem_init
     /*    .000000001 */
     /*   );  */
 
-    /* linalg_vec_axpy(-1., prob_vecs.u, u_prev, local_nodes); */
+    /* d4est_linalg_vec_axpy(-1., prob_vecs.u, u_prev, local_nodes); */
 
 
     

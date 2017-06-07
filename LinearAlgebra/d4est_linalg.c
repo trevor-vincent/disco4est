@@ -1,4 +1,4 @@
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -47,7 +47,7 @@
  * @param b_cols 
  */
 void
-linalg_kron_AoB (double *A, double *B, double *C, int a_rows, int a_cols,
+d4est_linalg_kron_AoB (double *A, double *B, double *C, int a_rows, int a_cols,
                  int b_rows, int b_cols)
 {
   int                 size2 = a_cols * b_cols;
@@ -63,7 +63,7 @@ linalg_kron_AoB (double *A, double *B, double *C, int a_rows, int a_cols,
 
 
 void
-linalg_kron_vec_o_vec_dot_x (double *vec, double*x, int vec_size, double* vecvec_dot_x)
+d4est_linalg_kron_vec_o_vec_dot_x (double *vec, double*x, int vec_size, double* vecvec_dot_x)
 {
   for (int i = 0; i < vec_size; i++)
     for (int k = 0; k < vec_size; k++){
@@ -73,7 +73,7 @@ linalg_kron_vec_o_vec_dot_x (double *vec, double*x, int vec_size, double* vecvec
 }
 
 void
-linalg_kron_vec1_o_vec2_dot_x
+d4est_linalg_kron_vec1_o_vec2_dot_x
 (
  double *vec1,
  double* vec2,
@@ -93,7 +93,7 @@ linalg_kron_vec1_o_vec2_dot_x
 }
 
 void
-linalg_kron_vec1_o_vec2_dot_xy
+d4est_linalg_kron_vec1_o_vec2_dot_xy
 (
  double *vec1,
  double* vec2,
@@ -114,7 +114,7 @@ linalg_kron_vec1_o_vec2_dot_xy
 }
 
 void
-linalg_kron_vec1_o_vec2_dot_wxyz
+d4est_linalg_kron_vec1_o_vec2_dot_wxyz
 (
  double *vec1,
  double* vec2,
@@ -137,7 +137,7 @@ linalg_kron_vec1_o_vec2_dot_wxyz
 }
 
 void
-linalg_kron_vec1_o_vec2_o_vec3_dot_x
+d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_x
 (
  double *vec1,
  double* vec2,
@@ -161,7 +161,7 @@ linalg_kron_vec1_o_vec2_o_vec3_dot_x
 }
 
 void
-linalg_kron_vec1_o_vec2_o_vec3_dot_xy
+d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_xy
 (
  double *vec1,
  double* vec2,
@@ -187,7 +187,7 @@ linalg_kron_vec1_o_vec2_o_vec3_dot_xy
 
 
 void
-linalg_kron_vec1_o_vec2_o_vec3_dot_wxyz
+d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_wxyz
 (
  double *vec1,
  double* vec2,
@@ -215,7 +215,7 @@ linalg_kron_vec1_o_vec2_o_vec3_dot_wxyz
 
 
 void
-linalg_kron_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* vecvec_dot_xy)
+d4est_linalg_kron_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* vecvec_dot_xy)
 {
   for (int i = 0; i < vec_size; i++)
     for (int k = 0; k < vec_size; k++){
@@ -225,7 +225,7 @@ linalg_kron_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_size, do
 }
 
 void
-linalg_kron_vec_o_vec_dot_wxyz (double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vecvec_dot_wxyz)
+d4est_linalg_kron_vec_o_vec_dot_wxyz (double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vecvec_dot_wxyz)
 {
   for (int i = 0; i < vec_size; i++)
     for (int k = 0; k < vec_size; k++){
@@ -236,7 +236,7 @@ linalg_kron_vec_o_vec_dot_wxyz (double *vec, double* w, double*x, double* y, dou
 
 
 void
-linalg_kron_oneover_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, int vec_size, double* vecvec_dot_xy)
+d4est_linalg_kron_oneover_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, int vec_size, double* vecvec_dot_xy)
 {
   for (int i = 0; i < vec_size; i++)
     for (int k = 0; k < vec_size; k++){
@@ -246,7 +246,7 @@ linalg_kron_oneover_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, double
 }
 
 void
-linalg_kron_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* vec_dot_xy)
+d4est_linalg_kron_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* vec_dot_xy)
 {
   for (int i = 0; i < vec_size; i++){
       vec_dot_xy[i] = vec[i] * x[i] * y[i];
@@ -255,7 +255,7 @@ linalg_kron_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* 
 
 
 void
-linalg_kron_vec_dot_wxyz (double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vec_dot_wxyz)
+d4est_linalg_kron_vec_dot_wxyz (double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vec_dot_wxyz)
 {
   for (int i = 0; i < vec_size; i++){
       vec_dot_wxyz[i] = vec[i] * w[i] * x[i] * y[i] * z[i];
@@ -264,7 +264,7 @@ linalg_kron_vec_dot_wxyz (double *vec, double* w, double*x, double* y, double* z
 
 
 void
-linalg_kron_vec_dot_x (double *vec, double*x,int vec_size, double* vec_dot_x)
+d4est_linalg_kron_vec_dot_x (double *vec, double*x,int vec_size, double* vec_dot_x)
 {
   for (int i = 0; i < vec_size; i++){
       vec_dot_x[i] = vec[i] * x[i];
@@ -272,7 +272,7 @@ linalg_kron_vec_dot_x (double *vec, double*x,int vec_size, double* vec_dot_x)
 }
 
 void
-linalg_kron_oneover_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, int vec_size, double* vec_dot_xy)
+d4est_linalg_kron_oneover_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, int vec_size, double* vec_dot_xy)
 {
   for (int i = 0; i < vec_size; i++){
     vec_dot_xy[i] = (1./(vec[i] * x[i])) * y[i];
@@ -280,7 +280,7 @@ linalg_kron_oneover_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, i
 }
 
 void
-linalg_kron_vec_o_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* vecvecvec_dot_xy)
+d4est_linalg_kron_vec_o_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* vecvecvec_dot_xy)
 {
   int b_rows = vec_size*vec_size;
   
@@ -293,7 +293,7 @@ linalg_kron_vec_o_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_si
 }
 
 void
-linalg_kron_vec_o_vec_o_vec_dot_wxyz(double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vecvecvec_dot_wxyz)
+d4est_linalg_kron_vec_o_vec_o_vec_dot_wxyz(double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vecvecvec_dot_wxyz)
 {
   int b_rows = vec_size*vec_size;
   
@@ -315,7 +315,7 @@ linalg_kron_vec_o_vec_o_vec_dot_wxyz(double *vec, double* w, double*x, double* y
 
 
 void
-linalg_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, int vec_size, double* vecvecvec_dot_xy)
+d4est_linalg_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, int vec_size, double* vecvecvec_dot_xy)
 {
   int b_rows = vec_size*vec_size;
   
@@ -328,7 +328,7 @@ linalg_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, 
 }
 
 void
-linalg_kron_vec_o_vec_o_vec_dot_x (double *vec, double*x, int vec_size, double* vecvecvec_dot_x)
+d4est_linalg_kron_vec_o_vec_o_vec_dot_x (double *vec, double*x, int vec_size, double* vecvecvec_dot_x)
 {
   int b_rows = vec_size*vec_size;
   
@@ -357,14 +357,14 @@ linalg_kron_vec_o_vec_o_vec_dot_x (double *vec, double*x, int vec_size, double* 
  * @param c_cols 
  */
 void
-linalg_kron_AoBoC (double *A, double *B, double *C, double *D, int a_rows,
+d4est_linalg_kron_AoBoC (double *A, double *B, double *C, double *D, int a_rows,
                    int a_cols, int b_rows, int b_cols, int c_rows, int c_cols)
 {
   double             *AoB =
     (double*) malloc (sizeof (double) * a_rows * a_cols * b_rows * b_cols);
 
-  linalg_kron_AoB (A, B, AoB, a_rows, a_cols, b_rows, b_cols);
-  linalg_kron_AoB (AoB, C, D, a_rows * b_rows, a_cols * b_cols, c_rows,
+  d4est_linalg_kron_AoB (A, B, AoB, a_rows, a_cols, b_rows, b_cols);
+  d4est_linalg_kron_AoB (AoB, C, D, a_rows * b_rows, a_cols * b_cols, c_rows,
                    c_cols);
 
   free (AoB);
@@ -372,7 +372,7 @@ linalg_kron_AoBoC (double *A, double *B, double *C, double *D, int a_rows,
 
 
 void
-linalg_kron_A1A2x_NONSQR (double *A1A2x, double *A1, double *A2, double *X,
+d4est_linalg_kron_A1A2x_nonsqr (double *A1A2x, double *A1, double *A2, double *X,
                           int a1_rows, int a1_cols, int a2_rows, int a2_cols)
 {
   /* X should be a1_cols * a2_cols */
@@ -388,79 +388,79 @@ linalg_kron_A1A2x_NONSQR (double *A1A2x, double *A1, double *A2, double *X,
   double             *tmp = (double *) malloc (sizeof (double) * N);
   double             *tmp1 = (double *) malloc (sizeof (double) * N);
 
-  linalg_mat_transpose_nonsqr (X, tmp1, a1_cols, a2_cols);
-  linalg_mat_multiply (A2, tmp1, tmp, a2_rows, a2_cols, a1_cols);
-  linalg_mat_transpose_nonsqr (tmp, tmp1, a2_rows, a1_cols);
-  linalg_mat_multiply (A1, tmp1, A1A2x, a1_rows, a1_cols, a2_rows);
+  d4est_linalg_mat_transpose_nonsqr (X, tmp1, a1_cols, a2_cols);
+  d4est_linalg_mat_multiply (A2, tmp1, tmp, a2_rows, a2_cols, a1_cols);
+  d4est_linalg_mat_transpose_nonsqr (tmp, tmp1, a2_rows, a1_cols);
+  d4est_linalg_mat_multiply (A1, tmp1, A1A2x, a1_rows, a1_cols, a2_rows);
 
   free (tmp);
   free (tmp1);
 }
 
 void
-linalg_kron_MAToIx_SQR (double *MAToIx, double *MAT, double *X, int N)
+d4est_linalg_kron_MAToIx_SQR (double *MAToIx, double *MAT, double *X, int N)
 {
-  linalg_mat_multiply (MAT, X, MAToIx, N, N, N);
+  d4est_linalg_mat_multiply (MAT, X, MAToIx, N, N, N);
 }
 
 void
-linalg_kron_IoMATx_SQR (double *IoMATx, double *MAT, double *X, int N)
+d4est_linalg_kron_IoMATx_SQR (double *IoMATx, double *MAT, double *X, int N)
 {
   double             *tmp = (double *) malloc (sizeof (double) * N * N);
   double             *tmp1 = (double *) malloc (sizeof (double) * N * N);
 
-  linalg_mat_transpose_nonsqr (X, tmp1, N, N);
-  linalg_mat_multiply (MAT, tmp1, tmp, N, N, N);
-  linalg_mat_transpose_nonsqr (tmp, IoMATx, N, N);
+  d4est_linalg_mat_transpose_nonsqr (X, tmp1, N, N);
+  d4est_linalg_mat_multiply (MAT, tmp1, tmp, N, N, N);
+  d4est_linalg_mat_transpose_nonsqr (tmp, IoMATx, N, N);
 
   free (tmp);
   free (tmp1);
 }
 
 void
-linalg_kron_VECoIx_SQR (double *VECoIx, double *VEC, double *X, int N)
+d4est_linalg_kron_VECoIx_SQR (double *VECoIx, double *VEC, double *X, int N)
 {
 
-  linalg_mat_multiply (VEC, X, VECoIx, N, 1, N);
+  d4est_linalg_mat_multiply (VEC, X, VECoIx, N, 1, N);
 
 }
 
 void
-linalg_kron_VEC_TRANSoIx_SQR (double *VEC_TRANSoIx, double *VEC, double *X,
+d4est_linalg_kron_VEC_TRANSoIx_SQR (double *VEC_TRANSoIx, double *VEC, double *X,
                               int N)
 {
-  linalg_mat_multiply (VEC, X, VEC_TRANSoIx, 1, N, N);
+  d4est_linalg_mat_multiply (VEC, X, VEC_TRANSoIx, 1, N, N);
 }
 
 void
-linalg_kron_IoVECx_SQR (double *IoVECx, double *VEC, double *X, int N)
+d4est_linalg_kron_IoVECx_SQR (double *IoVECx, double *VEC, double *X, int N)
 {
   /* int N = (a1_rows*a2_rows > a2_rows*a1_cols) ? a1_rows*a2_rows : a2_rows*a1_cols; */
 
   double             *tmp = (double *) malloc (sizeof (double) * N * N);
   /* double* tmp1 = (double*)malloc(sizeof(double)*N); */
 
-  linalg_mat_multiply (VEC, X, tmp, N, 1, N);
-  linalg_mat_transpose_nonsqr (tmp, IoVECx, N, N);
+  d4est_linalg_mat_multiply (VEC, X, tmp, N, 1, N);
+  d4est_linalg_mat_transpose_nonsqr (tmp, IoVECx, N, N);
 
   free (tmp);
   /* free(tmp1);   */
 }
 
 void
-linalg_kron_IoVEC_TRANSx_SQR (double *IoVEC_TRANSx, double *VEC, double *X,
+d4est_linalg_kron_IoVEC_TRANSx_SQR (double *IoVEC_TRANSx, double *VEC, double *X,
                               int N)
 {
   double             *tmp1 = (double *) malloc (sizeof (double) * N * N);
 
-  linalg_mat_transpose_nonsqr (X, tmp1, N, N);
-  linalg_mat_multiply (VEC, tmp1, IoVEC_TRANSx, 1, N, N);
+  d4est_linalg_mat_transpose_nonsqr (X, tmp1, N, N);
+  d4est_linalg_mat_multiply (VEC, tmp1, IoVEC_TRANSx, 1, N, N);
 
   free (tmp1);
 }
 
 void
-linalg_kron_A1A2A3x_NONSQR (double *A1A2A3x, double *A1, double *A2,
+d4est_linalg_kron_A1A2A3x_nonsqr (double *A1A2A3x, double *A1, double *A2,
                             double *A3, double *X, int a1_rows, int a1_cols,
                             int a2_rows, int a2_cols, int a3_rows,
                             int a3_cols)
@@ -469,92 +469,92 @@ linalg_kron_A1A2A3x_NONSQR (double *A1A2A3x, double *A1, double *A2,
     (double *) malloc (sizeof (double) * a2_rows * a3_rows * a1_cols);
   int                 i;
   for (i = 0; i < a1_cols; i++) {
-    linalg_kron_A1A2x_NONSQR (&tmp[i * a2_rows * a3_rows], A2, A3,
+    d4est_linalg_kron_A1A2x_nonsqr (&tmp[i * a2_rows * a3_rows], A2, A3,
                               &X[i * a2_cols * a3_cols], a2_rows, a2_cols,
                               a3_rows, a3_cols);
   }
 
-  linalg_mat_multiply (A1, tmp, A1A2A3x, a1_rows, a1_cols, a2_rows * a3_rows);
+  d4est_linalg_mat_multiply (A1, tmp, A1A2A3x, a1_rows, a1_cols, a2_rows * a3_rows);
   free (tmp);
 }
 
 void
-linalg_kron_MAToIoIx_SQR (double *MAToIoIx, double *MAT, double *X, int N)
+d4est_linalg_kron_MAToIoIx_SQR (double *MAToIoIx, double *MAT, double *X, int N)
 {
-  linalg_mat_multiply (MAT, X, MAToIoIx, N, N, N * N);
+  d4est_linalg_mat_multiply (MAT, X, MAToIoIx, N, N, N * N);
 }
 
 void
-linalg_kron_IoMAToIx_SQR (double *IoMAToIx, double *MAT, double *X, int N)
+d4est_linalg_kron_IoMAToIx_SQR (double *IoMAToIx, double *MAT, double *X, int N)
 {
   int                 i;
   for (i = 0; i < N; i++) {
-    linalg_kron_MAToIx_SQR (&IoMAToIx[i * N * N], MAT, &X[i * N * N], N);
+    d4est_linalg_kron_MAToIx_SQR (&IoMAToIx[i * N * N], MAT, &X[i * N * N], N);
   }
 }
 
 void
-linalg_kron_IoIoMATx_SQR (double *IoIoMATx, double *MAT, double *X, int N)
+d4est_linalg_kron_IoIoMATx_SQR (double *IoIoMATx, double *MAT, double *X, int N)
 {
   /* x should be N^2 by 1 */
   /* I should be N by N */
   /* VEC should be N by 1 */
   int                 i;
   for (i = 0; i < N; i++) {
-    linalg_kron_IoMATx_SQR (&IoIoMATx[i * N * N], MAT, &X[i * N * N], N);
+    d4est_linalg_kron_IoMATx_SQR (&IoIoMATx[i * N * N], MAT, &X[i * N * N], N);
   }
 }
 
 void
-linalg_kron_VECoIoIx_SQR (double *VECoIoIx, double *VEC, double *X, int N)
+d4est_linalg_kron_VECoIoIx_SQR (double *VECoIoIx, double *VEC, double *X, int N)
 {
-  linalg_mat_multiply (VEC, X, VECoIoIx, N, 1, N * N);
+  d4est_linalg_mat_multiply (VEC, X, VECoIoIx, N, 1, N * N);
 }
 
 void
-linalg_kron_VEC_TRANSoIoIx_SQR (double *VEC_TRANSoIoIx, double *VEC,
+d4est_linalg_kron_VEC_TRANSoIoIx_SQR (double *VEC_TRANSoIoIx, double *VEC,
                                 double *X, int N)
 {
-  linalg_mat_multiply (VEC, X, VEC_TRANSoIoIx, 1, N, N * N);
+  d4est_linalg_mat_multiply (VEC, X, VEC_TRANSoIoIx, 1, N, N * N);
 }
 
 void
-linalg_kron_IoVECoIx_SQR (double *IoVECoIx, double *VEC, double *X, int N)
+d4est_linalg_kron_IoVECoIx_SQR (double *IoVECoIx, double *VEC, double *X, int N)
 {
   /* x should be N^2 by 1 */
   /* I should be N by N */
   /* VEC should be N by 1 */
   int                 i;
   for (i = 0; i < N; i++) {
-    linalg_kron_VECoIx_SQR (&IoVECoIx[i * N * N], VEC, &X[i * N], N);
+    d4est_linalg_kron_VECoIx_SQR (&IoVECoIx[i * N * N], VEC, &X[i * N], N);
   }
 }
 
 void
-linalg_kron_IoVEC_TRANSoIx_SQR (double *IoVEC_TRANSoIx, double *VEC,
+d4est_linalg_kron_IoVEC_TRANSoIx_SQR (double *IoVEC_TRANSoIx, double *VEC,
                                 double *X, int N)
 {
   int                 i;
   for (i = 0; i < N; i++) {
-    linalg_kron_VEC_TRANSoIx_SQR (&IoVEC_TRANSoIx[i * N], VEC, &X[i * N * N],
+    d4est_linalg_kron_VEC_TRANSoIx_SQR (&IoVEC_TRANSoIx[i * N], VEC, &X[i * N * N],
                                   N);
   }
 }
 
 void
-linalg_kron_IoIoVECx_SQR (double *IoIoVECx, double *VEC, double *X, int N)
+d4est_linalg_kron_IoIoVECx_SQR (double *IoIoVECx, double *VEC, double *X, int N)
 {
   /* x should be N^2 by 1 */
   /* I should be N by N */
   /* VEC should be N by 1 */
   int                 i;
   for (i = 0; i < N; i++) {
-    linalg_kron_IoVECx_SQR (&IoIoVECx[i * N * N], VEC, &X[i * N], N);
+    d4est_linalg_kron_IoVECx_SQR (&IoIoVECx[i * N * N], VEC, &X[i * N], N);
   }
 }
 
 void
-linalg_kron_IoIoVEC_TRANSx_SQR (double *IoIoVEC_TRANSx, double *VEC,
+d4est_linalg_kron_IoIoVEC_TRANSx_SQR (double *IoIoVEC_TRANSx, double *VEC,
                                 double *X, int N)
 {
   /* x should be N^2 by 1 */
@@ -562,13 +562,13 @@ linalg_kron_IoIoVEC_TRANSx_SQR (double *IoIoVEC_TRANSx, double *VEC,
   /* VEC should be N by 1 */
   int                 i;
   for (i = 0; i < N; i++) {
-    linalg_kron_IoVEC_TRANSx_SQR (&IoIoVEC_TRANSx[i * N], VEC, &X[i * N * N],
+    d4est_linalg_kron_IoVEC_TRANSx_SQR (&IoIoVEC_TRANSx[i * N], VEC, &X[i * N * N],
                                   N);
   }
 }
 
 void
-linalg_invert (double *A, int m)
+d4est_linalg_invert (double *A, int m)
 {
   int                 N = m;
   int                 lwork = N * N;
@@ -585,26 +585,26 @@ linalg_invert (double *A, int m)
 }
 
 void
-linalg_invert_and_copy (double *A, double *inv_A, int m)
+d4est_linalg_invert_and_copy (double *A, double *inv_A, int m)
 {
   int                 i, j;
   for (i = 0; i < m; i++)
     for (j = 0; j < m; j++)
       inv_A[i * m + j] = A[i * m + j];
-  linalg_invert (inv_A, m);
+  d4est_linalg_invert (inv_A, m);
 }
 
 void
-linalg_leftinverse(double *A, double* inv_A, int A_rows, int A_cols)
+d4est_linalg_leftinverse(double *A, double* inv_A, int A_rows, int A_cols)
 {
   double* AT = (double *) malloc (sizeof (double) * A_rows * A_cols);
   double* ATA = (double *) malloc (sizeof (double) * A_cols * A_cols);
   double* inv_ATA = (double *) malloc (sizeof (double) * A_cols * A_cols);
   
-  linalg_mat_transpose_nonsqr(A, AT, A_rows, A_cols);
-  linalg_mat_multiply(AT, A, ATA, A_cols, A_rows, A_cols);
-  linalg_invert_and_copy(ATA, inv_ATA, A_cols);
-  linalg_mat_multiply(inv_ATA, AT, inv_A, A_cols, A_cols, A_rows);
+  d4est_linalg_mat_transpose_nonsqr(A, AT, A_rows, A_cols);
+  d4est_linalg_mat_multiply(AT, A, ATA, A_cols, A_rows, A_cols);
+  d4est_linalg_invert_and_copy(ATA, inv_ATA, A_cols);
+  d4est_linalg_mat_multiply(inv_ATA, AT, inv_A, A_cols, A_cols, A_rows);
   
   free(AT);
   free(ATA);
@@ -623,7 +623,7 @@ linalg_leftinverse(double *A, double* inv_A, int A_rows, int A_cols)
  * @param l rows(B)
  */
 void
-linalg_mat_multiply (double *A, double *B, double *C, int m, int l, int n)
+d4est_linalg_mat_multiply (double *A, double *B, double *C, int m, int l, int n)
 {
   char                ntran = 'N';
   double              one = 1.;
@@ -638,7 +638,7 @@ linalg_mat_multiply (double *A, double *B, double *C, int m, int l, int n)
 }
 
 void
-linalg_matvec_plus_vec (double alpha, double *A, double *v, double beta,
+d4est_linalg_matvec_plus_vec (double alpha, double *A, double *v, double beta,
                         double *b, int m, int n)
 {
   char                ytran = 'T';
@@ -656,13 +656,13 @@ linalg_matvec_plus_vec (double alpha, double *A, double *v, double beta,
 }
 
 void
-linalg_copy_1st_to_2nd (double *v1, double *v2, int N)
+d4est_linalg_copy_1st_to_2nd (double *v1, double *v2, int N)
 {
   memcpy (v2, v1, N * sizeof (double));
 }
 
 /*
-void linalg_mat_transpose(double* A, double* Atrans, int N, int M)
+void d4est_linalg_mat_transpose(double* A, double* Atrans, int N, int M)
 {
   for(int n = 0; n<N*M; n++){
     int i = n/N;
@@ -673,7 +673,7 @@ void linalg_mat_transpose(double* A, double* Atrans, int N, int M)
 */
 
 void
-linalg_mat_transpose (double *A, double *Atrans, int N)
+d4est_linalg_mat_transpose (double *A, double *Atrans, int N)
 {
   int                 i, j;
   for (i = 0; i < N; i++)
@@ -690,7 +690,7 @@ linalg_mat_transpose (double *A, double *Atrans, int N)
  * @param A_cols 
  */
 void
-linalg_mat_transpose_nonsqr (double *A, double *A_transpose, int A_rows,
+d4est_linalg_mat_transpose_nonsqr (double *A, double *A_transpose, int A_rows,
                              int A_cols)
 {
   int                 i, j;
@@ -709,7 +709,7 @@ linalg_mat_transpose_nonsqr (double *A, double *A_transpose, int A_rows,
  * @param M columns
  */
 void
-linalg_set_column (double *A, double *column, int col, int N, int M)
+d4est_linalg_set_column (double *A, double *column, int col, int N, int M)
 {
   assert (col < M);
   int                 s = 0;
@@ -723,7 +723,7 @@ linalg_set_column (double *A, double *column, int col, int N, int M)
 }
 
 void
-linalg_set_column_opt (double *A, double *column, int col, int N, int M)
+d4est_linalg_set_column_opt (double *A, double *column, int col, int N, int M)
 {
   assert (col < M);
   int                 s = 0;
@@ -736,22 +736,22 @@ linalg_set_column_opt (double *A, double *column, int col, int N, int M)
 
 
 void
-linalg_vec_scale (double alpha, double *x, int N)
+d4est_linalg_vec_scale (double alpha, double *x, int N)
 {
   int                 incx = 1;
   dscal_ (&N, &alpha, x, &incx);
 }
 
 void
-linalg_vec_normalize(double*x, int N)
+d4est_linalg_vec_normalize(double*x, int N)
 {
-  double xdotx = linalg_vec_dot(x,x,N);
+  double xdotx = d4est_linalg_vec_dot(x,x,N);
   double norm = sqrt(xdotx);
-  linalg_vec_scale(norm, x, N); 
+  d4est_linalg_vec_scale(norm, x, N); 
 }
 
 void
-linalg_vec_axpy (double alpha, double *x, double *y, int N)
+d4est_linalg_vec_axpy (double alpha, double *x, double *y, int N)
 {
   int                 incx = 1;
   int                 incy = 1;
@@ -759,21 +759,21 @@ linalg_vec_axpy (double alpha, double *x, double *y, int N)
 }
 
 void
-linalg_vec_axpyeqz (double alpha, double *x, double *y, double *z, int N)
+d4est_linalg_vec_axpyeqz (double alpha, double *x, double *y, double *z, int N)
 {
-  linalg_copy_1st_to_2nd (y, z, N);
-  linalg_vec_axpy (alpha, x, z, N);
+  d4est_linalg_copy_1st_to_2nd (y, z, N);
+  d4est_linalg_vec_axpy (alpha, x, z, N);
 }
 
 void
-linalg_vec_xpby (double *x, double beta, double *y, int N)
+d4est_linalg_vec_xpby (double *x, double beta, double *y, int N)
 {
-  linalg_vec_scale (beta, y, N);
-  linalg_vec_axpy (1., x, y, N);
+  d4est_linalg_vec_scale (beta, y, N);
+  d4est_linalg_vec_axpy (1., x, y, N);
 }
 
 double
-linalg_vec_dot (double *x, double *y, int N)
+d4est_linalg_vec_dot (double *x, double *y, int N)
 {
   int                 incx = 1;
   int                 incy = 1;
@@ -781,7 +781,7 @@ linalg_vec_dot (double *x, double *y, int N)
 }
 
 void
-linalg_fill_vec (double *v, double val, int N)
+d4est_linalg_fill_vec (double *v, double val, int N)
 {
   int                 i;
   for (i = 0; i < N; i++)
@@ -798,7 +798,7 @@ linalg_fill_vec (double *v, double val, int N)
  * @param N 
  */
 void
-linalg_sym_eigvals (double *A, double *eig_vals, int N)
+d4est_linalg_sym_eigvals (double *A, double *eig_vals, int N)
 {
   const int           rows = N;
   char                no_vec = 'N';
@@ -811,7 +811,7 @@ linalg_sym_eigvals (double *A, double *eig_vals, int N)
 }
 
 void
-linalg_sym_eigvecs (double *A, double *eig_vals, int N)
+d4est_linalg_sym_eigvecs (double *A, double *eig_vals, int N)
 {
   const int           rows = N;
   char                jobz = 'V';
@@ -824,7 +824,7 @@ linalg_sym_eigvecs (double *A, double *eig_vals, int N)
 }
 
 int
-linalg_compare_vecs (double *v1, double *v2, double tol, int N)
+d4est_linalg_compare_vecs (double *v1, double *v2, double tol, int N)
 {
   int                 i;
   double              err = 0.;
@@ -835,7 +835,7 @@ linalg_compare_vecs (double *v1, double *v2, double tol, int N)
 }
 
 void
-linalg_vec_fabs(double* x, int N)
+d4est_linalg_vec_fabs(double* x, int N)
 {
   int i;
   for (i = 0; i < N; i++) {
@@ -844,7 +844,7 @@ linalg_vec_fabs(double* x, int N)
 }
 
 void
-linalg_component_mult
+d4est_linalg_component_mult
 (
  double* x,
  double* y,
@@ -860,7 +860,7 @@ linalg_component_mult
 
 
 void
-linalg_component_div
+d4est_linalg_component_div
 (
  double* x,
  double* y,
@@ -884,7 +884,7 @@ linalg_component_div
  * @param v2 
  */
 void
-linalg_cross_prod
+d4est_linalg_cross_prod
 (
  double ax,
  double ay,
@@ -903,7 +903,7 @@ linalg_cross_prod
 }
 
 double
-linalg_vec_sum
+d4est_linalg_vec_sum
 (
  double* vec,
  int N
@@ -919,7 +919,7 @@ linalg_vec_sum
 
 
 double
-linalg_vec1_trans_mat_vec2
+d4est_linalg_vec1_trans_mat_vec2
 (
  double* vec1,
  double* mat,
@@ -929,8 +929,8 @@ linalg_vec1_trans_mat_vec2
 {
 
   double *mat_vec2 = (double *) malloc (sizeof (double) * N);
-  linalg_matvec_plus_vec(1., mat, vec2, 0., mat_vec2, N, N);                      
-  double dot = linalg_vec_dot(vec1, mat_vec2, N);
+  d4est_linalg_matvec_plus_vec(1., mat, vec2, 0., mat_vec2, N, N);                      
+  double dot = d4est_linalg_vec_dot(vec1, mat_vec2, N);
   free(mat_vec2);
   return dot;
 }

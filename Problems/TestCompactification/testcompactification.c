@@ -1,7 +1,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <curved_Gauss_sipg_flux_scalar_fcns.h>
@@ -249,7 +249,7 @@ void problem_build_rhs
   central_flux_params_t* central_flux_params = user;
   double* f = P4EST_ALLOC(double, prob_vecs->local_nodes);
   
-  d4est_element_data_init_node_vec
+  d4est_mesh_init_field
     (
      p4est,
      f,
@@ -288,7 +288,7 @@ void problem_build_rhs
       }
     }    
   
-  linalg_vec_scale(-1., prob_vecs->rhs, prob_vecs->local_nodes);
+  d4est_linalg_vec_scale(-1., prob_vecs->rhs, prob_vecs->local_nodes);
 
   int local_nodes = prob_vecs->local_nodes;
   double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
@@ -296,7 +296,7 @@ void problem_build_rhs
   
   prob_vecs->u = u_eq_0; 
   curved_Gauss_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
-  linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
+  d4est_linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
 
   prob_vecs->u = tmp;
   P4EST_FREE(u_eq_0);
@@ -485,7 +485,7 @@ problem_init
 
   p4est_partition(p4est, 0, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
-  /* d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
+  /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
 
   /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
@@ -529,7 +529,7 @@ problem_init
   prob_fcns.apply_lhs = curved_Gauss_poisson_apply_aij;
 
      
-    d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
+    d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
 
 
     d4est_geometry_t dgeom;
@@ -611,8 +611,8 @@ problem_init
                                             (zero_fcn);
 
     
-    /* linalg_fill_vec(u, 0., local_nodes); */
-    /* d4est_element_data_init_node_vec(p4est,f,f_fcn,d4est_ops); */
+    /* d4est_linalg_fill_vec(u, 0., local_nodes); */
+    /* d4est_mesh_init_field(p4est,f,f_fcn,d4est_ops); */
 
     /* double total_volume = 0.; */
     /* for (p4est_topidx_t tt = p4est->first_local_tree; */
@@ -658,7 +658,7 @@ problem_init
      /*   ); */
 
 
-    /* d4est_element_data_init_node_vec */
+    /* d4est_mesh_init_field */
   /*   ( */
   /*    p4est, */
   /*    u, */
@@ -666,7 +666,7 @@ problem_init
   /*    d4est_ops */
   /*   ); */
 
-    linalg_fill_vec(u, 0., local_nodes);
+    d4est_linalg_fill_vec(u, 0., local_nodes);
     
      /* p4est_vtk_write_file */
      /*   (p4est, */
@@ -708,7 +708,7 @@ problem_init
 
      /* double* vertex_u = P4EST_ALLOC(double, (P4EST_CHILDREN)*p4est->local_num_quadrants); */
      /* double* vertex_u_analytic = P4EST_ALLOC(double, (P4EST_CHILDREN)*p4est->local_num_quadrants); */
-     /* d4est_element_data_init_node_vec(p4est, u_analytic, analytic_fcn, d4est_ops); */
+     /* d4est_mesh_init_field(p4est, u_analytic, analytic_fcn, d4est_ops); */
   
      /* d4est_element_data_store_nodal_vec_in_vertex_array */
      /*   ( */
@@ -782,14 +782,14 @@ problem_init
 
      double* error = P4EST_ALLOC(double, local_nodes);
 
-     d4est_element_data_init_node_vec(p4est, u_analytic, analytic_fcn, d4est_ops, p4est_geom);
+     d4est_mesh_init_field(p4est, u_analytic, analytic_fcn, d4est_ops, p4est_geom);
 
      for (int i = 0; i < local_nodes; i++){
        error[i] = fabs(error[i]);
      }
   
           
-     linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
+     d4est_linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
 
      p4est_geometry_t* geom_vtk = d4est_geometry_new_sphere(p4est->connectivity, input.R1*2, input.R1, input.R0);
      
@@ -820,9 +820,9 @@ problem_init
   P4EST_FREE(error);
   p4est_geometry_destroy(geom_vtk);
   
-  linalg_vec_axpy(-1., u, u_analytic, local_nodes);
-  /* linalg_copy_1st_to_2nd(u, error, local_nodes); */
-  /* linalg_vec_axpy(-1., u, u_analytic, local_nodes); */
+  d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes);
+  /* d4est_linalg_copy_1st_to_2nd(u, error, local_nodes); */
+  /* d4est_linalg_vec_axpy(-1., u, u_analytic, local_nodes); */
   
   
   double local_l2_norm_sqr =  d4est_element_data_compute_l2_norm_sqr

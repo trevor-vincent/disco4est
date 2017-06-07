@@ -1,7 +1,7 @@
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <util.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
 #include <problem.h>
@@ -510,7 +510,7 @@ void kidder_apply_jac
       }
     }
   
-  linalg_vec_axpy(1.0, M_nonlinear_term, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_nonlinear_term, prob_vecs->Au, prob_vecs->local_nodes);
   P4EST_FREE(M_nonlinear_term);
 }
 
@@ -571,7 +571,7 @@ kidder_build_residual
       }
     }
 
-  linalg_vec_axpy(1.0,
+  d4est_linalg_vec_axpy(1.0,
                   M_neg_1o8_K2_psi_neg7_vec,
                   prob_vecs->Au,
                   prob_vecs->local_nodes);
@@ -643,7 +643,7 @@ problem_init
   prob_fcns.build_residual = kidder_build_residual;
   prob_fcns.apply_lhs = kidder_apply_jac;
   
-  d4est_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
+  d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
 
 
   for (level = 0; level < input.num_unifrefs; ++level){
@@ -721,16 +721,16 @@ problem_init
     prob_vecs.rhs = rhs;
     prob_vecs.local_nodes = local_nodes;
 
-    linalg_fill_vec(prob_vecs.u, 0., prob_vecs.local_nodes);
+    d4est_linalg_fill_vec(prob_vecs.u, 0., prob_vecs.local_nodes);
 
-    d4est_element_data_init_node_vec(
+    d4est_mesh_init_field(
                                       p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
                                       d4est_ops,
                                       d4est_geom
     );  
-    linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
+    d4est_linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
 
     DEBUG_PRINT_ARR_DBL_SUM(error, local_nodes);
     DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, local_nodes);
@@ -1031,14 +1031,14 @@ problem_init
     /* multigrid_bottom_solver_cheby_d4est_destroy(bottom_solver); */
 
   
-    d4est_element_data_init_node_vec(
+    d4est_mesh_init_field(
                                       p4est,
                                       u_analytic,
                                       analytic_solution_fcn,
                                       d4est_ops,
                                       d4est_geom
                                      );
-    linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
+    d4est_linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
 
     
     double local_l2_norm_sqr = d4est_element_data_compute_l2_norm_sqr
@@ -1061,7 +1061,7 @@ problem_init
     /* DEBUGGING STARTS HERE */
     /* DEBUGGING STARTS HERE */
     
-    /* d4est_element_data_init_node_vec( */
+    /* d4est_mesh_init_field( */
     /*                                   p4est, */
     /*                                   u, */
     /*                                   analytic_solution_fcn, */
@@ -1098,10 +1098,10 @@ problem_init
     /* double* Au_error = P4EST_ALLOC(double, local_nodes); */
     /* double* jacobian_lgl = P4EST_ALLOC(double, local_nodes); */
     /* d4est_element_data_compute_jacobian_on_lgl_grid(p4est,d4est_geom, d4est_ops, jacobian_lgl); */
-    /* linalg_copy_1st_to_2nd(Au, Au_error, local_nodes); */
-    /* linalg_vec_fabs(Au_error, local_nodes); */
+    /* d4est_linalg_copy_1st_to_2nd(Au, Au_error, local_nodes); */
+    /* d4est_linalg_vec_fabs(Au_error, local_nodes); */
 
-    /* linalg_vec_fabs(error, local_nodes); /\* not needed, except for vtk output *\/ */
+    /* d4est_linalg_vec_fabs(error, local_nodes); /\* not needed, except for vtk output *\/ */
     /* vtk_nodal_vecs_debug_t vtk_nodal_vecs_debug; */
     /* vtk_nodal_vecs_debug.u = u; */
     /* vtk_nodal_vecs_debug.Au = prob_vecs.Au; */
@@ -1147,7 +1147,7 @@ problem_init
 
     /* DEBUG_PRINT_ARR_DBL(jacobian_lgl, local_nodes); */
     
-    linalg_vec_fabs(error, local_nodes); /* not needed, except for vtk output */
+    d4est_linalg_vec_fabs(error, local_nodes); /* not needed, except for vtk output */
     vtk_nodal_vecs_t vtk_nodal_vecs;
     vtk_nodal_vecs.u = u;
     vtk_nodal_vecs.u_analytic = u_analytic;

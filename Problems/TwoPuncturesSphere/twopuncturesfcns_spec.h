@@ -311,7 +311,7 @@ void twopunctures_spec_apply_jac
       }
     }
   
-  linalg_vec_axpy(1.0, M_plus_7o8_K2_psi_neg8_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpy(1.0, M_plus_7o8_K2_psi_neg8_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
   P4EST_FREE(M_plus_7o8_K2_psi_neg8_of_u0_u_vec);
 }
 
@@ -360,7 +360,7 @@ twopunctures_spec_build_residual
       }
     }
 
-  linalg_vec_axpy(1.0,
+  d4est_linalg_vec_axpy(1.0,
                   M_neg_1o8_K2_psi_neg7_vec,
                   prob_vecs->Au,
                   prob_vecs->local_nodes);

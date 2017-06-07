@@ -2,7 +2,7 @@
 #include <d4est_element_data.h>
 #include <problem_data.h>
 #include <d4est_operators.h>
-#include <linalg.h>
+#include <d4est_linalg.h>
 #include <curved_poisson_operator.h>
 #include <grid_functions.h>
 #include <util.h>
@@ -51,14 +51,14 @@ void curved_Gauss_poisson_init_vecs
   elem_data->M_qstar_min_q_dot_n = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*face_nodes_Lobatto);  
   elem_data->Au_elem = &(problem_data->Au[elem_data->nodal_stride]);
 
-  linalg_copy_1st_to_2nd
+  d4est_linalg_copy_1st_to_2nd
     (
      &(problem_data->u[elem_data->nodal_stride]),
      &(elem_data->u_elem)[0],
      volume_nodes_Lobatto
     );
   /*  */
-  linalg_fill_vec
+  d4est_linalg_fill_vec
     (
      &(elem_data->du_elem[0][0]),
      0.0,
@@ -143,7 +143,7 @@ void curved_Gauss_poisson_init_vecs
 /*   for (int d = 0; d < (P4EST_DIM); d++){ */
 /*     for (int f = 0; f < faces; f++){ */
 /*       d4est_operators_apply_LIFT(d4est_ops, &element_data->M_ustar_min_u_n[d][f*face_nodes], dim, elem_data->deg_quad, f, vol_tmp); */
-/*       linalg_vec_axpy(1.0, vol_tmp, Si_u[d], volume_nodes_Gauss); */
+/*       d4est_linalg_vec_axpy(1.0, vol_tmp, Si_u[d], volume_nodes_Gauss); */
 /*     } */
 /*   } */
 
@@ -224,7 +224,7 @@ void curved_Gauss_poisson_compute_q_elem
   for (int d = 0; d < (P4EST_DIM); d++){
     for (int f = 0; f < faces; f++){
 
-      /* linalg_matvec_plus_vec(1., */
+      /* d4est_linalg_matvec_plus_vec(1., */
       /*                        element_data->invMface[f], */
       /*                        &element_data->M_ustar_min_u_n[d][f*face_nodes_Lobatto], */
       /*                        0., */
@@ -248,7 +248,7 @@ void curved_Gauss_poisson_compute_q_elem
                         f,
                         lifted_ustar_min_u[f][d]
                        );
-      /* linalg_vec_axpy(1.0, vol_tmp, Si_u[d], volume_nodes); */
+      /* d4est_linalg_vec_axpy(1.0, vol_tmp, Si_u[d], volume_nodes); */
     }
   }
 
@@ -274,7 +274,7 @@ void curved_Gauss_poisson_compute_q_elem
     }
     else {
       mpi_abort("invM is deprecated");
-      /* linalg_matvec_plus_vec(1., element_data->invM, Mq[i], 0., element_data->q_elem[i], volume_nodes_Lobatto, volume_nodes_Lobatto); */
+      /* d4est_linalg_matvec_plus_vec(1., element_data->invM, Mq[i], 0., element_data->q_elem[i], volume_nodes_Lobatto, volume_nodes_Lobatto); */
     }
   }
 
@@ -290,7 +290,7 @@ void curved_Gauss_poisson_compute_q_elem
 
   /* double* testinvMq = P4EST_ALLOC(double, volume_nodes_Lobatto); */
   /* d4est_operators_apply_invMij(d4est_ops, Mq[0], (P4EST_DIM), element_data->deg, testinvMq); */
-  /* linalg_vec_scale(1./element_data->J_quad[0], testinvMq, volume_nodes_Lobatto); */
+  /* d4est_linalg_vec_scale(1./element_data->J_quad[0], testinvMq, volume_nodes_Lobatto); */
 
 
   /* DEBUG_PRINT_3ARR_DBL( */
@@ -366,7 +366,7 @@ void curved_Gauss_poisson_compute_q_elem
 /*   int volume_nodes = d4est_operators_get_nodes(dim,deg); */
 
 /*   double* Au = element_data->Au_elem; */
-/*   linalg_fill_vec(Au, 0., volume_nodes); */
+/*   d4est_linalg_fill_vec(Au, 0., volume_nodes); */
   
 /*   double* dq = P4EST_ALLOC(double, d4est_operators_get_nodes(dim,deg)); */
 /*   double* dq_Gauss = P4EST_ALLOC(double, d4est_operators_get_nodes(dim,deg)); */
@@ -384,7 +384,7 @@ void curved_Gauss_poisson_compute_q_elem
 /*     }     */
 /*   } */
   
-/*   /\* linalg_component_mult(vol_tmp2, element_data->J, vol_tmp, volume_nodes); *\/ */
+/*   /\* d4est_linalg_component_mult(vol_tmp2, element_data->J, vol_tmp, volume_nodes); *\/ */
 /*   /\* d4est_operators_apply_Mij(d4est_ops, vol_tmp, dim, deg, Au); *\/ */
 
 /*   d4est_operators_apply_curvedGaussMass_onGaussNodeVec(d4est_ops, vol_tmp, deg, element_data->J_quad, deg, (P4EST_DIM), Au); */
@@ -406,11 +406,11 @@ void curved_Gauss_poisson_compute_q_elem
 /*     /\* } *\/ */
 
     
-/*     linalg_vec_axpy(1., vol_tmp, Au, volume_nodes); */
+/*     d4est_linalg_vec_axpy(1., vol_tmp, Au, volume_nodes); */
 /*   } */
 
 /*   /\* Au *= -1 because Au matrix is negative definite before this! *\/ */
-/*   linalg_vec_scale(-1., Au, volume_nodes); */
+/*   d4est_linalg_vec_scale(-1., Au, volume_nodes); */
   
 /*   P4EST_FREE(vol_tmp); */
 /*   P4EST_FREE(dq_Gauss); */
@@ -435,7 +435,7 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
   int volume_nodes_Lobatto = d4est_operators_get_nodes(dim,element_data->deg);
 
   double* Au = element_data->Au_elem;
-  linalg_fill_vec(Au, 0., volume_nodes_Lobatto);
+  d4est_linalg_fill_vec(Au, 0., volume_nodes_Lobatto);
   
   double* dq = P4EST_ALLOC(double, volume_nodes_Lobatto);
   double* dq_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
@@ -483,7 +483,7 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
   /* double* Minv_Mqstar_min_q_dot_n = P4EST_ALLOC(double, face_nodes_Lobatto); */
 
   for (int f = 0; f < faces; f++){
-    /* linalg_matvec_plus_vec(1., */
+    /* d4est_linalg_matvec_plus_vec(1., */
     /*                        element_data->invMface[f], */
     /*                        &element_data->M_qstar_min_q_dot_n[f*face_nodes_Lobatto], */
     /*                        0., */
@@ -551,7 +551,7 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
 
    
   /* Au *= -1 because Au matrix is negative definite before this! */
-  linalg_vec_scale(-1., Au, volume_nodes_Lobatto);
+  d4est_linalg_vec_scale(-1., Au, volume_nodes_Lobatto);
 
   /* printf("volume_nodes_Lobatto = %d\n", volume_nodes_Lobatto); */
   /* printf("element_data->deg = %d\n", element_data->deg); */
@@ -597,7 +597,7 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
 /*   int volume_nodes = d4est_operators_get_nodes(dim,deg); */
 
 /*   double* Au = element_data->Au_elem; */
-/*   linalg_fill_vec(Au, 0., volume_nodes); */
+/*   d4est_linalg_fill_vec(Au, 0., volume_nodes); */
   
 /*   double* dq = P4EST_ALLOC(double, d4est_operators_get_nodes(dim,deg)); */
 /*   double* dq_Gauss = P4EST_ALLOC(double, d4est_operators_get_nodes(dim,deg)); */
@@ -615,7 +615,7 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
 /*     }     */
 /*   } */
   
-/*   /\* linalg_component_mult(vol_tmp2, element_data->J, vol_tmp, volume_nodes); *\/ */
+/*   /\* d4est_linalg_component_mult(vol_tmp2, element_data->J, vol_tmp, volume_nodes); *\/ */
 /*   /\* d4est_operators_apply_Mij(d4est_ops, vol_tmp, dim, deg, Au); *\/ */
 
 /*   d4est_operators_apply_curvedGaussMass_onGaussNodeVec(d4est_ops, vol_tmp, deg, element_data->J_quad, deg, (P4EST_DIM), Au); */
@@ -637,11 +637,11 @@ void curved_Gauss_poisson_compute_Au_elem(p4est_iter_volume_info_t* info, void* 
 /*     /\* } *\/ */
 
     
-/*     linalg_vec_axpy(1., vol_tmp, Au, volume_nodes); */
+/*     d4est_linalg_vec_axpy(1., vol_tmp, Au, volume_nodes); */
 /*   } */
 
 /*   /\* Au *= -1 because Au matrix is negative definite before this! *\/ */
-/*   linalg_vec_scale(-1., Au, volume_nodes); */
+/*   d4est_linalg_vec_scale(-1., Au, volume_nodes); */
   
 /*   P4EST_FREE(vol_tmp); */
 /*   P4EST_FREE(dq_Gauss); */

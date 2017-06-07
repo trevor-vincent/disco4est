@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "../pXest/pXest.h"
 #include "../Utilities/util.h"
-#include "../LinearAlgebra/linalg.h"
+#include "../LinearAlgebra/d4est_linalg.h"
 #include "../dGMath/d4est_operators.h"
 #include "../GridFunctions/grid_functions.h"
 #include "../ElementData/element_data.h"
@@ -478,10 +478,10 @@ element_data_compute_l2_norm_sqr_callback
     
   double* Mvec = P4EST_ALLOC(double, volume_nodes);
   d4est_operators_apply_Mij(d4est_ops, &vec[*stride], (P4EST_DIM), elem_data->deg, Mvec);
-  linalg_vec_scale(jacobian, Mvec, volume_nodes);
+  d4est_linalg_vec_scale(jacobian, Mvec, volume_nodes);
 
   /* if it's wanted */
-  elem_data->local_estimator = linalg_vec_dot(&vec[*stride], Mvec, volume_nodes);
+  elem_data->local_estimator = d4est_linalg_vec_dot(&vec[*stride], Mvec, volume_nodes);
 
   /* printf("local_estimator = %f\n", elem_data->local_estimator); */
   *l2_norm_sqr += elem_data->local_estimator;
@@ -513,21 +513,21 @@ element_data_compute_l2_norm_sqr_callback
 /*   double* Mvec = P4EST_ALLOC(double, volume_nodes); */
 /*   double* dvec = P4EST_ALLOC(double, volume_nodes); */
 /*   d4est_operators_apply_Mij(&vec[stride], (P4EST_DIM), elem_data->deg, Mvec); */
-/*   linalg_vec_scale(jacobian, Mvec, volume_nodes); */
+/*   d4est_linalg_vec_scale(jacobian, Mvec, volume_nodes); */
 
 /*   /\* if it's wanted *\/ */
 
-/*   elem_data->local_estimator = linalg_vec_dot(&vec[stride], Mvec, volume_nodes); */
+/*   elem_data->local_estimator = d4est_linalg_vec_dot(&vec[stride], Mvec, volume_nodes); */
 
 
 
 /*   int i; */
 /*   for (i = 0; i < (P4EST_DIM); i++){ */
 /*     d4est_operators_apply_Dij(&vec[stride], dim, deg, i, dvec); */
-/*     linalg_vec_scale(2./h, dvec, d4est_operators_get_nodes(dim, deg)); */
+/*     d4est_linalg_vec_scale(2./h, dvec, d4est_operators_get_nodes(dim, deg)); */
 /*     d4est_operators_apply_Mij(dvec, (P4EST_DIM), elem_data->deg, Mvec); */
-/*     linalg_vec_scale(jacobian, Mvec, volume_nodes); */
-/*     elem_data->local_estimator += linalg_vec_dot(dvec, Mvec, volume_nodes); */
+/*     d4est_linalg_vec_scale(jacobian, Mvec, volume_nodes); */
+/*     elem_data->local_estimator += d4est_linalg_vec_dot(dvec, Mvec, volume_nodes); */
 /*   } */
   
 /*   *h1_norm_sqr += elem_data->local_estimator; */
@@ -561,9 +561,9 @@ element_data_compute_l2_norm_sqr_no_local_callback
     
   double* Mvec = P4EST_ALLOC(double, volume_nodes);
   d4est_operators_apply_Mij(d4est_ops, &vec[*stride], (P4EST_DIM), elem_data->deg, Mvec);
-  linalg_vec_scale(jacobian, Mvec, volume_nodes);
+  d4est_linalg_vec_scale(jacobian, Mvec, volume_nodes);
 
-  *l2_norm_sqr += linalg_vec_dot(&vec[*stride], Mvec, volume_nodes);;
+  *l2_norm_sqr += d4est_linalg_vec_dot(&vec[*stride], Mvec, volume_nodes);;
 
   *stride = *stride + volume_nodes;
   P4EST_FREE(Mvec);
@@ -669,18 +669,18 @@ element_data_compute_DG_norm_sqr_callback
     for (d = 0; d < (P4EST_DIM); d++){
       sigmavec_d = &(elem_data->qstar_min_q[d][f*face_nodes]);
       d4est_operators_apply_Mij(d4est_ops, sigmavec_d, dim - 1, deg, Msigmavec_d);
-      linalg_vec_scale(surface_jacobian, Msigmavec_d, face_nodes);
-      *dg_norm_sqr += linalg_vec_dot(sigmavec_d, Msigmavec_d, face_nodes);
+      d4est_linalg_vec_scale(surface_jacobian, Msigmavec_d, face_nodes);
+      *dg_norm_sqr += d4est_linalg_vec_dot(sigmavec_d, Msigmavec_d, face_nodes);
     }      
   }
   
   int i;
   for (i = 0; i < (P4EST_DIM); i++){
     d4est_operators_apply_Dij(d4est_ops, &vec[stride], dim, deg, i, dvec);
-    linalg_vec_scale(2./h, dvec, d4est_operators_get_nodes(dim, deg));
+    d4est_linalg_vec_scale(2./h, dvec, d4est_operators_get_nodes(dim, deg));
     d4est_operators_apply_Mij(d4est_ops, dvec, (P4EST_DIM), elem_data->deg, Mvec);
-    linalg_vec_scale(jacobian, Mvec, volume_nodes);
-    *dg_norm_sqr += linalg_vec_dot(dvec, Mvec, volume_nodes);
+    d4est_linalg_vec_scale(jacobian, Mvec, volume_nodes);
+    *dg_norm_sqr += d4est_linalg_vec_dot(dvec, Mvec, volume_nodes);
   }
 
   P4EST_FREE(Mvec);
@@ -710,7 +710,7 @@ element_data_DG_norm_sqr_init_vecs_callback
 
   element_data->u_elem = &(nodal_vec[element_data->stride]);
 
-  linalg_copy_1st_to_2nd(
+  d4est_linalg_copy_1st_to_2nd(
   element_data->u_elem,
     &(element_data->u_elem)[0],
     d4est_operators_get_nodes(dim, deg)
@@ -915,7 +915,7 @@ element_data_quadrate_au_andaddto_callback
      M_u
     );
   
-  linalg_vec_axpy(
+  d4est_linalg_vec_axpy(
                   a*jacobian,
                   M_u,
                   &a_u[stride],
@@ -1048,7 +1048,7 @@ element_data_quadrate_auv_andaddto_callback
      Mauv_restrict
     );
   
-  linalg_vec_axpy(jacobian, Mauv_restrict, &a_uv[stride], d4est_operators_get_nodes((P4EST_DIM),
+  d4est_linalg_vec_axpy(jacobian, Mauv_restrict, &a_uv[stride], d4est_operators_get_nodes((P4EST_DIM),
                                                              degH));
 
   P4EST_FREE(auv_prolong);
@@ -1201,7 +1201,7 @@ element_data_quadrate_auv_andaddto_callback
 /*      Mfofu_restrict */
 /*     ); */
   
-/*   linalg_vec_axpy(jacobian, Mfofu_restrict, &out[stride], d4est_operators_get_nodes((P4EST_DIM), */
+/*   d4est_linalg_vec_axpy(jacobian, Mfofu_restrict, &out[stride], d4est_operators_get_nodes((P4EST_DIM), */
 /*                                                              degH)); */
 
 /*   free(Mfofu_restrict); */
@@ -1284,7 +1284,7 @@ element_data_quadrate_auv_andaddto_callback
 /*      Mfofu */
 /*     ); */
   
-/*   linalg_vec_axpy( */
+/*   d4est_linalg_vec_axpy( */
 /*                   jacobian, */
 /*                   Mfofu, */
 /*                   &out[*stride], */
@@ -1440,7 +1440,7 @@ element_data_quadrate_fofuv_andaddto_callback
      Mfofuv
     );
   
-  linalg_vec_axpy(
+  d4est_linalg_vec_axpy(
                   jacobian,
                   Mfofuv,
                   &out[*stride],
@@ -1650,7 +1650,7 @@ element_data_quadrate_fofu_andaddto_callback
      Mfofu
     );
   
-  linalg_vec_axpy(jacobian, Mfofu, &out[*stride], d4est_operators_get_nodes((P4EST_DIM),
+  d4est_linalg_vec_axpy(jacobian, Mfofu, &out[*stride], d4est_operators_get_nodes((P4EST_DIM),
                                                              degH));
 
 
@@ -2140,7 +2140,7 @@ element_data_copy_from_vec_to_storage_callback
   int deg = element_data->deg;
   int volume_nodes = d4est_operators_get_nodes(dim,deg);
   
-  linalg_copy_1st_to_2nd
+  d4est_linalg_copy_1st_to_2nd
     (
      &u[*stride],
      &(element_data->u_elem)[0],
@@ -2189,7 +2189,7 @@ element_data_copy_from_storage_to_vec_callback
   int deg = element_data->deg;
   int volume_nodes = d4est_operators_get_nodes(dim,deg);
   
-  linalg_copy_1st_to_2nd
+  d4est_linalg_copy_1st_to_2nd
     (
      &(element_data->u_elem)[0],
      &u[*stride],
@@ -2350,7 +2350,7 @@ void element_data_apply_Mij_on_vec_callback(
 
 
   d4est_operators_apply_Mij(d4est_ops, &u[*stride], dim, deg, &Mu[*stride]);
-  linalg_vec_scale(elem_data->jacobian, &Mu[*stride], volume_nodes);
+  d4est_linalg_vec_scale(elem_data->jacobian, &Mu[*stride], volume_nodes);
   *stride = *stride + volume_nodes;
 }
 
@@ -2468,7 +2468,7 @@ void element_data_apply_Mij_on_f_of_vec_callback(
   }
   
   d4est_operators_apply_Mij(d4est_ops, f_of_u_interp, (P4EST_DIM), deg_new, M_f_of_u_interp);
-  linalg_vec_scale(elem_data->jacobian, M_f_of_u_interp, volume_nodes_deg_new);
+  d4est_linalg_vec_scale(elem_data->jacobian, M_f_of_u_interp, volume_nodes_deg_new);
   d4est_operators_apply_p_prolong_transpose(d4est_ops, M_f_of_u_interp, deg_new, (P4EST_DIM), deg_old, &Mu[*stride]);
   
   *stride = *stride + volume_nodes_deg_old;
@@ -2591,7 +2591,7 @@ void element_data_apply_Mij_on_f_of_vec1_x_vec2_callback(
   }
   
   d4est_operators_apply_Mij(d4est_ops, f_of_vec1_interp_x_vec2_interp, (P4EST_DIM), deg_new, M_f_of_vec1_interp_x_vec2_interp);
-  linalg_vec_scale(elem_data->jacobian, M_f_of_vec1_interp_x_vec2_interp, volume_nodes_deg_new);
+  d4est_linalg_vec_scale(elem_data->jacobian, M_f_of_vec1_interp_x_vec2_interp, volume_nodes_deg_new);
   d4est_operators_apply_p_prolong_transpose(d4est_ops, M_f_of_vec1_interp_x_vec2_interp, deg_new, (P4EST_DIM), deg_old, &M_f_of_vec1_x_vec2[*stride]);
   
   *stride = *stride + volume_nodes_deg_old;
@@ -2870,7 +2870,7 @@ element_data_compute_l2_norm_error_no_local
 {
   double* vec_analytic = P4EST_ALLOC(double, nodes);
   element_data_init_node_vec(p4est,vec_analytic,analytical_solution,d4est_ops);
-  linalg_vec_axpy(-1., vec, vec_analytic, nodes);
+  d4est_linalg_vec_axpy(-1., vec, vec_analytic, nodes);
   double err = element_data_compute_l2_norm_sqr_no_local(p4est,vec_analytic,d4est_ops);
   return err;
 }

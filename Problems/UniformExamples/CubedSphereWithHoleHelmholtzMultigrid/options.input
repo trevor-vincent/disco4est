@@ -1,6 +1,6 @@
 [p4est]
 min_quadrants = -1
-min_level = 2
+min_level = 1
 fill_uniform = 1
 
 [ip_flux_params]
@@ -27,8 +27,8 @@ use_mg_as_pc_for_ksp = 0
 
 [geometry]
 ; name = cubed_sphere_inner_shell_block
-; name = cubed_sphere_outer_shell_block
-name = cubed_sphere_innerouter_shell
+name = cubed_sphere_outer_shell_block
+; name = cubed_sphere_innerouter_shell
 ; name = cubed_sphere_with_cube_hole
 R0 = 4
 R1 = 4.5
@@ -38,7 +38,16 @@ DX_compute_method = analytic
 JAC_compute_method = numerical
 compactify_outer_shell = 1
 compactify_inner_shell = 0
-geom_quad_type = Lobatto
+
+[d4est_cg]
+iter = 0
+monitor = 1
+rtol = 1e-20
+atol = 1e-20
+
+
+[quadrature]
+name = legendre
 
 [krylov_petsc]
 ksp_type = fcg
@@ -53,8 +62,8 @@ ksp_monitor_singular_value = 1
 
 [d4est_vtk_geometry]
 ; name = cubed_sphere_inner_shell_block
-; name = cubed_sphere_outer_shell_block
-name = cubed_sphere_innerouter_shell
+name = cubed_sphere_outer_shell_block
+; name = cubed_sphere_innerouter_shell
 ; name = cubed_sphere_with_cube_hole
 R0 = 1
 R1 = 2
