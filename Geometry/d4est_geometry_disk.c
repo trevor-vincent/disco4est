@@ -13,16 +13,7 @@ secant_fcn(double x){
   return 1./cos(x);
 }
 
-typedef struct {
 
-  //R0 and R1 for 5 tree disk, inner square and wedge respectively
-  double R0;
-  double R1; 
-  double R2; //added radii for 9 tree disk
-  int compactify_outer_wedge;
-  const char* input_section;
-  
-} d4est_geometry_disk_attr_t;
 
 
 static
@@ -333,6 +324,160 @@ d4est_geometry_5treedisk_new
     printf("%s: NAME = 5treedisk\n", printf_prefix );
     printf("%s: R0 = %.25f\n", printf_prefix,  input->R0);
     printf("%s: R1 = %.25f\n", printf_prefix,  input->R1);
+  }
+}
+
+void
+d4est_geometry_disk_outer_wedge_sj_analytic
+(
+ d4est_geometry_t * d4est_geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [2],
+ p4est_qcoord_t dq,
+ const double rst[2],
+ double* sj
+)
+{
+  int compactify_outer_wedge = (( d4est_geometry_disk_attr_t*)(d4est_geom->user))->compactify_outer_wedge;
+  double R1 = (( d4est_geometry_disk_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_disk_attr_t*)(d4est_geom->user))->R2;
+
+  /* Element integration weight x-coordinates in [-1,1]^3 space of the element*/
+  double r = rst[0];
+  double s = rst[1];
+
+  /* topological coordinates of element corners */
+  double amin = q0[0];
+  double amax = q0[0] + dq;
+  double bmin = q0[1];
+  double bmax = q0[1] + dq;
+
+  /* transform element corners to [0,1]^3 topological space */
+  amin /= (double)P4EST_ROOT_LEN;
+  amax /= (double)P4EST_ROOT_LEN;
+  bmin /= (double)P4EST_ROOT_LEN;
+  bmax /= (double)P4EST_ROOT_LEN;
+
+  /* transform element corners to [-1,1]^2 x [1,2] topological space */
+  amin = 2.*amin - 1.;
+  amax = 2.*amax - 1.;
+  bmin = bmin + 1.;
+  bmax = bmax + 1.;
+
+  if (compactify_outer_wedge == 1){
+    if (rst[0] == 1. || rst[0] == -1.){
+      *sj = sqrt((4*pow(bmax - bmin,2)*pow(R1,2)*pow(R1 - R2,2)*pow(R2,2))/pow(R2*(-4 + bmax + bmin + bmax*s - bmin*s) - R1*(-2 + bmax + bmin + bmax*s - bmin*s),4));
+    }
+    else if (rst[1] == 1. || rst[1] == -1.){
+      *sj = sqrt((pow(amax - amin,2)*pow(M_PI,2)*pow(R1,2)*pow(R2,2))/(16.*pow(R2*(-4 + bmax + bmin + bmax*s - bmin*s) - R1*(-2 + bmax + bmin + bmax*s - bmin*s),2)));
+    }
+    else {
+      mpi_abort("[D4EST_ERROR]: This is not a face");
+    }
+  }
+  else {
+    mpi_abort("[D4EST_ERROR]: Code is not written yet");
+  }
+}
+
+void
+d4est_geometry_disk_outer_wedge_jac_analytic
+(
+ d4est_geometry_t * d4est_geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [2],
+ p4est_qcoord_t dq,
+ const double rst[2],
+ double* j
+)
+{
+
+  int compactify_outer_wedge = (( d4est_geometry_disk_attr_t*)(d4est_geom->user))->compactify_outer_wedge;
+  double R1 = (( d4est_geometry_disk_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_disk_attr_t*)(d4est_geom->user))->R2;
+
+  /* Element integration weight x-coordinates in [-1,1]^3 space of the element*/
+  double r = rst[0];
+  double s = rst[1];
+
+  /* topological coordinates of element corners */
+  double amin = q0[0];
+  double amax = q0[0] + dq;
+  double bmin = q0[1];
+  double bmax = q0[1] + dq;
+
+  /* transform element corners to [0,1]^3 topological space */
+  amin /= (double)P4EST_ROOT_LEN;
+  amax /= (double)P4EST_ROOT_LEN;
+  bmin /= (double)P4EST_ROOT_LEN;
+  bmax /= (double)P4EST_ROOT_LEN;
+
+  /* transform element corners to [-1,1]^2 x [1,2] topological space */
+  amin = 2.*amin - 1.;
+  amax = 2.*amax - 1.;
+  bmin = bmin + 1.;
+  bmax = bmax + 1.;
+  
+  if (compactify_outer_wedge == 1){
+  *j = -((amax - amin)*(bmax - bmin)*M_PI*pow(R1,2)*(R1 - R2)*pow(R2,2))/(2.*pow(-(R2*(-4 + bmax + bmin + bmax*s - bmin*s)) + R1*(-2 + bmax + bmin + bmax*s - bmin*s),3));
+  }
+  else {
+
+  }
+  
+}
+
+void
+d4est_geometry_disk_outer_wedge_sj_div_jac_analytic
+(
+ d4est_geometry_t * d4est_geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [2],
+ p4est_qcoord_t dq,
+ const double rst[2],
+ double* sj_div_jac
+)
+{
+
+  int compactify_outer_wedge = (( d4est_geometry_disk_attr_t*)(d4est_geom->user))->compactify_outer_wedge;
+  double R1 = (( d4est_geometry_disk_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_disk_attr_t*)(d4est_geom->user))->R2;
+
+  /* Element integration weight x-coordinates in [-1,1]^3 space of the element*/
+  double r = rst[0];
+  double s = rst[1];
+
+  /* topological coordinates of element corners */
+  double amin = q0[0];
+  double amax = q0[0] + dq;
+  double bmin = q0[1];
+  double bmax = q0[1] + dq;
+
+  /* transform element corners to [0,1]^3 topological space */
+  amin /= (double)P4EST_ROOT_LEN;
+  amax /= (double)P4EST_ROOT_LEN;
+  bmin /= (double)P4EST_ROOT_LEN;
+  bmax /= (double)P4EST_ROOT_LEN;
+
+  /* transform element corners to [-1,1]^2 x [1,2] topological space */
+  amin = 2.*amin - 1.;
+  amax = 2.*amax - 1.;
+  bmin = bmin + 1.;
+  bmax = bmax + 1.;
+  
+  if (compactify_outer_wedge == 1){
+    if (rst[0] == 1. || rst[0] == -1.){
+  *sj_div_jac = sqrt((16*pow(R2*(-4 + bmax + bmin + bmax*s - bmin*s) - R1*(-2 + bmax + bmin + bmax*s - bmin*s),2))/(pow(amax - amin,2)*pow(M_PI,2)*pow(R1,2)*pow(R2,2)));
+    }
+    else if (rst[1] == 1. || rst[1] == -1.){
+  *sj_div_jac = sqrt(pow(R2*(-4 + bmax + bmin + bmax*s - bmin*s) - R1*(-2 + bmax + bmin + bmax*s - bmin*s),4)/(4.*pow(bmax - bmin,2)*pow(R1,2)*pow(R1 - R2,2)*pow(R2,2)));
+    }
+    else {
+      mpi_abort("[D4EST_ERROR]: This is not a face");
+    }
+  }
+  else {
+    mpi_abort("[D4EST_ERROR]: Code is not written yet");
   }
 }
 

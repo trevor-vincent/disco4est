@@ -108,6 +108,7 @@ SET (
   # Solver/multigrid.c
   Solver/newton_petsc.c
   Solver/newton_d4est.c
+  Utilities/arbquad.c
   # Solver/cg_eigs.c
   # Solver/matrix_sym_tester.c
   # Solver/multigrid_matrix_operator.c
@@ -342,15 +343,28 @@ set(CTEST_MEMORYCHECK_COMMAND /usr/bin/valgrind)
 # set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=/usr/share/openmpi/openmpi-valgrind.supp" )
 set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/suppressions.txt" )
 
-add_executable(test_d4est_linalg Tests/test_d4est_linalg.c)
-target_link_libraries(test_d4est_linalg d4est)
-add_test(test_d4est_linalg_test test_d4est_linalg)
-target_compile_definitions(test_d4est_linalg PRIVATE NDEBUG)
+# add_executable(test_d4est_linalg Tests/test_d4est_linalg.c)
+# target_link_libraries(test_d4est_linalg d4est)
+# add_test(test_d4est_linalg_test test_d4est_linalg)
+# target_compile_definitions(test_d4est_linalg PRIVATE NDEBUG)
 
-add_executable(test_d4est_quadrature_compactified Tests/test_d4est_quadrature_compactified.c)
-target_link_libraries(test_d4est_quadrature_compactified d8est)
-add_test(test_d4est_quadrature_compactified_test test_d4est_quadrature_compactified)
-target_compile_definitions(test_d4est_quadrature_compactified PRIVATE DIM=3)
+# add_executable(test_d4est_quadrature_compactified Tests/test_d4est_quadrature_compactified.c)
+# target_link_libraries(test_d4est_quadrature_compactified d8est)
+# add_test(test_d4est_quadrature_compactified_test test_d4est_quadrature_compactified)
+# target_compile_definitions(test_d4est_quadrature_compactified PRIVATE DIM=3)
+
+
+# add_executable(test_d4est_quadrature_compactified_2 Tests/test_d4est_quadrature_compactified_2.c)
+# target_link_libraries(test_d4est_quadrature_compactified_2 d8est)
+# add_test(test_d4est_quadrature_compactified_2_test test_d4est_quadrature_compactified_2)
+# target_compile_definitions(test_d4est_quadrature_compactified_2 PRIVATE DIM=3)
+
+
+
+# add_executable(test_d4est_mortar_geometric_terms Tests/test_d4est_mortar_geometric_terms.c)
+# target_link_libraries(test_d4est_mortar_geometric_terms d8est)
+# add_test(test_d4est_mortar_geometric_terms_test test_d4est_mortar_geometric_terms)
+# target_compile_definitions(test_d4est_mortar_geometric_terms PRIVATE DIM=3)
 
 # add_executable(test_d4est_dictionary Tests/test_d4est_dictionary.c)
 # target_link_libraries(test_d4est_dictionary d4est)
@@ -364,12 +378,12 @@ target_compile_definitions(test_d4est_quadrature_compactified PRIVATE DIM=3)
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
 # add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
-# add_d4est_problem_2d(test_uniform_wedge_driver test_uniform_wedge.c UniformExamples/Wedge)
+add_d4est_problem_2d(test_uniform_wedge_driver test_uniform_wedge.c UniformExamples/Wedge)
 # add_d4est_problem_2d(test_uniform_wedge_multigrid_driver test_uniform_wedge_multigrid.c UniformExamples/WedgeMultigrid)
 # add_d4est_problem_3d(test_uniform_cubedsphere_poisson_driver test_uniform_cubedsphere_poisson.c UniformExamples/CubedSpherePoisson)
 # add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_driver test_uniform_cubedsphere_helmholtz.c UniformExamples/CubedSphereHelmholtz)
 # add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_driver test_uniform_cubedsphere_with_hole_helmholtz.c UniformExamples/CubedSphereWithHoleHelmholtz)
-add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_multigrid_driver test_uniform_cubed_sphere_with_hole_helmholtz_multigrid.c UniformExamples/CubedSphereWithHoleHelmholtzMultigrid)
+# add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_with_hole_multigrid_driver test_uniform_cubed_sphere_with_hole_helmholtz_multigrid.c UniformExamples/CubedSphereWithHoleHelmholtzMultigrid)
 # add_d4est_problem_3d(test_uniform_kidder_driver test_uniform_kidder.c UniformExamples/Kidder)
 # add_d4est_problem_3d(test_jacobian_driver test_jacobian.c TestJacobian)
 # add_d4est_problem_2d(testmultigridmatrixop_driver testmultigridmatrixop.c TestMultigridMatrixOp)

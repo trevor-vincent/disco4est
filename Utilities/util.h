@@ -210,95 +210,42 @@
     
 
 
-void util_print_matrix(double*,int,int,char[],int);
-void util_print_matrix_int(int*,int,int,char[],int);
-void util_print_matrices(double*,double*,int,int,char[]);
-void util_print_3d_matrix(double*,int,int,int,char[],int);
-void util_print_matrix_for_code(double* mat, int n, int m, char name []);
-double util_uniform_rand(long int, double, double);
-double util_max_error(double*, double*, int);
-int util_compare_double(double,double,double);
-int util_compare_vecs(double*,double*,int,double);
-void util_gen_rand_vec(double*, int, long int, double, double);
-int util_uniform_rand_int(long int seed, int a, int b);
-void util_eye(double* eye, int N);
-int util_int_pow_int(int x, int N);
-double util_dbl_pow_int(double x, int N);
-int util_sum_array_int(int* array, int N);
-double util_min(double a, double b);
-double util_max(double a, double b);
-int util_levi_civita(int a, int b, int c);
-double util_min(double a, double b);
-double util_max(double a, double b);
-int util_min_int(int a, int b);
-int util_max_int(int a, int b);
-int util_sort_double_callback(const void *p, const void *q);
-void util_sort_double(double *a, size_t n);
-void util_linear_regression(double*y,double* x,double* m,double* b,int n);
-int util_compact_1st_alongwith_2nd(double *array, double* array2, int size);
-int util_compact(double *array, int size);
-double
-util_parallel_checksum_dbl
-(
- double* vec,
- int N
-);
-double
-util_parallel_reduce_dbl_scalar
-(
- double local
-);
-
-int util_bisection
-(
- double funk(double, void*),
- double x1,
- double x2,
- double xacc,
- int iter,
- double* root,
- void* user
-);
-
-void
-util_find_biggest_error
-(
- double* a,
- double*b,
- int N,
- double* biggest_err,
- int* biggest_id
-);
-
-double
-util_compute_median(double *x, int n);
-
-double
-util_normal_deviate (double mu, double sigma);
+/* This file was automatically generated.  Do not edit! */
+double util_min_dbl_array(double *arr,int N);
+void util_compute_error_array(double *arr1,double *arr2,double *err,int N);
+int util_match(const char *str1,const char *str2);
+int util_match_couple(const char *section1,const char *section2,const char *name1,const char *name2);
 int util_does_file_exist(const char *filename);
-
-void
-util_print_matrix_for_mathematica(double* mat, int n, int m, const char* name);
-
-int util_match_couple
-(
- const char* section1,
- const char* section2,
- const char* name1,
- const char* name2
-);
-
-int util_match
-(
- const char* str1,
- const char* str2
-);
-
-void
-util_compute_error_array(double* arr1, double* arr2, double* err, int N);
-
-
-double
-util_min_dbl_array(double* arr, int N);
+double util_normal_deviate(double mu,double sigma);
+double util_compute_median(double *x,int n);
+int util_bisection(double funk(double,void *),double x1,double x2,double xacc,int iter,double *root,void *user);
+void util_linear_regression(double *y,double *x,double *m,double *b,int n);
+double util_parallel_reduce_dbl_scalar(double local);
+double util_parallel_checksum_dbl(double *vec,int N);
+void util_sort_double(double *a,size_t n);
+double util_sum_array_dbl(double *array,int N);
+int util_sum_array_int(int *array,int N);
+void util_gen_rand_vec(double *vec,int N,long int seed,double a,double b);
+double util_max_error(double *u,double *u_sol,int N);
+int util_uniform_rand_int(long int seed,int a,int b);
+double util_uniform_rand(long int seed,double a,double b);
+void util_print_matrix_for_mathematica(double *mat,int n,int m,const char *name);
+void util_print_matrix_for_code(double *mat,int n,int m,char name[]);
+void util_print_matrices(double *mat,double *mat2,int n,int m,char message[]);
+void util_print_matrix_int(int *mat,int n,int m,char message[],int print_rank);
+void util_print_matrix(double *mat,int n,int m,char message[],int print_rank);
+void util_print_3d_matrix(double *mat_3d,int n,int m,int l,char message[],int print_rank);
+void util_find_biggest_error(double *a,double *b,int N,double *biggest_err,int *biggest_id);
+int util_compare_vecs(double *a,double *b,int N,double eps);
+int util_compare_double(double a,double b,double eps);
+int util_int_pow_int(int base,int exp);
+double util_dbl_pow_int(double a,int b);
+void util_eye(double *eye,int N);
+int util_max_int(int a,int b);
+int util_min_int(int a,int b);
+double util_max(double a,double b);
+double util_min(double a,double b);
+int util_compact_1st_alongwith_2nd(double *array,double *array2,int size);
+int util_compact(double *array,int size);
 
 #endif

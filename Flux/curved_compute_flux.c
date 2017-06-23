@@ -92,6 +92,7 @@ void curved_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *info,
 
         /* unless every hanging face is a ghost, we calculate the flux */
         if (sum_ghost_array < (P4EST_HALF)) {
+          if (flux_fcn_ptrs->flux_interface_fcn != NULL){
           flux_fcn_ptrs->flux_interface_fcn
             (
              e_m,
@@ -109,6 +110,7 @@ void curved_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *info,
              d4est_quad,
              flux_fcn_ptrs->params
           );
+          }
         }
 
       }
@@ -130,25 +132,25 @@ void curved_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *info,
                              ->is.hanging.quad[i]
                              ->p.user_data;
             }
-
-            flux_fcn_ptrs->flux_interface_fcn
-              (
-               e_m,
-               1,
-               side[s_m]->face,
-               mortar_side_id_m,
-               e_p,
-               (P4EST_HALF),
-               side[s_p]->face,
-               mortar_side_id_p,
-               e_m_is_ghost,
-               info->orientation,
-               d4est_ops,
-               geom,
-               d4est_quad,
-               flux_fcn_ptrs->params
-              );
-
+            if (flux_fcn_ptrs->flux_interface_fcn != NULL){
+              flux_fcn_ptrs->flux_interface_fcn
+                (
+                 e_m,
+                 1,
+                 side[s_m]->face,
+                 mortar_side_id_m,
+                 e_p,
+                 (P4EST_HALF),
+                 side[s_p]->face,
+                 mortar_side_id_p,
+                 e_m_is_ghost,
+                 info->orientation,
+                 d4est_ops,
+                 geom,
+                 d4est_quad,
+                 flux_fcn_ptrs->params
+                );
+            }
           }
 
           // if + side is full
@@ -160,9 +162,11 @@ void curved_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *info,
               e_p[0] =
                   (d4est_element_data_t *)side[s_p]->is.full.quad->p.user_data;
 
+            if (flux_fcn_ptrs->flux_interface_fcn != NULL){
             flux_fcn_ptrs->flux_interface_fcn(
                                               e_m, 1, side[s_m]->face, mortar_side_id_m, e_p, 1, side[s_p]->face, mortar_side_id_p, e_m_is_ghost,
                 info->orientation, d4est_ops, geom, d4est_quad, flux_fcn_ptrs->params);
+            }
           }
         }
       }
@@ -180,11 +184,12 @@ void curved_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *info,
     /* #endif */
     mortar_side_id_m = mortar_stride;
     mortar_side_id_p = -1;
-    
-    flux_fcn_ptrs->flux_boundary_fcn(e_m[0], side->face, mortar_side_id_m,
-                                     flux_fcn_ptrs->bndry_fcn, d4est_ops, geom, d4est_quad,
-                                     flux_fcn_ptrs->params);
 
+    if (flux_fcn_ptrs->flux_boundary_fcn != NULL){
+      flux_fcn_ptrs->flux_boundary_fcn(e_m[0], side->face, mortar_side_id_m,
+                                       flux_fcn_ptrs->bndry_fcn, d4est_ops, geom, d4est_quad,
+                                       flux_fcn_ptrs->params);
+    }
     curved_compute_flux_user_data->mortar_stride += 1;
   }
 }

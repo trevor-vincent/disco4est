@@ -52,6 +52,7 @@ typedef struct {
   estimator_stats_t** estimator_stats;
   int elements_marked_for_hrefine;
   int elements_marked_for_prefine;
+  double* (*get_storage)(d4est_element_data_t*);
   
 } hp_amr_data_t;
 
@@ -63,7 +64,7 @@ hp_amr
  double** data_to_hp_refine,
  estimator_stats_t** stats,
  hp_amr_scheme_t* scheme,
- int curved
+ double* (*get_storage)(d4est_element_data_t*)
 );
 
 

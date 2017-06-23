@@ -10,6 +10,7 @@
 #include <util.h>
 
 /* #define NASTY_DEBUG */
+/* #define NASTY_DEBUG_3 */
 
 typedef struct {
 
@@ -99,7 +100,7 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
      d4est_geom,
      &mesh_vol,
      QUAD_VOLUME,
-     QUAD_DRDX_JAC_DRDX_TIMES_POLY_INTEGRAND,
+     QUAD_UNKNOWN_INTEGRAND,
      &element_data->u_elem[0],
      element_data->deg,
      element_data->J_quad,
@@ -107,12 +108,13 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
      element_data->deg_quad,
      stiff_u
     );
-  
+
+ 
   for (int i = 0; i < volume_nodes_lobatto; i++){
     element_data->Au_elem[i] += stiff_u[i];
   }
   
-#ifdef NASTY_DEBUG
+#ifdef NASTY_DEBUG_3
   printf("Stiffness Matrix Element id %d\n", element_data->id);
   DEBUG_PRINT_ARR_DBL_SUM(stiff_u, volume_nodes_lobatto);
   DEBUG_PRINT_ARR_DBL_SUM(element_data->Au_elem, volume_nodes_lobatto);

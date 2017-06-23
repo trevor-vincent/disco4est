@@ -5,7 +5,6 @@
 #include <util.h>
 #include <petscsnes.h>
 #include <arbquad.h>
-#include <d4est_geometry_cubed_sphere_inversemap_quadrature.h>
 
 /* #define P4EST_DIM 3 */
 #if (P4EST_DIM)==3
@@ -1028,92 +1027,6 @@ d4est_geometry_cubed_sphere_outer_shell_block_jac(d4est_geometry_t* d4est_geom,
 /* cmax + cmin + cmax*t - cmin*t),2)*pow(pow(secant_fcn((M_PI*(bmax + bmin + bmax*s */
 /* - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2)); */
 
-
-
-void
-d4est_geometry_cubed_sphere_outer_shell_block_get_custom_quadrature
-(d4est_geometry_t* d4est_geom,
- p4est_topidx_t which_tree,
- p4est_qcoord_t q0 [3],
- p4est_qcoord_t dq,
- int degree,
- double* custom_abscissas_dbl,
- double* custom_weights_dbl,
- int test_moments
-)
-{
-  double amin = q0[0];
-  double amax = q0[0] + dq;
-  double bmin = q0[1];
-  double bmax = q0[1] + dq;
-  double cmin = q0[2];
-  double cmax = q0[2] + dq;
-
-  /* transform element corners to [0,1]^3 topological space */
-  amin /= (double)P4EST_ROOT_LEN;
-  amax /= (double)P4EST_ROOT_LEN;
-  bmin /= (double)P4EST_ROOT_LEN;
-  bmax /= (double)P4EST_ROOT_LEN;
-  cmin /= (double)P4EST_ROOT_LEN;
-  cmax /= (double)P4EST_ROOT_LEN;
-
-  /* transform element corners to [-1,1]^2 x [1,2] topological space */
-  amin = 2.*amin - 1.;
-  amax = 2.*amax - 1.;
-  bmin = 2.*bmin - 1.;
-  bmax = 2.*bmax - 1.;
-  cmin = cmin + 1.;
-  cmax = cmax + 1.;
-
-
-  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
-  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
-  double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
-
-  mpi_assert(compactify_outer_shell == 1);
-
-
-  inversemap_quadrature_params_t params;
-  params.cmin = cmin;
-  params.cmax = cmax;
-  params.R1 = R1;
-  params.R2 = R2;
-
-  long double* custom_weights = P4EST_ALLOC(long double, degree + 1);
-  long double* custom_abscissas = P4EST_ALLOC(long double, degree + 1);
-  
-  arbquad_get_abscissas_and_weights_use_aa_and_bb(degree+1,
-                                    custom_weights,
-                                    custom_abscissas,
-                                    inversemap_moment_fcn,
-                                    inversemap_aa_and_bb,
-                                    &params,
-                                    DIVIDE_WEIGHTS_BY_WEIGHT_FCN,
-                                    inversemap_weight_fcn
-                                   );
-
-  /* arbquad_get_abscissas_and_weights(degree+1, */
-  /*                                   custom_weights, */
-  /*                                   custom_abscissas, */
-  /*                                   inversemap_moment_fcn, */
-  /*                                   &params, */
-  /*                                   DIVIDE_WEIGHTS_BY_WEIGHT_FCN, */
-  /*                                   inversemap_weight_fcn */
-  /*                                  ); */
-
-  for (int i = 0; i < degree + 1; i++){
-    custom_weights_dbl[i] = (double)custom_weights[i];
-    custom_abscissas_dbl[i] = (double)custom_abscissas[i];
-  }
-  
-  
-  if (test_moments)
-    arbquad_test_moments(degree+1, custom_weights, custom_abscissas, inversemap_moment_fcn, DIVIDE_WEIGHTS_BY_WEIGHT_FCN, inversemap_weight_fcn, &params);
-
-  P4EST_FREE(custom_weights);
-  P4EST_FREE(custom_abscissas);
-  
-}
 
 static void
 d4est_geometry_cubed_sphere_outer_shell_block_DX(d4est_geometry_t* d4est_geom,

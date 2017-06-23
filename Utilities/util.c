@@ -325,10 +325,21 @@ int util_sum_array_int(int* array, int N)
   return sum;
 }
 
+
+double util_sum_array_dbl(double* array, int N)
+{
+  double sum = 0.;
+  for (int i = 0; i < N; i++) {
+    sum += array[i];
+  }
+  return sum;
+}
+
 #include <stdlib.h>
 
 /* Comparison function. Receives two generic (void) pointers. */
-int util_sort_double_callback(const void *p, const void *q)
+static int
+util_sort_double_callback(const void *p, const void *q)
 {
     int ret;
     double x = *(const double *)p;

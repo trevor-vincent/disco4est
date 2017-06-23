@@ -4,6 +4,8 @@
 #include <d4est_linalg.h>
 #include <sc_reduce.h>
 
+#define NASTY_DEBUG
+
 static
 int d4est_cg_input_handler
 (
@@ -139,10 +141,12 @@ void d4est_cg_solve
   
   int i;
 
-  /* printf("imax = %d\n", imax); */
-  /* printf("monitor = %d\n", params->monitor); */
-  /* printf("delta_new > atol*atol + delta_0 * rtol * rtol = %d\n", delta_new > atol*atol + delta_0 * rtol * rtol); */
-
+#ifdef NASTY_DEBUG
+  printf("imax = %d\n", imax);
+  printf("monitor = %d\n", params->monitor);
+  printf("delta_new > atol*atol + delta_0 * rtol * rtol = %d\n", delta_new > atol*atol + delta_0 * rtol * rtol);
+  DEBUG_PRINT_2ARR_DBL(vecs->u, vecs->rhs, vecs->local_nodes);
+#endif
   /* DEBUG_PRINT_2ARR_DBL(u, r, local_nodes); */
     
   for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++) {

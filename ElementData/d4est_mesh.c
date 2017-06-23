@@ -1,5 +1,4 @@
 #include <d4est_mesh.h>
-#include <d4est_mesh.h>
 #include <d4est_geometry.h>
 #include <d4est_quadrature.h>
 #include <d4est_quadrature_lobatto.h>
@@ -114,11 +113,10 @@ d4est_mesh_compute_jacobian_on_lgl_grid
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), elem_data->deg);
 
 
-        d4est_geometry_object_t mesh_object;
-        mesh_object.type = ELEMENT_VOLUME;
+        d4est_quadrature_volume_t mesh_object;
         mesh_object.dq = elem_data->dq;
         mesh_object.tree = elem_data->tree;
-        mesh_object.local_id = elem_data->id;
+        mesh_object.element_id = elem_data->id;
         mesh_object.q[0] = elem_data->q[0];
         mesh_object.q[1] = elem_data->q[1];
 #if (P4EST_DIM)==3
@@ -126,11 +124,29 @@ d4est_mesh_compute_jacobian_on_lgl_grid
 #endif
       
         d4est_rst_t rst_points_lobatto;
-        rst_points_lobatto.r = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, mesh_object, elem_data->deg, 0);
-        rst_points_lobatto.s = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, mesh_object, elem_data->deg, 1);
+        rst_points_lobatto.r = d4est_quadrature_lobatto_get_rst(d4est_ops,
+                                                                NULL,
+                                                                NULL,
+                                                                &mesh_object,
+                                                                QUAD_VOLUME,
+                                                                QUAD_UNKNOWN_INTEGRAND,
+                                                                elem_data->deg,
+                                                                0);
+        rst_points_lobatto.s = d4est_quadrature_lobatto_get_rst(d4est_ops,
+                                                                NULL, NULL,
+                                                                &mesh_object,
+                                                                QUAD_VOLUME,
+                                                                QUAD_UNKNOWN_INTEGRAND,
+                                                                elem_data->deg, 1);
         rst_points_lobatto.t = NULL;
 #if (P4EST_DIM)==3
-        rst_points_lobatto.t = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, mesh_object, elem_data->deg, 2);
+        rst_points_lobatto.t = d4est_quadrature_lobatto_get_rst(d4est_ops,
+                                                                NULL,
+                                                                NULL,
+                                                                &mesh_object,
+                                                                QUAD_VOLUME,
+                                                                QUAD_UNKNOWN_INTEGRAND,
+                                                                elem_data->deg, 2);
 #endif
 
         d4est_geometry_compute_dxyz_drst
@@ -399,29 +415,62 @@ d4est_mesh_compute_l2_norm_sqr
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
 
 
-      d4est_geometry_object_t mesh_object;
-      mesh_object.type = ELEMENT_VOLUME;
+      d4est_quadrature_volume_t mesh_object;
       mesh_object.dq = ed->dq;
       mesh_object.tree = ed->tree;
-      mesh_object.local_id = ed->id;
+      mesh_object.element_id = ed->id;
       mesh_object.q[0] = ed->q[0];
       mesh_object.q[1] = ed->q[1];
 #if (P4EST_DIM)==3
       mesh_object.q[2] = ed->q[2];
 #endif
+      /* d4est_rst_t rst_points_quad; */
+      /* rst_points_quad = d4est_quadrature_get_rst_points */
+      /*                   ( */
+      /*                    d4est_ops, */
+      /*                    d4est_quad, */
+      /*                    d4est_geom, */
+      /*                    &mesh_object, */
+      /*                    QUAD_VOLUME, */
+      /*                    QUAD_UNKNOWN_INTEGRAND, */
+      /*                    ed->deg_quad */
+      /*                   ); */
+
+      /* d4est_geometry_compute_dxyz_drst */
+      /*   ( */
+      /*    d4est_ops, */
+      /*    d4est_geom, */
+      /*    rst_points_quad, */
+      /*    ed->tree, */
+      /*    ed->q, */
+      /*    ed->dq, */
+      /*    ed->deg_quad,            */
+      /*    xyz_rst_quad */
+      /*   ); */
+
+    
+      /* d4est_geometry_compute_jacobian */
+      /*   ( */
+      /*    xyz_rst_quad, */
+      /*    J_quad, */
+      /*    volume_nodes_quad */
+      /*   ); */
+      
         
-        d4est_quadrature_apply_mass_matrix
-          (
-           d4est_ops,
-           d4est_geom,
-           d4est_quad,
-           mesh_object,
-           &nodal_vec[ed->nodal_stride],
-           ed->deg,
-           ed->J_quad,
-           ed->deg_quad,
-           &Mvec[ed->nodal_stride]
-          );
+      d4est_quadrature_apply_mass_matrix
+        (
+         d4est_ops,
+         d4est_geom,
+         d4est_quad,
+         &mesh_object,
+         QUAD_VOLUME,
+         QUAD_UNKNOWN_INTEGRAND,
+         &nodal_vec[ed->nodal_stride],
+         ed->deg,
+         ed->J_quad,
+         ed->deg_quad,
+         &Mvec[ed->nodal_stride]
+        );
         
         double norm2 = d4est_linalg_vec_dot(&nodal_vec[ed->nodal_stride], &Mvec[ed->nodal_stride], volume_nodes);
         
@@ -543,11 +592,10 @@ d4est_mesh_geometry_storage_initialize_data
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
         d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
  
-        d4est_geometry_object_t mesh_object;
-        mesh_object.type = ELEMENT_VOLUME;
+        d4est_quadrature_volume_t mesh_object;
         mesh_object.dq =  ed->dq;
         mesh_object.tree = ed->tree;
-        mesh_object.local_id = ed->id;
+        mesh_object.element_id = ed->id;
         
         mesh_object.q[0] = ed->q[0];
         mesh_object.q[1] = ed->q[1];
@@ -556,19 +604,24 @@ d4est_mesh_geometry_storage_initialize_data
 #endif
       
         d4est_rst_t rst_points_quad;
-        rst_points_quad = d4est_quadrature_get_rst_points(d4est_ops,
-                                                          d4est_quad,
-                                                          d4est_geom,
-                                                          mesh_object,
-                                                          ed->deg_quad);
+        rst_points_quad = d4est_quadrature_get_rst_points
+                          (
+                           d4est_ops,
+                           d4est_quad,
+                           d4est_geom,
+                           &mesh_object,
+                           QUAD_VOLUME,
+                           QUAD_UNKNOWN_INTEGRAND,
+                           ed->deg_quad
+                          );
 
 
         d4est_rst_t rst_points_lobatto;
-        rst_points_lobatto.r = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, mesh_object, ed->deg, 0);
-        rst_points_lobatto.s = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, mesh_object, ed->deg, 1);
+        rst_points_lobatto.r = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, &mesh_object, QUAD_VOLUME, QUAD_UNKNOWN_INTEGRAND, ed->deg, 0);
+        rst_points_lobatto.s = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, &mesh_object, QUAD_VOLUME, QUAD_UNKNOWN_INTEGRAND, ed->deg, 1);
         rst_points_lobatto.t = NULL;
 #if (P4EST_DIM)==3
-        rst_points_lobatto.t = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, mesh_object, ed->deg, 2);
+        rst_points_lobatto.t = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, &mesh_object, QUAD_VOLUME, QUAD_UNKNOWN_INTEGRAND, ed->deg, 2);
 #endif
               
         int volume_nodes_quad = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad);
@@ -668,6 +721,8 @@ void
 d4est_mesh_update
 (
  p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ void* ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -687,6 +742,8 @@ d4est_mesh_update
     {
       d4est_quadrature_reinit(
                               p4est,
+                              ghost,
+                              ghost_data,
                               d4est_ops,
                               d4est_geom,
                               d4est_quad
@@ -749,18 +806,50 @@ d4est_mesh_init_field
         d4est_element_data_t* ed = quad->p.user_data;        
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
 
-        d4est_rst_t rst_points;
-        rst_points.r = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, (d4est_geometry_object_t){.type = ELEMENT_VOLUME}, ed->deg, 0);
-        rst_points.s = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, (d4est_geometry_object_t){.type = ELEMENT_VOLUME}, ed->deg, 1);
-        rst_points.t = NULL;
+
+
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq = ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
 #if (P4EST_DIM)==3
-        rst_points.t = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, (d4est_geometry_object_t){.type = ELEMENT_VOLUME}, ed->deg, 2);
+        mesh_object.q[2] = ed->q[2];
 #endif
+      
+        d4est_rst_t rst_points_lobatto;
+        rst_points_lobatto.r = d4est_quadrature_lobatto_get_rst(d4est_ops,
+                                                                NULL,
+                                                                NULL,
+                                                                &mesh_object,
+                                                                QUAD_VOLUME,
+                                                                QUAD_UNKNOWN_INTEGRAND,
+                                                                ed->deg,
+                                                                0);
+        rst_points_lobatto.s = d4est_quadrature_lobatto_get_rst(d4est_ops,
+                                                                NULL, NULL,
+                                                                &mesh_object,
+                                                                QUAD_VOLUME,
+                                                                QUAD_UNKNOWN_INTEGRAND,
+                                                                ed->deg, 1);
+        rst_points_lobatto.t = NULL;
+#if (P4EST_DIM)==3
+        rst_points_lobatto.t = d4est_quadrature_lobatto_get_rst(d4est_ops,
+                                                                NULL,
+                                                                NULL,
+                                                                &mesh_object,
+                                                                QUAD_VOLUME,
+                                                                QUAD_UNKNOWN_INTEGRAND,
+                                                                ed->deg, 2);
+#endif
+
+        
         d4est_geometry_compute_xyz
           (
            d4est_ops,
            d4est_geom,
-           rst_points,
+           rst_points_lobatto,
            tt,
            ed->deg,
            ed->q,
@@ -854,24 +943,41 @@ d4est_mesh_init_field_ext
         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
 
 
-        d4est_rst_t rst_points;
-        rst_points.r = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, (d4est_geometry_object_t){.type = ELEMENT_VOLUME}, ed->deg, 0);
-        rst_points.s = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, (d4est_geometry_object_t){.type = ELEMENT_VOLUME}, ed->deg, 1);
-        rst_points.t = NULL;
+          d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq = ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
 #if (P4EST_DIM)==3
-        rst_points.t = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, (d4est_geometry_object_t){.type = ELEMENT_VOLUME}, ed->deg, 2);
+        mesh_object.q[2] = ed->q[2];
 #endif
-        d4est_geometry_compute_xyz
-          (
-           d4est_ops,
-           d4est_geom,
-           rst_points,
-           tt,
-           ed->deg,
-           ed->q,
-           ed->dq,
-           xyz_temp
-          );
+      
+        d4est_rst_t rst_points_lobatto;
+        rst_points_lobatto.r = d4est_quadrature_lobatto_get_rst(d4est_ops,
+                                                                NULL,
+                                                                NULL,
+                                                                &mesh_object,
+                                                                QUAD_VOLUME,
+                                                                QUAD_UNKNOWN_INTEGRAND,
+                                                                ed->deg,
+                                                                0);
+        rst_points_lobatto.s = d4est_quadrature_lobatto_get_rst(d4est_ops,
+                                                                NULL, NULL,
+                                                                &mesh_object,
+                                                                QUAD_VOLUME,
+                                                                QUAD_UNKNOWN_INTEGRAND,
+                                                                ed->deg, 1);
+        rst_points_lobatto.t = NULL;
+#if (P4EST_DIM)==3
+        rst_points_lobatto.t = d4est_quadrature_lobatto_get_rst(d4est_ops,
+                                                                NULL,
+                                                                NULL,
+                                                                &mesh_object,
+                                                                QUAD_VOLUME,
+                                                                QUAD_UNKNOWN_INTEGRAND,
+                                                                ed->deg, 2);
+#endif
 
         
         for (int i = 0; i < volume_nodes; i++){

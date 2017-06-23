@@ -47,9 +47,9 @@ d4est_quadrature_legendre_get_rst
  int degree,
  int rst_direction
 ){
-  if (object_type == D4EST_QUAD_FACE)
+  if (object_type == QUAD_MORTAR)
     return d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, degree, rst_direction);
-  else if (object_type == D4EST_QUAD_VOLUME)
+  else if (object_type == QUAD_VOLUME)
     return d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), degree, rst_direction);
   else{
     mpi_abort("[D4EST_ERROR]: Object type must be QUAD_FACE or QUAD_VOLUME");

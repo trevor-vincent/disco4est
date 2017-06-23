@@ -152,7 +152,10 @@ uni_refine_function
  p4est_quadrant_t *quadrant
 )
 {
-  return 1;
+  if (which_tree == 0)
+    return 1;
+  else
+    return 0;
 }
 
 typedef struct {
@@ -400,6 +403,18 @@ double analytic_solution_fcn
   double R2 = global_cubed_sphere_attrs.R2;
   return 1./sqrt(x*x + y*y + z*z) - 1./R2;
 }
+
+static
+double u_poly
+(
+ double x,
+ double y,
+ double z
+)
+{
+  return x*y*z*x*y*z;
+}
+
 
 static
 double boundary_fcn
@@ -804,6 +819,8 @@ problem_init
   d4est_mesh_update
     (
      p4est,
+     ghost,
+     ghost_data,
      d4est_ops,
      d4est_geom,
      d4est_quad,
@@ -832,6 +849,15 @@ problem_init
 
     d4est_linalg_fill_vec(prob_vecs.u, 0., prob_vecs.local_nodes);
 
+
+    /* d4est_mesh_init_field( */
+    /*                                   p4est, */
+    /*                                   u, */
+    /*                                   u_poly, */
+    /*                                   d4est_ops, */
+    /*                                   d4est_geom */
+    /* );   */
+    
     d4est_mesh_init_field(
                                       p4est,
                                       u_analytic,

@@ -162,9 +162,11 @@ d4est_geometry_new(int mpirank,
 #if (P4EST_DIM)==2
   if (util_match(input.name,"disk")) {
     d4est_geometry_5treedisk_new(mpirank, input_file, input_section, printf_prefix,  d4est_geom);
+    d4est_geom->geom_type = GEOM_DISK_5TREE;
   }
   else if (util_match(input.name,"disk_outer_wedge")){
     d4est_geometry_disk_outer_wedge_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
+    d4est_geom->geom_type = GEOM_DISK_OUTER_WEDGE;
   }
   else if (util_match(input.name,"none")){}
   else {

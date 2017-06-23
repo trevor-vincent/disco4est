@@ -368,26 +368,26 @@ hp_amr_smooth_pred_balance_replace_callback (
   /* else */
     /* mpi_abort("[ERROR]: hp_amr_smooth_pred norm_type not supported"); */
 
-  double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN));
-  d4est_operators_apply_hp_prolong
-    (
-     d4est_ops,
-     &(parent_data->u_elem[0]),
-     degH,
-     (P4EST_DIM),
-     &degh[0],
-     temp_data
-    );
+  /* double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN)); */
+  /* d4est_operators_apply_hp_prolong */
+  /*   ( */
+  /*    d4est_ops, */
+  /*    &(parent_data->u_elem[0]), */
+  /*    degH, */
+  /*    (P4EST_DIM), */
+  /*    &degh[0], */
+  /*    temp_data */
+  /*   ); */
   
   for (i = 0; i < (P4EST_CHILDREN); i++){
     child_data = (element_data_t*) incoming[i]->p.user_data;
-    child_data->deg = parent_data->deg;
+    /* child_data->deg = parent_data->deg; */
     /* printf("child_data->deg = %d\n", child_data->deg); */
     child_data->local_predictor = (ONE_OVER_CHILDREN)*smooth_pred_data->gamma_h*util_dbl_pow_int(.5, 2*(h_pow))*parent_data->local_predictor;
     d4est_linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
-  P4EST_FREE(temp_data);
+  /* P4EST_FREE(temp_data); */
 }
 
 
@@ -430,24 +430,24 @@ hp_amr_smooth_pred_refine_replace_callback (
   /*   mpi_abort("[ERROR]: hp_amr_smooth_pred norm_type not supported"); */
   /*   h_pow *= -1.; /\* remove warnings *\/ */
   /* } */
-  double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN));
-  d4est_operators_apply_hp_prolong
-    (
-     d4est_ops,
-     &(parent_data->u_elem[0]),
-     degH,
-     (P4EST_DIM),
-     &degh[0],
-     temp_data
-    );
+  /* double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN)); */
+  /* d4est_operators_apply_hp_prolong */
+  /*   ( */
+  /*    d4est_ops, */
+  /*    &(parent_data->u_elem[0]), */
+  /*    degH, */
+  /*    (P4EST_DIM), */
+  /*    &degh[0], */
+  /*    temp_data */
+  /*   ); */
   
   for (i = 0; i < (P4EST_CHILDREN); i++){
     child_data = (element_data_t*) incoming[i]->p.user_data;
-    child_data->deg = parent_data->deg;
+    /* child_data->deg = parent_data->deg; */
     /* printf("child_data->deg = %d\n", child_data->deg); */
     child_data->local_predictor = parent_data->local_predictor;
     d4est_linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 
-  P4EST_FREE(temp_data);
+  /* P4EST_FREE(temp_data); */
 }
