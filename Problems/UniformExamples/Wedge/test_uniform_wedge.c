@@ -41,6 +41,8 @@
 #include "time.h"
 #include "util.h"
 
+#define NASTY_DEBUG
+
 /* soon to be in the input files */
 static const double pi = 3.1415926535897932384626433832795;
 d4est_geometry_disk_attr_t global_disk_attrs;
@@ -283,7 +285,7 @@ double f_fcn
 {
   double r2 = x*x + y*y;
   double r3 = pow(r2, 1.5);
-  double u = analytic_solution_fcn(x,y);
+  /* double u = analytic_solution_fcn(x,y); */
   return -(1./r3);// + helmholtz_fcn(x,y,u,NULL)*u;
 }
 
@@ -416,7 +418,12 @@ void problem_build_rhs
       }
     }
 
-
+#ifdef NASTY_DEBUG
+  double* problem_rhs_before_AU_calc = prob_vecs->rhs;
+  DEBUG_PRINT_ARR_DBL(problem_rhs_before_AU_calc, prob_vecs->local_nodes);
+  DEBUG_PRINT_ARR_DBL_SUM(problem_rhs_before_AU_calc, prob_vecs->local_nodes);
+#endif
+  
   
   int local_nodes = prob_vecs->local_nodes;
   double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
@@ -433,7 +440,9 @@ void problem_build_rhs
                                              (zero_fcn, &global_ip_flux_params);
 
 #ifdef NASTY_DEBUG
-  DEBUG_PRINT_ARR_DBL(prob_vecs->rhs, prob_vecs->local_nodes);
+  double* problem_rhs_after_AU_calc = prob_vecs->rhs;
+  DEBUG_PRINT_ARR_DBL(problem_rhs_after_AU_calc, prob_vecs->local_nodes);
+  DEBUG_PRINT_ARR_DBL_SUM(problem_rhs_after_AU_calc, prob_vecs->local_nodes);
 #endif
   
   P4EST_FREE(f);

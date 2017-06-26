@@ -12,8 +12,8 @@ ip_flux_penalty_calculate_fcn = meanp_sqr_over_meanh
 
 [problem]
 num_unifrefs = 0
-deg = 1
-deg_quad = 1
+deg = 3
+deg_quad = 3
 rhs_use_Lobatto = 1
 
 [geometry]
@@ -51,4 +51,4 @@ atol = 1e-20
 
 
 [quadrature]
-name = legendre_compactified_c1pc2t_neg1
+name = legendre

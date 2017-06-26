@@ -10,7 +10,7 @@
 #include <util.h>
 
 /* #define NASTY_DEBUG */
-/* #define NASTY_DEBUG_3 */
+#define NASTY_DEBUG_3
 
 typedef struct {
 

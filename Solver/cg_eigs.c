@@ -47,6 +47,7 @@ cg_eigs
  void* ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  int imax,
  double* eig_max
 )
@@ -103,7 +104,7 @@ cg_eigs
   /* debug("Build RHS in CG solve ends"); */
   
   /* first iteration data, store Au in r */
-  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
+  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom, d4est_quad);
   d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
   /* r = f - Au ; Au is stored in r so r = rhs - r */
   d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
@@ -142,7 +143,7 @@ cg_eigs
     /* util_print_matrix( u, vecs->local_nodes, 1, "u = ", 0); */
     
     /* Au = A*d; */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
+    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom, d4est_quad);
 
     /* printf("i = %d, cg_eigs Au sum at i = %.25f\n",i, d4est_linalg_vec_sum(vecs->Au, vecs->local_nodes)); */
     /* printf("cg_eigs u sum at i = %.25f\n", d4est_linalg_vec_sum(vecs->u, vecs->local_nodes)); */
@@ -188,10 +189,7 @@ cg_eigs
     beta_old = beta;
     beta = delta_new/delta_old;
     d4est_linalg_vec_xpby(r, beta, d, local_nodes);
-    /* if (print_residual_norm){ */
-    /*   printf ("%03d: r'r %g alpha %g beta %g\n", */
-    /*           i, delta_new, alpha, beta); */
-    /* } */
+
   tridiag_gershgorin(i, local_nodes, alpha_old, beta_old, alpha, beta, &temp_max, &temp_min);
 
   /* printf("alpha_old, alpha, beta_old, beta = %f,%f,%f,%f\n", alpha_old, alpha, beta_old, beta); */

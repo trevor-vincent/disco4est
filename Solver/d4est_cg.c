@@ -118,6 +118,8 @@ void d4est_cg_solve
   
   d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
 
+  DEBUG_PRINT_2ARR_DBL(Au, rhs, local_nodes);
+
   /* r = f - Au ; Au is stored in r so r = rhs - r */
   d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
   d4est_linalg_copy_1st_to_2nd(r, d, local_nodes);

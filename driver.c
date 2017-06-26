@@ -2,7 +2,7 @@
 #include "./pXest/pXest_input.h"
 #include "./Problems/problem.h"
 #include "./Geometry/d4est_geometry.h"
- #include <petscsnes.h>
+#include <petscsnes.h>
 
 int main(int argc, char *argv[])
 {  
@@ -14,8 +14,6 @@ int main(int argc, char *argv[])
   int proc_rank;
   MPI_Comm_size(mpicomm, &proc_size);
   MPI_Comm_rank(mpicomm, &proc_rank);
-
-
   
 #ifndef NDEBUG
   if(proc_rank == 0)
@@ -27,14 +25,6 @@ int main(int argc, char *argv[])
     printf("[D4EST_INFO]: DEBUG MODE OFF\n");
   p4est_init(NULL, SC_LP_ERROR);
 #endif
-
-#ifdef CURVED
-  if(proc_rank == 0)
-    printf("[D4EST_INFO]: Using CURVED infrastructure\n");
-#else
-  if(proc_rank == 0)
-    printf("[D4EST_INFO]: Using NON-CURVED infrastructure\n");  
-#endif
   
 #if (P4EST_DIM)==3
   if(proc_rank == 0)
@@ -44,12 +34,14 @@ int main(int argc, char *argv[])
     printf("[D4EST_INFO]: DIM = 2\n");
 #endif
 
+
+  printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] : "options.input");
+ 
  
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
-                                                    "options.input",
+                                                    (argc == 2) ? argv[1] : "options.input",
                                                     "geometry",
                                                     "[D4EST_GEOMETRY]");
-  /* p4est_connectivity_t* conn = problem_build_conn(); */
 
   pXest_input_t pXest_input = pXest_input_parse("options.input");
   p4est_t* p4est = problem_build_p4est
@@ -79,7 +71,7 @@ int main(int argc, char *argv[])
   /* Solve Problem */
   problem_init
     (
-     "options.input",
+     (argc == 2) ? argv[1] : "options.input",
      p4est,
      d4est_geom,
      d4est_ops,
