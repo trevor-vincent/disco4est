@@ -1129,9 +1129,9 @@ d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, d4est_operators_t* d4est_
         for (int ec = 0; ec < num_cells_in_element; ec++) {
           for (int corn = 0; corn < (P4EST_CHILDREN); corn++){
 
-            double r_01 = d4est_operators_rtox(vtk_rst[0 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
-            double s_01 = d4est_operators_rtox(vtk_rst[1 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
-            double t_01 = d4est_operators_rtox(vtk_rst[2 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
+            double r_01 = d4est_reference_rtox(vtk_rst[0 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
+            double s_01 = d4est_reference_rtox(vtk_rst[1 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
+            double t_01 = d4est_reference_rtox(vtk_rst[2 + corn*3 + ec*3*(P4EST_CHILDREN)], 0., 1.);
             eta_x = intsize * quad->x + h2 * (1. + (r_01 * 2 - 1) * scale);
             eta_y = intsize * quad->y + h2 * (1. + (s_01 * 2 - 1) * scale);
             eta_z = 0.;

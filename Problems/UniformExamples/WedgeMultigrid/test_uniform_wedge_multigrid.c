@@ -24,7 +24,7 @@
 #include <newton_petsc.h>
 #include <ini.h>
 #include <curved_poisson_operator_primal.h>
-#include <curved_Gauss_central_flux_vector_fcns.h>
+#include <curved_gauss_central_flux_vector_fcns.h>
 #include <multigrid_matrix_operator.h>
 #include <multigrid_smoother_cheby_d4est.h>
 #include <multigrid_smoother_krylov_petsc.h>
@@ -109,7 +109,7 @@ typedef struct {
   int deg;
   int deg_quad;
   int deg_stiffness;
-  int rhs_use_Lobatto;
+  int rhs_use_lobatto;
   int solve_with_multigrid;
   int use_mg_as_pc_for_ksp;
   
@@ -149,9 +149,9 @@ int problem_input_handler
     mpi_assert(pconfig->deg_stiffness == -1);
     pconfig->deg_stiffness = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"rhs_use_Lobatto")) {
-    mpi_assert(pconfig->rhs_use_Lobatto == -1);
-    pconfig->rhs_use_Lobatto = atoi(value);
+  else if (util_match_couple(section,"problem",name,"rhs_use_lobatto")) {
+    mpi_assert(pconfig->rhs_use_lobatto == -1);
+    pconfig->rhs_use_lobatto = atoi(value);
   }  
   else {
     return 0;  /* unknown section/name, error */
@@ -173,7 +173,7 @@ problem_input
   input.deg = -1;
   input.deg_quad = -1; 
   input.deg_stiffness = -1; 
-  input.rhs_use_Lobatto = -1; 
+  input.rhs_use_lobatto = -1; 
   input.solve_with_multigrid = -1; 
   input.use_mg_as_pc_for_ksp = -1; 
 
@@ -359,8 +359,8 @@ void apply_helmholtz
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
 
-        int deg_Gauss = ed->deg_quad;
-        int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), deg_Gauss);
+        int deg_gauss = ed->deg_quad;
+        int volume_nodes_gauss = d4est_lgl_get_nodes((P4EST_DIM), deg_gauss);
 
         d4est_element_data_apply_fofufofvlilj
           (
@@ -510,7 +510,7 @@ void problem_build_rhs_ext
           );
         
         double* tmp = &prob_vecs->rhs[ed->nodal_stride];
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
       }
     }    
 
@@ -694,7 +694,7 @@ problem_init
       );
     printf("Initial local l2 norm = %.25f\n", sqrt(initial_l2_norm_sqr_local));
 
-    if(input.rhs_use_Lobatto == 1){
+    if(input.rhs_use_lobatto == 1){
     problem_build_rhs
       (
        p4est,
@@ -708,7 +708,7 @@ problem_init
        ip_flux->ip_flux_params
       );   
     }
-    else if (input.rhs_use_Lobatto == 0){
+    else if (input.rhs_use_lobatto == 0){
       problem_build_rhs_ext
         (
          p4est,
@@ -723,7 +723,7 @@ problem_init
         );   
     }
     else {
-      mpi_abort("rhs_use_Lobatto must be 0 or 1");
+      mpi_abort("rhs_use_lobatto must be 0 or 1");
     }
 
     /* DEBUG_PRINT_2ARR_DBL(prob_vecs.u, prob_vecs.rhs, local_nodes); */
@@ -829,7 +829,7 @@ problem_init
       /*    NULL, */
       /*    NULL, */
       /*    matrix_op_callbacks->user, */
-      /*    set_deg_Gauss, */
+      /*    set_deg_gauss, */
       /*    &input */
       /*   ); */
     

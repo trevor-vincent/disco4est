@@ -24,7 +24,7 @@
 #include <newton_petsc.h>
 #include <ini.h>
 #include <curved_poisson_operator_primal.h>
-#include <curved_Gauss_central_flux_vector_fcns.h>
+#include <curved_gauss_central_flux_vector_fcns.h>
 #include <multigrid_matrix_operator.h>
 #include <multigrid_smoother_cheby_d4est.h>
 #include <multigrid_smoother_krylov_petsc.h>
@@ -435,7 +435,7 @@ set_deg_quad
 
 
 int
-set_deg_Gauss
+set_deg_gauss
 (
  void* elem_data_tmp,
  void* user_ctx
@@ -765,10 +765,10 @@ void apply_helmholtz
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
 
-        int deg_Gauss = ed->deg_quad;
-        int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), deg_Gauss);
+        int deg_gauss = ed->deg_quad;
+        int volume_nodes_gauss = d4est_lgl_get_nodes((P4EST_DIM), deg_gauss);
 
-        d4est_element_data_apply_fofufofvlilj_Gaussnodes
+        d4est_element_data_apply_fofufofvlilj_gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -809,7 +809,7 @@ void apply_helmholtz_matrix
   curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
   
   double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes);
-  int max_nodes = d4est_operators_get_nodes((P4EST_DIM), (MAX_DEGREE));
+  int max_nodes = d4est_lgl_get_nodes((P4EST_DIM), (MAX_DEGREE));
   double* matrix = P4EST_ALLOC(double, max_nodes*max_nodes);
   
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -823,10 +823,10 @@ void apply_helmholtz_matrix
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
 
-        int deg_Gauss = ed->deg_quad;
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
+        int deg_gauss = ed->deg_quad;
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
 
-        d4est_element_data_form_fofufofvlilj_matrix_Gaussnodes
+        d4est_element_data_form_fofufofvlilj_matrix_gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -867,7 +867,7 @@ void apply_helmholtz_matrix_2
   curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
   
   double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes);
-  /* int max_nodes = d4est_operators_get_nodes((P4EST_DIM), (MAX_DEGREE)); */
+  /* int max_nodes = d4est_lgl_get_nodes((P4EST_DIM), (MAX_DEGREE)); */
   int matrix_stride = 0;
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
@@ -880,8 +880,8 @@ void apply_helmholtz_matrix_2
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
 
-        int deg_Gauss = ed->deg_quad;
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
+        int deg_gauss = ed->deg_quad;
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
         
         d4est_linalg_matvec_plus_vec(1.,&((multigrid_matrix_op_t*)prob_vecs->user)->matrix[matrix_stride], &prob_vecs->u[ed->nodal_stride], 0., &M_helmf_u[ed->nodal_stride], volume_nodes, volume_nodes);
 
@@ -932,7 +932,7 @@ void problem_build_rhs
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        d4est_operators_apply_curvedGaussMass(d4est_ops,
+        d4est_operators_apply_curvedgaussMass(d4est_ops,
                                      &f[ed->nodal_stride],
                                      ed->deg,
                                      ed->J_quad,
@@ -941,10 +941,10 @@ void problem_build_rhs
                                      &prob_vecs->rhs[ed->nodal_stride]
                                     );
 
-        /* printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg))); */
+        /* printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_lgl_get_nodes((P4EST_DIM), ed->deg))); */
         /* double* tmp1 = &f[ed->nodal_stride]; */
         /* double* tmp2 = &prob_vecs->rhs[ed->nodal_stride]; */
-        /* DEBUG_PRINT_3ARR_DBL(tmp1,tmp2,ed->J_quad,d4est_operators_get_nodes((P4EST_DIM), ed->deg)); */
+        /* DEBUG_PRINT_3ARR_DBL(tmp1,tmp2,ed->J_quad,d4est_lgl_get_nodes((P4EST_DIM), ed->deg)); */
         
       }
     }    
@@ -974,7 +974,7 @@ void problem_build_rhs
 
 
 static
-void problem_build_rhs_Gauss
+void problem_build_rhs_gauss
 (
  p4est_t* p4est,
  problem_data_t* prob_vecs,
@@ -1011,7 +1011,7 @@ void problem_build_rhs_Gauss
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
 
-        d4est_element_data_apply_fofufofvlj_Gaussnodes
+        d4est_element_data_apply_fofufofvlj_gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -1028,9 +1028,9 @@ void problem_build_rhs_Gauss
           );
         
         double* tmp = &prob_vecs->rhs[ed->nodal_stride];
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
         /* DEBUG_PRINT_ARR_DBL(tmp, volume_nodes); */
-        /* d4est_operators_apply_curvedGaussMass(d4est_ops, */
+        /* d4est_operators_apply_curvedgaussMass(d4est_ops, */
         /*                              &f[ed->nodal_stride], */
         /*                              ed->deg, */
         /*                              ed->J_quad, */
@@ -1039,10 +1039,10 @@ void problem_build_rhs_Gauss
         /*                              &prob_vecs->rhs[ed->nodal_stride] */
         /*                             ); */
 
-        /* printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg))); */
+        /* printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_lgl_get_nodes((P4EST_DIM), ed->deg))); */
         /* double* tmp1 = &f[ed->nodal_stride]; */
         /* double* tmp2 = &prob_vecs->rhs[ed->nodal_stride]; */
-        /* DEBUG_PRINT_3ARR_DBL(tmp1,tmp2,ed->J_quad,d4est_operators_get_nodes((P4EST_DIM), ed->deg)); */
+        /* DEBUG_PRINT_3ARR_DBL(tmp1,tmp2,ed->J_quad,d4est_lgl_get_nodes((P4EST_DIM), ed->deg)); */
         
       }
     }    
@@ -1173,7 +1173,7 @@ problem_init
   prob_vecs.curved_scalar_flux_fcn_data = ip_flux->curved_flux_fcn_ptrs;
 
   
-    /* prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns */
+    /* prob_vecs.curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns */
   /*                                         (zero_fcn,&ip_flux_params); */
 
 
@@ -1623,7 +1623,7 @@ problem_init
     /*    NULL */
     /*   ); */
 
-     problem_build_rhs_Gauss
+     problem_build_rhs_gauss
        (
         p4est,
         &prob_vecs,
@@ -1745,7 +1745,7 @@ problem_init
          NULL,
          NULL,
          matrix_op_callbacks->user,
-         set_deg_Gauss,
+         set_deg_gauss,
          &input
         );
     

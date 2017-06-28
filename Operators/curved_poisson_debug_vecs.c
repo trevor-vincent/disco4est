@@ -12,7 +12,7 @@ curved_poisson_debug_vecs_set_lifteduflux
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int d = 0; d < (P4EST_DIM); d++){
     for (int f = 0; f < (P4EST_FACES); f++){
       d4est_linalg_copy_1st_to_2nd
@@ -33,7 +33,7 @@ curved_poisson_debug_vecs_set_liftedqflux
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int f = 0; f < (P4EST_FACES); f++){
     d4est_linalg_copy_1st_to_2nd(liftedqflux[f], debug_vecs->liftedqflux[f], volume_nodes);
   }
@@ -47,7 +47,7 @@ curved_poisson_debug_vecs_set_Mdu
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int d = 0; d < (P4EST_DIM); d++){
     d4est_linalg_copy_1st_to_2nd(Mdu[d], debug_vecs->Mdu[d], volume_nodes);
   }
@@ -63,7 +63,7 @@ curved_poisson_debug_vecs_set_Mq
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int d = 0; d < (P4EST_DIM); d++){
     d4est_linalg_copy_1st_to_2nd(Mq[d], debug_vecs->Mq[d], volume_nodes);
   }
@@ -77,7 +77,7 @@ curved_poisson_debug_vecs_set_q
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   /* printf("[WARNING] set_q only valid for constant jacobian meshes\n"); */
   for (int d = 0; d < (P4EST_DIM); d++){
     d4est_linalg_copy_1st_to_2nd(q[d], debug_vecs->q[d], volume_nodes);    
@@ -93,7 +93,7 @@ curved_poisson_debug_vecs_set_Au
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   d4est_linalg_copy_1st_to_2nd(Au, debug_vecs->Au, volume_nodes);
 }
 
@@ -106,7 +106,7 @@ curved_poisson_debug_vecs_set_u
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   d4est_linalg_copy_1st_to_2nd(u, debug_vecs->u, volume_nodes);
 }
 
@@ -118,7 +118,7 @@ curved_poisson_debug_vecs_set_Mdivq
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes_quad = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg_quad);
+  int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg_quad);
   d4est_linalg_copy_1st_to_2nd(Mdivq, debug_vecs->Mdivq, volume_nodes_quad);
 }
 
@@ -141,8 +141,8 @@ curved_poisson_debug_vecs_init
   int id = elem_data->id;
   int deg = elem_data->deg;
   int deg_quad = elem_data->deg_quad;
-  int volume_nodes_quad = d4est_operators_get_nodes((P4EST_DIM), deg_quad);
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), deg);
+  int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), deg_quad);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg);
 
   debug_vecs->deg = deg;
   debug_vecs->elem_id = id;
@@ -199,14 +199,14 @@ curved_poisson_debug_vecs_print
   
   DEBUG_PRINT_2ARR_DBL(debug_vecs->Mdu[0],
                        debug_vecs->Mdu[1],
-                       d4est_operators_get_nodes((P4EST_DIM),debug_vecs->deg)
+                       d4est_lgl_get_nodes((P4EST_DIM),debug_vecs->deg)
                       );
 
   DEBUG_PRINT_4ARR_DBL(debug_vecs->lifteduflux[0][0],
                        debug_vecs->lifteduflux[1][0],
                        debug_vecs->lifteduflux[2][0],
                        debug_vecs->lifteduflux[3][0],
-                       (d4est_operators_get_nodes((P4EST_DIM),debug_vecs->deg))
+                       (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs->deg))
                       );
 
 
@@ -214,19 +214,19 @@ curved_poisson_debug_vecs_print
                        debug_vecs->lifteduflux[1][1],
                        debug_vecs->lifteduflux[2][1],
                        debug_vecs->lifteduflux[3][1],
-                       (d4est_operators_get_nodes((P4EST_DIM),debug_vecs->deg))
+                       (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs->deg))
                       );
 
 
   DEBUG_PRINT_2ARR_DBL(debug_vecs->Mq[0],
                        debug_vecs->Mq[1],
-                       (d4est_operators_get_nodes((P4EST_DIM),debug_vecs->deg))
+                       (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs->deg))
                       );
 
 
   DEBUG_PRINT_2ARR_DBL(debug_vecs->q[0],
                        debug_vecs->q[1],
-                       (d4est_operators_get_nodes((P4EST_DIM),debug_vecs->deg))
+                       (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs->deg))
                       );
   
 
@@ -234,12 +234,12 @@ curved_poisson_debug_vecs_print
                        debug_vecs->liftedqflux[1],
                        debug_vecs->liftedqflux[2],
                        debug_vecs->liftedqflux[3],
-                       (d4est_operators_get_nodes((P4EST_DIM),debug_vecs->deg))
+                       (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs->deg))
                       );
    
-  DEBUG_PRINT_ARR_DBL(debug_vecs->Mdivq, (d4est_operators_get_nodes((P4EST_DIM),debug_vecs->deg)));
+  DEBUG_PRINT_ARR_DBL(debug_vecs->Mdivq, (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs->deg)));
 
-  DEBUG_PRINT_ARR_DBL(debug_vecs->Au, (d4est_operators_get_nodes((P4EST_DIM),debug_vecs->deg)));
+  DEBUG_PRINT_ARR_DBL(debug_vecs->Au, (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs->deg)));
 }
 
 
@@ -253,14 +253,14 @@ curved_poisson_debug_vecs_2print
   mpi_assert(debug_vecs1->deg == debug_vecs2->deg);
   printf("** Debug Info for Element %d and Element %d**\n", debug_vecs1->elem_id, debug_vecs2->elem_id);
 
-  DEBUG_PRINT_2ARR_DBL(debug_vecs1->u, debug_vecs2->u, (d4est_operators_get_nodes((P4EST_DIM),debug_vecs1->deg)));
+  DEBUG_PRINT_2ARR_DBL(debug_vecs1->u, debug_vecs2->u, (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs1->deg)));
 
   
   DEBUG_PRINT_4ARR_DBL(debug_vecs1->Mdu[0],
                        debug_vecs1->Mdu[1],
                        debug_vecs2->Mdu[0],
                        debug_vecs2->Mdu[1],
-                       d4est_operators_get_nodes((P4EST_DIM),debug_vecs1->deg)
+                       d4est_lgl_get_nodes((P4EST_DIM),debug_vecs1->deg)
                       );
 
   DEBUG_PRINT_8ARR_DBL(
@@ -272,7 +272,7 @@ curved_poisson_debug_vecs_2print
                        debug_vecs2->lifteduflux[1][0],
                        debug_vecs2->lifteduflux[2][0],
                        debug_vecs2->lifteduflux[3][0],
-                       (d4est_operators_get_nodes((P4EST_DIM),debug_vecs1->deg))
+                       (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs1->deg))
                       );
 
 
@@ -285,7 +285,7 @@ curved_poisson_debug_vecs_2print
                        debug_vecs2->lifteduflux[1][1],
                        debug_vecs2->lifteduflux[2][1],
                        debug_vecs2->lifteduflux[3][1],
-                       (d4est_operators_get_nodes((P4EST_DIM),debug_vecs1->deg))
+                       (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs1->deg))
                       );
 
 
@@ -294,7 +294,7 @@ curved_poisson_debug_vecs_2print
                        debug_vecs1->Mq[1],
                        debug_vecs2->Mq[0],
                        debug_vecs2->Mq[1],
-                       (d4est_operators_get_nodes((P4EST_DIM),debug_vecs1->deg))
+                       (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs1->deg))
                       );
 
 
@@ -303,7 +303,7 @@ curved_poisson_debug_vecs_2print
                        debug_vecs1->q[1],
                        debug_vecs2->q[0],
                        debug_vecs2->q[1],
-                       (d4est_operators_get_nodes((P4EST_DIM),debug_vecs1->deg))
+                       (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs1->deg))
                       );
   
 
@@ -316,11 +316,11 @@ curved_poisson_debug_vecs_2print
                        debug_vecs2->liftedqflux[1],
                        debug_vecs2->liftedqflux[2],
                        debug_vecs2->liftedqflux[3],
-                       (d4est_operators_get_nodes((P4EST_DIM),debug_vecs1->deg))
+                       (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs1->deg))
                       );
    
-  DEBUG_PRINT_2ARR_DBL(debug_vecs1->Mdivq, debug_vecs2->Mdivq, (d4est_operators_get_nodes((P4EST_DIM),debug_vecs1->deg)));
-  DEBUG_PRINT_2ARR_DBL(debug_vecs1->Au, debug_vecs2->Au, (d4est_operators_get_nodes((P4EST_DIM),debug_vecs1->deg)));
+  DEBUG_PRINT_2ARR_DBL(debug_vecs1->Mdivq, debug_vecs2->Mdivq, (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs1->deg)));
+  DEBUG_PRINT_2ARR_DBL(debug_vecs1->Au, debug_vecs2->Au, (d4est_lgl_get_nodes((P4EST_DIM),debug_vecs1->deg)));
 }
 
 

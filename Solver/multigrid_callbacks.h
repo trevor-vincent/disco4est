@@ -163,8 +163,8 @@ multigrid_apply_restriction
       );
 
     (*stride)++;
-    (*fine_stride)+=d4est_operators_get_nodes((P4EST_DIM), degh);
-    (*coarse_stride)+=d4est_operators_get_nodes((P4EST_DIM), degH);
+    (*fine_stride)+=d4est_lgl_get_nodes((P4EST_DIM), degh);
+    (*coarse_stride)+=d4est_lgl_get_nodes((P4EST_DIM), degH);
   }
   
   else if (coarse_grid_refinement[(*stride)].hrefine == 1){
@@ -187,9 +187,9 @@ multigrid_apply_restriction
 
     (*stride)++;
     for (int i = 0; i < (P4EST_CHILDREN); i++){
-      (*fine_stride) += d4est_operators_get_nodes( (P4EST_DIM) , degh[i] );
+      (*fine_stride) += d4est_lgl_get_nodes( (P4EST_DIM) , degh[i] );
     }
-    (*coarse_stride) += d4est_operators_get_nodes( (P4EST_DIM) , degH);
+    (*coarse_stride) += d4est_lgl_get_nodes( (P4EST_DIM) , degH);
   }
   else {
     int deg = coarse_grid_refinement[(*stride)].degh[*temp_stride];
@@ -198,7 +198,7 @@ multigrid_apply_restriction
       mg_data->user_callbacks->mg_restrict_user_callback(info, user_data, &deg, deg, 1);
     }
     
-    int nodes = d4est_operators_get_nodes( (P4EST_DIM) , deg );
+    int nodes = d4est_lgl_get_nodes( (P4EST_DIM) , deg );
     d4est_linalg_copy_1st_to_2nd(x_children,
                            x_parent,
                            nodes
@@ -298,8 +298,8 @@ multigrid_refine_and_apply_prolongation
       );
     
     (*stride)++;
-    (*fine_stride)+=d4est_operators_get_nodes((P4EST_DIM), degh);
-    (*coarse_stride)+=d4est_operators_get_nodes((P4EST_DIM), degH);
+    (*fine_stride)+=d4est_lgl_get_nodes((P4EST_DIM), degh);
+    (*coarse_stride)+=d4est_lgl_get_nodes((P4EST_DIM), degH);
     
     return 0;
   }
@@ -321,14 +321,14 @@ multigrid_refine_and_apply_prolongation
     (*stride)++;
     int i;
     for (i = 0; i < (P4EST_CHILDREN); i++)
-      (*fine_stride) += d4est_operators_get_nodes( (P4EST_DIM) , degh[i] );
-    (*coarse_stride) += d4est_operators_get_nodes( (P4EST_DIM) , degH);
+      (*fine_stride) += d4est_lgl_get_nodes( (P4EST_DIM) , degh[i] );
+    (*coarse_stride) += d4est_lgl_get_nodes( (P4EST_DIM) , degH);
 
     return 1;
   }
   else {
     int deg = coarse_grid_refinement[(*stride)].degh[*temp_stride];
-    int nodes = d4est_operators_get_nodes( (P4EST_DIM) , deg );
+    int nodes = d4est_lgl_get_nodes( (P4EST_DIM) , deg );
     
     d4est_linalg_copy_1st_to_2nd(x_parent,
                            x_children,

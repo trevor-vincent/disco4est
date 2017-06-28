@@ -7,10 +7,10 @@
 void
 grad(double*u, double* gradu [(P4EST_DIM)], double h, int deg, d4est_operators_t* d4est_ops)
 {
-  int vol_nodes = d4est_operators_get_nodes((P4EST_DIM),deg);
+  int vol_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg);
   int i;
   for (i = 0; i < (P4EST_DIM); i++){
-    d4est_operators_apply_Dij(
+    d4est_operators_apply_dij(
                      d4est_ops,
                      u,
                      (P4EST_DIM),
@@ -25,7 +25,7 @@ grad(double*u, double* gradu [(P4EST_DIM)], double h, int deg, d4est_operators_t
 void
 grad_euc_norm(double* u, double* gradu_norm,  double h, int deg, d4est_operators_t* d4est_ops)
 {
-  int vol_nodes = d4est_operators_get_nodes((P4EST_DIM),deg);
+  int vol_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg);
 
   double* gradu [(P4EST_DIM)];
   int i,j;

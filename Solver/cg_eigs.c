@@ -63,7 +63,7 @@ cg_eigs
   /* ghost_data = P4EST_ALLOC (element_data_t, */
                             /* ghost->ghosts.elem_count); */
 
-  /* int max_nodes = d4est_operators_get_nodes((P4EST_DIM), d4est_operators_fetch_max_degree_used()); */
+  /* int max_nodes = d4est_lgl_get_nodes((P4EST_DIM), d4est_operators_fetch_max_degree_used()); */
   /* ghost_data = malloc( (sizeof(element_data_t) + */
                         /* sizeof(double)*(max_nodes-1))*ghost->ghosts.elem_count ); */
   int local_nodes;

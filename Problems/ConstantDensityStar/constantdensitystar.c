@@ -189,7 +189,7 @@ build_residual
   /*    d4est_ops */
   /*   ); */
 
-  /* element_data_apply_Mij_on_vec */
+  /* element_data_apply_mij_on_vec */
   /*   ( */
   /*    p4est, */
   /*    neg_2pi_rho_up1_neg5_vec, */
@@ -197,7 +197,7 @@ build_residual
   /*    d4est_ops */
   /*   ); */
 
-  element_data_apply_Mij_on_f_of_vec
+  element_data_apply_mij_on_f_of_vec
     (
      p4est,
      prob_vecs->u,
@@ -217,14 +217,14 @@ build_residual
 
 typedef struct {
 
-  int deg_offset_for_Gauss_quad;
+  int deg_offset_for_gauss_quad;
   
 } problem_ctx_t;
 
 
 static
 void
-build_residual_Gauss
+build_residual_gauss
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -252,33 +252,33 @@ build_residual_Gauss
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         element_data_t* ed = quad->p.user_data;        
-        int deg_Gauss = ed->deg + ctx->deg_offset_for_Gauss_quad;
+        int deg_gauss = ed->deg + ctx->deg_offset_for_gauss_quad;
 
-        int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), deg_Gauss);
-        double* r_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 0);
-        double* s_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 1);
-        double* t_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 2);
-        double *jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
+        int volume_nodes_gauss = d4est_lgl_get_nodes((P4EST_DIM), deg_gauss);
+        double* r_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), deg_gauss, 0);
+        double* s_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), deg_gauss, 1);
+        double* t_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), deg_gauss, 2);
+        double *jac_gauss = P4EST_ALLOC(double, volume_nodes_gauss);
 
-        double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
-        double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
-        double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
+        double* x_GL = P4EST_ALLOC(double, volume_nodes_gauss);
+        double* y_GL = P4EST_ALLOC(double, volume_nodes_gauss);
+        double* z_GL = P4EST_ALLOC(double, volume_nodes_gauss);
 
-        d4est_linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
-        d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
-        d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
-        d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
-        double* xyz_Gauss [3] = {x_GL, y_GL, z_GL};
+        d4est_linalg_fill_vec(jac_gauss, ed->jacobian, volume_nodes_gauss);  
+        d4est_reference_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_gauss);
+        d4est_reference_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_gauss);
+        d4est_reference_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_gauss);
+        double* xyz_gauss [3] = {x_GL, y_GL, z_GL};
   
-        d4est_operators_apply_fofufofvlj_Gaussnodes
+        d4est_operators_apply_fofufofvlj_gaussnodes
           (
            d4est_ops,
            &prob_vecs->u[ed->stride],
            NULL,
            ed->deg,
-           jac_Gauss,
-           xyz_Gauss,
-           deg_Gauss,
+           jac_gauss,
+           xyz_gauss,
+           deg_gauss,
            (P4EST_DIM),
            &M_neg_2pi_rho_up1_neg5_vec[ed->stride],
            neg_2pi_rho_up1_neg5,
@@ -290,7 +290,7 @@ build_residual_Gauss
         P4EST_FREE(z_GL);
         P4EST_FREE(y_GL);
         P4EST_FREE(x_GL);
-        P4EST_FREE(jac_Gauss);
+        P4EST_FREE(jac_gauss);
       }
     }
 
@@ -301,7 +301,7 @@ build_residual_Gauss
 }
 
 static
-void apply_jac_Gauss
+void apply_jac_gauss
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -331,34 +331,34 @@ void apply_jac_Gauss
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         element_data_t* ed = quad->p.user_data;        
-        int deg_Gauss = ed->deg + ctx->deg_offset_for_Gauss_quad;
+        int deg_gauss = ed->deg + ctx->deg_offset_for_gauss_quad;
 
-        int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), deg_Gauss);
-        double* r_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 0);
-        double* s_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 1);
-        double* t_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg_Gauss, 2);
-        double *jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
+        int volume_nodes_gauss = d4est_lgl_get_nodes((P4EST_DIM), deg_gauss);
+        double* r_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), deg_gauss, 0);
+        double* s_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), deg_gauss, 1);
+        double* t_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), deg_gauss, 2);
+        double *jac_gauss = P4EST_ALLOC(double, volume_nodes_gauss);
 
-        double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
-        double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
-        double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
+        double* x_GL = P4EST_ALLOC(double, volume_nodes_gauss);
+        double* y_GL = P4EST_ALLOC(double, volume_nodes_gauss);
+        double* z_GL = P4EST_ALLOC(double, volume_nodes_gauss);
 
-        d4est_linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);  
-        d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
-        d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
-        d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
-        double* xyz_Gauss [3] = {x_GL, y_GL, z_GL};
+        d4est_linalg_fill_vec(jac_gauss, ed->jacobian, volume_nodes_gauss);  
+        d4est_reference_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_gauss);
+        d4est_reference_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_gauss);
+        d4est_reference_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_gauss);
+        double* xyz_gauss [3] = {x_GL, y_GL, z_GL};
   
-        d4est_operators_apply_fofufofvlilj_Gaussnodes
+        d4est_operators_apply_fofufofvlilj_gaussnodes
           (
            d4est_ops,
            &prob_vecs->u[ed->stride],
            &prob_vecs->u0[ed->stride],
            NULL,
            ed->deg,
-           jac_Gauss,
-           xyz_Gauss,
-           deg_Gauss,
+           jac_gauss,
+           xyz_gauss,
+           deg_gauss,
            (P4EST_DIM),
            &M_neg_10pi_rho_up1_neg4_of_u0_u_vec[ed->stride],
            neg_10pi_rho_up1_neg4,
@@ -369,11 +369,11 @@ void apply_jac_Gauss
         P4EST_FREE(z_GL);
         P4EST_FREE(y_GL);
         P4EST_FREE(x_GL);
-        P4EST_FREE(jac_Gauss);
+        P4EST_FREE(jac_gauss);
       }
     }
 
-  /* element_data_apply_Mij_on_f_of_vec1_x_vec2 */
+  /* element_data_apply_mij_on_f_of_vec1_x_vec2 */
   /*   ( */
   /*    p4est, */
   /*    prob_vecs->u0, */
@@ -431,7 +431,7 @@ void apply_jac
   /*    prob_vecs->local_nodes */
   /*   ); */
 
-  /* element_data_apply_Mij_on_vec */
+  /* element_data_apply_mij_on_vec */
   /*   ( */
   /*    p4est, */
   /*    neg_10pi_rho_up1_neg4_of_u0_u_vec, */
@@ -439,7 +439,7 @@ void apply_jac
   /*    d4est_ops */
   /*   ); */
 
-  element_data_apply_Mij_on_f_of_vec1_x_vec2
+  element_data_apply_mij_on_f_of_vec1_x_vec2
     (
      p4est,
      prob_vecs->u0,
@@ -530,9 +530,9 @@ typedef struct {
   double rho0_div_rhoc;
   double ip_flux_penalty;
   int percentile;
-  int use_Gauss_quad;
+  int use_gauss_quad;
   int degmax;
-  int deg_offset_for_Gauss_quad;
+  int deg_offset_for_gauss_quad;
   KSPType krylov_type;
   int amr_inflation_size;
   
@@ -587,13 +587,13 @@ int problem_input_handler
     mpi_assert(pconfig->domain_size == -1);
     pconfig->domain_size = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"use_Gauss_quad")) {
-    mpi_assert(pconfig->use_Gauss_quad == -1);
-    pconfig->use_Gauss_quad = atoi(value);
+  } else if (util_match_couple(section,"problem",name,"use_gauss_quad")) {
+    mpi_assert(pconfig->use_gauss_quad == -1);
+    pconfig->use_gauss_quad = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"deg_offset_for_Gauss_quad")) {
-    mpi_assert(pconfig->deg_offset_for_Gauss_quad == -1);
-    pconfig->deg_offset_for_Gauss_quad = atoi(value);
+  } else if (util_match_couple(section,"problem",name,"deg_offset_for_gauss_quad")) {
+    mpi_assert(pconfig->deg_offset_for_gauss_quad == -1);
+    pconfig->deg_offset_for_gauss_quad = atoi(value);
     pconfig->count += 1;
   } else if (util_match_couple(section,"amr",name,"amr_inflation_size")) {
     mpi_assert(pconfig->amr_inflation_size == -1);
@@ -624,8 +624,8 @@ problem_input
   input.ip_flux_penalty = -1;
   input.percentile = -1;
   input.rho0_div_rhoc = -1;
-  input.use_Gauss_quad = -1;
-  input.deg_offset_for_Gauss_quad = -1;
+  input.use_gauss_quad = -1;
+  input.deg_offset_for_gauss_quad = -1;
   input.amr_inflation_size = -1;
   input.degmax = -1;
   input.count = 0;
@@ -758,11 +758,11 @@ problem_init
 
   weakeqn_ptrs_t prob_fcns;
   problem_ctx_t prob_ctx;
-  if (input.use_Gauss_quad){
-    mpi_assert(input.deg_offset_for_Gauss_quad > -1);
-    prob_ctx.deg_offset_for_Gauss_quad = input.deg_offset_for_Gauss_quad;
-    prob_fcns.apply_lhs = apply_jac_Gauss;
-    prob_fcns.build_residual = build_residual_Gauss;
+  if (input.use_gauss_quad){
+    mpi_assert(input.deg_offset_for_gauss_quad > -1);
+    prob_ctx.deg_offset_for_gauss_quad = input.deg_offset_for_gauss_quad;
+    prob_fcns.apply_lhs = apply_jac_gauss;
+    prob_fcns.build_residual = build_residual_gauss;
     prob_vecs.user = (void*)&prob_ctx;
   }
   else{

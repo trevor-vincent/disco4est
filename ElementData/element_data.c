@@ -65,7 +65,7 @@ struct {
 /*   elem_data->h = dq/(double)P4EST_ROOT_LEN; */
 /*   elem_data->jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) );  */
 /*   elem_data->surface_jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) - 1); */
-/*   *element_data_stride += d4est_operators_get_nodes( (P4EST_DIM) , elem_data->deg); */
+/*   *element_data_stride += d4est_lgl_get_nodes( (P4EST_DIM) , elem_data->deg); */
 
 /*   /\* if (elem_data->stride == 0) *\/ */
 /*     /\* d4est_operators_set_max_degree_used(elem_data->deg); *\/ */
@@ -85,21 +85,21 @@ struct {
 
 /*   double* vec = (double*)info->p4est->user_pointer; */
 /*   int stride = elem_data->stride; */
-/*   int volume_nodes = d4est_operators_get_nodes( (P4EST_DIM), elem_data->deg ); */
+/*   int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), elem_data->deg ); */
 /*   double h = elem_data->h; */
   
 /*   int i; */
-/*   double* x = d4est_operators_fetch_xyz_nd( (P4EST_DIM), */
+/*   double* x = d4est_operators_fetch_lobatto_rst_nd( (P4EST_DIM), */
 /*                                    elem_data->deg, */
 /*                                    0); */
 /*   double xl = elem_data->xyz_corner[0]; */
   
-/*   double* y = d4est_operators_fetch_xyz_nd( (P4EST_DIM), */
+/*   double* y = d4est_operators_fetch_lobatto_rst_nd( (P4EST_DIM), */
 /*                                    elem_data->deg, */
 /*                                    1); */
 /*   double yl = elem_data->xyz_corner[1]; */
 /* #if (P4EST_DIM)==3 */
-/*   double* z = d4est_operators_fetch_xyz_nd( (P4EST_DIM), */
+/*   double* z = d4est_operators_fetch_lobatto_rst_nd( (P4EST_DIM), */
 /*                                    elem_data->deg, */
 /*                                    2); */
 /*   double zl = elem_data->xyz_corner[2]; */
@@ -108,21 +108,21 @@ struct {
 /*   for (i = 0; i < volume_nodes; i++){ */
 /*     vec[stride + i] = init_fcn */
 /*                       ( */
-/*                        d4est_operators_rtox(x[i], xl, h), */
-/*                        d4est_operators_rtox(y[i], yl, h) */
+/*                        d4est_reference_rtox(x[i], xl, h), */
+/*                        d4est_reference_rtox(y[i], yl, h) */
 /* #if (P4EST_DIM)==3 */
 /*                        , */
-/*                        d4est_operators_rtox(z[i], zl, h) */
+/*                        d4est_reference_rtox(z[i], zl, h) */
 /* #endif */
 /*                       ); */
 
 /* #ifndef NDEBUG */
 /*     printf(" vec[stride + i], x, y, z = %f,%f,%f,%f", */
 /*            vec[stride+i], */
-/*            d4est_operators_rtox(x[i], xl, h), */
-/*            d4est_operators_rtox(y[i], yl, h), */
+/*            d4est_reference_rtox(x[i], xl, h), */
+/*            d4est_reference_rtox(y[i], yl, h), */
 /* #if (P4EST_DIM)==3 */
-/*            d4est_operators_rtox(z[i], zl, h) */
+/*            d4est_reference_rtox(z[i], zl, h) */
 /* #else */
 /*            1. */
 /* #endif */
@@ -157,21 +157,21 @@ element_data_init_node_vec_callback
   d4est_operators_t* d4est_ops = (d4est_operators_t*)info->p4est->user_pointer;
   
   int stride = elem_data->stride;
-  int volume_nodes = d4est_operators_get_nodes( (P4EST_DIM), elem_data->deg );
+  int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), elem_data->deg );
   double h = elem_data->h;
   
   int i;
-  double* x = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* x = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    elem_data->deg,
                                    0);
   double xl = elem_data->xyz_corner[0];
   
-  double* y = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* y = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    elem_data->deg,
                                    1);
   double yl = elem_data->xyz_corner[1];
 #if (P4EST_DIM)==3
-  double* z = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* z = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    elem_data->deg,
                                    2);
   double zl = elem_data->xyz_corner[2];
@@ -180,21 +180,21 @@ element_data_init_node_vec_callback
   for (i = 0; i < volume_nodes; i++){
     vec[stride + i] = init_fcn
                       (
-                       d4est_operators_rtox(x[i], xl, h),
-                       d4est_operators_rtox(y[i], yl, h)
+                       d4est_reference_rtox(x[i], xl, h),
+                       d4est_reference_rtox(y[i], yl, h)
 #if (P4EST_DIM)==3
                        ,
-                       d4est_operators_rtox(z[i], zl, h)
+                       d4est_reference_rtox(z[i], zl, h)
 #endif
                       );
 
 /* #ifndef NDEBUG */
     /* printf(" vec[stride + i], x, y, z = %f,%f,%f,%f\n", */
           /* vec[stride+i], */
-          /* d4est_operators_rtox(x[i], xl, h), */
-          /* d4est_operators_rtox(y[i], yl, h), */
+          /* d4est_reference_rtox(x[i], xl, h), */
+          /* d4est_reference_rtox(y[i], yl, h), */
 /* #if (P4EST_DIM)==3 */
-          /* d4est_operators_rtox(z[i], zl, h) */
+          /* d4est_reference_rtox(z[i], zl, h) */
 /* #else */
           /* 1. */
 /* #endif */
@@ -240,7 +240,7 @@ element_data_store_nodal_vec_in_vertex_array_callback
   
   int c;
   for (c = 0; c < (P4EST_CHILDREN); c++){
-    int corner_to_node = d4est_operators_corner_to_node((P4EST_DIM), elem_data->deg, c);
+    int corner_to_node = d4est_reference_corner_to_node((P4EST_DIM), elem_data->deg, c);
     vertex_vec[id*(P4EST_CHILDREN) + c] = nodal_vec[stride + corner_to_node];
   }
 }
@@ -328,21 +328,21 @@ element_data_print_node_vec_callback
   double* vec = pnv_user_data->vec;
   FILE* f = pnv_user_data->f; 
   int stride = elem_data->stride;
-  int volume_nodes = d4est_operators_get_nodes( (P4EST_DIM), elem_data->deg );
+  int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), elem_data->deg );
   double h = elem_data->h;
   
   int i;
-  double* x = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* x = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    elem_data->deg,
                                    0);
   double xl = elem_data->xyz_corner[0];
   
-  double* y = d4est_operators_fetch_xyz_nd( d4est_ops,(P4EST_DIM),
+  double* y = d4est_operators_fetch_lobatto_rst_nd( d4est_ops,(P4EST_DIM),
                                    elem_data->deg,
                                    1);
   double yl = elem_data->xyz_corner[1];
 #if (P4EST_DIM)==3
-  double* z = d4est_operators_fetch_xyz_nd( d4est_ops,(P4EST_DIM),
+  double* z = d4est_operators_fetch_lobatto_rst_nd( d4est_ops,(P4EST_DIM),
                                    elem_data->deg,
                                    2);
   double zl = elem_data->xyz_corner[2];
@@ -353,15 +353,15 @@ element_data_print_node_vec_callback
     for (i = 0; i < volume_nodes; i++){
 #if (P4EST_DIM)==3
       printf("%.15f, %.15f, %.15f | %.15f\n",
-             d4est_operators_rtox(x[i], xl, h),
-             d4est_operators_rtox(y[i], yl, h),
-             d4est_operators_rtox(z[i], zl, h),
+             d4est_reference_rtox(x[i], xl, h),
+             d4est_reference_rtox(y[i], yl, h),
+             d4est_reference_rtox(z[i], zl, h),
              vec[stride + i]
             );
 #else
       printf("%.15f, %.15f | %.15f\n",
-             d4est_operators_rtox(x[i], xl, h),
-             d4est_operators_rtox(y[i], yl, h),
+             d4est_reference_rtox(x[i], xl, h),
+             d4est_reference_rtox(y[i], yl, h),
              vec[stride + i]
             );
 #endif
@@ -372,15 +372,15 @@ element_data_print_node_vec_callback
     for (i = 0; i < volume_nodes; i++){
 #if (P4EST_DIM)==3
       fprintf(f, "%.15f, %.15f, %.15f, %.15f\n",
-             d4est_operators_rtox(x[i], xl, h),
-             d4est_operators_rtox(y[i], yl, h),
-             d4est_operators_rtox(z[i], zl, h),
+             d4est_reference_rtox(x[i], xl, h),
+             d4est_reference_rtox(y[i], yl, h),
+             d4est_reference_rtox(z[i], zl, h),
              vec[stride + i]
             );
 #else
       fprintf(f, "%.15f, %.15f , %.15f\n",
-             d4est_operators_rtox(x[i], xl, h),
-             d4est_operators_rtox(y[i], yl, h),
+             d4est_reference_rtox(x[i], xl, h),
+             d4est_reference_rtox(y[i], yl, h),
              vec[stride + i]
             );
 #endif
@@ -474,10 +474,10 @@ element_data_compute_l2_norm_sqr_callback
   double jacobian = elem_data->jacobian;
   
   int* stride = compute_norm_user_data->stride;
-  int volume_nodes = d4est_operators_get_nodes( (P4EST_DIM), elem_data->deg );
+  int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), elem_data->deg );
     
   double* Mvec = P4EST_ALLOC(double, volume_nodes);
-  d4est_operators_apply_Mij(d4est_ops, &vec[*stride], (P4EST_DIM), elem_data->deg, Mvec);
+  d4est_operators_apply_mij(d4est_ops, &vec[*stride], (P4EST_DIM), elem_data->deg, Mvec);
   d4est_linalg_vec_scale(jacobian, Mvec, volume_nodes);
 
   /* if it's wanted */
@@ -506,13 +506,13 @@ element_data_compute_l2_norm_sqr_callback
 /*   double jacobian = elem_data->jacobian; */
 
 /*   int stride = elem_data->stride; */
-/*   int volume_nodes = d4est_operators_get_nodes( (P4EST_DIM), elem_data->deg ); */
+/*   int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), elem_data->deg ); */
 /*   int dim = (P4EST_DIM); */
 /*   int deg = elem_data->deg; */
 /*   double h = elem_data->h; */
 /*   double* Mvec = P4EST_ALLOC(double, volume_nodes); */
 /*   double* dvec = P4EST_ALLOC(double, volume_nodes); */
-/*   d4est_operators_apply_Mij(&vec[stride], (P4EST_DIM), elem_data->deg, Mvec); */
+/*   d4est_operators_apply_mij(&vec[stride], (P4EST_DIM), elem_data->deg, Mvec); */
 /*   d4est_linalg_vec_scale(jacobian, Mvec, volume_nodes); */
 
 /*   /\* if it's wanted *\/ */
@@ -523,9 +523,9 @@ element_data_compute_l2_norm_sqr_callback
 
 /*   int i; */
 /*   for (i = 0; i < (P4EST_DIM); i++){ */
-/*     d4est_operators_apply_Dij(&vec[stride], dim, deg, i, dvec); */
-/*     d4est_linalg_vec_scale(2./h, dvec, d4est_operators_get_nodes(dim, deg)); */
-/*     d4est_operators_apply_Mij(dvec, (P4EST_DIM), elem_data->deg, Mvec); */
+/*     d4est_operators_apply_dij(&vec[stride], dim, deg, i, dvec); */
+/*     d4est_linalg_vec_scale(2./h, dvec, d4est_lgl_get_nodes(dim, deg)); */
+/*     d4est_operators_apply_mij(dvec, (P4EST_DIM), elem_data->deg, Mvec); */
 /*     d4est_linalg_vec_scale(jacobian, Mvec, volume_nodes); */
 /*     elem_data->local_estimator += d4est_linalg_vec_dot(dvec, Mvec, volume_nodes); */
 /*   } */
@@ -557,10 +557,10 @@ element_data_compute_l2_norm_sqr_no_local_callback
   double jacobian = elem_data->jacobian;
   
   int* stride = compute_norm_user_data->stride;
-  int volume_nodes = d4est_operators_get_nodes( (P4EST_DIM), elem_data->deg );
+  int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), elem_data->deg );
     
   double* Mvec = P4EST_ALLOC(double, volume_nodes);
-  d4est_operators_apply_Mij(d4est_ops, &vec[*stride], (P4EST_DIM), elem_data->deg, Mvec);
+  d4est_operators_apply_mij(d4est_ops, &vec[*stride], (P4EST_DIM), elem_data->deg, Mvec);
   d4est_linalg_vec_scale(jacobian, Mvec, volume_nodes);
 
   *l2_norm_sqr += d4est_linalg_vec_dot(&vec[*stride], Mvec, volume_nodes);;
@@ -656,8 +656,8 @@ element_data_compute_DG_norm_sqr_callback
   int deg = elem_data->deg;
   int faces = 2*dim;
   double h = elem_data->h;
-  int volume_nodes = d4est_operators_get_nodes(dim, elem_data->deg );
-  int face_nodes = d4est_operators_get_nodes(dim-1,deg);
+  int volume_nodes = d4est_lgl_get_nodes(dim, elem_data->deg );
+  int face_nodes = d4est_lgl_get_nodes(dim-1,deg);
 
   double* Mvec = P4EST_ALLOC(double, volume_nodes);
   double* dvec = P4EST_ALLOC(double, volume_nodes);
@@ -668,7 +668,7 @@ element_data_compute_DG_norm_sqr_callback
   for (f = 0; f < faces; f++){
     for (d = 0; d < (P4EST_DIM); d++){
       sigmavec_d = &(elem_data->qstar_min_q[d][f*face_nodes]);
-      d4est_operators_apply_Mij(d4est_ops, sigmavec_d, dim - 1, deg, Msigmavec_d);
+      d4est_operators_apply_mij(d4est_ops, sigmavec_d, dim - 1, deg, Msigmavec_d);
       d4est_linalg_vec_scale(surface_jacobian, Msigmavec_d, face_nodes);
       *dg_norm_sqr += d4est_linalg_vec_dot(sigmavec_d, Msigmavec_d, face_nodes);
     }      
@@ -676,9 +676,9 @@ element_data_compute_DG_norm_sqr_callback
   
   int i;
   for (i = 0; i < (P4EST_DIM); i++){
-    d4est_operators_apply_Dij(d4est_ops, &vec[stride], dim, deg, i, dvec);
-    d4est_linalg_vec_scale(2./h, dvec, d4est_operators_get_nodes(dim, deg));
-    d4est_operators_apply_Mij(d4est_ops, dvec, (P4EST_DIM), elem_data->deg, Mvec);
+    d4est_operators_apply_dij(d4est_ops, &vec[stride], dim, deg, i, dvec);
+    d4est_linalg_vec_scale(2./h, dvec, d4est_lgl_get_nodes(dim, deg));
+    d4est_operators_apply_mij(d4est_ops, dvec, (P4EST_DIM), elem_data->deg, Mvec);
     d4est_linalg_vec_scale(jacobian, Mvec, volume_nodes);
     *dg_norm_sqr += d4est_linalg_vec_dot(dvec, Mvec, volume_nodes);
   }
@@ -705,7 +705,7 @@ element_data_DG_norm_sqr_init_vecs_callback
   int i;
   
   for (i = 0; i < (P4EST_DIM); i++){
-    element_data->qstar_min_q[i] = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_operators_get_nodes(dim-1, deg));
+    element_data->qstar_min_q[i] = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_lgl_get_nodes(dim-1, deg));
   }
 
   element_data->u_elem = &(nodal_vec[element_data->stride]);
@@ -713,7 +713,7 @@ element_data_DG_norm_sqr_init_vecs_callback
   d4est_linalg_copy_1st_to_2nd(
   element_data->u_elem,
     &(element_data->u_elem)[0],
-    d4est_operators_get_nodes(dim, deg)
+    d4est_lgl_get_nodes(dim, deg)
   );
 }
 
@@ -899,14 +899,14 @@ element_data_quadrate_au_andaddto_callback
 
   double* M_u = P4EST_ALLOC(
                             double,
-                            d4est_operators_get_nodes
+                            d4est_lgl_get_nodes
                             (
                              (P4EST_DIM),
                              deg
                             )
                            );
 
-  d4est_operators_apply_Mij
+  d4est_operators_apply_mij
     (
      d4est_ops,
      &u[stride],
@@ -919,7 +919,7 @@ element_data_quadrate_au_andaddto_callback
                   a*jacobian,
                   M_u,
                   &a_u[stride],
-                  d4est_operators_get_nodes
+                  d4est_lgl_get_nodes
                   (
                    (P4EST_DIM),
                    deg
@@ -956,7 +956,7 @@ element_data_quadrate_auv_andaddto_callback
   double* auv_restrict = P4EST_ALLOC
                          (
                           double,
-                          d4est_operators_get_nodes
+                          d4est_lgl_get_nodes
                           (
                            (P4EST_DIM),
                            degH
@@ -966,7 +966,7 @@ element_data_quadrate_auv_andaddto_callback
   double* Mauv_restrict = P4EST_ALLOC
                          (
                           double,
-                          d4est_operators_get_nodes
+                          d4est_lgl_get_nodes
                           (
                            (P4EST_DIM),
                            degH
@@ -976,7 +976,7 @@ element_data_quadrate_auv_andaddto_callback
   double* u_prolong = P4EST_ALLOC
                       (
                        double,
-                       d4est_operators_get_nodes
+                       d4est_lgl_get_nodes
                        (
                         (P4EST_DIM),
                         degh
@@ -986,7 +986,7 @@ element_data_quadrate_auv_andaddto_callback
   double* v_prolong = P4EST_ALLOC
                       (
                        double,
-                       d4est_operators_get_nodes
+                       d4est_lgl_get_nodes
                        (
                         (P4EST_DIM),
                         degh
@@ -997,7 +997,7 @@ element_data_quadrate_auv_andaddto_callback
   double* auv_prolong = P4EST_ALLOC
                       (
                        double,
-                       d4est_operators_get_nodes
+                       d4est_lgl_get_nodes
                        (
                         (P4EST_DIM),
                         degh
@@ -1024,7 +1024,7 @@ element_data_quadrate_auv_andaddto_callback
      v_prolong
     );
 
-  int sqr_nodes = d4est_operators_get_nodes((P4EST_DIM), degh);
+  int sqr_nodes = d4est_lgl_get_nodes((P4EST_DIM), degh);
   int i;
   for (i = 0; i < sqr_nodes; i++)
     auv_prolong[i] = a*v_prolong[i]*u_prolong[i];
@@ -1039,7 +1039,7 @@ element_data_quadrate_auv_andaddto_callback
      auv_restrict
     );
 
-  d4est_operators_apply_Mij
+  d4est_operators_apply_mij
     (
      d4est_ops,
      auv_restrict,
@@ -1048,7 +1048,7 @@ element_data_quadrate_auv_andaddto_callback
      Mauv_restrict
     );
   
-  d4est_linalg_vec_axpy(jacobian, Mauv_restrict, &a_uv[stride], d4est_operators_get_nodes((P4EST_DIM),
+  d4est_linalg_vec_axpy(jacobian, Mauv_restrict, &a_uv[stride], d4est_lgl_get_nodes((P4EST_DIM),
                                                              degH));
 
   P4EST_FREE(auv_prolong);
@@ -1085,8 +1085,8 @@ element_data_quadrate_auv_andaddto_callback
 /*   int degH = elem_data->deg; */
 /*   int degh = fofuv_data->nonlin_deg; */
 
-/*   /\* util_print_matrix(&u[stride], d4est_operators_get_nodes((P4EST_DIM), degH), 1, "u = ", 0); *\/ */
-/*   /\* util_print_matrix(&v[stride], d4est_operators_get_nodes((P4EST_DIM), degH), 1, "v = ", 0); *\/ */
+/*   /\* util_print_matrix(&u[stride], d4est_lgl_get_nodes((P4EST_DIM), degH), 1, "u = ", 0); *\/ */
+/*   /\* util_print_matrix(&v[stride], d4est_lgl_get_nodes((P4EST_DIM), degH), 1, "v = ", 0); *\/ */
   
 /*   if (degh == -1) */
 /*     degh = degH; */
@@ -1095,7 +1095,7 @@ element_data_quadrate_auv_andaddto_callback
 /*   double* fofu_restrict = P4EST_ALLOC */
 /*                          ( */
 /*                           double, */
-/*                           d4est_operators_get_nodes */
+/*                           d4est_lgl_get_nodes */
 /*                           ( */
 /*                            (P4EST_DIM), */
 /*                            degH */
@@ -1105,7 +1105,7 @@ element_data_quadrate_auv_andaddto_callback
 /*   double* Mfofu_restrict = P4EST_ALLOC */
 /*                          ( */
 /*                           double, */
-/*                           d4est_operators_get_nodes */
+/*                           d4est_lgl_get_nodes */
 /*                           ( */
 /*                            (P4EST_DIM), */
 /*                            degH */
@@ -1116,7 +1116,7 @@ element_data_quadrate_auv_andaddto_callback
 /*   double* u_prolong = P4EST_ALLOC */
 /*                       ( */
 /*                        double, */
-/*                        d4est_operators_get_nodes */
+/*                        d4est_lgl_get_nodes */
 /*                        ( */
 /*                         (P4EST_DIM), */
 /*                         degh */
@@ -1127,7 +1127,7 @@ element_data_quadrate_auv_andaddto_callback
 /*   double* v_prolong = P4EST_ALLOC */
 /*                       ( */
 /*                        double, */
-/*                        d4est_operators_get_nodes */
+/*                        d4est_lgl_get_nodes */
 /*                        ( */
 /*                         (P4EST_DIM), */
 /*                         degh */
@@ -1139,7 +1139,7 @@ element_data_quadrate_auv_andaddto_callback
 /*   double* fofu_prolong = P4EST_ALLOC */
 /*                       ( */
 /*                        double, */
-/*                        d4est_operators_get_nodes */
+/*                        d4est_lgl_get_nodes */
 /*                        ( */
 /*                         (P4EST_DIM), */
 /*                         degh */
@@ -1165,22 +1165,22 @@ element_data_quadrate_auv_andaddto_callback
 /*     ); */
 
 
-/*   int nonlin_nodes = d4est_operators_get_nodes((P4EST_DIM), degh); */
-/*   double* x = d4est_operators_fetch_xyz_nd((P4EST_DIM), degh, 0); */
+/*   int nonlin_nodes = d4est_lgl_get_nodes((P4EST_DIM), degh); */
+/*   double* x = d4est_operators_fetch_lobatto_rst_nd((P4EST_DIM), degh, 0); */
 /*   double xl = elem_data->xyz_corner[0]; */
-/*   double* y = d4est_operators_fetch_xyz_nd((P4EST_DIM), degh, 1); */
+/*   double* y = d4est_operators_fetch_lobatto_rst_nd((P4EST_DIM), degh, 1); */
 /*   double yl = elem_data->xyz_corner[1]; */
 /* #if (P4EST_DIM)==3 */
-/*   double* z = d4est_operators_fetch_xyz_nd((P4EST_DIM), degh, 2); */
+/*   double* z = d4est_operators_fetch_lobatto_rst_nd((P4EST_DIM), degh, 2); */
 /*   double zl = elem_data->xyz_corner[2]; */
 /* #endif */
   
 /*   int i; */
 /*   for (i = 0; i < nonlin_nodes; i++) */
-/*     fofu_prolong[i] = f(d4est_operators_rtox(x[i], xl, h), */
-/*                         d4est_operators_rtox(y[i], yl, h), */
+/*     fofu_prolong[i] = f(d4est_reference_rtox(x[i], xl, h), */
+/*                         d4est_reference_rtox(y[i], yl, h), */
 /* #if (P4EST_DIM)==3 */
-/*                         d4est_operators_rtox(z[i], zl, h), */
+/*                         d4est_reference_rtox(z[i], zl, h), */
 /* #endif */
 /*                         u_prolong[i])*v_prolong[i]; */
   
@@ -1193,7 +1193,7 @@ element_data_quadrate_auv_andaddto_callback
 /*      fofu_restrict */
 /*     ); */
 
-/*   d4est_operators_apply_Mij */
+/*   d4est_operators_apply_mij */
 /*     ( */
 /*      fofu_restrict, */
 /*      (P4EST_DIM), */
@@ -1201,7 +1201,7 @@ element_data_quadrate_auv_andaddto_callback
 /*      Mfofu_restrict */
 /*     ); */
   
-/*   d4est_linalg_vec_axpy(jacobian, Mfofu_restrict, &out[stride], d4est_operators_get_nodes((P4EST_DIM), */
+/*   d4est_linalg_vec_axpy(jacobian, Mfofu_restrict, &out[stride], d4est_lgl_get_nodes((P4EST_DIM), */
 /*                                                              degH)); */
 
 /*   free(Mfofu_restrict); */
@@ -1238,7 +1238,7 @@ element_data_quadrate_auv_andaddto_callback
 /*   double* fofu = P4EST_ALLOC */
 /*                          ( */
 /*                           double, */
-/*                           d4est_operators_get_nodes */
+/*                           d4est_lgl_get_nodes */
 /*                           ( */
 /*                            (P4EST_DIM), */
 /*                            degH */
@@ -1248,34 +1248,34 @@ element_data_quadrate_auv_andaddto_callback
 /*   double* Mfofu = P4EST_ALLOC */
 /*                          ( */
 /*                           double, */
-/*                           d4est_operators_get_nodes */
+/*                           d4est_lgl_get_nodes */
 /*                           ( */
 /*                            (P4EST_DIM), */
 /*                            degH */
 /*                           ) */
 /*                          ); */
 
-/*   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), degH); */
-/*   double* x = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), degH, 0); */
+/*   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), degH); */
+/*   double* x = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), degH, 0); */
 /*   double xl = elem_data->xyz_corner[0]; */
-/*   double* y = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), degH, 1); */
+/*   double* y = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), degH, 1); */
 /*   double yl = elem_data->xyz_corner[1]; */
 /* #if (P4EST_DIM)==3 */
-/*   double* z = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), degH, 2); */
+/*   double* z = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), degH, 2); */
 /*   double zl = elem_data->xyz_corner[2]; */
 /* #endif */
   
 /*   int i; */
 /*   for (i = 0; i < volume_nodes; i++) */
-/*     fofu[i] = f(d4est_operators_rtox(x[i], xl, h), */
-/*                 d4est_operators_rtox(y[i], yl, h), */
+/*     fofu[i] = f(d4est_reference_rtox(x[i], xl, h), */
+/*                 d4est_reference_rtox(y[i], yl, h), */
 /* #if (P4EST_DIM)==3 */
-/*                 d4est_operators_rtox(z[i], zl, h), */
+/*                 d4est_reference_rtox(z[i], zl, h), */
 /* #endif */
 /*                 u[*stride + i])*v[*stride + i]; */
 
 
-/*   d4est_operators_apply_Mij */
+/*   d4est_operators_apply_mij */
 /*     ( */
 /*      d4est_ops, */
 /*      fofu, */
@@ -1288,7 +1288,7 @@ element_data_quadrate_auv_andaddto_callback
 /*                   jacobian, */
 /*                   Mfofu, */
 /*                   &out[*stride], */
-/*                   d4est_operators_get_nodes */
+/*                   d4est_lgl_get_nodes */
 /*                   ( */
 /*                    (P4EST_DIM), */
 /*                    degH */
@@ -1329,7 +1329,7 @@ element_data_quadrate_fofuv_andaddto_callback
   double* fofuv = P4EST_ALLOC
                          (
                           double,
-                          d4est_operators_get_nodes
+                          d4est_lgl_get_nodes
                           (
                            (P4EST_DIM),
                            degH
@@ -1339,7 +1339,7 @@ element_data_quadrate_fofuv_andaddto_callback
   double* Mfofuv = P4EST_ALLOC
                          (
                           double,
-                          d4est_operators_get_nodes
+                          d4est_lgl_get_nodes
                           (
                            (P4EST_DIM),
                            degH
@@ -1350,7 +1350,7 @@ element_data_quadrate_fofuv_andaddto_callback
   double* fofuv_prolong = P4EST_ALLOC
                          (
                           double,
-                          d4est_operators_get_nodes
+                          d4est_lgl_get_nodes
                           (
                            (P4EST_DIM),
                            degh
@@ -1360,7 +1360,7 @@ element_data_quadrate_fofuv_andaddto_callback
    double* v_prolong = P4EST_ALLOC
                          (
                           double,
-                          d4est_operators_get_nodes
+                          d4est_lgl_get_nodes
                           (
                            (P4EST_DIM),
                            degh
@@ -1372,7 +1372,7 @@ element_data_quadrate_fofuv_andaddto_callback
    double* u_prolong = P4EST_ALLOC
                          (
                           double,
-                          d4est_operators_get_nodes
+                          d4est_lgl_get_nodes
                           (
                            (P4EST_DIM),
                            degh
@@ -1399,24 +1399,24 @@ element_data_quadrate_fofuv_andaddto_callback
       u_prolong
      );
 
-  int volume_nodes_H = d4est_operators_get_nodes((P4EST_DIM), degH);
-  int volume_nodes_h = d4est_operators_get_nodes((P4EST_DIM), degh);
+  int volume_nodes_H = d4est_lgl_get_nodes((P4EST_DIM), degH);
+  int volume_nodes_h = d4est_lgl_get_nodes((P4EST_DIM), degh);
   
-  double* x = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), degh, 0);
+  double* x = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), degh, 0);
   double xl = elem_data->xyz_corner[0];
-  double* y = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), degh, 1);
+  double* y = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), degh, 1);
   double yl = elem_data->xyz_corner[1];
 #if (P4EST_DIM)==3
-  double* z = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), degh, 2);
+  double* z = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), degh, 2);
   double zl = elem_data->xyz_corner[2];
 #endif
   
   int i;
   for (i = 0; i < volume_nodes_h; i++)
-    fofuv_prolong[i] = f(d4est_operators_rtox(x[i], xl, h),
-                d4est_operators_rtox(y[i], yl, h),
+    fofuv_prolong[i] = f(d4est_reference_rtox(x[i], xl, h),
+                d4est_reference_rtox(y[i], yl, h),
 #if (P4EST_DIM)==3
-                d4est_operators_rtox(z[i], zl, h),
+                d4est_reference_rtox(z[i], zl, h),
 #endif
                          u_prolong[i], NULL)*v_prolong[i];
 
@@ -1431,7 +1431,7 @@ element_data_quadrate_fofuv_andaddto_callback
     );
 
   
-  d4est_operators_apply_Mij
+  d4est_operators_apply_mij
     (
      d4est_ops,
      fofuv,
@@ -1444,7 +1444,7 @@ element_data_quadrate_fofuv_andaddto_callback
                   jacobian,
                   Mfofuv,
                   &out[*stride],
-                  d4est_operators_get_nodes
+                  d4est_lgl_get_nodes
                   (
                    (P4EST_DIM),
                    degH
@@ -1474,23 +1474,23 @@ element_data_get_slice_data_callback
   d4est_operators_t* d4est_ops = (d4est_operators_t*) info->p4est->user_pointer;
   
   double h = elem_data->h;
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), elem_data->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg);
   
-  double* x = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 0);
+  double* x = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 0);
   double xl = elem_data->xyz_corner[0];
-  double* y = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 1);
+  double* y = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 1);
   double yl = elem_data->xyz_corner[1];  
 #if (P4EST_DIM)==3
-  double* z = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 2);
+  double* z = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 2);
   double zl = elem_data->xyz_corner[2];
 #endif
 
   int i;
   for (i = 0; i < volume_nodes; i++){
-    double xi = d4est_operators_rtox(x[i], xl, h);
-    double yi = d4est_operators_rtox(y[i], yl, h);
+    double xi = d4est_reference_rtox(x[i], xl, h);
+    double yi = d4est_reference_rtox(y[i], yl, h);
 #if (P4EST_DIM)==3
-    double zi = d4est_operators_rtox(z[i], zl, h);
+    double zi = d4est_reference_rtox(z[i], zl, h);
 #endif
     /* printf("xi,yi,zi = %f,%f,%f\n",xi,yi,zi); */
     /* printf("scf(0.1,0.,0.0) = %d\n", slice_data->scf(.1,0.,0.)); */
@@ -1594,12 +1594,12 @@ element_data_quadrate_fofu_andaddto_callback
   grid_fcn_ext_t f_fcn = fofuv_data->f;
  
   int degH = elem_data->deg;
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), degH);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), degH);
   
   double* fofu = P4EST_ALLOC
                  (
                   double,
-                  d4est_operators_get_nodes
+                  d4est_lgl_get_nodes
                   (
                    (P4EST_DIM),
                    degH
@@ -1609,7 +1609,7 @@ element_data_quadrate_fofu_andaddto_callback
   double* Mfofu = P4EST_ALLOC
                   (
                    double,
-                   d4est_operators_get_nodes
+                   d4est_lgl_get_nodes
                    (
                     (P4EST_DIM),
                     degH
@@ -1617,12 +1617,12 @@ element_data_quadrate_fofu_andaddto_callback
                   );
 
 
-  double* x = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), degH, 0);
+  double* x = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), degH, 0);
   double xl = elem_data->xyz_corner[0];
-  double* y = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), degH, 1);
+  double* y = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), degH, 1);
   double yl = elem_data->xyz_corner[1];
 #if (P4EST_DIM)==3
-  double* z = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), degH, 2);
+  double* z = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), degH, 2);
   double zl = elem_data->xyz_corner[2];
 #endif
 
@@ -1631,17 +1631,17 @@ element_data_quadrate_fofu_andaddto_callback
   /* printf("quadid = %d, h = %f\n", info->quadid, elem_data->h); */
   int i;
   for (i = 0; i < volume_nodes; i++){
-    fofu[i] = f_fcn(d4est_operators_rtox(x[i], xl, h),
-                        d4est_operators_rtox(y[i], yl, h),
+    fofu[i] = f_fcn(d4est_reference_rtox(x[i], xl, h),
+                        d4est_reference_rtox(y[i], yl, h),
 #if (P4EST_DIM)==3
-                        d4est_operators_rtox(z[i], zl, h),
+                        d4est_reference_rtox(z[i], zl, h),
 #endif
                     u[*stride + i],
                    NULL);
-    /* printf("f[%d] = %f, u[%d] =  %f, x,y,z = %f,%f,%f xl,yl,zl = %f,%f,%f\n", *stride + i, fofu[i], *stride + i, u[*stride + i], d4est_operators_rtox(x[i], xl, h), d4est_operators_rtox(y[i], yl, h), d4est_operators_rtox(z[i], zl, h), xl,yl,zl); */
+    /* printf("f[%d] = %f, u[%d] =  %f, x,y,z = %f,%f,%f xl,yl,zl = %f,%f,%f\n", *stride + i, fofu[i], *stride + i, u[*stride + i], d4est_reference_rtox(x[i], xl, h), d4est_reference_rtox(y[i], yl, h), d4est_reference_rtox(z[i], zl, h), xl,yl,zl); */
   }
 
-  d4est_operators_apply_Mij
+  d4est_operators_apply_mij
     (
      d4est_ops,
      fofu,
@@ -1650,7 +1650,7 @@ element_data_quadrate_fofu_andaddto_callback
      Mfofu
     );
   
-  d4est_linalg_vec_axpy(jacobian, Mfofu, &out[*stride], d4est_operators_get_nodes((P4EST_DIM),
+  d4est_linalg_vec_axpy(jacobian, Mfofu, &out[*stride], d4est_lgl_get_nodes((P4EST_DIM),
                                                              degH));
 
 
@@ -1783,7 +1783,7 @@ element_data_get_local_nodes_callback
   p4est_quadrant_t* q = info->quad;
   element_data_t* elem_data = (element_data_t*) q->p.user_data;
   int* local_nodes = (int*) user_data;
-  *local_nodes += d4est_operators_get_nodes( (P4EST_DIM),
+  *local_nodes += d4est_lgl_get_nodes( (P4EST_DIM),
                                    elem_data->deg);
 }
 
@@ -1817,7 +1817,7 @@ int element_data_get_local_matrix_nodes(p4est_t* p4est)
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         element_data_t* ed = quad->p.user_data;
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
         local_matrix_nodes += volume_nodes*volume_nodes;
       }
     }
@@ -1881,7 +1881,7 @@ void element_data_init
         elem_data->h = dq/(double)P4EST_ROOT_LEN;
         elem_data->jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) ); 
         elem_data->surface_jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) - 1);
-        element_data_stride += d4est_operators_get_nodes( (P4EST_DIM) , elem_data->deg);
+        element_data_stride += d4est_lgl_get_nodes( (P4EST_DIM) , elem_data->deg);
         element_id_stride += 1;
       }
     }
@@ -1942,7 +1942,7 @@ int element_data_stride = 0;
         elem_data->h = dq/(double)P4EST_ROOT_LEN;
         elem_data->jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) ); 
         elem_data->surface_jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) - 1);
-        element_data_stride += d4est_operators_get_nodes( (P4EST_DIM) , elem_data->deg);
+        element_data_stride += d4est_lgl_get_nodes( (P4EST_DIM) , elem_data->deg);
         element_id_stride += 1;
       }
     }
@@ -1978,26 +1978,26 @@ element_data_get_xyz_callback
   p4est_quadrant_t* q = info->quad;
   element_data_t* elem_data = (element_data_t*) q->p.user_data;
   double h = elem_data->h;
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), elem_data->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg);
   d4est_operators_t* d4est_ops = (d4est_operators_t*) info->p4est->user_pointer;
   
   double** xyz = (double**) user_data;
   
-  double* x = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 0);
+  double* x = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 0);
   double xl = elem_data->xyz_corner[0];
-  double* y = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 1);
+  double* y = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 1);
   double yl = elem_data->xyz_corner[1];  
 #if (P4EST_DIM)==3
-  double* z = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 2);
+  double* z = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), elem_data->deg, 2);
   double zl = elem_data->xyz_corner[2];
 #endif
 
   int i;
   for (i = 0; i < volume_nodes; i++){
-    xyz[0][i + elem_data->stride] = d4est_operators_rtox(x[i], xl, h);
-    xyz[1][i + elem_data->stride] = d4est_operators_rtox(y[i], yl, h);
+    xyz[0][i + elem_data->stride] = d4est_reference_rtox(x[i], xl, h);
+    xyz[1][i + elem_data->stride] = d4est_reference_rtox(y[i], yl, h);
 #if (P4EST_DIM)==3
-    xyz[2][i + elem_data->stride] = d4est_operators_rtox(z[i], zl, h);
+    xyz[2][i + elem_data->stride] = d4est_reference_rtox(z[i], zl, h);
 #endif
   }
 }
@@ -2138,7 +2138,7 @@ element_data_copy_from_vec_to_storage_callback
   
   int dim = (P4EST_DIM);
   int deg = element_data->deg;
-  int volume_nodes = d4est_operators_get_nodes(dim,deg);
+  int volume_nodes = d4est_lgl_get_nodes(dim,deg);
   
   d4est_linalg_copy_1st_to_2nd
     (
@@ -2187,7 +2187,7 @@ element_data_copy_from_storage_to_vec_callback
   
   int dim = (P4EST_DIM);
   int deg = element_data->deg;
-  int volume_nodes = d4est_operators_get_nodes(dim,deg);
+  int volume_nodes = d4est_lgl_get_nodes(dim,deg);
   
   d4est_linalg_copy_1st_to_2nd
     (
@@ -2248,21 +2248,21 @@ element_data_compute_f_of_uxyz_callback
   double* u = fuxyz_user_data->u;
   double* f = fuxyz_user_data->f;  
   int* stride = fuxyz_user_data->stride;
-  int volume_nodes = d4est_operators_get_nodes( (P4EST_DIM), elem_data->deg );
+  int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), elem_data->deg );
   double h = elem_data->h;
   
   int i;
-  double* x = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* x = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    elem_data->deg,
                                    0);
   double xl = elem_data->xyz_corner[0];
   
-  double* y = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* y = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    elem_data->deg,
                                    1);
   double yl = elem_data->xyz_corner[1];
 #if (P4EST_DIM)==3
-  double* z = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* z = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    elem_data->deg,
                                    2);
   double zl = elem_data->xyz_corner[2];
@@ -2271,18 +2271,18 @@ element_data_compute_f_of_uxyz_callback
   for (i = 0; i < volume_nodes; i++){
     f[*stride + i] = f_fcn
                       (
-                       d4est_operators_rtox(x[i], xl, h),
-                       d4est_operators_rtox(y[i], yl, h)
+                       d4est_reference_rtox(x[i], xl, h),
+                       d4est_reference_rtox(y[i], yl, h)
 #if (P4EST_DIM)==3
                        ,
-                       d4est_operators_rtox(z[i], zl, h)
+                       d4est_reference_rtox(z[i], zl, h)
 #endif
                        ,
                        u[*stride + i],
                        NULL
                       );
 
-    /* printf("f[%d] = %f, u[%d] = %f, x,y,z = %f,%f,%f\n", *stride + i, f[*stride + i], *stride + i, u[*stride + i], d4est_operators_rtox(x[i], xl, h), d4est_operators_rtox(y[i], yl, h), d4est_operators_rtox(z[i], zl, h)); */
+    /* printf("f[%d] = %f, u[%d] = %f, x,y,z = %f,%f,%f\n", *stride + i, f[*stride + i], *stride + i, u[*stride + i], d4est_reference_rtox(x[i], xl, h), d4est_reference_rtox(y[i], yl, h), d4est_reference_rtox(z[i], zl, h)); */
 
       }
   
@@ -2328,34 +2328,34 @@ typedef struct {
   double *Mu;
   int* stride;
 }
-apply_Mij_on_vec_user_data_t;
+apply_mij_on_vec_user_data_t;
 
 
 static
-void element_data_apply_Mij_on_vec_callback(
+void element_data_apply_mij_on_vec_callback(
                               p4est_iter_volume_info_t * info,
                               void *user_data)
 {
   p4est_quadrant_t* q = info->quad;
   element_data_t* elem_data = (element_data_t*) q->p.user_data;
-  apply_Mij_on_vec_user_data_t* apply_Mij_on_vec_user_data = (apply_Mij_on_vec_user_data_t*)user_data;
+  apply_mij_on_vec_user_data_t* apply_mij_on_vec_user_data = (apply_mij_on_vec_user_data_t*)user_data;
   d4est_operators_t* d4est_ops = (d4est_operators_t*)info->p4est->user_pointer;
 
-  int* stride = apply_Mij_on_vec_user_data->stride;
-  double* u = apply_Mij_on_vec_user_data->u;
-  double* Mu = apply_Mij_on_vec_user_data->Mu;                                       
-  int volume_nodes = d4est_operators_get_nodes( (P4EST_DIM), elem_data->deg );  
+  int* stride = apply_mij_on_vec_user_data->stride;
+  double* u = apply_mij_on_vec_user_data->u;
+  double* Mu = apply_mij_on_vec_user_data->Mu;                                       
+  int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), elem_data->deg );  
   int deg = elem_data->deg;
   int dim = (P4EST_DIM);
 
 
-  d4est_operators_apply_Mij(d4est_ops, &u[*stride], dim, deg, &Mu[*stride]);
+  d4est_operators_apply_mij(d4est_ops, &u[*stride], dim, deg, &Mu[*stride]);
   d4est_linalg_vec_scale(elem_data->jacobian, &Mu[*stride], volume_nodes);
   *stride = *stride + volume_nodes;
 }
 
 void
-element_data_apply_Mij_on_vec
+element_data_apply_mij_on_vec
 (
  p4est_t* p4est,
  double* u,
@@ -2368,16 +2368,16 @@ element_data_apply_Mij_on_vec
 
   int stride = 0;
   
-  apply_Mij_on_vec_user_data_t apply_Mij_on_vec_user_data;
-  apply_Mij_on_vec_user_data.u = u;
-  apply_Mij_on_vec_user_data.Mu = Mu;
-  apply_Mij_on_vec_user_data.stride = &stride;
+  apply_mij_on_vec_user_data_t apply_mij_on_vec_user_data;
+  apply_mij_on_vec_user_data.u = u;
+  apply_mij_on_vec_user_data.Mu = Mu;
+  apply_mij_on_vec_user_data.stride = &stride;
   
   
   p4est_iterate(p4est,
 		NULL,
-		(void*)&apply_Mij_on_vec_user_data,
-		element_data_apply_Mij_on_vec_callback,
+		(void*)&apply_mij_on_vec_user_data,
+		element_data_apply_mij_on_vec_callback,
 		NULL,
 #if (P4EST_DIM)==3
                 NULL,
@@ -2390,7 +2390,7 @@ element_data_apply_Mij_on_vec
 
 /**
 * proj_deltap tells us how high of a space we want to interpolate
-* the vec to before we compute f of vec and Mij x f of vec
+* the vec to before we compute f of vec and mij x f of vec
 * p' = p + proj_deltap. If proj_deltap = 0, no interpolation/projection
 * will occur.
 */
@@ -2404,30 +2404,30 @@ typedef struct {
   int* stride;
   int proj_deltap;
   
-} apply_Mij_on_f_of_vec_user_data_t;
+} apply_mij_on_f_of_vec_user_data_t;
 
 
 static
-void element_data_apply_Mij_on_f_of_vec_callback(
+void element_data_apply_mij_on_f_of_vec_callback(
                               p4est_iter_volume_info_t * info,
                               void *user_data)
 {
   p4est_quadrant_t* q = info->quad;
   element_data_t* elem_data = (element_data_t*) q->p.user_data;
-  apply_Mij_on_f_of_vec_user_data_t* apply_Mij_on_f_of_vec_user_data = (apply_Mij_on_f_of_vec_user_data_t*)user_data;
+  apply_mij_on_f_of_vec_user_data_t* apply_mij_on_f_of_vec_user_data = (apply_mij_on_f_of_vec_user_data_t*)user_data;
   d4est_operators_t* d4est_ops = (d4est_operators_t*)info->p4est->user_pointer;
 
-  int* stride = apply_Mij_on_f_of_vec_user_data->stride;
-  double* u = apply_Mij_on_f_of_vec_user_data->u;
-  double* Mu = apply_Mij_on_f_of_vec_user_data->Mu;                                       
-  grid_fcn_ext_t f_fcn = apply_Mij_on_f_of_vec_user_data->f_fcn;
-  int proj_deltap = apply_Mij_on_f_of_vec_user_data->proj_deltap;
+  int* stride = apply_mij_on_f_of_vec_user_data->stride;
+  double* u = apply_mij_on_f_of_vec_user_data->u;
+  double* Mu = apply_mij_on_f_of_vec_user_data->Mu;                                       
+  grid_fcn_ext_t f_fcn = apply_mij_on_f_of_vec_user_data->f_fcn;
+  int proj_deltap = apply_mij_on_f_of_vec_user_data->proj_deltap;
 
   int deg_old = elem_data->deg;
   int deg_new = elem_data->deg + proj_deltap;
   
-  int volume_nodes_deg_old = d4est_operators_get_nodes( (P4EST_DIM), deg_old );  
-  int volume_nodes_deg_new = d4est_operators_get_nodes( (P4EST_DIM), deg_new);
+  int volume_nodes_deg_old = d4est_lgl_get_nodes( (P4EST_DIM), deg_old );  
+  int volume_nodes_deg_new = d4est_lgl_get_nodes( (P4EST_DIM), deg_new);
 
   double* u_interp = P4EST_ALLOC(double, volume_nodes_deg_new);
   double* f_of_u_interp = P4EST_ALLOC(double, volume_nodes_deg_new);
@@ -2435,17 +2435,17 @@ void element_data_apply_Mij_on_f_of_vec_callback(
 
   d4est_operators_apply_p_prolong(d4est_ops, &u[*stride], deg_old, (P4EST_DIM), deg_new, u_interp);
 
-  double* x = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* x = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    deg_new,
                                    0);
   double xl = elem_data->xyz_corner[0];
   
-  double* y = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* y = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    deg_new,
                                    1);
   double yl = elem_data->xyz_corner[1];
 #if (P4EST_DIM)==3
-  double* z = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* z = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    deg_new,
                                    2);
   double zl = elem_data->xyz_corner[2];
@@ -2454,11 +2454,11 @@ void element_data_apply_Mij_on_f_of_vec_callback(
   for (int i = 0; i < volume_nodes_deg_new; i++){
     f_of_u_interp[i] = f_fcn
                       (
-                       d4est_operators_rtox(x[i], xl, elem_data->h),
-                       d4est_operators_rtox(y[i], yl, elem_data->h)
+                       d4est_reference_rtox(x[i], xl, elem_data->h),
+                       d4est_reference_rtox(y[i], yl, elem_data->h)
 #if (P4EST_DIM)==3
                        ,
-                       d4est_operators_rtox(z[i], zl, elem_data->h)
+                       d4est_reference_rtox(z[i], zl, elem_data->h)
 #endif
                        ,
                        u_interp[i],
@@ -2467,7 +2467,7 @@ void element_data_apply_Mij_on_f_of_vec_callback(
 
   }
   
-  d4est_operators_apply_Mij(d4est_ops, f_of_u_interp, (P4EST_DIM), deg_new, M_f_of_u_interp);
+  d4est_operators_apply_mij(d4est_ops, f_of_u_interp, (P4EST_DIM), deg_new, M_f_of_u_interp);
   d4est_linalg_vec_scale(elem_data->jacobian, M_f_of_u_interp, volume_nodes_deg_new);
   d4est_operators_apply_p_prolong_transpose(d4est_ops, M_f_of_u_interp, deg_new, (P4EST_DIM), deg_old, &Mu[*stride]);
   
@@ -2479,7 +2479,7 @@ void element_data_apply_Mij_on_f_of_vec_callback(
 }
 
 void
-element_data_apply_Mij_on_f_of_vec
+element_data_apply_mij_on_f_of_vec
 (
  p4est_t* p4est,
  double* u,
@@ -2494,17 +2494,17 @@ element_data_apply_Mij_on_f_of_vec
 
   int stride = 0;
   
-  apply_Mij_on_f_of_vec_user_data_t apply_Mij_on_f_of_vec_user_data;
-  apply_Mij_on_f_of_vec_user_data.u = u;
-  apply_Mij_on_f_of_vec_user_data.Mu = Mu;
-  apply_Mij_on_f_of_vec_user_data.stride = &stride;
-  apply_Mij_on_f_of_vec_user_data.f_fcn = f_fcn;
-  apply_Mij_on_f_of_vec_user_data.proj_deltap = proj_deltap;
+  apply_mij_on_f_of_vec_user_data_t apply_mij_on_f_of_vec_user_data;
+  apply_mij_on_f_of_vec_user_data.u = u;
+  apply_mij_on_f_of_vec_user_data.Mu = Mu;
+  apply_mij_on_f_of_vec_user_data.stride = &stride;
+  apply_mij_on_f_of_vec_user_data.f_fcn = f_fcn;
+  apply_mij_on_f_of_vec_user_data.proj_deltap = proj_deltap;
 
   p4est_iterate(p4est,
 		NULL,
-		(void*)&apply_Mij_on_f_of_vec_user_data,
-		element_data_apply_Mij_on_f_of_vec_callback,
+		(void*)&apply_mij_on_f_of_vec_user_data,
+		element_data_apply_mij_on_f_of_vec_callback,
 		NULL,
 #if (P4EST_DIM)==3
                 NULL,
@@ -2525,31 +2525,31 @@ typedef struct {
   int* stride;
   int proj_deltap;
   
-} apply_Mij_on_f_of_vec1_x_vec2_user_data_t;
+} apply_mij_on_f_of_vec1_x_vec2_user_data_t;
 
 
 static
-void element_data_apply_Mij_on_f_of_vec1_x_vec2_callback(
+void element_data_apply_mij_on_f_of_vec1_x_vec2_callback(
                               p4est_iter_volume_info_t * info,
                               void *user_data)
 {
   p4est_quadrant_t* q = info->quad;
   element_data_t* elem_data = (element_data_t*) q->p.user_data;
-  apply_Mij_on_f_of_vec1_x_vec2_user_data_t* apply_Mij_on_f_of_vec1_x_vec2_user_data = (apply_Mij_on_f_of_vec1_x_vec2_user_data_t*)user_data;
+  apply_mij_on_f_of_vec1_x_vec2_user_data_t* apply_mij_on_f_of_vec1_x_vec2_user_data = (apply_mij_on_f_of_vec1_x_vec2_user_data_t*)user_data;
   d4est_operators_t* d4est_ops = (d4est_operators_t*)info->p4est->user_pointer;
 
-  int* stride = apply_Mij_on_f_of_vec1_x_vec2_user_data->stride;
-  double* vec1 = apply_Mij_on_f_of_vec1_x_vec2_user_data->vec1;
-  double* vec2 = apply_Mij_on_f_of_vec1_x_vec2_user_data->vec2;
-  double* M_f_of_vec1_x_vec2= apply_Mij_on_f_of_vec1_x_vec2_user_data->M_f_of_vec1_x_vec2;                                       
-  grid_fcn_ext_t f_fcn = apply_Mij_on_f_of_vec1_x_vec2_user_data->f_fcn;
-  int proj_deltap = apply_Mij_on_f_of_vec1_x_vec2_user_data->proj_deltap;
+  int* stride = apply_mij_on_f_of_vec1_x_vec2_user_data->stride;
+  double* vec1 = apply_mij_on_f_of_vec1_x_vec2_user_data->vec1;
+  double* vec2 = apply_mij_on_f_of_vec1_x_vec2_user_data->vec2;
+  double* M_f_of_vec1_x_vec2= apply_mij_on_f_of_vec1_x_vec2_user_data->M_f_of_vec1_x_vec2;                                       
+  grid_fcn_ext_t f_fcn = apply_mij_on_f_of_vec1_x_vec2_user_data->f_fcn;
+  int proj_deltap = apply_mij_on_f_of_vec1_x_vec2_user_data->proj_deltap;
 
   int deg_old = elem_data->deg;
   int deg_new = elem_data->deg + proj_deltap;
   
-  int volume_nodes_deg_old = d4est_operators_get_nodes( (P4EST_DIM), deg_old );  
-  int volume_nodes_deg_new = d4est_operators_get_nodes( (P4EST_DIM), deg_new);
+  int volume_nodes_deg_old = d4est_lgl_get_nodes( (P4EST_DIM), deg_old );  
+  int volume_nodes_deg_new = d4est_lgl_get_nodes( (P4EST_DIM), deg_new);
 
   double* vec1_interp = P4EST_ALLOC(double, volume_nodes_deg_new);
   double* vec2_interp = P4EST_ALLOC(double, volume_nodes_deg_new);
@@ -2559,17 +2559,17 @@ void element_data_apply_Mij_on_f_of_vec1_x_vec2_callback(
   d4est_operators_apply_p_prolong(d4est_ops, &vec1[*stride], deg_old, (P4EST_DIM), deg_new, vec1_interp);
   d4est_operators_apply_p_prolong(d4est_ops, &vec2[*stride], deg_old, (P4EST_DIM), deg_new, vec2_interp);
 
-  double* x = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* x = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    deg_new,
                                    0);
   double xl = elem_data->xyz_corner[0];
   
-  double* y = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* y = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    deg_new,
                                    1);
   double yl = elem_data->xyz_corner[1];
 #if (P4EST_DIM)==3
-  double* z = d4est_operators_fetch_xyz_nd( d4est_ops, (P4EST_DIM),
+  double* z = d4est_operators_fetch_lobatto_rst_nd( d4est_ops, (P4EST_DIM),
                                    deg_new,
                                    2);
   double zl = elem_data->xyz_corner[2];
@@ -2578,11 +2578,11 @@ void element_data_apply_Mij_on_f_of_vec1_x_vec2_callback(
   for (int i = 0; i < volume_nodes_deg_new; i++){
     f_of_vec1_interp_x_vec2_interp[i] = f_fcn
                       (
-                       d4est_operators_rtox(x[i], xl, elem_data->h),
-                       d4est_operators_rtox(y[i], yl, elem_data->h)
+                       d4est_reference_rtox(x[i], xl, elem_data->h),
+                       d4est_reference_rtox(y[i], yl, elem_data->h)
 #if (P4EST_DIM)==3
                        ,
-                       d4est_operators_rtox(z[i], zl, elem_data->h)
+                       d4est_reference_rtox(z[i], zl, elem_data->h)
 #endif
                        ,
                        vec1_interp[i],
@@ -2590,7 +2590,7 @@ void element_data_apply_Mij_on_f_of_vec1_x_vec2_callback(
                       )*vec2_interp[i];
   }
   
-  d4est_operators_apply_Mij(d4est_ops, f_of_vec1_interp_x_vec2_interp, (P4EST_DIM), deg_new, M_f_of_vec1_interp_x_vec2_interp);
+  d4est_operators_apply_mij(d4est_ops, f_of_vec1_interp_x_vec2_interp, (P4EST_DIM), deg_new, M_f_of_vec1_interp_x_vec2_interp);
   d4est_linalg_vec_scale(elem_data->jacobian, M_f_of_vec1_interp_x_vec2_interp, volume_nodes_deg_new);
   d4est_operators_apply_p_prolong_transpose(d4est_ops, M_f_of_vec1_interp_x_vec2_interp, deg_new, (P4EST_DIM), deg_old, &M_f_of_vec1_x_vec2[*stride]);
   
@@ -2603,7 +2603,7 @@ void element_data_apply_Mij_on_f_of_vec1_x_vec2_callback(
 }
 
 void
-element_data_apply_Mij_on_f_of_vec1_x_vec2
+element_data_apply_mij_on_f_of_vec1_x_vec2
 (
  p4est_t* p4est,
  double* vec1,
@@ -2619,18 +2619,18 @@ element_data_apply_Mij_on_f_of_vec1_x_vec2
 
   int stride = 0;
   
-  apply_Mij_on_f_of_vec1_x_vec2_user_data_t apply_Mij_on_f_of_vec1_x_vec2_user_data;
-  apply_Mij_on_f_of_vec1_x_vec2_user_data.vec1 = vec1;
-  apply_Mij_on_f_of_vec1_x_vec2_user_data.vec2 = vec2;
-  apply_Mij_on_f_of_vec1_x_vec2_user_data.M_f_of_vec1_x_vec2 = M_f_of_vec1_x_vec2;
-  apply_Mij_on_f_of_vec1_x_vec2_user_data.stride = &stride;
-  apply_Mij_on_f_of_vec1_x_vec2_user_data.f_fcn = f_fcn;
-  apply_Mij_on_f_of_vec1_x_vec2_user_data.proj_deltap = proj_deltap;
+  apply_mij_on_f_of_vec1_x_vec2_user_data_t apply_mij_on_f_of_vec1_x_vec2_user_data;
+  apply_mij_on_f_of_vec1_x_vec2_user_data.vec1 = vec1;
+  apply_mij_on_f_of_vec1_x_vec2_user_data.vec2 = vec2;
+  apply_mij_on_f_of_vec1_x_vec2_user_data.M_f_of_vec1_x_vec2 = M_f_of_vec1_x_vec2;
+  apply_mij_on_f_of_vec1_x_vec2_user_data.stride = &stride;
+  apply_mij_on_f_of_vec1_x_vec2_user_data.f_fcn = f_fcn;
+  apply_mij_on_f_of_vec1_x_vec2_user_data.proj_deltap = proj_deltap;
 
   p4est_iterate(p4est,
 		NULL,
-		(void*)&apply_Mij_on_f_of_vec1_x_vec2_user_data,
-		element_data_apply_Mij_on_f_of_vec1_x_vec2_callback,
+		(void*)&apply_mij_on_f_of_vec1_x_vec2_user_data,
+		element_data_apply_mij_on_f_of_vec1_x_vec2_callback,
 		NULL,
 #if (P4EST_DIM)==3
                 NULL,
@@ -2931,7 +2931,7 @@ element_data_init_new
         elem_data->jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) );
         elem_data->surface_jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) - 1);
 
-        int nodes = d4est_operators_get_nodes((P4EST_DIM), elem_data->deg);
+        int nodes = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg);
         local_nodes += nodes;        
         nodal_stride += nodes;
         id_stride += 1;

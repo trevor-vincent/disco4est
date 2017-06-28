@@ -282,7 +282,7 @@ d4est_geometry_compute_dxyz_drst_analytic
  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)]
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM),deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg);
   double rst [(P4EST_DIM)];
   double dxyz_drst_i [(P4EST_DIM)][(P4EST_DIM)];
 
@@ -316,7 +316,7 @@ d4est_geometry_compute_dxyz_drst_analytic
 /*  d4est_operators_t* d4est_ops, */
 /*  double* Jdrdxdrdx [(P4EST_DIM)][(P4EST_DIM)] */
 /* ) */
-/* {  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM),deg); */
+/* {  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg); */
 /*   double rst [(P4EST_DIM)]; */
 /*   double Jdrdxdrdx_i [(P4EST_DIM)][(P4EST_DIM)]; */
 
@@ -354,7 +354,7 @@ d4est_geometry_compute_dxyz_drst_analytic
 /*  double* drst_dxyz [(P4EST_DIM)][(P4EST_DIM)] */
 /* ) */
 /* { */
-/*   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM),deg); */
+/*   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg); */
 /*   double rst [(P4EST_DIM)]; */
 /*   double drst_dxyz_i [(P4EST_DIM)][(P4EST_DIM)]; */
 
@@ -392,7 +392,7 @@ d4est_geometry_compute_dxyz_drst_analytic
 /*  double* jac */
 /* ) */
 /* { */
-/*   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM),deg); */
+/*   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg); */
 /*   double rst [(P4EST_DIM)]; */
 
 /*   d4est_rst_t rst_points */
@@ -469,7 +469,7 @@ d4est_geometry_compute_dxyz_drst
 /* ) */
 /* { */
 /*   double* xyz [(P4EST_DIM)]; */
-/*   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM),deg); */
+/*   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg); */
 /*   for (int i = 0; i < (P4EST_DIM); i++){ */
 /*     xyz[i] = P4EST_ALLOC(double, volume_nodes); */
 /*   } */
@@ -499,14 +499,14 @@ d4est_geometry_compute_dxyz_drst
 /*   double* tmp = P4EST_ALLOC(double, volume_nodes); */
 /*   for (int d = 0; d < (P4EST_DIM); d++){ */
 /*     for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
-/*       d4est_operators_apply_Dij(d4est_ops, &xyz[d][0], (P4EST_DIM), deg, d1, &dxyz_drst[d][d1][0]); */
+/*       d4est_operators_apply_dij(d4est_ops, &xyz[d][0], (P4EST_DIM), deg, d1, &dxyz_drst[d][d1][0]); */
 /*     } */
 /*   } */
 
 /*   if (quad_type == QUAD_GAUSS){ */
 /*     for (int d = 0; d < (P4EST_DIM); d++){ */
 /*       for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
-/*         d4est_operators_interp_Lobatto_to_Gauss(d4est_ops, &dxyz_drst[d][d1][0], deg, deg, tmp, (P4EST_DIM)); */
+/*         d4est_operators_interp_lobatto_to_gauss(d4est_ops, &dxyz_drst[d][d1][0], deg, deg, tmp, (P4EST_DIM)); */
 /*         d4est_linalg_copy_1st_to_2nd(tmp, &dxyz_drst[d][d1][0], volume_nodes); */
 /*       } */
 /*     } */
@@ -531,8 +531,8 @@ d4est_geometry_compute_dxyz_drst_face_analytic
  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)]
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM),deg);
-  int face_nodes = d4est_operators_get_nodes((P4EST_DIM)-1,deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg);
+  int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1,deg);
   double rst [(P4EST_DIM)];
   double dxyz_drst_i [(P4EST_DIM)][(P4EST_DIM)];
 
@@ -569,7 +569,7 @@ d4est_geometry_compute_dxyz_drst_face_analytic
 /*  double* drst_dxyz [(P4EST_DIM)][(P4EST_DIM)] */
 /* ) */
 /* { */
-/*   int face_nodes = d4est_operators_get_nodes((P4EST_DIM)-1,deg); */
+/*   int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1,deg); */
 /*   double rst [(P4EST_DIM)]; */
 /*   double drst_dxyz_i [(P4EST_DIM)][(P4EST_DIM)]; */
 
@@ -613,7 +613,7 @@ d4est_geometry_compute_dxyz_drst_face_analytic
 /*  double* drst_dxyz_times_jac [(P4EST_DIM)][(P4EST_DIM)] */
 /* ) */
 /* { */
-/*   int face_nodes = d4est_operators_get_nodes((P4EST_DIM)-1,deg); */
+/*   int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1,deg); */
 /*   double rst [(P4EST_DIM)]; */
 /*   double drst_dxyz_times_jac_i [(P4EST_DIM)][(P4EST_DIM)]; */
 
@@ -659,7 +659,7 @@ d4est_geometry_compute_dxyz_drst_face_analytic
 /*  double* jac */
 /* ) */
 /* { */
-/*   int face_nodes = d4est_operators_get_nodes((P4EST_DIM)-1,deg); */
+/*   int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1,deg); */
 /*   double rst [(P4EST_DIM)]; */
 
 /*   d4est_rst_t rst_points */
@@ -700,7 +700,7 @@ d4est_geometry_compute_dxyz_drst_face_analytic
 /*  double* jac */
 /* ) */
 /* { */
-/*   int face_nodes = d4est_operators_get_nodes((P4EST_DIM)-1,deg); */
+/*   int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1,deg); */
 /*   double rst [(P4EST_DIM)]; */
 
 /*   d4est_geometry_face_info_t face_info; */
@@ -738,7 +738,7 @@ d4est_geometry_compute_dxyz_drst_face_analytic
 /*  double* xyz [(P4EST_DIM)] */
 /* ) */
 /* { */
-/*   int face_nodes = d4est_operators_get_nodes((P4EST_DIM)-1,deg); */
+/*   int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1,deg); */
 /*   double rst [(P4EST_DIM)]; */
 
 /*   d4est_rst_t rst_points */
@@ -776,7 +776,7 @@ d4est_geometry_compute_xyz_face_analytic
  double* xyz [(P4EST_DIM)]
 )
 {
-  int face_nodes = d4est_operators_get_nodes((P4EST_DIM)-1,deg);
+  int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1,deg);
   double rst [(P4EST_DIM)];
   
   d4est_geometry_face_info_t face_info;
@@ -813,8 +813,8 @@ d4est_geometry_compute_xyz_face_analytic
 /*  double* dxyz_drst_on_face [(P4EST_DIM)][(P4EST_DIM)] */
 /* ) */
 /* { */
-/*   int face_nodes = d4est_operators_get_nodes((P4EST_DIM)-1, deg); */
-/*   int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), deg); */
+/*   int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1, deg); */
+/*   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg); */
   
 /*   double* dxyz_drst_volume [(P4EST_DIM)][(P4EST_DIM)]; */
 /*   D4EST_ALLOC_DBYD_MAT(dxyz_drst_volume, volume_nodes); */
@@ -843,7 +843,7 @@ d4est_geometry_compute_xyz_face_analytic
 /*                             deg, */
 /*                             temp); */
       
-/*         d4est_operators_interp_Lobatto_to_Gauss */
+/*         d4est_operators_interp_lobatto_to_gauss */
 /*           ( */
 /*            d4est_ops, */
 /*            temp, */
@@ -1052,7 +1052,7 @@ d4est_geometry_compute_xyz
  double* xyz [(P4EST_DIM)]
 )
 {    
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg);
   
   double rst_i [(P4EST_DIM)]; 
   double xyz_i [(P4EST_DIM)];
@@ -1100,7 +1100,7 @@ d4est_geometry_compute_xyz
 /*   else { */
 /*     int total_face_mortar_nodes = 0; */
 /*     for (int face_mortar = 0; face_mortar < num_faces_mortar; face_mortar++){ */
-/*       total_face_mortar_nodes += d4est_operators_get_nodes((P4EST_DIM) - 1, deg_mortar[face_mortar]); */
+/*       total_face_mortar_nodes += d4est_lgl_get_nodes((P4EST_DIM) - 1, deg_mortar[face_mortar]); */
 /*     } */
 /*     for (int d = 0; d < (P4EST_DIM); d++){ */
 /*       xyz[d] = P4EST_ALLOC(double, total_face_mortar_nodes); */
@@ -1118,7 +1118,7 @@ d4est_geometry_compute_xyz
 /*   for (int j = 0; j < (P4EST_HALF); j++){ */
 /*     int c = p4est_face_corners[face_side][j]; */
 /*     for (int d = 0; d < (P4EST_DIM); d++){ */
-/*       int cd = d4est_operators_is_child_left_or_right(c, d); */
+/*       int cd = d4est_reference_is_child_left_or_right(c, d); */
 /*       q0[j][d] = e0_q[d] + cd*e0_dq; */
 /*     } */
 /*   } */
@@ -1141,7 +1141,7 @@ d4est_geometry_compute_xyz
 /*       for (int c = 0; c < (P4EST_HALF); c++){ */
 /*         q0[c][d] = q0[0][d]; */
 /*         for (int dir = 0; dir < (P4EST_DIM) - 1; dir++){ */
-/*           int cd = d4est_operators_is_child_left_or_right(c, dir); */
+/*           int cd = d4est_reference_is_child_left_or_right(c, dir); */
 /*           q0[c][d] += cd*dqa[dir][d]; */
 /*         } */
 /*       } */
@@ -1160,7 +1160,7 @@ d4est_geometry_compute_xyz
 /*   for (int face_mortar = 0; face_mortar < num_faces_mortar; face_mortar++){ */
 
 
-/*     int face_mortar_nodes = d4est_operators_get_nodes((P4EST_DIM) - 1, deg_mortar[face_mortar]); */
+/*     int face_mortar_nodes = d4est_lgl_get_nodes((P4EST_DIM) - 1, deg_mortar[face_mortar]); */
 /*     /\* compute the LGL nodes in the directions of the face_mortar vectors *\/ */
 /*     double* tmp = P4EST_ALLOC(double,face_mortar_nodes); */
 /*     for (int d = 0; d < (P4EST_DIM); d++){ */
@@ -1209,18 +1209,18 @@ d4est_geometry_compute_xyz
 /*     /\* compute the tangent vectors in direction(s) "dir" *\/ */
 /*       for (int d = 0; d < (P4EST_DIM); d++){ */
 /*         for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){ */
-/*           d4est_operators_apply_Dij(d4est_ops, xyz[d], ((P4EST_DIM))-1, deg_mortar[face_mortar], dir, dxda[d][dir]); */
+/*           d4est_operators_apply_dij(d4est_ops, xyz[d], ((P4EST_DIM))-1, deg_mortar[face_mortar], dir, dxda[d][dir]); */
 /*         } */
 /*       } */
 
 /*     if (quad_type == QUAD_GAUSS){ */
 /*       for (int d = 0; d < (P4EST_DIM); d++){ */
 /*         if (xyz[0] != NULL){ */
-/*           d4est_operators_interp_Lobatto_to_Gauss(d4est_ops, xyz[d], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1); */
+/*           d4est_operators_interp_lobatto_to_gauss(d4est_ops, xyz[d], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1); */
 /*           d4est_linalg_copy_1st_to_2nd(tmp, xyz[d], face_mortar_nodes); */
 /*         } */
 /*         for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){ */
-/*           d4est_operators_interp_Lobatto_to_Gauss(d4est_ops, dxda[d][dir], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1); */
+/*           d4est_operators_interp_lobatto_to_gauss(d4est_ops, dxda[d][dir], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1); */
 /*           d4est_linalg_copy_1st_to_2nd(tmp, dxda[d][dir], face_mortar_nodes); */
 /*         } */
 /*       } */
@@ -1264,7 +1264,7 @@ d4est_geometry_compute_xyz
 /*       } */
 /*     } */
 
-/*     face_mortar_nodal_stride += d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar[face_mortar]); */
+/*     face_mortar_nodal_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar[face_mortar]); */
 /*     for (int d = 0; d < (P4EST_DIM); d++){ */
 /*       /\* P4EST_FREE(xyz[d]); *\/ */
 /*       for (int dir = 0; dir < ((P4EST_DIM)-1); dir++) */
@@ -1295,11 +1295,11 @@ d4est_geometry_get_tree_coords_in_range_0_to_1
     mpi_assert(coords[0] >= -1. && coords[0] <= 1.);
     mpi_assert(coords[1] >= -1. && coords[1] <= 1.);
     /* transform from coords in [-1,1]^3 to the subspace [q0, q0+dq]^3 in [0,1]^3*/
-    tcoords[0] = d4est_operators_rtox(coords[0], (double)q0[0], (double)dq)/(double)P4EST_ROOT_LEN;
-    tcoords[1] = d4est_operators_rtox(coords[1], (double)q0[1], (double)dq)/(double)P4EST_ROOT_LEN;
+    tcoords[0] = d4est_reference_rtox(coords[0], (double)q0[0], (double)dq)/(double)P4EST_ROOT_LEN;
+    tcoords[1] = d4est_reference_rtox(coords[1], (double)q0[1], (double)dq)/(double)P4EST_ROOT_LEN;
 #if (P4EST_DIM)==3
     mpi_assert(coords[2] >= -1. && coords[2] <= 1.);
-    tcoords[2] = d4est_operators_rtox(coords[2], (double)q0[2], (double)dq)/(double)P4EST_ROOT_LEN;
+    tcoords[2] = d4est_reference_rtox(coords[2], (double)q0[2], (double)dq)/(double)P4EST_ROOT_LEN;
 #endif
   }
   else if (coords_type == COORDS_P4EST_INT){
@@ -1426,9 +1426,9 @@ d4est_geometry_compute_element_volume
  double* jac_GL
 )
 {
-  int volume_nodes_GL = d4est_operators_get_nodes((P4EST_DIM), deg_GL);
+  int volume_nodes_GL = d4est_lgl_get_nodes((P4EST_DIM), deg_GL);
   double* MJac = P4EST_ALLOC(double, volume_nodes_GL);
-  double* integ_weights = d4est_operators_fetch_GL_weights_1d(d4est_ops, deg_GL);
+  double* integ_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg_GL);
   double volume = 0;
   
 #if (P4EST_DIM)==3
@@ -1458,7 +1458,7 @@ d4est_geometry_compute_element_volume
 /*  int deg */
 /* ) */
 /* { */
-/*   int face_nodes = d4est_operators_get_nodes((P4EST_DIM)-1, deg); */
+/*   int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1, deg); */
 /*   double* n_on_face [(P4EST_DIM)]; */
 /*   double* xyz_on_face [(P4EST_DIM)]; */
 /*   for (int i = 0; i < (P4EST_DIM); i++){ */
@@ -1488,7 +1488,7 @@ d4est_geometry_compute_element_volume
 /*   ); */
                                                   
 /*   double* Msj = P4EST_ALLOC(double, face_nodes); */
-/*   double* integ_weights = d4est_operators_fetch_GL_weights_1d(d4est_ops, deg); */
+/*   double* integ_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg); */
 /*   double area = 0; */
   
 /* #if (P4EST_DIM)==3 */
@@ -1529,8 +1529,8 @@ d4est_geometry_compute_diam
   if (option == DIAM_APPROX || option == DIAM_APPROX_CUBE){
     for (int i = 0; i < (P4EST_CHILDREN); i++){
       for (int j = 0; j < (P4EST_CHILDREN); j++){
-        int corner_node_i = d4est_operators_corner_to_node((P4EST_DIM), deg, i);
-        int corner_node_j = d4est_operators_corner_to_node((P4EST_DIM), deg, j);
+        int corner_node_i = d4est_reference_corner_to_node((P4EST_DIM), deg, i);
+        int corner_node_j = d4est_reference_corner_to_node((P4EST_DIM), deg, j);
         double diam_temp = 0;
         for (int d = 0; d < (P4EST_DIM); d++){
           double diam_dx = xyz[d][corner_node_i] - xyz[d][corner_node_j];
@@ -1547,7 +1547,7 @@ d4est_geometry_compute_diam
     
   }
   else {
-    int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), deg);
+    int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg);
     for (int i = 0; i < volume_nodes; i++){
       for (int j = 0; j < volume_nodes; j++){
         double diam_temp = 0;
@@ -1573,9 +1573,9 @@ d4est_geometry_compute_diam
 /*  double* jac_GL */
 /* ) */
 /* { */
-/*   int volume_nodes_GL = d4est_operators_get_nodes((P4EST_DIM), deg_GL); */
+/*   int volume_nodes_GL = d4est_lgl_get_nodes((P4EST_DIM), deg_GL); */
 /*   double* MJac = P4EST_ALLOC(double, volume_nodes_GL); */
-/*   double* integ_weights = d4est_operators_fetch_GL_weights_1d(d4est_ops, deg_GL); */
+/*   double* integ_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg_GL); */
 /*   double volume = 0; */
   
 /* #if (P4EST_DIM)==3 */

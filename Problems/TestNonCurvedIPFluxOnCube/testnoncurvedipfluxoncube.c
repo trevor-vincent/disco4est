@@ -100,7 +100,7 @@ typedef struct {
   int num_unifrefs;
   int num_randrefs;
   int deg;
-  int deg_Gauss;
+  int deg_gauss;
   
   double ip_flux_penalty;  
   int count;
@@ -128,9 +128,9 @@ int problem_input_handler
     pconfig->num_randrefs = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"amr",name,"deg_Gauss")){
-    mpi_assert(pconfig->deg_Gauss == -1);
-    pconfig->deg_Gauss = atoi(value);
+  else if (util_match_couple(section,"amr",name,"deg_gauss")){
+    mpi_assert(pconfig->deg_gauss == -1);
+    pconfig->deg_gauss = atoi(value);
     pconfig->count += 1;    
   }
   else if (util_match_couple(section,"amr",name,"deg")){
@@ -206,7 +206,7 @@ void problem_build_rhs
 
 
     
-  element_data_apply_Mij_on_vec
+  element_data_apply_mij_on_vec
     (
      p4est,
      f,
@@ -252,7 +252,7 @@ problem_input
   problem_input_t input;
   input.num_unifrefs = -1;
   input.num_randrefs = -1;
-  input.deg_Gauss = -1;
+  input.deg_gauss = -1;
   input.deg = -1;
   input.ip_flux_penalty = -1;
   input.count = 0;
@@ -473,12 +473,12 @@ problem_init
 
   /* d4est_geometry_t dgeom; */
   /* dgeom.p4est_geom = p4est_geom; */
-  /* dgeom.interp_to_Gauss = 1; */
+  /* dgeom.interp_to_gauss = 1; */
   /* dgeom.dxdr_method = INTERP_X_ON_LOBATTO;     */
   /* element_data_init(p4est, geometric_factors, d4est_ops, &dgeom, degree, input.gauss_quad_deg); */
   /* element_data_init_ext(p4est, */
                         /* input.deg, */
-                        /* input.deg_Gauss); */
+                        /* input.deg_gauss); */
 
 
 
@@ -519,7 +519,7 @@ problem_init
   /*                          geometric_factors, */
   /*                          d4est_ops, */
   /*                          &dgeom, degree, */
-  /*                          degree_Gauss_diff[0], */
+  /*                          degree_gauss_diff[0], */
   /*                          GAUSS_INTEG); */
 
 
@@ -544,7 +544,7 @@ problem_init
                                            &ip_flux_params
                                           );
 
-  /* prob_vecs.curved_vector_flux_fcn_data = curved_Gauss_central_flux_vector_dirichlet_fetch_fcns */
+  /* prob_vecs.curved_vector_flux_fcn_data = curved_gauss_central_flux_vector_dirichlet_fetch_fcns */
   /*                                         ( */
   /*                                          zero_fcn, */
   /*                                          &central_flux_params */

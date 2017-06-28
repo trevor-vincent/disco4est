@@ -39,11 +39,11 @@ multigrid_matrix_operator_restriction_callback
     );
 
   for (int i = 0; i < num_children_h; i++){
-    int fine_volume_nodes = d4est_operators_get_nodes( (P4EST_DIM) , degh[i] );
+    int fine_volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM) , degh[i] );
     (*fine_matrix_stride) += fine_volume_nodes*fine_volume_nodes;
   }
   
-  int coarse_volume_nodes = d4est_operators_get_nodes( (P4EST_DIM) , degH);
+  int coarse_volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM) , degH);
   (*coarse_matrix_stride) += coarse_volume_nodes*coarse_volume_nodes;
 }
 
@@ -171,28 +171,28 @@ multigrid_matrix_fofu_fofv_mass_operator_setup_deg_quad_eq_deg
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         element_data_t* ed = quad->p.user_data;
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
         int matrix_volume_nodes = volume_nodes*volume_nodes;
-        int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes_gauss = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
 
-        double* jac_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
-        d4est_linalg_fill_vec(jac_Gauss, ed->jacobian, volume_nodes_Gauss);
+        double* jac_gauss = P4EST_ALLOC(double, volume_nodes_gauss);
+        d4est_linalg_fill_vec(jac_gauss, ed->jacobian, volume_nodes_gauss);
 
-        double* r_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), ed->deg, 0);
-        double* s_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), ed->deg, 1);
-        double* x_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
-        double* y_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
-        d4est_operators_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_Gauss);
-        d4est_operators_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_Gauss);
+        double* r_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), ed->deg, 0);
+        double* s_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), ed->deg, 1);
+        double* x_GL = P4EST_ALLOC(double, volume_nodes_gauss);
+        double* y_GL = P4EST_ALLOC(double, volume_nodes_gauss);
+        d4est_reference_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_gauss);
+        d4est_reference_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_gauss);
 
 
 #if (P4EST_DIM)==3        
-        double* t_GL = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), ed->deg, 2);
-        double* z_GL = P4EST_ALLOC(double, volume_nodes_Gauss);
-        d4est_operators_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_Gauss);
+        double* t_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), ed->deg, 2);
+        double* z_GL = P4EST_ALLOC(double, volume_nodes_gauss);
+        d4est_reference_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_gauss);
 #endif
         
-        double* xyz_Gauss [(P4EST_DIM)] = {x_GL, y_GL
+        double* xyz_gauss [(P4EST_DIM)] = {x_GL, y_GL
 #if(P4EST_DIM)==3
                                            ,z_GL
 #endif
@@ -204,8 +204,8 @@ multigrid_matrix_fofu_fofv_mass_operator_setup_deg_quad_eq_deg
            (u == NULL) ? NULL : &u[nodal_stride],
            (v == NULL) ? NULL : &v[nodal_stride],
            ed->deg,
-           xyz_Gauss,
-           jac_Gauss,
+           xyz_gauss,
+           jac_gauss,
            ed->deg,
            QUAD_GAUSS,
            (P4EST_DIM),
@@ -216,7 +216,7 @@ multigrid_matrix_fofu_fofv_mass_operator_setup_deg_quad_eq_deg
            fofv_ctx
           );
 
-        P4EST_FREE(jac_Gauss);
+        P4EST_FREE(jac_gauss);
         nodal_stride += volume_nodes;
         matrix_nodal_stride += matrix_volume_nodes;
       }
@@ -253,7 +253,7 @@ multigrid_matrix_curved_fofu_fofv_mass_operator_setup_deg_quad_eq_deg
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
         int matrix_volume_nodes = volume_nodes*volume_nodes;
 
         d4est_element_data_form_fofufofvlilj_matrix

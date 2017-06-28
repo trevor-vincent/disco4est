@@ -8,31 +8,35 @@
  * @author Trevor Vincent <tvincent@cita.utoronto.ca>
  * @date   Sun May 21 18:44:59 2017
  * 
- * @brief  This module is for Gaussian quadrature. 
+ * @brief  This module is for gaussian quadrature. 
  * d4est have built-in quadrature
- * types for Gauss-Legendre, Gauss-Legendre-Lobatto, and
- * a custom set for compactified intervals: "Gauss-Legendre-Compactified"
+ * types for gauss-Legendre, gauss-Legendre-lobatto, and
+ * a custom set for compactified intervals: "gauss-Legendre-Compactified"
  * for special use with compactified cubed spheres
  * 
  */
 
 typedef struct d4est_quadrature d4est_quadrature_t;
 
-typedef enum {QUAD_GAUSS_LEGENDRE,
-              QUAD_GAUSS_LEGENDRE_LOBATTO,
-              QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4,
-              QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG3,
-              QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG2,
-              QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG1,
-              QUAD_NOT_SET} d4est_quadrature_type_t; 
+typedef enum {QUAD_TYPE_GAUSS_LEGENDRE,
+              QUAD_TYPE_GAUSS_LEGENDRE_LOBATTO,
+              QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4,
+              QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG3,
+              QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG2,
+              QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG1,
+              QUAD_TYPE_NOT_SET} d4est_quadrature_type_t; 
 
-typedef enum {QUAD_MORTAR,
-              QUAD_VOLUME} d4est_quadrature_object_type_t;
+typedef enum {QUAD_OBJECT_MORTAR,
+              QUAD_OBJECT_VOLUME} d4est_quadrature_object_type_t;
 
 typedef enum
   {
-    QUAD_JAC_TIMES_POLY_INTEGRAND,
-    QUAD_UNKNOWN_INTEGRAND
+    QUAD_INTEGRAND_JAC_TIMES_POLY,
+    QUAD_INTEGRAND_POISSON_STIFFNESS_INTEGRAL,
+    QUAD_INTEGRAND_POISSON_FLUXTERM1_INTEGRAL,
+    QUAD_INTEGRAND_POISSON_FLUXTERM2_INTEGRAL,
+    QUAD_INTEGRAND_POISSON_FLUXTERM3_INTEGRAL,
+    QUAD_INTEGRAND_UNKNOWN
   } d4est_quadrature_integrand_type_t;
 
 typedef struct {

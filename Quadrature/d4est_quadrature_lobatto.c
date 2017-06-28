@@ -32,7 +32,7 @@ d4est_quadrature_lobatto_get_weights
  int degree,
  int rst_direction
 ){
-  return d4est_operators_fetch_GLL_weights_1d(d4est_ops, degree);
+  return d4est_operators_fetch_lobatto_weights_1d(d4est_ops, degree);
 }
 
 double*
@@ -48,12 +48,12 @@ d4est_quadrature_lobatto_get_rst
  int rst_direction
 )
 {
-  if (object_type == QUAD_MORTAR)
-    return d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM)-1, degree, rst_direction);
-  else if (object_type == QUAD_VOLUME)
-    return d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), degree, rst_direction);
+  if (object_type == QUAD_OBJECT_MORTAR)
+    return d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM)-1, degree, rst_direction);
+  else if (object_type == QUAD_OBJECT_VOLUME)
+    return d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), degree, rst_direction);
   else{
-    mpi_abort("[D4EST_ERROR]: Object type must be QUAD_FACE or QUAD_VOLUME");
+    mpi_abort("[D4EST_ERROR]: Object type must be QUAD_FACE or QUAD_OBJECT_VOLUME");
     return NULL;
   }
 }

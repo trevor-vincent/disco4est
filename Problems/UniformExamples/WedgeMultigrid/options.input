@@ -15,7 +15,7 @@ num_unifrefs = 1
 deg = 2
 deg_quad = 2
 deg_stiffness = 2
-rhs_use_Lobatto = 1
+rhs_use_lobatto = 1
 solve_with_multigrid = 1
 use_mg_as_pc_for_ksp = 1
 
@@ -26,7 +26,7 @@ R2 = 10000
 compactify_outer_wedge = 1
 DX_compute_method = analytic
 JAC_compute_method = numerical
-geom_quad_type = Gauss
+geom_quad_type = gauss
 
 [krylov_petsc]
 ksp_type = fcg
@@ -45,7 +45,7 @@ R2 = 2
 compactify_outer_wedge = 1
 DX_compute_method = analytic
 JAC_compute_method = numerical
-geom_quad_type = Gauss
+geom_quad_type = gauss
 
 
 

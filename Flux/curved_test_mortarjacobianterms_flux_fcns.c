@@ -17,12 +17,12 @@ void curved_test_mortarjacobianterms_init_vecs
   
   int dim = (P4EST_DIM);
   int deg = elem_data->deg;
-  int volume_nodes_lobatto = d4est_operators_get_nodes(dim,deg);
-  int face_nodes_lobatto = d4est_operators_get_nodes(dim-1,deg);
-  int volume_nodes_quad = d4est_operators_get_nodes(dim, elem_data->deg_quad);
+  int volume_nodes_lobatto = d4est_lgl_get_nodes(dim,deg);
+  int face_nodes_lobatto = d4est_lgl_get_nodes(dim-1,deg);
+  int volume_nodes_quad = d4est_lgl_get_nodes(dim, elem_data->deg_quad);
   
   for (int i = 0; i < (P4EST_DIM); i++){
-    d4est_operators_apply_Dij(d4est_ops,
+    d4est_operators_apply_dij(d4est_ops,
                      &(test_data->u[elem_data->nodal_stride]),
                      dim,
                      elem_data->deg,
@@ -54,8 +54,8 @@ curved_test_mortarjacobianterms_dirichlet
 )
 {
   test_mortarjacobianterms_data_t* data = params;
-  int face_nodes_m_lobatto = d4est_operators_get_nodes((P4EST_DIM) - 1, e_m->deg);
-  int face_nodes_m_quad = d4est_operators_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
+  int face_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg);
+  int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
 
   double* sj_on_f_m_quad = P4EST_ALLOC(double, face_nodes_m_quad);
   double* sjvol_on_f_m_quad = P4EST_ALLOC(double, face_nodes_m_quad);
@@ -352,8 +352,8 @@ curved_test_mortarjacobianterms_interface
     deg_m_lobatto[i] = e_m[i]->deg;
     /* deg_m_quad[i] = e_m[i]->deg_quad; */
     
-    face_nodes_m_lobatto[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
-    face_nodes_m_quad[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg_quad);
+    face_nodes_m_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
+    face_nodes_m_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg_quad);
     
     total_side_nodes_m_lobatto += face_nodes_m_lobatto[i];
     total_side_nodes_m_quad += face_nodes_m_quad[i];
@@ -367,8 +367,8 @@ curved_test_mortarjacobianterms_interface
     deg_p_lobatto_porder[i] = e_p[i]->deg;
     /* deg_p_quad[i] = e_p_oriented[i]->deg_quad; */
 
-    face_nodes_p_lobatto[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
-    face_nodes_p_quad[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg_quad);
+    face_nodes_p_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
+    face_nodes_p_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg_quad);
     
     total_side_nodes_p_lobatto += face_nodes_p_lobatto[i];
     total_side_nodes_p_quad += face_nodes_p_quad[i];
@@ -384,8 +384,8 @@ curved_test_mortarjacobianterms_interface
                                             e_p_oriented[j]->deg_quad);
       deg_mortar_lobatto[i+j] = util_max_int( e_m[i]->deg,
                                               e_p_oriented[j]->deg );      
-      nodes_mortar_quad[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
-      nodes_mortar_lobatto[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
+      nodes_mortar_quad[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
+      nodes_mortar_lobatto[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
       total_nodes_mortar_quad += nodes_mortar_quad[i+j];
       total_nodes_mortar_lobatto += nodes_mortar_lobatto[i+j];
       
@@ -399,7 +399,7 @@ curved_test_mortarjacobianterms_interface
   for(int i = 0; i < faces_mortar; i++){
     int inew = i;
     if (faces_mortar == (P4EST_HALF)){
-      inew = d4est_operators_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, i);
+      inew = d4est_reference_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, i);
     }
     deg_mortar_quad_porder[inew] = deg_mortar_quad[i];
     nodes_mortar_quad_porder[inew] = nodes_mortar_quad[i];
@@ -495,7 +495,7 @@ curved_test_mortarjacobianterms_interface
          &dudr_p_on_f_p_porder[d][stride]
         );
     }
-    stride += d4est_operators_get_nodes((P4EST_DIM)-1, e_p[i]->deg);
+    stride += d4est_lgl_get_nodes((P4EST_DIM)-1, e_p[i]->deg);
   }
 
   stride = 0;
@@ -509,7 +509,7 @@ curved_test_mortarjacobianterms_interface
          e_p[i]->deg,
          &u_p_on_f_p_porder[stride]
         );
-    stride += d4est_operators_get_nodes((P4EST_DIM)-1, e_p[i]->deg);
+    stride += d4est_lgl_get_nodes((P4EST_DIM)-1, e_p[i]->deg);
   }
   
 
@@ -855,11 +855,11 @@ curved_test_mortarjacobianterms_interface
   for (int face = 0; face < faces_mortar; face++){
     int face_p = face;
     if (faces_mortar == (P4EST_HALF))
-      face_p = d4est_operators_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, face);
+      face_p = d4est_reference_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, face);
 
     int oriented_face_mortar_stride = 0;
     for (int b = 0; b < face_p; b++){
-      oriented_face_mortar_stride += d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar_quad_porder[b]);
+      oriented_face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad_porder[b]);
     }
 
     /* printf("face, face_p, deg_mortar_quad[face], deg_mortar_quad_p[face_p] = %d,%d,%d,%d\n", face, face_p, deg_mortar_quad[face], deg_mortar_quad_p[face_p]); */
@@ -942,14 +942,14 @@ curved_test_mortarjacobianterms_interface
   }
       
 
-      d4est_linalg_vec_scale(-1., &nvol_p_on_f_p_mortar_quad_reoriented[d][face_mortar_stride], d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]));
+      d4est_linalg_vec_scale(-1., &nvol_p_on_f_p_mortar_quad_reoriented[d][face_mortar_stride], d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]));
 
 
-      d4est_linalg_vec_scale(-1., &nvol_p_on_f_p_mortar_quad_reoriented_analytic[d][face_mortar_stride], d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]));
+      d4est_linalg_vec_scale(-1., &nvol_p_on_f_p_mortar_quad_reoriented_analytic[d][face_mortar_stride], d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]));
       
     }
     
-    face_mortar_stride += d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
+    face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
   }
   
   for (int d = 0; d < (P4EST_DIM); d++){

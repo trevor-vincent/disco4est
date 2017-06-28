@@ -89,7 +89,7 @@ do
 				
 			    # for h in "${arr8[@]}"
 			    # do
-				#break for loop on Gauss offset if were not using Gauss
+				#break for loop on gauss offset if were not using gauss
 				# if [ "$g" -eq "0" ]; then
 				# if [ "$h" -gt "0" ]; then
 				#     break

@@ -1,6 +1,13 @@
 #ifndef CURVED_ELEMENT_DATA_H
 #define CURVED_ELEMENT_DATA_H 
 
+#define MAX_DEGREE 20
+#if (P4EST_DIM) == 3
+#define MAX_NODES (MAX_DEGREE + 1) * (MAX_DEGREE + 1) * (MAX_DEGREE + 1)
+#else
+#define MAX_NODES (MAX_DEGREE + 1) * (MAX_DEGREE + 1)
+#endif
+
 #include <ip_flux_params.h>
 #include <grid_functions.h>
 #include <d4est_operators.h>
@@ -29,28 +36,19 @@ typedef struct {
   double* xyz_quad [(P4EST_DIM)]; /* points on quadrature grid */
   double* xyz_rst_quad[(P4EST_DIM)][(P4EST_DIM)]; /* mapping derivatives */
   double* rst_xyz_quad[(P4EST_DIM)][(P4EST_DIM)]; /* inverse mapping derivatives */
-
-  double diam; /* approximate value of element diameter*/
-  double volume;
-  double surface_area [(P4EST_FACES)];
-  
-  /* aposteriori/apriori error indicator for hp_amr or h_amr */
+ 
+  /* estimator variables */
   double local_estimator;
   double local_predictor;
 
-  double* Au_elem;  /* alias for Au */
+  /* local nodal fields */
   double u_elem[MAX_NODES];   /* storage for MPI transfers */
   double dudr_elem[(P4EST_DIM)][MAX_NODES];   /* storage for MPI transfers */
+  double* Au_elem;  /* alias for Au */
   
   int deg; /* nodal degree */
   int deg_quad; /* deg for quadrature */
-  
-#ifndef NDEBUG
-  /* useful flag for debugging */
-  int debug_flag;
-  int on_bdry;
-#endif
-  
+    
 } d4est_element_data_t;
 
 /* This file was automatically generated.  Do not edit! */

@@ -41,16 +41,16 @@ bi_estimator_init
   int deg = element_data->deg;
   int i;
 
-  element_data->ustar_min_u = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_operators_get_nodes(dim-1, deg));
+  element_data->ustar_min_u = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_lgl_get_nodes(dim-1, deg));
   
   for (i = 0; i < (P4EST_DIM); i++){
-    element_data->qstar_min_q[i] = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_operators_get_nodes(dim-1, deg));
-    element_data->du_elem[i] = P4EST_ALLOC_ZERO(double, d4est_operators_get_nodes(dim, deg));   
+    element_data->qstar_min_q[i] = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_lgl_get_nodes(dim-1, deg));
+    element_data->du_elem[i] = P4EST_ALLOC_ZERO(double, d4est_lgl_get_nodes(dim, deg));   
   }
 
   element_data->u_elem = &(problem_data->u[element_data->stride]);
 
-  int volume_nodes = d4est_operators_get_nodes(dim,deg);
+  int volume_nodes = d4est_lgl_get_nodes(dim,deg);
 
   d4est_linalg_copy_1st_to_2nd(
   element_data->u_elem,
@@ -59,7 +59,7 @@ bi_estimator_init
     );
 
   for (i = 0; i < (P4EST_DIM); i++){
-    d4est_operators_apply_Dij(d4est_ops, element_data->u_elem, dim, deg, i, element_data->du_elem[i]);
+    d4est_operators_apply_dij(d4est_ops, element_data->u_elem, dim, deg, i, element_data->du_elem[i]);
     d4est_linalg_vec_scale(2./h, element_data->du_elem[i], volume_nodes);
   }
 }
@@ -81,7 +81,7 @@ void* user_data
   int dim = (P4EST_DIM);
   int deg = element_data->deg;
   int faces = 2*dim;
-  int face_nodes = d4est_operators_get_nodes(dim-1,deg);
+  int face_nodes = d4est_lgl_get_nodes(dim-1,deg);
 
   double surface_jacobian = element_data->surface_jacobian;
   double h = element_data->h;
@@ -103,7 +103,7 @@ void* user_data
   for (f = 0; f < faces; f++){
     /* calculate Ne1_sqr term */
     Je1 =  &(element_data->ustar_min_u[f*face_nodes]);
-    d4est_operators_apply_Mij(d4est_ops, Je1, dim - 1, deg, MJe1);
+    d4est_operators_apply_mij(d4est_ops, Je1, dim - 1, deg, MJe1);
     d4est_linalg_vec_scale(surface_jacobian, MJe1, face_nodes);
     Nsqre1 += d4est_linalg_vec_dot(Je1, MJe1, face_nodes);
 
@@ -115,7 +115,7 @@ void* user_data
     /* calculate Ne2_sqr term */
     for (d = 0; d < (P4EST_DIM); d++){
       Je2 = &(element_data->qstar_min_q[d][f*face_nodes]);
-      d4est_operators_apply_Mij(d4est_ops, Je2, dim - 1, deg, MJe2);
+      d4est_operators_apply_mij(d4est_ops, Je2, dim - 1, deg, MJe2);
       d4est_linalg_vec_scale(surface_jacobian, MJe2, face_nodes);
       Nsqre2 += d4est_linalg_vec_dot(Je2, MJe2, face_nodes);
 

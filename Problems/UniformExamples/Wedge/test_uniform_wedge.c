@@ -115,7 +115,7 @@ typedef struct {
   int deg;
   int deg_quad;
   int deg_stiffness;
-  int rhs_use_Lobatto;
+  int rhs_use_lobatto;
   
 } problem_input_t;
 
@@ -145,9 +145,9 @@ int problem_input_handler
     mpi_assert(pconfig->deg_stiffness == -1);
     pconfig->deg_stiffness = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"rhs_use_Lobatto")) {
-    mpi_assert(pconfig->rhs_use_Lobatto == -1);
-    pconfig->rhs_use_Lobatto = atoi(value);
+  else if (util_match_couple(section,"problem",name,"rhs_use_lobatto")) {
+    mpi_assert(pconfig->rhs_use_lobatto == -1);
+    pconfig->rhs_use_lobatto = atoi(value);
   }  
   else {
     return 0;  /* unknown section/name, error */
@@ -169,7 +169,7 @@ problem_input
   input.deg = -1;
   input.deg_quad = -1; 
   input.deg_stiffness = -1; 
-  input.rhs_use_Lobatto = -1; 
+  input.rhs_use_lobatto = -1; 
 
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
@@ -379,8 +379,8 @@ void problem_build_rhs
            d4est_geom,
            d4est_quad,
            &mesh_object,
-           QUAD_VOLUME,
-           QUAD_JAC_TIMES_POLY_INTEGRAND,
+           QUAD_OBJECT_VOLUME,
+           QUAD_INTEGRAND_UNKNOWN,
            &f[ed->nodal_stride],
            ed->deg,
            ed->J_quad,
@@ -412,7 +412,7 @@ void problem_build_rhs
         /* } */
 
 
-        printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg)));
+        printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_lgl_get_nodes((P4EST_DIM), ed->deg)));
         
         
       }

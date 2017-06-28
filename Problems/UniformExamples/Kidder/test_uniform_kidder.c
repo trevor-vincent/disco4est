@@ -544,7 +544,7 @@ kidder_build_residual
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        d4est_element_data_apply_fofufofvlj_Gaussnodes
+        d4est_element_data_apply_fofufofvlj_gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -562,11 +562,11 @@ kidder_build_residual
 
         /* DEBUG_PRINT_ARR_DBL */
         
-        /* int volume_nodes_Lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg); */
-        /* int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad); */
+        /* int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), ed->deg); */
+        /* int volume_nodes_gauss = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad); */
         /* double* u_tmp = &prob_vecs->u[ed->nodal_stride]; */
-        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_Lobatto); */
-        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_Gauss); */
+        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_lobatto); */
+        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_gauss); */
         
       }
     }
@@ -810,7 +810,7 @@ problem_init
 /*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq); */
 /*         d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data); */
 
-/*         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM),ed->deg_quad); */
+/*         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),ed->deg_quad); */
 /*         double rst [(P4EST_DIM)]; */
 /*         double drst_dxyz_i [(P4EST_DIM)][(P4EST_DIM)]; */
 /*         double drdxjacdrdx_i_anal [(P4EST_DIM)][(P4EST_DIM)]; */
@@ -891,7 +891,7 @@ problem_init
       /*    NULL, */
       /*    NULL, */
       /*    matrix_op_callbacks->user, */
-      /*    set_deg_Gauss, */
+      /*    set_deg_gauss, */
       /*    &input */
       /*   ); */
     
@@ -1085,7 +1085,7 @@ problem_init
     /*   for (int qq = 0; qq < QQ; ++qq) { */
     /*     p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq); */
     /*     d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data); */
-    /*     int volume_nodes = d4est_operators_get_nodes((P4EST_DIM),ed->deg); */
+    /*     int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),ed->deg); */
     /*     d4est_operators_convert_nodal_to_modal(d4est_ops, &Au[nodal_stride], */
     /*                                   (P4EST_DIM), ed->deg, &Au_modal[nodal_stride]); */
     /*     nodal_stride += volume_nodes; */

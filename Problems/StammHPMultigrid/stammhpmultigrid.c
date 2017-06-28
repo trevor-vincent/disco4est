@@ -160,7 +160,7 @@ void problem_build_rhs
      d4est_ops
     );
   
-  element_data_apply_Mij_on_vec
+  element_data_apply_mij_on_vec
     (
      p4est,
      f,

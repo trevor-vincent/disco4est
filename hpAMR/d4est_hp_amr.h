@@ -1,5 +1,5 @@
-#ifndef HP_AMR_H
-#define HP_AMR_H 
+#ifndef D4EST_HP_AMR_H
+#define D4EST_HP_AMR_H 
 
 #include "../pXest/pXest.h"
 #include "../dGMath/d4est_operators.h"
@@ -38,7 +38,7 @@ typedef struct {
   p4est_iter_volume_t iter_volume;
   void* hp_amr_scheme_data;
 
-} hp_amr_scheme_t;
+} d4est_hp_amr_scheme_t;
 
 typedef struct {
   
@@ -54,19 +54,17 @@ typedef struct {
   int elements_marked_for_prefine;
   double* (*get_storage)(d4est_element_data_t*);
   
-} hp_amr_data_t;
+} d4est_hp_amr_data_t;
 
 void
-hp_amr
+d4est_hp_amr
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  double** data_to_hp_refine,
  estimator_stats_t** stats,
- hp_amr_scheme_t* scheme,
+ d4est_hp_amr_scheme_t* scheme,
  double* (*get_storage)(d4est_element_data_t*)
 );
-
-
 
 #endif

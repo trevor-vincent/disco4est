@@ -5,10 +5,10 @@
 #include "../Flux/central_flux_params.h"
 
 curved_flux_fcn_ptrs_t
-curved_Gauss_central_flux_vector_dirichlet_fetch_fcns
+curved_gauss_central_flux_vector_dirichlet_fetch_fcns
 (
  grid_fcn_t bndry_fcn,
- central_flux_params_t* curved_Gauss_central_params
+ central_flux_params_t* curved_gauss_central_params
 );
 
 #endif

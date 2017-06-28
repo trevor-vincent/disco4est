@@ -31,7 +31,7 @@ hp_amr_curved_uniform_refine_replace_callback (
   for (i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;
 
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), degH);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), degH);
     
   /* int h_pow = -1; */
   /* if (smooth_pred_data->norm_type == l2_norm_type) */
@@ -92,7 +92,7 @@ hp_amr_curved_uniform_balance_replace_callback (
   for (i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;
 
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), degH);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), degH);
     
   int h_pow = -1;
   /* if (smooth_pred_data->norm_type == l2_norm_type) */

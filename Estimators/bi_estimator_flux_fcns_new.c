@@ -28,7 +28,7 @@ bi_est_dirichlet
 
   /* printf("prefactor = %f\n", prefactor); */
   
-  int face_nodes_m = d4est_operators_get_nodes ( (P4EST_DIM) - 1, e_m->deg );
+  int face_nodes_m = d4est_lgl_get_nodes ( (P4EST_DIM) - 1, e_m->deg );
   double* tmp = P4EST_ALLOC(double, face_nodes_m);
   double* xyz_on_f_m [(P4EST_DIM)];
   double* u_m_on_f_m = P4EST_ALLOC(double, face_nodes_m);
@@ -47,10 +47,10 @@ bi_est_dirichlet
   for (dir = 0; dir < (P4EST_DIM); dir++){
     xyz_on_f_m[dir] = P4EST_ALLOC(double, face_nodes_m);
 
-    double* rst = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), e_m->deg, dir);
+    double* rst = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), e_m->deg, dir);
     d4est_operators_apply_slicer(d4est_ops, rst, (P4EST_DIM), f_m, e_m->deg, tmp);
     
-    d4est_operators_rtox_array(tmp, e_m->xyz_corner[dir], e_m->h, xyz_on_f_m[dir], face_nodes_m);
+    d4est_reference_rtox_array(tmp, e_m->xyz_corner[dir], e_m->h, xyz_on_f_m[dir], face_nodes_m);
   }
 
   /* get boundary values on this face */
@@ -66,7 +66,7 @@ bi_est_dirichlet
   }
 
   double n [3];
-  d4est_operators_get_normal(f_m, (P4EST_DIM), &n[0]);
+  d4est_reference_get_normal(f_m, (P4EST_DIM), &n[0]);
 
   double* Je2 = P4EST_ALLOC(double, face_nodes_m);
   double* MJe2 = P4EST_ALLOC(double, face_nodes_m);
@@ -87,7 +87,7 @@ bi_est_dirichlet
     }
 
 
-    d4est_operators_apply_Mij(d4est_ops, Je2, (P4EST_DIM)-1, e_m->deg, MJe2);
+    d4est_operators_apply_mij(d4est_ops, Je2, (P4EST_DIM)-1, e_m->deg, MJe2);
     double Je2MJe2 = d4est_linalg_vec_dot(Je2, MJe2, face_nodes_m);
     Je2MJe2 *= e_m->surface_jacobian;
     e_m->local_estimator += Je2MJe2;
@@ -132,7 +132,7 @@ bi_est_interface
   double u_prefactor_mortar [(P4EST_HALF)];
   
   double n [(P4EST_DIM)];
-  d4est_operators_get_normal(f_m, (P4EST_DIM), &n[0]);
+  d4est_reference_get_normal(f_m, (P4EST_DIM), &n[0]);
   
   int i,j;
   
@@ -141,7 +141,7 @@ bi_est_interface
   for (i = 0; i < faces_m; i++){
     deg_m[i] = e_m[i]->deg;
     if (e_m[i]->deg > max_deg_m) max_deg_m = e_m[i]->deg;
-    face_nodes_m[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg );
+    face_nodes_m[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg );
     total_side_nodes_m += face_nodes_m[i];
   }
 
@@ -150,7 +150,7 @@ bi_est_interface
   for (i = 0; i < faces_p; i++){
     deg_p[i] = e_p[i]->deg;
     if (e_p[i]->deg > max_deg_p) max_deg_p = e_p[i]->deg;
-    face_nodes_p[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p[i]->deg );
+    face_nodes_p[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p[i]->deg );
     total_side_nodes_p += face_nodes_p[i];
   }    
 
@@ -182,14 +182,14 @@ bi_est_interface
 
       /* printf("Je1_prefactor_mortar, Je2_prefactor_mortar = %f,%f\n", gradu_prefactor_mortar[i], u_prefactor_mortar[i]); */
       
-      nodes_mortar[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar[i+j] );
+      nodes_mortar[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar[i+j] );
       
       total_nodes_mortar += nodes_mortar[i+j];
     }
 
   /* scalar and vector fields on each of the (-) and (+) elements */
-  double* du_m = P4EST_ALLOC(double, d4est_operators_get_nodes((P4EST_DIM), max_deg_m));
-  double* du_p = P4EST_ALLOC(double, d4est_operators_get_nodes((P4EST_DIM), max_deg_p));
+  double* du_m = P4EST_ALLOC(double, d4est_lgl_get_nodes((P4EST_DIM), max_deg_m));
+  double* du_p = P4EST_ALLOC(double, d4est_lgl_get_nodes((P4EST_DIM), max_deg_p));
   /* slices of scalar/vector fields of (-) onto f_m and (+) onto f_p */
   double* u_m_on_f_m = P4EST_ALLOC(double, total_side_nodes_m);
   double* du_m_on_f_m = P4EST_ALLOC(double, total_side_nodes_m); 
@@ -272,7 +272,7 @@ bi_est_interface
     /* compute the (-)-u-derivative and project on the (-)-side faces and project q onto the (-)-side faces */
     stride = 0;
     for (i = 0; i < faces_m; i++){
-      d4est_operators_apply_Dij
+      d4est_operators_apply_dij
         (
          d4est_ops,
          e_m[i]->u_elem,
@@ -282,7 +282,7 @@ bi_est_interface
          du_m
         );
       
-      d4est_linalg_vec_scale(2./e_m[i]->h, du_m, d4est_operators_get_nodes((P4EST_DIM), e_m[i]->deg));
+      d4est_linalg_vec_scale(2./e_m[i]->h, du_m, d4est_lgl_get_nodes((P4EST_DIM), e_m[i]->deg));
 
       d4est_operators_apply_slicer
         (
@@ -300,8 +300,8 @@ bi_est_interface
     /* compute the (+)-u-derivative and project on the (+)-side faces and project q onto the (+)-side faces */
     stride = 0;
     for (i = 0; i < faces_p; i++){
-      d4est_operators_apply_Dij(d4est_ops, &(e_p[i]->u_elem[0]), (P4EST_DIM), e_p[i]->deg, dir, du_p);
-      d4est_linalg_vec_scale(2./e_p[i]->h, du_p, d4est_operators_get_nodes((P4EST_DIM), e_p[i]->deg));
+      d4est_operators_apply_dij(d4est_ops, &(e_p[i]->u_elem[0]), (P4EST_DIM), e_p[i]->deg, dir, du_p);
+      d4est_linalg_vec_scale(2./e_p[i]->h, du_p, d4est_lgl_get_nodes((P4EST_DIM), e_p[i]->deg));
 
       d4est_operators_apply_slicer
         (
@@ -407,7 +407,7 @@ bi_est_interface
     for (f = 0; f < faces_mortar; f++){
       for (int d = 0; d < (P4EST_DIM); d++){
 
-         d4est_operators_apply_Mij(d4est_ops,
+         d4est_operators_apply_mij(d4est_ops,
                          &Je2[d][stride],
                          (P4EST_DIM)-1,
                          deg_mortar[f],
@@ -429,7 +429,7 @@ bi_est_interface
     stride = 0;
     for (f = 0; f < faces_mortar; f++){  
 
-      d4est_operators_apply_Mij(d4est_ops,
+      d4est_operators_apply_mij(d4est_ops,
                        &Je1[stride],
                        (P4EST_DIM)-1,
                        deg_mortar[f],
@@ -447,7 +447,7 @@ bi_est_interface
       else{
         e_m[0]->local_estimator += Je1MJe1;
       }
-      stride += nodes_mortar_Gauss[f];
+      stride += nodes_mortar_gauss[f];
     }
 
     for (int d = 0; d < (P4EST_DIM); d++){

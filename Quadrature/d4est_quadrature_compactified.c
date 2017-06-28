@@ -59,10 +59,10 @@ get_compactified_direction
 ){
 
   int tree;
-  if (object_type == QUAD_MORTAR){
+  if (object_type == QUAD_OBJECT_MORTAR){
     tree = ((d4est_quadrature_mortar_t*)object)->tree;
   }
-  else if (object_type == QUAD_VOLUME){
+  else if (object_type == QUAD_OBJECT_VOLUME){
     tree = ((d4est_quadrature_volume_t*)object)->tree;
   }
   else {
@@ -92,17 +92,17 @@ check_if_direction_is_compactified
  int rst_direction,
  int compactified_direction
 ){
-  if (object_type == QUAD_VOLUME){
-    return ((rst_direction == compactified_direction) && (integrand_type == QUAD_JAC_TIMES_POLY_INTEGRAND));
+  if (object_type == QUAD_OBJECT_VOLUME){
+    return ((rst_direction == compactified_direction) && (integrand_type == QUAD_INTEGRAND_UNKNOWN));
   }
-  else if (object_type == QUAD_MORTAR){
+  else if (object_type == QUAD_OBJECT_MORTAR){
     d4est_geometry_face_info_t face_info;
     d4est_geometry_get_face_info(((d4est_quadrature_mortar_t*)object)->face, &face_info);
     if (rst_direction == 0){
-      return (face_info.a == compactified_direction) && (integrand_type == QUAD_JAC_TIMES_POLY_INTEGRAND);
+      return (face_info.a == compactified_direction) && (integrand_type == QUAD_INTEGRAND_UNKNOWN);
     }
     else if (rst_direction == 1){
-      return (face_info.b == compactified_direction) && (integrand_type == QUAD_JAC_TIMES_POLY_INTEGRAND);
+      return (face_info.b == compactified_direction) && (integrand_type == QUAD_INTEGRAND_UNKNOWN);
     }
     else {
       mpi_abort("[D4EST_ERROR]: rst_direction < (P4EST_DIM)-1 when type == ELEMENT_FACE");
@@ -228,24 +228,24 @@ d4est_quadrature_compactified_get_weights
   d4est_quadrature_compactified_storage_t* storage = d4est_quad->user;
   
   if (!is_it_compactified){
-    return d4est_operators_fetch_GL_weights_1d(d4est_ops, degree);
+    return d4est_operators_fetch_gauss_weights_1d(d4est_ops, degree);
   }
   else{
-    if (object_type == QUAD_VOLUME){
+    if (object_type == QUAD_OBJECT_VOLUME){
       int local_id = ((d4est_quadrature_volume_t*)object)->element_id;
       int stride = storage->volume_strides_1d[local_id];
       int deg_quad_stored = storage->volume_deg_quad[local_id];
       mpi_assert(degree == deg_quad_stored);      
       return &storage->volume_weights[stride];
     }
-    else if (object_type == QUAD_MORTAR){
+    else if (object_type == QUAD_OBJECT_MORTAR){
       int mortar_side_id = ((d4est_quadrature_mortar_t*)object)->mortar_side_id;
       int mortar_subface_id = ((d4est_quadrature_mortar_t*)object)->mortar_subface_id;
       int stride = storage->mortar_strides_1d[(P4EST_HALF)*mortar_side_id + mortar_subface_id];
       return &storage->mortar_weights[stride];
     }
     else {
-      mpi_abort("[D4EST_ERROR]: object_type must be QUAD_VOLUME OR QUAD_MORTAR");
+      mpi_abort("[D4EST_ERROR]: object_type must be QUAD_OBJECT_VOLUME OR QUAD_OBJECT_MORTAR");
     }
     
   }
@@ -257,16 +257,16 @@ d4est_quadrature_compactified_check_type
  d4est_quadrature_t* d4est_quad
 )
 {
-    if (d4est_quad->quad_type == QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG1){
+    if (d4est_quad->quad_type == QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG1){
       return 1;
     }
-    else if (d4est_quad->quad_type == QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG2){
+    else if (d4est_quad->quad_type == QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG2){
       return 1;
     }
-    else if (d4est_quad->quad_type == QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG3){
+    else if (d4est_quad->quad_type == QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG3){
       return 1;
     }
-    else if (d4est_quad->quad_type == QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4){
+    else if (d4est_quad->quad_type == QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4){
       return 1;
     }
     else {
@@ -297,11 +297,11 @@ d4est_quadrature_compactified_get_rst
     
   d4est_quadrature_compactified_storage_t* storage = d4est_quad->user;
   
-  if (object_type == QUAD_VOLUME){
+  if (object_type == QUAD_OBJECT_VOLUME){
     mpi_assert(rst_direction < (P4EST_DIM) && rst_direction >= 0);
 
     if (!is_it_compactified){
-      return d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), degree, rst_direction);
+      return d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), degree, rst_direction);
     }
     else{
       int local_id = ((d4est_quadrature_volume_t*)object)->element_id;
@@ -311,10 +311,10 @@ d4est_quadrature_compactified_get_rst
       return &(storage->volume_rst[rst_direction][stride]);
     }
   }
-  else if (object_type == QUAD_MORTAR){
+  else if (object_type == QUAD_OBJECT_MORTAR){
 
     if (!is_it_compactified){
-      return d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, degree, rst_direction);      
+      return d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, degree, rst_direction);      
     }
     else {
       /* mpi_assert(rst_direction == 1 && compactified_direction == 2); /\* sanity check for now *\/ */
@@ -353,10 +353,10 @@ d4est_quadrature_compactified_get_interp
 
   d4est_quadrature_compactified_storage_t* storage = d4est_quad->user;
 
-  if (object_type == QUAD_VOLUME){
+  if (object_type == QUAD_OBJECT_VOLUME){
     mpi_assert(rst_direction < (P4EST_DIM) && rst_direction >= 0);
     if (!is_it_compactified){
-      return d4est_operators_fetch_ref_GLL_to_GL_interp_1d(d4est_ops, deg_lobatto, deg_quad);
+      return d4est_operators_fetch_lobatto_to_gauss_interp_1d(d4est_ops, deg_lobatto, deg_quad);
     }
     else{
       int local_id = ((d4est_quadrature_volume_t*)object)->element_id;
@@ -368,10 +368,10 @@ d4est_quadrature_compactified_get_interp
       return &(storage->volume_interp[stride]);
     }
   }
-  else if (object_type == QUAD_MORTAR){
+  else if (object_type == QUAD_OBJECT_MORTAR){
 
     if (!is_it_compactified){
-      return d4est_operators_fetch_ref_GLL_to_GL_interp_1d(d4est_ops, deg_lobatto, deg_quad);
+      return d4est_operators_fetch_lobatto_to_gauss_interp_1d(d4est_ops, deg_lobatto, deg_quad);
     }
     else {
       /* mpi_assert(rst_direction == 1 && compactified_direction == 2); /\* sanity check for now *\/ */
@@ -407,10 +407,10 @@ d4est_quadrature_compactified_get_interp_trans
 
   d4est_quadrature_compactified_storage_t* storage = d4est_quad->user;
   
-  if (object_type == QUAD_VOLUME){
+  if (object_type == QUAD_OBJECT_VOLUME){
     mpi_assert(rst_direction < (P4EST_DIM) && rst_direction >= 0);
     if (!is_it_compactified){
-      return d4est_operators_fetch_ref_GLL_to_GL_interp_trans_1d(d4est_ops, deg_lobatto, deg_quad);
+      return d4est_operators_fetch_lobatto_to_gauss_interp_trans_1d(d4est_ops, deg_lobatto, deg_quad);
     }
     else{
       int local_id = ((d4est_quadrature_volume_t*)object)->element_id;
@@ -422,10 +422,10 @@ d4est_quadrature_compactified_get_interp_trans
       return &(storage->volume_interp_trans[stride]);
     }
   }
-  else if (object_type == QUAD_MORTAR){
+  else if (object_type == QUAD_OBJECT_MORTAR){
 
     if (!is_it_compactified){
-      return d4est_operators_fetch_ref_GLL_to_GL_interp_trans_1d(d4est_ops, deg_lobatto, deg_quad);
+      return d4est_operators_fetch_lobatto_to_gauss_interp_trans_1d(d4est_ops, deg_lobatto, deg_quad);
     }
     else {
       /* mpi_assert(rst_direction == 1 && compactified_direction == 2); /\* sanity check for now *\/ */
@@ -450,7 +450,7 @@ d4est_quadrature_compactified_compute_interpolation_matrix_and_transpose
  int deg,
  int deg_quad
 ){
-  d4est_operators_build_custom_GLL_interp_1d
+  d4est_operators_build_custom_lobatto_interp_1d
     (
      d4est_ops,
      interp,
@@ -700,8 +700,8 @@ d4est_quadrature_compactified_compute_mortar_strides_and_sizes_boundary
   storage->mortar_strides_1d[mortar_side_id_m*(P4EST_HALF)] = storage->total_mortar_quad_nodes_1d;
   storage->mortar_strides_2d[mortar_side_id_m*(P4EST_HALF)] = storage->total_mortar_quad_nodes_2d;
   
-  storage->total_mortar_quad_nodes_1d += d4est_operators_get_nodes(1, e_m->deg_quad);  
-  storage->total_mortar_quad_nodes_2d += d4est_operators_get_nodes(2, e_m->deg_quad);
+  storage->total_mortar_quad_nodes_1d += d4est_lgl_get_nodes(1, e_m->deg_quad);  
+  storage->total_mortar_quad_nodes_2d += d4est_lgl_get_nodes(2, e_m->deg_quad);
   storage->total_mortar_sides += 1;
 }
 
@@ -752,8 +752,8 @@ d4est_quadrature_compactified_store_data_for_boundary
 
   double* tmp = &storage->mortar_rst[0][mortar_stride_face];
   printf("storaage for f_m = %d\n", f_m);
-  DEBUG_PRINT_ARR_DBL(rst_interface[0], d4est_operators_get_nodes((P4EST_DIM)-1, e_m->deg_quad));
-  DEBUG_PRINT_ARR_DBL(tmp, d4est_operators_get_nodes((P4EST_DIM)-1, e_m->deg_quad));
+  DEBUG_PRINT_ARR_DBL(rst_interface[0], d4est_lgl_get_nodes((P4EST_DIM)-1, e_m->deg_quad));
+  DEBUG_PRINT_ARR_DBL(tmp, d4est_lgl_get_nodes((P4EST_DIM)-1, e_m->deg_quad));
   
   d4est_quadrature_compactified_compute_interpolation_matrix_and_transpose
     (
@@ -794,8 +794,8 @@ d4est_quadrature_compactified_compute_mortar_strides_and_sizes_interface
       int deg_mortar_quad = util_max_int(e_m[i]->deg_quad,e_p_oriented[j]->deg_quad);
       storage->mortar_strides_1d[mortar_side_id_m*(P4EST_HALF) + i + j] = storage->total_mortar_quad_nodes_1d;
       storage->mortar_strides_2d[mortar_side_id_m*(P4EST_HALF) + i + j] = storage->total_mortar_quad_nodes_2d;
-      storage->total_mortar_quad_nodes_2d += d4est_operators_get_nodes(2, deg_mortar_quad);
-      storage->total_mortar_quad_nodes_1d += d4est_operators_get_nodes(1, deg_mortar_quad);
+      storage->total_mortar_quad_nodes_2d += d4est_lgl_get_nodes(2, deg_mortar_quad);
+      storage->total_mortar_quad_nodes_1d += d4est_lgl_get_nodes(1, deg_mortar_quad);
     }
   }
 
@@ -1789,7 +1789,7 @@ d4est_quadrature_compactified_compute_abscissas_and_weights
   d4est_quadrature_compactified_params_t params;
   params.c1 = c1;
   params.c2 = c2;
-  if (d4est_quad->quad_type == QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG1){
+  if (d4est_quad->quad_type == QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG1){
     arbquad_get_abscissas_and_weights_use_aa_and_bb(degree+1,
                                                     custom_weights,
                                                     custom_abscissas,
@@ -1800,7 +1800,7 @@ d4est_quadrature_compactified_compute_abscissas_and_weights
                                                     d4est_quadrature_compactified_c1tpc2_neg1_weight_fcn
                                                    );
   }
-  else if (d4est_quad->quad_type == QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG2){
+  else if (d4est_quad->quad_type == QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG2){
     arbquad_get_abscissas_and_weights_use_aa_and_bb(degree+1,
                                                     custom_weights,
                                                     custom_abscissas,
@@ -1811,7 +1811,7 @@ d4est_quadrature_compactified_compute_abscissas_and_weights
                                                     d4est_quadrature_compactified_c1tpc2_neg2_weight_fcn
                                                    );
   }
-  else if (d4est_quad->quad_type == QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG3){
+  else if (d4est_quad->quad_type == QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG3){
     arbquad_get_abscissas_and_weights_use_aa_and_bb(degree+1,
                                                     custom_weights,
                                                     custom_abscissas,
@@ -1822,7 +1822,7 @@ d4est_quadrature_compactified_compute_abscissas_and_weights
                                                     d4est_quadrature_compactified_c1tpc2_neg3_weight_fcn
                                                    );
   }
-  else if (d4est_quad->quad_type == QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4){
+  else if (d4est_quad->quad_type == QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4){
     arbquad_get_abscissas_and_weights_use_aa_and_bb(degree+1,
                                                     custom_weights,
                                                     custom_abscissas,

@@ -44,8 +44,8 @@ ip_flux_penalty = $4
 [problem]
 rho0_div_rhoc = $5
 domain_size = $6 
-use_Gauss_quad = 1
-deg_offset_for_Gauss_quad = $7
+use_gauss_quad = 1
+deg_offset_for_gauss_quad = $7
 
 [solver]
 krylov_type = cg
@@ -58,7 +58,7 @@ arr3=( 0. .25 2.0 6.0 ) #gammah
 arr4=( 2 ) #penalty
 arr5=( .01 .001 .1 ) #rho0_div_rhoc
 arr6=( 8 5 2 ) #domain size
-arr7=( 1 2 ) #Gauss offset
+arr7=( 1 2 ) #gauss offset
 arr8=( 64 128 256 )
 arr9=( 7 )
 
@@ -83,13 +83,13 @@ do
 				
 			    # for h in "${arr8[@]}"
 			    # do
-				#break for loop on Gauss offset if were not using Gauss
+				#break for loop on gauss offset if were not using gauss
 				# if [ "$g" -eq "0" ]; then
 				# if [ "$h" -gt "0" ]; then
 				#     break
 				# fi
 				# fi
- 				NEWDIR="cds_deg_${a}_perc_${b}_gamh_${c}_pen_${d}_rho0divrhoc_${e}_domsize_${f}_useGauss_1_Gaussoffset_${g}_AmrInfSize_${h}_Solver_cg_degmax_${i}"
+ 				NEWDIR="cds_deg_${a}_perc_${b}_gamh_${c}_pen_${d}_rho0divrhoc_${e}_domsize_${f}_usegauss_1_gaussoffset_${g}_AmrInfSize_${h}_Solver_cg_degmax_${i}"
 				mkdir $NEWDIR
 				cd $NEWDIR
 				SHORTNAME="cds${a}${b}${c}${d}${e}${f}${g}${h}${i}"

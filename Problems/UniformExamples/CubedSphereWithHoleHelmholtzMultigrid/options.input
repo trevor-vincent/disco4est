@@ -73,7 +73,7 @@ DX_compute_method = analytic
 JAC_compute_method = numerical
 compactify_outer_shell = 1
 compactify_inner_shell = 0
-geom_quad_type = Gauss
+geom_quad_type = gauss
 
 [multigrid]
 vcycle_imax = 1;

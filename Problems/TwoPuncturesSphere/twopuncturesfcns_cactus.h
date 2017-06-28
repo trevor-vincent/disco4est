@@ -257,7 +257,7 @@ void twopunctures_cactus_apply_jac
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;        
-        d4est_element_data_apply_fofufofvlilj_Gaussnodes
+        d4est_element_data_apply_fofufofvlilj_gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -307,7 +307,7 @@ twopunctures_cactus_build_residual
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;        
-        d4est_element_data_apply_fofufofvlj_Gaussnodes
+        d4est_element_data_apply_fofufofvlj_gaussnodes
           (
            d4est_ops,
            d4est_geom,

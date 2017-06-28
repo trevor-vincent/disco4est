@@ -14,13 +14,13 @@ sipg_flux_scalar_dirichlet
 )
 {
   grid_fcn_t u_at_bndry = bndry_fcn;
-  /* int vol_nodes_m = d4est_operators_get_nodes( (P4EST_DIM), e_m->deg); */
-  int face_nodes_m = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m->deg);
+  /* int vol_nodes_m = d4est_lgl_get_nodes( (P4EST_DIM), e_m->deg); */
+  int face_nodes_m = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m->deg);
   double* tmp = P4EST_ALLOC(double, face_nodes_m);
   double* xyz_on_f_m [(P4EST_DIM)];
   int dir, i;
   double* u_m_on_f_m = P4EST_ALLOC(double,
-                                   d4est_operators_get_nodes((P4EST_DIM)-1, e_m->deg)
+                                   d4est_lgl_get_nodes((P4EST_DIM)-1, e_m->deg)
                                   );
 
   d4est_operators_apply_slicer(d4est_ops, e_m->u_elem, (P4EST_DIM), f_m, e_m->deg, u_m_on_f_m);
@@ -28,10 +28,10 @@ sipg_flux_scalar_dirichlet
   for (dir = 0; dir < (P4EST_DIM); dir++){
     xyz_on_f_m[dir] = P4EST_ALLOC(double, face_nodes_m);
 
-    double* rst = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), e_m->deg, dir);
+    double* rst = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), e_m->deg, dir);
     d4est_operators_apply_slicer(d4est_ops, rst, (P4EST_DIM), f_m, e_m->deg, tmp);
 
-    d4est_operators_rtox_array(tmp,
+    d4est_reference_rtox_array(tmp,
                       e_m->xyz_corner[dir],
                       e_m->h,
                       xyz_on_f_m[dir],
@@ -88,7 +88,7 @@ sipg_flux_scalar_interface
   int faces_mortar = (faces_m > faces_p) ? faces_m : faces_p;
 
   double n [(P4EST_DIM)];
-  d4est_operators_get_normal(f_m, (P4EST_DIM), &n[0]);
+  d4est_reference_get_normal(f_m, (P4EST_DIM), &n[0]);
   
   int i,j;
   
@@ -99,7 +99,7 @@ sipg_flux_scalar_interface
     /* if (sum_ghost_array != 0) */
       /* printf(" sum_ghost_array = %d, deg_m[i] = %d\n" , sum_ghost_array, deg_m[i]); */
     if (e_m[i]->deg > max_deg_m) max_deg_m = e_m[i]->deg;
-    face_nodes_m[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg );
+    face_nodes_m[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg );
     total_side_nodes_m += face_nodes_m[i];
   }
   
@@ -108,7 +108,7 @@ sipg_flux_scalar_interface
   for (i = 0; i < faces_p; i++){
     deg_p[i] = e_p[i]->deg;
     if (e_p[i]->deg > max_deg_p) max_deg_p = e_p[i]->deg;
-    face_nodes_p[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p[i]->deg );
+    face_nodes_p[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p[i]->deg );
     total_side_nodes_p += face_nodes_p[i];
   }    
 
@@ -118,8 +118,8 @@ sipg_flux_scalar_interface
     for (j = 0; j < faces_p; j++){
       /* find max degree for each face pair of the two sides*/
       deg_mortar[i+j] = util_max_int( e_m[i]->deg, e_p[j]->deg );
-      nodes_mortar[i+j] = d4est_operators_get_nodes ( (P4EST_DIM) - 1, deg_mortar[i+j] );
-      total_nodes_mortar += d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar[i+j] );
+      nodes_mortar[i+j] = d4est_lgl_get_nodes ( (P4EST_DIM) - 1, deg_mortar[i+j] );
+      total_nodes_mortar += d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar[i+j] );
     }
 
   /* scalar and scalar fields on each of the (-) and (+) elements */

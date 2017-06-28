@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
   }
   
   /* start just-in-time dg-math */
-  d4est_operators_t* d4est_ops = d4est_ops_init();  
+  d4est_operators_t* d4est_ops = d4est_ops_init(20);  
   
   /* Solve Problem */
   problem_init

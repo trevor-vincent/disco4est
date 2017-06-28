@@ -385,7 +385,7 @@ void problem_apply_lhs
  d4est_quadrature_t* d4est_quad
 )
 {
-  /* prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns */
+  /* prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns */
                                              /* (zero_fcn, &global_ip_flux_params); */
 
   curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom, d4est_quad);
@@ -404,9 +404,9 @@ void problem_apply_lhs
  /*     for (int q = 0; q < Q; ++q) { */
  /*       p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
  /*       d4est_element_data_t* ed = quad->p.user_data; */
- /*       int volume_nodes_Lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg); */
+ /*       int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), ed->deg); */
 
- /*       d4est_element_data_apply_fofufofvlilj_Gaussnodes */
+ /*       d4est_element_data_apply_fofufofvlilj_gaussnodes */
  /*         ( */
  /*          d4est_ops, */
  /*          d4est_geom, */
@@ -423,7 +423,7 @@ void problem_apply_lhs
  /*          NULL */
  /*         ); */
 
- /*       nodal_stride += volume_nodes_Lobatto; */
+ /*       nodal_stride += volume_nodes_lobatto; */
  /*     } */
  /*   } */
   
@@ -493,7 +493,7 @@ void problem_build_rhs
                                     );
         /* } */
         /* else if(util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_GAUSS")){ */
-        /*   d4est_element_data_apply_fofufofvlj_Gaussnodes */
+        /*   d4est_element_data_apply_fofufofvlj_gaussnodes */
         /*     ( */
         /*      d4est_ops, */
         /*      d4est_geom, */
@@ -514,7 +514,7 @@ void problem_build_rhs
         /* } */
 
 
-        /* printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg))); */
+        /* printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_lgl_get_nodes((P4EST_DIM), ed->deg))); */
         
         
       }
@@ -575,7 +575,7 @@ void problem_build_rhs
 /*         d4est_element_data_t* ed = quad->p.user_data; */
 
 /*         if (util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){ */
-/*         d4est_operators_apply_curvedGaussMass(d4est_ops, */
+/*         d4est_operators_apply_curvedgaussMass(d4est_ops, */
 /*                                      &f[ed->nodal_stride], */
 /*                                      ed->deg, */
 /*                                      ed->J_quad, */
@@ -585,7 +585,7 @@ void problem_build_rhs
 /*                                     ); */
 /*         } */
 /*         else if(util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_GAUSS")){ */
-/*           d4est_element_data_apply_fofufofvlj_Gaussnodes */
+/*           d4est_element_data_apply_fofufofvlj_gaussnodes */
 /*             ( */
 /*              d4est_ops, */
 /*              d4est_geom, */
@@ -606,7 +606,7 @@ void problem_build_rhs
 /*         } */
 
 
-/*         printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg))); */
+/*         printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_lgl_get_nodes((P4EST_DIM), ed->deg))); */
         
         
 /*       } */
@@ -857,7 +857,7 @@ problem_init
 /*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq); */
 /*         d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data); */
 
-/*         int volume_nodes = d4est_operators_get_nodes((P4EST_DIM),ed->deg_quad); */
+/*         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),ed->deg_quad); */
 /*         double rst [(P4EST_DIM)]; */
 /*         double drst_dxyz_i [(P4EST_DIM)][(P4EST_DIM)]; */
 /*         double drdxjacdrdx_i_anal [(P4EST_DIM)][(P4EST_DIM)]; */
@@ -1015,7 +1015,7 @@ problem_init
     /*   for (int qq = 0; qq < QQ; ++qq) { */
     /*     p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq); */
     /*     d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data); */
-    /*     int volume_nodes = d4est_operators_get_nodes((P4EST_DIM),ed->deg); */
+    /*     int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),ed->deg); */
     /*     d4est_operators_convert_nodal_to_modal(d4est_ops, &Au[nodal_stride], */
     /*                                   (P4EST_DIM), ed->deg, &Au_modal[nodal_stride]); */
     /*     nodal_stride += volume_nodes; */

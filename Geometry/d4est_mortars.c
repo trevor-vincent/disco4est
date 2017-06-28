@@ -34,8 +34,8 @@ d4est_mortars_compute_geometric_data_on_mortar_aux
   for (int i = 0; i < num_faces_mortar; i++){
     max_deg = (deg_mortar_quad[i] > max_deg) ? deg_mortar_quad[i] : max_deg;
   }
-  int volume_nodes_max = d4est_operators_get_nodes((P4EST_DIM), max_deg);
-  int face_nodes_max = d4est_operators_get_nodes((P4EST_DIM)-1, max_deg);
+  int volume_nodes_max = d4est_lgl_get_nodes((P4EST_DIM), max_deg);
+  int face_nodes_max = d4est_lgl_get_nodes((P4EST_DIM)-1, max_deg);
   for (int i = 0; i < (P4EST_DIM); i++)
     for (int j = 0; j < (P4EST_DIM); j++){
       /* dxyz_drst[i][j] = P4EST_ALLOC(double, volume_nodes_max); */
@@ -66,7 +66,7 @@ d4est_mortars_compute_geometric_data_on_mortar_aux
   int face_mortar_quad_stride = 0;
   for (int face_mortar = 0; face_mortar < num_faces_mortar; face_mortar++){
   
-    int face_mortar_quad_nodes = d4est_operators_get_nodes((P4EST_DIM) - 1, deg_mortar_quad[face_mortar]);
+    int face_mortar_quad_nodes = d4est_lgl_get_nodes((P4EST_DIM) - 1, deg_mortar_quad[face_mortar]);
     /* double* xyz [(P4EST_DIM)]; */
     for (int d = 0; d < (P4EST_DIM); d++){
       q[d] = q0[face_mortar][d];
@@ -225,7 +225,7 @@ d4est_mortars_compute_geometric_data_on_mortar_aux
       }  
 
     
-    face_mortar_quad_stride += d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face_mortar]);
+    face_mortar_quad_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face_mortar]);
   }
 
   P4EST_FREE(temp);
@@ -356,7 +356,7 @@ d4est_geometry_compute_rst_on_mortar
                               d4est_quad,
                               d4est_geom,
                               &face_object,
-                              QUAD_MORTAR,
+                              QUAD_OBJECT_MORTAR,
                               integrand_type,
                               deg_mortar_quad[face_mortar]
                              );    
@@ -380,7 +380,7 @@ d4est_geometry_compute_qcoords_on_mortar
   for (int j = 0; j < (P4EST_HALF); j++){
     int c = p4est_face_corners[face][j];
     for (int d = 0; d < (P4EST_DIM); d++){
-      int cd = d4est_operators_is_child_left_or_right(c, d);
+      int cd = d4est_reference_is_child_left_or_right(c, d);
       mortar_q0[j][d] = e0_q[d] + cd*e0_dq;
     }
   }
@@ -406,7 +406,7 @@ d4est_geometry_compute_qcoords_on_mortar
       if (num_faces_side != num_faces_mortar)
         mortar_q0[c][d] += dq0mf0[d];
       for (int dir = 0; dir < (P4EST_DIM) - 1; dir++){
-        int cd = d4est_operators_is_child_left_or_right(c, dir);
+        int cd = d4est_reference_is_child_left_or_right(c, dir);
         mortar_q0[c][d] += cd*dqa[dir][d];
       }
     }
@@ -444,8 +444,8 @@ void d4est_mortars_project_mortar_onto_side(d4est_operators_t* d4est_ops,
                               (P4EST_DIM)-1, deg_side[i],
                               &out_side[stride_side]);
 
-      stride_side += d4est_operators_get_nodes((P4EST_DIM)-1, deg_side[i]);
-      stride_mortar += d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar[i]);
+      stride_side += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_side[i]);
+      stride_mortar += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar[i]);
     }
   }
 
@@ -484,8 +484,8 @@ void d4est_mortars_project_mass_mortar_onto_side(d4est_operators_t* dgmath,
                               (P4EST_DIM)-1, deg_side[i],
                               &out_side[stride_side]);
 
-      stride_side += d4est_operators_get_nodes((P4EST_DIM)-1, deg_side[i]);
-      stride_mortar += d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar[i]);
+      stride_side += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_side[i]);
+      stride_mortar += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar[i]);
     }
   }
 
@@ -537,8 +537,8 @@ void d4est_mortars_project_side_onto_mortar_space(d4est_operators_t* d4est_ops,
                              (P4EST_DIM)-1, deg_mortar[i],
                              &out_mortar[stride_mortar]);
 
-      stride_side += d4est_operators_get_nodes((P4EST_DIM)-1, deg_side[i]);
-      stride_mortar += d4est_operators_get_nodes((P4EST_DIM)-1, deg_mortar[i]);
+      stride_side += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_side[i]);
+      stride_mortar += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar[i]);
     }
   } else {
     mpi_abort("ERROR: d4est_mortars_project_side_onto_mortar_space");

@@ -24,7 +24,7 @@
 #include <newton_petsc.h>
 #include <ini.h>
 #include <curved_poisson_operator_primal.h>
-#include <curved_Gauss_central_flux_vector_fcns.h>
+#include <curved_gauss_central_flux_vector_fcns.h>
 #include <multigrid_matrix_operator.h>
 #include <multigrid_smoother_cheby_d4est.h>
 #include <multigrid_smoother_krylov_petsc.h>
@@ -370,7 +370,7 @@ void problem_build_rhs
         d4est_element_data_t* ed = quad->p.user_data;
 
         if (util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){
-        d4est_operators_apply_curvedGaussMass(d4est_ops,
+        d4est_operators_apply_curvedgaussMass(d4est_ops,
                                      &f[ed->nodal_stride],
                                      ed->deg,
                                      ed->J_quad,
@@ -380,7 +380,7 @@ void problem_build_rhs
                                     );
         }
         else if(util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_GAUSS")){
-          d4est_element_data_apply_fofufofvlj_Gaussnodes
+          d4est_element_data_apply_fofufofvlj_gaussnodes
             (
              d4est_ops,
              d4est_geom,
@@ -401,7 +401,7 @@ void problem_build_rhs
         }
 
 
-        printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_operators_get_nodes((P4EST_DIM), ed->deg)));
+        printf("elem_id, rhs sum = %d %.25f\n", ed->id, d4est_linalg_vec_sum(&prob_vecs->rhs[ed->nodal_stride], d4est_lgl_get_nodes((P4EST_DIM), ed->deg)));
         
         
       }

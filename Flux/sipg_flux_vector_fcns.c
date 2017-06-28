@@ -26,8 +26,8 @@ sipg_flux_vector_dirichlet
                   e_m->h,
                   sipg_flux_penalty_prefactor
                  );
-  int face_nodes_m = d4est_operators_get_nodes ( (P4EST_DIM) - 1, e_m->deg );
-  int vol_nodes_m = d4est_operators_get_nodes ( (P4EST_DIM) , e_m->deg );
+  int face_nodes_m = d4est_lgl_get_nodes ( (P4EST_DIM) - 1, e_m->deg );
+  int vol_nodes_m = d4est_lgl_get_nodes ( (P4EST_DIM) , e_m->deg );
   double* tmp = P4EST_ALLOC(double, face_nodes_m);
   double* xyz_on_f_m [(P4EST_DIM)];
   double* u_m_on_f_m = P4EST_ALLOC(double, face_nodes_m);
@@ -43,10 +43,10 @@ sipg_flux_vector_dirichlet
   for (dir = 0; dir < (P4EST_DIM); dir++){
     xyz_on_f_m[dir] = P4EST_ALLOC(double, face_nodes_m);
 
-    double* rst = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM), e_m->deg, dir);
+    double* rst = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), e_m->deg, dir);
     d4est_operators_apply_slicer(d4est_ops, rst, (P4EST_DIM), f_m, e_m->deg, tmp);
     
-    d4est_operators_rtox_array(tmp, e_m->xyz_corner[dir], e_m->h, xyz_on_f_m[dir], face_nodes_m);
+    d4est_reference_rtox_array(tmp, e_m->xyz_corner[dir], e_m->h, xyz_on_f_m[dir], face_nodes_m);
   }
 
   /* get boundary values on this face */
@@ -64,18 +64,18 @@ sipg_flux_vector_dirichlet
   }
 
   double n [3];
-  d4est_operators_get_normal(f_m, (P4EST_DIM), &n[0]);
+  d4est_reference_get_normal(f_m, (P4EST_DIM), &n[0]);
 
   for (dir = 0; dir < (P4EST_DIM); dir++){
     /* calculate gradient of solution variable */
-    d4est_operators_apply_Dij(d4est_ops, e_m->u_elem, (P4EST_DIM), e_m->deg, dir, du_m);
+    d4est_operators_apply_dij(d4est_ops, e_m->u_elem, (P4EST_DIM), e_m->deg, dir, du_m);
     d4est_linalg_vec_scale(2./e_m->h, du_m, vol_nodes_m);
 
     /* get gradient on this face */
     d4est_operators_apply_slicer(d4est_ops, du_m, (P4EST_DIM), f_m, e_m->deg, du_m_on_f_m);
 
     /* if (dir == 0) */
-      /* DEBUG_PRINT_ARR_DBL(du_m_on_f_m, d4est_operators_get_nodes((P4EST_DIM)-1, e_m->deg)); */
+      /* DEBUG_PRINT_ARR_DBL(du_m_on_f_m, d4est_lgl_get_nodes((P4EST_DIM)-1, e_m->deg)); */
     
     d4est_operators_apply_slicer(d4est_ops, e_m->q_elem[dir], (P4EST_DIM), f_m, e_m->deg, q_m_on_f_m);
     
@@ -144,7 +144,7 @@ sipg_flux_vector_interface
   int faces_mortar = (faces_m > faces_p) ? faces_m : faces_p;
 
   double n [(P4EST_DIM)];
-  d4est_operators_get_normal(f_m, (P4EST_DIM), &n[0]);
+  d4est_reference_get_normal(f_m, (P4EST_DIM), &n[0]);
   
   int i,j;
   
@@ -153,7 +153,7 @@ sipg_flux_vector_interface
   for (i = 0; i < faces_m; i++){
     deg_m[i] = e_m[i]->deg;
     if (e_m[i]->deg > max_deg_m) max_deg_m = e_m[i]->deg;
-    face_nodes_m[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg );
+    face_nodes_m[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg );
     total_side_nodes_m += face_nodes_m[i];
   }
 
@@ -162,7 +162,7 @@ sipg_flux_vector_interface
   for (i = 0; i < faces_p; i++){
     deg_p[i] = e_p[i]->deg;
     if (e_p[i]->deg > max_deg_p) max_deg_p = e_p[i]->deg;
-    face_nodes_p[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p[i]->deg );
+    face_nodes_p[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p[i]->deg );
     total_side_nodes_p += face_nodes_p[i];
   }    
 
@@ -185,14 +185,14 @@ sipg_flux_vector_interface
                             );
 
       /* printf("penalty_mortar[%d] = %f\n", i+j, penalty_mortar[i+j]); */
-      nodes_mortar[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar[i+j] );
+      nodes_mortar[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar[i+j] );
       
       total_nodes_mortar += nodes_mortar[i+j];
     }
 
   /* scalar and vector fields on each of the (-) and (+) elements */
-  double* du_m = P4EST_ALLOC(double, d4est_operators_get_nodes((P4EST_DIM), max_deg_m));
-  double* du_p = P4EST_ALLOC(double, d4est_operators_get_nodes((P4EST_DIM), max_deg_p));
+  double* du_m = P4EST_ALLOC(double, d4est_lgl_get_nodes((P4EST_DIM), max_deg_m));
+  double* du_p = P4EST_ALLOC(double, d4est_lgl_get_nodes((P4EST_DIM), max_deg_p));
   /* slices of scalar/vector fields of (-) onto f_m and (+) onto f_p */
   double* u_m_on_f_m = P4EST_ALLOC(double, total_side_nodes_m);
   double* du_m_on_f_m = P4EST_ALLOC(double, total_side_nodes_m); 
@@ -268,8 +268,8 @@ sipg_flux_vector_interface
     /* compute the (-)-u-derivative and project on the (-)-side faces and project q onto the (-)-side faces */
     stride = 0;
     for (i = 0; i < faces_m; i++){
-      d4est_operators_apply_Dij(d4est_ops, e_m[i]->u_elem, (P4EST_DIM), e_m[i]->deg, dir, du_m);
-      d4est_linalg_vec_scale(2./e_m[i]->h, du_m, d4est_operators_get_nodes((P4EST_DIM), e_m[i]->deg) );
+      d4est_operators_apply_dij(d4est_ops, e_m[i]->u_elem, (P4EST_DIM), e_m[i]->deg, dir, du_m);
+      d4est_linalg_vec_scale(2./e_m[i]->h, du_m, d4est_lgl_get_nodes((P4EST_DIM), e_m[i]->deg) );
 
       d4est_operators_apply_slicer
         (
@@ -297,8 +297,8 @@ sipg_flux_vector_interface
     /* compute the (+)-u-derivative and project on the (+)-side faces and project q onto the (+)-side faces */
     stride = 0;
     for (i = 0; i < faces_p; i++){
-      d4est_operators_apply_Dij(d4est_ops, &(e_p[i]->u_elem[0]), (P4EST_DIM), e_p[i]->deg, dir, du_p);
-      d4est_linalg_vec_scale(2./e_p[i]->h, du_p, d4est_operators_get_nodes((P4EST_DIM), e_p[i]->deg));
+      d4est_operators_apply_dij(d4est_ops, &(e_p[i]->u_elem[0]), (P4EST_DIM), e_p[i]->deg, dir, du_p);
+      d4est_linalg_vec_scale(2./e_p[i]->h, du_p, d4est_lgl_get_nodes((P4EST_DIM), e_p[i]->deg));
 
       d4est_operators_apply_slicer
         (

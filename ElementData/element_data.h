@@ -70,7 +70,7 @@ typedef struct {
   /* nodal degree */
   int deg;
 
-  /* degree for Gauss integration if needed for non-linear terms */
+  /* degree for gauss integration if needed for non-linear terms */
   int deg_quad;
   
 } element_data_t;
@@ -199,7 +199,7 @@ element_data_compute_f_of_uxyz
 );
 
 void
-element_data_apply_Mij_on_vec
+element_data_apply_mij_on_vec
 (
  p4est_t* p4est,
  double* u,
@@ -250,7 +250,7 @@ element_data_which_quadrant_of_root
 );
 
 void
-element_data_apply_Mij_on_f_of_vec1_x_vec2
+element_data_apply_mij_on_f_of_vec1_x_vec2
 (
  p4est_t* p4est,
  double* vec1,
@@ -262,7 +262,7 @@ element_data_apply_Mij_on_f_of_vec1_x_vec2
 );
 
 void
-element_data_apply_Mij_on_f_of_vec
+element_data_apply_mij_on_f_of_vec
 (
  p4est_t* p4est,
  double* u,

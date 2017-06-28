@@ -18,7 +18,7 @@
  * This is based off the paper
  * 
  * { fukuda2005gaussian, 
- *   title={Gaussian quadrature rule for arbitrary weight function and interval}, 
+ *   title={gaussian quadrature rule for arbitrary weight function and interval}, 
  *   author={Fukuda, H and Katuya, M and Alt, EO and Matveenko, AV}, 
  *   journal={Computer physics communications}, 
  *   volume={167}, 

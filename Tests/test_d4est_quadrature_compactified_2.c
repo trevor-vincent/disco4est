@@ -86,8 +86,8 @@ test_d4est_quadrature_compactified_surface_integrals_bndry
 {
 
   test_d4est_quadrature_compactified_surface_integrals_data_t*  data = params;
-  int face_nodes_m_lobatto = d4est_operators_get_nodes((P4EST_DIM) - 1, e_m->deg);
-  int face_nodes_m_quad = d4est_operators_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
+  int face_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg);
+  int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
 
   double* sj_on_f_m_quad_GL = P4EST_ALLOC(double, face_nodes_m_quad);
   double* sj_on_f_m_quad_comp = P4EST_ALLOC(double, face_nodes_m_quad);
@@ -101,7 +101,7 @@ test_d4est_quadrature_compactified_surface_integrals_bndry
      d4est_ops,
      d4est_geom,
      d4est_quad,
-     QUAD_UNKNOWN_INTEGRAND,
+     QUAD_INTEGRAND_UNKNOWN,
      e_m->tree,
      e_m->q,
      e_m->dq,
@@ -124,7 +124,7 @@ test_d4est_quadrature_compactified_surface_integrals_bndry
      d4est_ops,
      d4est_geom,
      d4est_quad,
-     QUAD_JAC_TIMES_POLY_INTEGRAND,
+     QUAD_INTEGRAND_UNKNOWN,
      e_m->tree,
      e_m->q,
      e_m->dq,
@@ -165,8 +165,8 @@ test_d4est_quadrature_compactified_surface_integrals_bndry
      d4est_geom,
      d4est_quad,
      &face_object,
-     QUAD_MORTAR,
-     QUAD_JAC_TIMES_POLY_INTEGRAND,
+     QUAD_OBJECT_MORTAR,
+     QUAD_INTEGRAND_UNKNOWN,
      ones_quad,
      NULL,
      sj_on_f_m_quad_comp,
@@ -180,8 +180,8 @@ test_d4est_quadrature_compactified_surface_integrals_bndry
      d4est_geom,
      d4est_quad,
      &face_object,
-     QUAD_MORTAR,
-     QUAD_UNKNOWN_INTEGRAND,
+     QUAD_OBJECT_MORTAR,
+     QUAD_INTEGRAND_UNKNOWN,
      ones_quad,
      NULL,
      sj_on_f_m_quad_GL,
@@ -247,8 +247,8 @@ test_d4est_quadrature_compactified_surface_integrals_interface
     deg_m_lobatto[i] = e_m[i]->deg;
     /* deg_m_quad[i] = e_m[i]->deg_quad; */
     
-    face_nodes_m_lobatto[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
-    face_nodes_m_quad[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg_quad);
+    face_nodes_m_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
+    face_nodes_m_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg_quad);
     
     total_side_nodes_m_lobatto += face_nodes_m_lobatto[i];
     total_side_nodes_m_quad += face_nodes_m_quad[i];
@@ -262,8 +262,8 @@ test_d4est_quadrature_compactified_surface_integrals_interface
     deg_p_lobatto_porder[i] = e_p[i]->deg;
     /* deg_p_quad[i] = e_p_oriented[i]->deg_quad; */
 
-    face_nodes_p_lobatto[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
-    face_nodes_p_quad[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg_quad);
+    face_nodes_p_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
+    face_nodes_p_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg_quad);
     
     total_side_nodes_p_lobatto += face_nodes_p_lobatto[i];
     total_side_nodes_p_quad += face_nodes_p_quad[i];
@@ -279,8 +279,8 @@ test_d4est_quadrature_compactified_surface_integrals_interface
                                             e_p_oriented[j]->deg_quad);
       deg_mortar_lobatto[i+j] = util_max_int( e_m[i]->deg,
                                               e_p_oriented[j]->deg );      
-      nodes_mortar_quad[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
-      nodes_mortar_lobatto[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
+      nodes_mortar_quad[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
+      nodes_mortar_lobatto[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
       total_nodes_mortar_quad += nodes_mortar_quad[i+j];
       total_nodes_mortar_lobatto += nodes_mortar_lobatto[i+j];
       
@@ -292,7 +292,7 @@ test_d4est_quadrature_compactified_surface_integrals_interface
   for(int i = 0; i < faces_mortar; i++){
     int inew = i;
     if (faces_mortar == (P4EST_HALF)){
-      inew = d4est_operators_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, i);
+      inew = d4est_reference_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, i);
     }
     deg_mortar_quad_porder[inew] = deg_mortar_quad[i];
     nodes_mortar_quad_porder[inew] = nodes_mortar_quad[i];
@@ -323,7 +323,7 @@ test_d4est_quadrature_compactified_surface_integrals_interface
      d4est_ops,
      d4est_geom,
      d4est_quad,
-     QUAD_JAC_TIMES_POLY_INTEGRAND,
+     QUAD_INTEGRAND_UNKNOWN,
      e_m[0]->tree,
      e_m[0]->q,
      e_m[0]->dq,
@@ -346,7 +346,7 @@ test_d4est_quadrature_compactified_surface_integrals_interface
      d4est_ops,
      d4est_geom,
      d4est_quad,
-     QUAD_UNKNOWN_INTEGRAND,
+     QUAD_INTEGRAND_UNKNOWN,
      e_m[0]->tree,
      e_m[0]->q,
      e_m[0]->dq,
@@ -392,8 +392,8 @@ test_d4est_quadrature_compactified_surface_integrals_interface
      d4est_geom,
      d4est_quad,
      &face_object,
-     QUAD_MORTAR,
-     QUAD_JAC_TIMES_POLY_INTEGRAND,
+     QUAD_OBJECT_MORTAR,
+     QUAD_INTEGRAND_UNKNOWN,
      ones,
      NULL,
      sjvol_m_on_f_m_mortar_quad_comp,
@@ -423,8 +423,8 @@ test_d4est_quadrature_compactified_surface_integrals_interface
      d4est_geom,
      d4est_quad,
      &face_object,
-     QUAD_MORTAR,
-     QUAD_UNKNOWN_INTEGRAND,
+     QUAD_OBJECT_MORTAR,
+     QUAD_INTEGRAND_UNKNOWN,
      ones,
      NULL,
      sjvol_m_on_f_m_mortar_quad_GL,
@@ -493,7 +493,7 @@ int main(int argc, char *argv[])
   d4est_operators_t* d4est_ops = d4est_ops_init();
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t, 1);
-  d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4;
+  d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4;
   d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, "", "");
 
 

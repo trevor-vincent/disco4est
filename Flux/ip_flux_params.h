@@ -31,7 +31,7 @@ typedef struct {
 
   /* Evaluate boundary function on */
   /* 1. BC_EVAL_ON_QUADRATURE_POINTS -----> Quadrature points */
-  /* 2. BC_EVAL_ON_LOBATTO_POINTS -----> Lobatto points and then interpolate to Quadrature points */
+  /* 2. BC_EVAL_ON_LOBATTO_POINTS -----> lobatto points and then interpolate to Quadrature points */
   bc_eval_t ip_flux_bc_eval;
 
   char name [50];

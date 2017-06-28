@@ -3,13 +3,13 @@
 
 #include <util.h>
 
-void d4est_operators_GL_nodes_and_weights ( int n, double x[], double w[] )
+void d4est_operators_gauss_nodes_and_weights ( int n, double x[], double w[] )
 
 /******************************************************************************/
 /*
   Purpose:
   
-    DGMATH_GL_NODES_AND_WEIGHTS sets abscissas and weights for Gauss-Legendre quadrature.
+    DGMATH_gauss_NODES_AND_WEIGHTS sets abscissas and weights for gauss-Legendre quadrature.
   
   Discussion:
     
@@ -25,12 +25,12 @@ void d4est_operators_GL_nodes_and_weights ( int n, double x[], double w[] )
   
     The abscissas are the zeroes of the Legendre polynomial P(ORDER)(X).
   
-    Mathematica can compute the abscissas and weights of a Gauss-Legendre
+    Mathematica can compute the abscissas and weights of a gauss-Legendre
     rule of order N for the interval [A,B] with P digits of precision
     by the commands:
 
     Needs["NumericalDifferentialEquationAnalysis`"]
-    GaussianQuadratureWeights [n, a, b, p ]
+    gaussianQuadratureWeights [n, a, b, p ]
   
   Licensing:
   
@@ -59,7 +59,7 @@ void d4est_operators_GL_nodes_and_weights ( int n, double x[], double w[] )
     LC: QA311.K713.
   
     Arthur Stroud, Don Secrest,
-    Gaussian Quadrature Formulas,
+    gaussian Quadrature Formulas,
     Prentice Hall, 1966,
     LC: QA299.4G3S7.
 
@@ -4069,7 +4069,7 @@ void d4est_operators_GL_nodes_and_weights ( int n, double x[], double w[] )
   else
   {
     fprintf ( stderr, "\n" );
-    fprintf ( stderr, "DGMATH_GL_NODES_AND_WEIGHTS - Fatal error!\n" );
+    fprintf ( stderr, "DGMATH_gauss_NODES_AND_WEIGHTS - Fatal error!\n" );
     fprintf ( stderr, "  Illegal value of N = %d\n", n );
     fprintf ( stderr, "  Legal values are 1:33, 63/64/65, 127/128/129, 255/256/257\n" );
     mpi_abort("Nodes and Weights not available for this order");
@@ -4079,13 +4079,13 @@ void d4est_operators_GL_nodes_and_weights ( int n, double x[], double w[] )
 
 
 
-void d4est_operators_GLL_nodes_and_weights ( int n, double xtab[], double weight[] )
+void d4est_operators_lobatto_nodes_and_weights ( int n, double xtab[], double weight[] )
 
 /******************************************************************************/
 /*
   Purpose:
   
-    DGMATH_GLL_NODES_AND_WEIGHTS sets abscissas and weights for Lobatto quadrature.
+    DGMATH_lobatto_NODES_AND_WEIGHTS sets abscissas and weights for lobatto quadrature.
   
   Discussion:
     
@@ -4100,7 +4100,7 @@ void d4est_operators_GLL_nodes_and_weights ( int n, double xtab[], double weight
     The quadrature rule will integrate exactly all polynomials up to
     X^(2*N-3).
   
-    The Lobatto rule is distinguished by the fact that both endpoints
+    The lobatto rule is distinguished by the fact that both endpoints
     (-1 and 1) are always abscissas.
   
   Licensing:
@@ -4124,7 +4124,7 @@ void d4est_operators_GLL_nodes_and_weights ( int n, double xtab[], double weight
     LC: QA47.A34.
   
     Arthur Stroud, Don Secrest,
-    Gaussian Quadrature Formulas,
+    gaussian Quadrature Formulas,
     Prentice Hall, 1966,
     LC: QA299.4G3S7.
   
@@ -4646,7 +4646,7 @@ void d4est_operators_GLL_nodes_and_weights ( int n, double xtab[], double weight
   else
   {
     fprintf ( stderr, "\n" );
-    fprintf ( stderr, "DGMATH_GLL_NODES_AND_WEIGHTS - Fatal error!\n" );
+    fprintf ( stderr, "DGMATH_lobatto_NODES_AND_WEIGHTS - Fatal error!\n" );
     fprintf ( stderr, "  Illegal value of N = %d\n", n );
     fprintf ( stderr, "  Legal values are between 1 and 20.\n" );
     mpi_abort("Nodes and Weights not available for this order");

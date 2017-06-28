@@ -77,27 +77,27 @@ d4est_quadrature_new
   d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t, 1);
 
   if (util_match(input.name,"legendre")) {
-    d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE;
+    d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE;
     d4est_quadrature_legendre_new(d4est_quad, d4est_geom, input_file);
   }
   else if (util_match(input.name,"lobatto")) {
-    d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE_LOBATTO;
+    d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_LOBATTO;
     d4est_quadrature_lobatto_new(d4est_quad, d4est_geom, input_file);
   }
   else if (util_match(input.name,"legendre_compactified_c1pc2t_neg4")){
-    d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4;
+    d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4;
     d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
   }
   else if (util_match(input.name,"legendre_compactified_c1pc2t_neg3")){
-    d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG3;
+    d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG3;
     d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
   }
   else if (util_match(input.name,"legendre_compactified_c1pc2t_neg2")){
-    d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG2;
+    d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG2;
     d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
   }
   else if (util_match(input.name,"legendre_compactified_c1pc2t_neg1")){
-    d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG1;
+    d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG1;
     d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
   }
   else if (util_match(input.name,"none")){
@@ -152,10 +152,10 @@ void d4est_quadrature_apply_galerkin_integral
   double* quad_weights [(P4EST_DIM)];
   double* interp_lobatto_to_quad_trans [(P4EST_DIM)];
 
-  int dim = (object_type == QUAD_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
+  int dim = (object_type == QUAD_OBJECT_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   int nodes_lobatto = deg_lobatto + 1;
   int nodes_quad = deg_quad + 1;
-  int volume_nodes_quad = d4est_operators_get_nodes(dim, deg_quad);
+  int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad);
   double* w_j_in_quad = P4EST_ALLOC(double, volume_nodes_quad);
   
   for (int dir = 0; dir < dim; dir++){
@@ -224,7 +224,7 @@ void d4est_quadrature_apply_galerkin_integral
 /*  double* M */
 /* ) */
 /* { */
-/*   int volume_nodes_lobatto = d4est_operators_get_nodes(dim,deg_lobatto); */
+/*   int volume_nodes_lobatto = d4est_lgl_get_nodes(dim,deg_lobatto); */
   
 /*   double* u = P4EST_ALLOC_ZERO(double, volume_nodes_lobatto); */
 /*   double* Mu = P4EST_ALLOC_ZERO(double, volume_nodes_lobatto); */
@@ -271,7 +271,7 @@ void d4est_quadrature_apply_stiffness_matrix
  int deg_quad,
  double* out
 ){
-  mpi_assert (object_type == QUAD_VOLUME);
+  mpi_assert (object_type == QUAD_OBJECT_VOLUME);
   /* for now assert this, can get rid of by p-prolonging then p-restricting */
 
 
@@ -283,8 +283,8 @@ void d4est_quadrature_apply_stiffness_matrix
   int nodes_lobatto = deg_lobatto + 1;
   int nodes_quad = deg_quad + 1;
 
-    int volume_nodes_quad = d4est_operators_get_nodes(dim, deg_quad);
-    int volume_nodes_lobatto = d4est_operators_get_nodes(dim, deg_lobatto);
+    int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad);
+    int volume_nodes_lobatto = d4est_lgl_get_nodes(dim, deg_lobatto);
   
   for (int dir = 0; dir < dim; dir++){
     interp_lobatto_to_quad[dir] = d4est_quadrature->get_interp
@@ -339,7 +339,7 @@ void d4est_quadrature_apply_stiffness_matrix
     for (int lp = 0; lp < dim; lp++){
       for (int l = 0; l < dim; l++){
         /* Apply Dbar in lth direction */
-        d4est_operators_apply_Dij(d4est_ops, in, dim, deg_lobatto, l, Dl_in);
+        d4est_operators_apply_dij(d4est_ops, in, dim, deg_lobatto, l, Dl_in);
 
         if ((P4EST_DIM) == 3) {
 
@@ -367,7 +367,7 @@ void d4est_quadrature_apply_stiffness_matrix
           mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
         }
 
-        d4est_operators_apply_Dij_transpose(d4est_ops, VT_W_V_Dl_in, dim, deg_lobatto, lp, DTlp_VT_W_V_Dl_in);
+        d4est_operators_apply_dij_transpose(d4est_ops, VT_W_V_Dl_in, dim, deg_lobatto, lp, DTlp_VT_W_V_Dl_in);
         d4est_linalg_vec_axpy(1., DTlp_VT_W_V_Dl_in, out, volume_nodes_lobatto);
       }
     }
@@ -396,7 +396,7 @@ void d4est_quadrature_apply_mass_matrix
  double* out
 ){
 
-  mpi_assert(object_type == QUAD_VOLUME);
+  mpi_assert(object_type == QUAD_OBJECT_VOLUME);
 
   double* quad_weights [(P4EST_DIM)];
   double* interp_lobatto_to_quad_trans [(P4EST_DIM)];
@@ -405,7 +405,7 @@ void d4est_quadrature_apply_mass_matrix
   int dim = (P4EST_DIM);
   int nodes_lobatto = deg_lobatto+1;
   int nodes_quad = deg_quad+1;
-  int volume_nodes_quad = d4est_operators_get_nodes(dim, deg_quad);
+  int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad);
   
   double* in_quad = P4EST_ALLOC(double, volume_nodes_quad);
   double* w_j_in_quad = P4EST_ALLOC(double, volume_nodes_quad);
@@ -505,7 +505,7 @@ void d4est_quadrature_apply_mass_matrix
 /*   double* u_quad = NULL; */
 /*   double* v_quad = NULL; */
 
-/*   int volume_nodes_quad = d4est_operators_get_nodes(dim, deg_quad); */
+/*   int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad); */
   
 /*   if (u != NULL){ */
 /*     u_quad = P4EST_ALLOC(double, volume_nodes_quad); */
@@ -618,7 +618,7 @@ void d4est_quadrature_apply_mass_matrix
 /*   double* u_quad = NULL; */
 /*   double* v_quad = NULL; */
 
-/*   int volume_nodes_quad = d4est_operators_get_nodes(dim, deg_quad); */
+/*   int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad); */
   
 /*   if (u != NULL){ */
 /*     u_quad = P4EST_ALLOC(double, volume_nodes_quad); */
@@ -730,7 +730,7 @@ void d4est_quadrature_apply_mass_matrix
 /*   double* u_quad = NULL; */
 /*   double* v_quad = NULL; */
 
-/*   int volume_nodes_quad = d4est_operators_get_nodes(dim, deg_quad); */
+/*   int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad); */
   
 /*   if (u != NULL){ */
 /*     u_quad = P4EST_ALLOC(double, volume_nodes_quad); */
@@ -824,7 +824,7 @@ d4est_quadrature_get_rst_points
  int degree
 )
 {
-  int dim = (object_type == QUAD_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
+  int dim = (object_type == QUAD_OBJECT_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   d4est_rst_t rst_points;
   rst_points.r = d4est_quadrature->get_rst(d4est_ops, d4est_geometry, d4est_quadrature,object,object_type, integrand_type, degree, 0);
   if (dim >= 2)
@@ -854,9 +854,9 @@ d4est_quadrature_interpolate
  int deg_quad
 )
 {
-  /* mpi_assert(object_type == QUAD_MORTAR || object_type == QUAD_VOLUME); */
+  /* mpi_assert(object_type == QUAD_OBJECT_MORTAR || object_type == QUAD_OBJECT_VOLUME); */
   double* interp_lobatto_to_quad [(P4EST_DIM)]; 
-  int dim = (object_type == QUAD_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
+  int dim = (object_type == QUAD_OBJECT_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   int nodes_lobatto = deg_lobatto + 1;
   int nodes_quad = deg_quad + 1;
 
@@ -910,7 +910,7 @@ d4est_quadrature_innerproduct
 
   double* quad_weights [(P4EST_DIM)];
 
-  int dim = (object_type == QUAD_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
+  int dim = (object_type == QUAD_OBJECT_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   int nodes_quad = deg_quad+1;  
   
   for (int dir = 0; dir < dim; dir++)
@@ -929,7 +929,7 @@ d4est_quadrature_innerproduct
     }
   
   mpi_assert(u != NULL);
-  int volume_nodes_quad = d4est_operators_get_nodes(dim, deg_quad);
+  int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad);
   double* wuv = P4EST_ALLOC(double, volume_nodes_quad);
   double wdotuv = 0.;
 

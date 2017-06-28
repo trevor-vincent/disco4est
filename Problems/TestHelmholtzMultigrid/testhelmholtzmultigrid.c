@@ -4,7 +4,7 @@
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
-#include <curved_Gauss_primal_sipg_flux_fcns.h>
+#include <curved_gauss_primal_sipg_flux_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
 #include <problem_weakeqn_ptrs.h>
@@ -198,7 +198,7 @@ void apply_helmholtz
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;        
-        d4est_operators_apply_fofufofvlilj_Gaussnodes
+        d4est_operators_apply_fofufofvlilj_gaussnodes
           (
            d4est_ops,
            &prob_vecs->u[ed->nodal_stride],
@@ -253,7 +253,7 @@ void apply_helmholtz
 /*       for (int q = 0; q < Q; ++q) { */
 /*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
 /*         d4est_element_data_t* ed = quad->p.user_data;         */
-/*         d4est_operators_apply_fofufofvlilj_Gaussnodes */
+/*         d4est_operators_apply_fofufofvlilj_gaussnodes */
 /*           ( */
 /*            d4est_ops, */
 /*            &prob_vecs->u[ed->nodal_stride], */
@@ -306,7 +306,7 @@ void problem_build_rhs
     );
   
    prob_vecs->curved_scalar_flux_fcn_data
-     = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+     = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
      (
       zero_fcn,ip_flux_params
      );
@@ -321,7 +321,7 @@ void problem_build_rhs
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        d4est_operators_apply_curvedGaussMass(d4est_ops,
+        d4est_operators_apply_curvedgaussMass(d4est_ops,
                                      &f[ed->nodal_stride],
                                       ed->deg,
                                      ed->J_quad,
@@ -344,7 +344,7 @@ void problem_build_rhs
   P4EST_FREE(u_eq_0);
 
 
-  prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (zero_fcn,ip_flux_params);
 
   P4EST_FREE(f);
@@ -580,7 +580,7 @@ problem_init
   /*                          geometric_factors, */
   /*                          d4est_ops, */
   /*                          d4est_geom, degree, */
-  /*                          degree_Gauss_diff[0], */
+  /*                          degree_gauss_diff[0], */
   /*                          GAUSS_INTEG); */
 
 
@@ -600,7 +600,7 @@ problem_init
 
 
 
-    prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+    prob_vecs.curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                              (zero_fcn,&ip_flux_params);
     
     /* d4est_linalg_fill_vec(u, 0., local_nodes); */

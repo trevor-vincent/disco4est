@@ -292,7 +292,7 @@ problem_input
 
 
 /*   for (int d = 0; d < 2; d++){ */
-/*     rsttmp[d] = d4est_operators_fetch_Gauss_xyz_nd */
+/*     rsttmp[d] = d4est_operators_fetch_gauss_rst_nd */
 /*                 ( */
 /*                  d4est_ops, */
 /*                  dim, */
@@ -323,7 +323,7 @@ problem_input
 /*   double* rsttmp [3] = {NULL}; */
 
 /*   for (int d = 0; d < 2; d++){ */
-/*     rsttmp[d] = d4est_operators_fetch_Gauss_xyz_nd */
+/*     rsttmp[d] = d4est_operators_fetch_gauss_rst_nd */
 /*                 ( */
 /*                  d4est_ops, */
 /*                  dim, */
@@ -538,7 +538,7 @@ problem_init
         for (int qq = 0; qq < QQ; ++qq) {
           p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
           d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
-          int volume_nodes_quad = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad);
+          int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
           
           double amin = ed->q[0];
           double amax = ed->q[0] + ed->dq;
@@ -584,8 +584,8 @@ problem_init
           printf("cmin = %.15f\n",cmin);
 
 
-          double* gauss_weights = d4est_operators_fetch_GL_weights_1d(d4est_ops, ed->deg_quad);
-          double* gauss_nodes = d4est_operators_fetch_GL_nodes_1d(d4est_ops, ed->deg_quad);
+          double* gauss_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, ed->deg_quad);
+          double* gauss_nodes = d4est_operators_fetch_gauss_nodes_1d(d4est_ops, ed->deg_quad);
           long double* jacmap_abscissas = P4EST_ALLOC(long double, ed->deg_quad + 1);
           long double* jacmap_weights = P4EST_ALLOC(long double, ed->deg_quad + 1);
           double* jacmap_abscissas_dbl = P4EST_ALLOC(double, ed->deg_quad + 1);
@@ -702,7 +702,7 @@ problem_init
           }
 
 
-          int face_nodes_quad = d4est_operators_get_nodes((P4EST_DIM)-1, ed->deg_quad);
+          int face_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM)-1, ed->deg_quad);
           d4est_rst_t rst_points_face
             = d4est_operators_get_rst_points(d4est_ops, ed->deg_quad, (P4EST_DIM) - 1, QUAD_GAUSS);
 

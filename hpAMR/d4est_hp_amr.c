@@ -1,47 +1,43 @@
-#define SAFETY
-#define NDEBUG
-
-#include "../hpAMR/hp_amr.h"
-#include "../GridFunctions/grid_functions.h"
-#include "../Utilities/util.h"
-#include "../LinearAlgebra/d4est_linalg.h"
-#include "../ElementData/element_data.h"
-#include "../ElementData/d4est_element_data.h"
+#include <d4est_hp_amr.h>
+#include <grid_functions.h>
+#include <util.h>
+#include <d4est_linalg.h>
+#include <d4est_element_data.h>
 
 
 static int
-hp_amr_refine_callback
+d4est_hp_amr_refine_callback
 (
  p4est_t * p4est,
  p4est_topidx_t which_tree,
  p4est_quadrant_t * quadrant
 )
 {
-  hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
+  d4est_hp_amr_data_t* d4est_hp_amr_data = (d4est_hp_amr_data_t*) p4est->user_pointer;
   d4est_element_data_t* elem_data = (d4est_element_data_t*) quadrant->p.user_data;
-  d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
+  d4est_operators_t* d4est_ops = d4est_hp_amr_data->d4est_ops;
   
-  int* refinement_log = hp_amr_data->refinement_log;
-  int* refinement_log_stride = &hp_amr_data->refinement_log_stride;
+  int* refinement_log = d4est_hp_amr_data->refinement_log;
+  int* refinement_log_stride = &d4est_hp_amr_data->refinement_log_stride;
   
   /* h-refine */
   if (refinement_log[*refinement_log_stride] < 0){
     (*refinement_log_stride)++;
-    hp_amr_data->elements_marked_for_hrefine += 1;
+    d4est_hp_amr_data->elements_marked_for_hrefine += 1;
     return 1;
   }
 
   /* p-refine, p-coarsen or do nothing */
   else {
-    int degH = ed->deg; 
+    int degH = elem_data->deg; 
     int degh = refinement_log[*refinement_log_stride];
-    int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), degh);
+    int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), degh);
 
-    double* stored_data = hp_amr_data->get_storage(elem_data);
+    double* stored_data = d4est_hp_amr_data->get_storage(elem_data);
     double* temp_data = P4EST_ALLOC(double, volume_nodes);
     
     if (elem_data->deg < degh){
-      hp_amr_data->elements_marked_for_prefine += 1;
+      d4est_hp_amr_data->elements_marked_for_prefine += 1;
       d4est_operators_apply_p_prolong
         (
          d4est_ops,
@@ -76,7 +72,7 @@ hp_amr_refine_callback
 
 
 static void
-hp_amr_refine_replace_callback (
+d4est_hp_amr_refine_replace_callback (
 			     p4est_t * p4est,
 			     p4est_topidx_t which_tree,
 			     int num_outgoing,
@@ -88,9 +84,9 @@ hp_amr_refine_replace_callback (
 #ifdef SAFETY  
   mpi_assert(num_outgoing == 1);
 #endif
-  hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
-  d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
-  /* hp_amr_curved_smooth_pred_data_t* smooth_pred_data = (hp_amr_curved_smooth_pred_data_t*) (hp_amr_data->hp_amr_scheme_data); */
+  d4est_hp_amr_data_t* d4est_hp_amr_data = (d4est_hp_amr_data_t*) p4est->user_pointer;
+  d4est_operators_t* d4est_ops = d4est_hp_amr_data->d4est_ops;
+  /* d4est_hp_amr_curved_smooth_pred_data_t* smooth_pred_data = (d4est_hp_amr_curved_smooth_pred_data_t*) (d4est_hp_amr_data->d4est_hp_amr_scheme_data); */
   
   d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
   d4est_element_data_t* child_data;
@@ -102,9 +98,9 @@ hp_amr_refine_replace_callback (
   for (i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;
 
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), degH);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), degH);
 
-  double* stored_parent_data = hp_amr_data->get_storage(parent_data);
+  double* stored_parent_data = d4est_hp_amr_data->get_storage(parent_data);
   double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN));
   d4est_operators_apply_hp_prolong
     (
@@ -118,21 +114,21 @@ hp_amr_refine_replace_callback (
   
   for (i = 0; i < (P4EST_CHILDREN); i++){
     child_data = (d4est_element_data_t*) incoming[i]->p.user_data;
-    double* stored_child_data = hp_amr_data->get_storage(child_data)
+    double* stored_child_data = d4est_hp_amr_data->get_storage(child_data);
     child_data->deg = parent_data->deg;
     d4est_linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], stored_child_data, volume_nodes);
   }
 
   P4EST_FREE(temp_data);
 
-  if(hp_amr_data->refine_replace_callback_fcn_ptr != NULL)
-    hp_amr_data->refine_replace_callback_fcn_ptr(p4est, which_tree, num_outgoing, outgoing, num_incoming, incoming);
+  if(d4est_hp_amr_data->refine_replace_callback_fcn_ptr != NULL)
+    d4est_hp_amr_data->refine_replace_callback_fcn_ptr(p4est, which_tree, num_outgoing, outgoing, num_incoming, incoming);
 }
 
 
 
 static void
-hp_amr_balance_replace_callback (
+d4est_hp_amr_balance_replace_callback (
 			     p4est_t * p4est,
 			     p4est_topidx_t which_tree,
 			     int num_outgoing,
@@ -144,8 +140,8 @@ hp_amr_balance_replace_callback (
 #ifdef SAFETY  
   mpi_assert(num_outgoing == 1);
 #endif
-  hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
-  d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
+  d4est_hp_amr_data_t* d4est_hp_amr_data = (d4est_hp_amr_data_t*) p4est->user_pointer;
+  d4est_operators_t* d4est_ops = d4est_hp_amr_data->d4est_ops;
   d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
   d4est_element_data_t* child_data;
   int i;
@@ -156,9 +152,9 @@ hp_amr_balance_replace_callback (
   for (i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;
 
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), degH);    
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), degH);    
 
-double* stored_parent_data = hp_amr_data->get_storage(parent_data);
+double* stored_parent_data = d4est_hp_amr_data->get_storage(parent_data);
  double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN));
   d4est_operators_apply_hp_prolong
     (
@@ -172,7 +168,7 @@ double* stored_parent_data = hp_amr_data->get_storage(parent_data);
   
   for (i = 0; i < (P4EST_CHILDREN); i++){
     child_data = (d4est_element_data_t*) incoming[i]->p.user_data;
-    double* stored_child_data = hp_amr_data->get_storage(child_data)
+    double* stored_child_data = d4est_hp_amr_data->get_storage(child_data);
     child_data->deg = parent_data->deg;
     /* d4est_linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], */
     /*                              &child_data->u_elem[0], */
@@ -184,41 +180,34 @@ double* stored_parent_data = hp_amr_data->get_storage(parent_data);
 
   P4EST_FREE(temp_data);
 
-  if(hp_amr_data->balance_replace_callback_fcn_ptr != NULL)
-    hp_amr_data->balance_replace_callback_fcn_ptr(p4est, which_tree, num_outgoing, outgoing, num_incoming, incoming);
+  if(d4est_hp_amr_data->balance_replace_callback_fcn_ptr != NULL)
+    d4est_hp_amr_data->balance_replace_callback_fcn_ptr(p4est, which_tree, num_outgoing, outgoing, num_incoming, incoming);
 }
 
-/** 
- * Assumes iter_volume will impose a refinement criterion
- * 
- * @param p4est 
- * @param data_to_hp_refine 
- * @param iter_volume 
- * @param hp_amr_refine_store_fcn_ptr if NULL, we use default
- * @param hp_amr_balance_store_fcn_ptr if NULL, we use default
- */
 void
-hp_amr
+d4est_hp_amr
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  double** data_to_hp_refine,
  estimator_stats_t** stats,
- hp_amr_scheme_t* scheme,
+ d4est_hp_amr_scheme_t* scheme,
+ double* (*get_storage)(d4est_element_data_t*)
 )
 {
-  hp_amr_data_t hp_amr_data;
-  hp_amr_data.refinement_log = P4EST_ALLOC(int, p4est->local_num_quadrants);
-  hp_amr_data.refinement_log_stride = 0;
-  hp_amr_data.data = *data_to_hp_refine;
-  hp_amr_data.hp_amr_scheme_data = scheme->hp_amr_scheme_data;
-  hp_amr_data.d4est_ops = d4est_ops;
-  hp_amr_data.estimator_stats = stats;
-  hp_amr_data.elements_marked_for_hrefine = 0;
-  hp_amr_data.elements_marked_for_prefine = 0;
-  hp_amr_data.refine_replace_callback_fcn_ptr
+  d4est_hp_amr_data_t d4est_hp_amr_data;
+  d4est_hp_amr_data.refinement_log = P4EST_ALLOC(int, p4est->local_num_quadrants);
+  d4est_hp_amr_data.refinement_log_stride = 0;
+  d4est_hp_amr_data.data = *data_to_hp_refine;
+  d4est_hp_amr_data.hp_amr_scheme_data = scheme->hp_amr_scheme_data;
+  d4est_hp_amr_data.d4est_ops = d4est_ops;
+  d4est_hp_amr_data.estimator_stats = stats;
+  d4est_hp_amr_data.elements_marked_for_hrefine = 0;
+  d4est_hp_amr_data.elements_marked_for_prefine = 0;
+  d4est_hp_amr_data.get_storage = get_storage;
+  d4est_hp_amr_data.refine_replace_callback_fcn_ptr
     = scheme->refine_replace_callback_fcn_ptr;
-  hp_amr_data.balance_replace_callback_fcn_ptr
+  d4est_hp_amr_data.balance_replace_callback_fcn_ptr
     = scheme->balance_replace_callback_fcn_ptr;
   
   if(scheme->pre_refine_callback != NULL){
@@ -237,8 +226,8 @@ hp_amr
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;        
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
-        double* storage = hp_amr_data->get_storage(ed);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        double* storage = d4est_hp_amr_data.get_storage(ed);
         d4est_linalg_copy_1st_to_2nd
           (
            &((*data_to_hp_refine)[ed->nodal_stride]),
@@ -250,7 +239,7 @@ hp_amr
 
   /* store p4est user pointer */
   void* tmp = p4est->user_pointer;
-  p4est->user_pointer = &hp_amr_data;
+  p4est->user_pointer = &d4est_hp_amr_data;
 
   /* iterate and store refinement boolean */
   p4est_iterate(p4est,
@@ -270,9 +259,9 @@ hp_amr
      p4est,
      0,
      -1,
-     hp_amr_refine_callback,
+     d4est_hp_amr_refine_callback,
      NULL,
-     hp_amr_refine_replace_callback_fcn_ptr
+     d4est_hp_amr_refine_replace_callback
     );
  
   /* 2-1 balance mesh */
@@ -281,7 +270,7 @@ hp_amr
      p4est,
      P4EST_CONNECT_FULL,
      NULL,
-     hp_amr_balance_replace_callback_fcn_ptr
+     d4est_hp_amr_balance_replace_callback
     );
 
 
@@ -300,8 +289,8 @@ hp_amr
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;        
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
-        local_nodes += volume_nodes;
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        post_balance_local_nodes += volume_nodes;
      }
     }  
   
@@ -323,8 +312,8 @@ hp_amr
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;        
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
-        double* storage = hp_amr_data->get_storage(ed);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        double* storage = d4est_hp_amr_data.get_storage(ed);
         d4est_linalg_copy_1st_to_2nd
           (
            storage,
@@ -338,6 +327,6 @@ hp_amr
     scheme->post_balance_callback(p4est, scheme->hp_amr_scheme_data);
   }
   
-  P4EST_FREE(hp_amr_data.refinement_log);
+  P4EST_FREE(d4est_hp_amr_data.refinement_log);
 }
 

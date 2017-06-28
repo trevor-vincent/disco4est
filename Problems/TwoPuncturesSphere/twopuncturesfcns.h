@@ -362,7 +362,7 @@ void twopunctures_apply_jac
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;        
-        d4est_element_data_apply_fofufofvlilj_Gaussnodes
+        d4est_element_data_apply_fofufofvlilj_gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -412,10 +412,10 @@ twopunctures_compute_jac_matrix_operator
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
         int matrix_volume_nodes = volume_nodes*volume_nodes;
         
-        d4est_element_data_form_fofufofvlilj_matrix_Gaussnodes
+        d4est_element_data_form_fofufofvlilj_matrix_gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -486,7 +486,7 @@ twopunctures_build_residual_mg
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        d4est_element_data_apply_fofufofvlj_Gaussnodes
+        d4est_element_data_apply_fofufofvlj_gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -504,11 +504,11 @@ twopunctures_build_residual_mg
 
         /* DEBUG_PRINT_ARR_DBL */
         
-        /* int volume_nodes_Lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg); */
-        /* int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad); */
+        /* int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), ed->deg); */
+        /* int volume_nodes_gauss = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad); */
         /* double* u_tmp = &prob_vecs->u[ed->nodal_stride]; */
-        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_Lobatto); */
-        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_Gauss); */
+        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_lobatto); */
+        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_gauss); */
         
       }
     }
@@ -552,8 +552,8 @@ void twopunctures_apply_jac_mg
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
-        /* d4est_element_data_apply_fofufofvlilj_Gaussnodes */
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        /* d4est_element_data_apply_fofufofvlilj_gaussnodes */
         /*   ( */
         /*    d4est_ops, */
         /*    d4est_geom, */
@@ -585,7 +585,7 @@ void twopunctures_apply_jac_mg
 
 
 static
-void twopunctures_apply_jac_Lobatto
+void twopunctures_apply_jac_lobatto
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -616,7 +616,7 @@ void twopunctures_apply_jac_Lobatto
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        int volume_nodes_lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
         for (int i = 0; i < volume_nodes_lobatto; i++){
           double x = ed->xyz[0][i];
           double y = ed->xyz[1][i];
@@ -632,7 +632,7 @@ void twopunctures_apply_jac_Lobatto
         }
 
         
-        d4est_element_data_apply_fofufofvlilj_Gaussnodes
+        d4est_element_data_apply_fofufofvlilj_gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -682,7 +682,7 @@ twopunctures_build_residual
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        d4est_element_data_apply_fofufofvlj_Gaussnodes
+        d4est_element_data_apply_fofufofvlj_gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -700,11 +700,11 @@ twopunctures_build_residual
 
         /* DEBUG_PRINT_ARR_DBL */
         
-        /* int volume_nodes_Lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg); */
-        /* int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad); */
+        /* int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), ed->deg); */
+        /* int volume_nodes_gauss = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad); */
         /* double* u_tmp = &prob_vecs->u[ed->nodal_stride]; */
-        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_Lobatto); */
-        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_Gauss); */
+        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_lobatto); */
+        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_gauss); */
         
       }
     }
@@ -720,7 +720,7 @@ twopunctures_build_residual
 
 static
 void
-twopunctures_build_residual_Lobatto
+twopunctures_build_residual_lobatto
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -746,7 +746,7 @@ twopunctures_build_residual_Lobatto
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        int volume_nodes_lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
         for (int i = 0; i < volume_nodes_lobatto; i++){
           double x = ed->xyz[0][i];
           double y = ed->xyz[1][i];
@@ -761,7 +761,7 @@ twopunctures_build_residual_Lobatto
                                             );
         }
 
-        d4est_element_data_apply_fofufofvlj_Gaussnodes
+        d4est_element_data_apply_fofufofvlj_gaussnodes
           (
            d4est_ops,
            d4est_geom,
@@ -779,11 +779,11 @@ twopunctures_build_residual_Lobatto
 
         /* DEBUG_PRINT_ARR_DBL */
         
-        /* int volume_nodes_Lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg); */
-        /* int volume_nodes_Gauss = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad); */
+        /* int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), ed->deg); */
+        /* int volume_nodes_gauss = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad); */
         /* double* u_tmp = &prob_vecs->u[ed->nodal_stride]; */
-        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_Lobatto); */
-        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_Gauss); */
+        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_lobatto); */
+        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_gauss); */
         
       }
     }

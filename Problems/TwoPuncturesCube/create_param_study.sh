@@ -44,8 +44,8 @@ ip_flux_penalty = $4
 [problem]
 hrefine_til_inview = $5
 domain_size = $6 
-use_Gauss_quad = 1
-deg_offset_for_Gauss_quad = $7
+use_gauss_quad = 1
+deg_offset_for_gauss_quad = $7
 
 [solver]
 krylov_type = cg
@@ -58,7 +58,7 @@ arr3=(.25 2.0 6.0) #gammah
 arr4=( 2 ) #penalty
 arr5=( 1 ) #hrefine til inview
 arr6=( 20000 1000 10 ) #domain size
-arr7=( 1 2 ) #Gauss offset
+arr7=( 1 2 ) #gauss offset
 arr8=( 64 128 256 )
 arr9=( 7 5 )
 
@@ -83,13 +83,13 @@ do
 				
 			    # for h in "${arr8[@]}"
 			    # do
-				#break for loop on Gauss offset if were not using Gauss
+				#break for loop on gauss offset if were not using gauss
 				# if [ "$g" -eq "0" ]; then
 				# if [ "$h" -gt "0" ]; then
 				#     break
 				# fi
 				# fi
- 				NEWDIR="2pun_deg_${a}_perc_${b}_gamh_${c}_pen_${d}_hreftilinview_${e}_domsize_${f}_useGauss_1_Gaussoffset_${g}_AmrInfSize_${h}_Solver_cg_degmax_${i}"
+ 				NEWDIR="2pun_deg_${a}_perc_${b}_gamh_${c}_pen_${d}_hreftilinview_${e}_domsize_${f}_usegauss_1_gaussoffset_${g}_AmrInfSize_${h}_Solver_cg_degmax_${i}"
 				mkdir $NEWDIR
 				cd $NEWDIR
 				SHORTNAME="2pun${a}${b}${c}${d}${e}${f}${g}${h}${i}"

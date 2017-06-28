@@ -38,9 +38,9 @@ void curved_poisson_operator_primal_init_vecs
   
   int dim = (P4EST_DIM);
   int deg = elem_data->deg;
-  int volume_nodes_Lobatto = d4est_operators_get_nodes(dim,deg);
-  /* int face_nodes_Lobatto = d4est_operators_get_nodes(dim-1,deg); */
-  /* int volume_nodes_Gauss = d4est_operators_get_nodes(dim, elem_data->deg_quad); */
+  int volume_nodes_lobatto = d4est_lgl_get_nodes(dim,deg);
+  /* int face_nodes_lobatto = d4est_lgl_get_nodes(dim-1,deg); */
+  /* int volume_nodes_gauss = d4est_lgl_get_nodes(dim, elem_data->deg_quad); */
   
   elem_data->Au_elem = &(problem_data->Au[elem_data->nodal_stride]);
   
@@ -48,18 +48,18 @@ void curved_poisson_operator_primal_init_vecs
     (
      &(problem_data->u[elem_data->nodal_stride]),
      &(elem_data->u_elem)[0],
-     volume_nodes_Lobatto
+     volume_nodes_lobatto
     );
 
   d4est_linalg_fill_vec
     (
      elem_data->Au_elem,
      0.0,
-     volume_nodes_Lobatto
+     volume_nodes_lobatto
     );
   
   for (int i = 0; i < (P4EST_DIM); i++){
-    d4est_operators_apply_Dij(d4est_ops, &(problem_data->u[elem_data->nodal_stride]), dim, elem_data->deg, i, &elem_data->dudr_elem[i][0]);
+    d4est_operators_apply_dij(d4est_ops, &(problem_data->u[elem_data->nodal_stride]), dim, elem_data->deg, i, &elem_data->dudr_elem[i][0]);
   }
 
 }
@@ -82,7 +82,7 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
   
   
   int dim = (P4EST_DIM);
-  int volume_nodes_lobatto = d4est_operators_get_nodes(dim,element_data->deg);
+  int volume_nodes_lobatto = d4est_lgl_get_nodes(dim,element_data->deg);
 
   double* stiff_u = P4EST_ALLOC(double, volume_nodes_lobatto);
   d4est_quadrature_volume_t mesh_vol = {.dq = element_data->dq,
@@ -99,8 +99,8 @@ void curved_poisson_operator_primal_compute_stiffmatrixterm
      d4est_quad,
      d4est_geom,
      &mesh_vol,
-     QUAD_VOLUME,
-     QUAD_UNKNOWN_INTEGRAND,
+     QUAD_OBJECT_VOLUME,
+     QUAD_INTEGRAND_UNKNOWN,
      &element_data->u_elem[0],
      element_data->deg,
      element_data->J_quad,

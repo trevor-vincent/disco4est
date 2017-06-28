@@ -4,7 +4,7 @@
 #include "curved_poisson_debug_vecs.h"
 
 void
-curved_Gauss_poisson_apply_aij
+curved_gauss_poisson_apply_aij
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -28,7 +28,7 @@ curved_poisson_apply_aij_debug
 );
 
 void
-curved_Gauss_poisson_build_rhs_with_strongbc
+curved_gauss_poisson_build_rhs_with_strongbc
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -37,25 +37,25 @@ curved_Gauss_poisson_build_rhs_with_strongbc
  d4est_operators_t* d4est_ops
 );
 
-void curved_Gauss_poisson_init_vecs
+void curved_gauss_poisson_init_vecs
 (
  p4est_iter_volume_info_t * info,
  void *user_data
 );
 
-void curved_Gauss_poisson_destroy_vecs
+void curved_gauss_poisson_destroy_vecs
 (
  p4est_iter_volume_info_t * info,
  void *user_data
 );
 
-void curved_Gauss_poisson_compute_q_elem
+void curved_gauss_poisson_compute_q_elem
 (
  p4est_iter_volume_info_t * info,
  void *user_data
 );
 
-void curved_Gauss_poisson_compute_Au_elem
+void curved_gauss_poisson_compute_Au_elem
 (
  p4est_iter_volume_info_t* info,
  void* user_data

@@ -38,7 +38,7 @@
 /*   /\* d4est_operators_t* d4est_ops = (d4est_operators_t*)info->p4est->user_pointer; *\/ */
   
 /*   int* stride = inv_user_data->stride; */
-/*   int volume_nodes = d4est_operators_get_nodes( (P4EST_DIM), elem_data->deg ); */
+/*   int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), elem_data->deg ); */
 
 /*   int i; */
 /*   for (i = 0; i < volume_nodes; i++){ */
@@ -110,8 +110,8 @@
 /*       for (int q = 0; q < Q; ++q) { */
 /*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
 /*         d4est_element_data_t* ed = quad->p.user_data; */
-/*         int volume_nodes_quad = d4est_operators_get_nodes((P4EST_DIM), ed->deg_quad); */
-/*         int volume_nodes_lobatto = d4est_operators_get_nodes((P4EST_DIM), ed->deg); */
+/*         int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad); */
+/*         int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), ed->deg); */
 /*         double* dnodal_vec [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(dnodal_vec, volume_nodes_quad); */
 
 /*         d4est_operators_compute_derivative_on_quadrature_points */
@@ -194,7 +194,7 @@ d4est_element_data_copy_from_vec_to_storage_callback
   
   int dim = (P4EST_DIM);
   int deg = d4est_element_data->deg;
-  int volume_nodes = d4est_operators_get_nodes(dim,deg);
+  int volume_nodes = d4est_lgl_get_nodes(dim,deg);
   
   d4est_linalg_copy_1st_to_2nd
     (
@@ -249,7 +249,7 @@ d4est_element_data_copy_from_storage_to_vec_callback
   
   int dim = (P4EST_DIM);
   int deg = d4est_element_data->deg;
-  int volume_nodes = d4est_operators_get_nodes(dim,deg);
+  int volume_nodes = d4est_lgl_get_nodes(dim,deg);
   
   d4est_linalg_copy_1st_to_2nd
     (
@@ -385,7 +385,7 @@ d4est_element_data_store_nodal_vec_in_vertex_array_callback
   
   int c;
   for (c = 0; c < (P4EST_CHILDREN); c++){
-    int corner_to_node = d4est_operators_corner_to_node((P4EST_DIM), elem_data->deg, c);
+    int corner_to_node = d4est_reference_corner_to_node((P4EST_DIM), elem_data->deg, c);
     vertex_vec[arrayoffset + c] = nodal_vec[stride + corner_to_node];
   }
 }
@@ -441,7 +441,7 @@ d4est_element_data_reorient_f_p_elements_to_f_m_order
     return;
   }
   for (int i = 0; i < faces_p; i++){
-    int inew = d4est_operators_reorient_face_order(face_dim, f_m, f_p, o, i);
+    int inew = d4est_reference_reorient_face_order(face_dim, f_m, f_p, o, i);
     e_p_oriented[i] = e_p[inew];
   }
 }

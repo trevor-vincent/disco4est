@@ -115,6 +115,8 @@ SET (
   EllipticSystem/problem_data.c
   Utilities/util.c
   dGMath/d4est_operators.c
+  dGMath/d4est_lgl.c
+  dGMath/d4est_reference.c
   GridFunctions/grid_functions.c
   LinearAlgebra/d4est_linalg.c
   # Estimators/bi_estimator.c
@@ -131,7 +133,7 @@ SET (
   # Estimators/curved_bi_estimator.c
   # Estimators/curved_bi_estimator_flux_fcns.c
   # Estimators/estimator_stats.c
-  # hpAMR/curved_hp_amr.c
+  hpAMR/d4est_hp_amr.c
   # hpAMR/curved_hp_amr_smooth_pred.c
   # hpAMR/hp_amr.c
   # Solver/cg.c
@@ -143,7 +145,7 @@ SET (
   # Operators/curved_poisson_debug_vecs.c
   Operators/grad.c
   # hpAMR/hp_amr_smooth_pred.c
-  # hpAMR/hp_amr_curved_smooth_pred.c
+  hpAMR/d4est_hp_amr_smooth_pred.c
   # hpAMR/hp_amr_uniform.c
   # hpAMR/hp_amr_curved_uniform.c
   ElementData/d4est_element_data.c
@@ -153,9 +155,9 @@ SET (
   # Flux/central_flux_vector_fcns.c
   # Flux/compute_flux.c
   Flux/curved_compute_flux.c
-  # Flux/curved_Gauss_central_flux_vector_fcns.c
-  # Flux/curved_Gauss_sipg_flux_scalar_fcns.c
-  # Flux/curved_Gauss_sipg_flux_vector_fcns.c
+  # Flux/curved_gauss_central_flux_vector_fcns.c
+  # Flux/curved_gauss_sipg_flux_scalar_fcns.c
+  # Flux/curved_gauss_sipg_flux_vector_fcns.c
   # Solver/multigrid_bottom_solver_cg_d4est.c
   # Solver/multigrid_bottom_solver_cheby_d4est.c
   # Solver/multigrid_smoother_cheby_d4est.c
@@ -165,8 +167,8 @@ SET (
   # Solver/multigrid_element_data_updater_nocurved.c
   # Solver/multigrid_element_data_updater_curved.c
   Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.c
-  # Flux/curved_Gauss_primal_sipg_kronbichler_uniform_flux_fcns.c
-  # Flux/curved_Gauss_primal_sipg_hesthaven_flux_fcns.c
+  # Flux/curved_gauss_primal_sipg_kronbichler_uniform_flux_fcns.c
+  # Flux/curved_gauss_primal_sipg_hesthaven_flux_fcns.c
   Quadrature/d4est_quadrature.c
   Quadrature/d4est_quadrature_legendre.c
   Quadrature/d4est_quadrature_lobatto.c
@@ -339,10 +341,17 @@ set(CTEST_MEMORYCHECK_COMMAND /usr/bin/valgrind)
 # set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=/usr/share/openmpi/openmpi-valgrind.supp" )
 set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/suppressions.txt" )
 
-# add_executable(test_d4est_linalg Tests/test_d4est_linalg.c)
-# target_link_libraries(test_d4est_linalg d4est)
-# add_test(test_d4est_linalg_test test_d4est_linalg)
-# target_compile_definitions(test_d4est_linalg PRIVATE NDEBUG)
+add_executable(test_d4est_linalg Tests/test_d4est_linalg.c)
+target_link_libraries(test_d4est_linalg d4est)
+add_test(test_d4est_linalg_test test_d4est_linalg)
+target_compile_definitions(test_d4est_linalg PRIVATE NDEBUG)
+
+
+add_executable(test_d4est_operators Tests/test_d4est_operators.c)
+target_link_libraries(test_d4est_operators d4est)
+add_test(test_d4est_operators_test test_d4est_operators)
+target_compile_definitions(test_d4est_operators PRIVATE NDEBUG DIM=3)
+
 
 # add_executable(test_d4est_quadrature_compactified Tests/test_d4est_quadrature_compactified.c)
 # target_link_libraries(test_d4est_quadrature_compactified d8est)
@@ -374,7 +383,7 @@ set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppr
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
 # add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
-add_d4est_problem_2d(test_uniform_wedge_driver test_uniform_wedge.c UniformExamples/Wedge)
+# add_d4est_problem_2d(test_uniform_wedge_driver test_uniform_wedge.c UniformExamples/Wedge)
 # add_d4est_problem_2d(test_uniform_wedge_multigrid_driver test_uniform_wedge_multigrid.c UniformExamples/WedgeMultigrid)
 # add_d4est_problem_3d(test_uniform_cubedsphere_poisson_driver test_uniform_cubedsphere_poisson.c UniformExamples/CubedSpherePoisson)
 # add_d4est_problem_3d(test_uniform_cubedsphere_helmholtz_driver test_uniform_cubedsphere_helmholtz.c UniformExamples/CubedSphereHelmholtz)

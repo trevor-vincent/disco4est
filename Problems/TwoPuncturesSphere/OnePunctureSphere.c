@@ -4,7 +4,7 @@
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
-#include <curved_Gauss_primal_sipg_flux_fcns.h>
+#include <curved_gauss_primal_sipg_flux_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
 #include <problem_weakeqn_ptrs.h>
@@ -24,7 +24,7 @@
 #include <newton_petsc.h>
 #include <ini.h>
 #include <curved_poisson_operator_primal.h>
-#include <curved_Gauss_central_flux_vector_fcns.h>
+#include <curved_gauss_central_flux_vector_fcns.h>
 #include <jacobian_tester.h>
 #include "./twopuncturesfcns.h"
 #include "./twopuncturesfcns_cactus.h"
@@ -550,7 +550,7 @@ problem_init
   prob_vecs.u = u;
   prob_vecs.local_nodes = local_nodes;
 
-  prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs.curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                           (zero_fcn,&ip_flux_params);
 
   if(input.use_cactus){
@@ -568,7 +568,7 @@ problem_init
   /*   prob_fcns.apply_lhs = twopunctures_cactus_apply_jac; */
   /* } */
   /* else { */
-  prob_fcns.build_residual = twopunctures_build_residual_Lobatto;
+  prob_fcns.build_residual = twopunctures_build_residual_lobatto;
   prob_fcns.apply_lhs = twopunctures_apply_jac;
   /* } */
   

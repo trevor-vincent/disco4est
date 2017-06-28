@@ -4,9 +4,9 @@
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
-#include <curved_Gauss_sipg_flux_scalar_fcns.h>
-#include <curved_Gauss_sipg_flux_vector_fcns.h>
-#include <curved_Gauss_central_flux_vector_fcns.h>
+#include <curved_gauss_sipg_flux_scalar_fcns.h>
+#include <curved_gauss_sipg_flux_vector_fcns.h>
+#include <curved_gauss_central_flux_vector_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
 #include <problem_weakeqn_ptrs.h>
@@ -184,7 +184,7 @@ void problem_build_rhs
   
     if (input->use_ip_flux){
       ip_flux_params_t* ip_flux_params = user;
-      prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
+      prob_vecs->curved_vector_flux_fcn_data = curved_gauss_sipg_flux_vector_dirichlet_fetch_fcns
                                             (
                                              boundary_fcn,
                                              ip_flux_params
@@ -192,14 +192,14 @@ void problem_build_rhs
     }
     else {
       central_flux_params_t* ip_flux_params = user;
-      prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_central_flux_vector_dirichlet_fetch_fcns
+      prob_vecs->curved_vector_flux_fcn_data = curved_gauss_central_flux_vector_dirichlet_fetch_fcns
                                                (
                                                 boundary_fcn,
                                                 ip_flux_params
                                                );
 
     }
-    prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns
+    prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_sipg_flux_scalar_dirichlet_fetch_fcns
                                             (boundary_fcn);
 
 
@@ -213,7 +213,7 @@ void problem_build_rhs
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        d4est_operators_apply_curvedGaussMass(d4est_ops,
+        d4est_operators_apply_curvedgaussMass(d4est_ops,
                                      &f[ed->nodal_stride],
                                      ed->deg,
                                      ed->J_quad,
@@ -224,7 +224,7 @@ void problem_build_rhs
 
         /* double* tmp1 = &f[ed->nodal_stride]; */
         /* double* tmp2 = &prob_vecs->rhs[ed->nodal_stride]; */
-        /* DEBUG_PRINT_3ARR_DBL(tmp1,tmp2,ed->J_quad,d4est_operators_get_nodes((P4EST_DIM), ed->deg)); */
+        /* DEBUG_PRINT_3ARR_DBL(tmp1,tmp2,ed->J_quad,d4est_lgl_get_nodes((P4EST_DIM), ed->deg)); */
         
       }
     }    
@@ -236,7 +236,7 @@ void problem_build_rhs
   double* tmp = prob_vecs->u;
   
   prob_vecs->u = u_eq_0; 
-  curved_Gauss_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
+  curved_gauss_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
   d4est_linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
 
   prob_vecs->u = tmp;
@@ -246,7 +246,7 @@ void problem_build_rhs
 
  if (input->use_ip_flux){
       ip_flux_params_t* ip_flux_params = user;
-      prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
+      prob_vecs->curved_vector_flux_fcn_data = curved_gauss_sipg_flux_vector_dirichlet_fetch_fcns
                                             (
                                              zero_fcn,
                                              ip_flux_params
@@ -254,14 +254,14 @@ void problem_build_rhs
     }
     else {
       central_flux_params_t* ip_flux_params = user;
-      prob_vecs->curved_vector_flux_fcn_data = curved_Gauss_central_flux_vector_dirichlet_fetch_fcns
+      prob_vecs->curved_vector_flux_fcn_data = curved_gauss_central_flux_vector_dirichlet_fetch_fcns
                                                (
                                                 zero_fcn,
                                                 ip_flux_params
                                                );
 
     }
-  prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns
+  prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_sipg_flux_scalar_dirichlet_fetch_fcns
                                           (zero_fcn);
 
   P4EST_FREE(f);
@@ -463,7 +463,7 @@ problem_init
   }
   
   curved_weakeqn_ptrs_t prob_fcns;
-  prob_fcns.apply_lhs = curved_Gauss_poisson_apply_aij;
+  prob_fcns.apply_lhs = curved_gauss_poisson_apply_aij;
 
      
     d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
@@ -517,7 +517,7 @@ problem_init
     /*                          geometric_factors, */
     /*                          d4est_ops, */
     /*                          d4est_geom, degree, */
-    /*                          degree_Gauss_diff[0], */
+    /*                          degree_gauss_diff[0], */
     /*                          GAUSS_INTEG); */
 
 
@@ -538,7 +538,7 @@ problem_init
 
     if (input.use_ip_flux){
       printf("Using ip flux\n");
-      prob_vecs.curved_vector_flux_fcn_data = curved_Gauss_sipg_flux_vector_dirichlet_fetch_fcns
+      prob_vecs.curved_vector_flux_fcn_data = curved_gauss_sipg_flux_vector_dirichlet_fetch_fcns
                                               (
                                                zero_fcn,
                                                &ip_flux_params
@@ -546,7 +546,7 @@ problem_init
     }
     else{
       printf("Using central flux\n");
-      prob_vecs.curved_vector_flux_fcn_data = curved_Gauss_central_flux_vector_dirichlet_fetch_fcns
+      prob_vecs.curved_vector_flux_fcn_data = curved_gauss_central_flux_vector_dirichlet_fetch_fcns
                                               (
                                                zero_fcn,
                                                &central_flux_params
@@ -554,7 +554,7 @@ problem_init
     }
 
     
-    prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_sipg_flux_scalar_dirichlet_fetch_fcns
+    prob_vecs.curved_scalar_flux_fcn_data = curved_gauss_sipg_flux_scalar_dirichlet_fetch_fcns
                                             (zero_fcn);
 
     

@@ -41,16 +41,16 @@ bi_estimator_init
   int deg = element_data->deg;
   int i;
 
-  element_data->ustar_min_u = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_operators_get_nodes(dim-1, deg));
+  element_data->ustar_min_u = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_lgl_get_nodes(dim-1, deg));
   
   for (i = 0; i < (P4EST_DIM); i++){
-    element_data->qstar_min_q[i] = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_operators_get_nodes(dim-1, deg));
-    element_data->du_elem[i] = P4EST_ALLOC_ZERO(double, d4est_operators_get_nodes(dim, deg));   
+    element_data->qstar_min_q[i] = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*d4est_lgl_get_nodes(dim-1, deg));
+    element_data->du_elem[i] = P4EST_ALLOC_ZERO(double, d4est_lgl_get_nodes(dim, deg));   
   }
 
   element_data->u_elem = &(problem_data->u[element_data->stride]);
 
-  int volume_nodes = d4est_operators_get_nodes(dim,deg);
+  int volume_nodes = d4est_lgl_get_nodes(dim,deg);
 
   d4est_linalg_copy_1st_to_2nd(
   element_data->u_elem,
@@ -59,7 +59,7 @@ bi_estimator_init
     );
 
   for (i = 0; i < (P4EST_DIM); i++){
-    d4est_operators_apply_Dij(d4est_ops, element_data->u_elem, dim, deg, i, element_data->du_elem[i]);
+    d4est_operators_apply_dij(d4est_ops, element_data->u_elem, dim, deg, i, element_data->du_elem[i]);
     d4est_linalg_vec_scale(2./h, element_data->du_elem[i], volume_nodes);
   }
 }
@@ -81,7 +81,7 @@ void* user_data
   int dim = (P4EST_DIM);
   int deg = element_data->deg;
   int faces = 2*dim;
-  int face_nodes = d4est_operators_get_nodes(dim-1,deg);
+  int face_nodes = d4est_lgl_get_nodes(dim-1,deg);
 
   double surface_jacobian = element_data->surface_jacobian;
   double h = element_data->h;

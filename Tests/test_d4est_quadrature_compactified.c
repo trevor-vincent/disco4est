@@ -335,16 +335,16 @@ test_d4est_quadrature_compactified_weights_and_abscissas_volume
         double* rst [(P4EST_DIM)];
         double volume_nodes_quad = (deg+1)*(deg+1)*(deg+1);
         rst[2] = P4EST_ALLOC(double, volume_nodes_quad);
-        rst[1] = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg, 1);
-        rst[0] = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM), deg, 0);
+        rst[1] = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), deg, 1);
+        rst[0] = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), deg, 0);
         d4est_quadrature_compactified_compute_rst_volume(abscissas, deg, rst[2], 2);
 
         double* weights_volume = P4EST_ALLOC(double, volume_nodes_quad);
-        double* GL_weights = d4est_operators_fetch_GL_weights_1d(d4est_ops, deg);
+        double* gauss_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg);
         
         d4est_linalg_kron_AoBoC(weights,
-                                GL_weights,
-                                GL_weights,
+                                gauss_weights,
+                                gauss_weights,
                                 weights_volume,
                                 1, deg+1,
                                 1, deg+1,
@@ -460,8 +460,8 @@ test_d4est_quadrature_compactified_weights_and_abscissas_face
         double a = (R2-R1)*(cmax-cmin);
         double b = (R2-R1)*(cmax+cmin) - 4*R2 + 2*R1;
 
-        int face_nodes_quad = d4est_operators_get_nodes((P4EST_DIM)-1, deg);
-        int face_nodes_quad_GL = d4est_operators_get_nodes((P4EST_DIM)-1, deg_GL);
+        int face_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM)-1, deg);
+        int face_nodes_quad_GL = d4est_lgl_get_nodes((P4EST_DIM)-1, deg_GL);
         double* sj_face = P4EST_ALLOC(double, face_nodes_quad);
         double* j_div_sj_face = P4EST_ALLOC(double, face_nodes_quad);
         double* weights_face = P4EST_ALLOC(double, face_nodes_quad);
@@ -490,26 +490,26 @@ test_d4est_quadrature_compactified_weights_and_abscissas_face
           d4est_geometry_get_face_info(f, &face_info);
           
           if (f == 0 || f == 1 || f == 2 || f == 3){
-            rst_quad_mortar.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg, 0);
+            rst_quad_mortar.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg, 0);
             rst_quad_mortar.s = rst_face[1];
             rst_quad_mortar.t = NULL;
 
-            rst_quad_mortar_GL.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
-            rst_quad_mortar_GL.s = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
+            rst_quad_mortar_GL.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
+            rst_quad_mortar_GL.s = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
             rst_quad_mortar_GL.t = NULL;
           
-            double* GL_weights = d4est_operators_fetch_GL_weights_1d(d4est_ops, deg);
-            double* GL_weights_GL = d4est_operators_fetch_GL_weights_1d(d4est_ops, deg_GL);
+            double* gauss_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg);
+            double* gauss_weights_GL = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg_GL);
         
             d4est_linalg_kron_AoB(weights,
-                                  GL_weights,
+                                  gauss_weights,
                                   weights_face,
                                   1, deg+1,
                                   1, deg+1);
           
 
-            d4est_linalg_kron_AoB(GL_weights_GL,
-                                  GL_weights_GL,
+            d4est_linalg_kron_AoB(gauss_weights_GL,
+                                  gauss_weights_GL,
                                   weights_face_GL,
                                   1, deg_GL+1,
                                   1, deg_GL+1);
@@ -517,27 +517,27 @@ test_d4est_quadrature_compactified_weights_and_abscissas_face
             
           }
           else{
-            rst_quad_mortar.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg, 0); 
-            rst_quad_mortar.s = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg, 1); 
+            rst_quad_mortar.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg, 0); 
+            rst_quad_mortar.s = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg, 1); 
             rst_quad_mortar.t = NULL;
 
-            rst_quad_mortar_GL.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
-            rst_quad_mortar_GL.s = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
+            rst_quad_mortar_GL.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
+            rst_quad_mortar_GL.s = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
             rst_quad_mortar_GL.t = NULL;
 
-            double* GL_weights = d4est_operators_fetch_GL_weights_1d(d4est_ops, deg);
-            double* GL_weights_GL = d4est_operators_fetch_GL_weights_1d(d4est_ops, deg_GL);
+            double* gauss_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg);
+            double* gauss_weights_GL = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg_GL);
         
-            d4est_linalg_kron_AoB(GL_weights,
-                                  GL_weights,
+            d4est_linalg_kron_AoB(gauss_weights,
+                                  gauss_weights,
                                   weights_face,
                                   1, deg+1,
                                   1, deg+1);
           
            
 
-            d4est_linalg_kron_AoB(GL_weights_GL,
-                                  GL_weights_GL,
+            d4est_linalg_kron_AoB(gauss_weights_GL,
+                                  gauss_weights_GL,
                                   weights_face_GL,
                                   1, deg_GL+1,
                                   1, deg_GL+1);
@@ -719,13 +719,13 @@ test_d4est_quadrature_compactified_weights_and_abscissas_interp_face
         double a = (R2-R1)*(cmax-cmin);
         double b = (R2-R1)*(cmax+cmin) - 4*R2 + 2*R1;
 
-        int face_nodes_quad = d4est_operators_get_nodes((P4EST_DIM)-1, deg);
-        int face_nodes_quad_GL = d4est_operators_get_nodes((P4EST_DIM)-1, deg_GL);
+        int face_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM)-1, deg);
+        int face_nodes_quad_GL = d4est_lgl_get_nodes((P4EST_DIM)-1, deg_GL);
         double* poly_GL = P4EST_ALLOC(double, face_nodes_quad);
         double* poly_GLL = P4EST_ALLOC(double, face_nodes_quad);
         double* poly_comp = P4EST_ALLOC(double, face_nodes_quad);
-        double* poly_GLL_to_comp = P4EST_ALLOC(double, face_nodes_quad);
-        double* GLL_to_comp_interp = P4EST_ALLOC(double, (deg+1)*(deg+1));
+        double* poly_lobatto_to_comp = P4EST_ALLOC(double, face_nodes_quad);
+        double* lobatto_to_comp_interp = P4EST_ALLOC(double, (deg+1)*(deg+1));
 
         double* rst_face [(P4EST_DIM)-1];
         for (int i = 0; i < (P4EST_DIM)-1; i++){
@@ -745,13 +745,13 @@ test_d4est_quadrature_compactified_weights_and_abscissas_interp_face
           (
            d4est_ops,
            abscissas,
-           GLL_to_comp_interp,
+           lobatto_to_comp_interp,
            NULL,
            deg,
            deg
           );
 
-        double* GLL_to_GL_interp = d4est_operators_fetch_ref_GLL_to_GL_interp_1d(d4est_ops, deg, deg);
+        double* lobatto_to_gauss_interp = d4est_operators_fetch_lobatto_to_gauss_interp_1d(d4est_ops, deg, deg);
         
 
         for (int f = 0; f < (P4EST_FACES); f++){
@@ -763,33 +763,33 @@ test_d4est_quadrature_compactified_weights_and_abscissas_interp_face
           d4est_geometry_get_face_info(f, &face_info);
           
           if (f < 4){
-            rst_quad_mortar.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg, 0);
+            rst_quad_mortar.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg, 0);
             rst_quad_mortar.s = rst_face[1];
             rst_quad_mortar.t = NULL;
 
-            rst_quad_mortar_GL.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
-            rst_quad_mortar_GL.s = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
+            rst_quad_mortar_GL.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
+            rst_quad_mortar_GL.s = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
             rst_quad_mortar_GL.t = NULL;
 
 
-            rst_quad_mortar_GLL.r = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 0);
-            rst_quad_mortar_GLL.s = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 1);
+            rst_quad_mortar_GLL.r = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 0);
+            rst_quad_mortar_GLL.s = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 1);
             rst_quad_mortar_GLL.t = NULL;
                        
             
           }
           else{
-            rst_quad_mortar.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg, 0); 
-            rst_quad_mortar.s = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg, 1); 
+            rst_quad_mortar.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg, 0); 
+            rst_quad_mortar.s = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg, 1); 
             rst_quad_mortar.t = NULL;
 
-            rst_quad_mortar_GL.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
-            rst_quad_mortar_GL.s = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
+            rst_quad_mortar_GL.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
+            rst_quad_mortar_GL.s = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
             rst_quad_mortar_GL.t = NULL;
 
 
-            rst_quad_mortar_GLL.r = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 0);
-            rst_quad_mortar_GLL.s = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 1);
+            rst_quad_mortar_GLL.r = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 0);
+            rst_quad_mortar_GLL.s = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 1);
             rst_quad_mortar_GLL.t = NULL;
                         
           }
@@ -820,20 +820,20 @@ test_d4est_quadrature_compactified_weights_and_abscissas_interp_face
           }
 
           if (f < 4){
-            d4est_linalg_kron_A1A2x_nonsqr(poly_GLL_to_comp,
-                                           GLL_to_comp_interp,
-                                           GLL_to_GL_interp,
+            d4est_linalg_kron_A1A2x_nonsqr(poly_lobatto_to_comp,
+                                           lobatto_to_comp_interp,
+                                           lobatto_to_gauss_interp,
                                            poly_GLL,
                                            deg + 1,
                                            deg + 1,
                              deg + 1, deg + 1);
           }
           else {
-            d4est_linalg_kron_A1A2x_nonsqr(poly_GLL_to_comp, GLL_to_GL_interp, GLL_to_GL_interp, poly_GLL, deg + 1, deg + 1,
+            d4est_linalg_kron_A1A2x_nonsqr(poly_lobatto_to_comp, lobatto_to_gauss_interp, lobatto_to_gauss_interp, poly_GLL, deg + 1, deg + 1,
                              deg + 1, deg + 1);
           }
 
-          DEBUG_PRINT_4ARR_DBL(poly_comp, poly_GL, poly_GLL, poly_GLL_to_comp, face_nodes_quad_GL);
+          DEBUG_PRINT_4ARR_DBL(poly_comp, poly_GL, poly_GLL, poly_lobatto_to_comp, face_nodes_quad_GL);
           
         
         }
@@ -847,8 +847,8 @@ test_d4est_quadrature_compactified_weights_and_abscissas_interp_face
         P4EST_FREE(poly_comp);
         P4EST_FREE(poly_GL);
         P4EST_FREE(poly_GLL);
-        P4EST_FREE(poly_GLL_to_comp);
-        P4EST_FREE(GLL_to_comp_interp);
+        P4EST_FREE(poly_lobatto_to_comp);
+        P4EST_FREE(lobatto_to_comp_interp);
         
         
         /* DEBUG_PRINT_2ARR_DBL(abscissas, weights, deg+1); */
@@ -938,13 +938,13 @@ test_d4est_quadrature_compactified_weights_and_abscissas_galerkin_integral_face
         double a = (R2-R1)*(cmax-cmin);
         double b = (R2-R1)*(cmax+cmin) - 4*R2 + 2*R1;
 
-        int face_nodes_quad = d4est_operators_get_nodes((P4EST_DIM)-1, deg);
-        int face_nodes_quad_GL = d4est_operators_get_nodes((P4EST_DIM)-1, deg_GL);
+        int face_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM)-1, deg);
+        int face_nodes_quad_GL = d4est_lgl_get_nodes((P4EST_DIM)-1, deg_GL);
         double* poly_GL = P4EST_ALLOC(double, face_nodes_quad);
         double* poly_GLL = P4EST_ALLOC(double, face_nodes_quad);
         double* poly_comp = P4EST_ALLOC(double, face_nodes_quad);
-        double* poly_GLL_to_comp = P4EST_ALLOC(double, face_nodes_quad);
-        double* GLL_to_comp_interp = P4EST_ALLOC(double, (deg+1)*(deg+1));
+        double* poly_lobatto_to_comp = P4EST_ALLOC(double, face_nodes_quad);
+        double* lobatto_to_comp_interp = P4EST_ALLOC(double, (deg+1)*(deg+1));
 
         double* rst_face [(P4EST_DIM)-1];
         for (int i = 0; i < (P4EST_DIM)-1; i++){
@@ -964,13 +964,13 @@ test_d4est_quadrature_compactified_weights_and_abscissas_galerkin_integral_face
           (
            d4est_ops,
            abscissas,
-           GLL_to_comp_interp,
+           lobatto_to_comp_interp,
            NULL,
            deg,
            deg
           );
 
-        double* GLL_to_GL_interp = d4est_operators_fetch_ref_GLL_to_GL_interp_1d(d4est_ops, deg, deg);
+        double* lobatto_to_gauss_interp = d4est_operators_fetch_lobatto_to_gauss_interp_1d(d4est_ops, deg, deg);
         
 
         for (int f = 0; f < (P4EST_FACES); f++){
@@ -982,33 +982,33 @@ test_d4est_quadrature_compactified_weights_and_abscissas_galerkin_integral_face
           d4est_geometry_get_face_info(f, &face_info);
           
           if (f < 4){
-            rst_quad_mortar.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg, 0);
+            rst_quad_mortar.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg, 0);
             rst_quad_mortar.s = rst_face[1];
             rst_quad_mortar.t = NULL;
 
-            rst_quad_mortar_GL.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
-            rst_quad_mortar_GL.s = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
+            rst_quad_mortar_GL.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
+            rst_quad_mortar_GL.s = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
             rst_quad_mortar_GL.t = NULL;
 
 
-            rst_quad_mortar_GLL.r = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 0);
-            rst_quad_mortar_GLL.s = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 1);
+            rst_quad_mortar_GLL.r = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 0);
+            rst_quad_mortar_GLL.s = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 1);
             rst_quad_mortar_GLL.t = NULL;
                        
             
           }
           else{
-            rst_quad_mortar.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg, 0); 
-            rst_quad_mortar.s = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg, 1); 
+            rst_quad_mortar.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg, 0); 
+            rst_quad_mortar.s = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg, 1); 
             rst_quad_mortar.t = NULL;
 
-            rst_quad_mortar_GL.r = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
-            rst_quad_mortar_GL.s = d4est_operators_fetch_Gauss_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
+            rst_quad_mortar_GL.r = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 0);
+            rst_quad_mortar_GL.s = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GL, 1);
             rst_quad_mortar_GL.t = NULL;
 
 
-            rst_quad_mortar_GLL.r = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 0);
-            rst_quad_mortar_GLL.s = d4est_operators_fetch_xyz_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 1);
+            rst_quad_mortar_GLL.r = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 0);
+            rst_quad_mortar_GLL.s = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM)-1, deg_GLL, 1);
             rst_quad_mortar_GLL.t = NULL;
                         
           }
@@ -1039,20 +1039,20 @@ test_d4est_quadrature_compactified_weights_and_abscissas_galerkin_integral_face
           }
 
           if (f < 4){
-            d4est_linalg_kron_A1A2x_nonsqr(poly_GLL_to_comp,
-                                           GLL_to_comp_interp,
-                                           GLL_to_GL_interp,
+            d4est_linalg_kron_A1A2x_nonsqr(poly_lobatto_to_comp,
+                                           lobatto_to_comp_interp,
+                                           lobatto_to_gauss_interp,
                                            poly_GLL,
                                            deg + 1,
                                            deg + 1,
                              deg + 1, deg + 1);
           }
           else {
-            d4est_linalg_kron_A1A2x_nonsqr(poly_GLL_to_comp, GLL_to_GL_interp, GLL_to_GL_interp, poly_GLL, deg + 1, deg + 1,
+            d4est_linalg_kron_A1A2x_nonsqr(poly_lobatto_to_comp, lobatto_to_gauss_interp, lobatto_to_gauss_interp, poly_GLL, deg + 1, deg + 1,
                              deg + 1, deg + 1);
           }
 
-          DEBUG_PRINT_4ARR_DBL(poly_comp, poly_GL, poly_GLL, poly_GLL_to_comp, face_nodes_quad_GL);
+          DEBUG_PRINT_4ARR_DBL(poly_comp, poly_GL, poly_GLL, poly_lobatto_to_comp, face_nodes_quad_GL);
           
         
         }
@@ -1066,8 +1066,8 @@ test_d4est_quadrature_compactified_weights_and_abscissas_galerkin_integral_face
         P4EST_FREE(poly_comp);
         P4EST_FREE(poly_GL);
         P4EST_FREE(poly_GLL);
-        P4EST_FREE(poly_GLL_to_comp);
-        P4EST_FREE(GLL_to_comp_interp);
+        P4EST_FREE(poly_lobatto_to_comp);
+        P4EST_FREE(lobatto_to_comp_interp);
         
         
         /* DEBUG_PRINT_2ARR_DBL(abscissas, weights, deg+1); */
@@ -1139,7 +1139,7 @@ int main(int argc, char *argv[])
   
   d4est_operators_t* d4est_ops = d4est_ops_init();  
   d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t, 1);
-  d4est_quad->quad_type = QUAD_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4;
+  d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4;
   d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, "", "");
 
   

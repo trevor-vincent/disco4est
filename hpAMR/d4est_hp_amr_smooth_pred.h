@@ -1,0 +1,54 @@
+#ifndef D4EST_HP_AMR_CURVED_SMOOTH_PRED_H
+#define D4EST_HP_AMR_CURVED_SMOOTH_PRED_H 
+
+#include <pXest.h>
+#include <grid_functions.h>
+#include <d4est_hp_amr.h>
+#include <d4est_element_data.h>
+
+
+typedef struct {
+
+  double gamma_h;
+  double gamma_p;
+  double gamma_n;
+
+} gamma_params_t;
+
+typedef struct {
+
+  int (*mark_element_fcn)
+  (
+   p4est_t*,
+   double, /* eta2 */
+   estimator_stats_t**,
+   d4est_element_data_t*,
+   void* /* user ptr */
+  );
+  
+  gamma_params_t (*set_element_gamma_fcn)
+  (
+   p4est_t*,
+   double, /* eta2 */
+   estimator_stats_t**,
+   d4est_element_data_t*,
+   void* /* user ptr */
+  );
+  
+  const char* name;
+  void* user;
+  
+} smooth_pred_marker_t;
+
+typedef struct {
+  
+  int max_degree;
+  smooth_pred_marker_t marker;
+  double* predictors; 
+  
+} d4est_hp_amr_smooth_pred_data_t;
+
+
+
+
+#endif

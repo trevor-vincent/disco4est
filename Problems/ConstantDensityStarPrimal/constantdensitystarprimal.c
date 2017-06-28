@@ -10,7 +10,7 @@
 #include <d4est_linalg.h>
 
 #include <d4est_element_data.h>
-#include <curved_Gauss_primal_sipg_flux_fcns.h>
+#include <curved_gauss_primal_sipg_flux_fcns.h>
 #include <sipg_flux_vector_fcns.h>
 #include <curved_poisson_operator_primal.h>
 #include <problem.h>
@@ -175,7 +175,7 @@ build_residual
 {
   problem_ctx_t* ctx = (problem_ctx_t*)prob_vecs->user;
   
-  prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (boundary_fcn, ctx->ip_flux_params);
   curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
@@ -195,7 +195,7 @@ build_residual
         d4est_element_data_t* ed = quad->p.user_data;        
         int deg_nonlinear = ed->deg;
 
-        d4est_operators_apply_fofufofvlj_Gaussnodes
+        d4est_operators_apply_fofufofvlj_gaussnodes
           (
            d4est_ops,
            &prob_vecs->u[ed->nodal_stride],
@@ -233,7 +233,7 @@ void apply_jac
   problem_ctx_t* ctx = (problem_ctx_t*)prob_vecs->user;
 
   /* apply jac must always have zero boundary conditions for du in dirichlet problems */
-  prob_vecs->curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (zero_fcn, ctx->ip_flux_params);
   curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
   
@@ -251,7 +251,7 @@ void apply_jac
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
         int deg_nonlinear = ed->deg;// + ctx->deg_offset_for_nonlinear_quad;
-        d4est_operators_apply_fofufofvlilj_Gaussnodes
+        d4est_operators_apply_fofufofvlilj_gaussnodes
           (
            d4est_ops,
            &prob_vecs->u[ed->nodal_stride],
@@ -327,7 +327,7 @@ typedef struct {
   double rho0_div_rhoc;
   double ip_flux_penalty;
   int percentile;
-  int use_Gauss_quad;
+  int use_gauss_quad;
   int degmax;
   int deg_offset_for_nonlinear_quad;
   KSPType krylov_type;
@@ -427,9 +427,9 @@ int problem_input_handler
     mpi_assert(pconfig->domain_size == -1);
     pconfig->domain_size = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"use_Gauss_quad")) {
-    mpi_assert(pconfig->use_Gauss_quad == -1);
-    pconfig->use_Gauss_quad = atoi(value);
+  } else if (util_match_couple(section,"problem",name,"use_gauss_quad")) {
+    mpi_assert(pconfig->use_gauss_quad == -1);
+    pconfig->use_gauss_quad = atoi(value);
     pconfig->count += 1;
   } else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
     mpi_assert(pconfig->deg_offset_for_nonlinear_quad == -1);
@@ -464,7 +464,7 @@ problem_input
   input.ip_flux_penalty = -1;
   input.percentile = -1;
   input.rho0_div_rhoc = -1;
-  input.use_Gauss_quad = -1;
+  input.use_gauss_quad = -1;
   input.deg_offset_for_nonlinear_quad = -1;
   input.amr_inflation_size = -1;
   input.degmax = -1;
@@ -717,7 +717,7 @@ problem_init
   prob_vecs.u = u;
   prob_vecs.u0 = u;
   prob_vecs.local_nodes = local_nodes;
-  prob_vecs.curved_scalar_flux_fcn_data = curved_Gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs.curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (boundary_fcn,
                                             &ip_flux_params);
 

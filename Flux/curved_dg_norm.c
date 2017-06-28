@@ -26,8 +26,8 @@ curved_dg_norm_boundary
   penalty_calc_t curved_dg_norm_u_dirichlet_prefactor_calculate_fcn = ip_flux_params->ip_flux_penalty_calculate_fcn;
 
   
-  int face_nodes_m_lobatto = d4est_operators_get_nodes((P4EST_DIM) - 1, e_m->deg);
-  int face_nodes_m_quad = d4est_operators_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
+  int face_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg);
+  int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
 
   double* u_m_on_f_m = P4EST_ALLOC(double, face_nodes_m_lobatto);
   double* u_m_on_f_m_quad = P4EST_ALLOC(double, face_nodes_m_quad);
@@ -182,8 +182,8 @@ curved_dg_norm_interface
     deg_m_lobatto[i] = e_m[i]->deg;
     /* deg_m_quad[i] = e_m[i]->deg_quad; */
     
-    face_nodes_m_lobatto[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
-    face_nodes_m_quad[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg_quad);
+    face_nodes_m_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
+    face_nodes_m_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg_quad);
     
     total_side_nodes_m_lobatto += face_nodes_m_lobatto[i];
     total_side_nodes_m_quad += face_nodes_m_quad[i];
@@ -197,8 +197,8 @@ curved_dg_norm_interface
     deg_p_lobatto_porder[i] = e_p[i]->deg;
     /* deg_p_quad[i] = e_p_oriented[i]->deg_quad; */
 
-    face_nodes_p_lobatto[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
-    face_nodes_p_quad[i] = d4est_operators_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg_quad);
+    face_nodes_p_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
+    face_nodes_p_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg_quad);
     
     total_side_nodes_p_lobatto += face_nodes_p_lobatto[i];
     total_side_nodes_p_quad += face_nodes_p_quad[i];
@@ -214,8 +214,8 @@ curved_dg_norm_interface
                                             e_p_oriented[j]->deg_quad);
       deg_mortar_lobatto[i+j] = util_max_int( e_m[i]->deg,
                                               e_p_oriented[j]->deg );      
-      nodes_mortar_quad[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
-      nodes_mortar_lobatto[i+j] = d4est_operators_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
+      nodes_mortar_quad[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
+      nodes_mortar_lobatto[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
       total_nodes_mortar_quad += nodes_mortar_quad[i+j];
       total_nodes_mortar_lobatto += nodes_mortar_lobatto[i+j];
    
@@ -238,7 +238,7 @@ curved_dg_norm_interface
   for(int i = 0; i < faces_mortar; i++){
     int inew = i;
     if (faces_mortar == (P4EST_HALF)){
-      inew = d4est_operators_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, i);
+      inew = d4est_reference_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, i);
     }
     deg_mortar_quad_porder[inew] = deg_mortar_quad[i];
     nodes_mortar_quad_porder[inew] = nodes_mortar_quad[i];

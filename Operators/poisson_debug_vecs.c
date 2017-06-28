@@ -11,7 +11,7 @@ poisson_debug_vecs_set_lifteduflux
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int d = 0; d < (P4EST_DIM); d++){
     for (int f = 0; f < (P4EST_FACES); f++){
       d4est_linalg_copy_1st_to_2nd(lifteduflux[f][d],
@@ -29,7 +29,7 @@ poisson_debug_vecs_set_liftedqflux
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int f = 0; f < (P4EST_FACES); f++){
     d4est_linalg_copy_1st_to_2nd(liftedqflux[f], debug_vecs->liftedqflux[f], volume_nodes);
   }
@@ -43,7 +43,7 @@ poisson_debug_vecs_set_Mdu
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int d = 0; d < (P4EST_DIM); d++){
     d4est_linalg_copy_1st_to_2nd(Mdu[d], debug_vecs->Mdu[d], volume_nodes);
   }
@@ -57,7 +57,7 @@ poisson_debug_vecs_set_Mq
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int d = 0; d < (P4EST_DIM); d++){
     d4est_linalg_copy_1st_to_2nd(Mq[d], debug_vecs->Mq[d], volume_nodes);
   }
@@ -71,7 +71,7 @@ poisson_debug_vecs_set_q
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   for (int d = 0; d < (P4EST_DIM); d++){
     d4est_linalg_copy_1st_to_2nd(q[d], debug_vecs->q[d], volume_nodes);
   }
@@ -85,7 +85,7 @@ poisson_debug_vecs_set_Au
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   d4est_linalg_copy_1st_to_2nd(Au, debug_vecs->Au, volume_nodes);
 }
 
@@ -97,7 +97,7 @@ poisson_debug_vecs_set_Mdivq
  d4est_operators_t* d4est_ops
 )
 {
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), debug_vecs->deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), debug_vecs->deg);
   d4est_linalg_copy_1st_to_2nd(Mdivq, debug_vecs->Mdivq, volume_nodes);
 }
 
@@ -119,7 +119,7 @@ poisson_debug_vecs_init
   
   int id = elem_data->id;
   int deg = elem_data->deg;
-  int volume_nodes = d4est_operators_get_nodes((P4EST_DIM), deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg);
 
   debug_vecs->deg = deg;
   debug_vecs->elem_id = id;
