@@ -1,17 +1,18 @@
-#include "../pXest/pXest.h"
-#include "../ElementData/element_data.h"
-#include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/problem_weakeqn_ptrs.h"
-#include "../LinearAlgebra/d4est_linalg.h"
-#include "../Utilities/util.h"
-#include "../hpAMR/hp_amr.h"
-#include "../Estimators/d4est_estimator_bi_flux_fcns.h"
-#include "../Estimators/d4est_estimator_bi.h"
+#include <pXest.h>
+#include <util.h>
+#include <problem_data.h>
+#include <problem_weakeqn_ptrs.h>
+#include <d4est_element_data.h>
+#include <d4est_linalg.h>
+#include <d4est_mesh.h>
+#include <d4est_estimator_bi.h>
+#include <d4est_mortars.h>
 
 typedef struct {
   
   d4est_operators_t* d4est_ops;
   problem_data_t* problem_data;
+  double(*get_diam)(d4est_element_data_t*);
   
 } d4est_estimator_bi_user_data_t;
 
@@ -31,7 +32,6 @@ d4est_estimator_bi_init
   int dim = (P4EST_DIM);
   int deg = elem_data->deg;
   int volume_nodes_lobatto = d4est_lgl_get_nodes(dim,deg);
-  int face_nodes_lobatto = d4est_lgl_get_nodes(dim-1,deg);
   int volume_nodes_gauss = d4est_lgl_get_nodes(dim, elem_data->deg_quad);
   /* int face_nodes_gauss = d4est_lgl_get_nodes(dim-1, elem_data->deg_quad); */
   
@@ -62,13 +62,14 @@ void* user_data
 )
 {
   p4est_quadrant_t *q = info->quad;
+  d4est_estimator_bi_user_data_t* d4est_estimator_bi_user_data = (d4est_estimator_bi_user_data_t*) user_data;
   d4est_element_data_t* element_data = (d4est_element_data_t*) q->p.user_data;
 
   int deg = element_data->deg;
   double* eta2 = &(element_data->local_estimator);
 
   /* handle ||R||^2 * h^2/p^2 term */
-  double h = get_diam(element_data);
+  double h = d4est_estimator_bi_user_data->get_diam(element_data);
   *eta2 *= h*h/(deg*deg);
 }
 
@@ -78,16 +79,14 @@ d4est_estimator_bi_compute
  p4est_t* p4est,
  problem_data_t* vecs,
  weakeqn_ptrs_t* fcns,
- penalty_calc_t u_penalty_fcn,
- penalty_calc_t u_dirichlet_penalty_fcn,
- penalty_calc_t gradu_penalty_fcn,
+ d4est_estimator_bi_penalty_data_t penalty_data,
  grid_fcn_t u_bndry_fcn,
- double penalty_prefactor,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad
+ d4est_quadrature_t* d4est_quad,
+ double (*get_diam)(d4est_element_data_t*)
 )
 {
   fcns->build_residual
@@ -97,21 +96,25 @@ d4est_estimator_bi_compute
      ghost_data,
      vecs,
      d4est_ops,
-     geom
+     d4est_geom,
+     d4est_quad
     );
 
-  d4est_element_data_compute_l2_norm_sqr
+  d4est_mesh_compute_l2_norm_sqr
     (
      p4est,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
      vecs->Au,
      vecs->local_nodes,
-     d4est_ops,
      STORE_LOCALLY
     );
 
   d4est_estimator_bi_user_data_t d4est_estimator_bi_user_data;
   d4est_estimator_bi_user_data.d4est_ops = d4est_ops;
   d4est_estimator_bi_user_data.problem_data = vecs;
+  d4est_estimator_bi_user_data.get_diam = get_diam;
  
   p4est_iterate
     (
@@ -139,14 +142,12 @@ d4est_estimator_bi_compute
      NULL
     );
 
-  curved_flux_fcn_ptrs_t d4est_estimator_bi_flux_fcn_ptrs = curved_bi_est_dirichlet_fetch_fcns
-                                                      (
-                                                       u_bndry_fcn,
-                                                       u_penalty_fcn,
-                                                       u_dirichlet_penalty_fcn,
-                                                       gradu_penalty_fcn,
-                                                       penalty_prefactor
-                                                      );
+  curved_flux_fcn_ptrs_t d4est_estimator_bi_flux_fcn_ptrs
+    = d4est_estimator_bi_dirichlet_fetch_fcns
+    (
+     u_bndry_fcn,
+     &penalty_data
+    );
   
   curved_compute_flux_on_local_elements
     (
@@ -164,17 +165,20 @@ d4est_estimator_bi_compute
 
 
 static void
-curved_bi_est_dirichlet
+d4est_estimator_bi_dirichlet
 (
  d4est_element_data_t* e_m,
  int f_m,
+ int mortar_side_id_m,
  grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
- d4est_geometry_t* geom,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  void* params
 )
 {
   grid_fcn_t u_at_bndry = bndry_fcn;
+  d4est_estimator_bi_penalty_data_t* penalty_data = params;
   int face_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg);
   int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
 
@@ -185,6 +189,7 @@ curved_bi_est_dirichlet
 
   double* MJe2 = P4EST_ALLOC(double, face_nodes_m_quad);
   double* sj_on_f_m_quad = P4EST_ALLOC(double, face_nodes_m_quad);
+  double* j_div_sj_quad = P4EST_ALLOC(double, face_nodes_m_quad);
   double* Je2 = P4EST_ALLOC(double, face_nodes_m_quad);
 
   double* xyz_on_f_m [(P4EST_DIM)];
@@ -193,10 +198,8 @@ curved_bi_est_dirichlet
 
   
   for (int d = 0; d < (P4EST_DIM); d++) {
-    /* xyz_on_f_m_quad[d] = P4EST_ALLOC(double, face_nodes_m_quad); */
     xyz_on_f_m[d] = P4EST_ALLOC(double, face_nodes_m_lobatto);
     n_on_f_m_quad[d] = P4EST_ALLOC(double, face_nodes_m_quad);
-    /* sj_n_on_f_m_quad[d] = P4EST_ALLOC(double, face_nodes_m_quad); */
 
 
     d4est_operators_apply_slicer(d4est_ops,
@@ -217,37 +220,17 @@ curved_bi_est_dirichlet
                       e_m->deg,
                       u_m_on_f_m);
 
-  /* d4est_operators_interp_lobatto_to_GL */
-  /*   ( */
-  /*    d4est_ops, */
-  /*    u_m_on_f_m, */
-  /*    e_m->deg, */
-  /*    e_m->deg_quad, */
-  /*    u_m_on_f_m_quad, */
-  /*    (P4EST_DIM)-1 */
-  /*   ); */
- 
-  /* d4est_element_data_compute_mortar_normal_and_sj_using_face_data */
-  /*   ( */
-  /*    &e_m, */
-  /*    1, */
-  /*    1, */
-  /*    &e_m->deg_quad, */
-  /*    f_m, */
-  /*    geom->dxdr_method, */
-  /*    1, */
-  /*    n_on_f_m_quad, */
-  /*    sj_on_f_m_quad, */
-  /*    geom, */
-  /*    d4est_ops, */
-  /*    xyz_on_f_m_quad */
-  /*   ); */
 
-  d4est_geometry_compute_geometric_data_on_mortar
+  d4est_mortars_compute_geometric_data_on_mortar
     (
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     QUAD_INTEGRAND_UNKNOWN,
      e_m->tree,
      e_m->q,
      e_m->dq,
+     mortar_side_id_m,
      1,
      1,
      &e_m->deg_quad,
@@ -256,26 +239,36 @@ curved_bi_est_dirichlet
      sj_on_f_m_quad,
      n_on_f_m_quad,
      NULL,
-     NULL,
-     geom->geom_quad_type,
-     geom,
-     d4est_ops,
+     j_div_sj_quad,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
   
-  
-  
-  double h = (e_m->volume/e_m->surface_area[f_m]);
-  /* find IP penalty parameter for each face pair of the two sides*/
-  double Je2_prefactor = curved_bi_est_u_dirichlet_prefactor_calculate_fcn
-                  (
-                   e_m->deg,
-                   h,
-                   e_m->deg,
-                   h,
-                   curved_bi_est_sipg_flux_penalty_prefactor
-                  );
+  double* Je2_prefactor = P4EST_ALLOC(double, face_nodes_m_quad);
+  double h, h_min;
+  if (penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+    h_min = util_min_dbl_array(j_div_sj_quad, face_nodes_m_quad);
+  }
     
+  for (int i = 0; i < face_nodes_m_quad; i++){
+    if (penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ){
+      h = j_div_sj_quad[i];
+    }
+    else if (penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+      h = h_min;
+    }
+    else {
+      mpi_abort("[D4EST_ERROR]: NOT SUPPORTED IP_FLUX_H_CALC");
+    }
+    Je2_prefactor[i] = penalty_data->u_dirichlet_penalty_fcn
+                       (
+                        e_m->deg,
+                        h,
+                        e_m->deg,
+                        h,
+                        penalty_data->penalty_prefactor
+                       );
+  }
+
 
   for (int i = 0; i < face_nodes_m_lobatto; i++){
     u_on_f_m_min_u_at_bndry_lobatto[i] = u_m_on_f_m[i]
@@ -292,56 +285,67 @@ curved_bi_est_dirichlet
 
 
   
-    d4est_operators_interp(d4est_ops,
-                  u_on_f_m_min_u_at_bndry_lobatto,
-                  QUAD_LOBATTO,
-                  e_m->deg,
-                  u_on_f_m_min_u_at_bndry_quad,
-                  geom->geom_quad_type,
-                  e_m->deg_quad,
-                  (P4EST_DIM)-1);
+  d4est_quadrature_mortar_t face_object;
+  face_object.dq = e_m->dq;
+  face_object.tree = e_m->tree;
+  face_object.face = f_m;
+  face_object.mortar_side_id = mortar_side_id_m;
+  face_object.mortar_subface_id = 0;
+  
+  face_object.q[0] = e_m->q[0];
+  face_object.q[1] = e_m->q[1];
+#if (P4EST_DIM)==3
+  face_object
+    .q[2] = e_m->q[2];
+#endif
 
+
+  d4est_quadrature_interpolate
+    (
+     d4est_ops,
+     d4est_quad,
+     d4est_geom,
+     &face_object,
+     QUAD_OBJECT_MORTAR,
+     QUAD_INTEGRAND_UNKNOWN,
+     u_on_f_m_min_u_at_bndry_lobatto,
+     e_m->deg,
+     u_on_f_m_min_u_at_bndry_quad,
+     e_m->deg_quad
+    );
+
+    
   
   for (int dim = 0; dim < (P4EST_DIM); dim++){
-    /* calculate qstar - q(-) */
 
     for(int i = 0; i < face_nodes_m_quad; i++){
-      Je2[i] = n_on_f_m_quad[dim][i]*Je2_prefactor*(u_on_f_m_min_u_at_bndry_quad[i]);
-     
+      Je2[i] = n_on_f_m_quad[dim][i]*Je2_prefactor[i]*(u_on_f_m_min_u_at_bndry_quad[i]);
     }
-    
-    
-    /* d4est_operators_apply_curvedquadMass_onquadNodeVec(d4est_ops, */
-    /*                                             Je2, */
-    /*                                             e_m->deg_quad, */
-    /*                                             sj_n_on_f_m_quad[dim], */
-    /*                                             e_m->deg_quad, */
-    /*                                             (P4EST_DIM)-1, */
-    /*                                             MJe2); */
-    
 
-    /* double Je2MJe2 = d4est_linalg_vec_dot(Je2, MJe2, face_nodes_m_quad); */
-    
+    double Je2MJe2 = d4est_quadrature_innerproduct
+                     (
+                      d4est_ops,
+                      d4est_geom,
+                      d4est_quad,
+                      &face_object,
+                      QUAD_OBJECT_MORTAR,
+                      QUAD_INTEGRAND_UNKNOWN,
+                      Je2,
+                      Je2,
+                      sj_on_f_m_quad,
+                      e_m->deg_quad
+                     );
 
-    double Je2MJe2 = d4est_operators_quadrature(
-                                       d4est_ops,
-                                       Je2,
-                                       Je2,
-                                       sj_on_f_m_quad,
-                                       e_m->deg_quad,
-                                       geom->geom_quad_type,
-                                       (P4EST_DIM)-1);
+
     
     e_m->local_estimator += Je2MJe2;
-    /* if (e_m->id == 1){ */
-      /* printf("element id = %d, f = %d, Je2MJe2 = %.25f\n", e_m->id, f_m, Je2MJe2); */
-      /* printf("element id = %d, f = %d, Je1MJe1 = %.25f\n", e_m->id, f_m, 0.); */
-    /* } */
+
   }
 
-
+  P4EST_FREE(Je2_prefactor);
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(sj_on_f_m_quad);
+  P4EST_FREE(j_div_sj_quad);
   P4EST_FREE(Je2);
   P4EST_FREE(MJe2);
   P4EST_FREE(u_on_f_m_min_u_at_bndry_lobatto);
@@ -350,23 +354,25 @@ curved_bi_est_dirichlet
   for (int d = 0; d < (P4EST_DIM); d++){
     P4EST_FREE(xyz_on_f_m[d]);
     P4EST_FREE(n_on_f_m_quad[d]);
-    /* P4EST_FREE(sj_n_on_f_m_quad[d]); */
   }
 }
 
 static void
-curved_bi_est_interface
+d4est_estimator_bi_interface
 (
  d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
+ int mortar_side_id_m,
  d4est_element_data_t** e_p,
  int faces_p,
  int f_p,
+ int mortar_side_id_p,
  int* e_m_is_ghost,
  int orientation,
  d4est_operators_t* d4est_ops,
- d4est_geometry_t* geom,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  void* params
 )
 {
@@ -382,11 +388,13 @@ curved_bi_est_interface
   int deg_mortar_quad [(P4EST_HALF)];
   int deg_mortar_lobatto [(P4EST_HALF)];
   int faces_mortar = (faces_m > faces_p) ? faces_m : faces_p;
-  double Je1_prefactor_mortar [(P4EST_HALF)];
-  double Je2_prefactor_mortar [(P4EST_HALF)];
+  /* double Je1_prefactor_mortar [(P4EST_HALF)]; */
+  /* double Je2_prefactor_mortar [(P4EST_HALF)]; */
   int deg_p_lobatto_porder [(P4EST_HALF)];
   d4est_element_data_t* e_p_oriented [(P4EST_HALF)];
   d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
+  d4est_estimator_bi_penalty_data_t* penalty_data = params;
+  
   
   int total_side_nodes_m_lobatto = 0;
   int total_side_nodes_m_quad = 0;
@@ -429,25 +437,7 @@ curved_bi_est_interface
       nodes_mortar_quad[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
       nodes_mortar_lobatto[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
       total_nodes_mortar_quad += nodes_mortar_quad[i+j];
-      total_nodes_mortar_lobatto += nodes_mortar_lobatto[i+j];
-      Je1_prefactor_mortar[i+j] =  curved_bi_est_gradu_prefactor_calculate_fcn
-                                   (
-                                    e_m[i]->deg,
-                                    (e_m[i]->volume/e_m[i]->surface_area[f_m]),
-                                    e_p[j]->deg,
-                                    (e_p_oriented[j]->volume/e_p_oriented[j]->surface_area[f_p]),
-                                    curved_bi_est_sipg_flux_penalty_prefactor
-                                   );    
-    
-      Je2_prefactor_mortar[i+j] = curved_bi_est_u_prefactor_calculate_fcn
-                                  (
-                                   e_m[i]->deg,
-                                   (e_m[i]->volume/e_m[i]->surface_area[f_m]),
-                                   e_p[j]->deg,
-                                   (e_p_oriented[j]->volume/e_p_oriented[j]->surface_area[f_p]),
-                                   curved_bi_est_sipg_flux_penalty_prefactor
-                                  );    
-      
+      total_nodes_mortar_lobatto += nodes_mortar_lobatto[i+j];     
     }
 
 
@@ -516,6 +506,62 @@ curved_bi_est_interface
   double* MJe2 = P4EST_ALLOC(double, total_nodes_mortar_quad);
   double* tmp = P4EST_ALLOC(double, total_side_nodes_p_quad);
 
+  p4est_qcoord_t mortar_q0_forder [(P4EST_HALF)][(P4EST_DIM)];
+  p4est_qcoord_t mortar_dq_forder;
+  p4est_qcoord_t mortar_q0_porder [(P4EST_HALF)][(P4EST_DIM)];
+  p4est_qcoord_t mortar_dq_porder;
+  d4est_quadrature_mortar_t mortar_face_object_forder [(P4EST_HALF)];
+  d4est_quadrature_mortar_t mortar_face_object_porder [(P4EST_HALF)];
+  
+  d4est_geometry_compute_qcoords_on_mortar
+    (
+     e_m[0]->tree,
+     e_m[0]->q,
+     e_m[0]->dq,
+     faces_m,
+     faces_mortar,
+     f_m,
+     mortar_q0_forder,
+     &mortar_dq_forder
+    );
+
+  d4est_geometry_compute_qcoords_on_mortar
+    (
+     e_p[0]->tree,
+     e_p[0]->q,
+     e_p[0]->dq,
+     faces_p,
+     faces_mortar,
+     f_p,
+     mortar_q0_porder,
+     &mortar_dq_porder
+    );
+
+
+  for (int f = 0; f < faces_mortar; f++){
+    mortar_face_object_forder[f].dq = mortar_dq_forder;
+    mortar_face_object_forder[f].tree = e_m[0]->tree;
+    mortar_face_object_forder[f].mortar_side_id = mortar_side_id_m;
+    mortar_face_object_forder[f].mortar_subface_id = f;   
+    mortar_face_object_forder[f].face = f_m;
+    mortar_face_object_forder[f].q[0] = mortar_q0_forder[f][0];
+    mortar_face_object_forder[f].q[1] = mortar_q0_forder[f][1];
+#if (P4EST_DIM)==3
+    mortar_face_object_forder[f].q[2] = mortar_q0_forder[f][2];
+#endif
+
+    mortar_face_object_porder[f].dq = mortar_dq_porder;
+    mortar_face_object_porder[f].tree = e_p[0]->tree;
+    mortar_face_object_porder[f].face = f_p;
+    mortar_face_object_porder[f].mortar_side_id = mortar_side_id_p;
+    mortar_face_object_porder[f].mortar_subface_id = f;
+    mortar_face_object_porder[f].q[0] = mortar_q0_porder[f][0];
+    mortar_face_object_porder[f].q[1] = mortar_q0_porder[f][1];
+#if (P4EST_DIM)==3
+    mortar_face_object_porder[f].q[2] = mortar_q0_porder[f][2];
+#endif    
+  }
+  
   stride = 0;
   for (int i = 0; i < faces_m; i++){   
     d4est_operators_apply_slicer
@@ -585,23 +631,33 @@ curved_bi_est_interface
 
   stride = 0;
   for (int f = 0; f < faces_mortar; f++){
-    d4est_operators_interp(d4est_ops,
-                  &u_m_on_f_m_mortar[stride],
-                  QUAD_LOBATTO,
-                  deg_mortar_quad[f],
-                  &u_m_on_f_m_mortar_quad[stride],
-                  geom->geom_quad_type,
-                  deg_mortar_quad[f],
-                  (P4EST_DIM)-1);
+    d4est_quadrature_interpolate
+      (
+       d4est_ops,
+       d4est_quad,
+       d4est_geom,
+       &mortar_face_object_forder,
+       QUAD_OBJECT_MORTAR,
+       QUAD_INTEGRAND_UNKNOWN,
+       &u_m_on_f_m_mortar[stride],
+       deg_mortar_quad[f],
+       &u_m_on_f_m_mortar_quad[stride],
+       deg_mortar_quad[f]
+      );
     
-    d4est_operators_interp(d4est_ops,
-                  &u_p_on_f_p_mortar[stride],
-                  QUAD_LOBATTO,
-                  deg_mortar_quad[f],
-                  &u_p_on_f_p_mortar_quad[stride],
-                  geom->geom_quad_type,
-                  deg_mortar_quad[f],
-                  (P4EST_DIM)-1);
+    d4est_quadrature_interpolate
+      (
+       d4est_ops,
+       d4est_quad,
+       d4est_geom,
+       &mortar_face_object_forder,
+       QUAD_OBJECT_MORTAR,
+       QUAD_INTEGRAND_UNKNOWN,
+       &u_p_on_f_p_mortar[stride],
+       deg_mortar_quad[f],
+       &u_p_on_f_p_mortar_quad[stride],
+       deg_mortar_quad[f]
+      );
     
     stride += nodes_mortar_quad[f];
   }
@@ -668,59 +724,72 @@ curved_bi_est_interface
 
     stride = 0;
     for (int f = 0; f < faces_mortar; f++){
-
-      d4est_operators_interp(d4est_ops,
-                    &dudr_m_on_f_m_mortar[d][stride],
-                    QUAD_LOBATTO,
-                    deg_mortar_quad[f],
-                    &dudr_m_on_f_m_mortar_quad[d][stride],
-                    geom->geom_quad_type,
-                    deg_mortar_quad[f],
-                    (P4EST_DIM)-1);
       
+      d4est_quadrature_interpolate
+        (
+         d4est_ops,
+         d4est_quad,
+         d4est_geom,
+         &mortar_face_object_forder,
+         QUAD_OBJECT_MORTAR,
+         QUAD_INTEGRAND_UNKNOWN,
+         &dudr_m_on_f_m_mortar[d][stride],
+         deg_mortar_quad[f],
+         &dudr_m_on_f_m_mortar_quad[d][stride],
+         deg_mortar_quad[f]
+        );
+
       stride += nodes_mortar_quad[f];
     }
 
     stride = 0;
     for (int f = 0; f < faces_mortar; f++){
 
-      d4est_operators_interp(d4est_ops,
-                    &dudr_p_on_f_p_mortar_porder[d][stride],
-                    QUAD_LOBATTO,
-                    deg_mortar_quad_porder[f],
-                    &dudr_p_on_f_p_mortar_quad_porder[d][stride],
-                    geom->geom_quad_type,
-                    deg_mortar_quad_porder[f],
-                    (P4EST_DIM)-1);
+      d4est_quadrature_interpolate
+        (
+         d4est_ops,
+         d4est_quad,
+         d4est_geom,
+         &mortar_face_object_porder,
+         QUAD_OBJECT_MORTAR,
+         QUAD_INTEGRAND_UNKNOWN,
+         &dudr_p_on_f_p_mortar_porder[d][stride],
+         deg_mortar_quad_porder[f],
+         &dudr_p_on_f_p_mortar_quad_porder[d][stride],
+         deg_mortar_quad_porder[f]
+        );
               
       stride += nodes_mortar_quad_porder[f];
     }
-    
+   
+  }
 
+  double* j_div_sj_on_f_m_mortar_quad = NULL;
+  double* j_div_sj_on_f_p_mortar_quad_porder = NULL;
+  double* j_div_sj_on_f_p_mortar_quad_porder_oriented = NULL;
+
+  if(penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ
+     || penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN
+    ){
+    j_div_sj_on_f_m_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
+    j_div_sj_on_f_p_mortar_quad_porder =  P4EST_ALLOC(double, total_nodes_mortar_quad);
+    j_div_sj_on_f_p_mortar_quad_porder_oriented =  P4EST_ALLOC(double, total_nodes_mortar_quad);
+  }
+  else {
+    mpi_abort("[D4EST_ERROR]: ip_flux_params->ip_flux_h_calc can only be H_EQ_J_DIV_SJ(_MIN)\n");
   }
   
-
-
- /* curved_data_compute_drst_dxyz_quad_on_mortar_using_volume_data */
- /*    ( */
- /*     e_m, */
- /*     faces_m, */
- /*     faces_mortar, */
- /*     &deg_mortar_quad[0], */
- /*     f_m, */
- /*     drst_dxyz_m_on_mortar_quad, */
- /*     sj_on_f_m_mortar_quad, */
- /*     n_on_f_m_mortar_quad, */
- /*     geom->p4est_geom, */
- /*     d4est_ops, */
- /*     NULL */
- /*    ); */
-
-  d4est_geometry_compute_geometric_data_on_mortar
+  
+  d4est_mortars_compute_geometric_data_on_mortar
     (
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     QUAD_INTEGRAND_UNKNOWN,
      e_m[0]->tree,
      e_m[0]->q,
      e_m[0]->dq,
+     mortar_side_id_m,
      faces_m,
      faces_mortar,
      &deg_mortar_quad[0],
@@ -729,18 +798,20 @@ curved_bi_est_interface
      sj_on_f_m_mortar_quad,
      n_on_f_m_mortar_quad,
      NULL,
-     NULL,
-     geom->geom_quad_type,
-     geom,
-     d4est_ops,
+     j_div_sj_on_f_m_mortar_quad,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
 
-  d4est_geometry_compute_geometric_data_on_mortar
+  d4est_mortars_compute_geometric_data_on_mortar
     (
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     QUAD_INTEGRAND_UNKNOWN,
      e_p[0]->tree,
      e_p[0]->q,
      e_p[0]->dq,
+     mortar_side_id_p,
      faces_p,
      faces_mortar,
      &deg_mortar_quad_porder[0],
@@ -749,10 +820,7 @@ curved_bi_est_interface
      NULL,
      NULL,
      NULL,
-     NULL,
-     geom->geom_quad_type,
-     geom,
-     d4est_ops,
+     j_div_sj_on_f_p_mortar_quad_porder,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
 
@@ -810,214 +878,165 @@ curved_bi_est_interface
          &dudx_p_on_f_p_mortar_quad[d][face_mortar_stride]
         );
     }
+
+
+    if (j_div_sj_on_f_p_mortar_quad_porder != NULL){
+      d4est_operators_reorient_face_data
+        (
+         d4est_ops,
+         &j_div_sj_on_f_p_mortar_quad_porder[oriented_face_mortar_stride],
+         (P4EST_DIM)-1,
+         deg_mortar_quad[face],
+         orientation,
+         f_m,
+         f_p,
+         &j_div_sj_on_f_p_mortar_quad_porder_oriented[face_mortar_stride]
+        );
+    }    
+    
     
     face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
   }
 
 
+  double hm_min, hp_min;
+  if (penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+    hp_min = util_min_dbl_array(j_div_sj_on_f_p_mortar_quad_porder_oriented, total_nodes_mortar_quad);
+    hm_min = util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
+  }
+  double* Je1_prefactor = P4EST_ALLOC(double, total_nodes_mortar_quad);
+  double* Je2_prefactor = P4EST_ALLOC(double, total_nodes_mortar_quad);
   
-  
-  /* DEBUG_PRINT_ARR_DBL */
-  /*   ( */
-  /*    u_m_on_f_m, */
-  /*    total_side_nodes_m_lobatto */
-  /*   ); */
-  /* DEBUG_PRINT_ARR_DBL */
-  /*   ( */
-  /*    u_p_on_f_p, */
-  /*    total_side_nodes_p_lobatto */
-  /*   ); */
-  /* DEBUG_PRINT_3ARR_DBL */
-  /*   ( */
-  /*    dudr_m_on_f_m[0], */
-  /*    dudr_m_on_f_m[1], */
-  /*    dudr_m_on_f_m[2], */
-  /*    total_side_nodes_m_lobatto */
-  /*   ); */
-  /* DEBUG_PRINT_3ARR_DBL */
-  /*   ( */
-  /*    dudr_m_on_f_m[0], */
-  /*    dudr_m_on_f_m[1], */
-  /*    dudr_m_on_f_m[2], */
-  /*    total_side_nodes_p_lobatto */
-  /*   ); */
+  stride = 0;
+  for (int f = 0; f < faces_mortar; f++){
+    for (int k = 0; k < nodes_mortar_quad[f]; k++){
+      int ks = k + stride;
+      int is_it_min = (penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN);
+      double hp = (is_it_min) ? hp_min : j_div_sj_on_f_p_mortar_quad_porder_oriented[ks];
+      double hm = (is_it_min) ? hm_min : j_div_sj_on_f_m_mortar_quad[ks];
+      
+      Je1_prefactor[ks] = penalty_data->gradu_penalty_fcn
+                           (
+                            e_m[f]->deg,
+                            hm,
+                            e_p_oriented[f]->deg,
+                            hp,
+                            penalty_data->penalty_prefactor
+                           ); 
 
-  /* DEBUG_PRINT_6ARR_DBL */
-  /*   ( */
-  /*    dudr_m_on_f_m_mortar[0], */
-  /*    dudr_m_on_f_m_mortar[1], */
-  /*    dudr_m_on_f_m_mortar[2], */
-  /*    dudr_p_on_f_p_mortar[0], */
-  /*    dudr_p_on_f_p_mortar[1], */
-  /*    dudr_p_on_f_p_mortar[2], */
-  /*    total_nodes_mortar_quad */
-  /*   ); */
+      Je2_prefactor[ks] = penalty_data->u_penalty_fcn
+                          (
+                           e_m[f]->deg,
+                           hm,
+                           e_p_oriented[f]->deg,
+                           hp,
+                           penalty_data->penalty_prefactor
+                          );    
+      
 
-
-  /* for (int i = 0; i < total_nodes_mortar_quad; i++){ */
-  /*   printf("dudx_mortar_lobatto = %.25f %.25f %.25f\n", 4*dudr_m_on_f_m_mortar[0][i],4*dudr_m_on_f_m_mortar[1][i], 4*dudr_m_on_f_m_mortar[2][i]);     */
-  /* } */
-
-  /* double dudx_div_dudr = dudx_m_on_f_m_mortar_quad[0][0]/dudr_m_on_f_m_mortar_quad[0][0]; */
-  /* double nx = n_on_f_m_mortar_quad[0][0]; */
-  /* double ny = n_on_f_m_mortar_quad[1][0]; */
-  /* double nz = n_on_f_m_mortar_quad[2][0]; */
-  
-  
-  /* double* tmpxyz [(P4EST_DIM)]; */
-  /* D4EST_ALLOC_DIM_VEC(tmpxyz,total_nodes_mortar_quad); */
-  /* d4est_element_data_compute_mortar_normal_and_sj_using_face_data */
-  /*   ( */
-  /*    e_m, */
-  /*    faces_m, */
-  /*    faces_mortar, */
-  /*    &deg_mortar_quad[0], */
-  /*    f_m, */
-  /*    geom->dxdr_method, */
-  /*    1, */
-  /*    n_on_f_m_mortar_quad, */
-  /*    sj_on_f_m_mortar_quad, */
-  /*    geom, */
-  /*    d4est_ops, */
-  /*    tmpxyz */
-  /*   ); */
-  /* D4EST_FREE_DIM_VEC(tmpxyz); */
-  
-
-  /* for(int d = 0; d < (P4EST_DIM); d++){ */
-  /*   stride = 0; */
-  /*   for (int f = 0; f < faces_mortar; f++){ */
-  /*     d4est_operators_reorient_face_data */
-  /*       ( */
-  /*        d4est_ops, */
-  /*        &dudx_p_on_f_p_mortar_quad[d][stride], */
-  /*        ((P4EST_DIM) - 1), */
-  /*        deg_mortar_quad[f], */
-  /*        orientation, */
-  /*        f_m, */
-  /*        f_p, */
-  /*        &dudx_p_on_f_p_mortar_quad_reoriented[d][stride] */
-  /*       );       */
-  /*     stride += nodes_mortar_quad[f]; */
-  /*   }    */
-  /* } */
-
-
-
-    /* calculate symmetric interior penalty flux */
-    int k;
-    int f;
-    int ks;
-    double n_ks;
-    double sj_ks;
-    stride = 0;
-    for (f = 0; f < faces_mortar; f++){
-      for (k = 0; k < nodes_mortar_quad[f]; k++){
-        ks = k + stride;
-        sj_ks = sj_on_f_m_mortar_quad[ks];
-        Je1[ks] = 0.;
-        for (int d = 0; d < (P4EST_DIM); d++){
-          n_ks = n_on_f_m_mortar_quad[d][ks];        
-          Je1[ks] += Je1_prefactor_mortar[f]*n_ks*
-                     (dudx_m_on_f_m_mortar_quad[d][ks] - dudx_p_on_f_p_mortar_quad[d][ks]);
-          /* sje1[ks] += sj_ks*Je1_prefactor_mortar[f]*n_ks* */
-                      /* (du_m_on_f_m_mortar[d][ks] - du_p_on_f_p_mortar[d][ks]); */
-
-          Je2[d][ks] = n_ks*u_m_on_f_m_mortar_quad[ks];
-          Je2[d][ks] -= n_ks*u_p_on_f_p_mortar_quad[ks];
-          Je2[d][ks] *= Je2_prefactor_mortar[f];
-          
-        }
-        /* printf("Je1_test = %.25f\n", Je1_test); */
-      }
-      stride += nodes_mortar_quad[f];
     }
+    stride += nodes_mortar_quad[f];
+  }
+
+  
+
+  /* calculate symmetric interior penalty flux */
+  int k;
+  int f;
+  int ks;
+  double n_ks;
+  double sj_ks;
+  stride = 0;
+  for (f = 0; f < faces_mortar; f++){
+    for (k = 0; k < nodes_mortar_quad[f]; k++){
+      ks = k + stride;
+      sj_ks = sj_on_f_m_mortar_quad[ks];
+      Je1[ks] = 0.;
+      for (int d = 0; d < (P4EST_DIM); d++){
+        n_ks = n_on_f_m_mortar_quad[d][ks];        
+        Je1[ks] += Je1_prefactor[ks]*n_ks*
+                   (dudx_m_on_f_m_mortar_quad[d][ks] - dudx_p_on_f_p_mortar_quad[d][ks]);
+        Je2[d][ks] = n_ks*u_m_on_f_m_mortar_quad[ks];
+        Je2[d][ks] -= n_ks*u_p_on_f_p_mortar_quad[ks];
+        Je2[d][ks] *= Je2_prefactor[ks];
+      }
+    }
+    stride += nodes_mortar_quad[f];
+  }
 
 
     
-    /* the contribution in every direction must be added up due to it being a vector norm */
-    stride = 0;
-    for (f = 0; f < faces_mortar; f++){
-      for (int d = 0; d < (P4EST_DIM); d++){
-        
+  /* the contribution in every direction must be added up due to it being a vector norm */
+  stride = 0;
+  for (f = 0; f < faces_mortar; f++){
+    for (int d = 0; d < (P4EST_DIM); d++){
 
+      double Je2MJe2 = d4est_quadrature_innerproduct
+                       (
+                        d4est_ops,
+                        d4est_geom,
+                        d4est_quad,
+                        &mortar_face_object_forder,
+                        QUAD_OBJECT_MORTAR,
+                        QUAD_INTEGRAND_UNKNOWN,
+                        &Je2[d][stride],
+                        &Je2[d][stride],
+                        &sj_on_f_m_mortar_quad[stride],
+                        deg_mortar_quad[f]
+                       );
 
-        double Je2MJe2 = d4est_operators_quadrature(
-                                                 d4est_ops,
-                                                 &Je2[d][stride],
-                                                 &Je2[d][stride],
-                                                 &sj_on_f_m_mortar_quad[stride],
-                                                 deg_mortar_quad[f],
-                                                 geom->geom_quad_type,
-                                                 (P4EST_DIM)-1);
-        
+      
+      /* even if it's a ghost we can still add it to the ghosts estimator because we will not send it back! */
 
-        /* even if it's a ghost we can still add it to the ghosts estimator because we will not send it back! */
-
-        if(faces_m == (P4EST_HALF)){
-          e_m[f]->local_estimator += Je2MJe2;
-        }
-        else{
-          e_m[0]->local_estimator += Je2MJe2;
-        }
+      if(faces_m == (P4EST_HALF)){
+        e_m[f]->local_estimator += Je2MJe2;
       }
-      stride += nodes_mortar_quad[f];
+      else{
+        e_m[0]->local_estimator += Je2MJe2;
+      }
     }
+    stride += nodes_mortar_quad[f];
+  }
 
 
     
   stride = 0;
   for (f = 0; f < faces_mortar; f++){  
 
-    /* d4est_operators_apply_curvedquadMass_onquadNodeVec */
-    /*   ( */
-    /*    d4est_ops, */
-    /*    &Je1[stride], */
-    /*    deg_mortar_quad[f], */
-    /*    &sj_on_f_m_mortar_quad[stride], */
-    /*    deg_mortar_quad[f], */
-    /*    (P4EST_DIM)-1, */
-    /*    &MJe1[stride] */
-    /*   ); */
-
-    /* double Je1MJe1 = d4est_linalg_vec_dot(&Je1[stride], &MJe1[stride], nodes_mortar_quad[f]); */
-
-    double Je1MJe1 = d4est_operators_quadrature(
-                                             d4est_ops,
-                                             &Je1[stride],
-                                             &Je1[stride],
-                                             &sj_on_f_m_mortar_quad[stride],
-                                             deg_mortar_quad[f],
-                                             geom->geom_quad_type,
-                                             (P4EST_DIM)-1);
-
-
-    /* d4est_operators_apply_mij(d4est_ops, &Je1_test_mortar[stride], (P4EST_DIM)-1, deg_mortar_quad[f], &MJe1_test_mortar[stride]); */
-    /* d4est_linalg_vec_scale(sj_on_f_m_mortar_quad[0], &MJe1_test_mortar[stride], nodes_mortar_quad[f]); */
-    /* double Je1MJe1_test = d4est_linalg_vec_dot(&Je1_test_mortar[stride], &MJe1_test_mortar[stride], nodes_mortar_quad[f]); */
-
-
-    /* if (fabs(Je1MJe1 - Je1MJe1_test) > .00001){ */
-    /* } */
-    /* printf("id, f, Je1MJe1, Je1MJe1_test = %d %d %.25f, %.25f\n", e_m[0]->id, f_m, Je1MJe1, Je1MJe1_test); */
-
+    double Je1MJe1 = d4est_quadrature_innerproduct
+                     (
+                      d4est_ops,
+                      d4est_geom,
+                      d4est_quad,
+                      &mortar_face_object_forder,
+                      QUAD_OBJECT_MORTAR,
+                      QUAD_INTEGRAND_UNKNOWN,
+                      &Je1[stride],
+                      &Je1[stride],
+                      &sj_on_f_m_mortar_quad[stride],
+                      deg_mortar_quad[f]
+                     );
     
+   
     /* even if it's a ghost we can still add it to the ghosts estimator because we will not send it back! */
-      if(faces_m == (P4EST_HALF)){
-        e_m[f]->local_estimator += Je1MJe1;
-      }
-      else{
-        e_m[0]->local_estimator += Je1MJe1;
-      }
-      stride += nodes_mortar_quad[f];
+    if(faces_m == (P4EST_HALF)){
+      e_m[f]->local_estimator += Je1MJe1;
+    }
+    else{
+      e_m[0]->local_estimator += Je1MJe1;
+    }
+    stride += nodes_mortar_quad[f];
   }
 
 
-  /* for (int f = 0; f < faces_m; f++){ */
-    /* printf("eta2 on face %d = %.25f\n", f, e_m[f]->local_estimator); */
-  /* } */
   D4EST_FREE_DBYD_MAT(drst_dxyz_m_on_mortar_quad);
   D4EST_FREE_DBYD_MAT(drst_dxyz_p_on_mortar_quad_porder);
+
+  P4EST_FREE(Je1_prefactor);
+  P4EST_FREE(Je2_prefactor);
+  P4EST_FREE(j_div_sj_on_f_m_mortar_quad);
+  P4EST_FREE(j_div_sj_on_f_p_mortar_quad_porder);
+  P4EST_FREE(j_div_sj_on_f_p_mortar_quad_porder_oriented);
   
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_p_on_f_p);
@@ -1045,30 +1064,28 @@ curved_bi_est_interface
 
 }
 
+
+
 curved_flux_fcn_ptrs_t
-curved_bi_est_dirichlet_fetch_fcns
+d4est_estimator_bi_dirichlet_fetch_fcns
 (
  grid_fcn_t bndry_fcn,
- penalty_calc_t u_penalty_fcn,
- penalty_calc_t u_dirichlet_penalty_fcn,
- penalty_calc_t gradu_penalty_fcn,
- double penalty_prefactor
+ d4est_estimator_bi_penalty_data_t* penalty_data
 )
 {
-  curved_flux_fcn_ptrs_t curved_bi_est_fcns;
-  curved_bi_est_fcns.flux_interface_fcn
-    = curved_bi_est_interface;
+  curved_flux_fcn_ptrs_t d4est_estimator_bi_fcns;
+  d4est_estimator_bi_fcns.flux_interface_fcn
+    = d4est_estimator_bi_interface;
 
-  curved_bi_est_fcns.flux_boundary_fcn
-    = curved_bi_est_dirichlet;
+  d4est_estimator_bi_fcns.flux_boundary_fcn
+    = d4est_estimator_bi_dirichlet;
 
-  curved_bi_est_fcns.bndry_fcn = bndry_fcn;
-
-  curved_bi_est_sipg_flux_penalty_prefactor = penalty_prefactor;
-
-  curved_bi_est_u_prefactor_calculate_fcn = u_penalty_fcn;
-  curved_bi_est_u_dirichlet_prefactor_calculate_fcn = u_dirichlet_penalty_fcn;
-  curved_bi_est_gradu_prefactor_calculate_fcn = gradu_penalty_fcn;
+  d4est_estimator_bi_fcns.bndry_fcn = bndry_fcn;
+ 
+  d4est_estimator_bi_fcns.params = penalty_data;
+  /* d4est_estimator_bi_u_prefactor_calculate_fcn = u_penalty_fcn; */
+  /* d4est_estimator_bi_u_dirichlet_prefactor_calculate_fcn = u_dirichlet_penalty_fcn; */
+  /* d4est_estimator_bi_gradu_prefactor_calculate_fcn = gradu_penalty_fcn; */
   
-  return curved_bi_est_fcns;
+  return d4est_estimator_bi_fcns;
 }

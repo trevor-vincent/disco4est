@@ -387,7 +387,6 @@ d4est_mesh_print_element_data_debug
     }  
 }
 
-
 double
 d4est_mesh_compute_l2_norm_sqr
 (

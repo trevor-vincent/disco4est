@@ -1,8 +1,7 @@
 #define _GNU_SOURCE
-#include "estimator_stats.h"
-#include "../ElementData/d4est_element_data.h"
-#include "../ElementData/element_data.h"
-#include "../Utilities/util.h"
+#include <estimator_stats.h>
+#include <d4est_element_data.h>
+#include <util.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <float.h>
@@ -10,8 +9,13 @@
 #include <math.h>
 #include <sc_reduce.h>
 
-void estimator_stats_compute(p4est_t* p4est, estimator_stats_t* stats, int curved){
-
+void estimator_stats_compute
+(
+ p4est_t* p4est,
+ estimator_stats_t* stats,
+ int curved
+)
+{
   double* eta2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
   
   double total_eta2 = 0.;
@@ -25,11 +29,7 @@ void estimator_stats_compute(p4est_t* p4est, estimator_stats_t* stats, int curve
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q, ++k) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        if(curved)
-          eta2[k] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
-        else{
-          eta2[k] = (((element_data_t*)(quad->p.user_data))->local_estimator);
-        }
+        eta2[k] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
         total_eta2 += eta2[k];
       }
     }
@@ -154,7 +154,6 @@ estimator_stats_compute_stats
 
   stats->total = total_eta2;
   stats->mean = total_eta2/(double)sample_size;
-  /* stats->median = util_compute_median(eta2, sample_size); */
   stats->std = 0.;
   stats->max = eta2[sample_size-1];
   stats->min = eta2[0];
@@ -168,9 +167,7 @@ estimator_stats_compute_stats
   else
     stats->std = 0.;
   stats->std = sqrt(stats->std);
-  /* stats->bin_size_scott = 3.5*stats->std*(1./pow(stats->sample_size,1./3.)); */
-  /* stats->num_bins_scott = round((stats->max - stats->min)/stats->bin_size_scott); */
-
+ 
   stats->p5 =  eta2[(int)(((double)sample_size)*.95)];
   stats->p10 = eta2[(int)(((double)sample_size)*.9)];
   stats->p15 = eta2[(int)(((double)sample_size)*.85)];
@@ -189,29 +186,7 @@ estimator_stats_compute_stats
     stats->p15 = -1;
     stats->p20 = -1;
   }
-  /* if even */
-  /* if (stats->sample_size != 1){ */
-    
-  /*   if (stats->sample_size % 2 == 0){ */
-  /*     stats->Q1 = util_compute_median(&eta2[0], stats->sample_size/2); */
-  /*     stats->Q3 = util_compute_median(&eta2[stats->sample_size/2], stats->sample_size/2); */
-  /*     stats->IQR = stats->Q3 - stats->Q1; */
-  /*     stats->bin_size_freedman = (2.*stats->IQR)/pow((double)stats->sample_size, 1./3.); */
-  /*   } */
-  /*   else { */
-  /*     stats->Q1 = util_compute_median(&eta2[0], (stats->sample_size-1)/2); */
-  /*     stats->Q3 = util_compute_median(&eta2[(stats->sample_size+1)/2], stats->sample_size/2); */
-  /*     stats->IQR = stats->Q3 - stats->Q1; */
-  /*     stats->bin_size_freedman = (2.*stats->IQR)/pow((double)stats->sample_size, 1./3.); */
-  /*   } */
-  /*   stats->num_bins_freedman = round((stats->max - stats->min)/stats->bin_size_freedman); */
-  /* } */
-  /* else { */
-  /*   stats->Q1 = 0.; */
-  /*   stats->Q3 = 0.; */
-  /*   stats->IQR = 0.; */
-  /*   stats->bin_size_freedman = 0.; */
-  /* } */
+
 }
 
 void
@@ -423,10 +398,7 @@ void estimator_stats_write_to_file
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        if(curved)
-          fprintf(file_est, "%.20f\n", ((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
-        else
-          fprintf(file_est, "%.20f\n", ((element_data_t*)(quad->p.user_data))->local_estimator);
+        fprintf(file_est, "%.20f\n", ((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
       }
     }
   

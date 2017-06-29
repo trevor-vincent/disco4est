@@ -132,7 +132,8 @@ SET (
   Geometry/d4est_geometry.c
   # Estimators/curved_bi_estimator.c
   # Estimators/curved_bi_estimator_flux_fcns.c
-  # Estimators/estimator_stats.c
+  Estimators/estimator_stats.c
+  Estimators/d4est_estimator_bi.c
   hpAMR/d4est_hp_amr.c
   # hpAMR/curved_hp_amr_smooth_pred.c
   # hpAMR/hp_amr.c

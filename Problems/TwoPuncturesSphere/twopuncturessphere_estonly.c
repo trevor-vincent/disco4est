@@ -96,68 +96,6 @@ amr_set_element_gamma
   return gamma_hpn;
 }
 
-/* static */
-/* double psi_fcn */
-/* ( */
-/*  double x, */
-/*  double y, */
-/*  double z, */
-/*  double u */
-/* ) */
-/* { */
-/*   double sumn_mn_o_2rn = 0.; */
-/*   double dxn, dyn, dzn, r; */
-/*   int n; */
-/*   for (n = 0; n < NUM_PUNCTURES; n++){ */
-/*     dxn = x - xyz_bh[n][0]; */
-/*     dyn = y - xyz_bh[n][1]; */
-/*     dzn = z - xyz_bh[n][2]; */
-/*     r = sqrt(dxn*dxn + dyn*dyn + dzn*dzn); */
-/*     if (r == 0.){ */
-/*       r += puncture_eps; */
-/*     } */
-/*     sumn_mn_o_2rn += M_bh[n]/(2.*r); */
-/*   } */
-
-/*   return 1. + u + sumn_mn_o_2rn; */
-/* } */
-
-
-
-static int
-uni_refine_function
-(
- p4est_t * p4est,
- p4est_topidx_t which_tree,
- p4est_quadrant_t *quadrant
-)
-{
-  /* if (which_tree != 12) */
-  return 1;
-  /* else */
-    /* return 0; */
-}
-
-
-
-typedef struct {
-
-  int num_unifrefs;
-  int num_of_amr_levels;
-
-  int deg_R0;
-  int deg_quad_R0;
-  int deg_R1;
-  int deg_quad_R1;
-  int deg_R2;
-  int deg_quad_R2;
-  int deg_offset_for_nonlinear_quad;
-  double ip_flux_penalty;
-  int use_cactus;
-  int count;
-  
-} problem_input_t;
-
 
 static
 int problem_input_handler
@@ -174,59 +112,13 @@ int problem_input_handler
     pconfig->num_of_amr_levels = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"amr",name,"num_unifrefs")) {
-    mpi_assert(pconfig->num_unifrefs == -1);
-    pconfig->num_unifrefs = atoi(value);
-    pconfig->count += 1;
-  }
-  else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
-    mpi_assert(pconfig->ip_flux_penalty == -1);
-    pconfig->ip_flux_penalty = atof(value);
-    pconfig->count += 1;
-  } 
-  else if (util_match_couple(section,"problem",name,"deg_R0")) {
-    mpi_assert(pconfig->deg_R0 == -1);
-    pconfig->deg_R0 = atoi(value);
-    pconfig->count += 1;
-  }
   else if (util_match_couple(section,"problem",name,"use_cactus")) {
     mpi_assert(pconfig->use_cactus == -1);
     pconfig->use_cactus = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
-    mpi_assert(pconfig->deg_quad_R0 == -1);
-    pconfig->deg_quad_R0 = atoi(value);
-    pconfig->count += 1;
-  }
-  else if (util_match_couple(section,"problem",name,"deg_R1")) {
-    mpi_assert(pconfig->deg_R1 == -1);
-    pconfig->deg_R1 = atoi(value);
-    pconfig->count += 1;
-  }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
-    mpi_assert(pconfig->deg_quad_R1 == -1);
-    pconfig->deg_quad_R1 = atoi(value);
-    pconfig->count += 1;
-  }
-  else if (util_match_couple(section,"problem",name,"deg_R2")) {
-    mpi_assert(pconfig->deg_R2 == -1);
-    pconfig->deg_R2 = atoi(value);
-    pconfig->count += 1;
-  }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
-    mpi_assert(pconfig->deg_quad_R2 == -1);
-    pconfig->deg_quad_R2 = atoi(value);
-    pconfig->count += 1;
-  }  
-  else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
-    mpi_assert(pconfig->deg_offset_for_nonlinear_quad == -1);
-    pconfig->deg_offset_for_nonlinear_quad = atoi(value);
-    pconfig->count += 1;
-  }  
-
   else {
-    return 0;  /* unknown section/name, error */
+    return 0;
   }
   return 1;
 }
@@ -239,22 +131,9 @@ problem_input
  const char* input_file
 )
 {
-  int num_of_options = 11;
-  
   problem_input_t input;
-  input.num_unifrefs = -1;
   input.num_of_amr_levels = -1;
-  input.ip_flux_penalty = -1;
   input.use_cactus = -1;
-  input.deg_R0 = -1;
-  input.deg_quad_R0 = -1;
-  input.deg_R1 = -1;
-  input.deg_quad_R1 = -1;
-  input.deg_R2 = -1;
-  input.deg_quad_R2 = -1; 
-  input.deg_offset_for_nonlinear_quad = -1;
-  
-  input.count = 0;
   
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
     mpi_abort("Can't load input file");
@@ -264,29 +143,7 @@ problem_input
   return input;
 }
 
-/* p4est_geometry_t* */
-/* problem_build_geom */
-/* ( */
-/*  p4est_connectivity_t* conn */
-/* ) */
-/* { */
-/*   /\* mpi_assert((P4EST_DIM)==3); *\/ */
-/*   p4est_geometry_t* geom; */
-/*   problem_input_t input = problem_input("options.input"); */
 
-/*   /\* geom = d4est_geometry_new_compact_sphere(conn, input.R2, input.R1, input.R0, input.w, input.Rinf); *\/ */
-/* #if (P4EST_DIM)==3 */
-/*   geom = d4est_geometry_new_sphere(conn, input.R2, input.R1, input.R0); */
-/* #endif */
-/* #if (P4EST_DIM)==2 */
-/*   geom = d4est_geometry_new_disk(conn, input.R1, input.R2); */
-/* #endif */
-  
-/*   /\* printf("input.R2 = %.25f\n", input.R2); *\/ */
-
-  
-/*   return geom;   */
-/* } */
 
 p4est_t*
 problem_build_p4est
