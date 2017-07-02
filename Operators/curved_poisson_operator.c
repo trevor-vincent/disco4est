@@ -13,7 +13,7 @@
 typedef struct {
   
   d4est_operators_t* d4est_ops;
-  problem_data_t* problem_data;
+  d4est_elliptic_problem_data_t* problem_data;
 #ifndef NDEBUG
   curved_poisson_debug_vecs_t* debug_vecs;
 #endif
@@ -30,7 +30,7 @@ void curved_gauss_poisson_init_vecs
   d4est_element_data_t* elem_data = (d4est_element_data_t *) q->p.user_data;
 
   curved_gauss_poisson_user_data_t* curved_gauss_poisson_user_data = (curved_gauss_poisson_user_data_t*) user_data;
-  problem_data_t* problem_data = (problem_data_t*) curved_gauss_poisson_user_data->problem_data;
+  d4est_elliptic_problem_data_t* problem_data = (d4est_elliptic_problem_data_t*) curved_gauss_poisson_user_data->problem_data;
   d4est_operators_t* d4est_ops = (d4est_operators_t*) curved_gauss_poisson_user_data->d4est_ops;
   
   int dim = (P4EST_DIM);
@@ -672,7 +672,7 @@ curved_gauss_poisson_apply_aij
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom
 )
@@ -684,9 +684,9 @@ curved_gauss_poisson_apply_aij
   curved_gauss_poisson_user_data.debug_vecs = NULL;
 #endif
   
-  curved_compute_flux_user_data_t curved_compute_flux_user_data;
-  curved_compute_flux_user_data.d4est_ops = d4est_ops;
-  curved_compute_flux_user_data.geom = geom;
+  d4est_mortar_compute_flux_user_data_t d4est_mortar_compute_flux_user_data;
+  d4est_mortar_compute_flux_user_data.d4est_ops = d4est_ops;
+  d4est_mortar_compute_flux_user_data.geom = geom;
   
   void* tmpptr = p4est->user_pointer;
   
@@ -702,14 +702,14 @@ curved_gauss_poisson_apply_aij
 
   p4est_ghost_exchange_data(p4est,ghost,ghost_data);
  
-  curved_compute_flux_user_data.flux_fcn_ptrs = &prob_vecs->curved_scalar_flux_fcn_data;
-  p4est->user_pointer = &curved_compute_flux_user_data;
+  d4est_mortar_compute_flux_user_data.flux_fcn_ptrs = &prob_vecs->flux_fcn_data;
+  p4est->user_pointer = &d4est_mortar_compute_flux_user_data;
   
   p4est_iterate(p4est,
 		ghost,
 		(void*) ghost_data,
 		NULL,
-		curved_compute_flux_on_local_elements,
+		d4est_mortar_compute_flux_on_local_elements,
 #if (P4EST_DIM)==3
                 NULL,
 #endif
@@ -729,14 +729,14 @@ curved_gauss_poisson_apply_aij
 		NULL);
 
   p4est_ghost_exchange_data (p4est, ghost, ghost_data);
-  curved_compute_flux_user_data.flux_fcn_ptrs = &prob_vecs->curved_vector_flux_fcn_data;
-  p4est->user_pointer = &curved_compute_flux_user_data;
+  d4est_mortar_compute_flux_user_data.flux_fcn_ptrs = &prob_vecs->curved_vector_flux_fcn_data;
+  p4est->user_pointer = &d4est_mortar_compute_flux_user_data;
 
   p4est_iterate (p4est,
   		 ghost,
   		 (void *) ghost_data,
   		 NULL,
-                 curved_compute_flux_on_local_elements,
+                 d4est_mortar_compute_flux_on_local_elements,
 #if (P4EST_DIM)==3
                  NULL,
 #endif
@@ -771,7 +771,7 @@ curved_poisson_apply_aij_debug
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  int local_element_id
@@ -789,9 +789,9 @@ curved_poisson_apply_aij_debug
                                             ); 
   mpi_assert(curved_gauss_poisson_user_data.debug_vecs != NULL);
   
-  curved_compute_flux_user_data_t curved_compute_flux_user_data;
-  curved_compute_flux_user_data.d4est_ops = d4est_ops;
-  curved_compute_flux_user_data.geom = geom;
+  d4est_mortar_compute_flux_user_data_t d4est_mortar_compute_flux_user_data;
+  d4est_mortar_compute_flux_user_data.d4est_ops = d4est_ops;
+  d4est_mortar_compute_flux_user_data.geom = geom;
   
   
   void* tmpptr = p4est->user_pointer;
@@ -808,14 +808,14 @@ curved_poisson_apply_aij_debug
 
   p4est_ghost_exchange_data(p4est,ghost,ghost_data);
  
-  curved_compute_flux_user_data.flux_fcn_ptrs = &prob_vecs->curved_scalar_flux_fcn_data;
-  p4est->user_pointer = &curved_compute_flux_user_data;
+  d4est_mortar_compute_flux_user_data.flux_fcn_ptrs = &prob_vecs->flux_fcn_data;
+  p4est->user_pointer = &d4est_mortar_compute_flux_user_data;
   
   p4est_iterate(p4est,
 		ghost,
 		(void*) ghost_data,
 		NULL,
-		curved_compute_flux_on_local_elements,
+		d4est_mortar_compute_flux_on_local_elements,
 #if (P4EST_DIM)==3
                 NULL,
 #endif
@@ -835,14 +835,14 @@ curved_poisson_apply_aij_debug
 		NULL);
 
   p4est_ghost_exchange_data (p4est, ghost, ghost_data);
-  curved_compute_flux_user_data.flux_fcn_ptrs = &prob_vecs->curved_vector_flux_fcn_data;
-  p4est->user_pointer = &curved_compute_flux_user_data;
+  d4est_mortar_compute_flux_user_data.flux_fcn_ptrs = &prob_vecs->curved_vector_flux_fcn_data;
+  p4est->user_pointer = &d4est_mortar_compute_flux_user_data;
 
   p4est_iterate (p4est,
   		 ghost,
   		 (void *) ghost_data,
   		 NULL,
-                 curved_compute_flux_on_local_elements,
+                 d4est_mortar_compute_flux_on_local_elements,
 #if (P4EST_DIM)==3
                  NULL,
 #endif

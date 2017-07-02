@@ -7,7 +7,7 @@
 #include <sipg_flux_vector_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <central_flux_params.h>
 #include <poisson_operator.h>
 #include <krylov_petsc.h>
@@ -157,7 +157,7 @@ build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -175,8 +175,8 @@ static
 void problem_build_rhs
 (
  p4est_t* p4est,
- problem_data_t* prob_vecs,
- weakeqn_ptrs_t* prob_fcns,
+ d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_eqns_t* prob_fcns,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
@@ -390,9 +390,9 @@ problem_init
   /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
 
-  /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
+  /* d4est_grid_fcn_t boundary_flux_fcn = zero_fcn; */
   
-  problem_data_t prob_vecs;
+  d4est_elliptic_problem_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
@@ -463,7 +463,7 @@ problem_init
                         NULL);
   
   
-  weakeqn_ptrs_t prob_fcns;
+  d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.apply_lhs = poisson_apply_aij;
   prob_fcns.build_residual = build_residual;
 

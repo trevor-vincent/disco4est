@@ -6,7 +6,7 @@
 /* #include <sipg_flux_vector_fcns.h> */
 #include <problem.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 /* #include <central_flux_params.h> */
 /* #include <curved_bi_estimator.h> */
 #include <krylov_petsc.h>
@@ -24,7 +24,7 @@
 /* #include <bi_estimator_flux_fcns.h> */
 #include <newton_petsc.h>
 #include <ini.h>
-#include <curved_poisson_operator_primal.h>
+#include <d4est_poisson.h>
 #include <curved_Gauss_primal_sipg_kronbichler_flux_fcns.h>
 /* #include <multigrid_matrix_operator.h> */
 /* #include <multigrid_smoother_cheby_d4est.h> */
@@ -461,16 +461,16 @@ void problem_apply_lhs
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad
 )
 {
-  /* prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns */
+  /* prob_vecs->flux_fcn_data = curved_gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns */
                                              /* (zero_fcn, &global_ip_flux_params); */
 
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom, d4est_quad);
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom, d4est_quad);
 
  /* double* M_helmf_u = P4EST_ALLOC(double, prob_vecs->local_nodes); */
  
@@ -518,8 +518,8 @@ static
 void problem_build_rhs
 (
  p4est_t* p4est,
- problem_data_t* prob_vecs,
- weakeqn_ptrs_t* prob_fcns,
+ d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_eqns_t* prob_fcns,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
@@ -539,7 +539,7 @@ void problem_build_rhs
      d4est_geom
     );
 
-  prob_vecs->curved_scalar_flux_fcn_data = curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
+  prob_vecs->flux_fcn_data = curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
                                              (boundary_fcn, &global_ip_flux_params);
 
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -622,7 +622,7 @@ void problem_build_rhs
   prob_vecs->u = tmp;
   P4EST_FREE(u_eq_0);
 
-  prob_vecs->curved_scalar_flux_fcn_data = curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
+  prob_vecs->flux_fcn_data = curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
                                              (zero_fcn, &global_ip_flux_params);
 
 #ifdef NASTY_DEBUG
@@ -636,8 +636,8 @@ void problem_build_rhs
 /* void problem_build_rhs_weakbc */
 /* ( */
 /*  p4est_t* p4est, */
-/*  problem_data_t* prob_vecs, */
-/*  weakeqn_ptrs_t* prob_fcns, */
+/*  d4est_elliptic_problem_data_t* prob_vecs, */
+/*  d4est_elliptic_eqns_t* prob_fcns, */
 /*  p4est_ghost_t* ghost, */
 /*  d4est_element_data_t* ghost_data, */
 /*  d4est_operators_t* d4est_ops, */
@@ -719,7 +719,7 @@ problem_build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad
@@ -765,7 +765,7 @@ problem_init
   p4est_partition(p4est, 0, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
   
-  problem_data_t prob_vecs;
+  d4est_elliptic_problem_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
@@ -773,11 +773,11 @@ problem_init
 
   ip_flux_t* ip_flux = ip_flux_dirichlet_new(p4est, "[IP_FLUX]", input_file, zero_fcn);
   /* ip_flux_t* ip_flux = ip_flux_dirichlet_new(p4est, "[IP_FLUX]", input_file, boundary_fcn); */
-  prob_vecs.curved_scalar_flux_fcn_data = ip_flux->curved_flux_fcn_ptrs;
+  prob_vecs.flux_fcn_data = ip_flux->mortar_fcn_ptrs;
   global_ip_flux_params = *(ip_flux->ip_flux_params);
   prob_vecs.user = &input;
 
-  weakeqn_ptrs_t prob_fcns;
+  d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = problem_build_residual;
   prob_fcns.apply_lhs = problem_apply_lhs;
   
@@ -1239,7 +1239,7 @@ problem_init
     /*                                   d4est_geom */
     /*                                  ); */
 
-    /* prob_vecs.curved_scalar_flux_fcn_data.bndry_fcn = boundary_fcn; */
+    /* prob_vecs.flux_fcn_data.bndry_fcn = boundary_fcn; */
     /* problem_apply_lhs(p4est, ghost, ghost_data, &prob_vecs, d4est_ops, d4est_geom); */
 
 

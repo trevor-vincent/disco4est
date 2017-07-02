@@ -6,7 +6,7 @@
 #include <d4est_geometry.h>
 #include <d4est_mesh.h>
 #include <d4est_geometry_cubed_sphere.h>
-#include <curved_compute_flux.h>
+#include <d4est_mortar_compute_flux.h>
 #include <petscsnes.h>
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
@@ -530,14 +530,14 @@ curved_test_mortarjacobianterms_interface
   
 }
 
-curved_flux_fcn_ptrs_t
+d4est_mortar_fcn_ptrs_t
 curved_test_mortarjacobianterms_fetch_fcns
 (
  test_mortarjacobianterms_data_t* data
 )
 {
   
-  curved_flux_fcn_ptrs_t curved_test_mortarjacobianterms_fcns;
+  d4est_mortar_fcn_ptrs_t curved_test_mortarjacobianterms_fcns;
   curved_test_mortarjacobianterms_fcns.flux_interface_fcn = curved_test_mortarjacobianterms_interface;
   curved_test_mortarjacobianterms_fcns.flux_boundary_fcn = NULL;
   curved_test_mortarjacobianterms_fcns.params = (void*)data;
@@ -642,9 +642,9 @@ int main(int argc, char *argv[])
   test_data.global_err = 0.;
   test_data.local_eps = .00000000001;
   test_data.d4est_ops = d4est_ops;
-  curved_flux_fcn_ptrs_t ffp = curved_test_mortarjacobianterms_fetch_fcns(&test_data);
+  d4est_mortar_fcn_ptrs_t ffp = curved_test_mortarjacobianterms_fetch_fcns(&test_data);
   
-  curved_compute_flux_on_local_elements
+  d4est_mortar_compute_flux_on_local_elements
     (
      p4est,
      ghost,

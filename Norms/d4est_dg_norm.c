@@ -3,7 +3,7 @@
 #include "../dGMath/d4est_operators.h"
 #include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
-#include "../Flux/curved_compute_flux.h"
+#include "../Flux/d4est_mortar_compute_flux.h"
 #include <curved_dg_norm.h>
 #include <ip_flux_params.h>
 
@@ -14,7 +14,7 @@ curved_dg_norm_boundary
 (
  d4est_element_data_t* e_m,
  int f_m,
- grid_fcn_t bndry_fcn,
+ d4est_grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  void* params
@@ -443,13 +443,13 @@ curved_dg_norm_interface
   P4EST_FREE(Mfaceterm);
 }
 
-curved_flux_fcn_ptrs_t
+d4est_mortar_fcn_ptrs_t
 curved_dg_norm_fetch_fcns
 (
  curved_dg_norm_params_t* curved_dg_params
 )
 {
-  curved_flux_fcn_ptrs_t curved_dg_norm_fcns;
+  d4est_mortar_fcn_ptrs_t curved_dg_norm_fcns;
   curved_dg_norm_fcns.flux_interface_fcn
     = curved_dg_norm_interface;
 

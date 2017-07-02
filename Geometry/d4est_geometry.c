@@ -1,6 +1,11 @@
+#define _GNU_SOURCE
+#include <d4est_geometry.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <float.h>
+#include <string.h>
 #include <util.h>
 #include <ini.h>
-#include <d4est_geometry.h>
 #include <d4est_operators.h>
 #include <d4est_element_data.h>
 
@@ -1511,7 +1516,6 @@ d4est_geometry_compute_element_volume
 
 /*   return area; */
 /* } */
-
 
 
 

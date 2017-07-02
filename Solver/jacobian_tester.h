@@ -2,7 +2,7 @@
 #define JACOBIAN_TESTER_H 
 
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 
 
 void
@@ -13,8 +13,8 @@ jacobian_tester
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- weakeqn_ptrs_t* prob_fcns,
- problem_data_t* prob_vecs
+ d4est_elliptic_eqns_t* prob_fcns,
+ d4est_elliptic_problem_data_t* prob_vecs
 );
 
 

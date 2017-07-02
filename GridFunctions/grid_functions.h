@@ -10,12 +10,12 @@
  * where x,y,z is a nodal
  * grid point
  * 
- * @param grid_fcn_t 
+ * @param d4est_grid_fcn_t 
  * 
  * @return 
  */
 typedef double
-(*grid_fcn_t)
+(*d4est_grid_fcn_t)
 (
  double,
  double

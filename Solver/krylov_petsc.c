@@ -1,6 +1,6 @@
 #include <util.h>
+#include <pXest.h>
 #include <ip_flux.h>
-#include "../pXest/pXest.h"
 #include "../LinearAlgebra/d4est_linalg.h"
 #include "../Solver/krylov_petsc.h"
 #include "petscsnes.h"
@@ -232,21 +232,22 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   ierr = VecGetArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecGetArray( y, &py ); CHKERRQ(ierr);
 
-  /* weakeqn_ptrs_t* fcns = petsc_ctx->fcns; */
+  /* d4est_elliptic_eqns_t* fcns = petsc_ctx->fcns; */
   p4est_t* p4est = petsc_ctx->p4est;
   p4est_ghost_t* ghost = *petsc_ctx->ghost;
   d4est_operators_t* d4est_ops = petsc_ctx->d4est_ops;
 
-  problem_data_t vecs_for_aij;
+  d4est_elliptic_problem_data_t vecs_for_aij;
   problem_data_copy_ptrs(petsc_ctx->vecs, &vecs_for_aij);
 
   vecs_for_aij.u = (double*)px;
   vecs_for_aij.Au = py;
 
-  ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
+  ((d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
                                                   ghost,
                                                   (*petsc_ctx->ghost_data),
                                                   &vecs_for_aij,
+            ((d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->flux_fcn_data,
                                                   d4est_ops,
                                                   petsc_ctx->d4est_geom,
                                                   petsc_ctx->d4est_quad
@@ -261,7 +262,7 @@ krylov_info_t
 krylov_petsc_solve
 (
  p4est_t* p4est,
- problem_data_t* vecs,
+ d4est_elliptic_problem_data_t* vecs,
  void* fcns,
  p4est_ghost_t** ghost,
  void** ghost_data, 

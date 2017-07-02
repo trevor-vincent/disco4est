@@ -98,8 +98,8 @@ void
 (*krylov_solver_fcn_t)
 (
  p4est_t*,
- problem_data_t*,
- weakeqn_ptrs_t*,
+ d4est_elliptic_problem_data_t*,
+ d4est_elliptic_eqns_t*,
  double*,
  int
 );
@@ -124,8 +124,8 @@ int
 newton_d4est_solve
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  p4est_ghost_t** ghost,
  void** ghost_data, 
  d4est_operators_t* d4est_ops,
@@ -146,8 +146,8 @@ newton_d4est_solve
   int ierr = 0;
   int local_nodes = vecs->local_nodes;
   int n = local_nodes;
-  problem_data_t vecs_for_linsolve;
-  problem_data_t vecs_for_res_build;
+  d4est_elliptic_problem_data_t vecs_for_linsolve;
+  d4est_elliptic_problem_data_t vecs_for_res_build;
 
 
   double* xt = P4EST_ALLOC(double, local_nodes);

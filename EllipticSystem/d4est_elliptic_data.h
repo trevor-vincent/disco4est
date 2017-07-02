@@ -1,8 +1,6 @@
 #ifndef PROBLEM_DATA_H
 #define PROBLEM_DATA_H 
 
-/* #include "../Flux/compute_flux.h" */
-#include "../Flux/curved_compute_flux.h"
 
 typedef struct {
 
@@ -28,24 +26,16 @@ typedef struct {
   /* used to store rhs of weak eqns (pointer alias)*/
   double* rhs;
   
-  /* function pointers to calculate flux for scalar variable */
-  /* flux_fcn_ptrs_t scalar_flux_fcn_data; */
-  curved_flux_fcn_ptrs_t curved_scalar_flux_fcn_data;
-
-  /* function pointers to calculate flux for vector variable, will be deprecated eventually */
-  /* flux_fcn_ptrs_t vector_flux_fcn_data; */
-  curved_flux_fcn_ptrs_t curved_vector_flux_fcn_data;
-
   /* convenience pointer for the user */
   void* user;
   
-} problem_data_t;
+} d4est_elliptic_problem_data_t;
 
 void
 problem_data_copy_ptrs
 (
- problem_data_t* pd1,
- problem_data_t* pd2
+ d4est_elliptic_problem_data_t* pd1,
+ d4est_elliptic_problem_data_t* pd2
 );
 
 #endif

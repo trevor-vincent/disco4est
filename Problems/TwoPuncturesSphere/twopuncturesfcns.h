@@ -337,13 +337,13 @@ void twopunctures_apply_jac
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   twopunctures_params_t* params = prob_vecs->user;
-  curved_poisson_operator_primal_apply_aij(p4est,
+  d4est_poisson_apply_aij(p4est,
                                            ghost,
                                            ghost_data,
                                            prob_vecs,
@@ -465,14 +465,14 @@ twopunctures_build_residual_mg
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   twopunctures_params_t* params = ((multigrid_matrix_op_t*)prob_vecs->user)->user;
   /* twopunctures_params_t* params = prob_vecs->user; */
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
   double* M_neg_1o8_K2_psi_neg7_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -527,13 +527,13 @@ void twopunctures_apply_jac_mg
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   twopunctures_params_t* params = ((multigrid_matrix_op_t*)prob_vecs->user)->user;
-  curved_poisson_operator_primal_apply_aij(p4est,
+  d4est_poisson_apply_aij(p4est,
                                            ghost,
                                            ghost_data,
                                            prob_vecs,
@@ -590,13 +590,13 @@ void twopunctures_apply_jac_lobatto
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   twopunctures_params_t* params = prob_vecs->user;
-  curved_poisson_operator_primal_apply_aij(p4est,
+  d4est_poisson_apply_aij(p4est,
                                            ghost,
                                            ghost_data,
                                            prob_vecs,
@@ -662,13 +662,13 @@ twopunctures_build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   twopunctures_params_t* params = prob_vecs->user;
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
   double* M_neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -725,13 +725,13 @@ twopunctures_build_residual_lobatto
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   twopunctures_params_t* params = prob_vecs->user;
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
   double* M_neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
   double* neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);

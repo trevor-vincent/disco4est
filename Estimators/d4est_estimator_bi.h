@@ -2,7 +2,7 @@
 #define D4EST_ESTIMATOR_BI_H 
 
 #include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/problem_weakeqn_ptrs.h"
+#include "../EllipticSystem/d4est_elliptic_eqns.h"
 
 typedef struct {
   
@@ -189,8 +189,7 @@ houston_u_dirichlet_prefactor_maxp_minh
 }
 
 /* This file was automatically generated.  Do not edit! */
-curved_flux_fcn_ptrs_t d4est_estimator_bi_dirichlet_fetch_fcns(grid_fcn_t bndry_fcn,d4est_estimator_bi_penalty_data_t *penalty_data);
-void d4est_estimator_bi_compute(p4est_t *p4est,problem_data_t *vecs,weakeqn_ptrs_t *fcns,d4est_estimator_bi_penalty_data_t penalty_data,grid_fcn_t u_bndry_fcn,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,double(*get_diam)(d4est_element_data_t *));
-
+d4est_mortar_fcn_ptrs_t d4est_estimator_bi_dirichlet_fetch_fcns(d4est_grid_fcn_t bndry_fcn,d4est_estimator_bi_penalty_data_t *penalty_data);
+void d4est_estimator_bi_compute(p4est_t *p4est,d4est_elliptic_problem_data_t *vecs,d4est_elliptic_eqns_t *fcns,d4est_estimator_bi_penalty_data_t bi_penalty_data,d4est_grid_fcn_t u_bndry_fcn,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,double(*get_diam)(d4est_element_data_t *));
 
 #endif

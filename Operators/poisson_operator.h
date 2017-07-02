@@ -7,7 +7,7 @@ void poisson_apply_aij(
                          p4est_t* p4est,
                          p4est_ghost_t* ghost,
                          void* ghost_data,
-                         problem_data_t* prob_vecs,
+                         d4est_elliptic_problem_data_t* prob_vecs,
 			 d4est_operators_t* d4est_ops,
                          d4est_geometry_t* d4est_geom
 );
@@ -16,7 +16,7 @@ poisson_apply_aij_debug(
                          p4est_t* p4est,
                          p4est_ghost_t* ghost,
                          element_data_t* ghost_data,
-                         problem_data_t* prob_vecs,
+                         d4est_elliptic_problem_data_t* prob_vecs,
 			 d4est_operators_t* d4est_ops,
                          int local_element_id
 );

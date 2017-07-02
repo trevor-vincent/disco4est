@@ -4,7 +4,7 @@
 #include "petscsnes.h"
 #include "../pXest/pXest.h"
 #include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/problem_weakeqn_ptrs.h"
+#include "../EllipticSystem/d4est_elliptic_eqns.h"
 
 #include <d4est_petsc.h>
 #include <krylov_pc.h>
@@ -33,7 +33,7 @@ typedef struct {
 } krylov_petsc_params_t;
 
 /* This file was automatically generated.  Do not edit! */
-krylov_info_t krylov_petsc_solve(p4est_t *p4est,problem_data_t *vecs,void *fcns,p4est_ghost_t **ghost,void **ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,krylov_petsc_params_t *krylov_petsc_params,krylov_pc_t *krylov_pc);
+krylov_info_t krylov_petsc_solve(p4est_t *p4est,d4est_elliptic_problem_data_t *vecs,void *fcns,p4est_ghost_t **ghost,void **ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,krylov_petsc_params_t *krylov_petsc_params,krylov_pc_t *krylov_pc);
 void krylov_petsc_input(p4est_t *p4est,const char *input_file,const char *input_section,const char *printf_prefix,krylov_petsc_params_t *input);
 void krylov_petsc_set_options_database_from_params(krylov_petsc_params_t *input);
 

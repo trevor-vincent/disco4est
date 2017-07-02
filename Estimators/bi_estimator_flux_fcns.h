@@ -224,10 +224,10 @@ houston_u_dirichlet_prefactor_maxp_minh
 
 
 
-flux_fcn_ptrs_t
+d4est_mortar_fcn_ptrs_t
 bi_est_dirichlet_fetch_fcns
 (
- grid_fcn_t bndry_fcn,
+ d4est_grid_fcn_t bndry_fcn,
  penalty_calc_t u_penalty_fcn,
  penalty_calc_t u_dirichlet_penalty_fcn,
  penalty_calc_t gradu_penalty_fcn,

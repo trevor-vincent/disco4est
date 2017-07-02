@@ -7,7 +7,7 @@
 #include <curved_gauss_primal_sipg_flux_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <central_flux_params.h>
 #include <curved_bi_estimator.h>
 #include <krylov_petsc.h>
@@ -23,7 +23,7 @@
 #include <bi_estimator_flux_fcns.h>
 #include <newton_petsc.h>
 #include <ini.h>
-#include <curved_poisson_operator_primal.h>
+#include <d4est_poisson.h>
 #include <curved_gauss_central_flux_vector_fcns.h>
 #include <jacobian_tester.h>
 #include "./twopuncturesfcns.h"
@@ -548,7 +548,7 @@ problem_init
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
   /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
-  /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
+  /* d4est_grid_fcn_t boundary_flux_fcn = zero_fcn; */
   twopunctures_params_t tp_params;
   init_twopunctures_data(&tp_params, input.deg_offset_for_nonlinear_quad);
   /* init_S_puncture_data(p4est, &tp_params, input.deg_offset_for_nonlinear_quad); */
@@ -557,13 +557,13 @@ problem_init
   init_cactus_puncture_data(&tp_cactus_params, input.deg_offset_for_nonlinear_quad);
 
   
-  problem_data_t prob_vecs;
+  d4est_elliptic_problem_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
   prob_vecs.local_nodes = local_nodes;
 
-  prob_vecs.curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs.flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                           (zero_fcn,&ip_flux_params);
 
   if(input.use_cactus){
@@ -573,7 +573,7 @@ problem_init
     prob_vecs.user = &tp_params;
   }
 
-  weakeqn_ptrs_t prob_fcns;
+  d4est_elliptic_eqns_t prob_fcns;
 
 
   /* if(input.use_cactus){ */
@@ -881,9 +881,9 @@ problem_init
     /* double* Au_cactus = P4EST_ALLOC(double, local_nodes); */
     /* double* u_test = P4EST_ALLOC_ZERO(double, local_nodes); */
     
-    /* problem_data_t prob_vecs_spec; */
-    /* problem_data_t prob_vecs_me; */
-    /* problem_data_t prob_vecs_cactus; */
+    /* d4est_elliptic_problem_data_t prob_vecs_spec; */
+    /* d4est_elliptic_problem_data_t prob_vecs_me; */
+    /* d4est_elliptic_problem_data_t prob_vecs_cactus; */
     
     /* problem_data_copy_ptrs(&prob_vecs, &prob_vecs_spec); */
     /* problem_data_copy_ptrs(&prob_vecs, &prob_vecs_me); */

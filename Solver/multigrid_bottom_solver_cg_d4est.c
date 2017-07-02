@@ -49,8 +49,8 @@ static void
 multigrid_bottom_solver_cg_d4est
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  double* r
 )
 {

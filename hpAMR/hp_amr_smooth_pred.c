@@ -1,7 +1,7 @@
 #include "../pXest/pXest.h"
 #include "../ElementData/element_data.h"
 #include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/problem_weakeqn_ptrs.h"
+#include "../EllipticSystem/d4est_elliptic_eqns.h"
 #include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../hpAMR/hp_amr.h"

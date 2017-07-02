@@ -2,7 +2,7 @@
 #define CG_H 
 
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 
 typedef struct {
 
@@ -21,8 +21,8 @@ void
 cg_nr_solve
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  d4est_operators_t* d4est_ops,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
@@ -38,8 +38,8 @@ void
 cg_solve
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  d4est_operators_t* d4est_ops,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
@@ -49,8 +49,8 @@ cg_solve
 void curved_cg_solve
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  p4est_ghost_t* ghost,

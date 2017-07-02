@@ -1,7 +1,7 @@
 #ifndef CURVED_DG_NORM_H
 #define CURVED_DG_NORM_H 
 
-#include <curved_compute_flux.h>
+#include <d4est_mortar_compute_flux.h>
 #include <ip_flux.h>
 
 typedef struct{
@@ -10,7 +10,7 @@ typedef struct{
 }
 curved_dg_norm_params_t;
 
-curved_flux_fcn_ptrs_t curved_dg_norm_fetch_fcns(curved_dg_norm_params_t *curved_dg_params);
+d4est_mortar_fcn_ptrs_t curved_dg_norm_fetch_fcns(curved_dg_norm_params_t *curved_dg_params);
 
 
 #endif

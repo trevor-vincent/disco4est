@@ -12,10 +12,10 @@
 #include <d4est_element_data.h>
 #include <curved_gauss_primal_sipg_flux_fcns.h>
 #include <sipg_flux_vector_fcns.h>
-#include <curved_poisson_operator_primal.h>
+#include <d4est_poisson.h>
 #include <problem.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <poisson_operator.h>
 #include <hp_amr_curved_smooth_pred.h>
 #include <curved_bi_estimator.h>
@@ -168,16 +168,16 @@ build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   problem_ctx_t* ctx = (problem_ctx_t*)prob_vecs->user;
   
-  prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs->flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (boundary_fcn, ctx->ip_flux_params);
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
   double* M_neg_2pi_rho_up1_neg5_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -225,7 +225,7 @@ void apply_jac
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
@@ -233,9 +233,9 @@ void apply_jac
   problem_ctx_t* ctx = (problem_ctx_t*)prob_vecs->user;
 
   /* apply jac must always have zero boundary conditions for du in dirichlet problems */
-  prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs->flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (zero_fcn, ctx->ip_flux_params);
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
   
   double* M_neg_10pi_rho_up1_neg4_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
 
@@ -712,18 +712,18 @@ problem_init
 
   double local_eta2 = -1.;
 
-  problem_data_t prob_vecs;
+  d4est_elliptic_problem_data_t prob_vecs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
   prob_vecs.u0 = u;
   prob_vecs.local_nodes = local_nodes;
-  prob_vecs.curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs.flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (boundary_fcn,
                                             &ip_flux_params);
 
   d4est_linalg_fill_vec(u, 1., prob_vecs.local_nodes);
 
-  curved_weakeqn_ptrs_t prob_fcns;
+  curved_d4est_elliptic_eqns_t prob_fcns;
   problem_ctx_t prob_ctx;
   mpi_assert(input.deg_offset_for_nonlinear_quad > -1);
   prob_ctx.deg_offset_for_nonlinear_quad = input.deg_offset_for_nonlinear_quad;

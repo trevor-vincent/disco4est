@@ -10,10 +10,7 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
 )
 
-
 if(UBUNTU)
-  # set(LAPACK_LIBRARIES "/home/tvincent/Dropbox/Research/Codes/lapack-3.7.0/build/lib/liblapack.a")
-  # set(BLAS_LIBRARIES "/home/tvincent/Dropbox/Research/Codes/lapack-3.7.0/build/lib/libblas.a")
   set(USE_OPENBLAS ON)
   set(OPENBLAS_DIR "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/")
   set(OPENBLAS_ROOT "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/")
@@ -46,29 +43,9 @@ endif()
 
 if(USE_OPENBLAS)
   include_directories(${OPENBLAS_INCLUDE_DIR})
-# else()
-  # find_package(BLAS REQUIRED)
-  # find_package(LAPACK REQUIRED)
-  # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
-  # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${BLAS_LINKER_FLAGS}")
 endif()
 
-# find_package(BLAS)
-# if(NOT BLAS_FOUND)
-#   message("Cannot find BLAS, searching for OpenBlas")
-#   find_package(OpenBLAS REQUIRED)
-#   if(OpenBLAS_FOUND)
-#     message("Found OpenBLAS")
-#   endif()
-# else()
-#   find_package(LAPACK REQUIRED)
-# endif()
-
-# find_package (Threads)
 find_package(MPI REQUIRED)
-# find_package(ZLIB REQUIRED)
-# find_package(X11 REQUIRED)
-# find_package(SSL REQUIRED)
 
 ##
 ## Set build include path
@@ -101,13 +78,13 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MPI_C_COMPILE_FLAG}")
 SET (
   SRCS
   InputParser/ini.c
-  Solver/krylov_petsc.c
-  Solver/d4est_cg.c
+  # Solver/krylov_petsc.c
+  # Solver/d4est_cg.c
   # Solver/krylov_pc_multigrid.c
   # Solver/krylov_pc_invstiff.c
   # Solver/multigrid.c
-  Solver/newton_petsc.c
-  Solver/newton_d4est.c
+  # Solver/newton_petsc.c
+  # Solver/newton_d4est.c
   Utilities/arbquad.c
   # Solver/cg_eigs.c
   # Solver/matrix_sym_tester.c
@@ -140,7 +117,7 @@ SET (
   # Solver/cg.c
   # Solver/jacobian_tester.c
   # Operators/curved_poisson_operator.c
-  Operators/curved_poisson_operator_primal.c
+  # Operators/curved_poisson_operator_primal.c
   # Operators/poisson_operator.c
   # Operators/poisson_debug_vecs.c
   # Operators/curved_poisson_debug_vecs.c
@@ -155,7 +132,7 @@ SET (
   # ElementData/element_data.c
   # Flux/central_flux_vector_fcns.c
   # Flux/compute_flux.c
-  Flux/curved_compute_flux.c
+  # Flux/d4est_mortar_compute_flux.c
   # Flux/curved_gauss_central_flux_vector_fcns.c
   # Flux/curved_gauss_sipg_flux_scalar_fcns.c
   # Flux/curved_gauss_sipg_flux_vector_fcns.c
@@ -176,6 +153,7 @@ SET (
   Geometry/d4est_mortars.c
   Flux/ip_flux.c
   Flux/ip_flux_params.c
+  Operators/d4est_poisson.c
   # Flux/curved_test_mortarjacobianterms_flux_fcns.c
   # Flux/dg_norm.c
   # Flux/curved_dg_norm.c
@@ -186,16 +164,13 @@ SET (
   )
 
 
-# /home/tvincent/Dropbox/Research/Codes/disco4est/src_new_build/ThirdParty/petsc/install/lib/libfblas.a
 ##
 ## D8EST Library
 ##
 add_library(d8est ${SRCS})
-add_library(curved_d8est ${SRCS})
 add_library(d4est ${SRCS})
 
 add_dependencies(d8est build_bundled_libs)
-add_dependencies(curved_d8est build_bundled_libs)
 add_dependencies(d4est build_bundled_libs)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
 
@@ -214,24 +189,12 @@ subdirs(ThirdParty)
 
 SET (
   LIBS
-  # ${Threads_LIBRARIES}
-  # ${ZLIB_LIBRARIES}
   ${MPI_C_LIBRARIES}
   ${P4EST_LIBRARIES}
   ${PETSC_LIBRARIES}
   m
   dl
-  # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libopenblas.a
   ${CMAKE_BINARY_DIR}/ThirdParty/zlib/install/lib/libz.a
-  # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libfblas.a
-  # ${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/libflapack.a 
-  # ${LAPACK_LIBRARIES}
-  # ${BLAS_LIBRARIES}
-  # ${X11_LIBRARIES}
-  # ${SSL_LIBRARIES}
-  # X11
-  # crypto
-  # ssl
   )
 
 if(USE_OPENBLAS)
@@ -256,10 +219,6 @@ if(NOT USE_OPENBLAS AND NOT DOWNLOAD_BLAS)
 endif()
 
 message("LIBS=${LIBS}")
-
-# -llapack -lblas -lX11 -lssl -lcrypto -lm -L/usr/lib/openmpi/lib -L/usr/lib/gcc/x86_64-linux-gnu/5 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -lmpi_f90 -lmpi_f77 -lgfortran -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.9 -lgfortran -lm -lquadmath -lm -lmpi_cxx -lstdc++ -L/usr/lib/openmpi/lib -L/usr/lib/gcc/x86_64-linux-gnu/5 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu -ldl -lmpi -lhwloc -lgcc_s -lpthread -ldl 
-# find_library(MATH_LIB m)
-
 target_link_libraries(d4est ${LIBS})
 # set_target_properties(d4est PROPERTIES COMPILE_DEFINITIONS "DIM=2")
 set_property(TARGET d4est APPEND_STRING PROPERTY
@@ -270,12 +229,6 @@ target_link_libraries(d8est ${LIBS})
 # set_target_properties(d8est PROPERTIES COMPILE_DEFINITIONS "DIM=3")
 set_property(TARGET d8est APPEND_STRING PROPERTY
   COMPILE_FLAGS " -DDIM=3")
-
-target_link_libraries(curved_d8est ${LIBS})
-# set_target_properties(curved_d8est PROPERTIES COMPILE_DEFINITIONS "DIM=3")
-set_property(TARGET curved_d8est APPEND_STRING PROPERTY
-  COMPILE_FLAGS "-DDIM=3 -DCURVED=1")
-
 
 
 function(add_d4est_problem_3d exec src parent_dir)
@@ -293,27 +246,8 @@ function(add_d4est_problem_3d exec src parent_dir)
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/options.input
-    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/options.input)  
-endfunction()
-
-function(add_d4est_curved_problem_3d exec src parent_dir)
-  add_executable(${exec} driver.c ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/${src})
-  target_link_libraries(${exec} curved_d8est)
-
-  set_property(TARGET ${exec} APPEND_STRING PROPERTY
-      COMPILE_FLAGS " -DDIM=3 -DCURVED=1")
-    
-  set_target_properties(${exec}
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${parent_dir}"
-    )
-
-  add_custom_command(
-    TARGET ${exec} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/options.input
-    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/options.input)  
+    ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/*.input
+    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/)
 endfunction()
 
 
@@ -342,16 +276,16 @@ set(CTEST_MEMORYCHECK_COMMAND /usr/bin/valgrind)
 # set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=/usr/share/openmpi/openmpi-valgrind.supp" )
 set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/suppressions.txt" )
 
-add_executable(test_d4est_linalg Tests/test_d4est_linalg.c)
-target_link_libraries(test_d4est_linalg d4est)
-add_test(test_d4est_linalg_test test_d4est_linalg)
-target_compile_definitions(test_d4est_linalg PRIVATE NDEBUG)
+# add_executable(test_d4est_linalg Tests/test_d4est_linalg.c)
+# target_link_libraries(test_d4est_linalg d4est)
+# add_test(test_d4est_linalg_test test_d4est_linalg)
+# target_compile_definitions(test_d4est_linalg PRIVATE NDEBUG)
 
 
-add_executable(test_d4est_operators Tests/test_d4est_operators.c)
-target_link_libraries(test_d4est_operators d4est)
-add_test(test_d4est_operators_test test_d4est_operators)
-target_compile_definitions(test_d4est_operators PRIVATE NDEBUG DIM=3)
+# add_executable(test_d4est_operators Tests/test_d4est_operators.c)
+# target_link_libraries(test_d4est_operators d4est)
+# add_test(test_d4est_operators_test test_d4est_operators)
+# target_compile_definitions(test_d4est_operators PRIVATE NDEBUG DIM=3)
 
 
 # add_executable(test_d4est_quadrature_compactified Tests/test_d4est_quadrature_compactified.c)
@@ -409,6 +343,7 @@ target_compile_definitions(test_d4est_operators PRIVATE NDEBUG DIM=3)
 # add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopuncturessphere_mg_driver twopuncturessphere_mg.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopunctures_testfcns_driver twopunctures_testfcns.c TwoPuncturesSphere)
+add_d4est_problem_3d(twopunctures_estonly_driver twopuncturessphere_estonly.c TwoPuncturesSphere)
 # add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_2d(testmortarjacobianterms_driver_2d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)

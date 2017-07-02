@@ -1,18 +1,12 @@
-
-#include "../ElementData/d4est_element_data.h"
-#include "../GridFunctions/grid_functions.h"
-#include "../Utilities/util.h"
-#include "../LinearAlgebra/d4est_linalg.h"
+#include <d4est_element_data.h>
+#include <grid_functions.h>
+#include <util.h>
+#include <d4est_linalg.h>
 #include <ip_flux.h>
-#include <curved_compute_flux.h>
-#include <curved_dg_norm.h>
 #include <sc_reduce.h>
-#include <d4est_geometry.h>
-#include <d4est_mortars.h>
-#include <d4est_quadrature_lobatto.h>
 
 /* typedef struct { */
-/*   grid_fcn_t init_fcn; */
+/*   d4est_grid_fcn_t init_fcn; */
 /*   double* vec; */
 /*   int* stride; */
 /* } init_node_vec_user_data_t; */
@@ -33,7 +27,7 @@
 /*   p4est_quadrant_t* q = info->quad; */
 /*   d4est_element_data_t* elem_data = (d4est_element_data_t*) q->p.user_data; */
 /*   init_node_vec_user_data_t* inv_user_data = (init_node_vec_user_data_t*) user_data; */
-/*   grid_fcn_t init_fcn = inv_user_data->init_fcn; */
+/*   d4est_grid_fcn_t init_fcn = inv_user_data->init_fcn; */
 /*   double* vec = inv_user_data->vec; */
 /*   /\* d4est_operators_t* d4est_ops = (d4est_operators_t*)info->p4est->user_pointer; *\/ */
   
@@ -148,21 +142,21 @@
 /*   curved_dg_params.ip_flux_params = ip_flux_params; */
 /*   curved_dg_params.dg_norm_face_term = 0.; */
   
-/*   curved_flux_fcn_ptrs_t flux_fcn_ptrs = curved_dg_norm_fetch_fcns(&curved_dg_params); */
+/*   d4est_mortar_fcn_ptrs_t flux_fcn_ptrs = curved_dg_norm_fetch_fcns(&curved_dg_params); */
 
-/*   curved_compute_flux_user_data_t curved_compute_flux_user_data; */
-/*   curved_compute_flux_user_data.d4est_ops = d4est_ops; */
-/*   curved_compute_flux_user_data.geom = d4est_geom; */
-/*   curved_compute_flux_user_data.flux_fcn_ptrs = &flux_fcn_ptrs; */
+/*   d4est_mortar_compute_flux_user_data_t d4est_mortar_compute_flux_user_data; */
+/*   d4est_mortar_compute_flux_user_data.d4est_ops = d4est_ops; */
+/*   d4est_mortar_compute_flux_user_data.geom = d4est_geom; */
+/*   d4est_mortar_compute_flux_user_data.flux_fcn_ptrs = &flux_fcn_ptrs; */
   
 /*   void* tmpptr = p4est->user_pointer; */
-/*   p4est->user_pointer = &curved_compute_flux_user_data; */
+/*   p4est->user_pointer = &d4est_mortar_compute_flux_user_data; */
   
 /*   p4est_iterate(p4est, */
 /* 		ghost, */
 /* 		ghost_data, */
 /* 		NULL, */
-/* 		curved_compute_flux_on_local_elements, */
+/* 		d4est_mortar_compute_flux_on_local_elements, */
 /* #if (P4EST_DIM)==3 */
 /*                 NULL, */
 /* #endif */

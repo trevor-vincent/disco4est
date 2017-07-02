@@ -95,7 +95,7 @@ do
 				#     break
 				# fi
 				# fi
- 				NEWDIR="sphere_unif_${a}_pen_${b}_degR2_${c}_degR2int_${d}_degR1_${e}_degR1int_${f}__degR0_${g}_R1_${h}_R2_${i}_Solver_gmres"
+ 				NEWDIR="sphere_unif_${a}_pen_${b}_degR2_${c}_degR2int_${d}_degR1_${e}_degR1int_${f}_degR0_${g}_R1_${h}_R2_${i}_Solver_gmres"
 				mkdir $NEWDIR
 				cd $NEWDIR
 				SHORTNAME="sph${a}${b}${c}${d}${e}${f}${g}${h}${i}"

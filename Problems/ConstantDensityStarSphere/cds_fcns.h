@@ -333,16 +333,16 @@ cds_build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
 {
   constantdensitystar_params_t* ctx = (constantdensitystar_params_t*)prob_vecs->user;
   
-  prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs->flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (boundary_fcn, ctx->ip_flux_params);
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
   double* M_neg_2pi_rho_up1_neg5_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
  
@@ -390,7 +390,7 @@ void cds_apply_jac
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
@@ -398,9 +398,9 @@ void cds_apply_jac
   constantdensitystar_params_t* ctx = (constantdensitystar_params_t*)prob_vecs->user;
 
   /* apply jac must always have zero boundary conditions for du in dirichlet problems */
-  prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs->flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                            (zero_fcn, ctx->ip_flux_params);
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
   
   double* M_neg_10pi_rho_up1_neg4_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
 

@@ -9,7 +9,7 @@ curved_gauss_poisson_apply_aij
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom
 );
@@ -21,7 +21,7 @@ curved_poisson_apply_aij_debug
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  int local_element_id
@@ -33,7 +33,7 @@ curved_gauss_poisson_build_rhs_with_strongbc
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 );
 

@@ -1221,7 +1221,7 @@ static void d4est_operators_build_gauss_rst_nd(d4est_operators_t* d4est_ops, dou
 double* d4est_operators_fetch_lobatto_rst_nd(d4est_operators_t* d4est_ops, int dim, int deg,
                             int dir)
 {
-  mpi_assert(dir < dim && dir >= 0 && dim < 3 && dim > 0);
+  mpi_assert(dir < dim && dir >= 0 && dim <= 3 && dim > 0);
   
   if (dim == 1)
     return d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, deg);
@@ -1270,7 +1270,7 @@ void d4est_operators_apply_dij
 double* d4est_operators_fetch_gauss_rst_nd(d4est_operators_t* d4est_ops, int dim, int deg,
                             int dir) {
 
-  mpi_assert(dir < dim && dir >= 0 && dim < 3 && dim > 0);
+  mpi_assert(dir < dim && dir >= 0 && dim <= 3 && dim > 0);
   
   if (dim == 1)
     return d4est_operators_fetch_gauss_nodes_1d(d4est_ops, deg);

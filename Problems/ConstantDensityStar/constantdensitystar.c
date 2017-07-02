@@ -15,7 +15,7 @@
 #include <sipg_flux_scalar_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <poisson_operator.h>
 #include <hp_amr_smooth_pred.h>
 #include <hp_amr_uniform.h>
@@ -168,7 +168,7 @@ build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -229,7 +229,7 @@ build_residual_gauss
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -306,7 +306,7 @@ void apply_jac_gauss
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -401,7 +401,7 @@ void apply_jac
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -737,7 +737,7 @@ problem_init
 
   double local_eta2 = -1.;
 
-  problem_data_t prob_vecs;
+  d4est_elliptic_problem_data_t prob_vecs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
   prob_vecs.u0 = u;
@@ -756,7 +756,7 @@ problem_init
   /* else */
     /* element_data_copy_from_storage_to_vec(p4est, u); */
 
-  weakeqn_ptrs_t prob_fcns;
+  d4est_elliptic_eqns_t prob_fcns;
   problem_ctx_t prob_ctx;
   if (input.use_gauss_quad){
     mpi_assert(input.deg_offset_for_gauss_quad > -1);

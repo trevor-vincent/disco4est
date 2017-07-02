@@ -14,13 +14,13 @@ curved_bi_est_dirichlet
 (
  d4est_element_data_t* e_m,
  int f_m,
- grid_fcn_t bndry_fcn,
+ d4est_grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  void* params
 )
 {
-  grid_fcn_t u_at_bndry = bndry_fcn;
+  d4est_grid_fcn_t u_at_bndry = bndry_fcn;
   int face_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg);
   int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
 
@@ -891,17 +891,17 @@ curved_bi_est_interface
 
 }
 
-curved_flux_fcn_ptrs_t
+d4est_mortar_fcn_ptrs_t
 curved_bi_est_dirichlet_fetch_fcns
 (
- grid_fcn_t bndry_fcn,
+ d4est_grid_fcn_t bndry_fcn,
  penalty_calc_t u_penalty_fcn,
  penalty_calc_t u_dirichlet_penalty_fcn,
  penalty_calc_t gradu_penalty_fcn,
  double penalty_prefactor
 )
 {
-  curved_flux_fcn_ptrs_t curved_bi_est_fcns;
+  d4est_mortar_fcn_ptrs_t curved_bi_est_fcns;
   curved_bi_est_fcns.flux_interface_fcn
     = curved_bi_est_interface;
 

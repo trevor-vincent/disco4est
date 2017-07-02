@@ -7,11 +7,11 @@ https://github.com/benhoyt/inih
 
 */
 
-#ifndef __INI_H__
-#define __INI_H__
+#ifndef _INI_H_
+#define _INI_H_
 
 /* Make this header file easier to include in C++ code */
-#ifdef __cplusplus
+#ifdef _cplusplus
 extern "C" {
 #endif
 
@@ -86,8 +86,8 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
 #define INI_MAX_LINE 200
 #endif
 
-#ifdef __cplusplus
+#ifdef _cplusplus
 }
 #endif
 
-#endif /* __INI_H__ */
+#endif /* _INI_H_ */

@@ -7,9 +7,9 @@
 #include <curved_Gauss_primal_sipg_kronbichler_flux_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <central_flux_params.h>
-#include <curved_poisson_operator_primal.h>
+#include <d4est_poisson.h>
 #include <krylov_petsc.h>
 #include <matrix_sym_tester.h>
 #include <dg_norm.h>
@@ -218,8 +218,8 @@ static
 void problem_build_rhs
 (
  p4est_t* p4est,
- problem_data_t* prob_vecs,
- weakeqn_ptrs_t* prob_fcns,
+ d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_eqns_t* prob_fcns,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
@@ -240,7 +240,7 @@ void problem_build_rhs
      d4est_geom
     );
   
-   prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns(boundary_fcn,ip_flux_params);
+   prob_vecs->flux_fcn_data = curved_gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns(boundary_fcn,ip_flux_params);
 
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
@@ -277,7 +277,7 @@ void problem_build_rhs
   /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs->rhs, local_nodes); */
   
   prob_vecs->u = u_eq_0; 
-  curved_poisson_operator_primal_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
   d4est_linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);
  
   /* printf("rhs after aij added to rhs\n"); */
@@ -287,7 +287,7 @@ void problem_build_rhs
   P4EST_FREE(u_eq_0);
 
 
-  prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
+  prob_vecs->flux_fcn_data = curved_gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
                                            (zero_fcn,ip_flux_params);
 
   P4EST_FREE(f);
@@ -456,9 +456,9 @@ problem_init
   /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
 
-  /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
+  /* d4est_grid_fcn_t boundary_flux_fcn = zero_fcn; */
   
-  problem_data_t prob_vecs;
+  d4est_elliptic_problem_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
@@ -493,8 +493,8 @@ problem_init
 
   }
   
-  weakeqn_ptrs_t prob_fcns;
-  prob_fcns.apply_lhs = curved_poisson_operator_primal_apply_aij;
+  d4est_elliptic_eqns_t prob_fcns;
+  prob_fcns.apply_lhs = d4est_poisson_apply_aij;
 
      
     d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est);
@@ -573,7 +573,7 @@ problem_init
 
 
 
-    prob_vecs.curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
+    prob_vecs.flux_fcn_data = curved_gauss_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
                                              (zero_fcn,&ip_flux_params);
     
     /* d4est_linalg_fill_vec(u, 0., local_nodes); */

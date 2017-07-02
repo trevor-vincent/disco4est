@@ -9,7 +9,7 @@
 #include <curved_gauss_central_flux_vector_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <central_flux_params.h>
 #include <curved_poisson_operator.h>
 #include <krylov_petsc.h>
@@ -277,8 +277,8 @@ static
 void problem_build_rhs
 (
  p4est_t* p4est,
- problem_data_t* prob_vecs,
- curved_weakeqn_ptrs_t* prob_fcns,
+ d4est_elliptic_problem_data_t* prob_vecs,
+ curved_d4est_elliptic_eqns_t* prob_fcns,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
@@ -303,7 +303,7 @@ void problem_build_rhs
     /*                                          boundary_fcn, */
     /*                                          ip_flux_params */
     /*                                         ); */
-    /* prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_sipg_flux_scalar_dirichlet_fetch_fcns */
+    /* prob_vecs->flux_fcn_data = curved_gauss_sipg_flux_scalar_dirichlet_fetch_fcns */
     /*                                         (boundary_fcn); */
 
 
@@ -347,7 +347,7 @@ void problem_build_rhs
   /*                                          zero_fcn, */
   /*                                          ip_flux_params */
   /*                                         ); */
-  /* prob_vecs->curved_scalar_flux_fcn_data = curved_gauss_sipg_flux_scalar_dirichlet_fetch_fcns */
+  /* prob_vecs->flux_fcn_data = curved_gauss_sipg_flux_scalar_dirichlet_fetch_fcns */
   /*                                         (zero_fcn); */
 
   P4EST_FREE(f);
@@ -541,9 +541,9 @@ problem_init
   /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
 
-  /* grid_fcn_t boundary_flux_fcn = zero_fcn; */
+  /* d4est_grid_fcn_t boundary_flux_fcn = zero_fcn; */
   
-  problem_data_t prob_vecs;
+  d4est_elliptic_problem_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
@@ -578,7 +578,7 @@ problem_init
 
   }
   
-  curved_weakeqn_ptrs_t prob_fcns;
+  curved_d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.apply_lhs = curved_gauss_poisson_apply_aij;
 
      
@@ -673,7 +673,7 @@ problem_init
     }
 
     
-    prob_vecs.curved_scalar_flux_fcn_data = curved_gauss_sipg_flux_scalar_dirichlet_fetch_fcns
+    prob_vecs.flux_fcn_data = curved_gauss_sipg_flux_scalar_dirichlet_fetch_fcns
                                             (zero_fcn);
 
     

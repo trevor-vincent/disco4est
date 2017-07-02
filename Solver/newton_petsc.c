@@ -162,7 +162,7 @@ PetscErrorCode newton_petsc_save_x0
 
   PetscErrorCode ierr;
   petsc_ctx_t* petsc_ctx = (petsc_ctx_t*) ctx;
-  problem_data_t* vecs = petsc_ctx->vecs;
+  d4est_elliptic_problem_data_t* vecs = petsc_ctx->vecs;
   const double* px0;
   ierr = VecGetArrayRead( x0, &px0 ); CHKERRQ(ierr);
 
@@ -193,24 +193,24 @@ PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
   VecGetArray(f,&ftemp); 
   VecGetArrayRead(x,&xx);
 
-  problem_data_t* vecs = petsc_ctx->vecs;
+  d4est_elliptic_problem_data_t* vecs = petsc_ctx->vecs;
   p4est_t* p4est = petsc_ctx->p4est;
   p4est_ghost_t* ghost = *petsc_ctx->ghost;
   d4est_operators_t* d4est_ops = petsc_ctx->d4est_ops;
   d4est_geometry_t* d4est_geom = petsc_ctx->d4est_geom;
   d4est_quadrature_t* d4est_quad = petsc_ctx->d4est_quad;
   
-  problem_data_t vecs_for_res_build;
+  d4est_elliptic_problem_data_t vecs_for_res_build;
   problem_data_copy_ptrs(vecs, &vecs_for_res_build);
   vecs_for_res_build.u = (double*)xx;//x_temp;
   vecs_for_res_build.u0 = (double*)xx;//x_temp;
   vecs_for_res_build.Au = ftemp;
 
   /* if (d4est_geom != NULL){ */
-  /*   ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (d4est_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_res_build, d4est_ops,d4est_geom); */
+  /*   ((curved_d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (d4est_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_res_build, d4est_ops,d4est_geom); */
   /* } */
   /* else { */
-  ((weakeqn_ptrs_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (petsc_ctx->ghost_data), &vecs_for_res_build, d4est_ops, d4est_geom, d4est_quad);
+  ((d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (petsc_ctx->ghost_data), &vecs_for_res_build, d4est_ops, d4est_geom, d4est_quad);
   /* } */
   VecRestoreArray(f,&ftemp);//CHKERRQ(ierr);
   VecRestoreArrayRead(x,&xx);
@@ -236,7 +236,7 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
   ierr = VecGetArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecGetArray( y, &py ); CHKERRQ(ierr);
 
-  problem_data_t* vecs = petsc_ctx->vecs;
+  d4est_elliptic_problem_data_t* vecs = petsc_ctx->vecs;
   p4est_t* p4est = petsc_ctx->p4est;
   p4est_ghost_t* ghost = *petsc_ctx->ghost;
   d4est_operators_t* d4est_ops = petsc_ctx->d4est_ops;
@@ -249,7 +249,7 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
     /* vecs->u[i] = px[i]; */
   /* } */
 
-  problem_data_t vecs_for_jac;
+  d4est_elliptic_problem_data_t vecs_for_jac;
   problem_data_copy_ptrs(vecs, &vecs_for_jac);
 
   vecs_for_jac.u = (double*)px;
@@ -259,10 +259,10 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
 
 
   /* if (d4est_geom != NULL){ */
-    /* ((curved_weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (d4est_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_jac, d4est_ops,d4est_geom); */
+    /* ((curved_d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (d4est_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_jac, d4est_ops,d4est_geom); */
   /* } */
   /* else { */
-((weakeqn_ptrs_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
+((d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
                                                 ghost,
                                                 (petsc_ctx->ghost_data),
                                                 &vecs_for_jac,
@@ -338,7 +338,7 @@ newton_petsc_set_options_database_from_params
 void newton_petsc_solve
 (
  p4est_t* p4est,
- problem_data_t* vecs,
+ d4est_elliptic_problem_data_t* vecs,
  void* fcns,
  p4est_ghost_t** ghost,
  void** ghost_data, 

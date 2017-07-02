@@ -6,7 +6,7 @@
 #include <sipg_flux_vector_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <central_flux_params.h>
 #include <curved_bi_estimator.h>
 #include <krylov_petsc.h>
@@ -23,7 +23,7 @@
 #include <bi_estimator_flux_fcns.h>
 #include <newton_petsc.h>
 #include <ini.h>
-#include <curved_poisson_operator_primal.h>
+#include <d4est_poisson.h>
 #include <curved_Gauss_primal_sipg_kronbichler_flux_fcns.h>
 #include <multigrid_matrix_operator.h>
 #include <multigrid_smoother_cheby_d4est.h>
@@ -448,7 +448,7 @@ problem_init
   p4est_partition(p4est, 0, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
   
-  problem_data_t prob_vecs;
+  d4est_elliptic_problem_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
@@ -456,7 +456,7 @@ problem_init
 
   ip_flux_t* ip_flux = ip_flux_dirichlet_new(p4est, "[IP_FLUX]", input_file, zero_fcn);
   /* ip_flux_t* ip_flux = ip_flux_dirichlet_new(p4est, "[IP_FLUX]", input_file, boundary_fcn); */
-  prob_vecs.curved_scalar_flux_fcn_data = ip_flux->curved_flux_fcn_ptrs;
+  prob_vecs.flux_fcn_data = ip_flux->mortar_fcn_ptrs;
   global_ip_flux_params = *(ip_flux->ip_flux_params);
   prob_vecs.user = &input;
 

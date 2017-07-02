@@ -3,7 +3,7 @@
 
 #include "../pXest/pXest.h"
 #include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/problem_weakeqn_ptrs.h"
+#include "../EllipticSystem/d4est_elliptic_eqns.h"
 #include <d4est_petsc.h>
 
 typedef struct krylov_pc krylov_pc_t;

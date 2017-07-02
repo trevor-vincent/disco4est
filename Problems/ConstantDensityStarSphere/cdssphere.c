@@ -7,7 +7,7 @@
 #include <curved_gauss_primal_sipg_flux_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <central_flux_params.h>
 #include <curved_bi_estimator.h>
 #include <krylov_petsc.h>
@@ -23,7 +23,7 @@
 #include <bi_estimator_flux_fcns.h>
 #include <newton_petsc.h>
 #include <ini.h>
-#include <curved_poisson_operator_primal.h>
+#include <d4est_poisson.h>
 #include <curved_gauss_central_flux_vector_fcns.h>
 #include <jacobian_tester.h>
 #include "cds_fcns.h"
@@ -388,18 +388,18 @@ problem_init
   p4est_partition(p4est, 0, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
   
-  problem_data_t prob_vecs;
+  d4est_elliptic_problem_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
   prob_vecs.local_nodes = local_nodes;
 
-  prob_vecs.curved_scalar_flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
+  prob_vecs.flux_fcn_data = curved_gauss_primal_sipg_flux_dirichlet_fetch_fcns
                                           (zero_fcn,input.ip_flux_params);
 
 
 
-  weakeqn_ptrs_t prob_fcns;
+  d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = cds_build_residual;
   prob_fcns.apply_lhs = cds_apply_jac;
   

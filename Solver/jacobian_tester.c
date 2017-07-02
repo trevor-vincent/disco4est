@@ -11,15 +11,15 @@ jacobian_tester
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- weakeqn_ptrs_t* prob_fcns,
- problem_data_t* prob_vecs
+ d4est_elliptic_eqns_t* prob_fcns,
+ d4est_elliptic_problem_data_t* prob_vecs
 )
 {
   int local_nodes = prob_vecs->local_nodes;
 
-  problem_data_t prob_vecs_jac;
-  problem_data_t prob_vecs_F_u0;
-  problem_data_t prob_vecs_F_u0_p_u;
+  d4est_elliptic_problem_data_t prob_vecs_jac;
+  d4est_elliptic_problem_data_t prob_vecs_F_u0;
+  d4est_elliptic_problem_data_t prob_vecs_F_u0_p_u;
   problem_data_copy_ptrs(prob_vecs,&prob_vecs_jac);
   problem_data_copy_ptrs(prob_vecs,&prob_vecs_F_u0);
   problem_data_copy_ptrs(prob_vecs,&prob_vecs_F_u0_p_u);

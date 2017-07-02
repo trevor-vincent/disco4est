@@ -29,8 +29,6 @@ d4est_mesh_geometry_storage_realloc
 {
   int local_nodes = local_sizes.local_nodes;
   int local_nodes_quad = local_sizes.local_nodes_quad;
-  int local_sqr_nodes = local_sizes.local_sqr_nodes;
-  int local_sqr_mortar_nodes = local_sizes.local_sqr_mortar_nodes;
     
   int vector_nodes = local_nodes*(P4EST_DIM); 
   geometric_factors->xyz = P4EST_REALLOC(geometric_factors->xyz,double,vector_nodes);
@@ -67,24 +65,46 @@ d4est_mesh_get_array_of_degrees
  int* deg_array
 )
 {
-   int vtk_nodes = 0;
-     
-    int stride = 0;
-    for (p4est_topidx_t tt = p4est->first_local_tree;
-         tt <= p4est->last_local_tree;
-         ++tt)
-      {
-        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-        sc_array_t* tquadrants = &tree->quadrants;
-        int Q = (p4est_locidx_t) tquadrants->elem_count;
-        for (int q = 0; q < Q; ++q) {
-          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-          d4est_element_data_t* ed = quad->p.user_data;
-          deg_array[stride] = ed->deg;
-          vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
-          stride++;
-        }
+  int stride = 0;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data;
+        deg_array[stride] = ed->deg;
+        stride++;
       }
+    }
+}
+
+
+void
+d4est_mesh_get_array_of_estimators
+(
+ p4est_t* p4est,
+ int* eta2_array
+)
+{
+  int stride = 0;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data;
+        eta2_array[stride] = ed->local_estimator;
+        stride++;
+      }
+    }
 }
 
 void
@@ -287,32 +307,6 @@ d4est_mesh_global_node_to_local_node
   return -1;
 }
 
-
-/* int */
-/* d4est_mesh_count_boundary_elements */
-/* ( */
-/*  p4est_t* p4est */
-/* ) */
-/* { */
-/*   int belems = 0; */
-/*   for (p4est_topidx_t tt = p4est->first_local_tree; */
-/*        tt <= p4est->last_local_tree; */
-/*        ++tt) */
-/*     { */
-/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-/*       sc_array_t* tquadrants = &tree->quadrants; */
-/*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
-/*       for (int q = 0; q < Q; ++q) { */
-/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-/*         d4est_element_data_t* ed = quad->p.user_data; */
-/*         belems += ed->on_bdry; */
-/*       } */
-/*     }   */
-/*   return belems; */
-/* } */
-
-
- 
 /* only for serial use */
 int
 d4est_mesh_debug_find_node
@@ -423,38 +417,6 @@ d4est_mesh_compute_l2_norm_sqr
 #if (P4EST_DIM)==3
       mesh_object.q[2] = ed->q[2];
 #endif
-      /* d4est_rst_t rst_points_quad; */
-      /* rst_points_quad = d4est_quadrature_get_rst_points */
-      /*                   ( */
-      /*                    d4est_ops, */
-      /*                    d4est_quad, */
-      /*                    d4est_geom, */
-      /*                    &mesh_object, */
-      /*                    QUAD_OBJECT_VOLUME, */
-      /*                    QUAD_INTEGRAND_UNKNOWN, */
-      /*                    ed->deg_quad */
-      /*                   ); */
-
-      /* d4est_geometry_compute_dxyz_drst */
-      /*   ( */
-      /*    d4est_ops, */
-      /*    d4est_geom, */
-      /*    rst_points_quad, */
-      /*    ed->tree, */
-      /*    ed->q, */
-      /*    ed->dq, */
-      /*    ed->deg_quad,            */
-      /*    xyz_rst_quad */
-      /*   ); */
-
-    
-      /* d4est_geometry_compute_jacobian */
-      /*   ( */
-      /*    xyz_rst_quad, */
-      /*    J_quad, */
-      /*    volume_nodes_quad */
-      /*   ); */
-      
         
       d4est_quadrature_apply_mass_matrix
         (
@@ -529,10 +491,16 @@ d4est_mesh_init_element_data
 #endif        
         /* user_fcn should set degree, 
            or the degree will be assumed to be set */
-
-        if (user_fcn != NULL)
+        if (user_fcn != NULL){
           user_fcn(elem_data, user_ctx);
+        }
+
+        printf("elem_data->deg = %d\n", elem_data->deg);
+        printf("elem_data->deg_quad = %d\n", elem_data->deg_quad);
         
+        elem_data->deg = 2;
+        elem_data->deg_quad = 2;
+
         mpi_assert(elem_data->deg > 0
                    &&
                    elem_data->deg_quad > 0
@@ -717,7 +685,7 @@ d4est_mesh_geometry_storage_initialize_aliases
     }
 }
 
-void
+int
 d4est_mesh_update
 (
  p4est_t* p4est,
@@ -774,7 +742,8 @@ d4est_mesh_update
      ){
     d4est_mesh_geometry_storage_initialize_aliases(p4est, geometric_factors, local_sizes);
   }
-  
+
+  return local_sizes.local_nodes; 
 }
 
 void
@@ -782,7 +751,7 @@ d4est_mesh_init_field
 (
  p4est_t* p4est,
  double* node_vec,
- grid_fcn_t init_fcn,
+ d4est_grid_fcn_t init_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
@@ -877,39 +846,6 @@ d4est_mesh_init_field
   }
   
 }
-
-/* void */
-/* d4est_mesh_compute_mesh_volume_and_surface_area */
-/* ( */
-/*  p4est_t* p4est, */
-/*  double* volume, */
-/*  double* surface_area */
-/* ) */
-/* { */
-/*   *surface_area = 0; */
-/*   *volume = 0; */
-  
-/*   for (p4est_topidx_t tt = p4est->first_local_tree; */
-/*        tt <= p4est->last_local_tree; */
-/*        ++tt) */
-/*     { */
-/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-/*       sc_array_t* tquadrants = &tree->quadrants; */
-/*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
-/*       for (int q = 0; q < Q; ++q) { */
-/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-/*         d4est_element_data_t* elem_data = (d4est_element_data_t*)(quad->p.user_data); */
-/*         for (int i = 0; i < (P4EST_FACES); i++){ */
-/*           if (d4est_geometry_is_face_on_boundary(p4est, quad, elem_data->tree, i)){ */
-/*             *surface_area += elem_data->surface_area[i]; */
-/*           } */
-/*         } */
-/*         *volume += elem_data->volume; */
-/*       } */
-/*     } */
-/* } */
-
-
 
 void
 d4est_mesh_init_field_ext

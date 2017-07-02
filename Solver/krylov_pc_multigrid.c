@@ -37,7 +37,7 @@ krylov_pc_multigrid_apply(krylov_pc_t* kpc, double* xp, double* yp)
 
   double* Au = P4EST_ALLOC(double, local_nodes);
   
-  problem_data_t mg_prob_vecs;
+  d4est_elliptic_problem_data_t mg_prob_vecs;
   problem_data_copy_ptrs(kct->vecs, &mg_prob_vecs);
   mg_prob_vecs.u = yp;
   mg_prob_vecs.rhs = xp;

@@ -11,12 +11,12 @@ bi_est_dirichlet
 (
  element_data_t* e_m,
  int f_m,
- grid_fcn_t bndry_fcn,
+ d4est_grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  void* params
 )
 {
-  grid_fcn_t u_at_bndry = bndry_fcn;
+  d4est_grid_fcn_t u_at_bndry = bndry_fcn;
   double prefactor = bi_est_u_dirichlet_prefactor_calculate_fcn
                  (
                   e_m->deg,
@@ -473,17 +473,17 @@ bi_est_interface
     P4EST_FREE(ustar_min_u_mortar);
 }
 
-flux_fcn_ptrs_t
+d4est_mortar_fcn_ptrs_t
 bi_est_dirichlet_fetch_fcns
 (
- grid_fcn_t bndry_fcn,
+ d4est_grid_fcn_t bndry_fcn,
  penalty_calc_t u_penalty_fcn,
  penalty_calc_t u_dirichlet_penalty_fcn,
  penalty_calc_t gradu_penalty_fcn,
  double penalty_prefactor
 )
 {
-  flux_fcn_ptrs_t bi_est_fcns;
+  d4est_mortar_fcn_ptrs_t bi_est_fcns;
   bi_est_fcns.flux_interface_fcn
     = bi_est_interface;
 

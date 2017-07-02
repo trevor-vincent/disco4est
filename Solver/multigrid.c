@@ -77,7 +77,7 @@ multigrid_update_components
 (
  p4est_t* p4est,
  int level,
- problem_data_t* data
+ d4est_elliptic_problem_data_t* data
 )
 {
   multigrid_data_t* mg_data = p4est->user_pointer;
@@ -324,8 +324,8 @@ static void
 multigrid_vcycle
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns
 )
 {
   multigrid_data_t* mg_data = p4est->user_pointer;
@@ -392,9 +392,9 @@ multigrid_vcycle
   
   double* u = vecs->u;
   
-  problem_data_t vecs_for_smooth;
+  d4est_elliptic_problem_data_t vecs_for_smooth;
   problem_data_copy_ptrs(vecs, &vecs_for_smooth);
-  problem_data_t vecs_for_bottom_solve;
+  d4est_elliptic_problem_data_t vecs_for_bottom_solve;
   problem_data_copy_ptrs(vecs, &vecs_for_bottom_solve);
   
   /* initialize error to zero */
@@ -840,8 +840,8 @@ static double
 multigrid_compute_residual
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns
 ){
   
   multigrid_data_t* mg_data = p4est->user_pointer;
@@ -895,8 +895,8 @@ void
 multigrid_solve
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  multigrid_data_t* mg_data
 )
 {

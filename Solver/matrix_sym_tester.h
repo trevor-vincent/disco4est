@@ -2,13 +2,13 @@
 #define MATRIX_SYM_TESTER_H 
 
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 /* This file was automatically generated.  Do not edit! */
 void
 matrix_sym_tester_parallel_aux
 (
  p4est_t* p4est,
- problem_data_t* vecs, 
+ d4est_elliptic_problem_data_t* vecs, 
  void* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
@@ -21,13 +21,13 @@ matrix_sym_tester_parallel_aux
  double* Aji,
  double* Aij
 );
-int matrix_sym_tester_parallel(p4est_t *p4est,problem_data_t *vecs,void *fcns,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,int print,int num_tests,double sym_eps);
+int matrix_sym_tester_parallel(p4est_t *p4est,d4est_elliptic_problem_data_t *vecs,void *fcns,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,int print,int num_tests,double sym_eps);
 void
 serial_matrix_sym_tester
 (
  p4est_t* p4est,
- problem_data_t* vecs, /* only needed for # of nodes */
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs, /* only needed for # of nodes */
+ d4est_elliptic_eqns_t* fcns,
  double sym_eps,
  d4est_operators_t* d4est_ops,
  int print,
@@ -38,7 +38,7 @@ serial_matrix_sym_tester
 /* parallel_matrix_sym_tester */
 /* ( */
 /*  p4est_t* p4est, */
-/*  problem_data_t* vecs, /\* only needed for # of nodes *\/ */
+/*  d4est_elliptic_problem_data_t* vecs, /\* only needed for # of nodes *\/ */
 /*  void* fcns, */
 /*  double sym_eps, */
 /*  d4est_operators_t* d4est_ops, */
@@ -50,7 +50,7 @@ serial_matrix_sym_tester
 /* matrix_sym_tester_parallel */
 /* ( */
 /*  p4est_t* p4est, */
-/*  problem_data_t* vecs, /\* only needed for # of nodes *\/ */
+/*  d4est_elliptic_problem_data_t* vecs, /\* only needed for # of nodes *\/ */
 /*  void* fcns, */
 /*  int mpi_rank, */
 /*  int num_tests, */
@@ -66,7 +66,7 @@ int
 matrix_spd_tester_parallel
 (
  p4est_t* p4est,
- problem_data_t* vecs, 
+ d4est_elliptic_problem_data_t* vecs, 
  void* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,

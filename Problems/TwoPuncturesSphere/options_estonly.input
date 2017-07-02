@@ -1,0 +1,45 @@
+[p4est]
+min_quadrants = -1
+min_level = 0
+fill_uniform = 1
+
+[ip_flux_params]
+name = kronbichler
+ip_flux_penalty_prefactor = 2.0
+ip_flux_bc_eval = BC_EVAL_ON_LOBATTO_POINTS
+ip_flux_h_calc = H_EQ_J_DIV_SJ
+ip_flux_penalty_calculate_fcn = meanp_sqr_over_meanh
+
+[problem]
+num_of_amr_levels = 0
+deg = 2
+deg_quad = 2
+
+[geometry]
+name = cubed_sphere
+R0 = 10
+R1 = 100
+R2 = 10000
+compactify_outer_shell = 1
+compactify_inner_shell = 0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_vtk_geometry]
+name = cubed_sphere
+R0 = 10
+R1 = 100
+R2 = 10000
+compactify_outer_shell = 1
+compactify_inner_shell = 0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_cg]
+iter = 1
+monitor = 1
+rtol = 1e-20
+atol = 1e-20
+
+[quadrature]
+name = legendre

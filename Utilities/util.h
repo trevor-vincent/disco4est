@@ -134,7 +134,7 @@
 /* #define mpi_assert(expression)  \ */
 /* do { \ */
 /*   if (!(expression)) { \ */
-/*      fprintf(stderr, "Failed assertion at %d in %s",__LINE__, __FILE__); \ */
+/*      fprintf(stderr, "Failed assertion at %d in %s",_LINE_, _FILE_); \ */
 /*      MPI_Abort(MPI_COMM_WORLD, 1); \ */
 /*  } \ */
 /* } while (0) */
@@ -147,7 +147,7 @@
 
 /* #define mpi_abort(expression) \ */
 /* do { \ */
-/*     fprintf(stderr, "%s Failed assertion at %d in %s",expression,__LINE__, __FILE__); \ */
+/*     fprintf(stderr, "%s Failed assertion at %d in %s",expression,_LINE_, _FILE_); \ */
 /*      MPI_Abort(MPI_COMM_WORLD, 1); \ */
 /* } while (0) */
 

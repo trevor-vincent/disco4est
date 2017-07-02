@@ -6,8 +6,8 @@ static void
 multigrid_smoother_krylov_petsc
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  double* r,
  int level
 )

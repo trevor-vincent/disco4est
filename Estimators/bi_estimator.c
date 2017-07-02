@@ -1,7 +1,7 @@
 #include "../pXest/pXest.h"
 #include "../ElementData/element_data.h"
 #include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/problem_weakeqn_ptrs.h"
+#include "../EllipticSystem/d4est_elliptic_eqns.h"
 #include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../hpAMR/hp_amr.h"
@@ -13,7 +13,7 @@
 typedef struct {
   
   d4est_operators_t* d4est_ops;
-  problem_data_t* problem_data;
+  d4est_elliptic_problem_data_t* problem_data;
   double* bi_estimator_local_eta2;
   
 } bi_estimator_user_data_t;
@@ -32,7 +32,7 @@ bi_estimator_init
   element_data_t* element_data = (element_data_t *) q->p.user_data;
 
   bi_estimator_user_data_t* bi_estimator_user_data = (bi_estimator_user_data_t*) user_data;
-  problem_data_t* problem_data = bi_estimator_user_data->problem_data;
+  d4est_elliptic_problem_data_t* problem_data = bi_estimator_user_data->problem_data;
   d4est_operators_t* d4est_ops = bi_estimator_user_data->d4est_ops;
 
   
@@ -200,12 +200,12 @@ void
 bi_estimator_compute
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  penalty_calc_t u_penalty_fcn,
  penalty_calc_t u_dirichlet_penalty_fcn,
  penalty_calc_t gradu_penalty_fcn,
- grid_fcn_t u_bndry_fcn,
+ d4est_grid_fcn_t u_bndry_fcn,
  double penalty_prefactor,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
@@ -258,7 +258,7 @@ bi_estimator_compute
 
   
   
-  flux_fcn_ptrs_t bi_estimator_flux_fcn_ptrs = bi_est_dirichlet_fetch_fcns(u_bndry_fcn,
+  d4est_mortar_fcn_ptrs_t bi_estimator_flux_fcn_ptrs = bi_est_dirichlet_fetch_fcns(u_bndry_fcn,
                                                                         u_penalty_fcn,
                                                                         u_dirichlet_penalty_fcn,
                                                                         gradu_penalty_fcn,

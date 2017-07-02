@@ -2,7 +2,7 @@
 #define BI_ESTIMATOR_H 
 
 #include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/problem_weakeqn_ptrs.h"
+#include "../EllipticSystem/d4est_elliptic_eqns.h"
 #include "../Estimators/estimator_stats.h"
 
 double
@@ -16,12 +16,12 @@ void
 bi_estimator_compute
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  penalty_calc_t u_penalty_fcn,
  penalty_calc_t u_dirichlet_penalty_fcn,
  penalty_calc_t gradu_penalty_fcn,
- grid_fcn_t u_bndry_fcn,
+ d4est_grid_fcn_t u_bndry_fcn,
  double penalty_prefactor,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,

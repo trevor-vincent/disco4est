@@ -14,7 +14,7 @@
 #include <sipg_flux_scalar_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <poisson_operator.h>
 #include <hp_amr_smooth_pred.h>
 #include <hp_amr_uniform.h>
@@ -197,7 +197,7 @@ double two_punctures_adm_quadral_volume
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -390,7 +390,7 @@ build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -459,7 +459,7 @@ build_residual_gauss
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -540,7 +540,7 @@ void apply_jac
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -614,7 +614,7 @@ void apply_jac_gauss
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -693,8 +693,8 @@ void apply_jac_gauss
 /* void problem_build_rhs */
 /* ( */
 /*  p4est_t* p4est, */
-/*  problem_data_t* prob_vecs, */
-/*  weakeqn_ptrs_t* prob_fcns, */
+/*  d4est_elliptic_problem_data_t* prob_vecs, */
+/*  d4est_elliptic_eqns_t* prob_fcns, */
 /*  p4est_ghost_t* ghost, */
 /*  element_data_t* ghost_data, */
 /*  penalty_calc_t peanalty_fcn, */
@@ -1031,7 +1031,7 @@ problem_init
   ip_flux_params.ip_flux_penalty_prefactor = input.ip_flux_penalty;
   ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
   
-  problem_data_t prob_vecs;
+  d4est_elliptic_problem_data_t prob_vecs;
   /* prob_vecs.rhs = rhs; */
   prob_vecs.Au = Au;
   prob_vecs.u = u;
@@ -1046,7 +1046,7 @@ problem_init
 
 
   /* set weak equations */
-  weakeqn_ptrs_t prob_fcns;
+  d4est_elliptic_eqns_t prob_fcns;
   problem_ctx_t prob_ctx;
   if (input.use_gauss_quad){
     mpi_assert(input.deg_offset_for_gauss_quad > -1);

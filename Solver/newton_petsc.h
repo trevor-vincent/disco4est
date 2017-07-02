@@ -3,7 +3,7 @@
 
 #include "../pXest/pXest.h"
 #include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/problem_weakeqn_ptrs.h"
+#include "../EllipticSystem/d4est_elliptic_eqns.h"
 #include <d4est_petsc.h>
 #include <krylov_petsc.h>
 
@@ -29,7 +29,7 @@ typedef struct {
 void newton_petsc_solve
 (
  p4est_t* p4est,
- problem_data_t* vecs,
+ d4est_elliptic_problem_data_t* vecs,
  void* fcns,
  p4est_ghost_t** ghost,
  void** ghost_data, 

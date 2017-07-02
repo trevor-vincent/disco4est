@@ -2,7 +2,7 @@
 #define HO_H 
 
 #include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/problem_weakeqn_ptrs.h"
+#include "../EllipticSystem/d4est_elliptic_eqns.h"
 #include "../dGMath/d4est_operators.h"
 
 typedef struct multigrid_data_t multigrid_data_t;
@@ -55,7 +55,7 @@ void
 (
  p4est_t*,
  int, /* current level */
- problem_data_t*
+ d4est_elliptic_problem_data_t*
 );
 
 typedef
@@ -96,8 +96,8 @@ void
 (*multigrid_smoother_fcn_t)
 (
  p4est_t*,
- problem_data_t*,
- weakeqn_ptrs_t*,
+ d4est_elliptic_problem_data_t*,
+ d4est_elliptic_eqns_t*,
  double*,
  int
 );
@@ -107,8 +107,8 @@ void
 (*multigrid_bottom_solver_fcn_t)
 (
  p4est_t*,
- problem_data_t*,
- weakeqn_ptrs_t*,
+ d4est_elliptic_problem_data_t*,
+ d4est_elliptic_eqns_t*,
  double*
 );
 
@@ -225,8 +225,8 @@ void
 multigrid_solve
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  multigrid_data_t* mg_data
 );
 

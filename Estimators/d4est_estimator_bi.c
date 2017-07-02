@@ -1,86 +1,21 @@
 #include <pXest.h>
 #include <util.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <d4est_element_data.h>
 #include <d4est_linalg.h>
 #include <d4est_mesh.h>
 #include <d4est_estimator_bi.h>
 #include <d4est_mortars.h>
 
-typedef struct {
-  
-  d4est_operators_t* d4est_ops;
-  problem_data_t* problem_data;
-  double(*get_diam)(d4est_element_data_t*);
-  
-} d4est_estimator_bi_user_data_t;
-
-static void
-d4est_estimator_bi_init
-(
- p4est_iter_volume_info_t * info,
- void *user_data
-)
-{
-  p4est_quadrant_t *q = info->quad;
-  d4est_element_data_t* elem_data = (d4est_element_data_t *) q->p.user_data;
-  d4est_estimator_bi_user_data_t* d4est_estimator_bi_user_data = (d4est_estimator_bi_user_data_t*) user_data;
-  problem_data_t* problem_data = d4est_estimator_bi_user_data->problem_data;
-  d4est_operators_t* d4est_ops = d4est_estimator_bi_user_data->d4est_ops;
-  
-  int dim = (P4EST_DIM);
-  int deg = elem_data->deg;
-  int volume_nodes_lobatto = d4est_lgl_get_nodes(dim,deg);
-  int volume_nodes_gauss = d4est_lgl_get_nodes(dim, elem_data->deg_quad);
-  /* int face_nodes_gauss = d4est_lgl_get_nodes(dim-1, elem_data->deg_quad); */
-  
-  d4est_linalg_copy_1st_to_2nd
-    (
-     &(problem_data->u[elem_data->nodal_stride]),
-     &(elem_data->u_elem)[0],
-     volume_nodes_lobatto
-    );
-  
-  double* u_prolonged = P4EST_ALLOC(double, volume_nodes_gauss);
-  double* du_di_gauss = P4EST_ALLOC(double, volume_nodes_gauss);
-  
-  for (int i = 0; i < (P4EST_DIM); i++){
-    d4est_operators_apply_p_prolong(d4est_ops, &(problem_data->u[elem_data->nodal_stride]), deg, (P4EST_DIM), elem_data->deg_quad, u_prolonged);
-    d4est_operators_apply_dij(d4est_ops, u_prolonged, dim, elem_data->deg_quad, i, &elem_data->dudr_elem[i][0]);
-  }
-
-  P4EST_FREE(u_prolonged);
-  P4EST_FREE(du_di_gauss);
-}
-
-static
-void d4est_estimator_bi_compute_volume_term_callback
-(
-p4est_iter_volume_info_t* info,
-void* user_data
-)
-{
-  p4est_quadrant_t *q = info->quad;
-  d4est_estimator_bi_user_data_t* d4est_estimator_bi_user_data = (d4est_estimator_bi_user_data_t*) user_data;
-  d4est_element_data_t* element_data = (d4est_element_data_t*) q->p.user_data;
-
-  int deg = element_data->deg;
-  double* eta2 = &(element_data->local_estimator);
-
-  /* handle ||R||^2 * h^2/p^2 term */
-  double h = d4est_estimator_bi_user_data->get_diam(element_data);
-  *eta2 *= h*h/(deg*deg);
-}
-
 void
 d4est_estimator_bi_compute
 (
  p4est_t* p4est,
- problem_data_t* vecs,
- weakeqn_ptrs_t* fcns,
- d4est_estimator_bi_penalty_data_t penalty_data,
- grid_fcn_t u_bndry_fcn,
+ d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
+ d4est_estimator_bi_penalty_data_t bi_penalty_data,
+ d4est_grid_fcn_t u_bndry_fcn,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
@@ -89,17 +24,18 @@ d4est_estimator_bi_compute
  double (*get_diam)(d4est_element_data_t*)
 )
 {
-  fcns->build_residual
+  d4est_elliptic_eqns_build_residual
     (
      p4est,
      ghost,
-     ghost_data,
+     fcns,
      vecs,
+     ghost_data,
      d4est_ops,
      d4est_geom,
      d4est_quad
     );
-
+  
   d4est_mesh_compute_l2_norm_sqr
     (
      p4est,
@@ -111,45 +47,48 @@ d4est_estimator_bi_compute
      STORE_LOCALLY
     );
 
-  d4est_estimator_bi_user_data_t d4est_estimator_bi_user_data;
-  d4est_estimator_bi_user_data.d4est_ops = d4est_ops;
-  d4est_estimator_bi_user_data.problem_data = vecs;
-  d4est_estimator_bi_user_data.get_diam = get_diam;
- 
-  p4est_iterate
-    (
-     p4est,
-     NULL,
-     (void*) &d4est_estimator_bi_user_data,
-     d4est_estimator_bi_compute_volume_term_callback,
-     NULL,
-#if (P4EST_DIM)==3
-     NULL,
-#endif
-     NULL
-    );
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data; 
+        int deg = ed->deg;
+        int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg);
+        double* eta2 = &(ed->local_estimator);
+        /* handle ||R||^2 * h^2/p^2 term */
+        double h = get_diam(ed);
+        *eta2 *= h*h/(deg*deg);
 
-  p4est_iterate
-    (
-     p4est,
-     NULL,
-     (void *) &d4est_estimator_bi_user_data,
-     d4est_estimator_bi_init,
-     NULL,
-#if (P4EST_DIM)==3
-     NULL,
-#endif
-     NULL
-    );
 
-  curved_flux_fcn_ptrs_t d4est_estimator_bi_flux_fcn_ptrs
+        d4est_linalg_copy_1st_to_2nd
+          (
+           &(vecs->u[ed->nodal_stride]),
+           &(ed->u_elem)[0],
+           volume_nodes_lobatto
+          );
+    
+        for (int i = 0; i < (P4EST_DIM); i++){
+          d4est_operators_apply_dij(d4est_ops, &(vecs->u[ed->nodal_stride]), (P4EST_DIM), ed->deg, i, &ed->dudr_elem[i][0]);
+        }
+
+        
+      }
+
+    }
+
+  d4est_mortar_fcn_ptrs_t d4est_estimator_bi_flux_fcn_ptrs
     = d4est_estimator_bi_dirichlet_fetch_fcns
     (
      u_bndry_fcn,
-     &penalty_data
+     &bi_penalty_data
     );
   
-  curved_compute_flux_on_local_elements
+  d4est_mortar_compute_flux_on_local_elements
     (
      p4est,
      ghost,
@@ -170,14 +109,14 @@ d4est_estimator_bi_dirichlet
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
- grid_fcn_t bndry_fcn,
+ d4est_grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  void* params
 )
 {
-  grid_fcn_t u_at_bndry = bndry_fcn;
+  d4est_grid_fcn_t u_at_bndry = bndry_fcn;
   d4est_estimator_bi_penalty_data_t* penalty_data = params;
   int face_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg);
   int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
@@ -513,7 +452,7 @@ d4est_estimator_bi_interface
   d4est_quadrature_mortar_t mortar_face_object_forder [(P4EST_HALF)];
   d4est_quadrature_mortar_t mortar_face_object_porder [(P4EST_HALF)];
   
-  d4est_geometry_compute_qcoords_on_mortar
+  d4est_mortars_compute_qcoords_on_mortar
     (
      e_m[0]->tree,
      e_m[0]->q,
@@ -525,7 +464,7 @@ d4est_estimator_bi_interface
      &mortar_dq_forder
     );
 
-  d4est_geometry_compute_qcoords_on_mortar
+  d4est_mortars_compute_qcoords_on_mortar
     (
      e_p[0]->tree,
      e_p[0]->q,
@@ -1066,14 +1005,14 @@ d4est_estimator_bi_interface
 
 
 
-curved_flux_fcn_ptrs_t
+d4est_mortar_fcn_ptrs_t
 d4est_estimator_bi_dirichlet_fetch_fcns
 (
- grid_fcn_t bndry_fcn,
+ d4est_grid_fcn_t bndry_fcn,
  d4est_estimator_bi_penalty_data_t* penalty_data
 )
 {
-  curved_flux_fcn_ptrs_t d4est_estimator_bi_fcns;
+  d4est_mortar_fcn_ptrs_t d4est_estimator_bi_fcns;
   d4est_estimator_bi_fcns.flux_interface_fcn
     = d4est_estimator_bi_interface;
 

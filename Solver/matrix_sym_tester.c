@@ -23,8 +23,8 @@
 /* curved_matrix_sym_tester */
 /* ( */
 /*  p4est_t* p4est, */
-/*  problem_data_t* vecs, /\* only needed for # of nodes *\/ */
-/*  curved_weakeqn_ptrs_t* fcns, */
+/*  d4est_elliptic_problem_data_t* vecs, /\* only needed for # of nodes *\/ */
+/*  curved_d4est_elliptic_eqns_t* fcns, */
 /*  int print, */
 /*  d4est_operators_t* d4est_ops */
 /* ) */
@@ -89,8 +89,8 @@
 /* matrix_sym_tester_parallel */
 /* ( */
 /*  p4est_t* p4est, */
-/*  problem_data_t* vecs, /\* only needed for # of nodes *\/ */
-/*  weakeqn_ptrs_t* fcns, */
+/*  d4est_elliptic_problem_data_t* vecs, /\* only needed for # of nodes *\/ */
+/*  d4est_elliptic_eqns_t* fcns, */
 /*  int mpi_rank, */
 /*  int tests, */
 /*  int test_PD, /\* test if positive definite *\/ */
@@ -224,8 +224,8 @@
 /* curved_matrix_sym_tester_parallel */
 /* ( */
 /*  p4est_t* p4est, */
-/*  problem_data_t* vecs, /\* only needed for # of nodes *\/ */
-/*  curved_weakeqn_ptrs_t* fcns, */
+/*  d4est_elliptic_problem_data_t* vecs, /\* only needed for # of nodes *\/ */
+/*  curved_d4est_elliptic_eqns_t* fcns, */
 /*  int mpi_rank, */
 /*  int tests, */
 /*  int test_PD, /\* test if positive definite *\/ */
@@ -382,8 +382,8 @@ void
 serial_matrix_sym_tester
 (
  p4est_t* p4est,
- problem_data_t* vecs, /* only needed for # of nodes */
- weakeqn_ptrs_t* fcns,
+ d4est_elliptic_problem_data_t* vecs, /* only needed for # of nodes */
+ d4est_elliptic_eqns_t* fcns,
  double sym_eps,
  d4est_operators_t* d4est_ops,
  int print,
@@ -417,7 +417,7 @@ serial_matrix_sym_tester
   for (i = 0; i < vecs->local_nodes; i++){
     vecs->u[i] = 1.;
     /* if (curved) */
-      /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (d4est_element_data_t*)ghost_data, vecs, d4est_ops, geom); */
+      /* ((curved_d4est_elliptic_eqns_t*)fcns)->apply_lhs(p4est, ghost, (d4est_element_data_t*)ghost_data, vecs, d4est_ops, geom); */
     /* else */
     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, geom);
 
@@ -519,7 +519,7 @@ serial_matrix_sym_tester
 /* parallel_matrix_sym_tester */
 /* ( */
 /*  p4est_t* p4est, */
-/*  problem_data_t* vecs, /\* only needed for # of nodes *\/ */
+/*  d4est_elliptic_problem_data_t* vecs, /\* only needed for # of nodes *\/ */
 /*  void* fcns, */
 /*  double sym_eps, */
 /*  d4est_operators_t* d4est_ops, */
@@ -591,9 +591,9 @@ serial_matrix_sym_tester
 /*       vecs->u[c - rstart] = 1.; */
     
 /*     if (curved) */
-/*       ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (d4est_element_data_t*)ghost_data, vecs, d4est_ops, geom); */
+/*       ((curved_d4est_elliptic_eqns_t*)fcns)->apply_lhs(p4est, ghost, (d4est_element_data_t*)ghost_data, vecs, d4est_ops, geom); */
 /*     else */
-/*       ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (element_data_t*)ghost_data, vecs, d4est_ops); */
+/*       ((d4est_elliptic_eqns_t*)fcns)->apply_lhs(p4est, ghost, (element_data_t*)ghost_data, vecs, d4est_ops); */
 
 /*     /\* to make parallel send stride as well *\/ */
 /*     d4est_linalg_set_column_opt(a_mat, vecs->Au, c, vecs->local_nodes, global_nodes); */
@@ -666,7 +666,7 @@ int
 matrix_sym_tester_parallel
 (
  p4est_t* p4est,
- problem_data_t* vecs, 
+ d4est_elliptic_problem_data_t* vecs, 
  void* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
@@ -735,7 +735,7 @@ int
 matrix_spd_tester_parallel
 (
  p4est_t* p4est,
- problem_data_t* vecs, 
+ d4est_elliptic_problem_data_t* vecs, 
  void* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
@@ -798,7 +798,7 @@ void
 matrix_sym_tester_parallel_aux
 (
  p4est_t* p4est,
- problem_data_t* vecs, 
+ d4est_elliptic_problem_data_t* vecs, 
  void* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
@@ -812,7 +812,7 @@ matrix_sym_tester_parallel_aux
  double* Aij
 )
 {
-  problem_data_t vecs_for_sym_test;
+  d4est_elliptic_problem_data_t vecs_for_sym_test;
   problem_data_copy_ptrs(vecs, &vecs_for_sym_test);
   
   double uj_A_ui_local; //Aji
@@ -840,7 +840,7 @@ matrix_sym_tester_parallel_aux
   vecs_for_sym_test.Au = A_ui;
 
   /* if (d4est_geom != NULL){ */
-    /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs( */
+    /* ((curved_d4est_elliptic_eqns_t*)fcns)->apply_lhs( */
                                               /* p4est, */
                                               /* ghost, */
                                               /* (d4est_element_data_t*)ghost_data, */
@@ -850,7 +850,7 @@ matrix_sym_tester_parallel_aux
                                              /* ); */
   /* }   */
   /* else{ */
-    ((weakeqn_ptrs_t*)fcns)->apply_lhs(
+    ((d4est_elliptic_eqns_t*)fcns)->apply_lhs(
                                        p4est,
                                        ghost,
                                        ghost_data,
@@ -868,9 +868,9 @@ matrix_sym_tester_parallel_aux
   vecs_for_sym_test.Au = A_uj;
     
   /* if (d4est_geom != NULL) */
-    /* ((curved_weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, (d4est_element_data_t*)ghost_data, &vecs_for_sym_test, d4est_ops, d4est_geom); */
+    /* ((curved_d4est_elliptic_eqns_t*)fcns)->apply_lhs(p4est, ghost, (d4est_element_data_t*)ghost_data, &vecs_for_sym_test, d4est_ops, d4est_geom); */
   /* else */
-    ((weakeqn_ptrs_t*)fcns)->apply_lhs(p4est, ghost, ghost_data, &vecs_for_sym_test, d4est_ops, d4est_geom);
+    ((d4est_elliptic_eqns_t*)fcns)->apply_lhs(p4est, ghost, ghost_data, &vecs_for_sym_test, d4est_ops, d4est_geom);
     
   ui_A_uj_local = d4est_linalg_vec_dot(ui, A_uj, vecs->local_nodes);
 

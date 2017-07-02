@@ -1,7 +1,7 @@
 #include <pXest.h>
 #include <d4est_element_data.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <d4est_linalg.h>
 #include <util.h>
 #include <d4est_hp_amr.h>

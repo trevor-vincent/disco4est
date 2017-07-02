@@ -10,7 +10,7 @@
 #include <sipg_flux_scalar_fcns.h>
 #include <problem.h>
 #include <problem_data.h>
-#include <problem_weakeqn_ptrs.h>
+#include <d4est_elliptic_eqns.h>
 #include <poisson_operator.h>
 #include <hp_amr_smooth_pred.h>
 #include <hp_amr_uniform.h>
@@ -141,8 +141,8 @@ static
 void problem_build_rhs
 (
  p4est_t* p4est,
- problem_data_t* prob_vecs,
- weakeqn_ptrs_t* prob_fcns,
+ d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_eqns_t* prob_fcns,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
  d4est_operators_t* d4est_ops
@@ -197,7 +197,7 @@ build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- problem_data_t* prob_vecs,
+ d4est_elliptic_problem_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
@@ -436,7 +436,7 @@ problem_init
 
   double local_eta2 = -1.;
 
-  problem_data_t prob_vecs;
+  d4est_elliptic_problem_data_t prob_vecs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
   prob_vecs.rhs = rhs;
@@ -451,7 +451,7 @@ problem_init
   prob_vecs.scalar_flux_fcn_data = sipg_flux_scalar_dirichlet_fetch_fcns(boundary_fcn);
   d4est_linalg_fill_vec(u, 100., prob_vecs.local_nodes);
   
-  weakeqn_ptrs_t prob_fcns;
+  d4est_elliptic_eqns_t prob_fcns;
 
   prob_fcns.apply_lhs = poisson_apply_aij;
   prob_fcns.build_residual = build_residual;

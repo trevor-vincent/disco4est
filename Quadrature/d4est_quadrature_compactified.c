@@ -5,9 +5,9 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_disk.h>
 #include <d4est_geometry_cubed_sphere.h>
+#include <d4est_mortars.h>
 #include <d4est_linalg.h>
 #include <arbquad.h>
-#include <curved_compute_flux.h>
 #include <util.h>
 
 /* store only weights and abscissas and compute rst on the spot */
@@ -684,7 +684,7 @@ d4est_quadrature_compactified_compute_mortar_strides_and_sizes_boundary
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
- grid_fcn_t bndry_fcn,
+ d4est_grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -711,7 +711,7 @@ d4est_quadrature_compactified_store_data_for_boundary
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
- grid_fcn_t bndry_fcn,
+ d4est_grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -837,7 +837,7 @@ d4est_quadrature_compactified_store_data_for_interface
   p4est_qcoord_t mortar_q0 [(P4EST_HALF)][(P4EST_DIM)];
   p4est_qcoord_t mortar_dq;
 
-  d4est_geometry_compute_qcoords_on_mortar
+  d4est_mortars_compute_qcoords_on_mortar
     (
      e_m[0]->tree,
      e_m[0]->q, /* qcoord of first element of side */
@@ -918,13 +918,13 @@ d4est_quadrature_compactified_compute_storage_for_mortar_space
   storage->total_mortar_quad_nodes_2d = 0;
   storage->total_mortar_sides = 0;
   
-  curved_flux_fcn_ptrs_t compute_strides_and_sizes;
+  d4est_mortar_fcn_ptrs_t compute_strides_and_sizes;
   compute_strides_and_sizes.flux_interface_fcn = d4est_quadrature_compactified_compute_mortar_strides_and_sizes_interface;
   compute_strides_and_sizes.flux_boundary_fcn = d4est_quadrature_compactified_compute_mortar_strides_and_sizes_boundary;
   compute_strides_and_sizes.bndry_fcn = NULL;
   compute_strides_and_sizes.params = NULL;
 
-  curved_compute_flux_on_local_elements
+  d4est_mortar_compute_flux_on_local_elements
     (
      p4est,
      ghost,
@@ -950,13 +950,13 @@ d4est_quadrature_compactified_compute_storage_for_mortar_space
   }
   
   
-  curved_flux_fcn_ptrs_t compute_storage;
+  d4est_mortar_fcn_ptrs_t compute_storage;
   compute_storage.flux_interface_fcn = d4est_quadrature_compactified_store_data_for_interface;
   compute_storage.flux_boundary_fcn = d4est_quadrature_compactified_store_data_for_boundary;
   compute_storage.bndry_fcn = NULL;
   compute_storage.params = NULL;  
 
-  curved_compute_flux_on_local_elements
+  d4est_mortar_compute_flux_on_local_elements
     (
      p4est,
      ghost,

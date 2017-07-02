@@ -11,7 +11,7 @@
 typedef struct {
   
   d4est_operators_t* d4est_ops;
-  problem_data_t* problem_data;
+  d4est_elliptic_problem_data_t* problem_data;
 
 #if D4EST_DEBUG
   poisson_debug_vecs_t* debug_vecs;
@@ -26,7 +26,7 @@ void poisson_init_vecs(p4est_iter_volume_info_t * info, void *user_data)
   element_data_t* element_data = (element_data_t *) q->p.user_data;
 
   poisson_user_data_t* poisson_user_data = (poisson_user_data_t*) user_data;
-  problem_data_t* problem_data = (problem_data_t*) poisson_user_data->problem_data;
+  d4est_elliptic_problem_data_t* problem_data = (d4est_elliptic_problem_data_t*) poisson_user_data->problem_data;
   d4est_operators_t* d4est_ops = (d4est_operators_t*) poisson_user_data->d4est_ops;
   
   double h = element_data->h;
@@ -355,7 +355,7 @@ void poisson_destroy_vecs(p4est_iter_volume_info_t * info, void *user_data)
 /*   element_data_t* elem_data = (element_data_t*) q->p.user_data; */
 
 /*   poisson_user_data_t* poisson_user_data = (poisson_user_data_t*) user_data; */
-/*   problem_data_t* prob_vecs = (problem_data_t*) poisson_user_data->problem_data; */
+/*   d4est_elliptic_problem_data_t* prob_vecs = (d4est_elliptic_problem_data_t*) poisson_user_data->problem_data; */
 /*   d4est_operators_t* d4est_ops = (d4est_operators_t*) poisson_user_data->d4est_ops; */
   
 /*   double* f_elem; */
@@ -384,7 +384,7 @@ void poisson_destroy_vecs(p4est_iter_volume_info_t * info, void *user_data)
 /*  p4est_t* p4est, */
 /*  p4est_ghost_t* ghost, */
 /*  element_data_t* ghost_data, */
-/*  problem_data_t* prob_vecs, */
+/*  d4est_elliptic_problem_data_t* prob_vecs, */
 /*  d4est_operators_t* d4est_ops */
 /* ) */
 /* { */
@@ -428,7 +428,7 @@ void poisson_apply_aij(
                          p4est_t* p4est,
                          p4est_ghost_t* ghost,
                          void* ghost_data,
-                         problem_data_t* prob_vecs,
+                         d4est_elliptic_problem_data_t* prob_vecs,
 			 d4est_operators_t* d4est_ops,
                          d4est_geometry_t* d4est_geom
                          )
@@ -545,7 +545,7 @@ poisson_apply_aij_debug(
                          p4est_t* p4est,
                          p4est_ghost_t* ghost,
                          element_data_t* ghost_data,
-                         problem_data_t* prob_vecs,
+                         d4est_elliptic_problem_data_t* prob_vecs,
 			 d4est_operators_t* d4est_ops,
                          int local_element_id
                          )
