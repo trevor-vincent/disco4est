@@ -7,7 +7,7 @@
  * Function pointer for 
  * functions of the form
  * F(x,y,z) or F(x,y)
- * where x,y,z is a nodal
+ * where x,y,z is a 
  * grid point
  * 
  * @param d4est_grid_fcn_t 
@@ -25,15 +25,6 @@ typedef double
 #endif // (P4EST_DIM)==3
 );
 
-double zero_fcn
-(
- double x,
- double y
-#if (P4EST_DIM)==3
- ,  
- double z
-#endif // (P4EST_DIM)==3
-);
 
 typedef double
 (*grid_fcn_ext_t)
@@ -48,6 +39,16 @@ typedef double
 );
 
 
+double zero_fcn
+(
+ double x,
+ double y
+#if (P4EST_DIM)==3
+ ,  
+ double z
+#endif // (P4EST_DIM)==3
+);
+
 double identity_fcn
 (
  double x,
@@ -58,7 +59,6 @@ double identity_fcn
  double u,
  void* user
 );
-
 
 double
 sinpix_fcn

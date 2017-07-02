@@ -77,89 +77,32 @@ include_directories(${MPI_C_INCLUDE_PATH})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MPI_C_COMPILE_FLAG}")
 SET (
   SRCS
-  InputParser/ini.c
-  # Solver/krylov_petsc.c
-  # Solver/d4est_cg.c
-  # Solver/krylov_pc_multigrid.c
-  # Solver/krylov_pc_invstiff.c
-  # Solver/multigrid.c
-  # Solver/newton_petsc.c
-  # Solver/newton_d4est.c
+  Utilities/ini.c
   Utilities/arbquad.c
-  # Solver/cg_eigs.c
-  # Solver/matrix_sym_tester.c
-  # Solver/multigrid_matrix_operator.c
-  EllipticSystem/problem_data.c
   Utilities/util.c
+  LinearAlgebra/d4est_linalg.c
+  EllipticSystem/d4est_elliptic_eqns.c
   dGMath/d4est_operators.c
   dGMath/d4est_lgl.c
   dGMath/d4est_reference.c
-  GridFunctions/grid_functions.c
-  LinearAlgebra/d4est_linalg.c
-  # Estimators/bi_estimator.c
-  # Estimators/curved_bi_estimator.c
-  # Estimators/curved_bi_estimator_flux_fcns.c
-  # Estimators/bi_estimator_flux_fcns.c
+  dgMath/d4est_poisson.c
+  dgMath/d4est_poisson_flux.c
+  dgMath/d4est_poisson_flux_sipg.c
   Geometry/d4est_geometry_cubed_sphere.c
-  # Geometry/d4est_geometry_shell.c
   Geometry/d4est_geometry_disk.c
-  # Geometry/d4est_geometry_2pac.c
-  # Geometry/d4est_geometry_pizza_half.c
-  # Geometry/d4est_geometry_trap.c
   Geometry/d4est_geometry.c
-  # Estimators/curved_bi_estimator.c
-  # Estimators/curved_bi_estimator_flux_fcns.c
-  Estimators/estimator_stats.c
+  Estimators/d4est_estimator_stats.c
   Estimators/d4est_estimator_bi.c
   hpAMR/d4est_hp_amr.c
-  # hpAMR/curved_hp_amr_smooth_pred.c
-  # hpAMR/hp_amr.c
-  # Solver/cg.c
-  # Solver/jacobian_tester.c
-  # Operators/curved_poisson_operator.c
-  # Operators/curved_poisson_operator_primal.c
-  # Operators/poisson_operator.c
-  # Operators/poisson_debug_vecs.c
-  # Operators/curved_poisson_debug_vecs.c
-  Operators/grad.c
-  # hpAMR/hp_amr_smooth_pred.c
   hpAMR/d4est_hp_amr_smooth_pred.c
-  # hpAMR/hp_amr_uniform.c
-  # hpAMR/hp_amr_curved_uniform.c
-  ElementData/d4est_element_data.c
-  ElementData/d4est_mesh.c
+  Mesh/d4est_element_data.c
+  Mesh/d4est_mesh.c
+  Mesh/d4est_xyz_functions.c
+  Mesh/d4est_mortars.c
   Quadrature/d4est_quadrature_compactified.c
-  # ElementData/element_data.c
-  # Flux/central_flux_vector_fcns.c
-  # Flux/compute_flux.c
-  # Flux/d4est_mortar_compute_flux.c
-  # Flux/curved_gauss_central_flux_vector_fcns.c
-  # Flux/curved_gauss_sipg_flux_scalar_fcns.c
-  # Flux/curved_gauss_sipg_flux_vector_fcns.c
-  # Solver/multigrid_bottom_solver_cg_d4est.c
-  # Solver/multigrid_bottom_solver_cheby_d4est.c
-  # Solver/multigrid_smoother_cheby_d4est.c
-  # Solver/multigrid_smoother_krylov_petsc.c
-  # Solver/multigrid_bottom_solver_krylov_petsc.c
-  # Solver/multigrid_logger_residual.c
-  # Solver/multigrid_element_data_updater_nocurved.c
-  # Solver/multigrid_element_data_updater_curved.c
-  Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns.c
-  # Flux/curved_gauss_primal_sipg_kronbichler_uniform_flux_fcns.c
-  # Flux/curved_gauss_primal_sipg_hesthaven_flux_fcns.c
   Quadrature/d4est_quadrature.c
   Quadrature/d4est_quadrature_legendre.c
   Quadrature/d4est_quadrature_lobatto.c
-  Geometry/d4est_mortars.c
-  Flux/ip_flux.c
-  Flux/ip_flux_params.c
-  Operators/d4est_poisson.c
-  # Flux/curved_test_mortarjacobianterms_flux_fcns.c
-  # Flux/dg_norm.c
-  # Flux/curved_dg_norm.c
-  # Flux/sipg_flux_scalar_fcns.c
-  # Flux/sipg_flux_vector_fcns.c
-  # Visualization/hacked_p4est_vtk.c
   Visualization/d4est_vtk.c
   )
 

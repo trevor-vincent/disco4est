@@ -2093,4 +2093,3 @@ double* d4est_operators_fetch_vtk_rst
      d4est_operators_build_vtk_rst
     );
 }
-
