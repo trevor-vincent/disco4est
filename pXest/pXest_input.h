@@ -1,9 +1,9 @@
 #ifndef PXEST_INPUT_H
 #define PXEST_INPUT_H 
 
-#include "../InputParser/ini.h"
-#include "./pXest.h"
-#include "../Utilities/util.h"
+#include <ini.h>
+#include <pXest.h>
+#include <util.h>
 
 typedef struct {
 

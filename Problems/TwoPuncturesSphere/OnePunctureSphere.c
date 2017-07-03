@@ -520,9 +520,9 @@ problem_init
   penalty_calc_t bi_u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
   penalty_calc_t bi_gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh;
   
-  ip_flux_params_t ip_flux_params;
-  ip_flux_params.ip_flux_penalty_prefactor = input.ip_flux_penalty;
-  ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
+  d4est_poisson_flux_sipg_params_t ip_flux_params;
+  ip_flux_params.sipg_penalty_prefactor = input.ip_flux_penalty;
+  ip_flux_params.sipg_penalty_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
 
   central_flux_params_t central_flux_params;
   central_flux_params.central_flux_penalty_prefactor = input.ip_flux_penalty;
@@ -639,7 +639,7 @@ problem_init
       /*    bi_u_dirichlet_penalty_fcn, */
       /*    bi_gradu_penalty_fcn, */
       /*    zero_fcn, */
-      /*    ip_flux_params.ip_flux_penalty_prefactor, */
+      /*    ip_flux_params.sipg_penalty_prefactor, */
       /*    ghost, */
       /*    ghost_data, */
       /*    d4est_ops, */
@@ -719,7 +719,7 @@ problem_init
        bi_u_dirichlet_penalty_fcn,
        bi_gradu_penalty_fcn,
        zero_fcn,
-       ip_flux_params.ip_flux_penalty_prefactor,
+       ip_flux_params.sipg_penalty_prefactor,
        ghost,
        ghost_data,
        d4est_ops,

@@ -5,10 +5,10 @@ fill_uniform = 1
 
 [ip_flux_params]
 name = kronbichler
-ip_flux_penalty_prefactor = 2.0
+sipg_penalty_prefactor = 2.0
 ip_flux_bc_eval = BC_EVAL_ON_LOBATTO_POINTS
-ip_flux_h_calc = H_EQ_J_DIV_SJ_MIN
-ip_flux_penalty_calculate_fcn = meanp_sqr_over_meanh
+sipg_flux_h = H_EQ_J_DIV_SJ_MIN
+sipg_penalty_fcn = meanp_sqr_over_meanh
 
 [problem]
 num_unifrefs = 1

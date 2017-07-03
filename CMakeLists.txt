@@ -50,7 +50,6 @@ find_package(MPI REQUIRED)
 ##
 ## Set build include path
 ##
-include_directories(${CMAKE_SOURCE_DIR}/InputParser)
 include_directories(${CMAKE_SOURCE_DIR}/EllipticSystem)
 include_directories(${CMAKE_SOURCE_DIR}/Geometry)
 include_directories(${CMAKE_SOURCE_DIR}/Solver)
@@ -63,10 +62,11 @@ include_directories(${CMAKE_SOURCE_DIR}/Utilities)
 include_directories(${CMAKE_SOURCE_DIR}/pXest)
 include_directories(${CMAKE_SOURCE_DIR}/hpAMR)
 include_directories(${CMAKE_SOURCE_DIR}/ElementData)
-include_directories(${CMAKE_SOURCE_DIR}/Flux)
+include_directories(${CMAKE_SOURCE_DIR}/Mesh)
 include_directories(${CMAKE_SOURCE_DIR}/Operators)
 include_directories(${CMAKE_SOURCE_DIR}/Visualization)
 include_directories(${CMAKE_SOURCE_DIR}/Quadrature)
+include_directories(${CMAKE_SOURCE_DIR}/Utilities)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${MPI_C_INCLUDE_PATH})
 # include_directories(${OpenBLAS_INCLUDE_DIR})
@@ -85,9 +85,8 @@ SET (
   dGMath/d4est_operators.c
   dGMath/d4est_lgl.c
   dGMath/d4est_reference.c
-  dgMath/d4est_poisson.c
-  dgMath/d4est_poisson_flux.c
-  dgMath/d4est_poisson_flux_sipg.c
+  dGMath/d4est_poisson.c
+  dGMath/d4est_poisson_flux_sipg.c
   Geometry/d4est_geometry_cubed_sphere.c
   Geometry/d4est_geometry_disk.c
   Geometry/d4est_geometry.c

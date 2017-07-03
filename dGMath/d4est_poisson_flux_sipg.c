@@ -1,4 +1,5 @@
 #include <util.h>
+#include <ini.h>
 #include <d4est_operators.h>
 #include <d4est_element_data.h>
 #include <d4est_linalg.h>
@@ -24,9 +25,9 @@ d4est_poisson_flux_sipg_dirichlet
  void* params
 )
 {
-  ip_flux_params_t* ip_flux_params = (ip_flux_params_t*) params;
-  double sipg_kronbichler_flux_penalty_prefactor = ip_flux_params->ip_flux_penalty_prefactor;
-  penalty_calc_t sipg_kronbichler_flux_penalty_calculate_fcn = ip_flux_params->ip_flux_penalty_calculate_fcn;
+  d4est_poisson_flux_sipg_params_t* ip_flux_params = (d4est_poisson_flux_sipg_params_t*) params;
+  double sipg_kronbichler_flux_penalty_prefactor = ip_flux_params->sipg_penalty_prefactor;
+  penalty_calc_t sipg_kronbichler_flux_penalty_calculate_fcn = ip_flux_params->sipg_penalty_fcn;
 
   
   d4est_grid_fcn_t u_at_bndry = bndry_fcn;
@@ -79,7 +80,7 @@ d4est_poisson_flux_sipg_dirichlet
   double* lifted_VT_w_term3_lobatto = P4EST_ALLOC(double, volume_nodes_m_lobatto);
 
   double* J_div_SJ_quad = NULL;
-  if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ || ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+  if (ip_flux_params->sipg_flux_h ==H_EQ_J_DIV_SJ || ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
     J_div_SJ_quad = P4EST_ALLOC(double, face_nodes_m_quad);
   }
 
@@ -108,19 +109,19 @@ d4est_poisson_flux_sipg_dirichlet
   
   double* sigma = P4EST_ALLOC(double, face_nodes_m_quad);
   double h, h_min;
-  if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ_MIN){
+  if (ip_flux_params->sipg_flux_h ==H_EQ_J_DIV_SJ_MIN){
     h_min = util_min_dbl_array(J_div_SJ_quad, face_nodes_m_quad);
   }
     
   for (int i = 0; i < face_nodes_m_quad; i++){
-    if (ip_flux_params->ip_flux_h_calc == H_EQ_VOLUME_DIV_AREA){
+    if (ip_flux_params->sipg_flux_h == H_EQ_VOLUME_DIV_AREA){
       mpi_abort("H_EQ_VOLUME_DIV_AREA no longer supported, will be completely deprecated soon\n");
       /* h = (e_m->volume/e_m->surface_area[f_m]); */
     }
-    else if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ){
+    else if (ip_flux_params->sipg_flux_h ==H_EQ_J_DIV_SJ){
       h = J_div_SJ_quad[i];
     }
-    else if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ_MIN){
+    else if (ip_flux_params->sipg_flux_h ==H_EQ_J_DIV_SJ_MIN){
       h = h_min;
     }
     sigma[i] = sipg_kronbichler_flux_penalty_calculate_fcn
@@ -139,7 +140,7 @@ d4est_poisson_flux_sipg_dirichlet
     
   }
 
-  if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ || ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+  if (ip_flux_params->sipg_flux_h ==H_EQ_J_DIV_SJ || ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
     P4EST_FREE(J_div_SJ_quad);
   }
 
@@ -279,8 +280,6 @@ d4est_poisson_flux_sipg_dirichlet
 #endif
   
 
-  if (ip_flux_params->ip_flux_bc_eval == BC_EVAL_ON_LOBATTO_POINTS){
-
     double* xyz_on_f_m [(P4EST_DIM)];
     D4EST_ALLOC_DIM_VEC(xyz_on_f_m, face_nodes_m_lobatto);
     
@@ -352,10 +351,7 @@ d4est_poisson_flux_sipg_dirichlet
                         );
     
     D4EST_FREE_DIM_VEC(xyz_on_f_m);
-  }
-  else {
-    mpi_abort("At this time we only support BC_EVAL_ON_LOBATTO_POINTS");
-  }
+
   
   for(int i = 0; i < face_nodes_m_quad; i++){
      
@@ -547,7 +543,7 @@ d4est_poisson_flux_sipg_dirichlet
 }
 
 static void
-curved_primal_sipg_kronbichler_flux_interface
+d4est_poisson_flux_sipg_interface
 (
  d4est_element_data_t** e_m,
  int faces_m,
@@ -565,9 +561,9 @@ curved_primal_sipg_kronbichler_flux_interface
  void* params
 )
 {
-  ip_flux_params_t* ip_flux_params = (ip_flux_params_t*) params;
-  double sipg_kronbichler_flux_penalty_prefactor = ip_flux_params->ip_flux_penalty_prefactor;
-  penalty_calc_t sipg_kronbichler_flux_penalty_calculate_fcn = ip_flux_params->ip_flux_penalty_calculate_fcn;
+  d4est_poisson_flux_sipg_params_t* ip_flux_params = (d4est_poisson_flux_sipg_params_t*) params;
+  double sipg_kronbichler_flux_penalty_prefactor = ip_flux_params->sipg_penalty_prefactor;
+  penalty_calc_t sipg_kronbichler_flux_penalty_calculate_fcn = ip_flux_params->sipg_penalty_fcn;
   
   int stride;
   int deg_p_lobatto [(P4EST_HALF)];
@@ -986,7 +982,7 @@ curved_primal_sipg_kronbichler_flux_interface
   double* j_div_sj_on_f_p_mortar_quad_porder = NULL;
   double* j_div_sj_on_f_p_mortar_quad_porder_oriented = NULL;
 
-  if(ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ || ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+  if(ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ || ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
     j_div_sj_on_f_m_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
     j_div_sj_on_f_p_mortar_quad_porder =  P4EST_ALLOC(double, total_nodes_mortar_quad);
     j_div_sj_on_f_p_mortar_quad_porder_oriented =  P4EST_ALLOC(double, total_nodes_mortar_quad);
@@ -1109,7 +1105,7 @@ curved_primal_sipg_kronbichler_flux_interface
   }
 
   double hm_min, hp_min;
-  if (ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+  if (ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
     hp_min = util_min_dbl_array(j_div_sj_on_f_p_mortar_quad_porder_oriented, total_nodes_mortar_quad);
     hm_min = util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
   }
@@ -1119,12 +1115,12 @@ curved_primal_sipg_kronbichler_flux_interface
   for (int f = 0; f < faces_mortar; f++){
     for (int k = 0; k < nodes_mortar_quad[f]; k++){
       int ks = k + stride;
-      if (ip_flux_params->ip_flux_h_calc == H_EQ_VOLUME_DIV_AREA){
+      if (ip_flux_params->sipg_flux_h == H_EQ_VOLUME_DIV_AREA){
         mpi_abort("H_EQ_VOLUME_DIV_AREA IS NO LONGER SUPPORTED\n");
         /* sigma[ks] = penalty_mortar[f]; */
         /* printf("sigma[ks] = %f\n", sigma[ks]); */
       }
-      else if (ip_flux_params->ip_flux_h_calc ==H_EQ_J_DIV_SJ){
+      else if (ip_flux_params->sipg_flux_h ==H_EQ_J_DIV_SJ){
         double hp = j_div_sj_on_f_p_mortar_quad_porder_oriented[ks];
         double hm = j_div_sj_on_f_m_mortar_quad[ks];
         sigma[ks] = sipg_kronbichler_flux_penalty_calculate_fcn
@@ -1137,7 +1133,7 @@ curved_primal_sipg_kronbichler_flux_interface
                     );
 
       }
-      else if (ip_flux_params->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+      else if (ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
         sigma[ks] = sipg_kronbichler_flux_penalty_calculate_fcn
                     (
                      e_m[f]->deg,
@@ -1148,7 +1144,7 @@ curved_primal_sipg_kronbichler_flux_interface
                     );
       }
       else {
-        mpi_abort("Select j_DIV_SJ or VOLUME_DIV_AREA for ip_flux_h_calc");
+        mpi_abort("Select j_DIV_SJ or VOLUME_DIV_AREA for sipg_flux_h");
       }
 
     }
@@ -1451,7 +1447,7 @@ d4est_poisson_flux_sipg_penalty_maxp_sqr_over_minh
 }
 
 static void
-ip_flux_params_get_string_from_h_calc
+d4est_poisson_flux_sipg_params_get_string_from_h_calc
 (
  h_calc_method_t h_calc,
  char string [50]
@@ -1472,34 +1468,16 @@ ip_flux_params_get_string_from_h_calc
 }
 
 static void
-ip_flux_params_get_string_from_bc_eval
-(
- bc_eval_t bc_eval,
- char string [50]
-)
-{
-  if (bc_eval == BC_EVAL_ON_QUADRATURE_POINTS){
-    string = "BC_EVAL_ON_QUADRATURE_POINTS";
-  }
-  else if (bc_eval == BC_EVAL_ON_LOBATTO_POINTS){
-    string = "BC_EVAL_ON_LOBATTO_POINTS";
-  }
-  else {
-    string = "NOT_SET";
-  }
-}
-
-static void
-ip_flux_params_get_string_from_penalty_fcn
+d4est_poisson_flux_sipg_params_get_string_from_penalty_fcn
 (
  penalty_calc_t fcn,
  char string [50]
 )
 {
-  if (fcn == ip_flux_params_penalty_maxp_sqr_over_minh){
+  if (fcn == d4est_poisson_flux_sipg_penalty_maxp_sqr_over_minh){
     string = "maxp_sqr_over_minh";
   }
-  else if (fcn == ip_flux_params_penalty_meanp_sqr_over_meanh){
+  else if (fcn == d4est_poisson_flux_sipg_penalty_meanp_sqr_over_meanh){
     string = "meanp_sqr_over_meanh";
   }
   else {
@@ -1508,16 +1486,16 @@ ip_flux_params_get_string_from_penalty_fcn
 }
 
 static penalty_calc_t
-ip_flux_params_get_penalty_fcn_from_string
+d4est_poisson_flux_sipg_get_penalty_fcn_from_string
 (
  const char* string
 )
 {
   if (util_match(string,"maxp_sqr_over_minh")){
-    return ip_flux_params_penalty_maxp_sqr_over_minh;
+    return d4est_poisson_flux_sipg_penalty_maxp_sqr_over_minh;
   }
   else if (util_match(string,"meanp_sqr_over_meanh")){
-    return ip_flux_params_penalty_meanp_sqr_over_meanh;
+    return d4est_poisson_flux_sipg_penalty_meanp_sqr_over_meanh;
   }
   else {
     mpi_abort("This ip flux penalty calculation fcn does not exist");
@@ -1526,7 +1504,7 @@ ip_flux_params_get_penalty_fcn_from_string
 }
 
 static
-int ip_flux_params_input_handler
+int d4est_poisson_flux_sipg_params_input_handler
 (
  void* user,
  const char* section,
@@ -1534,47 +1512,27 @@ int ip_flux_params_input_handler
  const char* value
 )
 {
-  ip_flux_params_t* pconfig = (ip_flux_params_t*)user;
-  if (util_match_couple(section,"ip_flux_params",name,"name")) {
-    mpi_assert(pconfig->name[0] == '*');
-    snprintf (pconfig->name, sizeof(pconfig->name), "%s", value);
-  }
+  d4est_poisson_flux_sipg_params_t* pconfig = (d4est_poisson_flux_sipg_params_t*)user;
   
-  if (util_match_couple(section,"ip_flux_params",name,"ip_flux_penalty_prefactor")) {
-    mpi_assert(pconfig->ip_flux_penalty_prefactor == -1);
-    pconfig->ip_flux_penalty_prefactor = atof(value);
+  if (util_match_couple(section,"d4est_poisson_flux_sipg_params",name,"sipg_penalty_prefactor")) {
+    mpi_assert(pconfig->sipg_penalty_prefactor == -1);
+    pconfig->sipg_penalty_prefactor = atof(value);
   }
-  else if (util_match_couple(section,"ip_flux_params",name,"ip_flux_penalty_calculate_fcn")) {
-    mpi_assert(pconfig->ip_flux_penalty_calculate_fcn == NULL);
-    pconfig->ip_flux_penalty_calculate_fcn = ip_flux_params_get_penalty_fcn_from_string(value);
+  else if (util_match_couple(section,"d4est_poisson_flux_sipg_params",name,"sipg_penalty_fcn")) {
+    mpi_assert(pconfig->sipg_penalty_fcn == NULL);
+    pconfig->sipg_penalty_fcn = d4est_poisson_flux_sipg_get_penalty_fcn_from_string(value);
   }
-  else if (util_match_couple(section,"ip_flux_params",name,"ip_flux_bc_eval")) {
-    mpi_assert(pconfig->ip_flux_bc_eval == BC_EVAL_NOTSET);
-    if(util_match(value, "BC_EVAL_ON_QUADRATURE_POINTS")){
-      pconfig->ip_flux_bc_eval = BC_EVAL_ON_QUADRATURE_POINTS;
-    }
-    else if (util_match(value, "BC_EVAL_ON_LOBATTO_POINTS")){
-      pconfig->ip_flux_bc_eval = BC_EVAL_ON_LOBATTO_POINTS;
-    }
-    else {
-      printf("ip_flux_params_bc_eval = %s\n", value);
-      mpi_abort("ip_flux_params_bc_eval is not set to BC_EVAL_ON_LOBATTO_POINTS or BC_EVAL_ON_QUADRATURE_POINTS\n");
-    }
-  }
-  else if (util_match_couple(section,"ip_flux_params",name,"ip_flux_h_calc")) {
-    mpi_assert(pconfig->ip_flux_h_calc == H_EQ_NOTSET);
+  else if (util_match_couple(section,"d4est_poisson_flux_sipg_params",name,"sipg_flux_h")) {
+    mpi_assert(pconfig->sipg_flux_h == H_EQ_NOTSET);
     if(util_match(value, "H_EQ_J_DIV_SJ")){
-      pconfig->ip_flux_h_calc = H_EQ_J_DIV_SJ;
+      pconfig->sipg_flux_h = H_EQ_J_DIV_SJ;
     }
     else if(util_match(value, "H_EQ_J_DIV_SJ_MIN")){
-      pconfig->ip_flux_h_calc = H_EQ_J_DIV_SJ_MIN;
-    }
-    else if (util_match(value, "H_EQ_VOLUME_DIV_AREA")){
-      pconfig->ip_flux_h_calc = H_EQ_VOLUME_DIV_AREA;
+      pconfig->sipg_flux_h = H_EQ_J_DIV_SJ_MIN;
     }
     else {
-      printf("ip_flux_params_h_calc = %s\n", value);
-      mpi_abort("ip_flux_params_h_calc is not set to H_EQ_J_DIV_SJ or H_EQ_VOLUME_DIV_AREA\n");
+      printf("d4est_poisson_flux_sipg_params_h_calc = %s\n", value);
+      mpi_abort("d4est_poisson_flux_sipg_params_h_calc is not set to H_EQ_J_DIV_SJ or H_EQ_VOLUME_DIV_AREA\n");
     }
   }
   else {
@@ -1584,64 +1542,56 @@ int ip_flux_params_input_handler
 }
 
 static void
-ip_flux_params_input
+d4est_poisson_flux_sipg_params_input
 (
  p4est_t* p4est,
  const char* printf_prefix,
  const char* input_file,
- ip_flux_params_t* input
+ d4est_poisson_flux_sipg_params_t* input
 )
 {
-  /* set defaults */
-  input->name[0] = '*';
-  input->ip_flux_bc_eval = BC_EVAL_NOTSET;
-  input->ip_flux_h_calc = H_EQ_NOTSET;
-  input->ip_flux_penalty_calculate_fcn = NULL;
-  input->ip_flux_penalty_prefactor = -1.;
+  input->sipg_flux_h = H_EQ_NOTSET;
+  input->sipg_penalty_fcn = NULL;
+  input->sipg_penalty_prefactor = -1.;
 
-  if (ini_parse(input_file, ip_flux_params_input_handler, input) < 0) {
+  if (ini_parse(input_file, d4est_poisson_flux_sipg_params_input_handler, input) < 0) {
     mpi_abort("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("ip_flux_params", input->ip_flux_penalty_prefactor, -1);
-  D4EST_CHECK_INPUT("ip_flux_params", input->ip_flux_penalty_calculate_fcn, NULL);
-  D4EST_CHECK_INPUT("ip_flux_params", input->ip_flux_h_calc, H_EQ_NOTSET);
-  D4EST_CHECK_INPUT("ip_flux_params", input->ip_flux_bc_eval, BC_EVAL_NOTSET);
-  D4EST_CHECK_INPUT("ip_flux_params", input->name[0], '*');
+  D4EST_CHECK_INPUT("d4est_poisson_flux_sipg_params", input->sipg_penalty_prefactor, -1);
+  D4EST_CHECK_INPUT("d4est_poisson_flux_sipg_params", input->sipg_penalty_fcn, NULL);
+  D4EST_CHECK_INPUT("d4est_poisson_flux_sipg_params", input->sipg_flux_h, H_EQ_NOTSET);
   
   char penalty_calculate_fcn [50];
   char h_eq [50];
-  char bc_eval [50];  
 
-  ip_flux_params_get_string_from_penalty_fcn (input->ip_flux_penalty_calculate_fcn,penalty_calculate_fcn);
-  ip_flux_params_get_string_from_bc_eval (input->ip_flux_bc_eval,bc_eval);
-  ip_flux_params_get_string_from_h_calc (input->ip_flux_h_calc,h_eq);
+  d4est_poisson_flux_sipg_params_get_string_from_penalty_fcn (input->sipg_penalty_fcn,penalty_calculate_fcn);
+  d4est_poisson_flux_sipg_params_get_string_from_h_calc (input->sipg_flux_h,h_eq);
   
   if(p4est->mpirank == 0){
-    printf("%s: ip_flux_params_penalty_prefactor = %f\n", printf_prefix, input->ip_flux_penalty_prefactor);
-    printf("%s: ip_flux_params_penalty_calculate_fcn = %s\n", printf_prefix, penalty_calculate_fcn);
-    printf("%s: ip_flux_params_h_calc = %s\n", printf_prefix, h_eq);
-    printf("%s: ip_flux_params_bc_eval = %s\n", printf_prefix, bc_eval);
+    printf("%s: d4est_poisson_flux_sipg_params_penalty_prefactor = %f\n", printf_prefix, input->sipg_penalty_prefactor);
+    printf("%s: d4est_poisson_flux_sipg_params_penalty_calculate_fcn = %s\n", printf_prefix, penalty_calculate_fcn);
+    printf("%s: d4est_poisson_flux_sipg_params_h_calc = %s\n", printf_prefix, h_eq);
   }
 }
 
-ip_flux_params_t*
-ip_flux_params_new
+d4est_poisson_flux_sipg_params_t*
+d4est_poisson_flux_sipg_params_new
 (
  p4est_t* p4est,
  const char* print_prefix,
  const char* input_file
 )
 {
-  ip_flux_params_t* ip_flux_params = P4EST_ALLOC(ip_flux_params_t, 1); 
-  ip_flux_params_input(p4est, print_prefix, input_file, ip_flux_params);
-  return ip_flux_params;
+  d4est_poisson_flux_sipg_params_t* d4est_poisson_flux_sipg_params = P4EST_ALLOC(d4est_poisson_flux_sipg_params_t, 1); 
+  d4est_poisson_flux_sipg_params_input(p4est, print_prefix, input_file, d4est_poisson_flux_sipg_params);
+  return d4est_poisson_flux_sipg_params;
 }
 
 void
-ip_flux_params_destroy
+d4est_poisson_flux_sipg_params_destroy
 (
- ip_flux_params_t* params
+ d4est_poisson_flux_sipg_params_t* params
 ){
   P4EST_FREE(params);
 }

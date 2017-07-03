@@ -46,7 +46,7 @@
 /* soon to be in the input files */
 static const double pi = 3.1415926535897932384626433832795;
 d4est_geometry_disk_attr_t global_disk_attrs;
-ip_flux_params_t global_ip_flux_params;
+d4est_poisson_flux_sipg_params_t global_ip_flux_params;
 
 
 typedef struct {

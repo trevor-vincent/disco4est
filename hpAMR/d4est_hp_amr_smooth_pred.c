@@ -1,6 +1,6 @@
 #include <pXest.h>
 #include <d4est_element_data.h>
-#include <problem_data.h>
+#include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
 #include <d4est_linalg.h>
 #include <util.h>
@@ -119,7 +119,7 @@ d4est_hp_amr_smooth_pred_set_refinement
   d4est_hp_amr_data_t* d4est_hp_amr_data = (d4est_hp_amr_data_t*) info->p4est->user_pointer;
   d4est_hp_amr_smooth_pred_data_t* smooth_pred_data = (d4est_hp_amr_smooth_pred_data_t*) (d4est_hp_amr_data->hp_amr_scheme_data);
   d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
-  estimator_stats_t** stats = d4est_hp_amr_data->estimator_stats;
+  d4est_estimator_stats_t** stats = d4est_hp_amr_data->d4est_estimator_stats;
   
   double eta2 = elem_data->local_estimator;
   double eta2_pred = elem_data->local_predictor;
@@ -179,7 +179,7 @@ d4est_hp_amr_smooth_pred_balance_replace_callback (
   d4est_hp_amr_data_t* d4est_hp_amr_data = (d4est_hp_amr_data_t*) p4est->user_pointer;
   d4est_operators_t* d4est_ops = d4est_hp_amr_data->d4est_ops;
   d4est_hp_amr_smooth_pred_data_t* smooth_pred_data = (d4est_hp_amr_smooth_pred_data_t*) (d4est_hp_amr_data->hp_amr_scheme_data);
-  estimator_stats_t** stats = d4est_hp_amr_data->estimator_stats;
+  d4est_estimator_stats_t** stats = d4est_hp_amr_data->d4est_estimator_stats;
   d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
   d4est_element_data_t* child_data;
   int i;

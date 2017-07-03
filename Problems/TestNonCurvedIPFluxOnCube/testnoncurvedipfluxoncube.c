@@ -183,7 +183,7 @@ void problem_build_rhs
  void* user
 )
 {
-  ip_flux_params_t* ip_flux_params = user;
+  d4est_poisson_flux_sipg_params_t* ip_flux_params = user;
   double* f = P4EST_ALLOC(double, prob_vecs->local_nodes);
   
   element_data_init_node_vec
@@ -376,9 +376,9 @@ problem_init
   int local_nodes = 1;
 
   
-  ip_flux_params_t ip_flux_params;
-  ip_flux_params.ip_flux_penalty_prefactor = input.ip_flux_penalty;
-  ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
+  d4est_poisson_flux_sipg_params_t ip_flux_params;
+  ip_flux_params.sipg_penalty_prefactor = input.ip_flux_penalty;
+  ip_flux_params.sipg_penalty_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   /* create space for storing the ghost data */
@@ -664,7 +664,7 @@ problem_init
      bi_u_dirichlet_penalty_fcn,
      bi_gradu_penalty_fcn,
      boundary_fcn,
-     ip_flux_params.ip_flux_penalty_prefactor,
+     ip_flux_params.sipg_penalty_prefactor,
      ghost,
      ghost_data,
      d4est_ops

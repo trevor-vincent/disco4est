@@ -8,8 +8,7 @@
 #define MAX_NODES (MAX_DEGREE + 1) * (MAX_DEGREE + 1)
 #endif
 
-#include <ip_flux_params.h>
-#include <grid_functions.h>
+#include <d4est_xyz_functions.h>
 #include <d4est_operators.h>
 #include <d4est_quadrature.h>
 

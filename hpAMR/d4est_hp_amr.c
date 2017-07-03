@@ -1,5 +1,5 @@
 #include <d4est_hp_amr.h>
-#include <grid_functions.h>
+#include <d4est_xyz_functions.h>
 #include <util.h>
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
@@ -190,7 +190,7 @@ d4est_hp_amr
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  double** data_to_hp_refine,
- estimator_stats_t** stats,
+ d4est_estimator_stats_t** stats,
  d4est_hp_amr_scheme_t* scheme,
  double* (*get_storage)(d4est_element_data_t*)
 )
@@ -201,7 +201,7 @@ d4est_hp_amr
   d4est_hp_amr_data.data = *data_to_hp_refine;
   d4est_hp_amr_data.hp_amr_scheme_data = scheme->hp_amr_scheme_data;
   d4est_hp_amr_data.d4est_ops = d4est_ops;
-  d4est_hp_amr_data.estimator_stats = stats;
+  d4est_hp_amr_data.d4est_estimator_stats = stats;
   d4est_hp_amr_data.elements_marked_for_hrefine = 0;
   d4est_hp_amr_data.elements_marked_for_prefine = 0;
   d4est_hp_amr_data.get_storage = get_storage;

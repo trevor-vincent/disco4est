@@ -1,8 +1,7 @@
 #include <d4est_element_data.h>
-#include <grid_functions.h>
+#include <d4est_xyz_functions.h>
 #include <util.h>
 #include <d4est_linalg.h>
-#include <ip_flux.h>
 #include <sc_reduce.h>
 
 /* typedef struct { */
@@ -80,7 +79,7 @@
 /*  p4est_t* p4est, */
 /*  double* nodal_vec, */
 /*  int local_nodes, */
-/*  ip_flux_params_t* ip_flux_params, */
+/*  d4est_poisson_flux_sipg_params_t* ip_flux_params, */
 /*  d4est_geometry_t* d4est_geom, */
 /*  p4est_ghost_t* ghost, */
 /*  void* ghost_data, */

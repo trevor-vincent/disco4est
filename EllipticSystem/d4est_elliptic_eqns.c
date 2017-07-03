@@ -13,17 +13,17 @@ d4est_elliptic_eqns_apply_lhs
  d4est_quadrature_t* d4est_quad
 )
 {
-  fcns->apply_lhs
+  eqns->apply_lhs
     (
      p4est,
      ghost,
      ghost_data,
      vecs,
-     fcns->flux_fcn_data,
+     eqns->flux_fcn_data,
      d4est_ops,
      d4est_geom,
      d4est_quad,
-     fcns->user
+     eqns->user
     );
 }
 
@@ -41,16 +41,16 @@ d4est_elliptic_eqns_build_residual
  d4est_quadrature_t* d4est_quad
 )
 {
-  fcns->build_residual
+  eqns->build_residual
     (
      p4est,
      ghost,
      ghost_data,
      vecs,
-     fcns->flux_fcn_data,
+     eqns->flux_fcn_data,
      d4est_ops,
      d4est_geom,
      d4est_quad,
-     fcns->user
+     eqns->user
     );
 }

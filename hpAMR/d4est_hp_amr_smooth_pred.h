@@ -1,8 +1,8 @@
-#ifndef D4EST_HP_AMR_CURVED_SMOOTH_PRED_H
-#define D4EST_HP_AMR_CURVED_SMOOTH_PRED_H 
+#ifndef D4EST_HP_AMR_SMOOTH_PRED_H
+#define D4EST_HP_AMR_SMOOTH_PRED_H 
 
 #include <pXest.h>
-#include <grid_functions.h>
+#include <d4est_xyz_functions.h>
 #include <d4est_hp_amr.h>
 #include <d4est_element_data.h>
 
@@ -21,7 +21,7 @@ typedef struct {
   (
    p4est_t*,
    double, /* eta2 */
-   estimator_stats_t**,
+   d4est_estimator_stats_t**,
    d4est_element_data_t*,
    void* /* user ptr */
   );
@@ -30,7 +30,7 @@ typedef struct {
   (
    p4est_t*,
    double, /* eta2 */
-   estimator_stats_t**,
+   d4est_estimator_stats_t**,
    d4est_element_data_t*,
    void* /* user ptr */
   );

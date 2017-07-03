@@ -1263,7 +1263,7 @@ problem_init
       /*    bi_u_dirichlet_penalty_fcn, */
       /*    bi_gradu_penalty_fcn, */
       /*    zero_fcn, */
-      /*    ip_flux_params.ip_flux_penalty_prefactor, */
+      /*    ip_flux_params.sipg_penalty_prefactor, */
       /*    ghost, */
       /*    ghost_data, */
       /*    d4est_ops, */
@@ -1383,7 +1383,7 @@ problem_init
        bi_u_dirichlet_penalty_fcn,
        bi_gradu_penalty_fcn,
        zero_fcn,
-       ip_flux->ip_flux_params->ip_flux_penalty_prefactor,
+       ip_flux->ip_flux_params->sipg_penalty_prefactor,
        ghost,
        ghost_data,
        d4est_ops,

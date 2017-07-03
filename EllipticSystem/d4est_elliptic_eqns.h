@@ -1,7 +1,7 @@
 #ifndef D4EST_ELLIPTIC_EQNS_H
 #define D4EST_ELLIPTIC_EQNS_H 
 
-#include <problem_data.h>
+#include <d4est_elliptic_data.h>
 #include <d4est_geometry.h>
 #include <d4est_quadrature.h>
 #include <d4est_mortars.h>

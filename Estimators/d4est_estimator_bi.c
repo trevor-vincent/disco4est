@@ -1,6 +1,6 @@
 #include <pXest.h>
 #include <util.h>
-#include <problem_data.h>
+#include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
 #include <d4est_element_data.h>
 #include <d4est_linalg.h>
@@ -184,15 +184,15 @@ d4est_estimator_bi_dirichlet
   
   double* Je2_prefactor = P4EST_ALLOC(double, face_nodes_m_quad);
   double h, h_min;
-  if (penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+  if (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
     h_min = util_min_dbl_array(j_div_sj_quad, face_nodes_m_quad);
   }
     
   for (int i = 0; i < face_nodes_m_quad; i++){
-    if (penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ){
+    if (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ){
       h = j_div_sj_quad[i];
     }
-    else if (penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+    else if (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
       h = h_min;
     }
     else {
@@ -707,15 +707,15 @@ d4est_estimator_bi_interface
   double* j_div_sj_on_f_p_mortar_quad_porder = NULL;
   double* j_div_sj_on_f_p_mortar_quad_porder_oriented = NULL;
 
-  if(penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ
-     || penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN
+  if(penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ
+     || penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN
     ){
     j_div_sj_on_f_m_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
     j_div_sj_on_f_p_mortar_quad_porder =  P4EST_ALLOC(double, total_nodes_mortar_quad);
     j_div_sj_on_f_p_mortar_quad_porder_oriented =  P4EST_ALLOC(double, total_nodes_mortar_quad);
   }
   else {
-    mpi_abort("[D4EST_ERROR]: ip_flux_params->ip_flux_h_calc can only be H_EQ_J_DIV_SJ(_MIN)\n");
+    mpi_abort("[D4EST_ERROR]: ip_flux_params->sipg_flux_h can only be H_EQ_J_DIV_SJ(_MIN)\n");
   }
   
   
@@ -839,7 +839,7 @@ d4est_estimator_bi_interface
 
 
   double hm_min, hp_min;
-  if (penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN){
+  if (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
     hp_min = util_min_dbl_array(j_div_sj_on_f_p_mortar_quad_porder_oriented, total_nodes_mortar_quad);
     hm_min = util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
   }
@@ -850,7 +850,7 @@ d4est_estimator_bi_interface
   for (int f = 0; f < faces_mortar; f++){
     for (int k = 0; k < nodes_mortar_quad[f]; k++){
       int ks = k + stride;
-      int is_it_min = (penalty_data->ip_flux_h_calc == H_EQ_J_DIV_SJ_MIN);
+      int is_it_min = (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN);
       double hp = (is_it_min) ? hp_min : j_div_sj_on_f_p_mortar_quad_porder_oriented[ks];
       double hm = (is_it_min) ? hm_min : j_div_sj_on_f_m_mortar_quad[ks];
       

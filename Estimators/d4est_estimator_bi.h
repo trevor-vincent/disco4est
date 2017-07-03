@@ -1,15 +1,16 @@
 #ifndef D4EST_ESTIMATOR_BI_H
 #define D4EST_ESTIMATOR_BI_H 
 
-#include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/d4est_elliptic_eqns.h"
+#include <d4est_elliptic_data.h>
+#include <d4est_elliptic_eqns.h>
+#include <d4est_poisson_flux_sipg.h>
 
 typedef struct {
   
   penalty_calc_t u_penalty_fcn;
   penalty_calc_t u_dirichlet_penalty_fcn;
   penalty_calc_t gradu_penalty_fcn;
-  h_calc_method_t ip_flux_h_calc;
+  h_calc_method_t sipg_flux_h;
   double penalty_prefactor;
   
 } d4est_estimator_bi_penalty_data_t;

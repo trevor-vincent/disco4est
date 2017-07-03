@@ -30,7 +30,7 @@ typedef struct {
   double rho0_div_rhoc;
   double ip_flux_penalty;
 
-  ip_flux_params_t* ip_flux_params;
+  d4est_poisson_flux_sipg_params_t* ip_flux_params;
 
 } constantdensitystar_params_t;
 
@@ -167,9 +167,9 @@ constantdensitystar_input
   D4EST_CHECK_INPUT("problem", input.deg_R2, -1);
   D4EST_CHECK_INPUT("problem", input.deg_quad_R2, -1);
 
-  ip_flux_params_t ip_flux_params;
-  ip_flux_params.ip_flux_penalty_prefactor = input.ip_flux_penalty;
-  ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
+  d4est_poisson_flux_sipg_params_t ip_flux_params;
+  ip_flux_params.sipg_penalty_prefactor = input.ip_flux_penalty;
+  ip_flux_params.sipg_penalty_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
   input.ip_flux_params = &ip_flux_params;
   
   double R1 = ((d4est_geometry_sphere_attr_t*)(d4est_geom->p4est_geom->user))->R1;

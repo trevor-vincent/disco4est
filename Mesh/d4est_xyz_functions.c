@@ -1,5 +1,5 @@
-#include "../pXest/pXest.h"
-#include "../GridFunctions/grid_functions.h"
+#include <pXest.h>
+#include <d4est_xyz_functions.h>
 
 double
 zero_fcn

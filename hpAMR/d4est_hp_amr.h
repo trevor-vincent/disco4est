@@ -1,9 +1,9 @@
 #ifndef D4EST_HP_AMR_H
 #define D4EST_HP_AMR_H 
 
-#include "../pXest/pXest.h"
-#include "../dGMath/d4est_operators.h"
-#include "../Estimators/estimator_stats.h"
+#include <pXest.h>
+#include <d4est_operators.h>
+#include <d4est_estimator_stats.h>
 
 
 /**
@@ -49,7 +49,7 @@ typedef struct {
   d4est_operators_t* d4est_ops;  
   p4est_replace_t refine_replace_callback_fcn_ptr;
   p4est_replace_t balance_replace_callback_fcn_ptr;
-  estimator_stats_t** estimator_stats;
+  d4est_estimator_stats_t** d4est_estimator_stats;
   int elements_marked_for_hrefine;
   int elements_marked_for_prefine;
   double* (*get_storage)(d4est_element_data_t*);
@@ -62,7 +62,7 @@ d4est_hp_amr
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  double** data_to_hp_refine,
- estimator_stats_t** stats,
+ d4est_estimator_stats_t** stats,
  d4est_hp_amr_scheme_t* scheme,
  double* (*get_storage)(d4est_element_data_t*)
 );

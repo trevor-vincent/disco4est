@@ -45,7 +45,7 @@
 /* #define NASTY_DEBUG */
 
 d4est_geometry_cubed_sphere_attr_t global_cubed_sphere_attrs;
-ip_flux_params_t global_ip_flux_params;
+d4est_poisson_flux_sipg_params_t global_ip_flux_params;
 
 typedef struct {
 

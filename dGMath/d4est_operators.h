@@ -2,7 +2,7 @@
 #define D4EST_OPERATORS_H
 
 #include <pXest.h>
-#include <grid_functions.h>
+#include <d4est_xyz_functions.h>
 #include <d4est_lgl.h>
 #include <d4est_reference.h>
 

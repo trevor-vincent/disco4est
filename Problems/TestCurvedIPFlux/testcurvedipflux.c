@@ -306,7 +306,7 @@ void problem_build_rhs
     );
   
     if (input->use_ip_flux){
-      ip_flux_params_t* ip_flux_params = user;
+      d4est_poisson_flux_sipg_params_t* ip_flux_params = user;
       prob_vecs->curved_vector_flux_fcn_data = curved_gauss_sipg_flux_vector_dirichlet_fetch_fcns
                                             (
                                              boundary_fcn,
@@ -368,7 +368,7 @@ void problem_build_rhs
   /* DEBUG_PRINT_4ARR_DBL(f,prob_vecs->rhs, prob_vecs->u, prob_vecs->Au, prob_vecs->local_nodes);  */
 
  if (input->use_ip_flux){
-      ip_flux_params_t* ip_flux_params = user;
+      d4est_poisson_flux_sipg_params_t* ip_flux_params = user;
       prob_vecs->curved_vector_flux_fcn_data = curved_gauss_sipg_flux_vector_dirichlet_fetch_fcns
                                             (
                                              zero_fcn,
@@ -551,13 +551,13 @@ problem_init
   /* double* u_analytic = P4EST_ALLOC_ZERO(double, 1); */
   int local_nodes = 1;
 
-  /* ip_flux_params_t ip_flux_params; */
-  /* ip_flux_params.ip_flux_penalty_prefactor = atof(argv[6]); */
-  /* ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh; */
+  /* d4est_poisson_flux_sipg_params_t ip_flux_params; */
+  /* ip_flux_params.sipg_penalty_prefactor = atof(argv[6]); */
+  /* ip_flux_params.sipg_penalty_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh; */
   
-  ip_flux_params_t ip_flux_params;
-  ip_flux_params.ip_flux_penalty_prefactor = input.ip_flux_penalty;
-  ip_flux_params.ip_flux_penalty_calculate_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
+  d4est_poisson_flux_sipg_params_t ip_flux_params;
+  ip_flux_params.sipg_penalty_prefactor = input.ip_flux_penalty;
+  ip_flux_params.sipg_penalty_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
 
   central_flux_params_t central_flux_params;
   central_flux_params.central_flux_penalty_prefactor = input.ip_flux_penalty;

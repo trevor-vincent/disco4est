@@ -3,10 +3,8 @@
 #include <util.h>
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
-#include <ip_flux_params.h>
-#include <ip_flux.h>
 #include <problem.h>
-#include <problem_data.h>
+#include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
 #include <d4est_estimator_bi.h>
 #include <d4est_hp_amr.h>
@@ -17,7 +15,7 @@
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_poisson.h>
-#include <curved_Gauss_primal_sipg_kronbichler_flux_fcns.h>
+#include <d4est_poisson_flux_sipg.h>
 #include <util.h>
 #include "./twopuncturesfcns_nomg.h"
 #include <time.h>
@@ -104,7 +102,7 @@ amr_mark_element
 (
  p4est_t* p4est,
  double eta2,
- estimator_stats_t** stats,
+ d4est_estimator_stats_t** stats,
  d4est_element_data_t* elem_data,
  void* user
 )
@@ -126,7 +124,7 @@ amr_mark_element
  
   /* if (elem_data->tree == 12){ */
   double eta2_percentile
-    = estimator_stats_get_percentile(stats[elem_bin], 5);
+    = d4est_estimator_stats_get_percentile(stats[elem_bin], 5);
 
   /* if (elem_data->tree == 12) */
     return (eta2 >= eta2_percentile);
@@ -144,7 +142,7 @@ amr_set_element_gamma
 (
  p4est_t* p4est,
  double eta2,
- estimator_stats_t** stats,
+ d4est_estimator_stats_t** stats,
  d4est_element_data_t* elem_data,
  void* user
 )
@@ -343,10 +341,6 @@ problem_init
   init_twopunctures_data(&tp_params);
 
 
-  d4est_elliptic_eqns_t prob_fcns;
-  prob_fcns.build_residual = twopunctures_build_residual;
-  prob_fcns.apply_lhs = twopunctures_apply_jac;
-
  
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
@@ -366,22 +360,29 @@ problem_init
                      problem_set_degrees,
                      (void*)&input
                     );
+
   
-  /* double* Au = P4EST_ALLOC_ZERO(double, local_nodes); */
-  /* double* rhs = P4EST_ALLOC_ZERO(double, local_nodes); */
-  /* double* u = P4EST_ALLOC_ZERO(double, local_nodes); */
-  /* double* u_prev = P4EST_ALLOC_ZERO(double, local_nodes); */
+  d4est_poisson_flux_sipg_params_t* sipg_params = d4est_poisson_flux_sipg_params_new(p4est, "[SIPG_FLUX]", input_file);
+  d4est_mortar_fcn_ptrs_t flux_fcn_data = d4est_poisson_flux_sipg_fetch_fcns(zero_fcn, sipg_params);
+
+  d4est_elliptic_eqns_t prob_fcns;
+  prob_fcns.build_residual = twopunctures_build_residual;
+  prob_fcns.apply_lhs = twopunctures_apply_jac;
+  prob_fcns.user = &tp_params;
+  prob_fcns.flux_fcn_data = &flux_fcn_data;
+
+  
+  double* Au = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* rhs = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* u = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* u_prev = P4EST_ALLOC_ZERO(double, local_nodes);
   
   
-  /* d4est_elliptic_problem_data_t prob_vecs; */
-  /* prob_vecs.rhs = rhs; */
-  /* prob_vecs.Au = Au; */
-  /* prob_vecs.u = u; */
-  /* prob_vecs.local_nodes = local_nodes; */
-  /* prob_vecs.user = &tp_params; */
-  
-  /* ip_flux_t* ip_flux = ip_flux_dirichlet_new(p4est, "[IP_FLUX]", input_file, zero_fcn); */
-  /* prob_vecs.flux_fcn_data = ip_flux->mortar_fcn_ptrs; */
+  d4est_elliptic_problem_data_t prob_vecs;
+  prob_vecs.rhs = rhs;
+  prob_vecs.Au = Au;
+  prob_vecs.u = u;
+  prob_vecs.local_nodes = local_nodes;
   
   /* smooth_pred_marker_t amr_marker; */
   /* amr_marker.user = (void*)&input; */
@@ -401,8 +402,8 @@ problem_init
   /* penalty_data.u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh; */
   /* penalty_data.u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh; */
   /* penalty_data.gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh; */
-  /* penalty_data.penalty_prefactor = ip_flux->ip_flux_params->ip_flux_penalty_prefactor; */
-  /* penalty_data.ip_flux_h_calc = ip_flux->ip_flux_params->ip_flux_h_calc; */
+  /* penalty_data.penalty_prefactor = ip_flux->ip_flux_params->sipg_penalty_prefactor; */
+  /* penalty_data.sipg_flux_h = ip_flux->ip_flux_params->sipg_flux_h; */
   
   /* for (int level = 0; level < input.num_of_amr_levels; ++level){ */
 
@@ -426,12 +427,12 @@ problem_init
   /*     ); */
 
     
-  /*   estimator_stats_t* stats [3]; */
+  /*   d4est_estimator_stats_t* stats [3]; */
   /*   for (int i = 0; i < 3; i++){ */
-  /*     stats[i] = P4EST_ALLOC(estimator_stats_t, 1); */
+  /*     stats[i] = P4EST_ALLOC(d4est_estimator_stats_t, 1); */
   /*   } */
     
-  /*   double local_eta2 = estimator_stats_compute_per_bin */
+  /*   double local_eta2 = d4est_estimator_stats_compute_per_bin */
   /*                       ( */
   /*                        p4est, */
   /*                        &stats[0], */
@@ -441,7 +442,7 @@ problem_init
 
   /*   d4est_mesh_print_number_of_elements_per_tree(p4est); */
     
-  /*   estimator_stats_compute_max_percentiles_across_proc */
+  /*   d4est_estimator_stats_compute_max_percentiles_across_proc */
   /*     ( */
   /*      stats, */
   /*      3 */
@@ -449,7 +450,7 @@ problem_init
 
   /*   if (world_rank == 0){ */
   /*     for (int i = 0; i < 3; i++){ */
-  /*       estimator_stats_print(stats[i]); */
+  /*       d4est_estimator_stats_print(stats[i]); */
   /*     } */
   /*   } */
     
@@ -534,7 +535,7 @@ problem_init
          
 
   d4est_mesh_geometry_storage_destroy(geometric_factors);
-  ip_flux_dirichlet_destroy(ip_flux);
+  d4est_poisson_flux_sipg_params_destroy(sipg_params);
   
   if (ghost) {
     p4est_ghost_destroy (ghost);

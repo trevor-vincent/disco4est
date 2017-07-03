@@ -1,10 +1,10 @@
 #include <pXest.h>
 #include <d4est_element_data.h>
-#include <problem_data.h>
+#include <d4est_elliptic_data.h>
 #include <d4est_operators.h>
 #include <d4est_linalg.h>
 #include <d4est_poisson.h>
-#include <grid_functions.h>
+#include <d4est_xyz_functions.h>
 #include <d4est_quadrature.h>
 #include <d4est_mortars.h>
 #include <util.h>

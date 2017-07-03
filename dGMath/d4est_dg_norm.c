@@ -21,9 +21,9 @@ curved_dg_norm_boundary
 )
 {
   curved_dg_norm_params_t* curved_dg_norm_params = (curved_dg_norm_params_t*) params;
-  ip_flux_params_t* ip_flux_params = curved_dg_norm_params->ip_flux_params;
-  double curved_curved_dg_norm_penalty_prefactor = ip_flux_params->ip_flux_penalty_prefactor;
-  penalty_calc_t curved_dg_norm_u_dirichlet_prefactor_calculate_fcn = ip_flux_params->ip_flux_penalty_calculate_fcn;
+  d4est_poisson_flux_sipg_params_t* ip_flux_params = curved_dg_norm_params->ip_flux_params;
+  double curved_curved_dg_norm_penalty_prefactor = ip_flux_params->sipg_penalty_prefactor;
+  penalty_calc_t curved_dg_norm_u_dirichlet_prefactor_calculate_fcn = ip_flux_params->sipg_penalty_fcn;
 
   
   int face_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg);
@@ -155,9 +155,9 @@ curved_dg_norm_interface
 )
 {
   curved_dg_norm_params_t* curved_dg_norm_params = (curved_dg_norm_params_t*) params;
-  ip_flux_params_t* ip_flux_params = curved_dg_norm_params->ip_flux_params;
-  double curved_dg_norm_penalty_prefactor = ip_flux_params->ip_flux_penalty_prefactor;
-  penalty_calc_t curved_dg_norm_penalty_calculate_fcn = ip_flux_params->ip_flux_penalty_calculate_fcn;
+  d4est_poisson_flux_sipg_params_t* ip_flux_params = curved_dg_norm_params->ip_flux_params;
+  double curved_dg_norm_penalty_prefactor = ip_flux_params->sipg_penalty_prefactor;
+  penalty_calc_t curved_dg_norm_penalty_calculate_fcn = ip_flux_params->sipg_penalty_fcn;
 
   int stride;
   int deg_p_lobatto [(P4EST_HALF)];
