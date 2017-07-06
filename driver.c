@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
                                                     "geometry",
                                                     "[D4EST_GEOMETRY]");
 
-  pXest_input_t pXest_input = pXest_input_parse("options.input");
+  pXest_input_t pXest_input = pXest_input_parse((argc == 2) ? argv[1] : "options.input");
   p4est_t* p4est = problem_build_p4est
                    (
                     mpicomm,

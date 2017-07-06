@@ -1,3 +1,4 @@
+#include <pXest.h>
 #include <d4est_element_data.h>
 #include <d4est_xyz_functions.h>
 #include <util.h>

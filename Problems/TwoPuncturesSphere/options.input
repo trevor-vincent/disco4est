@@ -1,27 +1,150 @@
+; [p4est]
+; min_quadrants = -1
+; min_level = 1
+; fill_uniform = 1
+
+; [amr]
+; num_unifrefs = 0
+; num_of_amr_levels = 8
+
+; [flux]
+; ip_flux_penalty = 2.0
+
+; [problem]
+; deg_offset_for_nonlinear_quad = 0
+; deg_R2 = 2
+; deg_quad_R2 = 2
+; deg_stiffness_R2 = 2
+; deg_R1 = 2
+; deg_quad_R1 = 2
+; deg_stiffness_R1 = 2
+; deg_R0 = 2
+; deg_quad_R0 = 2
+; deg_stiffness_R0 = 2
+; use_cactus = 0
+
+; [geometry]
+; name = cubed_sphere
+; R0 = 10
+; R1 = 100
+; R2 = 10000
+; compactify_outer_shell = 1
+; compactify_inner_shell = 0
+; X_mapping_type = analytic
+
+; [newton_d4est]
+; atol = 1e-15
+; rtol = 1e-3
+; imax = 5
+; monitor = 1
+; imin = 1
+
+; [newton_petsc]
+; snes_type = newtonls
+; snes_atol = 1e-20
+; snes_rtol = 1e-5
+; snes_max_it = 10000
+; snes_max_funcs = 1000000000
+; snes_view = 1
+; snes_monitor = 1
+; snes_converged_reason = 1
+; snes_linesearch_monitor = 1
+; snes_linesearch_order = 3
+
+; [krylov_petsc]
+; ksp_type = fcg
+; ksp_atol = 1e-20
+; ksp_rtol = 1e-20
+; ksp_max_it = 5
+; ksp_view = 1
+; ksp_monitor = 1
+; ksp_converged_reason = 1
+; ksp_initial_guess_nonzero = 1
+
+; [multigrid]
+; vcycle_imax = 1;
+; vcycle_rtol = 1e-15;
+; vcycle_atol = 0.;
+; smoother_name = mg_smoother_krylov_petsc
+; bottom_solver_name = mg_bottom_solver_krylov_petsc
+
+
+; [mg_bottom_solver_cg_d4est]
+; bottom_iter = 10000;
+; bottom_rtol = 1e-40;
+; bottom_atol = 1e-20;
+; bottom_print_residual_norm = 1;
+
+; [mg_smoother_cheby_d4est]
+; cheby_imax = 15;
+; cheby_eigs_cg_imax = 30;
+; cheby_eigs_lmax_lmin_ratio = 30.;
+; cheby_eigs_max_multiplier = 1.;
+; cheby_eigs_reuse_fromdownvcycle = 0;
+; cheby_eigs_reuse_fromlastvcycle = 0;
+; cheby_print_residual_norm = 1;
+; cheby_print_eigs = 1;
+
+; [mg_bottom_solver_cheby_d4est]
+; cheby_imax = 15;
+; cheby_eigs_cg_imax = 10;
+; cheby_eigs_lmax_lmin_ratio = 30.;
+; cheby_eigs_max_multiplier = 1.;
+; cheby_eigs_reuse_fromdownvcycle = 0;
+; cheby_eigs_reuse_fromlastvcycle = 0;
+; cheby_print_residual_norm = 1;
+; cheby_print_eig = 1;
+
+; [mg_smoother_krylov_petsc]
+; ksp_type = chebyshev
+; ksp_atol = 1e-20
+; ksp_rtol = 1e-20
+; ksp_max_it = 15
+; ksp_view = 1
+; ksp_monitor = 0
+; ksp_converged_reason = 0
+; ksp_initial_guess_nonzero = 1
+; ksp_chebyshev_esteig_steps = 30
+; ksp_chebyshev_esteig = 0,.1,0,1.1
+; ksp_chebyshev_esteig_random = 0
+
+; ; [mg_bottom_solver_krylov_petsc]
+; ; ksp_type = cg
+; ; ksp_atol = 1e-20
+; ; ksp_rtol = 1e-20
+; ; ksp_max_it = 15
+; ; ksp_view = 0
+; ; ksp_monitor = 1
+; ; ksp_converged_reason = 0
+; ; ksp_initial_guess_nonzero = 0
+
+; [mg_bottom_solver_krylov_petsc]
+; ksp_type = chebyshev
+; ksp_atol = 1e-20
+; ksp_rtol = 1e-20
+; ksp_max_it = 15
+; ksp_view = 1
+; ksp_monitor = 0
+; ksp_converged_reason = 0
+; ksp_initial_guess_nonzero = 1
+; ksp_chebyshev_esteig_steps = 30
+; ksp_chebyshev_esteig = 0,.1,0,1.1
+; ksp_chebyshev_esteig_random = 0
+
 [p4est]
 min_quadrants = -1
-min_level = 1
+min_level = 0
 fill_uniform = 1
 
-[amr]
-num_unifrefs = 0
-num_of_amr_levels = 8
-
-[flux]
-ip_flux_penalty = 2.0
+[d4est_poisson_flux_sipg_params]
+sipg_penalty_prefactor = 2.0
+sipg_flux_h = H_EQ_J_DIV_SJ
+sipg_penalty_fcn = meanp_sqr_over_meanh
 
 [problem]
-deg_offset_for_nonlinear_quad = 0
-deg_R2 = 2
-deg_quad_R2 = 2
-deg_stiffness_R2 = 2
-deg_R1 = 2
-deg_quad_R1 = 2
-deg_stiffness_R1 = 2
-deg_R0 = 2
-deg_quad_R0 = 2
-deg_stiffness_R0 = 2
-use_cactus = 0
+num_of_amr_levels = 0
+deg = 2
+deg_quad = 2
 
 [geometry]
 name = cubed_sphere
@@ -30,103 +153,24 @@ R1 = 100
 R2 = 10000
 compactify_outer_shell = 1
 compactify_inner_shell = 0
-X_mapping_type = analytic
+DX_compute_method = analytic
+JAC_compute_method = numerical
 
-[newton_d4est]
-atol = 1e-15
-rtol = 1e-3
-imax = 5
+[d4est_vtk_geometry]
+name = cubed_sphere
+R0 = 10
+R1 = 100
+R2 = 10000
+compactify_outer_shell = 1
+compactify_inner_shell = 0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_cg]
+iter = 1
 monitor = 1
-imin = 1
+rtol = 1e-20
+atol = 1e-20
 
-[newton_petsc]
-snes_type = newtonls
-snes_atol = 1e-20
-snes_rtol = 1e-5
-snes_max_it = 10000
-snes_max_funcs = 1000000000
-snes_view = 1
-snes_monitor = 1
-snes_converged_reason = 1
-snes_linesearch_monitor = 1
-snes_linesearch_order = 3
-
-[krylov_petsc]
-ksp_type = fcg
-ksp_atol = 1e-20
-ksp_rtol = 1e-20
-ksp_max_it = 5
-ksp_view = 1
-ksp_monitor = 1
-ksp_converged_reason = 1
-ksp_initial_guess_nonzero = 1
-
-[multigrid]
-vcycle_imax = 1;
-vcycle_rtol = 1e-15;
-vcycle_atol = 0.;
-smoother_name = mg_smoother_krylov_petsc
-bottom_solver_name = mg_bottom_solver_krylov_petsc
-
-
-[mg_bottom_solver_cg_d4est]
-bottom_iter = 10000;
-bottom_rtol = 1e-40;
-bottom_atol = 1e-20;
-bottom_print_residual_norm = 1;
-
-[mg_smoother_cheby_d4est]
-cheby_imax = 15;
-cheby_eigs_cg_imax = 30;
-cheby_eigs_lmax_lmin_ratio = 30.;
-cheby_eigs_max_multiplier = 1.;
-cheby_eigs_reuse_fromdownvcycle = 0;
-cheby_eigs_reuse_fromlastvcycle = 0;
-cheby_print_residual_norm = 1;
-cheby_print_eigs = 1;
-
-[mg_bottom_solver_cheby_d4est]
-cheby_imax = 15;
-cheby_eigs_cg_imax = 10;
-cheby_eigs_lmax_lmin_ratio = 30.;
-cheby_eigs_max_multiplier = 1.;
-cheby_eigs_reuse_fromdownvcycle = 0;
-cheby_eigs_reuse_fromlastvcycle = 0;
-cheby_print_residual_norm = 1;
-cheby_print_eig = 1;
-
-[mg_smoother_krylov_petsc]
-ksp_type = chebyshev
-ksp_atol = 1e-20
-ksp_rtol = 1e-20
-ksp_max_it = 15
-ksp_view = 1
-ksp_monitor = 0
-ksp_converged_reason = 0
-ksp_initial_guess_nonzero = 1
-ksp_chebyshev_esteig_steps = 30
-ksp_chebyshev_esteig = 0,.1,0,1.1
-ksp_chebyshev_esteig_random = 0
-
-; [mg_bottom_solver_krylov_petsc]
-; ksp_type = cg
-; ksp_atol = 1e-20
-; ksp_rtol = 1e-20
-; ksp_max_it = 15
-; ksp_view = 0
-; ksp_monitor = 1
-; ksp_converged_reason = 0
-; ksp_initial_guess_nonzero = 0
-
-[mg_bottom_solver_krylov_petsc]
-ksp_type = chebyshev
-ksp_atol = 1e-20
-ksp_rtol = 1e-20
-ksp_max_it = 15
-ksp_view = 1
-ksp_monitor = 0
-ksp_converged_reason = 0
-ksp_initial_guess_nonzero = 1
-ksp_chebyshev_esteig_steps = 30
-ksp_chebyshev_esteig = 0,.1,0,1.1
-ksp_chebyshev_esteig_random = 0
+[quadrature]
+name = legendre

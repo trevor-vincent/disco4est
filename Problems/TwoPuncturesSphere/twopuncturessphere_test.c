@@ -284,8 +284,8 @@ double f_fcn_ext
 {
   double r2 = x*x + y*y;
   double r3 = pow(r2, 1.5);
-  double u = analytic_solution_fcn(x,y);
-  return -(1./r3) + helmholtz_fcn(x,y,u,NULL)*u;
+  double u = analytic_solution_fcn(x,y,z);
+  return -(1./r3) + helmholtz_fcn(x,y,z,u,NULL)*u;
 }
 
 static
@@ -575,26 +575,26 @@ problem_init
     }
 
 
-   d4est_cg_params_t cg_params;
-    d4est_cg_input(p4est, input_file, "d4est_cg", "[D4EST_CG]", &cg_params);
+   /* d4est_cg_params_t cg_params; */
+   /*  d4est_cg_input(p4est, input_file, "d4est_cg", "[D4EST_CG]", &cg_params); */
 
 
-    DEBUG_PRINT_2ARR_DBL(prob_vecs.u,
-                         prob_vecs.rhs,
-                         prob_vecs.local_nodes);
+   /*  DEBUG_PRINT_2ARR_DBL(prob_vecs.u, */
+   /*                       prob_vecs.rhs, */
+   /*                       prob_vecs.local_nodes); */
     
-    d4est_cg_solve
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       &ghost,
-       (void**)&ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       &cg_params
-      );
+   /*  d4est_cg_solve */
+   /*    ( */
+   /*     p4est, */
+   /*     &prob_vecs, */
+   /*     &prob_fcns, */
+   /*     &ghost, */
+   /*     (void**)&ghost_data, */
+   /*     d4est_ops, */
+   /*     d4est_geom, */
+   /*     d4est_quad, */
+   /*     &cg_params */
+   /*    ); */
     
     /* } */
     

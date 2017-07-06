@@ -1,10 +1,10 @@
-#ifndef D4EST_MESH_DATA_H
-#define D4EST_MESH_DATA_H 
+#ifndef D4EST_MESH_H
+#define D4EST_MESH_H 
 
+#include <pXest.h>
 #include <d4est_element_data.h>
 #include <d4est_geometry.h>
 #include <d4est_quadrature.h>
-#include <pXest.h>
 
 typedef enum { DO_NOT_STORE_LOCALLY, STORE_LOCALLY } norm_storage_option_t;
 typedef enum {INITIALIZE_QUADRATURE_DATA, DO_NOT_INITIALIZE_QUADRATURE_DATA} d4est_mesh_quadrature_data_init_option_t;
@@ -30,20 +30,15 @@ typedef struct {
 
 } d4est_mesh_geometry_storage_t;
 
-typedef void
-(*d4est_mesh_user_fcn_t)
-(
- d4est_element_data_t*,
- void*
-);
 
 /* This file was automatically generated.  Do not edit! */
 int d4est_mesh_get_local_nodes(p4est_t *p4est);
 void d4est_mesh_get_local_nodes_callback(p4est_iter_volume_info_t *info,void *user_data);
 void d4est_mesh_init_field_ext(p4est_t *p4est,double *node_vec,grid_fcn_ext_t fofxyzv,double *v,double *fofxyzv_user,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom);
 void d4est_mesh_init_field(p4est_t *p4est,double *node_vec,d4est_grid_fcn_t init_fcn,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom);
-int d4est_mesh_update(p4est_t *p4est,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *geometric_factors,d4est_mesh_quadrature_data_init_option_t quad_init_option,d4est_mesh_geometry_data_init_option_t geom_init_option,d4est_mesh_geometry_aliases_init_option_t alias_init_option,d4est_mesh_user_fcn_t user_fcn,void *user_ctx);
+int d4est_mesh_update(p4est_t *p4est,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *geometric_factors,d4est_mesh_quadrature_data_init_option_t quad_init_option,d4est_mesh_geometry_data_init_option_t geom_init_option,d4est_mesh_geometry_aliases_init_option_t alias_init_option,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
 void d4est_mesh_geometry_storage_initialize_aliases(p4est_t *p4est,d4est_mesh_geometry_storage_t *geometric_factors,d4est_local_sizes_t local_sizes);
+d4est_local_sizes_t d4est_mesh_init_element_data(p4est_t *p4est,d4est_operators_t *d4est_ops,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
 double d4est_mesh_compute_l2_norm_sqr(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,double *nodal_vec,int local_nodes,norm_storage_option_t store_local);
 void d4est_mesh_print_element_data_debug(p4est_t *p4est);
 int d4est_mesh_debug_find_node(p4est_t *p4est,int node);

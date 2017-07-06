@@ -328,8 +328,13 @@ void d4est_operators_build_lobatto_to_gauss_interp_1d
       ref_gaussVij[i * cols + j] = d4est_lgl_jacobi(gauss_nodes[i], 0., 0., j);
 
   double* invvij = d4est_operators_fetch_invvij_1d(d4est_ops, lobatto_degree);
+
+  /* DEBUG_PRINT_ARR_DBL(invvij, (lobatto_degree+1)*(lobatto_degree+1)); */
+  /* DEBUG_PRINT_ARR_DBL(ref_gaussVij, (lobatto_degree+1)*(gauss_degree+1)); */
   d4est_linalg_mat_multiply(ref_gaussVij, invvij, ref_lobatto_to_gauss_interp_1d, gauss_degree + 1, lobatto_degree + 1, lobatto_degree + 1);
 
+  /* DEBUG_PRINT_ARR_DBL(ref_lobatto_to_gauss_interp_1d, (gauss_degree + 1)*(lobatto_degree + 1)); */
+  
   P4EST_FREE(ref_gaussVij);
 }
 
@@ -366,8 +371,8 @@ d4est_operators_fetch_lobatto_to_gauss_interp_1d(d4est_operators_t* d4est_ops, i
   int size = (deg_gauss + 1) * (deg_lobatto + 1);
   return d4est_operators_2index_fetch(d4est_ops,
                                       d4est_ops->lobatto_to_gauss_interp_1d_table,
-                                      (deg_lobatto + 1),
-                                      (deg_gauss + 1),
+                                      deg_lobatto,
+                                      deg_gauss,
                                       size,
                                       d4est_operators_build_lobatto_to_gauss_interp_1d
                                      );
@@ -396,8 +401,8 @@ double* d4est_operators_fetch_lobatto_to_gauss_interp_trans_1d
   int size = (deg_gauss + 1) * (deg_lobatto + 1);
   return d4est_operators_2index_fetch(d4est_ops,
                                       d4est_ops->lobatto_to_gauss_interp_trans_1d_table,
-                                      (deg_lobatto + 1),
-                                      (deg_gauss + 1),
+                                      deg_lobatto,
+                                      deg_gauss,
                                       size,
                                       d4est_operators_build_lobatto_to_gauss_interp_trans_1d
                                      );  

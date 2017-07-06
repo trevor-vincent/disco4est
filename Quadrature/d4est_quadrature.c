@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include <pXest.h>
 #include <d4est_quadrature.h>
 #include <d4est_quadrature_legendre.h>
 #include <d4est_quadrature_lobatto.h>

@@ -103,6 +103,7 @@ SET (
   Quadrature/d4est_quadrature_legendre.c
   Quadrature/d4est_quadrature_lobatto.c
   Visualization/d4est_vtk.c
+  Solver/d4est_cg.c
   )
 
 
@@ -176,20 +177,16 @@ set_property(TARGET d8est APPEND_STRING PROPERTY
 function(add_d4est_problem_3d exec src parent_dir)
   add_executable(${exec} driver.c ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/${src})
   target_link_libraries(${exec} d8est)
-
-  set_property(TARGET ${exec} APPEND_STRING PROPERTY
-      COMPILE_FLAGS " -DDIM=3")
-
+  set_target_properties(${exec} PROPERTIES COMPILE_DEFINITIONS "DIM=3")
   set_target_properties(${exec}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${parent_dir}"
     )
-
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/*.input
-    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/)
+    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/)  
 endfunction()
 
 
@@ -224,11 +221,21 @@ set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppr
 # target_compile_definitions(test_d4est_linalg PRIVATE NDEBUG)
 
 
-# add_executable(test_d4est_operators Tests/test_d4est_operators.c)
-# target_link_libraries(test_d4est_operators d4est)
-# add_test(test_d4est_operators_test test_d4est_operators)
-# target_compile_definitions(test_d4est_operators PRIVATE NDEBUG DIM=3)
+add_executable(test_d4est_operators Tests/test_d4est_operators.c)
+target_link_libraries(test_d4est_operators d8est)
+add_test(test_d4est_operators_test test_d4est_operators)
+target_compile_definitions(test_d4est_operators PRIVATE NDEBUG DIM=3)
 
+
+add_executable(test_d4est_geometry Tests/test_d4est_geometry.c)
+target_link_libraries(test_d4est_geometry d8est)
+add_test(test_d4est_geometry_test test_d4est_geometry)
+target_compile_definitions(test_d4est_geometry PRIVATE NDEBUG DIM=3)
+
+add_executable(test_d4est_geometry_2d Tests/test_d4est_geometry.c)
+target_link_libraries(test_d4est_geometry_2d d4est)
+add_test(test_d4est_geometry_test_2d test_d4est_geometry_2d)
+target_compile_definitions(test_d4est_geometry_2d PRIVATE NDEBUG DIM=2)
 
 # add_executable(test_d4est_quadrature_compactified Tests/test_d4est_quadrature_compactified.c)
 # target_link_libraries(test_d4est_quadrature_compactified d8est)
@@ -286,6 +293,8 @@ set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppr
 # add_d4est_problem_3d(twopuncturessphere_mg_driver twopuncturessphere_mg.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopunctures_testfcns_driver twopunctures_testfcns.c TwoPuncturesSphere)
 add_d4est_problem_3d(twopunctures_estonly_driver twopuncturessphere_estonly.c TwoPuncturesSphere)
+# add_d4est_problem_3d(twopunctures_test_driver twopuncturessphere_test.c TwoPuncturesSphere)
+# add_d4est_problem_2d(twopunctures_estonly_driver_2d twopuncturessphere_estonly.c TwoPuncturesSphere)
 # add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_2d(testmortarjacobianterms_driver_2d testmortarjacobianterms.c TestMortarJacobianTerms)
 # add_d4est_problem_3d(testcurvedipfluxoncube_driver testcurvedipfluxoncube.c TestCurvedIPFluxOnCube)

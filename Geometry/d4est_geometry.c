@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include <pXest.h>
 #include <d4est_geometry.h>
 #include <stdlib.h>
 #include <stdio.h>

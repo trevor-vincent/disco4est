@@ -1,3 +1,4 @@
+#include <pXest.h>
 #include <d4est_mesh.h>
 #include <d4est_geometry.h>
 #include <d4est_quadrature.h>
@@ -417,7 +418,7 @@ d4est_mesh_compute_l2_norm_sqr
 #if (P4EST_DIM)==3
       mesh_object.q[2] = ed->q[2];
 #endif
-        
+
       d4est_quadrature_apply_mass_matrix
         (
          d4est_ops,
@@ -432,7 +433,7 @@ d4est_mesh_compute_l2_norm_sqr
          ed->deg_quad,
          &Mvec[ed->nodal_stride]
         );
-        
+      
         double norm2 = d4est_linalg_vec_dot(&nodal_vec[ed->nodal_stride], &Mvec[ed->nodal_stride], volume_nodes);
         
         if (store_local == STORE_LOCALLY){
@@ -447,13 +448,13 @@ d4est_mesh_compute_l2_norm_sqr
 }
 
 
-static
+
 d4est_local_sizes_t
 d4est_mesh_init_element_data
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
- d4est_mesh_user_fcn_t user_fcn,
+ void(*user_fcn)(d4est_element_data_t*, void*),
  void* user_ctx
 )
 {
@@ -489,17 +490,27 @@ d4est_mesh_init_element_data
 #if (P4EST_DIM)==3  
         elem_data->q[2] = quad->z;
 #endif        
+
+
+        
+        elem_data->id = id_stride;
+        elem_data->sqr_nodal_stride = sqr_nodal_stride;
+        elem_data->sqr_mortar_stride = sqr_mortar_stride;
+        elem_data->nodal_stride = nodal_stride;
+        elem_data->quad_stride = quad_stride;
+
         /* user_fcn should set degree, 
            or the degree will be assumed to be set */
         if (user_fcn != NULL){
+          /* problem_set_degrees_donald_trump(elem_data, user_ctx); */
           user_fcn(elem_data, user_ctx);
         }
 
-        printf("elem_data->deg = %d\n", elem_data->deg);
-        printf("elem_data->deg_quad = %d\n", elem_data->deg_quad);
+        /* printf("elem_data->deg = %d\n", elem_data->deg); */
+        /* printf("elem_data->deg_quad = %d\n", elem_data->deg_quad); */
         
-        elem_data->deg = 2;
-        elem_data->deg_quad = 2;
+        /* elem_data->deg = 2; */
+        /* elem_data->deg_quad = 2; */
 
         mpi_assert(elem_data->deg > 0
                    &&
@@ -507,12 +518,7 @@ d4est_mesh_init_element_data
                    &&
                    elem_data->deg < MAX_DEGREE
                   );
-        
-        elem_data->id = id_stride;
-        elem_data->sqr_nodal_stride = sqr_nodal_stride;
-        elem_data->sqr_mortar_stride = sqr_mortar_stride;
-        elem_data->nodal_stride = nodal_stride;
-        elem_data->quad_stride = quad_stride;
+
         
         int nodes = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg);
         int nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg_quad);
@@ -698,13 +704,13 @@ d4est_mesh_update
  d4est_mesh_quadrature_data_init_option_t quad_init_option,
  d4est_mesh_geometry_data_init_option_t geom_init_option,
  d4est_mesh_geometry_aliases_init_option_t alias_init_option,
- d4est_mesh_user_fcn_t user_fcn,
+ void(*user_fcn)(d4est_element_data_t*, void*),
  void* user_ctx
 )
 {
   d4est_local_sizes_t local_sizes = d4est_mesh_init_element_data(p4est,
                                                                  d4est_ops,
-                                                                 user_fcn,
+                                                                 user_fcn,//problem_set_degrees_donald_trump,
                                                                  user_ctx);
   if (quad_init_option == INITIALIZE_QUADRATURE_DATA)
     {

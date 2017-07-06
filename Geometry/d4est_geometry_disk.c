@@ -481,6 +481,21 @@ d4est_geometry_disk_outer_wedge_sj_div_jac_analytic
   }
 }
 
+void
+d4est_geometry_disk_outer_wedge_new_aux
+(
+ d4est_geometry_t* d4est_geom,
+ d4est_geometry_disk_attr_t* disk_attrs
+)
+{
+  p4est_connectivity_t* conn = p4est_connectivity_new_unitsquare();
+  d4est_geom->user = disk_attrs;
+  d4est_geom->p4est_conn = conn;
+  d4est_geom->destroy = d4est_geometry_disk_destroy;
+  d4est_geom->X = d4est_geometry_disk_outer_wedge_X;
+  d4est_geom->DX = d4est_geometry_disk_outer_wedge_DX;
+
+}
 
 void
 d4est_geometry_disk_outer_wedge_new
@@ -494,13 +509,9 @@ d4est_geometry_disk_outer_wedge_new
 {
   mpi_assert((P4EST_DIM)==2);
   d4est_geometry_disk_attr_t* input = d4est_geometry_disk_outer_wedge_input(input_file, input_section);
-  p4est_connectivity_t* conn = p4est_connectivity_new_unitsquare();
-  
-  d4est_geom->user = input;
-  d4est_geom->p4est_conn = conn;
-  d4est_geom->destroy = d4est_geometry_disk_destroy;
-  d4est_geom->X = d4est_geometry_disk_outer_wedge_X;
-  d4est_geom->DX = d4est_geometry_disk_outer_wedge_DX;
+
+  d4est_geometry_disk_outer_wedge_new_aux(d4est_geom, input);
+
 
   if (mpirank == 0){
     printf("%s: NAME = disk_outer_wedge\n", printf_prefix );
@@ -509,6 +520,5 @@ d4est_geometry_disk_outer_wedge_new
     printf("%s: compactify outer wedge = %d\n", printf_prefix,  input->compactify_outer_wedge);
   }
 }
-
 
 #endif

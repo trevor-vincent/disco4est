@@ -1,3 +1,4 @@
+#include <pXest.h>
 #include <util.h>
 #include <ini.h>
 #include <d4est_operators.h>

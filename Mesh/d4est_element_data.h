@@ -1,17 +1,17 @@
-#ifndef CURVED_ELEMENT_DATA_H
-#define CURVED_ELEMENT_DATA_H 
+#ifndef D4EST_ELEMENT_DATA_H
+#define D4EST_ELEMENT_DATA_H 
 
-#define MAX_DEGREE 20
+#include <pXest.h>
+#include <d4est_xyz_functions.h>
+#include <d4est_operators.h>
+#include <d4est_quadrature.h>
+
+#define MAX_DEGREE 5
 #if (P4EST_DIM) == 3
 #define MAX_NODES (MAX_DEGREE + 1) * (MAX_DEGREE + 1) * (MAX_DEGREE + 1)
 #else
 #define MAX_NODES (MAX_DEGREE + 1) * (MAX_DEGREE + 1)
 #endif
-
-#include <d4est_xyz_functions.h>
-#include <d4est_operators.h>
-#include <d4est_quadrature.h>
-
 
 typedef struct {
 

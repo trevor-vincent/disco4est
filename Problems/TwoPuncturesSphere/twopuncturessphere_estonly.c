@@ -2,7 +2,6 @@
 #include <pXest.h>
 #include <util.h>
 #include <d4est_linalg.h>
-#include <d4est_element_data.h>
 #include <problem.h>
 #include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
@@ -14,11 +13,23 @@
 #include <d4est_vtk.h>
 #include <d4est_mesh.h>
 #include <ini.h>
+#include <d4est_element_data.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
 #include <util.h>
 #include "./twopuncturesfcns_nomg.h"
 #include <time.h>
+
+static int
+uni_refine_function
+(
+ p4est_t * p4est,
+ p4est_topidx_t which_tree,
+ p4est_quadrant_t *quadrant
+)
+{
+  return 1;
+}
 
 
 double*
@@ -289,8 +300,6 @@ in_bin_fcn
   return (elem_bin == bin);
 }
 
-
-
 void
 problem_set_degrees
 (
@@ -298,15 +307,21 @@ problem_set_degrees
  void* user_ctx
 )
 {
-  problem_input_t* input = user_ctx;
-  elem_data->deg = input->deg;
-  elem_data->deg_quad = input->deg_quad;
+  /* d4est_element_data_t* elem_data = elem_data_tmp; */
+  /* problem_input_t* input = user_ctx; */
+  /* elem_data->deg = input->deg; */
+  /* elem_data->deg = input->deg; */
+  elem_data->deg = 2;
+  /* elem_data->deg_quad = input->deg_quad; */
+  elem_data->deg_quad = 2;
   printf("PROBLEM_SET_DEGREES BEGIN\n");
   printf("elem_data->id = %d\n", elem_data->id);
+  printf("elem_data->tt = %d\n", elem_data->tree);
+  printf("elem_data->tt_quadid = %d\n", elem_data->tree_quadid);
   printf("elem_data->deg = %d\n", elem_data->deg);
   printf("elem_data->deg_quad = %d\n", elem_data->deg_quad);
-  printf("input->deg = %d\n", input->deg);
-  printf("input->deg_quad = %d\n", input->deg_quad);
+  /* printf("input->deg = %d\n", input->deg); */
+  /* printf("input->deg_quad = %d\n", input->deg_quad); */
   printf("PROBLEM_SET_DEGREES END\n");
 }
 
@@ -324,19 +339,19 @@ problem_init
 {
   problem_input_t input = problem_input(input_file);
   
-  mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
+  mpi_assert( (P4EST_DIM) == 3 || (P4EST_DIM) == 2);
   int world_rank, world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);
+
+  p4est_partition(p4est, 0, NULL);
+  p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
 
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   /* create space for storing the ghost data */
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
                                                    ghost->ghosts.elem_count);
-
-  p4est_partition(p4est, 0, NULL);
-  p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
-
+  
   twopunctures_params_t tp_params;
   init_twopunctures_data(&tp_params);
 
@@ -344,23 +359,26 @@ problem_init
  
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
-  
-  int local_nodes = d4est_mesh_update
-                    (
-                     p4est,
-                     ghost,
-                     ghost_data,
-                     d4est_ops,
-                     d4est_geom,
-                     d4est_quad,
-                     geometric_factors,
-                     INITIALIZE_QUADRATURE_DATA,
-                     INITIALIZE_GEOMETRY_DATA,
-                     INITIALIZE_GEOMETRY_ALIASES,
-                     problem_set_degrees,
-                     (void*)&input
-                    );
 
+  
+  d4est_mesh_update
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     geometric_factors,
+     INITIALIZE_QUADRATURE_DATA,
+     INITIALIZE_GEOMETRY_DATA,
+     INITIALIZE_GEOMETRY_ALIASES,
+     problem_set_degrees,
+     (void*)&input
+    );
+
+
+  int local_nodes = d4est_mesh_get_local_nodes(p4est);
   
   d4est_poisson_flux_sipg_params_t* sipg_params = d4est_poisson_flux_sipg_params_new(p4est, "[SIPG_FLUX]", input_file);
   d4est_mortar_fcn_ptrs_t flux_fcn_data = d4est_poisson_flux_sipg_fetch_fcns(zero_fcn, sipg_params);
@@ -384,26 +402,26 @@ problem_init
   prob_vecs.u = u;
   prob_vecs.local_nodes = local_nodes;
   
-  /* smooth_pred_marker_t amr_marker; */
-  /* amr_marker.user = (void*)&input; */
-  /* amr_marker.mark_element_fcn = amr_mark_element; */
-  /* amr_marker.set_element_gamma_fcn = amr_set_element_gamma; */
-  /* amr_marker.name = "puncture_marker"; */
+  smooth_pred_marker_t amr_marker;
+  amr_marker.user = (void*)&input;
+  amr_marker.mark_element_fcn = amr_mark_element;
+  amr_marker.set_element_gamma_fcn = amr_set_element_gamma;
+  amr_marker.name = "puncture_marker";
 
-  /* d4est_hp_amr_scheme_t* scheme = */
-  /*   d4est_hp_amr_smooth_pred_init */
-  /*   ( */
-  /*    p4est, */
-  /*    8, */
-  /*    amr_marker */
-  /*   ); */
+  d4est_hp_amr_scheme_t* scheme =
+    d4est_hp_amr_smooth_pred_init
+    (
+     p4est,
+     8,
+     amr_marker
+    );
 
-  /* d4est_estimator_bi_penalty_data_t penalty_data; */
-  /* penalty_data.u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh; */
-  /* penalty_data.u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh; */
-  /* penalty_data.gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh; */
-  /* penalty_data.penalty_prefactor = ip_flux->ip_flux_params->sipg_penalty_prefactor; */
-  /* penalty_data.sipg_flux_h = ip_flux->ip_flux_params->sipg_flux_h; */
+  d4est_estimator_bi_penalty_data_t penalty_data;
+  penalty_data.u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
+  penalty_data.u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
+  penalty_data.gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh;
+  penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
+  penalty_data.sipg_flux_h = sipg_params->sipg_flux_h;
   
   /* for (int level = 0; level < input.num_of_amr_levels; ++level){ */
 
@@ -493,7 +511,7 @@ problem_init
   /*                &stats[0], */
   /*                scheme, */
   /*                get_storage */
-  /*               );         */
+  /*               ); */
 
   /*   for (int i = 0; i < 3; i++){ */
   /*     P4EST_FREE(stats[i]); */
@@ -532,7 +550,6 @@ problem_init
 
 
   /* } */
-         
 
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_poisson_flux_sipg_params_destroy(sipg_params);

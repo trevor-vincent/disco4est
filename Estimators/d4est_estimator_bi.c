@@ -28,9 +28,9 @@ d4est_estimator_bi_compute
     (
      p4est,
      ghost,
+     ghost_data,
      fcns,
      vecs,
-     ghost_data,
      d4est_ops,
      d4est_geom,
      d4est_quad

@@ -3,10 +3,8 @@ min_quadrants = -1
 min_level = 0
 fill_uniform = 1
 
-[ip_flux_params]
-name = kronbichler
+[d4est_poisson_flux_sipg_params]
 sipg_penalty_prefactor = 2.0
-ip_flux_bc_eval = BC_EVAL_ON_LOBATTO_POINTS
 sipg_flux_h = H_EQ_J_DIV_SJ
 sipg_penalty_fcn = meanp_sqr_over_meanh
 
