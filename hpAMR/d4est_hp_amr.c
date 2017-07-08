@@ -1,3 +1,4 @@
+#include <pXest.h>
 #include <d4est_hp_amr.h>
 #include <d4est_xyz_functions.h>
 #include <util.h>
@@ -86,16 +87,13 @@ d4est_hp_amr_refine_replace_callback (
 #endif
   d4est_hp_amr_data_t* d4est_hp_amr_data = (d4est_hp_amr_data_t*) p4est->user_pointer;
   d4est_operators_t* d4est_ops = d4est_hp_amr_data->d4est_ops;
-  /* d4est_hp_amr_curved_smooth_pred_data_t* smooth_pred_data = (d4est_hp_amr_curved_smooth_pred_data_t*) (d4est_hp_amr_data->d4est_hp_amr_scheme_data); */
-  
   d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
   d4est_element_data_t* child_data;
-  int i;
 
   int degh [(P4EST_CHILDREN)];
   int degH = parent_data->deg;
     
-  for (i = 0; i < (P4EST_CHILDREN); i++)
+  for (int i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;
 
   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), degH);
@@ -112,7 +110,7 @@ d4est_hp_amr_refine_replace_callback (
      temp_data
     );
   
-  for (i = 0; i < (P4EST_CHILDREN); i++){
+  for (int i = 0; i < (P4EST_CHILDREN); i++){
     child_data = (d4est_element_data_t*) incoming[i]->p.user_data;
     double* stored_child_data = d4est_hp_amr_data->get_storage(child_data);
     child_data->deg = parent_data->deg;
@@ -195,6 +193,8 @@ d4est_hp_amr
  double* (*get_storage)(d4est_element_data_t*)
 )
 {
+  printf("[D4EST_HP_AMR]: Refining one level\n");
+  
   d4est_hp_amr_data_t d4est_hp_amr_data;
   d4est_hp_amr_data.refinement_log = P4EST_ALLOC(int, p4est->local_num_quadrants);
   d4est_hp_amr_data.refinement_log_stride = 0;
@@ -300,6 +300,7 @@ d4est_hp_amr
                                      post_balance_local_nodes
                                     );
 
+  int post_balance_nodal_stride = 0;
 
   /* copy storage back to field */
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -317,9 +318,10 @@ d4est_hp_amr
         d4est_linalg_copy_1st_to_2nd
           (
            storage,
-           &((*data_to_hp_refine)[ed->nodal_stride]),
+           &((*data_to_hp_refine)[post_balance_nodal_stride]),
            volume_nodes
           );
+        post_balance_nodal_stride += volume_nodes;
       }
     }
 

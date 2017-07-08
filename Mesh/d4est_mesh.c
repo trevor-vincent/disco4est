@@ -88,7 +88,7 @@ void
 d4est_mesh_get_array_of_estimators
 (
  p4est_t* p4est,
- int* eta2_array
+ double* eta2_array
 )
 {
   int stride = 0;

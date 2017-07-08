@@ -10,8 +10,8 @@
 #include <d4est_quadrature_lobatto.h>
 
 /* #define NASTY_DEBUG */
-#define NASTY_DEBUG2
-#define NASTY_TRUMP_DEBUG
+/* #define NASTY_DEBUG2 */
+/* #define NASTY_TRUMP_DEBUG */
 
 static void
 d4est_poisson_flux_sipg_dirichlet
@@ -346,10 +346,10 @@ d4est_poisson_flux_sipg_dirichlet
        e_m->deg_quad
       );  
 
-    DEBUG_PRINT_2ARR_DBL(u_m_on_f_m_min_u_at_bndry_lobatto,
-                         u_m_on_f_m_min_u_at_bndry_quad,
-                         face_nodes_m_quad
-                        );
+    /* DEBUG_PRINT_2ARR_DBL(u_m_on_f_m_min_u_at_bndry_lobatto, */
+                         /* u_m_on_f_m_min_u_at_bndry_quad, */
+                         /* face_nodes_m_quad */
+                        /* ); */
     
     D4EST_FREE_DIM_VEC(xyz_on_f_m);
 
@@ -644,6 +644,9 @@ d4est_poisson_flux_sipg_interface
                             /* ); */
       
     }
+
+  /* printf("faces_m = %d, faces_p = %d, faces_mortar = %d\n", faces_m, faces_p, faces_mortar); */
+  /* DEBUG_PRINT_ARR_INT(deg_mortar_lobatto, faces_mortar); */
 
   int deg_mortar_quad_porder [(P4EST_HALF)];
   int nodes_mortar_quad_porder [(P4EST_HALF)];
@@ -1126,20 +1129,21 @@ d4est_poisson_flux_sipg_interface
         double hm = j_div_sj_on_f_m_mortar_quad[ks];
         sigma[ks] = sipg_kronbichler_flux_penalty_calculate_fcn
                     (
-                     e_m[f]->deg,
+                     (faces_m == faces_mortar) ? e_m[f]->deg : e_m[0]->deg,
                      hm,
-                     e_p_oriented[f]->deg,
+                     (faces_p == faces_mortar) ? e_p_oriented[f]->deg : e_p_oriented[0]->deg,
                      hp,
                      sipg_kronbichler_flux_penalty_prefactor
                     );
 
+        
       }
       else if (ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
         sigma[ks] = sipg_kronbichler_flux_penalty_calculate_fcn
                     (
-                     e_m[f]->deg,
+                     (faces_m == faces_mortar) ? e_m[f]->deg : e_m[0]->deg,
                      hm_min,
-                     e_p_oriented[f]->deg,
+                     (faces_p == faces_mortar) ? e_p_oriented[f]->deg : e_p_oriented[0]->deg,
                      hp_min,
                      sipg_kronbichler_flux_penalty_prefactor
                     );
@@ -1333,34 +1337,6 @@ d4est_poisson_flux_sipg_interface
     stride += face_nodes_m_lobatto[f];
   }   
 
-#ifdef NASTY_DEBUG
-  printf("Interface Flux Integral\n");
-  printf("Element m id = %d, f_m = %d, Element_p id = %d, f_p = %d\n", e_m[0]->id, f_m, e_p[0]->id,f_p);
-  DEBUG_PRINT_ARR_DBL_SUM(proj_VT_w_term1_mortar_lobatto, total_nodes_mortar_lobatto);
-  for (int d = 0; d < (P4EST_DIM); d++){
-    DEBUG_PRINT_ARR_DBL_SUM(proj_VT_w_term2_mortar_lobatto[d], total_nodes_mortar_lobatto);
-  }
-  DEBUG_PRINT_ARR_DBL_SUM(proj_VT_w_term3_mortar_lobatto, total_nodes_mortar_lobatto);
-#endif
-
-#ifdef NASTY_DEBUG2
-  printf("Element m id = %d, f_m = %d, Element_p id = %d, f_p = %d, t1 = %f, t20 = %f, t21 = %f, t22 = %f, t3 = %f\n",
-         e_m[0]->id,
-         f_m,
-         e_p[0]->id,
-         f_p,
-         util_sum_array_dbl(proj_VT_w_term1_mortar_lobatto, total_nodes_mortar_lobatto),
-         util_sum_array_dbl(proj_VT_w_term2_mortar_lobatto[0], total_nodes_mortar_lobatto),
-         util_sum_array_dbl(proj_VT_w_term2_mortar_lobatto[1], total_nodes_mortar_lobatto),
-#if (P4EST_DIM)==3
-         util_sum_array_dbl(proj_VT_w_term2_mortar_lobatto[2], total_nodes_mortar_lobatto),
-#else
-         -1.,
-#endif
-         util_sum_array_dbl(proj_VT_w_term3_mortar_lobatto, total_nodes_mortar_lobatto)
-        );
-#endif
-  
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_p_on_f_p);
 
@@ -1451,20 +1427,20 @@ static void
 d4est_poisson_flux_sipg_params_get_string_from_h_calc
 (
  h_calc_method_t h_calc,
- char string [50]
+ char* string
 )
 {
   if (h_calc == H_EQ_J_DIV_SJ){
-    string = "H_EQ_J_DIV_SJ";
+    strcpy(string, "H_EQ_J_DIV_SJ");
   }
   else if (h_calc == H_EQ_J_DIV_SJ_MIN){
-    string = "H_EQ_J_DIV_SJ_MIN";
+    strcpy(string,"H_EQ_J_DIV_SJ_MIN");
   }
   else if (h_calc == H_EQ_VOLUME_DIV_AREA){
-    string = "H_EQ_VOLUME_DIV_AREA";
+    strcpy(string,"H_EQ_VOLUME_DIV_AREA");
   }
   else {
-    string = "NOT_SET";
+    strcpy(string,"NOT_SET");
   }
 }
 
@@ -1472,17 +1448,17 @@ static void
 d4est_poisson_flux_sipg_params_get_string_from_penalty_fcn
 (
  penalty_calc_t fcn,
- char string [50]
+ char* string
 )
 {
   if (fcn == d4est_poisson_flux_sipg_penalty_maxp_sqr_over_minh){
-    string = "maxp_sqr_over_minh";
+    strcpy(string,"maxp_sqr_over_minh");
   }
   else if (fcn == d4est_poisson_flux_sipg_penalty_meanp_sqr_over_meanh){
-    string = "meanp_sqr_over_meanh";
+    strcpy(string,"meanp_sqr_over_meanh");
   }
   else {
-    string = "not_set";
+    strcpy(string,"not_set");
   }
 }
 
@@ -1568,6 +1544,10 @@ d4est_poisson_flux_sipg_params_input
 
   d4est_poisson_flux_sipg_params_get_string_from_penalty_fcn (input->sipg_penalty_fcn,penalty_calculate_fcn);
   d4est_poisson_flux_sipg_params_get_string_from_h_calc (input->sipg_flux_h,h_eq);
+
+  double check_function = input->sipg_penalty_fcn(1,.1,1,.1,0.);
+
+  mpi_assert(check_function == 0.);
   
   if(p4est->mpirank == 0){
     printf("%s: d4est_poisson_flux_sipg_params_penalty_prefactor = %f\n", printf_prefix, input->sipg_penalty_prefactor);

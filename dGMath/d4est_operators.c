@@ -1,8 +1,8 @@
+#include <pXest.h>
 #include <d4est_operators.h>
 #include <assert.h>
 #include <d4est_linalg.h>
 #include <util.h>
-#include <pXest.h>
 #include <GL_and_GLL_nodes_and_weights.h>
 
 d4est_operators_t* d4est_ops_init(int deg_max) {
@@ -100,6 +100,10 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
     P4EST_FREE(d4est_ops->lift_1d_table[i]);
     P4EST_FREE(d4est_ops->flip_1d_table[i]);
     P4EST_FREE(d4est_ops->vtk_interp_1d_table[i]);
+    P4EST_FREE(d4est_ops->lobatto_rst_3d_table[i]);
+    P4EST_FREE(d4est_ops->lobatto_rst_2d_table[i]);
+    P4EST_FREE(d4est_ops->gauss_rst_2d_table[i]);
+    P4EST_FREE(d4est_ops->gauss_rst_3d_table[i]);
   }
   P4EST_FREE(d4est_ops->mij_1d_table);
   P4EST_FREE(d4est_ops->vtk_rst_3d_table);
@@ -2082,9 +2086,9 @@ double* d4est_operators_fetch_vtk_rst
  int dim
 )
 {
-
   int children = (dim == 2) ? 4 : 8;
   int deg_dim = (dim == 2) ? deg*deg : deg*deg*deg;
+  /* we need a 3 here because we zero out the z-component */
   int size = 3*deg_dim*(children);
 
   return d4est_operators_1index_2d_3d_fetch

@@ -853,21 +853,22 @@ d4est_estimator_bi_interface
       int is_it_min = (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN);
       double hp = (is_it_min) ? hp_min : j_div_sj_on_f_p_mortar_quad_porder_oriented[ks];
       double hm = (is_it_min) ? hm_min : j_div_sj_on_f_m_mortar_quad[ks];
+
       
       Je1_prefactor[ks] = penalty_data->gradu_penalty_fcn
-                           (
-                            e_m[f]->deg,
-                            hm,
-                            e_p_oriented[f]->deg,
-                            hp,
-                            penalty_data->penalty_prefactor
-                           ); 
+                          (
+                           (faces_m == faces_mortar) ? e_m[f]->deg : e_m[0]->deg,
+                           hm,
+                           (faces_p == faces_mortar) ? e_p_oriented[f]->deg : e_p_oriented[0]->deg,
+                           hp,
+                           penalty_data->penalty_prefactor
+                          ); 
 
       Je2_prefactor[ks] = penalty_data->u_penalty_fcn
                           (
-                           e_m[f]->deg,
+                           (faces_m == faces_mortar) ? e_m[f]->deg : e_m[0]->deg,
                            hm,
-                           e_p_oriented[f]->deg,
+                           (faces_p == faces_mortar) ? e_p_oriented[f]->deg : e_p_oriented[0]->deg,
                            hp,
                            penalty_data->penalty_prefactor
                           );    

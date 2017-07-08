@@ -321,7 +321,7 @@ void twopunctures_apply_jac
  void* user
 )
 {
-  twopunctures_params_t* params = prob_vecs->user;
+  twopunctures_params_t* params = user;
   mpi_assert(params->num_punctures > 0);
   d4est_poisson_apply_aij(p4est,
                           ghost,
@@ -370,7 +370,7 @@ void twopunctures_apply_jac
            ed->deg_quad,
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
            twopunctures_plus_7o8_K2_psi_neg8,
-           prob_vecs->user,
+           user,
            NULL,
            NULL
           );
@@ -446,7 +446,7 @@ twopunctures_build_residual
            ed->deg_quad,
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
            twopunctures_neg_1o8_K2_psi_neg7,
-           prob_vecs->user,
+           user,
            NULL,
            NULL
           );

@@ -81,8 +81,11 @@ test_d4est_operators_interp_lobatto_to_gauss
   }  
 
   int error = 0;
+  /* double max_error = 0.; */
   for (int i = 0; i < volume_nodes_gauss; i++){
     error += !(util_compare_double(poly_lobatto_to_gauss[i],poly_gauss[i],D4EST_REAL_EPS));
+    /* error_tmp = fabs(poly_lobatto_to_gauss[i] - poly_gauss[i]); */
+    /* max_error = ; */
   }
  
   if (error != 0){
@@ -91,7 +94,7 @@ test_d4est_operators_interp_lobatto_to_gauss
     exit(1);
   }
   else {
-    printf("test_d4est_operators_interp_lobatto_to_gauss passed\n");
+    printf("test_d4est_operators_interp_lobatto_to_gauss passed for dim = %d, deg = %d\n", dim, deg);
   }
 
   P4EST_FREE(poly_lobatto);
@@ -388,11 +391,13 @@ test_d4est_operators_p_projection
 int main(int argc, char *argv[])
 {
   d4est_operators_t* d4est_ops = d4est_ops_init(20);  
-  /* test_d4est_operators_mass_1d(d4est_ops, 3); */
-  /* test_d4est_operators_inv_vandermonde(d4est_ops); */
-  /* test_d4est_operators_p_projection(d4est_ops); */
-  /* test_d4est_operators_lagrange(d4est_ops); */
-  test_d4est_operators_interp_lobatto_to_gauss(d4est_ops,3,3);
+  test_d4est_operators_mass_1d(d4est_ops, 3);
+  test_d4est_operators_inv_vandermonde(d4est_ops);
+  test_d4est_operators_p_projection(d4est_ops);
+  test_d4est_operators_lagrange(d4est_ops);
+  for (int dim = 3; dim < 4; dim++)
+    for (int deg = 1; deg < 20; deg++)
+      test_d4est_operators_interp_lobatto_to_gauss(d4est_ops,dim,deg);
   d4est_ops_destroy(d4est_ops);
   return 0;
 }

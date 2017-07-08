@@ -43,7 +43,7 @@ static const double pi = 3.1415926535897932384626433832795;
 typedef struct {
 
   double* u;
-  int* eta2;
+  double* eta2;
   double* jacobian;
 
 } vtk_nodal_vecs_t;
@@ -88,7 +88,8 @@ vtk_field_plotter
                  0,
                  vtk_ctx
                 );
-  
+
+   if (vecs->eta2 != NULL){
    vtk_ctx = d4est_vtk_write_dg_cell_dataf
              (
               vtk_ctx,
@@ -104,6 +105,21 @@ vtk_field_plotter
               vtk_ctx
              );
 
+   }
+   else {
+     vtk_ctx = d4est_vtk_write_dg_cell_dataf
+               (
+                vtk_ctx,
+                1,
+                1,
+                1,
+                0,
+                1,
+                0,
+                0,
+                vtk_ctx
+               );
+   }
 }
 
 
@@ -133,18 +149,13 @@ amr_mark_element
     elem_bin = 2;
   }
  
-  /* if (elem_data->tree == 12){ */
   double eta2_percentile
     = d4est_estimator_stats_get_percentile(stats[elem_bin], 5);
 
-  /* if (elem_data->tree == 12) */
+  if (elem_bin == 2)
     return (eta2 >= eta2_percentile);
-  /* else */
-    /* return 0; */
-  /* } */
-  /* else { */
-    /* return 0; */
-  /* } */
+  else
+    return 0;
 }
 
 static
@@ -307,23 +318,78 @@ problem_set_degrees
  void* user_ctx
 )
 {
-  /* d4est_element_data_t* elem_data = elem_data_tmp; */
-  /* problem_input_t* input = user_ctx; */
-  /* elem_data->deg = input->deg; */
-  /* elem_data->deg = input->deg; */
-  elem_data->deg = 2;
-  /* elem_data->deg_quad = input->deg_quad; */
-  elem_data->deg_quad = 2;
-  printf("PROBLEM_SET_DEGREES BEGIN\n");
-  printf("elem_data->id = %d\n", elem_data->id);
-  printf("elem_data->tt = %d\n", elem_data->tree);
-  printf("elem_data->tt_quadid = %d\n", elem_data->tree_quadid);
-  printf("elem_data->deg = %d\n", elem_data->deg);
-  printf("elem_data->deg_quad = %d\n", elem_data->deg_quad);
-  /* printf("input->deg = %d\n", input->deg); */
-  /* printf("input->deg_quad = %d\n", input->deg_quad); */
-  printf("PROBLEM_SET_DEGREES END\n");
+  problem_input_t* input = user_ctx;
+  elem_data->deg = input->deg;
+  elem_data->deg_quad = input->deg_quad;
 }
+
+
+void
+problem_set_degrees_after_amr
+(
+ d4est_element_data_t* elem_data,
+ void* user_ctx
+)
+{
+  elem_data->deg_quad = elem_data->deg;
+}
+
+
+void
+problem_save_vtk
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ int local_nodes,
+ int level,
+ int store_eta2,
+ double* u,
+ const char* input_file
+)
+{
+    double* jacobian_lgl = P4EST_ALLOC(double, local_nodes);
+    int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
+    double* eta2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
+    d4est_mesh_compute_jacobian_on_lgl_grid(p4est, d4est_ops, d4est_geom, jacobian_lgl);
+    d4est_mesh_get_array_of_degrees(p4est, deg_array);
+    d4est_mesh_get_array_of_estimators(p4est, eta2_array);
+
+    vtk_nodal_vecs_t vtk_nodal_vecs;
+    vtk_nodal_vecs.u = u;
+    vtk_nodal_vecs.jacobian = jacobian_lgl;
+    if (store_eta2 == 1){
+      vtk_nodal_vecs.eta2 = eta2_array;
+    }
+    else{
+      vtk_nodal_vecs.eta2 = NULL;
+    }
+    
+    
+    char save_as [500];
+    sprintf(save_as, "%s_level_%d", "puncture_cubedsphere", level);
+    
+    /* vtk output */
+    d4est_vtk_save_geometry_and_dg_fields
+      (
+       save_as,
+       p4est,
+       d4est_ops,
+       deg_array,
+       input_file,
+       "d4est_vtk_geometry",
+       vtk_field_plotter,
+       (void*)&vtk_nodal_vecs
+      );
+
+    P4EST_FREE(jacobian_lgl);
+    P4EST_FREE(deg_array);
+    P4EST_FREE(eta2_array);
+
+}
+
+
+
 
 
 void
@@ -422,135 +488,132 @@ problem_init
   penalty_data.gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh;
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
   penalty_data.sipg_flux_h = sipg_params->sipg_flux_h;
+
+
+  problem_save_vtk
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom,
+     local_nodes,
+     -1,
+     0,
+     u,
+     input_file
+    );
+
+
   
-  /* for (int level = 0; level < input.num_of_amr_levels; ++level){ */
+  for (int level = 0; level < input.num_of_amr_levels; ++level){
 
-  /*   if (world_rank == 0) */
-  /*     printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level); */
+    if (world_rank == 0)
+      printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level);
     
 
-  /*   d4est_estimator_bi_compute */
-  /*     ( */
-  /*      p4est, */
-  /*      &prob_vecs, */
-  /*      &prob_fcns, */
-  /*      penalty_data, */
-  /*      zero_fcn, */
-  /*      ghost, */
-  /*      ghost_data, */
-  /*      d4est_ops, */
-  /*      d4est_geom, */
-  /*      d4est_quad, */
-  /*      get_diam */
-  /*     ); */
+    d4est_estimator_bi_compute
+      (
+       p4est,
+       &prob_vecs,
+       &prob_fcns,
+       penalty_data,
+       zero_fcn,
+       ghost,
+       ghost_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       get_diam
+      );
 
     
-  /*   d4est_estimator_stats_t* stats [3]; */
-  /*   for (int i = 0; i < 3; i++){ */
-  /*     stats[i] = P4EST_ALLOC(d4est_estimator_stats_t, 1); */
-  /*   } */
+    d4est_estimator_stats_t* stats [3];
+    for (int i = 0; i < 3; i++){
+      stats[i] = P4EST_ALLOC(d4est_estimator_stats_t, 1);
+    }
     
-  /*   double local_eta2 = d4est_estimator_stats_compute_per_bin */
-  /*                       ( */
-  /*                        p4est, */
-  /*                        &stats[0], */
-  /*                        3, */
-  /*                        in_bin_fcn */
-  /*                       ); */
+    double local_eta2 = d4est_estimator_stats_compute_per_bin
+                        (
+                         p4est,
+                         &stats[0],
+                         3,
+                         in_bin_fcn
+                        );
 
-  /*   d4est_mesh_print_number_of_elements_per_tree(p4est); */
+    d4est_mesh_print_number_of_elements_per_tree(p4est);
+    d4est_estimator_stats_compute_max_percentiles_across_proc
+      (
+       stats,
+       3
+      );
+
+    if (world_rank == 0){
+      for (int i = 0; i < 3; i++){
+        d4est_estimator_stats_print(stats[i]);
+      }
+    }
+
+
+    problem_save_vtk
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       local_nodes,
+       level,
+       1,
+       u,
+       input_file
+      );
+
     
-  /*   d4est_estimator_stats_compute_max_percentiles_across_proc */
-  /*     ( */
-  /*      stats, */
-  /*      3 */
-  /*     ); */
+    d4est_hp_amr(p4est,
+                 d4est_ops,
+                 &u,
+                 &stats[0],
+                 scheme,
+                 get_storage
+                );
 
-  /*   if (world_rank == 0){ */
-  /*     for (int i = 0; i < 3; i++){ */
-  /*       d4est_estimator_stats_print(stats[i]); */
-  /*     } */
-  /*   } */
+    for (int i = 0; i < 3; i++){
+      P4EST_FREE(stats[i]);
+    }
     
-  /*   double* jacobian_lgl = P4EST_ALLOC(double, local_nodes); */
-  /*   int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants); */
-  /*   int* eta2_array = P4EST_ALLOC(int, p4est->local_num_quadrants); */
-  /*   d4est_mesh_compute_jacobian_on_lgl_grid(p4est, d4est_ops, d4est_geom, jacobian_lgl); */
-  /*   d4est_mesh_get_array_of_degrees(p4est, deg_array); */
-  /*   d4est_mesh_get_array_of_estimators(p4est, eta2_array); */
+    p4est_ghost_destroy(ghost);
+    P4EST_FREE(ghost_data);
 
-  /*   vtk_nodal_vecs_t vtk_nodal_vecs; */
-  /*   vtk_nodal_vecs.u = u; */
-  /*   vtk_nodal_vecs.jacobian = jacobian_lgl; */
-  /*   vtk_nodal_vecs.eta2 = eta2_array; */
-
+    ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE);
+    ghost_data = P4EST_ALLOC(d4est_element_data_t, ghost->ghosts.elem_count);
     
-  /*   char save_as [500]; */
-  /*   sprintf(save_as, "%s_level_%d", "puncture_cubedsphere", level); */
-    
-  /*   /\* vtk output *\/ */
-  /*   d4est_vtk_save_geometry_and_dg_fields */
-  /*     ( */
-  /*      save_as, */
-  /*      p4est, */
-  /*      d4est_ops, */
-  /*      deg_array, */
-  /*      input_file, */
-  /*      "d4est_vtk_geometry", */
-  /*      vtk_field_plotter, */
-  /*      (void*)&vtk_nodal_vecs */
-  /*     ); */
+    local_nodes = d4est_mesh_update
+                    (
+                     p4est,
+                     ghost,
+                     ghost_data,
+                     d4est_ops,
+                     d4est_geom,
+                     d4est_quad,
+                     geometric_factors,
+                     INITIALIZE_QUADRATURE_DATA,
+                     INITIALIZE_GEOMETRY_DATA,
+                     INITIALIZE_GEOMETRY_ALIASES,
+                     problem_set_degrees_after_amr,
+                     (void*)&input
+                    );
 
-  /*   P4EST_FREE(jacobian_lgl); */
-  /*   P4EST_FREE(deg_array); */
-  /*   P4EST_FREE(eta2_array); */
-    
-  /*   d4est_hp_amr(p4est, */
-  /*                d4est_ops, */
-  /*                &u, */
-  /*                &stats[0], */
-  /*                scheme, */
-  /*                get_storage */
-  /*               ); */
+    u_prev = P4EST_REALLOC(u_prev, double, local_nodes);
+    Au = P4EST_REALLOC(Au, double, local_nodes);
+    prob_vecs.Au = Au;
+    prob_vecs.u = u;
+    prob_vecs.u0 = u;
+    prob_vecs.local_nodes = local_nodes;
 
-  /*   for (int i = 0; i < 3; i++){ */
-  /*     P4EST_FREE(stats[i]); */
-  /*   } */
-    
-  /*   p4est_ghost_destroy(ghost); */
-  /*   P4EST_FREE(ghost_data); */
-
-  /*   ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE); */
-  /*   ghost_data = P4EST_ALLOC(d4est_element_data_t, ghost->ghosts.elem_count); */
-    
-  /*   local_nodes = d4est_mesh_update */
-  /*                   ( */
-  /*                    p4est, */
-  /*                    ghost, */
-  /*                    ghost_data, */
-  /*                    d4est_ops, */
-  /*                    d4est_geom, */
-  /*                    d4est_quad, */
-  /*                    geometric_factors, */
-  /*                    INITIALIZE_QUADRATURE_DATA, */
-  /*                    INITIALIZE_GEOMETRY_DATA, */
-  /*                    INITIALIZE_GEOMETRY_ALIASES, */
-  /*                    problem_set_degrees, */
-  /*                    (void*)&input */
-  /*                   ); */
-    
-  /*   u_prev = P4EST_REALLOC(u_prev, double, local_nodes); */
-  /*   Au = P4EST_REALLOC(Au, double, local_nodes); */
-  /*   prob_vecs.Au = Au; */
-  /*   prob_vecs.u = u; */
-  /*   prob_vecs.u0 = u; */
-  /*   prob_vecs.local_nodes = local_nodes; */
-
-  /*   d4est_linalg_copy_1st_to_2nd(u, u_prev, local_nodes); */
+    d4est_linalg_copy_1st_to_2nd(u, u_prev, local_nodes);
 
 
-  /* } */
+  }
 
+  printf("[D4EST_INFO]: Starting garbage collection...\n");
+  
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_poisson_flux_sipg_params_destroy(sipg_params);
   
@@ -561,6 +624,8 @@ problem_init
     ghost_data = NULL;
   }
 
+  d4est_hp_amr_smooth_pred_destroy(scheme);
+  
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
 
   P4EST_FREE(Au);
