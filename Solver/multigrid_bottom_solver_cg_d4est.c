@@ -16,19 +16,19 @@ multigrid_bottom_solver_cg_d4est_input_handler
   multigrid_bottom_solver_cg_d4est_t* pconfig = ((multigrid_bottom_solver_cg_d4est_t*)user);
   
   if (util_match_couple(section,"mg_bottom_solver_cg_d4est",name,"bottom_iter")) {
-    mpi_assert(pconfig->bottom_imax == -1);
+    D4EST_ASSERT(pconfig->bottom_imax == -1);
     pconfig->bottom_imax = atoi(value);
   }
   else if (util_match_couple(section,"mg_bottom_solver_cg_d4est",name,"bottom_rtol")) {
-    mpi_assert(pconfig->bottom_rtol == -1);
+    D4EST_ASSERT(pconfig->bottom_rtol == -1);
     pconfig->bottom_rtol = atof(value);
   }
   else if (util_match_couple(section,"mg_bottom_solver_cg_d4est",name,"bottom_atol")) {
-    mpi_assert(pconfig->bottom_atol == -1);
+    D4EST_ASSERT(pconfig->bottom_atol == -1);
     pconfig->bottom_atol = atof(value);
   }
   else if (util_match_couple(section,"mg_bottom_solver_cg_d4est",name,"bottom_print_residual_norm")) {
-    mpi_assert(pconfig->bottom_print_residual_norm == -1);
+    D4EST_ASSERT(pconfig->bottom_print_residual_norm == -1);
     pconfig->bottom_print_residual_norm = atoi(value);
   }
   else {
@@ -181,7 +181,7 @@ multigrid_bottom_solver_cg_d4est_init
   bottom_data->bottom_print_residual_norm = -1;
   
   if (ini_parse(input_file, multigrid_bottom_solver_cg_d4est_input_handler, bottom_data) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("mg_bottom_solver_cg_d4est", bottom_data->bottom_atol, -1);

@@ -24,12 +24,12 @@ int d4est_geometry_shell_input_handler
 {
   d4est_geometry_shell_input_t* pconfig = (d4est_geometry_shell_input_t*)user;
   if (util_match_couple(section,"geometry",name,"R1")) {
-    mpi_assert(pconfig->R1 == -1);
+    D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"geometry",name,"R2")) {
-    mpi_assert(pconfig->R2 == -1);
+    D4EST_ASSERT(pconfig->R2 == -1);
     pconfig->R2 = atof(value);
     pconfig->count += 1;
   }
@@ -54,10 +54,10 @@ d4est_geometry_shell_input
   input.R2 = -1;
   
   if (ini_parse(input_file, d4est_geometry_shell_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
-  mpi_assert(input.count == num_of_options);
+  D4EST_ASSERT(input.count == num_of_options);
   return input;
 }
 

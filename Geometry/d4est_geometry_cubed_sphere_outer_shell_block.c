@@ -23,17 +23,17 @@ int d4est_geometry_cubed_sphere_outer_shell_block_input_handler
 {
   d4est_geometry_cubed_sphere_outer_shell_block_input_t* pconfig = (d4est_geometry_cubed_sphere_outer_shell_block_input_t*)user;
   if (util_match_couple(section,"geometry",name,"R0")) {
-    mpi_assert(pconfig->R0 == -1);
+    D4EST_ASSERT(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
   }
   else if (util_match_couple(section,"geometry",name,"R1")) {
-    mpi_assert(pconfig->R1 == -1);
+    D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
   }
   else if (util_match_couple(section,"geometry",name,"compactify")) {
-    mpi_assert(pconfig->compactify == -1);
+    D4EST_ASSERT(pconfig->compactify == -1);
     pconfig->compactify = atoi(value);
-    mpi_assert(pconfig->compactify == 0 || pconfig->compactify == 1);
+    D4EST_ASSERT(pconfig->compactify == 0 || pconfig->compactify == 1);
   }
   else {
     return 0;  /* unknown section/name, error */
@@ -55,7 +55,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_input
   input->R1 = -1;
   
   if (ini_parse(input_file, d4est_geometry_cubed_sphere_outer_shell_block_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("geometry", input->R0, -1);

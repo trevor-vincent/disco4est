@@ -70,11 +70,11 @@ get_compactified_direction
   }
   
   if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_OUTER_SHELL){
-    mpi_assert(tree == 0);
+    D4EST_ASSERT(tree == 0);
     return 2;
   }
   else if (d4est_geom->geom_type == GEOM_DISK_OUTER_WEDGE){
-    mpi_assert(tree == 0);
+    D4EST_ASSERT(tree == 0);
     return 1;
   }
   else {
@@ -105,12 +105,12 @@ check_if_direction_is_compactified
       return (face_info.b == compactified_direction) && (integrand_type == QUAD_INTEGRAND_UNKNOWN);
     }
     else {
-      mpi_abort("[D4EST_ERROR]: rst_direction < (P4EST_DIM)-1 when type == ELEMENT_FACE");
+      D4EST_ABORT("[D4EST_ERROR]: rst_direction < (P4EST_DIM)-1 when type == ELEMENT_FACE");
       return -1;
     }
   }
   else {
-    mpi_abort("[D4EST_ERROR]: type == ELEMENT_FACE or type == ELEMENT_VOLUME");
+    D4EST_ABORT("[D4EST_ERROR]: type == ELEMENT_FACE or type == ELEMENT_VOLUME");
     return -1;
   }
 }
@@ -223,7 +223,7 @@ d4est_quadrature_compactified_get_weights
                                                               integrand_type,
                                                               rst_direction,
                                                               compactified_direction);
-  mpi_assert((rst_direction < (P4EST_DIM) && rst_direction >= 0) || (rst_direction < (P4EST_DIM) - 1 && rst_direction >= 0));
+  D4EST_ASSERT((rst_direction < (P4EST_DIM) && rst_direction >= 0) || (rst_direction < (P4EST_DIM) - 1 && rst_direction >= 0));
 
   d4est_quadrature_compactified_storage_t* storage = d4est_quad->user;
   
@@ -235,7 +235,7 @@ d4est_quadrature_compactified_get_weights
       int local_id = ((d4est_quadrature_volume_t*)object)->element_id;
       int stride = storage->volume_strides_1d[local_id];
       int deg_quad_stored = storage->volume_deg_quad[local_id];
-      mpi_assert(degree == deg_quad_stored);      
+      D4EST_ASSERT(degree == deg_quad_stored);      
       return &storage->volume_weights[stride];
     }
     else if (object_type == QUAD_OBJECT_MORTAR){
@@ -245,7 +245,7 @@ d4est_quadrature_compactified_get_weights
       return &storage->mortar_weights[stride];
     }
     else {
-      mpi_abort("[D4EST_ERROR]: object_type must be QUAD_OBJECT_VOLUME OR QUAD_OBJECT_MORTAR");
+      D4EST_ABORT("[D4EST_ERROR]: object_type must be QUAD_OBJECT_VOLUME OR QUAD_OBJECT_MORTAR");
     }
     
   }
@@ -298,7 +298,7 @@ d4est_quadrature_compactified_get_rst
   d4est_quadrature_compactified_storage_t* storage = d4est_quad->user;
   
   if (object_type == QUAD_OBJECT_VOLUME){
-    mpi_assert(rst_direction < (P4EST_DIM) && rst_direction >= 0);
+    D4EST_ASSERT(rst_direction < (P4EST_DIM) && rst_direction >= 0);
 
     if (!is_it_compactified){
       return d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), degree, rst_direction);
@@ -307,7 +307,7 @@ d4est_quadrature_compactified_get_rst
       int local_id = ((d4est_quadrature_volume_t*)object)->element_id;
       int stride = storage->volume_strides_3d[local_id];
       int deg_quad_stored = storage->volume_deg_quad[local_id];
-      mpi_assert(degree == deg_quad_stored);      
+      D4EST_ASSERT(degree == deg_quad_stored);      
       return &(storage->volume_rst[rst_direction][stride]);
     }
   }
@@ -317,7 +317,7 @@ d4est_quadrature_compactified_get_rst
       return d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM)-1, degree, rst_direction);      
     }
     else {
-      /* mpi_assert(rst_direction == 1 && compactified_direction == 2); /\* sanity check for now *\/ */
+      /* D4EST_ASSERT(rst_direction == 1 && compactified_direction == 2); /\* sanity check for now *\/ */
       int mortar_side_id = ((d4est_quadrature_mortar_t*)object)->mortar_side_id;
       int mortar_subface_id = ((d4est_quadrature_mortar_t*)object)->mortar_subface_id;
 #if (P4EST_DIM)==3
@@ -329,7 +329,7 @@ d4est_quadrature_compactified_get_rst
     }
   } 
   else {
-    mpi_abort("[D4EST_ERROR]: ELEMENT_TYPE not supported");
+    D4EST_ABORT("[D4EST_ERROR]: ELEMENT_TYPE not supported");
   }
 }
 
@@ -354,7 +354,7 @@ d4est_quadrature_compactified_get_interp
   d4est_quadrature_compactified_storage_t* storage = d4est_quad->user;
 
   if (object_type == QUAD_OBJECT_VOLUME){
-    mpi_assert(rst_direction < (P4EST_DIM) && rst_direction >= 0);
+    D4EST_ASSERT(rst_direction < (P4EST_DIM) && rst_direction >= 0);
     if (!is_it_compactified){
       return d4est_operators_fetch_lobatto_to_gauss_interp_1d(d4est_ops, deg_lobatto, deg_quad);
     }
@@ -363,8 +363,8 @@ d4est_quadrature_compactified_get_interp
       int stride = storage->volume_strides_2d[local_id];
       int deg_quad_stored = storage->volume_deg_quad[local_id];
       int deg_lobatto_stored = storage->volume_deg_lobatto[local_id];
-      mpi_assert(deg_quad == deg_quad_stored);      
-      mpi_assert(deg_lobatto == deg_lobatto_stored);      
+      D4EST_ASSERT(deg_quad == deg_quad_stored);      
+      D4EST_ASSERT(deg_lobatto == deg_lobatto_stored);      
       return &(storage->volume_interp[stride]);
     }
   }
@@ -374,7 +374,7 @@ d4est_quadrature_compactified_get_interp
       return d4est_operators_fetch_lobatto_to_gauss_interp_1d(d4est_ops, deg_lobatto, deg_quad);
     }
     else {
-      /* mpi_assert(rst_direction == 1 && compactified_direction == 2); /\* sanity check for now *\/ */
+      /* D4EST_ASSERT(rst_direction == 1 && compactified_direction == 2); /\* sanity check for now *\/ */
       int mortar_side_id = ((d4est_quadrature_mortar_t*)object)->mortar_side_id;
       int mortar_subface_id = ((d4est_quadrature_mortar_t*)object)->mortar_subface_id;
       int stride = storage->mortar_strides_2d[(P4EST_HALF)*mortar_side_id + mortar_subface_id];
@@ -382,7 +382,7 @@ d4est_quadrature_compactified_get_interp
     }
   } 
   else {
-    mpi_abort("[D4EST_ERROR]: ELEMENT_TYPE not supported");
+    D4EST_ABORT("[D4EST_ERROR]: ELEMENT_TYPE not supported");
   }
   
 
@@ -408,7 +408,7 @@ d4est_quadrature_compactified_get_interp_trans
   d4est_quadrature_compactified_storage_t* storage = d4est_quad->user;
   
   if (object_type == QUAD_OBJECT_VOLUME){
-    mpi_assert(rst_direction < (P4EST_DIM) && rst_direction >= 0);
+    D4EST_ASSERT(rst_direction < (P4EST_DIM) && rst_direction >= 0);
     if (!is_it_compactified){
       return d4est_operators_fetch_lobatto_to_gauss_interp_trans_1d(d4est_ops, deg_lobatto, deg_quad);
     }
@@ -417,8 +417,8 @@ d4est_quadrature_compactified_get_interp_trans
       int stride = storage->volume_strides_2d[local_id];
       int deg_quad_stored = storage->volume_deg_quad[local_id];
       int deg_lobatto_stored = storage->volume_deg_lobatto[local_id];
-      mpi_assert(deg_quad == deg_quad_stored);      
-      mpi_assert(deg_lobatto == deg_lobatto_stored);      
+      D4EST_ASSERT(deg_quad == deg_quad_stored);      
+      D4EST_ASSERT(deg_lobatto == deg_lobatto_stored);      
       return &(storage->volume_interp_trans[stride]);
     }
   }
@@ -428,7 +428,7 @@ d4est_quadrature_compactified_get_interp_trans
       return d4est_operators_fetch_lobatto_to_gauss_interp_trans_1d(d4est_ops, deg_lobatto, deg_quad);
     }
     else {
-      /* mpi_assert(rst_direction == 1 && compactified_direction == 2); /\* sanity check for now *\/ */
+      /* D4EST_ASSERT(rst_direction == 1 && compactified_direction == 2); /\* sanity check for now *\/ */
       int mortar_side_id = ((d4est_quadrature_mortar_t*)object)->mortar_side_id;
       int mortar_subface_id = ((d4est_quadrature_mortar_t*)object)->mortar_subface_id;
       int stride = storage->mortar_strides_2d[(P4EST_HALF)*mortar_side_id + mortar_subface_id];
@@ -436,7 +436,7 @@ d4est_quadrature_compactified_get_interp_trans
     }
   } 
   else {
-    mpi_abort("[D4EST_ERROR]: ELEMENT_TYPE not supported");
+    D4EST_ABORT("[D4EST_ERROR]: ELEMENT_TYPE not supported");
   }
 }
 
@@ -521,7 +521,7 @@ d4est_quadrature_compactified_compute_rst_volume
       );
   }
   else {
-    mpi_abort("[D4EST_ERROR]: rst_direction != 0,1 or 2");
+    D4EST_ABORT("[D4EST_ERROR]: rst_direction != 0,1 or 2");
   }
 
   P4EST_FREE(eye);
@@ -657,7 +657,7 @@ d4est_quadrature_compactified_new
  const char* input_section
 )
 {
-  mpi_assert(d4est_geom->geom_type == GEOM_CUBED_SPHERE_OUTER_SHELL
+  D4EST_ASSERT(d4est_geom->geom_type == GEOM_CUBED_SPHERE_OUTER_SHELL
              ||
              d4est_geom->geom_type == GEOM_DISK_OUTER_WEDGE
             );
@@ -684,7 +684,6 @@ d4est_quadrature_compactified_compute_mortar_strides_and_sizes_boundary
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
- d4est_grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -711,7 +710,6 @@ d4est_quadrature_compactified_store_data_for_boundary
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
- d4est_grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -921,8 +919,7 @@ d4est_quadrature_compactified_compute_storage_for_mortar_space
   d4est_mortar_fcn_ptrs_t compute_strides_and_sizes;
   compute_strides_and_sizes.flux_interface_fcn = d4est_quadrature_compactified_compute_mortar_strides_and_sizes_interface;
   compute_strides_and_sizes.flux_boundary_fcn = d4est_quadrature_compactified_compute_mortar_strides_and_sizes_boundary;
-  compute_strides_and_sizes.bndry_fcn = NULL;
-  compute_strides_and_sizes.params = NULL;
+  compute_strides_and_sizes.user_ctx = NULL;
 
   d4est_mortar_compute_flux_on_local_elements
     (
@@ -953,8 +950,7 @@ d4est_quadrature_compactified_compute_storage_for_mortar_space
   d4est_mortar_fcn_ptrs_t compute_storage;
   compute_storage.flux_interface_fcn = d4est_quadrature_compactified_store_data_for_interface;
   compute_storage.flux_boundary_fcn = d4est_quadrature_compactified_store_data_for_boundary;
-  compute_storage.bndry_fcn = NULL;
-  compute_storage.params = NULL;  
+  compute_storage.user_ctx = NULL;  
 
   d4est_mortar_compute_flux_on_local_elements
     (
@@ -1103,7 +1099,7 @@ d4est_quadrature_compactified_c1tpc2_neg4_aa_and_bb
 
   }
   else {
-    mpi_abort("[D4EST_ERROR]: Do not support n >= 5 yet\n");
+    D4EST_ABORT("[D4EST_ERROR]: Do not support n >= 5 yet\n");
   }
 
 }
@@ -1209,7 +1205,7 @@ d4est_quadrature_compactified_c1tpc2_neg3_moment_fcn(int n, void* user)
   else if (n == 20) return (-2*(29099070*powl(c1,21) - 48498450*powl(c1,19)*powl(c2,2) + 15519504*powl(c1,17)*powl(c2,4) + 2217072*powl(c1,15)*powl(c2,6) + 739024*powl(c1,13)*powl(c2,8) + 335920*powl(c1,11)*powl(c2,10) + 180880*powl(c1,9)*powl(c2,12) + 108528*powl(c1,7)*powl(c2,14) + 70224*powl(c1,5)*powl(c2,16) + 48048*powl(c1,3)*powl(c2,18) + 27027*c1*powl(c2,20)))/(153153.*powl(c2,20)*powl(powl(c1,2) - powl(c2,2),2)) + (380*powl(c1,18)*atanhl(c2/c1))/powl(c2,21);
 
   else {
-    mpi_abort("n must be <= 20");
+    D4EST_ABORT("n must be <= 20");
     return NAN;
   }
     
@@ -1272,7 +1268,7 @@ d4est_quadrature_compactified_c1tpc2_neg2_moment_fcn(int n, void* user)
 
   else if (n == 20) return (40*powl(c1,18))/powl(c2,20) + (40*powl(c1,16))/(3.*powl(c2,18)) + (8*powl(c1,14))/powl(c2,16) + (40*powl(c1,12))/(7.*powl(c2,14)) + (40*powl(c1,10))/(9.*powl(c2,12)) + (40*powl(c1,8))/(11.*powl(c2,10)) + (40*powl(c1,6))/(13.*powl(c2,8)) + (8*powl(c1,4))/(3.*powl(c2,6)) + (40*powl(c1,2))/(17.*powl(c2,4)) + 40/(19.*powl(c2,2)) + 2/(powl(c1,2) - powl(c2,2)) - (40*powl(c1,19)*atanhl(c2/c1))/powl(c2,21);
   else {
-    mpi_abort("n must be <= 20");
+    D4EST_ABORT("n must be <= 20");
     return NAN;
   }
 }
@@ -1298,7 +1294,7 @@ d4est_quadrature_compactified_c1tpc2_neg4_moment_fcn(int n, void* user)
     /* printf(" cmax = %Le\n", cmax); */
     /* printf(" cmin == %Le\n", cmin); */
     /* printf(" n == %d\n", n); */
-    mpi_abort("[D4EST_ERROR]: condition c1 + c2 > 0 && c1 - c2 > 0 && n <= 20 failed\n");
+    D4EST_ABORT("[D4EST_ERROR]: condition c1 + c2 > 0 && c1 - c2 > 0 && n <= 20 failed\n");
   }
   
   if (n == 0) return (2*(3*powl(c1,2) + powl(c2,2)))/(3.*powl(powl(c1,2) - powl(c2,2),3));
@@ -1323,7 +1319,7 @@ d4est_quadrature_compactified_c1tpc2_neg4_moment_fcn(int n, void* user)
   else if (n == 19) return (2*c1*c2*(-14549535*powl(c1,20) + 38798760*powl(c1,18)*powl(c2,2) - 32008977*powl(c1,16)*powl(c2,4) + 6651216*powl(c1,14)*powl(c2,6) + 739024*powl(c1,12)*powl(c2,8) + 201552*powl(c1,10)*powl(c2,10) + 77520*powl(c1,8)*powl(c2,12) + 36176*powl(c1,6)*powl(c2,14) + 19152*powl(c1,4)*powl(c2,16) + 11088*powl(c1,2)*powl(c2,18) + 4004*powl(c2,20)) - 14549535*powl(c1,16)*powl(powl(c1,2) - powl(c2,2),3)*logl(c1 - c2) + 14549535*powl(c1,16)*powl(powl(c1,2) - powl(c2,2),3)*logl(c1 + c2))/(15015.*powl(c1 - c2,3)*powl(c2,20)*powl(c1 + c2,3));
   else if (n == 20) return (2*(-58198140*powl(c1,22) + 155195040*powl(c1,20)*powl(c2,2) - 128035908*powl(c1,18)*powl(c2,4) + 26604864*powl(c1,16)*powl(c2,6) + 2956096*powl(c1,14)*powl(c2,8) + 806208*powl(c1,12)*powl(c2,10) + 310080*powl(c1,10)*powl(c2,12) + 144704*powl(c1,8)*powl(c2,14) + 76608*powl(c1,6)*powl(c2,16) + 44352*powl(c1,4)*powl(c2,18) + 25025*powl(c1,2)*powl(c2,20) + 3003*powl(c2,22)))/(51051.*powl(c2,20)*powl(-powl(c1,2) + powl(c2,2),3)) - (2280*powl(c1,17)*atanhl(c2/c1))/powl(c2,21);
   else {
-    mpi_abort("n must be <= 20");
+    D4EST_ABORT("n must be <= 20");
     return NAN;
   }
 }
@@ -1384,7 +1380,7 @@ else if (n == 19) return (2*powl(c1,18))/powl(c2,19) + (2*powl(c1,16))/(3.*powl(
 else if (n == 20) return (-2*powl(c1,19))/powl(c2,20) - (2*powl(c1,17))/(3.*powl(c2,18)) - (2*powl(c1,15))/(5.*powl(c2,16)) - (2*powl(c1,13))/(7.*powl(c2,14)) - (2*powl(c1,11))/(9.*powl(c2,12)) - (2*powl(c1,9))/(11.*powl(c2,10)) - (2*powl(c1,7))/(13.*powl(c2,8)) - (2*powl(c1,5))/(15.*powl(c2,6)) - (2*powl(c1,3))/(17.*powl(c2,4)) - (2*c1)/(19.*powl(c2,2)) + (2*powl(c1,20)*atanhl(c2/c1))/powl(c2,21);
 
  else {
-   mpi_abort("[D4EST_ERROR]: Do not support n>=20 moments for neg1 compactified quadrature points");
+   D4EST_ABORT("[D4EST_ERROR]: Do not support n>=20 moments for neg1 compactified quadrature points");
    return NAN;
  }
 
@@ -1485,7 +1481,7 @@ bb[4] = (36*(6*powl(c1,3)*powl(atanhl(c2/c1),2) - 3*powl(c1,2)*atanhl(c2/c1)*(4*
 }
 
   else {
-    mpi_abort("[D4EST_ERROR]: Do not support n >= 5 yet\n");
+    D4EST_ABORT("[D4EST_ERROR]: Do not support n >= 5 yet\n");
   }
  
 }
@@ -1671,7 +1667,7 @@ d4est_quadrature_compactified_c1tpc2_neg3_aa_and_bb
 
 
   else {
-    mpi_abort("[D4EST_ERROR]: Do not support n >= 5 yet\n");
+    D4EST_ABORT("[D4EST_ERROR]: Do not support n >= 5 yet\n");
   }
   
 }
@@ -1748,7 +1744,7 @@ d4est_quadrature_compactified_compute_abscissas_and_weights
     cmax = cmax + 1.;
     
     int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
-    mpi_assert(compactify_outer_shell == 1);
+    D4EST_ASSERT(compactify_outer_shell == 1);
     double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
     double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
     c1 = ((R2-R1)*(cmax+cmin) - 4.0l*R2 + 2.0l*R1);
@@ -1776,14 +1772,14 @@ d4est_quadrature_compactified_compute_abscissas_and_weights
     printf("amin,amax,bmin,bmax = %.15f,%.15f,%.15f,%.15f\n", amin, amax, bmin, bmax);
     
     int compactify_outer_wedge = ((d4est_geometry_disk_attr_t*)(d4est_geom->user))->compactify_outer_wedge;
-    mpi_assert(compactify_outer_wedge == 1);
+    D4EST_ASSERT(compactify_outer_wedge == 1);
     double R1 = ((d4est_geometry_disk_attr_t*)(d4est_geom->user))->R1;
     double R2 = ((d4est_geometry_disk_attr_t*)(d4est_geom->user))->R2;
     c1 = ((R2-R1)*(bmax+bmin) - 4.0l*R2 + 2.0l*R1);
     c2 = ((R2-R1)*(bmax-bmin));
   }
   else {
-    mpi_abort("[D4EST_ERROR]: d4est_quadrature_compactified does not support this type at the moment\n");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_quadrature_compactified does not support this type at the moment\n");
   }
   
   d4est_quadrature_compactified_params_t params;
@@ -1834,7 +1830,7 @@ d4est_quadrature_compactified_compute_abscissas_and_weights
                                                    );
   }
   else {
-    mpi_abort("[D4EST_ERROR]: Not a supported type");
+    D4EST_ABORT("[D4EST_ERROR]: Not a supported type");
   }
     
   weight_and_abscissa_pair_t* pairs = P4EST_ALLOC(weight_and_abscissa_pair_t, degree + 1);

@@ -29,7 +29,7 @@ p4est_connectivity_new_trap (void)
                                       tree_to_tree, tree_to_face,
                                       NULL, &num_ctt, NULL, NULL);
 #else
-  mpi_abort("[ERROR]: trapezoid geometry only supports DIM=2");
+  D4EST_ABORT("[ERROR]: trapezoid geometry only supports DIM=2");
   return NULL;
 #endif
   

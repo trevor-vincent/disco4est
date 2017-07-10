@@ -33,16 +33,16 @@ multigrid_element_data_updater_curved_init
   updater->geometric_factors[num_of_levels-1] = d4est_mesh_geometry_storage_toplevel;
 
   if (element_data_init_user_fcn == NULL){
-    mpi_abort("You must set the element data init user fcn for the element data updater\n");
+    D4EST_ABORT("You must set the element data init user fcn for the element data updater\n");
   }
 
   if (d4est_geom == NULL){
-    mpi_abort("You must set the d4est geometry for the element data updater\n");
+    D4EST_ABORT("You must set the d4est geometry for the element data updater\n");
   }
 
 
   if (d4est_mesh_geometry_storage_toplevel == NULL){
-    mpi_abort("You must set the geometric_factors for the element data updater\n");
+    D4EST_ABORT("You must set the geometric_factors for the element data updater\n");
   }
   
   updater->user = user;

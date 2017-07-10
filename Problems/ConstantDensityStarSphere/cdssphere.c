@@ -363,7 +363,7 @@ problem_init
   
   int level;
   
-  mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
+  D4EST_ASSERT((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
   int world_rank, world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);

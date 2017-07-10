@@ -28,7 +28,7 @@ int d4est_reference_is_child_left_or_right(int c, int dir) {
     else
       return 1;
   else {
-    mpi_abort("[D4EST_ERROR]: d4est_reference_is_child_left_or_right\n");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_reference_is_child_left_or_right\n");
     return -1;
   }
 }
@@ -42,12 +42,12 @@ void d4est_reference_child_to_parent_coords(int c, double* r) {
     *r += .5;
   }
   else {
-    mpi_abort("[D4EST_ERROR]: d4est_reference_child_to_parent_coords\n");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_reference_child_to_parent_coords\n");
   }
 }
 
 void d4est_reference_get_normal(int face, int dim, double* n) {
-  mpi_assert((face < 2 * dim) && (dim == 2 || dim == 3));
+  D4EST_ASSERT((face < 2 * dim) && (dim == 2 || dim == 3));
 
   double* nx = &n[0];
   double* ny = &n[1];
@@ -73,7 +73,7 @@ void d4est_reference_get_normal(int face, int dim, double* n) {
   } else if (face == 5) {
     *nz = 1.;
   } else {
-    mpi_abort("[D4EST_ERROR]: d4est_reference_get_normal");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_reference_get_normal");
   }
 }
 
@@ -86,7 +86,7 @@ int d4est_reference_reorient_face_order
  int i
 )
 {
-  mpi_assert((face_dim == 1 && o < 2 && i < 2) || (face_dim == 2 && o < 4 && i < 4));
+  D4EST_ASSERT((face_dim == 1 && o < 2 && i < 2) || (face_dim == 2 && o < 4 && i < 4));
 
   if (face_dim == 1){
     if (o == 1){
@@ -101,7 +101,7 @@ int d4est_reference_reorient_face_order
     return d4est_reference_p8est_perm_to_order[perm][i];
   }
   else {
-    mpi_abort("FACE DIM == 1, 2\n");
+    D4EST_ABORT("FACE DIM == 1, 2\n");
     return -1;
   }
 }
@@ -113,7 +113,7 @@ int d4est_reference_corner_to_node
  int corner
 )
 {
-  mpi_assert(
+  D4EST_ASSERT(
              (
               (dim == 3 && corner < 8)
               || (dim == 2 && dim < 4)
@@ -135,7 +135,7 @@ int d4est_reference_corner_to_node
     else if (corner == 3)
       return nodes_2d - 1;
     else{
-      mpi_abort("[D4EST_ERROR]: corner < 4\n");
+      D4EST_ABORT("[D4EST_ERROR]: corner < 4\n");
       return -1;
     }
   }
@@ -158,13 +158,13 @@ int d4est_reference_corner_to_node
     else if (corner == 7)
       return nodes_3d - 1;
     else{
-      mpi_abort("[D4EST_ERROR]: corner < 8\n");
+      D4EST_ABORT("[D4EST_ERROR]: corner < 8\n");
       return -1;
     }
   }
 
   else {
-    mpi_abort("[D4EST_ERROR]: DIM == 3 or DIM == 2\n");
+    D4EST_ABORT("[D4EST_ERROR]: DIM == 3 or DIM == 2\n");
     return -1;
   }
 #endif
@@ -179,7 +179,7 @@ int d4est_reference_corner_to_node
     else if (corner == 3)
       return nodes_2d - 1;
     else{
-      mpi_abort("[D4EST_ERROR]: corner < 4\n");
+      D4EST_ABORT("[D4EST_ERROR]: corner < 4\n");
       return -1;
     }
   }
@@ -202,13 +202,13 @@ int d4est_reference_corner_to_node
     else if (corner == 7)
       return nodes_3d - 1;
     else{
-      mpi_abort("[D4EST_ERROR]: corner < 8\n");
+      D4EST_ABORT("[D4EST_ERROR]: corner < 8\n");
       return -1;
     }
   }
 
   else {
-    mpi_abort("[D4EST_ERROR]: DIM == 3 or DIM == 2\n");
+    D4EST_ABORT("[D4EST_ERROR]: DIM == 3 or DIM == 2\n");
     return -1;
   }
 #endif

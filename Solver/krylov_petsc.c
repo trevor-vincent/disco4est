@@ -18,78 +18,78 @@ int krylov_petsc_input_handler
 {
   krylov_petsc_params_t* pconfig = (krylov_petsc_params_t*)user;
   if (util_match_couple(section,pconfig->input_section,name,"ksp_atol")) {
-    mpi_assert(pconfig->ksp_atol[0] == '*');
+    D4EST_ASSERT(pconfig->ksp_atol[0] == '*');
     snprintf (pconfig->ksp_atol, sizeof(pconfig->ksp_atol), "%s", value);
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_atol",value); */
   }
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_rtol")) {
-    mpi_assert(pconfig->ksp_rtol[0] == '*');
+    D4EST_ASSERT(pconfig->ksp_rtol[0] == '*');
     snprintf (pconfig->ksp_rtol, sizeof(pconfig->ksp_rtol), "%s", value);
 
     /* pconfig->ksp_rtol = atof(value); */
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_rtol",value); */
   }
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_max_it")) {
-    mpi_assert(pconfig->ksp_max_it[0] == '*');
+    D4EST_ASSERT(pconfig->ksp_max_it[0] == '*');
     snprintf (pconfig->ksp_max_it, sizeof(pconfig->ksp_max_it), "%s", value);
-    mpi_assert(atoi(value) > -1);
+    D4EST_ASSERT(atoi(value) > -1);
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_max_it",value); */
   }
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_view")) {
-    mpi_assert(pconfig->ksp_view == -1);
+    D4EST_ASSERT(pconfig->ksp_view == -1);
     pconfig->ksp_view = atoi(value);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     /* if (atoi(value) == 1){ */
       /* PetscOptionsSetValue(pconfig->petsc_options,"-s_view",""); */
     /* } */
   }  
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_monitor")) {
-    mpi_assert(pconfig->ksp_monitor == -1);
+    D4EST_ASSERT(pconfig->ksp_monitor == -1);
     pconfig->ksp_monitor = atoi(value);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     /* if (atoi(value) == 1){ */
       /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_monitor",""); */
     /* } */
   } 
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_converged_reason")) {
-    mpi_assert(pconfig->ksp_converged_reason == -1);
+    D4EST_ASSERT(pconfig->ksp_converged_reason == -1);
     pconfig->ksp_converged_reason = atoi(value);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     /* if (atoi(value) == 1){ */
       /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_converged_reason",""); */
     /* } */
   }
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_monitor_singular_value")) {
     pconfig->ksp_monitor_singular_value = atoi(value);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
   }      
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_initial_guess_nonzero")) {
-    mpi_assert(pconfig->ksp_initial_guess_nonzero == -1);
+    D4EST_ASSERT(pconfig->ksp_initial_guess_nonzero == -1);
     pconfig->ksp_initial_guess_nonzero = atoi(value);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     /* if (atoi(value) == 1){ */
       /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_initial_guess_nonzero",""); */
     /* } */
   }  
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_type")) {
-    mpi_assert(pconfig->ksp_type[0] == '*');
+    D4EST_ASSERT(pconfig->ksp_type[0] == '*');
     snprintf (pconfig->ksp_type, sizeof(pconfig->ksp_type), "%s", value);
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_type",value); */
   }
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_chebyshev_esteig_steps")) {
-    mpi_assert(pconfig->ksp_chebyshev_esteig_steps[0] == '*');
+    D4EST_ASSERT(pconfig->ksp_chebyshev_esteig_steps[0] == '*');
     snprintf (pconfig->ksp_chebyshev_esteig_steps, sizeof(pconfig->ksp_chebyshev_esteig_steps), "%s", value);
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_chebyshev_esteig_steps",value); */
   }
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_chebyshev_esteig")) {
-    mpi_assert(pconfig->ksp_chebyshev_esteig[0] == '*');
+    D4EST_ASSERT(pconfig->ksp_chebyshev_esteig[0] == '*');
     snprintf (pconfig->ksp_chebyshev_esteig, sizeof(pconfig->ksp_chebyshev_esteig), "%s", value);
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_chebyshev_esteig",value); */
   }
   else if (util_match_couple(section,pconfig->input_section,name,"ksp_chebyshev_esteig_random")) {
-    mpi_assert(pconfig->ksp_chebyshev_esteig_random == -1);
+    D4EST_ASSERT(pconfig->ksp_chebyshev_esteig_random == -1);
     pconfig->ksp_chebyshev_esteig_random = atoi(value);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_chebyshev_esteig_random",value); */
   }  
   else {
@@ -176,10 +176,10 @@ krylov_petsc_input
   input->ksp_chebyshev_esteig_random = -1;
   input->ksp_monitor_singular_value = 0;
   
-  mpi_assert(sizeof(input->input_section) <= 50);
+  D4EST_ASSERT(sizeof(input->input_section) <= 50);
   snprintf (input->input_section, sizeof(input->input_section), "%s", input_section);
   if (ini_parse(input_file, krylov_petsc_input_handler, input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT(input_section, input->ksp_view, -1);

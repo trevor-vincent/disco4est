@@ -50,7 +50,7 @@ arbquad_test_moments
       }
     }
     else {
-      mpi_abort("[D4EST_ERROR]: weight choice not supported\n");
+      D4EST_ABORT("[D4EST_ERROR]: weight choice not supported\n");
     }
     if (moment_analytic == 0.0l)
       moment_relerror = fabsl((moment_analytic - moment_numerical));
@@ -320,7 +320,7 @@ arbquad_get_abscissas_and_weights
     }
   }
   else if (weight_choice == DIVIDE_WEIGHTS_BY_WEIGHT_FCN) {
-    mpi_assert(weight_fcn != NULL);
+    D4EST_ASSERT(weight_fcn != NULL);
     for (int k = 0; k < n; k++){
       long double vv = 0.l;
       for (int i = 0; i < n; i++){
@@ -333,7 +333,7 @@ arbquad_get_abscissas_and_weights
 
   }
   else {
-    mpi_abort("[D4EST_ERROR]: This weight choice is not supported\n");
+    D4EST_ABORT("[D4EST_ERROR]: This weight choice is not supported\n");
   }
   
   free(z);
@@ -408,7 +408,7 @@ arbquad_get_abscissas_and_weights_use_aa_and_bb
     }
   }
   else if (weight_choice == DIVIDE_WEIGHTS_BY_WEIGHT_FCN) {
-    mpi_assert(weight_fcn != NULL);
+    D4EST_ASSERT(weight_fcn != NULL);
     for (int k = 0; k < n; k++){
       long double vv = 0.l;
       for (int i = 0; i < n; i++){
@@ -421,7 +421,7 @@ arbquad_get_abscissas_and_weights_use_aa_and_bb
 
   }
   else {
-    mpi_abort("[D4EST_ERROR]: This weight choice is not supported\n");
+    D4EST_ABORT("[D4EST_ERROR]: This weight choice is not supported\n");
   }
   
   free(z);

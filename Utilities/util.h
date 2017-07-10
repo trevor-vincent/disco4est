@@ -123,80 +123,80 @@
   {                                                                            \
   } while (0)
 
-
-
 #ifndef NDEBUG
-#define mpi_assert(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
+#define D4EST_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
 #else
-#define mpi_assert(c) D4EST_NOOP()
+#define D4EST_ASSERT(c) D4EST_NOOP()
 #endif
 
-/* #define mpi_assert(expression)  \ */
-/* do { \ */
-/*   if (!(expression)) { \ */
-/*      fprintf(stderr, "Failed assertion at %d in %s",_LINE_, _FILE_); \ */
-/*      MPI_Abort(MPI_COMM_WORLD, 1); \ */
-/*  } \ */
-/* } while (0) */
-
-#define mpi_abort(c) SC_ABORT(c)
-
-#define mpi_abort_if(q, ...) ((q) ? mpi_abort(__VA_ARGS__) : (void)0)
-#define mpi_abort_if_not(q, ...) mpi_abort_if(!(q), __VA_ARGS__)
+#define D4EST_ABORT(c) SC_ABORT(c)
+#define D4EST_ABORT_IF(q, ...) ((q) ? D4EST_ABORT(__VA_ARGS__) : (void)0)
+#define D4EST_ABORT_IF_NOT(q, ...) D4EST_ABORT_IF(!(q), __VA_ARGS__)
 
 
-/* #define mpi_abort(expression) \ */
-/* do { \ */
-/*     fprintf(stderr, "%s Failed assertion at %d in %s",expression,_LINE_, _FILE_); \ */
-/*      MPI_Abort(MPI_COMM_WORLD, 1); \ */
-/* } while (0) */
-
-
-#define D4EST_ASPRINTF(write_to, ...) {              \
-    char *tmp_string_for_extend = (write_to);        \
-    if(asprintf(&(write_to), __VA_ARGS__) <0){       \
-      mpi_abort("ASPRINTF_ERROR");                   \
-    }                                                \
-    free(tmp_string_for_extend);                     \
+#define D4EST_ASPRINTF(write_to, ...) {         \
+    char *tmp_string_for_extend = (write_to);   \
+    if(asprintf(&(write_to), __VA_ARGS__) <0){  \
+      D4EST_ABORT("ASPRINTF_ERROR");              \
+    }                                           \
+    free(tmp_string_for_extend);                \
   }
 
-#define D4EST_FREE_MAT(a, n1, n2) do {                                  \
-    for (int i = 0; i < n1; i++) {                                      \
-      for (int j = 0; j < n2; j++) {                                    \
-        P4EST_FREE(a[i][j]);                                            \
-      }                                                                 \
-    }                                                                   \
+#define D4EST_FREE_MAT(a, n1, n2) do {          \
+    for (int i = 0; i < n1; i++) {              \
+      for (int j = 0; j < n2; j++) {            \
+        P4EST_FREE(a[i][j]);                    \
+      }                                         \
+    }                                           \
   } while(0)
 
-#define D4EST_FREE_VEC(a, n1) do {                                      \
-    for (int i = 0; i < n1; i++) {                                      \
-      P4EST_FREE(a[i]);                                                 \
-    }                                                                   \
+#define D4EST_FREE_VEC(a, n1) do {              \
+    for (int i = 0; i < n1; i++) {              \
+      P4EST_FREE(a[i]);                         \
+    }                                           \
   } while(0)
 
-#define D4EST_ALLOC_MAT(a, n1, n2, size) do {                           \
-    for (int i = 0; i < n1; i++) {                                      \
-      for (int j = 0; j < n2; j++) {                                    \
-        a[i][j] = P4EST_ALLOC(double, size);                            \
-      }                                                                 \
-    }                                                                   \
+#define D4EST_ALLOC_MAT(a, n1, n2, size) do {   \
+    for (int i = 0; i < n1; i++) {              \
+      for (int j = 0; j < n2; j++) {            \
+        a[i][j] = P4EST_ALLOC(double, size);    \
+      }                                         \
+    }                                           \
   } while(0)
 
-#define D4EST_ALLOC_VEC(a, n1, size) do {                               \
-    for (int i = 0; i < n1; i++) {                                      \
-      a[i] = P4EST_ALLOC(double, size);                                 \
-    }                                                                   \
+
+#define D4EST_COPY_MAT(a, b, n1, n2) do {       \
+    for (int i = 0; i < n1; i++) {              \
+      for (int j = 0; j < n2; j++) {            \
+        b[i][j] = a[i][j];                      \
+      }                                         \
+    }                                           \
+  } while(0)
+
+#define D4EST_COPY_VEC(a, b, n1) do {           \
+    for (int i = 0; i < n1; i++) {              \
+      b[i] = a[i];                              \
+    }                                           \
+  } while(0)
+
+
+#define D4EST_ALLOC_VEC(a, n1, size) do {       \
+    for (int i = 0; i < n1; i++) {              \
+      a[i] = P4EST_ALLOC(double, size);         \
+    }                                           \
   } while(0)
 
 #define D4EST_ALLOC_DBYD_MAT(a, size) D4EST_ALLOC_MAT(a, (P4EST_DIM), (P4EST_DIM), size);
+#define D4EST_COPY_DBYD_MAT(a, b) D4EST_COPY_MAT(a, b, (P4EST_DIM), (P4EST_DIM));
 #define D4EST_FREE_DBYD_MAT(a) D4EST_FREE_MAT(a, (P4EST_DIM), (P4EST_DIM));
 #define D4EST_ALLOC_DIM_VEC(a, size) D4EST_ALLOC_VEC(a, (P4EST_DIM), size);
+#define D4EST_COPY_DIM_VEC(a, b) D4EST_COPY_VEC(a, b, (P4EST_DIM));
 #define D4EST_FREE_DIM_VEC(a) D4EST_FREE_VEC(a, (P4EST_DIM));
 
 /* #define D4EST_INPUT_CHECK(section, param, param_default) do {           \ */
 /*   if (param == param_default){                                          \ */
 /*     printf("Please set %s in section %s\n", section, #param);           \ */
-/*     mpi_abort("Parameter not set");                                     \ */
+/*     D4EST_ABORT("Parameter not set");                                     \ */
 /*   }                                                              */
 /* } while(0) */
 
@@ -204,7 +204,7 @@
 #define D4EST_CHECK_INPUT(section, param, param_default) do {           \
     if (param == param_default) {                                       \
       printf("Please set %s in input file section %s\n",#param, section); \
-      mpi_abort("");                                                    \
+      D4EST_ABORT("");                                                    \
     }                                                                   \
   } while(0)
     

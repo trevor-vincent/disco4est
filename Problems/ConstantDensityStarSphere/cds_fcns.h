@@ -70,43 +70,43 @@ int problem_input_handler
 {
   constantdensitystar_params_t* pconfig = (constantdensitystar_params_t*)user;
   if (util_match_couple(section,"amr",name,"num_of_amr_levels")) {
-    mpi_assert(pconfig->num_of_amr_levels == -1);
+    D4EST_ASSERT(pconfig->num_of_amr_levels == -1);
     pconfig->num_of_amr_levels = atoi(value);
   }
   else if (util_match_couple(section,"amr",name,"num_unifrefs")) {
-    mpi_assert(pconfig->num_unifrefs == -1);
+    D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
   }
   else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
-    mpi_assert(pconfig->ip_flux_penalty == -1);
+    D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R0")) {
-    mpi_assert(pconfig->deg_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
-    mpi_assert(pconfig->deg_quad_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R0 == -1);
     pconfig->deg_quad_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R1")) {
-    mpi_assert(pconfig->deg_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
-    mpi_assert(pconfig->deg_quad_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R1 == -1);
     pconfig->deg_quad_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R2")) {
-    mpi_assert(pconfig->deg_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
-    mpi_assert(pconfig->deg_quad_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R2 == -1);
     pconfig->deg_quad_R2 = atoi(value);
   }  
   else if (util_match_couple(section,"problem",name,"rho0_div_rhoc")) {
-    mpi_assert(pconfig->rho0_div_rhoc == -1);
+    D4EST_ASSERT(pconfig->rho0_div_rhoc == -1);
     pconfig->rho0_div_rhoc = atof(value);
   } 
   else {
@@ -154,7 +154,7 @@ constantdensitystar_input
   input.deg_quad_R2 = -1; 
  
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("problem", input.num_unifrefs, -1);
@@ -183,12 +183,12 @@ constantdensitystar_input
   double C0 = pow(1./(2.*pi*rho0/3.),.25);
   double alpha = 386.266;
 
-  mpi_assert( !util_bisection(solve_for_alpha, alpha_crit, 1000*alpha_crit, DBL_EPSILON, 100000, &alpha, &input));
+  D4EST_ASSERT( !util_bisection(solve_for_alpha, alpha_crit, 1000*alpha_crit, DBL_EPSILON, 100000, &alpha, &input));
 
   double u_alpha_at_R = sqrt(alpha*R)/sqrt(R*R + alpha*R*alpha*R);
   double beta = R*(C0*u_alpha_at_R - 1.);
   
-  mpi_assert(
+  D4EST_ASSERT(
              (C0*u_alpha(R + 0.,0.,0., &input) == 1. + beta/R)
              &&
              (C0*u_alpha(0.,R + 0.,0., &input) == 1. + beta/R)

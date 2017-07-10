@@ -4072,7 +4072,7 @@ void d4est_operators_gauss_nodes_and_weights ( int n, double x[], double w[] )
     fprintf ( stderr, "DGMATH_gauss_NODES_AND_WEIGHTS - Fatal error!\n" );
     fprintf ( stderr, "  Illegal value of N = %d\n", n );
     fprintf ( stderr, "  Legal values are 1:33, 63/64/65, 127/128/129, 255/256/257\n" );
-    mpi_abort("Nodes and Weights not available for this order");
+    D4EST_ABORT("[D4EST_ERROR]: Nodes and Weights not available for this order");
   }
   return;
 }
@@ -4649,7 +4649,7 @@ void d4est_operators_lobatto_nodes_and_weights ( int n, double xtab[], double we
     fprintf ( stderr, "DGMATH_lobatto_NODES_AND_WEIGHTS - Fatal error!\n" );
     fprintf ( stderr, "  Illegal value of N = %d\n", n );
     fprintf ( stderr, "  Legal values are between 1 and 20.\n" );
-    mpi_abort("Nodes and Weights not available for this order");
+    D4EST_ABORT("Nodes and Weights not available for this order");
   }
 
   return;

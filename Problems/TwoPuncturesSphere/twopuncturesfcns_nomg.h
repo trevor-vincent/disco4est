@@ -3,6 +3,7 @@
 
 #include <d4est_element_data.h>
 #include <d4est_poisson.h>
+#include <d4est_poisson_flux.h>
 
 #define MAX_PUNCTURES 10
  
@@ -13,6 +14,7 @@ typedef struct {
   double M_bh [MAX_PUNCTURES];
   int num_punctures;
   double puncture_eps;
+  d4est_poisson_flux_data_t* flux_data;
   
 } twopunctures_params_t;
 
@@ -20,13 +22,16 @@ static
 void
 init_onepuncture_data
 (
- twopunctures_params_t* params
+ twopunctures_params_t* params,
+ d4est_poisson_flux_data_t* flux_data
 )
 {
+  params->flux_data = flux_data;
+
   double M = 1.;
   params->num_punctures = 1;
   params->puncture_eps = 1e-10;
-  mpi_assert(params->num_punctures < (MAX_PUNCTURES));
+  D4EST_ASSERT(params->num_punctures < (MAX_PUNCTURES));
   
   params->M_bh[0] = M;
 
@@ -49,14 +54,16 @@ static
 void
 init_twopunctures_data
 (
- twopunctures_params_t* params
+ twopunctures_params_t* params,
+ d4est_poisson_flux_data_t* flux_data
 )
 {
+  params->flux_data = flux_data;
   double M = 1.;
   params->num_punctures = 2;
   params->puncture_eps = 1e-10;
-  mpi_assert(params->num_punctures < (MAX_PUNCTURES));
-  
+  D4EST_ASSERT(params->num_punctures < (MAX_PUNCTURES));
+
   params->M_bh[0] = .5*M;
   params->M_bh[1] = .5*M;
 
@@ -95,10 +102,12 @@ init_random_puncture_data
 (
  p4est_t* p4est,
  twopunctures_params_t* params,
- int num_punctures
+ int num_punctures,
+ d4est_poisson_flux_data_t* flux_data
 )
 {
-  mpi_assert(num_punctures < (MAX_PUNCTURES));
+  params->flux_data = flux_data;
+  D4EST_ASSERT(num_punctures < (MAX_PUNCTURES));
   params->puncture_eps = 1e-10;
   params->num_punctures = num_punctures;
   double M = 1.;
@@ -314,7 +323,6 @@ void twopunctures_apply_jac
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
  d4est_elliptic_problem_data_t* prob_vecs,
- d4est_mortar_fcn_ptrs_t* flux_fcn_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -322,12 +330,13 @@ void twopunctures_apply_jac
 )
 {
   twopunctures_params_t* params = user;
-  mpi_assert(params->num_punctures > 0);
+  d4est_poisson_flux_data_t* flux_data = params->flux_data;
+  D4EST_ASSERT(params->num_punctures > 0);
   d4est_poisson_apply_aij(p4est,
                           ghost,
                           ghost_data,
                           prob_vecs,
-                          flux_fcn_data,
+                          flux_data,
                           d4est_ops,
                           d4est_geom,
                           d4est_quad);
@@ -388,7 +397,6 @@ twopunctures_build_residual
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
  d4est_elliptic_problem_data_t* prob_vecs,
- d4est_mortar_fcn_ptrs_t* flux_fcn_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -396,13 +404,14 @@ twopunctures_build_residual
 )
 {
   twopunctures_params_t* params = user;
-  mpi_assert(params->num_punctures > 0);
-  
+  D4EST_ASSERT(params->num_punctures > 0);
+
+  d4est_poisson_flux_data_t* flux_data = params->flux_data;
   d4est_poisson_apply_aij(p4est,
                           ghost,
                           ghost_data,
                           prob_vecs,
-                          flux_fcn_data,
+                          flux_data,
                           d4est_ops,
                           d4est_geom,
                           d4est_quad

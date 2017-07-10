@@ -341,7 +341,7 @@ d4est_mesh_print_element_data_debug
 )
 {
 /* #ifndef D4EST_DEBUG */
-/*   mpi_abort("compile with the debug flag if you want to print curved element data"); */
+/*   D4EST_ABORT("compile with the debug flag if you want to print curved element data"); */
 /* #endif */
 
   
@@ -372,11 +372,11 @@ d4est_mesh_print_element_data_debug
         printf("q = %d, %d, %d, dq = %d\n", ed->q[0], ed->q[1], ed->q[2], ed->dq);
         DEBUG_PRINT_3ARR_DBL(ed->xyz[0], ed->xyz[1], ed->xyz[2], volume_nodes);
 #else
-        mpi_abort("DIM = 2 or 3");
+        D4EST_ABORT("DIM = 2 or 3");
 #endif
         
 /* #else */
-        /* mpi_abort("DEBUG flag must be set"); */
+        /* D4EST_ABORT("DEBUG flag must be set"); */
 /* #endif */
       }
     }  
@@ -512,7 +512,7 @@ d4est_mesh_init_element_data
         /* elem_data->deg = 2; */
         /* elem_data->deg_quad = 2; */
 
-        mpi_assert(elem_data->deg > 0
+        D4EST_ASSERT(elem_data->deg > 0
                    &&
                    elem_data->deg_quad > 0
                    &&

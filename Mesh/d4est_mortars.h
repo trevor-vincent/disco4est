@@ -26,7 +26,7 @@ typedef void (*d4est_mortar_interface_fcn_t)
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  d4est_quadrature_t* d4est_quad,
- void* params
+ void* user_ctx
 );
 
 /* We need the problem specific data */
@@ -35,19 +35,17 @@ typedef void (*d4est_mortar_boundary_fcn_t)
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id,
- d4est_grid_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- void* params
+ void* user_ctx
 );
 
 typedef struct {
 
   d4est_mortar_interface_fcn_t flux_interface_fcn;
   d4est_mortar_boundary_fcn_t flux_boundary_fcn;
-  d4est_grid_fcn_t bndry_fcn;
-  void* params;
+  void* user_ctx;
   
 } d4est_mortar_fcn_ptrs_t;
 

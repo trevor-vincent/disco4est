@@ -46,10 +46,10 @@ hp_amr_smooth_pred_init
  smooth_pred_marker_t marker
 )
 {
-  mpi_assert(!(gamma_h < 0.));
-  mpi_assert(!(gamma_p < 0.));
-  mpi_assert(!(gamma_n < 0.));
-  mpi_assert((max_degree < (MAX_DEGREE)-1));
+  D4EST_ASSERT(!(gamma_h < 0.));
+  D4EST_ASSERT(!(gamma_p < 0.));
+  D4EST_ASSERT(!(gamma_n < 0.));
+  D4EST_ASSERT((max_degree < (MAX_DEGREE)-1));
   
   hp_amr_scheme_t* scheme = P4EST_ALLOC(hp_amr_scheme_t, 1);
   hp_amr_smooth_pred_data_t* smooth_pred_data;
@@ -194,7 +194,7 @@ hp_amr_smooth_pred_set_marker
     printf("[HP_AMR_SMOOTH_PRED]: Using marker sigaverage marker with sigma = %f\n", *(double*)marker.user);
   }
   else{
-    mpi_abort("[D4EST_ERROR]: Marker type not supported");
+    D4EST_ABORT("[D4EST_ERROR]: Marker type not supported");
   }
 }
 
@@ -207,7 +207,7 @@ hp_amr_smooth_pred_set_gammah
 {
   hp_amr_smooth_pred_data_t* smooth_pred_data
     = (hp_amr_smooth_pred_data_t*)scheme->hp_amr_scheme_data;
-  mpi_assert(!(gamma_h < 0.));
+  D4EST_ASSERT(!(gamma_h < 0.));
   smooth_pred_data->gamma_h = gamma_h;
 }
 
@@ -242,7 +242,7 @@ hp_amr_smooth_pred_get_percentile_marker
 (
  int* percentile
 ){
-  mpi_assert(*percentile == 5 ||
+  D4EST_ASSERT(*percentile == 5 ||
              *percentile == 10 ||
              *percentile == 15 ||
              *percentile == 20 ||
@@ -273,7 +273,7 @@ hp_amr_smooth_pred_get_sigaverage_marker
 (
  double* sigma
 ){
-  mpi_assert(!(*sigma < 0.));
+  D4EST_ASSERT(!(*sigma < 0.));
   smooth_pred_marker_t marker;
   marker.user = (void*)sigma;
   marker.mark_element_fcn = hp_amr_smooth_pred_sigaverage_mark_element;
@@ -319,7 +319,7 @@ hp_amr_smooth_pred_set_refinement
       /* else if (smooth_pred_data->norm_type == L2_NORM) */
         /* eta2_pred = smooth_pred_data->gamma_h*eta2*util_dbl_pow_int(.5, 2*(elem_data->deg + 1))*(ONE_OVER_CHILDREN); */
       /* else */
-        /* mpi_abort("[D4EST_ERROR]: Not a supported norm type"); */
+        /* D4EST_ABORT("[D4EST_ERROR]: Not a supported norm type"); */
     }
   }
   /* do not refine */
@@ -342,7 +342,7 @@ hp_amr_smooth_pred_balance_replace_callback (
 			     )
 {
 #ifdef SAFETY  
-  mpi_assert(num_outgoing == 1);
+  D4EST_ASSERT(num_outgoing == 1);
 #endif
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
   d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
@@ -366,7 +366,7 @@ hp_amr_smooth_pred_balance_replace_callback (
   /* else if (smooth_pred_data->norm_type == dg_norm_type) */
     h_pow = parent_data->deg;
   /* else */
-    /* mpi_abort("[ERROR]: hp_amr_smooth_pred norm_type not supported"); */
+    /* D4EST_ABORT("[ERROR]: hp_amr_smooth_pred norm_type not supported"); */
 
   /* double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN)); */
   /* d4est_operators_apply_hp_prolong */
@@ -402,7 +402,7 @@ hp_amr_smooth_pred_refine_replace_callback (
 			     )
 {
 #ifdef SAFETY  
-  mpi_assert(num_outgoing == 1);
+  D4EST_ASSERT(num_outgoing == 1);
 #endif
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
   d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
@@ -427,7 +427,7 @@ hp_amr_smooth_pred_refine_replace_callback (
   /* else if (smooth_pred_data->norm_type == dg_norm_type) */
   /*   h_pow = parent_data->deg; */
   /* else{ */
-  /*   mpi_abort("[ERROR]: hp_amr_smooth_pred norm_type not supported"); */
+  /*   D4EST_ABORT("[ERROR]: hp_amr_smooth_pred norm_type not supported"); */
   /*   h_pow *= -1.; /\* remove warnings *\/ */
   /* } */
   /* double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN)); */

@@ -171,7 +171,7 @@ d4est_operators_1index_fetch
  void (*build_fcn)(d4est_operators_t*, double*, int)
 )
 {
-  mpi_assert(deg < d4est_ops->max_degree && deg > 0);
+  D4EST_ASSERT(deg < d4est_ops->max_degree && deg > 0);
   if (table[deg-1] != NULL) {
     return table[deg-1];
   }
@@ -193,7 +193,7 @@ double* d4est_operators_2index_fetch
  void (*build_fcn)(d4est_operators_t*, double*, int, int)
 )
 {
-  mpi_assert(deg1 < d4est_ops->max_degree &&
+  D4EST_ASSERT(deg1 < d4est_ops->max_degree &&
              deg2 < d4est_ops->max_degree &&
              deg1 > 0 &&
              deg2 > 0);
@@ -221,7 +221,7 @@ double* d4est_operators_1index_2d_3d_fetch
  void (*build_fcn)(d4est_operators_t*, double*, int, int)
 )
 {
-  mpi_assert(deg < d4est_ops->max_degree &&
+  D4EST_ASSERT(deg < d4est_ops->max_degree &&
              dim <= 3 &&
              deg > 0 &&
              dim > 0
@@ -239,7 +239,7 @@ double* d4est_operators_1index_2d_3d_fetch
       table_2d[deg] = P4EST_ALLOC(double, size);
     }
     else{
-      mpi_abort("[D4EST_ERROR]: Not a support dimension");
+      D4EST_ABORT("[D4EST_ERROR]: Not a support dimension");
     }
     
     double* op = (dim==3) ? table_3d[deg] : table_2d[deg];
@@ -281,7 +281,7 @@ double* d4est_operators_fetch_invvij_1d(d4est_operators_t* d4est_ops, int deg) {
 void d4est_operators_hp_apply_nd_prolong_with_ptr(double* Uh, int degh, double* UH,
                                          int degH, int dim, int c,
                                          double* hp_prolong_matrix_1d) {
-  mpi_assert((degH <= degh) && (c < (1 << dim)));
+  D4EST_ASSERT((degH <= degh) && (c < (1 << dim)));
   int nodesh = degh + 1;
   int nodesH = degH + 1;
 
@@ -309,7 +309,7 @@ void d4est_operators_hp_apply_nd_prolong_with_ptr(double* Uh, int degh, double* 
                                nodesh, nodesH, nodesh, nodesH, nodesh, nodesH);
 
   } else {
-    mpi_abort("[D4EST_ERROR]: d4est_operators_prolong_nd_U\n");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_operators_prolong_nd_U\n");
   }
 }
 
@@ -507,7 +507,7 @@ void d4est_operators_hp_apply_nd_restrict_with_ptr(double* uH, int degH, double*
                                           int degh, int dim, int c,
                                           double* hp_restrict_matrix_1d) {
 
-  mpi_assert((degH <= degh) && (c < (1 << dim)));
+  D4EST_ASSERT((degH <= degh) && (c < (1 << dim)));
 
   int nodesh = degh + 1;
   int nodesH = degH + 1;
@@ -538,7 +538,7 @@ void d4est_operators_hp_apply_nd_restrict_with_ptr(double* uH, int degH, double*
 
     
   } else {
-    mpi_abort("[D4EST_ERROR]: d4est_operators_restrict_nd_U\n");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_operators_restrict_nd_U\n");
   }
 }
 
@@ -670,7 +670,7 @@ d4est_operators_fetch_mij_1d
 
 
 /* double* d4est_operators_fetch_mij_1d(d4est_operators_t* d4est_ops, int deg) { */
-/*   mpi_assert(deg < d4est_ops->max_degree); */
+/*   D4EST_ASSERT(deg < d4est_ops->max_degree); */
 /*   if (d4est_ops->mij_1d_table[deg] != NULL) { */
 /*     return d4est_ops->mij_1d_table[deg]; */
 /*   } */
@@ -728,7 +728,7 @@ static double* d4est_operators_fetch_invmij_1d(d4est_operators_t* d4est_ops, int
 
 void d4est_operators_apply_mij(d4est_operators_t* d4est_ops, double* in, int dim, int deg,
                       double* out) {
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
+  D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   double* mass_1d = d4est_operators_fetch_mij_1d(d4est_ops, deg);
 
   int nodes = deg + 1;
@@ -741,13 +741,13 @@ void d4est_operators_apply_mij(d4est_operators_t* d4est_ops, double* in, int dim
     d4est_linalg_kron_A1A2A3x_nonsqr(out, mass_1d, mass_1d, mass_1d, in,
                                nodes, nodes, nodes, nodes, nodes, nodes);
   } else {
-    mpi_abort("[D4EST_ERROR]: Apply mass matrix ref space, wrong dimension.");
+    D4EST_ABORT("[D4EST_ERROR]: Apply mass matrix ref space, wrong dimension.");
   }
 }
 
 void d4est_operators_apply_invmij(d4est_operators_t* d4est_ops, double* in, int dim,
                          int deg, double* out) {
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
+  D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   double* inv_mass_1d = d4est_operators_fetch_invmij_1d(d4est_ops, deg);
 
   int nodes = deg + 1;
@@ -761,7 +761,7 @@ void d4est_operators_apply_invmij(d4est_operators_t* d4est_ops, double* in, int 
                                inv_mass_1d, in, nodes, nodes, nodes, nodes,
                                nodes, nodes);
   } else {
-    mpi_abort("[D4EST_ERROR]: Apply mass matrix ref space, wrong dimension.");
+    D4EST_ABORT("[D4EST_ERROR]: Apply mass matrix ref space, wrong dimension.");
   }
 }
 
@@ -779,7 +779,7 @@ static double* d4est_operators_fetch_dij_1d(d4est_operators_t* d4est_ops, int de
 
 void d4est_operators_apply_dij_transpose(d4est_operators_t* d4est_ops, double* in, int dim, int deg,
                       int dir, double* out) {
-  mpi_assert(dir < dim && dir >= 0 && (dim == 1 || dim == 3 || dim == 2));
+  D4EST_ASSERT(dir < dim && dir >= 0 && (dim == 1 || dim == 3 || dim == 2));
   double* Dr_1d = d4est_operators_fetch_dij_1d(d4est_ops, deg);
 
   /* bad change this later */
@@ -802,7 +802,7 @@ void d4est_operators_apply_dij_transpose(d4est_operators_t* d4est_ops, double* i
 
   } else {
     P4EST_FREE(Dr_1d_transpose);
-    mpi_abort("[D4EST_ERROR]: d4est_operators_apply_dij");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_operators_apply_dij");
   }
 
   P4EST_FREE(Dr_1d_transpose);
@@ -812,7 +812,7 @@ static void d4est_operators_build_hp_prolong_1d_aux(int degH, int degh, int c,
                                            double* inv_v1d_trans_degH,
                                            double* lobatto_nodes_degh,
                                            double* hp_prolong_matrix_1d) {
-  mpi_assert(degH <= degh);
+  D4EST_ASSERT(degH <= degh);
   int n, i;
   int nodesH = degH + 1;
   int nodesh = degh + 1;
@@ -885,7 +885,7 @@ void d4est_operators_hp_apply_nd_prolong_transpose_with_ptr(
     double* uH, int degH, double* uh, int degh, int dim, int c,
     double* hp_prolong_transpose_matrix_1d) {
   /* sanity check */
-  mpi_assert((degH <= degh) && (c < (1 << dim)));
+  D4EST_ASSERT((degH <= degh) && (c < (1 << dim)));
 
   int nodesh = degh + 1;
   int nodesH = degH + 1;
@@ -917,7 +917,7 @@ void d4est_operators_hp_apply_nd_prolong_transpose_with_ptr(
         nodesh, nodesH, nodesh, nodesH, nodesh);
 
   } else {
-    mpi_abort("[D4EST_ERROR]: d4est_operators_prolong_transpose_nd_U\n");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_operators_prolong_transpose_nd_U\n");
   }
 }
 
@@ -957,7 +957,7 @@ double* d4est_operators_fetch_p_prolong_1d
 
 void d4est_operators_apply_hp_prolong(d4est_operators_t* d4est_ops, double* in, int degH,
                              int dim, int* degh, double* out) {
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
+  D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   int children = (1 << dim);
   int c;
   double* hp_prolong_1d;
@@ -994,7 +994,7 @@ void d4est_operators_apply_p_prolong(d4est_operators_t* d4est_ops, double* in, i
                                in, nodesh, nodesH, nodesh, nodesH, nodesh,
                                nodesH);
   } else {
-    mpi_abort("[D4EST_ERROR]: d4est_operators_prolong_nd_U\n");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_operators_prolong_nd_U\n");
   }
 }
 
@@ -1092,7 +1092,7 @@ void d4est_operators_apply_p_restrict(d4est_operators_t* d4est_ops, double* in, 
                                in, nodesH, nodesh, nodesH, nodesh, nodesH,
                                nodesh);
   } else {
-    mpi_abort("[D4EST_ERROR]: d4est_operators_restrict_nd_U\n");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_operators_restrict_nd_U\n");
   }
 }
 
@@ -1141,7 +1141,7 @@ static double* d4est_operators_fetch_hp_restrict_1d(d4est_operators_t* d4est_ops
 
 void d4est_operators_apply_hp_restrict(d4est_operators_t* d4est_ops, double* in, int* degh,
                               int dim, int degH, double* out) {
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
+  D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   int children = (1 << dim);
   int c;
   int nodesH = d4est_lgl_get_nodes(dim, degH);
@@ -1190,7 +1190,7 @@ static void d4est_operators_build_lobatto_rst_nd(d4est_operators_t* d4est_ops, d
                       nodes, 1, nodes, 1);
 
   } else
-    mpi_abort("ERROR 1: d4est_operators_build_lobatto_rst_nd");
+    D4EST_ABORT("ERROR 1: d4est_operators_build_lobatto_rst_nd");
 
   P4EST_FREE(eye);
 }
@@ -1222,7 +1222,7 @@ static void d4est_operators_build_gauss_rst_nd(d4est_operators_t* d4est_ops, dou
                       nodes, 1, nodes, 1);
 
   } else
-    mpi_abort("ERROR 1: d4est_operators_build_lobatto_rst_nd");
+    D4EST_ABORT("ERROR 1: d4est_operators_build_lobatto_rst_nd");
 
   P4EST_FREE(eye);
 }
@@ -1230,7 +1230,7 @@ static void d4est_operators_build_gauss_rst_nd(d4est_operators_t* d4est_ops, dou
 double* d4est_operators_fetch_lobatto_rst_nd(d4est_operators_t* d4est_ops, int dim, int deg,
                             int dir)
 {
-  mpi_assert(dir < dim && dir >= 0 && dim <= 3 && dim > 0);
+  D4EST_ASSERT(dir < dim && dir >= 0 && dim <= 3 && dim > 0);
   
   if (dim == 1)
     return d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, deg);
@@ -1259,7 +1259,7 @@ void d4est_operators_apply_dij
  double* out
 )
 {
-  mpi_assert(dir < dim && dir >= 0 && (dim == 1 || dim == 3 || dim == 2));
+  D4EST_ASSERT(dir < dim && dir >= 0 && (dim == 1 || dim == 3 || dim == 2));
   double* Dr_1d = d4est_operators_fetch_dij_1d(d4est_ops, deg);
   int nodes = deg + 1;
   if (dim == 1)
@@ -1272,14 +1272,14 @@ void d4est_operators_apply_dij
     if (dir == 1) d4est_linalg_kron_IoMAToIx_SQR(out, Dr_1d, in, nodes);
     if (dir == 2) d4est_linalg_kron_MAToIoIx_SQR(out, Dr_1d, in, nodes);
   } else {
-    mpi_abort("ERROR: d4est_operators_apply_dij");
+    D4EST_ABORT("ERROR: d4est_operators_apply_dij");
   }
 }
 
 double* d4est_operators_fetch_gauss_rst_nd(d4est_operators_t* d4est_ops, int dim, int deg,
                             int dir) {
 
-  mpi_assert(dir < dim && dir >= 0 && dim <= 3 && dim > 0);
+  D4EST_ASSERT(dir < dim && dir >= 0 && dim <= 3 && dim > 0);
   
   if (dim == 1)
     return d4est_operators_fetch_gauss_nodes_1d(d4est_ops, deg);
@@ -1321,8 +1321,8 @@ static double* d4est_operators_fetch_lift_1d(d4est_operators_t* d4est_ops, int d
 
 void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double* in, int dim, int deg,
                        int face, double* out) {
-  mpi_assert(dim == 2 || dim == 3);
-  mpi_assert(face < 2 * (dim));
+  D4EST_ASSERT(dim == 2 || dim == 3);
+  D4EST_ASSERT(face < 2 * (dim));
 
   double* lift_1d = d4est_operators_fetch_lift_1d(d4est_ops, deg);
 
@@ -1353,7 +1353,7 @@ void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double* in, int di
   } else {
     dir = -1;
     side = -1;
-    mpi_abort("ERROR 0: d4est_operators_lift_boundary_vec");
+    D4EST_ABORT("ERROR 0: d4est_operators_lift_boundary_vec");
   }
 
   if (dim == 2){
@@ -1363,7 +1363,7 @@ void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double* in, int di
     else if (dir == 1)
       d4est_linalg_kron_VECoIx_SQR(out, &lift_1d[side * nodes], in, nodes);
     else 
-      mpi_abort("dim == 2 so dir == 0 OR 1");
+      D4EST_ABORT("dim == 2 so dir == 0 OR 1");
     
   }
 
@@ -1377,18 +1377,18 @@ void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double* in, int di
   else if (dir == 2)
     d4est_linalg_kron_VECoIoIx_SQR(out, &lift_1d[side * nodes], in, nodes);
   else
-    mpi_abort("DIM = 3 so DIR = 0,1,2");
+    D4EST_ABORT("DIM = 3 so DIR = 0,1,2");
   
   }
 
   else {
-    mpi_abort("DIM not supported");
+    D4EST_ABORT("DIM not supported");
   }
 }
 
 void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int dim,
                          int face, int deg, double* out) {
-  mpi_assert(face < 2 * (dim));
+  D4EST_ASSERT(face < 2 * (dim));
   /* int nodes = util_pow_int(deg+1, DIM); */
 
   double* slicer_1d = d4est_operators_fetch_lift_1d(d4est_ops, deg);
@@ -1417,7 +1417,7 @@ void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int 
   } else {
     dir = -1;
     side = -1;
-    mpi_abort("ERROR 0: d4est_operators_lift_boundary_vec");
+    D4EST_ABORT("ERROR 0: d4est_operators_lift_boundary_vec");
   }
 
   /* util_print_matrix(slicer_1d, (deg+1), 1, "slicer_1d = ", 0); */
@@ -1431,7 +1431,7 @@ void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int 
       d4est_linalg_kron_VEC_TRANSoIx_SQR(out, &slicer_1d[side * (deg + 1)], in,
                                  deg + 1);
     else
-      mpi_abort("DIM == 2, so dir == 0,1");
+      D4EST_ABORT("DIM == 2, so dir == 0,1");
   }
 
   else if (dim == 3){
@@ -1444,18 +1444,18 @@ void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int 
       d4est_linalg_kron_VEC_TRANSoIoIx_SQR(out, &slicer_1d[side * (deg + 1)], in,
                                    deg + 1);
     else
-      mpi_abort("DIM == 3 so DIR=0,1 or 2");
+      D4EST_ABORT("DIM == 3 so DIR=0,1 or 2");
   
   }
   else {
-    mpi_abort("DIM must be 2 or 3");
+    D4EST_ABORT("DIM must be 2 or 3");
   }
 }
 
 
 void d4est_operators_convert_nodal_to_modal(d4est_operators_t* d4est_ops, double* in,
                                    int dim, int deg, double* out) {
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
+  D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   int nodes = deg + 1;
   double* invvij_1d = P4EST_ALLOC(double, nodes* nodes);
 
@@ -1472,7 +1472,7 @@ void d4est_operators_convert_nodal_to_modal(d4est_operators_t* d4est_ops, double
     d4est_linalg_kron_A1A2A3x_nonsqr(out, invvij_1d, invvij_1d, invvij_1d, in, nodes,
                                nodes, nodes, nodes, nodes, nodes);
   } else {
-    mpi_abort("[D4EST_ERROR]: Apply mass matrix ref space, wrong dimension.");
+    D4EST_ABORT("[D4EST_ERROR]: Apply mass matrix ref space, wrong dimension.");
   }
 
   P4EST_FREE(invvij_1d);
@@ -1555,7 +1555,7 @@ void d4est_operators_build_p_prolong_transpose_1d_inverse(d4est_operators_t* d4e
 void d4est_operators_apply_hp_prolong_transpose(d4est_operators_t* d4est_ops, double* in,
                                        int* degh, int dim, int degH,
                                        double* out) {
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
+  D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   int children = (1 << dim);
   int c;
   int nodesH = d4est_lgl_get_nodes(dim, degH);
@@ -1610,7 +1610,7 @@ void d4est_operators_apply_p_prolong_transpose(d4est_operators_t* d4est_ops, dou
                                in, nodesH, nodesh, nodesH, nodesh, nodesH,
                                nodesh);
   } else {
-    mpi_abort("[D4EST_ERROR]: d4est_operators_apply_p_prolong_transpose\n");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_operators_apply_p_prolong_transpose\n");
   }
 }
 
@@ -1618,8 +1618,8 @@ static
 void d4est_operators_build_hp_restrict_interp_1d_aux(
     int degh, int degH, int c, double* inv_v1d_trans_degh,
     double* lobatto_nodes_degH, double* hp_restrict_interp_matrix_1d) {
-  mpi_assert(degH <= degh);
-  mpi_assert(c == 0 || c == 1);
+  D4EST_ASSERT(degH <= degh);
+  D4EST_ASSERT(c == 0 || c == 1);
 
   int n, i;
   int nodesH = degH + 1;
@@ -1699,7 +1699,7 @@ static double* d4est_operators_fetch_hp_restrict_interp_1d(d4est_operators_t* d4
 void d4est_operators_apply_hp_restrict_interp(d4est_operators_t* d4est_ops, double* in,
                                      int* degh, int dim, int degH,
                                      double* out) {
-  mpi_assert(dim == 1 || dim == 2 || dim == 3);
+  D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   int children = (1 << dim);
   int c;
   int nodesH = d4est_lgl_get_nodes(dim, degH);
@@ -1745,7 +1745,7 @@ static void d4est_operators_build_p_restrict_interp_1d_aux(
 static void d4est_operators_build_p_restrict_interp_1d(d4est_operators_t* d4est_ops,
                                               double* hp_restrict_interp_1d,
                                               int degH, int degh) {
-  mpi_assert(degH <= degh);
+  D4EST_ASSERT(degH <= degh);
   /* int edge_nodes_degH = degH + 1; */
   int edge_nodes_degh = degh + 1;
 
@@ -1810,7 +1810,7 @@ void d4est_operators_apply_p_restrict_interp(d4est_operators_t* d4est_ops, doubl
                                in, nodesH, nodesh, nodesH, nodesh, nodesH,
                                nodesh);
   } else {
-    mpi_abort("[D4EST_ERROR]: d4est_operators_restrict_nd_U\n");
+    D4EST_ABORT("[D4EST_ERROR]: d4est_operators_restrict_nd_U\n");
   }
 }
 
@@ -1838,7 +1838,7 @@ static double* d4est_operators_fetch_flip_1d(d4est_operators_t* d4est_ops, int d
 
 void d4est_operators_apply_flip(d4est_operators_t* d4est_ops, double* in, int dim, int deg,
                        int dir, double* out) {
-  mpi_assert(dim == 1 || dim == 2);
+  D4EST_ASSERT(dim == 1 || dim == 2);
   double* flip_1d = d4est_operators_fetch_flip_1d(d4est_ops, deg);
   int nodes = deg + 1;
   if (dim == 1)
@@ -1850,7 +1850,7 @@ void d4est_operators_apply_flip(d4est_operators_t* d4est_ops, double* in, int di
       d4est_linalg_kron_A1A2x_nonsqr(out, flip_1d, flip_1d, in, nodes, nodes, nodes,
                                nodes);
   } else {
-    mpi_abort("[D4EST_ERROR]: flip not supported in this dimension atm.");
+    D4EST_ABORT("[D4EST_ERROR]: flip not supported in this dimension atm.");
   }
 }
 
@@ -1869,7 +1869,7 @@ void d4est_operators_reorient_face_data
 )
 {
   /* dim == 1 and o == 4 hasn't been unit tested therefore check for them */
-  mpi_assert((face_dim == 2 && o < 4) || (face_dim == 1 && o < 2));
+  D4EST_ASSERT((face_dim == 2 && o < 4) || (face_dim == 1 && o < 2));
 
   if (o == 4)
     printf("[WARNING]: o == 4 and this orientation has not been tested");
@@ -1994,7 +1994,7 @@ void d4est_operators_apply_vtk_interp
  int c,
  double* out
 ){
-  mpi_assert((c < (1 << dim)));
+  D4EST_ASSERT((c < (1 << dim)));
 
   double* vtk_interp_1d = d4est_operators_fetch_vtk_interp_1d(d4est_ops, deg);
   
@@ -2019,7 +2019,7 @@ void d4est_operators_apply_vtk_interp
                                &vtk_interp_1d[cz * nodes_in * nodes_out], in,
                                nodes_out, nodes_in, nodes_out, nodes_in, nodes_out, nodes_in);
   } else {
-    mpi_abort("Dim = 1 or 2 or 3 in vtk_interp");
+    D4EST_ABORT("Dim = 1 or 2 or 3 in vtk_interp");
   }
 }
 

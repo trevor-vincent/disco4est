@@ -77,7 +77,7 @@ test_d4est_operators_interp_lobatto_to_gauss
     d4est_linalg_matvec_plus_vec(1.0,interp, poly_lobatto, 0., poly_lobatto_to_gauss, nodes_gauss, nodes_lobatto);
   }
   else {
-    mpi_abort("[D4EST_ERROR]: dim = 1, 2 or 3\n");
+    D4EST_ABORT("[D4EST_ERROR]: dim = 1, 2 or 3\n");
   }  
 
   int error = 0;

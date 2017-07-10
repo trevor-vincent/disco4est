@@ -28,7 +28,7 @@ int d4est_quadrature_input_handler
   d4est_quadrature_input_t* pconfig = (d4est_quadrature_input_t*)user;
 
   if (util_match_couple(section,pconfig->input_section,name,"name")) {
-    mpi_assert(pconfig->name == NULL);
+    D4EST_ASSERT(pconfig->name == NULL);
     D4EST_ASPRINTF(pconfig->name,"%s",value);
   }
   else {
@@ -52,7 +52,7 @@ d4est_quadrature_input
   input.name = NULL;
   
   if (ini_parse(input_file, d4est_quadrature_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT(input_section, input.name, NULL); 
@@ -105,7 +105,7 @@ d4est_quadrature_new
   }
   else {
     printf("[D4EST_ERROR]: You tried to use %s quadrature\n", input.name);
-    mpi_abort("[D4EST_ERROR]: this quadrature is currently not supported");
+    D4EST_ABORT("[D4EST_ERROR]: this quadrature is currently not supported");
   }
 
   free(input.name);
@@ -204,7 +204,7 @@ void d4est_quadrature_apply_galerkin_integral
   else {    
     P4EST_FREE(w_j_in_quad);
     P4EST_FREE(in_quad);
-    mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
+    D4EST_ABORT("ERROR: Apply mass matrix ref space, wrong dimension.");
   }  
   P4EST_FREE(w_j_in_quad);
 }
@@ -272,7 +272,7 @@ void d4est_quadrature_apply_stiffness_matrix
  int deg_quad,
  double* out
 ){
-  mpi_assert (object_type == QUAD_OBJECT_VOLUME);
+  D4EST_ASSERT (object_type == QUAD_OBJECT_VOLUME);
   /* for now assert this, can get rid of by p-prolonging then p-restricting */
 
 
@@ -365,7 +365,7 @@ void d4est_quadrature_apply_stiffness_matrix
           P4EST_FREE(W_V_Dl_in);
           P4EST_FREE(V_Dl_in);
           P4EST_FREE(Dl_in);
-          mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
+          D4EST_ABORT("ERROR: Apply mass matrix ref space, wrong dimension.");
         }
 
         d4est_operators_apply_dij_transpose(d4est_ops, VT_W_V_Dl_in, dim, deg_lobatto, lp, DTlp_VT_W_V_Dl_in);
@@ -397,7 +397,7 @@ void d4est_quadrature_apply_mass_matrix
  double* out
 ){
 
-  mpi_assert(object_type == QUAD_OBJECT_VOLUME);
+  D4EST_ASSERT(object_type == QUAD_OBJECT_VOLUME);
 
   double* quad_weights [(P4EST_DIM)];
   double* interp_lobatto_to_quad_trans [(P4EST_DIM)];
@@ -470,7 +470,7 @@ void d4est_quadrature_apply_mass_matrix
   else {
     P4EST_FREE(w_j_in_quad);
     P4EST_FREE(in_quad);
-    mpi_abort("ERROR: Apply mass matrix ref space, wrong dimension.");
+    D4EST_ABORT("ERROR: Apply mass matrix ref space, wrong dimension.");
   }
   P4EST_FREE(w_j_in_quad);
   P4EST_FREE(in_quad);
@@ -853,7 +853,7 @@ d4est_quadrature_interpolate
  int deg_quad
 )
 {
-  /* mpi_assert(object_type == QUAD_OBJECT_MORTAR || object_type == QUAD_OBJECT_VOLUME); */
+  /* D4EST_ASSERT(object_type == QUAD_OBJECT_MORTAR || object_type == QUAD_OBJECT_VOLUME); */
   double* interp_lobatto_to_quad [(P4EST_DIM)]; 
   int dim = (object_type == QUAD_OBJECT_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   int nodes_lobatto = deg_lobatto + 1;
@@ -886,7 +886,7 @@ d4est_quadrature_interpolate
     d4est_linalg_matvec_plus_vec(1.0,interp_lobatto_to_quad[0], u_lobatto_in, 0., u_quad_out, nodes_quad, nodes_lobatto);
   }
   else {
-    mpi_abort("[D4EST_ERROR]: dim = 1, 2 or 3\n");
+    D4EST_ABORT("[D4EST_ERROR]: dim = 1, 2 or 3\n");
   }  
 }
 
@@ -927,7 +927,7 @@ d4est_quadrature_innerproduct
                           );
     }
   
-  mpi_assert(u != NULL);
+  D4EST_ASSERT(u != NULL);
   int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad);
   double* wuv = P4EST_ALLOC(double, volume_nodes_quad);
   double wdotuv = 0.;
@@ -957,7 +957,7 @@ d4est_quadrature_innerproduct
     }
   }
   else {
-    mpi_abort("dim must be 1,2,3");
+    D4EST_ABORT("dim must be 1,2,3");
   }
 
   if (jac_quad == NULL){

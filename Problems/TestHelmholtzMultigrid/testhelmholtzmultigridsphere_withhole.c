@@ -179,71 +179,71 @@ int problem_input_handler
 {
   problem_input_t* pconfig = (problem_input_t*)user;
   if (util_match_couple(section,"problem",name,"solve_with_multigrid")) {
-    mpi_assert(pconfig->solve_with_multigrid == -1);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(pconfig->solve_with_multigrid == -1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->solve_with_multigrid = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"use_mg_as_pc_for_ksp")) {
-    mpi_assert(pconfig->use_mg_as_pc_for_ksp == -1);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(pconfig->use_mg_as_pc_for_ksp == -1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->use_mg_as_pc_for_ksp = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"use_non_varying_penalty")) {
-    mpi_assert(pconfig->use_non_varying_penalty == -1);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(pconfig->use_non_varying_penalty == -1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->use_non_varying_penalty = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"use_matrix_operator")) {
-    mpi_assert(pconfig->use_matrix_operator == -1);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(pconfig->use_matrix_operator == -1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->use_matrix_operator = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"num_of_amr_levels")) {
-    mpi_assert(pconfig->num_of_amr_levels == -1);
+    D4EST_ASSERT(pconfig->num_of_amr_levels == -1);
     pconfig->num_of_amr_levels = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"num_unifrefs")) {
-    mpi_assert(pconfig->num_unifrefs == -1);
+    D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R0")) {
-    mpi_assert(pconfig->deg_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
-    mpi_assert(pconfig->deg_quad_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R0 == -1);
     pconfig->deg_quad_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R0")) {
-    mpi_assert(pconfig->deg_stiffness_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_stiffness_R0 == -1);
     pconfig->deg_stiffness_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R1")) {
-    mpi_assert(pconfig->deg_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
-    mpi_assert(pconfig->deg_quad_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R1 == -1);
     pconfig->deg_quad_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R1")) {
-    mpi_assert(pconfig->deg_stiffness_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_stiffness_R1 == -1);
     pconfig->deg_stiffness_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R2")) {
-    mpi_assert(pconfig->deg_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
-    mpi_assert(pconfig->deg_quad_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R2 == -1);
     pconfig->deg_quad_R2 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R2")) {
-    mpi_assert(pconfig->deg_stiffness_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_stiffness_R2 == -1);
     pconfig->deg_stiffness_R2 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
-    mpi_assert(pconfig->deg_offset_for_nonlinear_quad == -1);
+    D4EST_ASSERT(pconfig->deg_offset_for_nonlinear_quad == -1);
     pconfig->deg_offset_for_nonlinear_quad = atoi(value);
   }  
 
@@ -281,7 +281,7 @@ problem_input
   input.use_matrix_operator = -1;
 
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("problem", input.num_unifrefs, -1);
@@ -310,7 +310,7 @@ problem_input
 /*  p4est_connectivity_t* conn */
 /* ) */
 /* { */
-/*   /\* mpi_assert((P4EST_DIM)==3); *\/ */
+/*   /\* D4EST_ASSERT((P4EST_DIM)==3); *\/ */
 /*   p4est_geometry_t* geom; */
 /*   problem_input_t input = problem_input("options.input"); */
 
@@ -666,7 +666,7 @@ double analytic_solution_fcn
   double ret = 1/sqrt(r2);
   /* printf("global_Rinf, x,y,z,analytic = %f, %f,%f,%f,%f\n",global_Rinf, x,y,z,ret); */
 #else
-  mpi_abort("Dimension should be 3");
+  D4EST_ABORT("Dimension should be 3");
 #endif
   return ret;
 }
@@ -708,7 +708,7 @@ double f_fcn
 #if (P4EST_DIM)==3
   return 0. + helmholtz_fcn(x,y,z,u,NULL)*u;
 #else
-  mpi_abort("Only DIM = 3");
+  D4EST_ABORT("Only DIM = 3");
 #endif
   /* return 2*analytic_fcn(x,y,z)*(2*x*x + 2*y*y + 2*z*z - 3*global_sigma*global_sigma)/(global_sigma*global_sigma*global_sigma*global_sigma); */
 }
@@ -730,7 +730,7 @@ double f_fcn_ext
 #if (P4EST_DIM)==3
   return 0. + helmholtz_fcn(x,y,z,u,NULL)*u;
 #else
-  mpi_abort("Only DIM = 3");
+  D4EST_ABORT("Only DIM = 3");
 #endif
   /* return 2*analytic_fcn(x,y,z)*(2*x*x + 2*y*y + 2*z*z - 3*global_sigma*global_sigma)/(global_sigma*global_sigma*global_sigma*global_sigma); */
 }
@@ -1125,7 +1125,7 @@ problem_init
   
   int level;
   
-  mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
+  D4EST_ASSERT((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
   int world_rank, world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);
@@ -1659,7 +1659,7 @@ problem_init
     printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
 
     /* need to do a reduce on min,max_level before supporting multiple proc */
-    /* mpi_assert(proc_size == 1); */
+    /* D4EST_ASSERT(proc_size == 1); */
     int num_of_levels = max_level + 1;
      
       

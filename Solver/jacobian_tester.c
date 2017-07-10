@@ -46,7 +46,7 @@ jacobian_tester
   int num_vecs_to_try = 5;
   double eps = .0001;
   d4est_linalg_fill_vec(u0, 0., local_nodes);
-  mpi_assert(num_vecs_to_try <= local_nodes);
+  D4EST_ASSERT(num_vecs_to_try <= local_nodes);
 
   double max_err = -1;
   int max_err_i = -1;

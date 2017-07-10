@@ -171,52 +171,52 @@ int problem_input_handler
 {
   problem_input_t* pconfig = (problem_input_t*)user;
   if (util_match_couple(section,"amr",name,"num_of_amr_levels")) {
-    mpi_assert(pconfig->num_of_amr_levels == -1);
+    D4EST_ASSERT(pconfig->num_of_amr_levels == -1);
     pconfig->num_of_amr_levels = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"amr",name,"num_unifrefs")) {
-    mpi_assert(pconfig->num_unifrefs == -1);
+    D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
-    mpi_assert(pconfig->ip_flux_penalty == -1);
+    D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } 
   else if (util_match_couple(section,"problem",name,"deg_R0")) {
-    mpi_assert(pconfig->deg_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
-    mpi_assert(pconfig->deg_quad_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R0 == -1);
     pconfig->deg_quad_R0 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_R1")) {
-    mpi_assert(pconfig->deg_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
-    mpi_assert(pconfig->deg_quad_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R1 == -1);
     pconfig->deg_quad_R1 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_R2")) {
-    mpi_assert(pconfig->deg_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
-    mpi_assert(pconfig->deg_quad_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R2 == -1);
     pconfig->deg_quad_R2 = atoi(value);
     pconfig->count += 1;
   }  
   else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
-    mpi_assert(pconfig->deg_offset_for_nonlinear_quad == -1);
+    D4EST_ASSERT(pconfig->deg_offset_for_nonlinear_quad == -1);
     pconfig->deg_offset_for_nonlinear_quad = atoi(value);
     pconfig->count += 1;
   }  
@@ -251,10 +251,10 @@ problem_input
   
   input.count = 0;
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
-  mpi_assert(input.count == num_of_options);
+  D4EST_ASSERT(input.count == num_of_options);
   return input;
 }
 
@@ -264,7 +264,7 @@ problem_input
 /*  p4est_connectivity_t* conn */
 /* ) */
 /* { */
-/*   /\* mpi_assert((P4EST_DIM)==3); *\/ */
+/*   /\* D4EST_ASSERT((P4EST_DIM)==3); *\/ */
 /*   p4est_geometry_t* geom; */
 /*   problem_input_t input = problem_input("options.input"); */
 
@@ -944,7 +944,7 @@ problem_init
   
   int level;
   
-  mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
+  D4EST_ASSERT((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
   int world_rank, world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);
@@ -1441,7 +1441,7 @@ problem_init
     printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
 
     /* need to do a reduce on min,max_level before supporting multiple proc */
-    /* mpi_assert(proc_size == 1); */
+    /* D4EST_ASSERT(proc_size == 1); */
     int num_of_levels = max_level + 1;
      
       

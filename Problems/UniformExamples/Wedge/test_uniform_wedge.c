@@ -111,23 +111,23 @@ int problem_input_handler
 {
   problem_input_t* pconfig = (problem_input_t*)user;
   if (util_match_couple(section,"problem",name,"num_unifrefs")) {
-    mpi_assert(pconfig->num_unifrefs == -1);
+    D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg")) {
-    mpi_assert(pconfig->deg == -1);
+    D4EST_ASSERT(pconfig->deg == -1);
     pconfig->deg = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad")) {
-    mpi_assert(pconfig->deg_quad == -1);
+    D4EST_ASSERT(pconfig->deg_quad == -1);
     pconfig->deg_quad = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness")) {
-    mpi_assert(pconfig->deg_stiffness == -1);
+    D4EST_ASSERT(pconfig->deg_stiffness == -1);
     pconfig->deg_stiffness = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"rhs_use_lobatto")) {
-    mpi_assert(pconfig->rhs_use_lobatto == -1);
+    D4EST_ASSERT(pconfig->rhs_use_lobatto == -1);
     pconfig->rhs_use_lobatto = atoi(value);
   }  
   else {
@@ -153,7 +153,7 @@ problem_input
   input.rhs_use_lobatto = -1; 
 
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("problem", input.num_unifrefs, -1);
@@ -423,7 +423,7 @@ problem_init
   
   int level;
   
-  mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
+  D4EST_ASSERT((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
   int world_rank, world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);

@@ -4,7 +4,7 @@
 #include <util.h>
 
 int d4est_lgl_get_nodes(int dim, int deg) {
-  mpi_assert(dim > 0 && dim < 4 && deg > 0);
+  D4EST_ASSERT(dim > 0 && dim < 4 && deg > 0);
   int volume_nodes = 1;
   for (int i = 0; i < dim; i++) volume_nodes *= deg + 1;
   return volume_nodes;

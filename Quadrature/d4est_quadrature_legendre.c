@@ -52,7 +52,7 @@ d4est_quadrature_legendre_get_rst
   else if (object_type == QUAD_OBJECT_VOLUME)
     return d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), degree, rst_direction);
   else{
-    mpi_abort("[D4EST_ERROR]: Object type must be QUAD_FACE or QUAD_OBJECT_VOLUME");
+    D4EST_ABORT("[D4EST_ERROR]: Object type must be QUAD_FACE or QUAD_OBJECT_VOLUME");
     return NULL;
   }
 }

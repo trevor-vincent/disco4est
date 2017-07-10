@@ -1049,7 +1049,7 @@ d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, d4est_operators_t* d4est_
     indeps = NULL;
   }
   else {
-    mpi_abort("[D4EST_ERROR]: We do not support scale = 1. yet");
+    D4EST_ABORT("[D4EST_ERROR]: We do not support scale = 1. yet");
   }
 
   /* Have each proc write to its own file */
@@ -1182,7 +1182,7 @@ d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, d4est_operators_t* d4est_
 
   
   /* else { */
-  /*   mpi_abort("[D4EST_ABORT]: We do not support nodes != NULL in vtk"); */
+  /*   D4EST_ABORT("[D4EST_ABORT]: We do not support nodes != NULL in vtk"); */
   /* } */
  
 
@@ -2611,7 +2611,7 @@ d4est_vtk_write_dg_point_datav (d4est_vtk_context_t * cont,
   }
 
   for (i = 0; i < num_point_vectors; ++all, ++i) {
-    mpi_abort("We do not support dg vectors yet");
+    D4EST_ABORT("We do not support dg vectors yet");
     /* cont = d4est_vtk_write_dg_point_vector (cont, names[all], values[all]); */
     /* SC_CHECK_ABORT (cont != NULL, */
                     /* P4EST_STRING "_vtk: Error writing point vectors"); */

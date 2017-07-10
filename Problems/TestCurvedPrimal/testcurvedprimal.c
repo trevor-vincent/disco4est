@@ -123,7 +123,7 @@ problem_help()
 p4est_connectivity_t*
 problem_build_conn()
 {
-  /* mpi_assert((P4EST_DIM)==3); */
+  /* D4EST_ASSERT((P4EST_DIM)==3); */
   p4est_connectivity_t* conn;
 
 #if (P4EST_DIM)==3
@@ -165,47 +165,47 @@ int problem_input_handler
 {
   problem_input_t* pconfig = (problem_input_t*)user;
   if (util_match_couple(section,"amr",name,"num_unifrefs")) {
-    mpi_assert(pconfig->num_unifrefs == -1);
+    D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
   }
   else if (util_match_couple(section,"amr",name,"num_randrefs")) {
-    mpi_assert(pconfig->num_randrefs == -1);
+    D4EST_ASSERT(pconfig->num_randrefs == -1);
     pconfig->num_randrefs = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R0")) {
-    mpi_assert(pconfig->deg_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
-    mpi_assert(pconfig->deg_quad_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R0 == -1);
     pconfig->deg_quad_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R0")) {
-    mpi_assert(pconfig->deg_stiffness_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_stiffness_R0 == -1);
     pconfig->deg_stiffness_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R1")) {
-    mpi_assert(pconfig->deg_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
-    mpi_assert(pconfig->deg_quad_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R1 == -1);
     pconfig->deg_quad_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R1")) {
-    mpi_assert(pconfig->deg_stiffness_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_stiffness_R1 == -1);
     pconfig->deg_stiffness_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R2")) {
-    mpi_assert(pconfig->deg_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
-    mpi_assert(pconfig->deg_quad_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R2 == -1);
     pconfig->deg_quad_R2 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R2")) {
-    mpi_assert(pconfig->deg_stiffness_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_stiffness_R2 == -1);
     pconfig->deg_stiffness_R2 = atoi(value);
   }
   else {
@@ -316,7 +316,7 @@ problem_input
   input.deg_stiffness_R2 = -1; 
     
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("problem", input.num_unifrefs, -1);
@@ -425,7 +425,7 @@ problem_init
   int level;
   global_Rinf = 1.;
   
-  mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
+  D4EST_ASSERT((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
   int world_rank, world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);

@@ -30,23 +30,23 @@ int newton_d4est_input_handler
   newton_d4est_params_t* pconfig = (newton_d4est_params_t*)user;
   
   if (util_match_couple(section,"newton_d4est",name,"atol")) {
-    mpi_assert(pconfig->atol == -1);
+    D4EST_ASSERT(pconfig->atol == -1);
     pconfig->atol = atof(value);
   }
   else if (util_match_couple(section,"newton_d4est",name,"rtol")) {
-    mpi_assert(pconfig->rtol == -1);
+    D4EST_ASSERT(pconfig->rtol == -1);
     pconfig->rtol = atof(value);
   }
   else if (util_match_couple(section,"newton_d4est",name,"imax")) {
-    mpi_assert(pconfig->imax == -1);
+    D4EST_ASSERT(pconfig->imax == -1);
     pconfig->imax = atoi(value);
   }
   else if (util_match_couple(section,"newton_d4est",name,"monitor")) {
-    mpi_assert(pconfig->monitor == -1);
+    D4EST_ASSERT(pconfig->monitor == -1);
     pconfig->monitor = atoi(value);
   }
   else if (util_match_couple(section,"newton_d4est",name,"imin")) {
-    mpi_assert(pconfig->imin == -1);
+    D4EST_ASSERT(pconfig->imin == -1);
     pconfig->imin = atoi(value);
   }
   else {
@@ -71,7 +71,7 @@ newton_d4est_input
   input.monitor = -1;
   
   if (ini_parse(input_file, newton_d4est_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("newton", input.atol, -1);

@@ -798,54 +798,54 @@ int problem_input_handler
 {
   problem_input_t* pconfig = (problem_input_t*)user;
   if (util_match_couple(section,"amr",name,"amr_levels")) {
-    mpi_assert(pconfig->endlevel == -1);
+    D4EST_ASSERT(pconfig->endlevel == -1);
     pconfig->endlevel = atoi(value);
     pconfig->count += 1;
   } else if (util_match_couple(section,"amr",name, "initial_degree")) {
-    mpi_assert(pconfig->degree == -1);
+    D4EST_ASSERT(pconfig->degree == -1);
     pconfig->degree = atoi(value);
     pconfig->count += 1;
   } else if (util_match_couple(section,"amr",name,"percentile")) {
-    mpi_assert(pconfig->percentile == -1);
+    D4EST_ASSERT(pconfig->percentile == -1);
     pconfig->percentile = atoi(value);
     pconfig->count += 1;
   } else if (util_match_couple(section,"amr",name,"gamma_h")) {
-    mpi_assert(pconfig->gamma_h == -1);
+    D4EST_ASSERT(pconfig->gamma_h == -1);
     pconfig->gamma_h = atof(value);
     pconfig->count += 1;
   } else if (util_match_couple(section,"amr",name,"gamma_p")) {
-    mpi_assert(pconfig->gamma_p == -1);
+    D4EST_ASSERT(pconfig->gamma_p == -1);
     pconfig->gamma_p = atof(value);
     pconfig->count += 1;
   } else if (util_match_couple(section,"amr",name,"degmax")) {
-    mpi_assert(pconfig->degmax == -1);
+    D4EST_ASSERT(pconfig->degmax == -1);
     pconfig->degmax = atoi(value);
     pconfig->count += 1;
   }else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
-    mpi_assert(pconfig->ip_flux_penalty == -1);
+    D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } else if (util_match_couple(section,"problem",name,"hrefine_til_inview")) {
-    mpi_assert(pconfig->hrefine_til_inview == -1);
+    D4EST_ASSERT(pconfig->hrefine_til_inview == -1);
     pconfig->hrefine_til_inview = atoi(value);
     pconfig->count += 1;
   } else if (util_match_couple(section,"problem",name,"domain_size")) {
-    mpi_assert(pconfig->domain_size == -1);
+    D4EST_ASSERT(pconfig->domain_size == -1);
     pconfig->domain_size = atof(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"use_gauss_quad")) {
-    mpi_assert(pconfig->use_gauss_quad == -1);
+    D4EST_ASSERT(pconfig->use_gauss_quad == -1);
     pconfig->use_gauss_quad = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_offset_for_gauss_quad")) {
-    mpi_assert(pconfig->deg_offset_for_gauss_quad == -1);
+    D4EST_ASSERT(pconfig->deg_offset_for_gauss_quad == -1);
     pconfig->deg_offset_for_gauss_quad = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"amr",name,"amr_inflation_size")) {
-    mpi_assert(pconfig->amr_inflation_size == -1);
+    D4EST_ASSERT(pconfig->amr_inflation_size == -1);
     pconfig->amr_inflation_size = atoi(value);
     pconfig->count += 1;
   }
@@ -858,7 +858,7 @@ int problem_input_handler
       pconfig->krylov_type = KSPGMRES;
     }
     else {
-      mpi_abort("not a support KSP solver type");
+      D4EST_ABORT("not a support KSP solver type");
     }
     pconfig->count += 1;
   }
@@ -894,13 +894,13 @@ problem_input
   input.count = 0;
   
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   if (input.count != num_of_options){
     printf("[D4EST_INFO]: input.count = %d\n", input.count);
     printf("[D4EST_INFO]: num_of_options = %d\n", num_of_options);
-    mpi_abort("num_of_options != input.count\n");
+    D4EST_ABORT("num_of_options != input.count\n");
   }
   return input;
 }
@@ -920,8 +920,8 @@ problem_init
 )
 {
 
-  mpi_assert((P4EST_DIM) == 3);
-  /* mpi_assert(argc == 12); */
+  D4EST_ASSERT((P4EST_DIM) == 3);
+  /* D4EST_ASSERT(argc == 12); */
   
   int world_rank,world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
@@ -1049,7 +1049,7 @@ problem_init
   d4est_elliptic_eqns_t prob_fcns;
   problem_ctx_t prob_ctx;
   if (input.use_gauss_quad){
-    mpi_assert(input.deg_offset_for_gauss_quad > -1);
+    D4EST_ASSERT(input.deg_offset_for_gauss_quad > -1);
     prob_ctx.deg_offset_for_gauss_quad = input.deg_offset_for_gauss_quad;
     prob_fcns.apply_lhs = apply_jac_gauss;
     prob_fcns.build_residual = build_residual_gauss;
@@ -1073,7 +1073,7 @@ problem_init
 
   /* force a balance if we're loading from checkpoint with autopartition */
   if(load_from_checkpoint){
-    mpi_abort("Not supported yet");
+    D4EST_ABORT("Not supported yet");
   }
   
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);

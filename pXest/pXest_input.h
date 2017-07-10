@@ -58,7 +58,7 @@ pXest_input_parse(const char* input_file){
   
   if (ini_parse(input_file, pXest_input_handler, &pXest_input) < 0) {
     printf("[D4EST_ERROR]: pXest input_file = %s\n", input_file);
-    mpi_abort("[D4EST_ERROR]: Can't load pXest input file");
+    D4EST_ABORT("[D4EST_ERROR]: Can't load pXest input file");
   }
 
   D4EST_CHECK_INPUT("p4est", pXest_input.min_quadrants, -2);

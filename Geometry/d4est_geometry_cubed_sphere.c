@@ -27,29 +27,29 @@ int d4est_geometry_cubed_sphere_input_handler
 {
   d4est_geometry_cubed_sphere_attr_t* pconfig = user;
   if (util_match_couple(section,pconfig->input_section,name,"R0")) {
-    mpi_assert(pconfig->R0 == -1);
+    D4EST_ASSERT(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
-    mpi_assert(pconfig->R0 > 0);
+    D4EST_ASSERT(pconfig->R0 > 0);
   }
   else if (util_match_couple(section,pconfig->input_section,name,"R1")) {
-    mpi_assert(pconfig->R1 == -1);
+    D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
-    mpi_assert(pconfig->R1 > 0);
+    D4EST_ASSERT(pconfig->R1 > 0);
   }
   else if (util_match_couple(section,pconfig->input_section,name,"R2")) {
-    mpi_assert(pconfig->R2 == -1);
+    D4EST_ASSERT(pconfig->R2 == -1);
     pconfig->R2 = atof(value);
-    mpi_assert(pconfig->R2 > 0);
+    D4EST_ASSERT(pconfig->R2 > 0);
   }
   else if (util_match_couple(section,pconfig->input_section,name,"compactify_outer_shell")) {
-    mpi_assert(pconfig->compactify_outer_shell == -1);
+    D4EST_ASSERT(pconfig->compactify_outer_shell == -1);
     pconfig->compactify_outer_shell = atoi(value);
-    mpi_assert(pconfig->compactify_outer_shell == 0 || pconfig->compactify_outer_shell == 1);
+    D4EST_ASSERT(pconfig->compactify_outer_shell == 0 || pconfig->compactify_outer_shell == 1);
   }
   else if (util_match_couple(section,pconfig->input_section,name,"compactify_inner_shell")) {
-    mpi_assert(pconfig->compactify_inner_shell == -1);
+    D4EST_ASSERT(pconfig->compactify_inner_shell == -1);
     pconfig->compactify_inner_shell = atoi(value);
-    mpi_assert(pconfig->compactify_inner_shell == 0 || pconfig->compactify_inner_shell == 1);
+    D4EST_ASSERT(pconfig->compactify_inner_shell == 0 || pconfig->compactify_inner_shell == 1);
   }
   else {
     return 0;  /* unknown section/name, error */
@@ -1127,7 +1127,7 @@ d4est_geometry_cubed_sphere_innerouter_shell_X
                                                     xyz);
   }
   else {
-    mpi_abort("[D4EST_ERROR]: which_tree should only be 0 or 1 for innerouter_shell");
+    D4EST_ABORT("[D4EST_ERROR]: which_tree should only be 0 or 1 for innerouter_shell");
   }
 }
 
@@ -1157,7 +1157,7 @@ d4est_geometry_cubed_sphere_innerouter_shell_DX(d4est_geometry_t* d4est_geom,
                                                      dxyz_drst);
   }
   else {
-    mpi_abort("[D4EST_ERROR]: which_tree should only be 0 or 1 for innerouter_shell");
+    D4EST_ABORT("[D4EST_ERROR]: which_tree should only be 0 or 1 for innerouter_shell");
   }
 }
 
@@ -1338,7 +1338,7 @@ d4est_geometry_cubed_sphere_input
   sphere_attrs->compactify_inner_shell = -1;
 
   if (ini_parse(input_file, d4est_geometry_cubed_sphere_input_handler, sphere_attrs) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT(input_section, sphere_attrs->R0, -1);
@@ -1371,7 +1371,7 @@ d4est_geometry_cubed_sphere_inner_shell_input
   sphere_attrs->compactify_outer_shell = -1;
 
   if (ini_parse(input_file, d4est_geometry_cubed_sphere_input_handler, sphere_attrs) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT(input_section, sphere_attrs->R0, -1);
@@ -1403,7 +1403,7 @@ d4est_geometry_cubed_sphere_innerouter_shell_input
   sphere_attrs->compactify_outer_shell = -1;
 
   if (ini_parse(input_file, d4est_geometry_cubed_sphere_input_handler, sphere_attrs) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT(input_section, sphere_attrs->R0, -1);
@@ -1435,7 +1435,7 @@ d4est_geometry_cubed_sphere_7tree_input
   sphere_attrs->compactify_outer_shell = -1;
 
   if (ini_parse(input_file, d4est_geometry_cubed_sphere_input_handler, sphere_attrs) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT(input_section, sphere_attrs->R0, -1);
@@ -1468,7 +1468,7 @@ d4est_geometry_cubed_sphere_outer_shell_input
   sphere_attrs->compactify_inner_shell = -1;
 
   if (ini_parse(input_file, d4est_geometry_cubed_sphere_input_handler, sphere_attrs) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   /* D4EST_CHECK_INPUT(input_section, sphere_attrs->R0, -1); */

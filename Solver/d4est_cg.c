@@ -17,21 +17,21 @@ int d4est_cg_input_handler
 {
   d4est_cg_params_t* pconfig = (d4est_cg_params_t*)user;
   if (util_match_couple(section,pconfig->input_section,name,"atol")) {
-    mpi_assert(pconfig->atol == -1);
+    D4EST_ASSERT(pconfig->atol == -1);
     pconfig->atol = atof(value);
   }
   else if (util_match_couple(section,pconfig->input_section,name,"rtol")) {
-    mpi_assert(pconfig->rtol == -1);
+    D4EST_ASSERT(pconfig->rtol == -1);
     pconfig->rtol = atof(value);
   }
   else if (util_match_couple(section,pconfig->input_section,name,"monitor")) {
-    mpi_assert(pconfig->monitor == -1);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(pconfig->monitor == -1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->monitor = atoi(value);
   }
   else if (util_match_couple(section,pconfig->input_section,name,"iter")) {
-    mpi_assert(pconfig->iter == -1);
-    mpi_assert(atoi(value) >= 0);
+    D4EST_ASSERT(pconfig->iter == -1);
+    D4EST_ASSERT(atoi(value) >= 0);
     pconfig->iter = atoi(value);
   }
   else {
@@ -55,11 +55,11 @@ d4est_cg_input
   input->rtol = -1;
   input->atol = -1;
 
-  mpi_assert(sizeof(input->input_section) <= 50);
+  D4EST_ASSERT(sizeof(input->input_section) <= 50);
   snprintf (input->input_section, sizeof(input->input_section), "%s", input_section);
   
   if (ini_parse(input_file, d4est_cg_input_handler, input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT(input_section, input->iter, -1);

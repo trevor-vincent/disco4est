@@ -116,7 +116,7 @@ double d4est_estimator_stats_compute_per_tree(p4est_t* p4est, d4est_estimator_st
         if(curved)
           eta2[q] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
         else{
-          mpi_abort("Soon to be deprecated\n");
+          D4EST_ABORT("Soon to be deprecated\n");
         }
         total_eta2_per_tree += eta2[q];
         local_eta2 += eta2[q];
@@ -195,7 +195,7 @@ d4est_estimator_stats_compute_max_percentiles_across_proc
  d4est_estimator_stats_t** stats,
  int num_bins
 ){
-  mpi_assert(num_bins < MAX_BINS);
+  D4EST_ASSERT(num_bins < MAX_BINS);
   double local_percentiles [MAX_BINS*5];
   double global_percentile_maxes [MAX_BINS*5];
 
@@ -247,7 +247,7 @@ d4est_estimator_stats_get_percentile
     else if (percentile == 25)
       return stats->p25;
     else{
-      mpi_abort("[D4EST_ERROR]: Not a supported percentile");
+      D4EST_ABORT("[D4EST_ERROR]: Not a supported percentile");
       return -1;
     }
 }

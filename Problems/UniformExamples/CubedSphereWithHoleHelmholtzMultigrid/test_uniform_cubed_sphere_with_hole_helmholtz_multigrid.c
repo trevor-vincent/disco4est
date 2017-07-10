@@ -187,59 +187,59 @@ int problem_input_handler
 {
   problem_input_t* pconfig = (problem_input_t*)user;
     if (util_match_couple(section,"problem",name,"solve_with_multigrid")) {
-    mpi_assert(pconfig->solve_with_multigrid == -1);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(pconfig->solve_with_multigrid == -1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->solve_with_multigrid = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"use_mg_as_pc_for_ksp")) {
-    mpi_assert(pconfig->use_mg_as_pc_for_ksp == -1);
-    mpi_assert(atoi(value) == 0 || atoi(value) == 1);
+    D4EST_ASSERT(pconfig->use_mg_as_pc_for_ksp == -1);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->use_mg_as_pc_for_ksp = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"num_unifrefs")) {
-    mpi_assert(pconfig->num_unifrefs == -1);
+    D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"rhs_compute_method")) {
-    mpi_assert(pconfig->rhs_compute_method[0] == '*');
+    D4EST_ASSERT(pconfig->rhs_compute_method[0] == '*');
     snprintf (pconfig->rhs_compute_method, sizeof(pconfig->rhs_compute_method), "%s", value);
-    mpi_assert(util_match(pconfig->rhs_compute_method, "COMPUTE_RHS_ON_QUADRATURE") ||
+    D4EST_ASSERT(util_match(pconfig->rhs_compute_method, "COMPUTE_RHS_ON_QUADRATURE") ||
                util_match(pconfig->rhs_compute_method, "COMPUTE_RHS_ON_LOBATTO") );
   }
   else if (util_match_couple(section,"problem",name,"deg_R0")) {
-    mpi_assert(pconfig->deg_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
-    mpi_assert(pconfig->deg_quad_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R0 == -1);
     pconfig->deg_quad_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R0")) {
-    mpi_assert(pconfig->deg_stiffness_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_stiffness_R0 == -1);
     pconfig->deg_stiffness_R0 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R1")) {
-    mpi_assert(pconfig->deg_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
-    mpi_assert(pconfig->deg_quad_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R1 == -1);
     pconfig->deg_quad_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R1")) {
-    mpi_assert(pconfig->deg_stiffness_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_stiffness_R1 == -1);
     pconfig->deg_stiffness_R1 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_R2")) {
-    mpi_assert(pconfig->deg_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
-    mpi_assert(pconfig->deg_quad_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R2 == -1);
     pconfig->deg_quad_R2 = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness_R2")) {
-    mpi_assert(pconfig->deg_stiffness_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_stiffness_R2 == -1);
     pconfig->deg_stiffness_R2 = atoi(value);
   }
   else {
@@ -272,7 +272,7 @@ problem_input
   input.solve_with_multigrid = -1;
   input.use_mg_as_pc_for_ksp = -1;
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("problem", input.num_unifrefs, -1);
@@ -599,7 +599,7 @@ void problem_build_rhs
             /* ); */
         /* } */
         /* else { */
-          /* mpi_abort("Should not happen\n"); */
+          /* D4EST_ABORT("Should not happen\n"); */
         /* } */
 
 
@@ -697,7 +697,7 @@ void problem_build_rhs
 /*             ); */
 /*         } */
 /*         else { */
-/*           mpi_abort("Should not happen\n"); */
+/*           D4EST_ABORT("Should not happen\n"); */
 /*         } */
 
 
@@ -746,7 +746,7 @@ problem_init
   
   int level;
   
-  mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
+  D4EST_ASSERT((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
   int world_rank, world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);
@@ -964,12 +964,12 @@ problem_init
 /* #endif */
 
 /*           if (d4est_geom->DRDX == NULL){ */
-/*             mpi_abort("d4est_geom->DRDX == NULL"); */
+/*             D4EST_ABORT("d4est_geom->DRDX == NULL"); */
 /*           } */
 /*           d4est_geom->DRDX(d4est_geom, tt, ed->q, ed->dq, rst, drst_dxyz_i); */
 
 /*           if (d4est_geom->JAC == NULL){ */
-/*             mpi_abort("d4est_geom->JAC == NULL"); */
+/*             D4EST_ABORT("d4est_geom->JAC == NULL"); */
 /*           } */
 
 /*           d4est_geom->JACDRDXDRDX(d4est_geom, tt, ed->q, ed->dq, rst, drdxjacdrdx_i_anal); */
@@ -1018,7 +1018,7 @@ problem_init
     /* printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level); */
 
     /* need to do a reduce on min,max_level before supporting multiple proc */
-    /* mpi_assert(proc_size == 1); */
+    /* D4EST_ASSERT(proc_size == 1); */
     /* int num_of_levels = max_level + 1; */
      
       

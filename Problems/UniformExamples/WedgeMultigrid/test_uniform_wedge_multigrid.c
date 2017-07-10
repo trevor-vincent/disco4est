@@ -126,31 +126,31 @@ int problem_input_handler
 {
   problem_input_t* pconfig = (problem_input_t*)user;
   if (util_match_couple(section,"problem",name,"num_unifrefs")) {
-    mpi_assert(pconfig->num_unifrefs == -1);
+    D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"solve_with_multigrid")) {
-    mpi_assert(pconfig->solve_with_multigrid == -1);
+    D4EST_ASSERT(pconfig->solve_with_multigrid == -1);
     pconfig->solve_with_multigrid = atoi(value);
   }
   else if (util_match_couple(section,"problem", name,"use_mg_as_pc_for_ksp")) {
-    mpi_assert(pconfig->use_mg_as_pc_for_ksp == -1);
+    D4EST_ASSERT(pconfig->use_mg_as_pc_for_ksp == -1);
     pconfig->use_mg_as_pc_for_ksp = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg")) {
-    mpi_assert(pconfig->deg == -1);
+    D4EST_ASSERT(pconfig->deg == -1);
     pconfig->deg = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad")) {
-    mpi_assert(pconfig->deg_quad == -1);
+    D4EST_ASSERT(pconfig->deg_quad == -1);
     pconfig->deg_quad = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_stiffness")) {
-    mpi_assert(pconfig->deg_stiffness == -1);
+    D4EST_ASSERT(pconfig->deg_stiffness == -1);
     pconfig->deg_stiffness = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"rhs_use_lobatto")) {
-    mpi_assert(pconfig->rhs_use_lobatto == -1);
+    D4EST_ASSERT(pconfig->rhs_use_lobatto == -1);
     pconfig->rhs_use_lobatto = atoi(value);
   }  
   else {
@@ -178,7 +178,7 @@ problem_input
   input.use_mg_as_pc_for_ksp = -1; 
 
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("problem", input.num_unifrefs, -1);
@@ -561,7 +561,7 @@ problem_init
   
   int level;
   
-  mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
+  D4EST_ASSERT((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
   int world_rank, world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);
@@ -723,7 +723,7 @@ problem_init
         );   
     }
     else {
-      mpi_abort("rhs_use_lobatto must be 0 or 1");
+      D4EST_ABORT("rhs_use_lobatto must be 0 or 1");
     }
 
     /* DEBUG_PRINT_2ARR_DBL(prob_vecs.u, prob_vecs.rhs, local_nodes); */
@@ -743,7 +743,7 @@ problem_init
     printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
 
     /* need to do a reduce on min,max_level before supporting multiple proc */
-    /* mpi_assert(proc_size == 1); */
+    /* D4EST_ASSERT(proc_size == 1); */
     int num_of_levels = max_level + 1;
      
       

@@ -18,27 +18,27 @@ multigrid_bottom_solver_cheby_d4est_input_handler
   multigrid_bottom_solver_cheby_d4est_t* pconfig = ((multigrid_bottom_solver_cheby_d4est_t*)user);
 
   if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_imax")) {
-    mpi_assert(pconfig->cheby_imax == -1);
+    D4EST_ASSERT(pconfig->cheby_imax == -1);
     pconfig->cheby_imax = atoi(value);
   }
   else if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_eigs_cg_imax")) {
-    mpi_assert(pconfig->cheby_eigs_cg_imax == -1);
+    D4EST_ASSERT(pconfig->cheby_eigs_cg_imax == -1);
     pconfig->cheby_eigs_cg_imax = atoi(value);
   }
   else if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_eigs_lmax_lmin_ratio")) {
-    mpi_assert(pconfig->cheby_eigs_lmax_lmin_ratio == -1);
+    D4EST_ASSERT(pconfig->cheby_eigs_lmax_lmin_ratio == -1);
     pconfig->cheby_eigs_lmax_lmin_ratio = atof(value);
   }
   else if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_eigs_max_multiplier")) {
-    mpi_assert(pconfig->cheby_eigs_max_multiplier == -1);
+    D4EST_ASSERT(pconfig->cheby_eigs_max_multiplier == -1);
     pconfig->cheby_eigs_max_multiplier = atof(value);
   }
   else if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_print_residual_norm")) {
-    mpi_assert(pconfig->cheby_print_residual_norm == -1);
+    D4EST_ASSERT(pconfig->cheby_print_residual_norm == -1);
     pconfig->cheby_print_residual_norm = atoi(value);
   }
   else if (util_match_couple(section,"mg_bottom_solver_cheby_d4est",name,"cheby_print_eig")) {
-    mpi_assert(pconfig->cheby_print_eig == -1);
+    D4EST_ASSERT(pconfig->cheby_print_eig == -1);
     pconfig->cheby_print_eig = atoi(value);
   }
   else {
@@ -130,7 +130,7 @@ multigrid_bottom_solver_cheby_d4est_init
   cheby_data->cheby_print_eig = -1;
   
   if (ini_parse(input_file, multigrid_bottom_solver_cheby_d4est_input_handler, cheby_data) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("multigrid_bottom_solver", cheby_data->cheby_imax, -1);

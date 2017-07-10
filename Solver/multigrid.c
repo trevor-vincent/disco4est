@@ -111,7 +111,7 @@ multigrid_update_components
     }
   }
   else {
-    mpi_abort("You should set elem_data_updater in multigrid\n");
+    D4EST_ABORT("You should set elem_data_updater in multigrid\n");
   }
   
 }
@@ -128,23 +128,23 @@ int multigrid_input_handler
   multigrid_data_t* mg_data = ((multigrid_data_t*)user);
   
   if (util_match_couple(section,"multigrid",name,"vcycle_imax")) {
-    mpi_assert(mg_data->vcycle_imax == -1);
+    D4EST_ASSERT(mg_data->vcycle_imax == -1);
     mg_data->vcycle_imax = atoi(value);
   }
   else if (util_match_couple(section,"multigrid",name,"vcycle_rtol")) {
-    mpi_assert(mg_data->vcycle_rtol == -1);
+    D4EST_ASSERT(mg_data->vcycle_rtol == -1);
     mg_data->vcycle_rtol = atof(value);
   }
   else if (util_match_couple(section,"multigrid",name,"vcycle_atol")) {
-    mpi_assert(mg_data->vcycle_atol == -1);
+    D4EST_ASSERT(mg_data->vcycle_atol == -1);
     mg_data->vcycle_atol = atof(value);
   }
   else if (util_match_couple(section,"multigrid",name,"smoother_name")) {
-    mpi_assert(mg_data->smoother_name[0] == '*');
+    D4EST_ASSERT(mg_data->smoother_name[0] == '*');
     snprintf (mg_data->smoother_name, sizeof(mg_data->smoother_name), "%s", value);
   }
   else if (util_match_couple(section,"multigrid",name,"bottom_solver_name")) {
-    mpi_assert(mg_data->bottom_solver_name[0] == '*');
+    D4EST_ASSERT(mg_data->bottom_solver_name[0] == '*');
     snprintf (mg_data->bottom_solver_name, sizeof(mg_data->bottom_solver_name), "%s", value);
   }
   else {
@@ -170,7 +170,7 @@ multigrid_set_smoother(p4est_t* p4est, const char* input_file, multigrid_data_t*
   }
   else {
     printf("[D4EST_ERROR]: You chose the %s smoother\n", mg_data->smoother_name);
-    mpi_abort("[D4EST_ERROR]: This smoother is not supported");
+    D4EST_ABORT("[D4EST_ERROR]: This smoother is not supported");
   }
 }
 
@@ -186,7 +186,7 @@ multigrid_destroy_smoother(multigrid_data_t* mg_data){
   }
   else {
     printf("[D4EST_ERROR]: You chose the %s smoother\n", mg_data->smoother_name);
-    mpi_abort("[D4EST_ERROR]: This smoother is not supported");
+    D4EST_ABORT("[D4EST_ERROR]: This smoother is not supported");
   }
 }
 
@@ -217,7 +217,7 @@ multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file, multigrid_da
   }
   else {
     printf("[D4EST_ERROR]: You chose the %s bottom_solver\n", mg_data->bottom_solver_name);
-    mpi_abort("[D4EST_ERROR]: This bottom_solver is not supported");
+    D4EST_ABORT("[D4EST_ERROR]: This bottom_solver is not supported");
   }
 }
 
@@ -245,7 +245,7 @@ multigrid_destroy_bottom_solver(multigrid_data_t* mg_data){
   }
   else {
     printf("[D4EST_ERROR]: You chose the %s bottom_solver\n", mg_data->bottom_solver_name);
-    mpi_abort("[D4EST_ERROR]: This bottom_solver is not supported");
+    D4EST_ABORT("[D4EST_ERROR]: This bottom_solver is not supported");
   }
 }
 
@@ -263,7 +263,7 @@ multigrid_data_init
 )
 {
   multigrid_data_t* mg_data = P4EST_ALLOC(multigrid_data_t, 1);
-  mpi_assert(num_of_levels > 0);
+  D4EST_ASSERT(num_of_levels > 0);
 
   mg_data->d4est_ops = d4est_ops;
   mg_data->num_of_levels = num_of_levels;
@@ -282,7 +282,7 @@ multigrid_data_init
   mg_data->nodes_on_level_of_surrogate_multigrid = NULL;
   
   if (ini_parse(input_file, multigrid_input_handler, mg_data) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_atol, -1);

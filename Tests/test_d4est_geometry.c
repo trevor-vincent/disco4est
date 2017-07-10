@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     d4est_geometry_disk_outer_wedge_new_aux(d4est_geom, disk_attrs);
   }
   else {
-    mpi_abort("DIM == 2 or 3 only");
+    D4EST_ABORT("DIM == 2 or 3 only");
   }
   
   p4est_t* p4est = problem_build_p4est

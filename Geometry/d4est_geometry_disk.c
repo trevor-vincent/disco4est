@@ -28,19 +28,19 @@ int d4est_geometry_disk_input_handler
   d4est_geometry_disk_attr_t* pconfig = (d4est_geometry_disk_attr_t*)user;
   
   if (util_match_couple(section,pconfig->input_section,name,"R0")) {
-    mpi_assert(pconfig->R0 == -1);
+    D4EST_ASSERT(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
   }
   else if (util_match_couple(section,pconfig->input_section,name,"R1")) {
-    mpi_assert(pconfig->R1 == -1);
+    D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
   }
   else if (util_match_couple(section,pconfig->input_section,name,"R2")) {
-    mpi_assert(pconfig->R2 == -1);
+    D4EST_ASSERT(pconfig->R2 == -1);
     pconfig->R2 = atof(value);
   }
   else if (util_match_couple(section,pconfig->input_section,name,"compactify_outer_wedge")) {
-    mpi_assert(pconfig->compactify_outer_wedge == -1);
+    D4EST_ASSERT(pconfig->compactify_outer_wedge == -1);
     pconfig->compactify_outer_wedge = atoi(value);
   }
   else {
@@ -58,7 +58,7 @@ d4est_geometry_5treedisk_input
 )
 {
   d4est_geometry_disk_attr_t* input = P4EST_ALLOC(d4est_geometry_disk_attr_t, 1);
-  /* mpi_assert(sizeof(input->input_section) <= 50); */
+  /* D4EST_ASSERT(sizeof(input->input_section) <= 50); */
   /* snprintf (input->input_section, sizeof(input->input_section), "%s", input_section); */
   input->input_section = input_section;
   input->R0 = -1;
@@ -67,7 +67,7 @@ d4est_geometry_5treedisk_input
   input->compactify_outer_wedge = -1;
   
   if (ini_parse(input_file, d4est_geometry_disk_input_handler, input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT(input->input_section, input->R0, -1);
@@ -84,7 +84,7 @@ d4est_geometry_disk_outer_wedge_input
 )
 {
   d4est_geometry_disk_attr_t* input = P4EST_ALLOC(d4est_geometry_disk_attr_t, 1);
-  /* mpi_assert(sizeof(input->input_section) <= 50); */
+  /* D4EST_ASSERT(sizeof(input->input_section) <= 50); */
   /* snprintf (input->input_section, sizeof(input->input_section), "%s", input_section); */
 
   input->input_section = input_section;
@@ -95,7 +95,7 @@ d4est_geometry_disk_outer_wedge_input
 
 
   if (ini_parse(input_file, d4est_geometry_disk_input_handler, input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT(input->input_section, input->R1, -1);
@@ -309,7 +309,7 @@ d4est_geometry_5treedisk_new
  d4est_geometry_t* d4est_geom
 )
 {
-  mpi_assert((P4EST_DIM)==2);
+  D4EST_ASSERT((P4EST_DIM)==2);
   d4est_geometry_disk_attr_t* input = d4est_geometry_5treedisk_input(input_file, input_section);
   p4est_connectivity_t* conn = p4est_connectivity_new_disk();
   
@@ -372,11 +372,11 @@ d4est_geometry_disk_outer_wedge_sj_analytic
       *sj = sqrt((pow(amax - amin,2)*pow(M_PI,2)*pow(R1,2)*pow(R2,2))/(16.*pow(R2*(-4 + bmax + bmin + bmax*s - bmin*s) - R1*(-2 + bmax + bmin + bmax*s - bmin*s),2)));
     }
     else {
-      mpi_abort("[D4EST_ERROR]: This is not a face");
+      D4EST_ABORT("[D4EST_ERROR]: This is not a face");
     }
   }
   else {
-    mpi_abort("[D4EST_ERROR]: Code is not written yet");
+    D4EST_ABORT("[D4EST_ERROR]: Code is not written yet");
   }
 }
 
@@ -473,11 +473,11 @@ d4est_geometry_disk_outer_wedge_sj_div_jac_analytic
   *sj_div_jac = sqrt(pow(R2*(-4 + bmax + bmin + bmax*s - bmin*s) - R1*(-2 + bmax + bmin + bmax*s - bmin*s),4)/(4.*pow(bmax - bmin,2)*pow(R1,2)*pow(R1 - R2,2)*pow(R2,2)));
     }
     else {
-      mpi_abort("[D4EST_ERROR]: This is not a face");
+      D4EST_ABORT("[D4EST_ERROR]: This is not a face");
     }
   }
   else {
-    mpi_abort("[D4EST_ERROR]: Code is not written yet");
+    D4EST_ABORT("[D4EST_ERROR]: Code is not written yet");
   }
 }
 
@@ -507,7 +507,7 @@ d4est_geometry_disk_outer_wedge_new
  d4est_geometry_t* d4est_geom
 )
 {
-  mpi_assert((P4EST_DIM)==2);
+  D4EST_ASSERT((P4EST_DIM)==2);
   d4est_geometry_disk_attr_t* input = d4est_geometry_disk_outer_wedge_input(input_file, input_section);
 
   d4est_geometry_disk_outer_wedge_new_aux(d4est_geom, input);

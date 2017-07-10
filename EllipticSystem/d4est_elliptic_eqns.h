@@ -14,7 +14,6 @@ void (*d4est_apply_operator_fcn_t)
  p4est_ghost_t*,
  d4est_element_data_t*, /* element_data */
  d4est_elliptic_problem_data_t*,
- d4est_mortar_fcn_ptrs_t*,
  d4est_operators_t*,
  d4est_geometry_t*,
  d4est_quadrature_t*,
@@ -29,10 +28,7 @@ typedef struct {
   /* function pointer to build residual */
   d4est_apply_operator_fcn_t build_residual;
 
-  /* flux fcn data */
-  d4est_mortar_fcn_ptrs_t* flux_fcn_data;
-
-  /* user-specified data */
+  /* user-specified data, this is given to the apply_operator fcns above */
   void* user;
   
 } d4est_elliptic_eqns_t;

@@ -4,6 +4,7 @@
 #include <d4est_operators.h>
 #include <d4est_linalg.h>
 #include <d4est_poisson.h>
+#include <d4est_poisson_flux.h>
 #include <d4est_xyz_functions.h>
 #include <d4est_quadrature.h>
 #include <d4est_mortars.h>
@@ -16,7 +17,7 @@ d4est_poisson_apply_aij
  p4est_ghost_t* ghost,
  void* ghost_data,
  d4est_elliptic_problem_data_t* prob_vecs,
- d4est_mortar_fcn_ptrs_t* flux_fcn_data,
+ d4est_poisson_flux_data_t* flux_fcn_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad
@@ -77,7 +78,9 @@ d4est_poisson_apply_aij
       }
 
     }
- 
+
+
+  d4est_mortar_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(flux_fcn_data);
   d4est_mortar_compute_flux_on_local_elements
     (
      p4est,
@@ -86,7 +89,7 @@ d4est_poisson_apply_aij
      d4est_ops,
      d4est_geom,
      d4est_quad,
-     flux_fcn_data,
+     &flux_fcns,
      EXCHANGE_GHOST_DATA
     );
     

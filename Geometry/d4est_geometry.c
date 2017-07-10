@@ -45,7 +45,7 @@ int d4est_geometry_input_handler
   d4est_geometry_input_t* pconfig = (d4est_geometry_input_t*)user;
 
   if (util_match_couple(section,pconfig->input_section,name,"name")) {
-    mpi_assert(pconfig->name == NULL);
+    D4EST_ASSERT(pconfig->name == NULL);
     D4EST_ASPRINTF(pconfig->name,"%s",value);
   }
   else if (util_match_couple(section,pconfig->input_section,name,"DX_compute_method")) {
@@ -57,7 +57,7 @@ int d4est_geometry_input_handler
     }
     else {
       printf("[D4EST_ERROR]: You tried to use %s as a mapping type\n", value);
-      mpi_abort("[D4EST_ERROR]: This mapping is not supported");
+      D4EST_ABORT("[D4EST_ERROR]: This mapping is not supported");
     }
   } 
   else if (util_match_couple(section,pconfig->input_section,name,"JAC_compute_method")) {
@@ -69,7 +69,7 @@ int d4est_geometry_input_handler
     }
     else {
       printf("[D4EST_ERROR]: You tried to use %s as a mapping type\n", value);
-      mpi_abort("[D4EST_ERROR]: This mapping is not supported");
+      D4EST_ABORT("[D4EST_ERROR]: This mapping is not supported");
     }
   }
   else {
@@ -95,7 +95,7 @@ d4est_geometry_input
   input.JAC_compute_method = GEOM_COMPUTE_NOT_SET;
   
   if (ini_parse(input_file, d4est_geometry_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT(input_section, input.name, NULL);
@@ -161,7 +161,7 @@ d4est_geometry_new(int mpirank,
   }
   else {
     printf("[D4EST_ERROR]: You tried to use %s geometry\n", input.name);
-    mpi_abort("[D4EST_ERROR]: this geometry is currently not supported");
+    D4EST_ABORT("[D4EST_ERROR]: this geometry is currently not supported");
   }
 
 #endif
@@ -177,17 +177,17 @@ d4est_geometry_new(int mpirank,
   else if (util_match(input.name,"none")){}
   else {
     printf("[D4EST_ERROR]: You tried to use %s geometry\n", input.name);
-    mpi_abort("[D4EST_ERROR]: this geometry is currently not supported");
+    D4EST_ABORT("[D4EST_ERROR]: this geometry is currently not supported");
   }
 #endif
   free(input.name);
 
   if(d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC && d4est_geom->DX == NULL){
-    mpi_abort("[D4EST_ERROR]: This geometry does not support analytic derivatives");
+    D4EST_ABORT("[D4EST_ERROR]: This geometry does not support analytic derivatives");
   }
 
   if(d4est_geom->JAC_compute_method == GEOM_COMPUTE_ANALYTIC && d4est_geom->JAC == NULL){
-    mpi_abort("[D4EST_ERROR]: This geometry does not support analytic jacobians");
+    D4EST_ABORT("[D4EST_ERROR]: This geometry does not support analytic jacobians");
   }
   
   return d4est_geom;
@@ -441,7 +441,7 @@ d4est_geometry_compute_dxyz_drst
     /*    d4est_ops, */
     /*    dxyz_drst */
     /*   ); */
-    mpi_abort("[D4EST_ERROR]: we currently do not support numerical/isoparametric mappings\n");
+    D4EST_ABORT("[D4EST_ERROR]: we currently do not support numerical/isoparametric mappings\n");
   }
   else if (d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC) {
     d4est_geometry_compute_dxyz_drst_analytic
@@ -457,7 +457,7 @@ d4est_geometry_compute_dxyz_drst
       );
   }
   else {
-    mpi_abort("derivative type must be ISOPARAMETRIC or ANALYTIC");
+    D4EST_ABORT("derivative type must be ISOPARAMETRIC or ANALYTIC");
   }
 }
 
@@ -586,7 +586,7 @@ d4est_geometry_compute_dxyz_drst_face_analytic
 /*   d4est_geometry_get_face_info(face, &face_info); */
 
 /*   if(d4est_geom->DRDX == NULL){ */
-/*     mpi_abort("d4est_geom->DRDX == NULL"); */
+/*     D4EST_ABORT("d4est_geom->DRDX == NULL"); */
 /*   } */
   
 /*   for (int i = 0; i < face_nodes; i++){ */
@@ -630,7 +630,7 @@ d4est_geometry_compute_dxyz_drst_face_analytic
 /* /\*   d4est_geometry_get_face_info(face, &face_info); *\/ */
 
 /* /\*   if(d4est_geom->DRDX == NULL){ *\/ */
-/* /\*     mpi_abort("d4est_geom->DRDX == NULL"); *\/ */
+/* /\*     D4EST_ABORT("d4est_geom->DRDX == NULL"); *\/ */
 /* /\*   } *\/ */
   
 /* /\*   for (int i = 0; i < face_nodes; i++){ *\/ */
@@ -676,7 +676,7 @@ d4est_geometry_compute_dxyz_drst_face_analytic
 
 
 /* /\*   if(d4est_geom->JAC == NULL){ *\/ */
-/* /\*     mpi_abort("d4est_geom->JAC == NULL"); *\/ */
+/* /\*     D4EST_ABORT("d4est_geom->JAC == NULL"); *\/ */
 /* /\*   } *\/ */
   
 /* /\*   for (int i = 0; i < face_nodes; i++){ *\/ */
@@ -714,7 +714,7 @@ d4est_geometry_compute_dxyz_drst_face_analytic
 
 
 /* /\*   if(d4est_geom->JAC == NULL){ *\/ */
-/* /\*     mpi_abort("d4est_geom->JAC == NULL"); *\/ */
+/* /\*     D4EST_ABORT("d4est_geom->JAC == NULL"); *\/ */
 /* /\*   } *\/ */
   
 /* /\*   for (int i = 0; i < face_nodes; i++){ *\/ */
@@ -875,7 +875,7 @@ d4est_geometry_compute_xyz_face_analytic
 /* /\*     } *\/ */
 /* /\*   } *\/ */
 /* /\*   else { *\/ */
-/* /\*     mpi_abort("quad type not supported"); *\/ */
+/* /\*     D4EST_ABORT("quad type not supported"); *\/ */
 /* /\*   } *\/ */
 
 /* /\*   D4EST_FREE_DBYD_MAT(dxyz_drst_volume); *\/ */
@@ -913,7 +913,7 @@ d4est_geometry_compute_jacobian
 #elif (P4EST_DIM) == 2
     jac[i] = -xs*yr + xr*ys;
 #else
-    mpi_abort("DIM must be 2 or 3");
+    D4EST_ABORT("DIM must be 2 or 3");
 #endif
   }
 }
@@ -1298,13 +1298,13 @@ d4est_geometry_get_tree_coords_in_range_0_to_1
 )
 {
   if (coords_type == COORDS_INTEG_RST){
-    mpi_assert(coords[0] >= -1. && coords[0] <= 1.);
-    mpi_assert(coords[1] >= -1. && coords[1] <= 1.);
+    D4EST_ASSERT(coords[0] >= -1. && coords[0] <= 1.);
+    D4EST_ASSERT(coords[1] >= -1. && coords[1] <= 1.);
     /* transform from coords in [-1,1]^3 to the subspace [q0, q0+dq]^3 in [0,1]^3*/
     tcoords[0] = d4est_reference_rtox(coords[0], (double)q0[0], (double)dq)/(double)P4EST_ROOT_LEN;
     tcoords[1] = d4est_reference_rtox(coords[1], (double)q0[1], (double)dq)/(double)P4EST_ROOT_LEN;
 #if (P4EST_DIM)==3
-    mpi_assert(coords[2] >= -1. && coords[2] <= 1.);
+    D4EST_ASSERT(coords[2] >= -1. && coords[2] <= 1.);
     tcoords[2] = d4est_reference_rtox(coords[2], (double)q0[2], (double)dq)/(double)P4EST_ROOT_LEN;
 #endif
   }
@@ -1324,7 +1324,7 @@ d4est_geometry_get_tree_coords_in_range_0_to_1
 #endif
   }
   else {
-    mpi_abort("[D4EST_ERROR]: You either did not set a coords type or used an unsupported coords type");
+    D4EST_ABORT("[D4EST_ERROR]: You either did not set a coords type or used an unsupported coords type");
   }
 }
 
@@ -1419,7 +1419,7 @@ void d4est_geometry_get_face_info(int f, d4est_geometry_face_info_t* face_info) 
     face_info->c = 2;
   }
   else {
-    mpi_abort("face info error: only f > 5 or f < 0 in 3d");
+    D4EST_ABORT("face info error: only f > 5 or f < 0 in 3d");
   }
 
 }
@@ -1442,7 +1442,7 @@ d4est_geometry_compute_element_volume
 #elif (P4EST_DIM)==2
   d4est_linalg_kron_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac);
 #else
-  mpi_abort("only DIM=2 or DIM=3");
+  D4EST_ABORT("only DIM=2 or DIM=3");
 #endif
   
   for (int i = 0; i < volume_nodes_GL; i++){
@@ -1502,7 +1502,7 @@ d4est_geometry_compute_element_volume
 /* #elif (P4EST_DIM)==2 */
 /*   d4est_linalg_kron_vec_dot_x(integ_weights, sj_on_face, deg + 1, Msj); */
 /* #else */
-/*   mpi_abort("only DIM=2 or DIM=3"); */
+/*   D4EST_ABORT("only DIM=2 or DIM=3"); */
 /* #endif */
   
 /*   for (int i = 0; i < face_nodes; i++){ */
@@ -1588,7 +1588,7 @@ d4est_geometry_compute_diam
 /* #elif (P4EST_DIM)==2 */
 /*   d4est_linalg_kron_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac); */
 /* #else */
-/*   mpi_abort("only DIM=2 or DIM=3"); */
+/*   D4EST_ABORT("only DIM=2 or DIM=3"); */
 /* #endif */
   
 /*   for (int i = 0; i < volume_nodes_GL; i++){ */

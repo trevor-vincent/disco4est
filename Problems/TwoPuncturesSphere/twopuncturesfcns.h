@@ -31,7 +31,7 @@ init_onepuncture_data
   double M = 1.;
   params->num_punctures = 1;
   params->puncture_eps = 1e-10;
-  mpi_assert(params->num_punctures < (MAX_PUNCTURES));
+  D4EST_ASSERT(params->num_punctures < (MAX_PUNCTURES));
   
   params->M_bh[0] = M;
 
@@ -64,7 +64,7 @@ init_twopunctures_data
   double M = 1.;
   params->num_punctures = 2;
   params->puncture_eps = 1e-10;
-  mpi_assert(params->num_punctures < (MAX_PUNCTURES));
+  D4EST_ASSERT(params->num_punctures < (MAX_PUNCTURES));
   
   params->M_bh[0] = .5*M;
   params->M_bh[1] = .5*M;
@@ -111,7 +111,7 @@ init_random_puncture_data
  int deg_offset_for_puncture_nonlinearity_quad
 )
 {
-  mpi_assert(num_punctures < (MAX_PUNCTURES));
+  D4EST_ASSERT(num_punctures < (MAX_PUNCTURES));
   params->puncture_eps = 1e-10;
   params->num_punctures = num_punctures;
   double M = 1.;

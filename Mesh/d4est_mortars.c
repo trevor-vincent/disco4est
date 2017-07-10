@@ -88,7 +88,7 @@ d4est_mortars_compute_geometric_data_on_mortar_aux
         );
     }
     else {
-      mpi_abort("[D4EST_ERROR]: compute method type for DX not supported");
+      D4EST_ABORT("[D4EST_ERROR]: compute method type for DX not supported");
     }
 
     if (d4est_geom->JAC_compute_method == GEOM_COMPUTE_NUMERICAL){
@@ -100,7 +100,7 @@ d4est_mortars_compute_geometric_data_on_mortar_aux
         );
     }
     else {
-      mpi_abort("[D4EST_ERROR]: compute method type for JAC not supported");
+      D4EST_ABORT("[D4EST_ERROR]: compute method type for JAC not supported");
     }
 
     d4est_geometry_compute_drst_dxyz
@@ -129,7 +129,7 @@ d4est_mortars_compute_geometric_data_on_mortar_aux
         i0 = 2;
       }
       else {
-        mpi_abort("face must be < 6\n");
+        D4EST_ABORT("face must be < 6\n");
       }
       double sgn = (face == 0 || face == 2 || face == 4) ? -1. : 1.;
       d4est_geometry_face_info_t face_info;
@@ -192,7 +192,7 @@ d4est_mortars_compute_geometric_data_on_mortar_aux
           
         }
         else {
-          mpi_abort("[D4EST_ERROR]: Only two ways to compute normal");
+          D4EST_ABORT("[D4EST_ERROR]: Only two ways to compute normal");
         }
 
         /* STORE COMPUTATIONS */
@@ -451,7 +451,7 @@ void d4est_mortars_project_mortar_onto_side(d4est_operators_t* d4est_ops,
   }
 
   else {
-    mpi_abort("ERROR: d4est_mortars_project_side_onto_mortar_space");
+    D4EST_ABORT("ERROR: d4est_mortars_project_side_onto_mortar_space");
   }
 }
 
@@ -491,7 +491,7 @@ void d4est_mortars_project_mass_mortar_onto_side(d4est_operators_t* dgmath,
   }
 
   else {
-    mpi_abort("ERROR: d4est_mortars_project_mass_mortar_onto_side_space");
+    D4EST_ABORT("ERROR: d4est_mortars_project_mass_mortar_onto_side_space");
   }
 }
 
@@ -542,7 +542,7 @@ void d4est_mortars_project_side_onto_mortar_space(d4est_operators_t* d4est_ops,
       stride_mortar += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar[i]);
     }
   } else {
-    mpi_abort("ERROR: d4est_mortars_project_side_onto_mortar_space");
+    D4EST_ABORT("ERROR: d4est_mortars_project_side_onto_mortar_space");
   }
 }
 
@@ -653,7 +653,7 @@ void d4est_mortar_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *inf
              d4est_ops,
              geom,
              d4est_quad,
-             flux_fcn_ptrs->params
+             flux_fcn_ptrs->user_ctx
           );
           }
         }
@@ -693,7 +693,7 @@ void d4est_mortar_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *inf
                  d4est_ops,
                  geom,
                  d4est_quad,
-                 flux_fcn_ptrs->params
+                 flux_fcn_ptrs->user_ctx
                 );
             }
           }
@@ -710,7 +710,7 @@ void d4est_mortar_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *inf
             if (flux_fcn_ptrs->flux_interface_fcn != NULL){
             flux_fcn_ptrs->flux_interface_fcn(
                                               e_m, 1, side[s_m]->face, mortar_side_id_m, e_p, 1, side[s_p]->face, mortar_side_id_p, e_m_is_ghost,
-                info->orientation, d4est_ops, geom, d4est_quad, flux_fcn_ptrs->params);
+                info->orientation, d4est_ops, geom, d4est_quad, flux_fcn_ptrs->user_ctx);
             }
           }
         }
@@ -732,8 +732,8 @@ void d4est_mortar_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *inf
 
     if (flux_fcn_ptrs->flux_boundary_fcn != NULL){
       flux_fcn_ptrs->flux_boundary_fcn(e_m[0], side->face, mortar_side_id_m,
-                                       flux_fcn_ptrs->bndry_fcn, d4est_ops, geom, d4est_quad,
-                                       flux_fcn_ptrs->params);
+                                       d4est_ops, geom, d4est_quad,
+                                       flux_fcn_ptrs->user_ctx);
     }
     d4est_mortar_compute_flux_user_data->mortar_stride += 1;
   }

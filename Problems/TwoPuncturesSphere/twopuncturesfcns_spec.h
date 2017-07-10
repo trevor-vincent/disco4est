@@ -241,7 +241,7 @@ double twopunctures_spec_neg_1o8_K2_psi_neg7
                                                                params->num_punctures
                                                               );
 
-  /* mpi_abort("stop here duckers"); */
+  /* D4EST_ABORT("stop here duckers"); */
   /* printf("oneoveralpha = %.25f\n", oneoveralpha); */
   
   double psi_0 = 1. + u + oneoveralpha;

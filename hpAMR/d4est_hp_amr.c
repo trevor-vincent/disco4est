@@ -83,7 +83,7 @@ d4est_hp_amr_refine_replace_callback (
 			     )
 {
 #ifdef SAFETY  
-  mpi_assert(num_outgoing == 1);
+  D4EST_ASSERT(num_outgoing == 1);
 #endif
   d4est_hp_amr_data_t* d4est_hp_amr_data = (d4est_hp_amr_data_t*) p4est->user_pointer;
   d4est_operators_t* d4est_ops = d4est_hp_amr_data->d4est_ops;
@@ -136,7 +136,7 @@ d4est_hp_amr_balance_replace_callback (
 			     )
 {
 #ifdef SAFETY  
-  mpi_assert(num_outgoing == 1);
+  D4EST_ASSERT(num_outgoing == 1);
 #endif
   d4est_hp_amr_data_t* d4est_hp_amr_data = (d4est_hp_amr_data_t*) p4est->user_pointer;
   d4est_operators_t* d4est_ops = d4est_hp_amr_data->d4est_ops;

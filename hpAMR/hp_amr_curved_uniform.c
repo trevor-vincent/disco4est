@@ -14,7 +14,7 @@ hp_amr_curved_uniform_refine_replace_callback (
 			     )
 {
 #ifdef SAFETY  
-  mpi_assert(num_outgoing == 1);
+  D4EST_ASSERT(num_outgoing == 1);
 #endif
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
   d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
@@ -39,7 +39,7 @@ hp_amr_curved_uniform_refine_replace_callback (
   /* else if (smooth_pred_data->norm_type == dg_norm_type) */
   /*   h_pow = parent_data->deg; */
   /* else{ */
-  /*   mpi_abort("[ERROR]: hp_amr_curved_smooth_pred norm_type not supported"); */
+  /*   D4EST_ABORT("[ERROR]: hp_amr_curved_smooth_pred norm_type not supported"); */
   /*   h_pow *= -1.; /\* remove warnings *\/ */
   /* } */
   double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN));
@@ -77,7 +77,7 @@ hp_amr_curved_uniform_balance_replace_callback (
 			     )
 {
 #ifdef SAFETY  
-  mpi_assert(num_outgoing == 1);
+  D4EST_ASSERT(num_outgoing == 1);
 #endif
   hp_amr_data_t* hp_amr_data = (hp_amr_data_t*) p4est->user_pointer;
   d4est_operators_t* d4est_ops = hp_amr_data->d4est_ops;
@@ -100,7 +100,7 @@ hp_amr_curved_uniform_balance_replace_callback (
   /* else if (smooth_pred_data->norm_type == dg_norm_type) */
     h_pow = parent_data->deg;
   /* else */
-    /* mpi_abort("[ERROR]: hp_amr_curved_smooth_pred norm_type not supported"); */
+    /* D4EST_ABORT("[ERROR]: hp_amr_curved_smooth_pred norm_type not supported"); */
 
   double* temp_data = P4EST_ALLOC(double, volume_nodes*(P4EST_CHILDREN));
   d4est_operators_apply_hp_prolong

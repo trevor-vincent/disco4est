@@ -3,6 +3,7 @@
 
 #include <pXest.h>
 #include <d4est_mortars.h>
+#include <d4est_poisson_flux.h>
 
 typedef double
 (*penalty_calc_t)
@@ -32,8 +33,7 @@ typedef struct {
 } d4est_poisson_flux_sipg_params_t;
 
 /* This file was automatically generated.  Do not edit! */
-d4est_mortar_fcn_ptrs_t d4est_poisson_flux_sipg_fetch_fcns(d4est_grid_fcn_t bndry_fcn,d4est_poisson_flux_sipg_params_t *sipg_params);
-void d4est_poisson_flux_sipg_params_destroy(d4est_poisson_flux_sipg_params_t *params);
-d4est_poisson_flux_sipg_params_t *d4est_poisson_flux_sipg_params_new(p4est_t *p4est,const char *print_prefix,const char *input_file);
+void d4est_poisson_flux_sipg_params_destroy(d4est_poisson_flux_data_t *data);
+void d4est_poisson_flux_sipg_params_new(p4est_t *p4est,d4est_grid_fcn_t boundary_condition,const char *print_prefix,const char *input_file,d4est_poisson_flux_data_t *d4est_poisson_flux_data);
 
 #endif

@@ -124,24 +124,24 @@ int problem_input_handler
 {
   problem_input_t* pconfig = (problem_input_t*)user;
   if (util_match_couple(section,"amr",name,"num_unifrefs")) {
-    mpi_assert(pconfig->num_unifrefs == -1);
+    D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"amr",name,"num_randrefs")) {
-    mpi_assert(pconfig->num_randrefs == -1);
+    D4EST_ASSERT(pconfig->num_randrefs == -1);
     pconfig->num_randrefs = atoi(value);
     pconfig->count += 1;
   }
 
   else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
-    mpi_assert(pconfig->ip_flux_penalty == -1);
+    D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } 
 
   else if (util_match_couple(section,"problem",name,"deg")) {
-    mpi_assert(pconfig->deg == -1);
+    D4EST_ASSERT(pconfig->deg == -1);
     pconfig->deg = atoi(value);
     pconfig->count += 1;
   } 
@@ -369,10 +369,10 @@ problem_input
   input.count = 0;
   
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
-  mpi_assert(input.count == num_of_options);
+  D4EST_ASSERT(input.count == num_of_options);
   return input;
 }
 
@@ -451,7 +451,7 @@ problem_init
   
   int level;
   
-  mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
+  D4EST_ASSERT((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
   int world_rank, world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);

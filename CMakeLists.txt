@@ -86,6 +86,7 @@ SET (
   dGMath/d4est_lgl.c
   dGMath/d4est_reference.c
   dGMath/d4est_poisson.c
+  dGMath/d4est_poisson_flux.c
   dGMath/d4est_poisson_flux_sipg.c
   Geometry/d4est_geometry_cubed_sphere.c
   Geometry/d4est_geometry_disk.c

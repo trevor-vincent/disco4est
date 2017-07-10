@@ -92,7 +92,7 @@ problem_help()
 p4est_connectivity_t*
 problem_build_conn()
 {
-  mpi_assert((P4EST_DIM)==3);
+  D4EST_ASSERT((P4EST_DIM)==3);
   p4est_connectivity_t* conn;
   conn = p8est_connectivity_new_sphere();
   return conn;
@@ -135,87 +135,87 @@ int problem_input_handler
 {
   problem_input_t* pconfig = (problem_input_t*)user;
   if (util_match_couple(section,"amr",name,"num_unifrefs")) {
-    mpi_assert(pconfig->num_unifrefs == -1);
+    D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"amr",name,"num_randrefs")) {
-    mpi_assert(pconfig->num_randrefs == -1);
+    D4EST_ASSERT(pconfig->num_randrefs == -1);
     pconfig->num_randrefs = atoi(value);
     pconfig->count += 1;
   }
   /* else if (util_match_couple(section,"amr",name, "initial_degree")) { */
-    /* mpi_assert(pconfig->degree == -1); */
+    /* D4EST_ASSERT(pconfig->degree == -1); */
     /* pconfig->degree = atoi(value); */
     /* pconfig->count += 1; */
   /* } */
   else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
-    mpi_assert(pconfig->ip_flux_penalty == -1);
+    D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } 
   /* else if (util_match_couple(section,"problem",name,"gauss_quad_deg")) { */
-  /*   mpi_assert(pconfig->gauss_quad_deg == -1); */
+  /*   D4EST_ASSERT(pconfig->gauss_quad_deg == -1); */
   /*   pconfig->gauss_quad_deg = atoi(value); */
   /*   pconfig->count += 1; */
   /* } */
   else if (util_match_couple(section,"problem",name,"R0")) {
-    mpi_assert(pconfig->R0 == -1);
+    D4EST_ASSERT(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"R1")) {
-    mpi_assert(pconfig->R1 == -1);
+    D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"R2")) {
-    mpi_assert(pconfig->R2 == -1);
+    D4EST_ASSERT(pconfig->R2 == -1);
     pconfig->R2 = atof(value);
     pconfig->count += 1;
   }
   /* else if (util_match_couple(section,"problem",name,"Rinf")) { */
-    /* mpi_assert(pconfig->Rinf == -1); */
+    /* D4EST_ASSERT(pconfig->Rinf == -1); */
     /* pconfig->Rinf = atof(value); */
     /* pconfig->count += 1; */
   /* } */
   /* else if (util_match_couple(section,"problem",name,"w")) { */
-    /* mpi_assert(pconfig->w == -1); */
+    /* D4EST_ASSERT(pconfig->w == -1); */
     /* pconfig->w = atof(value); */
     /* pconfig->count += 1; */
   /* } */
   else if (util_match_couple(section,"problem",name,"deg_R0")) {
-    mpi_assert(pconfig->deg_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
-    mpi_assert(pconfig->deg_quad_R0 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R0 == -1);
     pconfig->deg_quad_R0 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_R1")) {
-    mpi_assert(pconfig->deg_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
-    mpi_assert(pconfig->deg_quad_R1 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R1 == -1);
     pconfig->deg_quad_R1 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_R2")) {
-    mpi_assert(pconfig->deg_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
-    mpi_assert(pconfig->deg_quad_R2 == -1);
+    D4EST_ASSERT(pconfig->deg_quad_R2 == -1);
     pconfig->deg_quad_R2 = atoi(value);
     pconfig->count += 1;
   }  
   /* else if (util_match_couple(section,"solver",name,"krylov_type")) { */
-  /*   mpi_assert(pconfig->krylov_type = ""); */
+  /*   D4EST_ASSERT(pconfig->krylov_type = ""); */
   /*   if (strcmp("cg", value) == 0){ */
   /*     pconfig->krylov_type = KSPCG; */
   /*   } */
@@ -223,7 +223,7 @@ int problem_input_handler
   /*     pconfig->krylov_type = KSPGMRES; */
   /*   } */
   /*   else { */
-  /*     mpi_abort("not a support KSP solver type"); */
+  /*     D4EST_ABORT("not a support KSP solver type"); */
   /*   } */
   /*   pconfig->count += 1; */
   /* }     */
@@ -345,10 +345,10 @@ problem_input
   input.count = 0;
   
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
-  mpi_assert(input.count == num_of_options);
+  D4EST_ASSERT(input.count == num_of_options);
   return input;
 }
 
@@ -358,7 +358,7 @@ problem_build_geom
  p4est_connectivity_t* conn
 )
 {
-  mpi_assert((P4EST_DIM)==3);
+  D4EST_ASSERT((P4EST_DIM)==3);
   p4est_geometry_t* geom;
   problem_input_t input = problem_input("options.input");
 
@@ -460,7 +460,7 @@ problem_init
   /* global_Rinf = input.Rinf; */
   global_sigma = input.R0;
   
-  mpi_assert((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
+  D4EST_ASSERT((P4EST_DIM) == 2 || (P4EST_DIM) == 3);
   int world_rank, world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);

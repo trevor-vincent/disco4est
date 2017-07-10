@@ -31,7 +31,6 @@ uni_refine_function
   return 1;
 }
 
-
 double*
 get_storage(d4est_element_data_t* ed){
   return &(ed->u_elem[0]);
@@ -196,15 +195,15 @@ int problem_input_handler
 {
   problem_input_t* pconfig = (problem_input_t*)user;
   if (util_match_couple(section,"problem",name,"num_of_amr_levels")) {
-    mpi_assert(pconfig->num_of_amr_levels == -1);
+    D4EST_ASSERT(pconfig->num_of_amr_levels == -1);
     pconfig->num_of_amr_levels = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg")) {
-    mpi_assert(pconfig->deg == -1);
+    D4EST_ASSERT(pconfig->deg == -1);
     pconfig->deg = atoi(value);
   }
   else if (util_match_couple(section,"problem",name,"deg_quad")) {
-    mpi_assert(pconfig->deg_quad == -1);
+    D4EST_ASSERT(pconfig->deg_quad == -1);
     pconfig->deg_quad = atoi(value);
   }
   else {
@@ -227,7 +226,7 @@ problem_input
   input.deg_quad = -1;
   
   if (ini_parse(input_file, problem_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("problem", input.num_of_amr_levels, -1);
@@ -405,7 +404,7 @@ problem_init
 {
   problem_input_t input = problem_input(input_file);
   
-  mpi_assert( (P4EST_DIM) == 3 || (P4EST_DIM) == 2);
+  D4EST_ASSERT( (P4EST_DIM) == 3 || (P4EST_DIM) == 2);
   int world_rank, world_size;
   sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
   sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);
@@ -418,49 +417,43 @@ problem_init
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
                                                    ghost->ghosts.elem_count);
   
-  twopunctures_params_t tp_params;
-  init_twopunctures_data(&tp_params);
 
 
  
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
-
   
-  d4est_mesh_update
-    (
-     p4est,
-     ghost,
-     ghost_data,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     geometric_factors,
-     INITIALIZE_QUADRATURE_DATA,
-     INITIALIZE_GEOMETRY_DATA,
-     INITIALIZE_GEOMETRY_ALIASES,
-     problem_set_degrees,
-     (void*)&input
-    );
-
-
-  int local_nodes = d4est_mesh_get_local_nodes(p4est);
+  d4est_poisson_flux_data_t* flux_data = d4est_poisson_flux_new(p4est, input_file, zero_fcn);
+  twopunctures_params_t tp_params;
+  init_twopunctures_data(&tp_params, flux_data);
   
-  d4est_poisson_flux_sipg_params_t* sipg_params = d4est_poisson_flux_sipg_params_new(p4est, "[SIPG_FLUX]", input_file);
-  d4est_mortar_fcn_ptrs_t flux_fcn_data = d4est_poisson_flux_sipg_fetch_fcns(zero_fcn, sipg_params);
-
   d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = twopunctures_build_residual;
   prob_fcns.apply_lhs = twopunctures_apply_jac;
   prob_fcns.user = &tp_params;
-  prob_fcns.flux_fcn_data = &flux_fcn_data;
+
+  
+  int local_nodes = d4est_mesh_update
+                    (
+                     p4est,
+                     ghost,
+                     ghost_data,
+                     d4est_ops,
+                     d4est_geom,
+                     d4est_quad,
+                     geometric_factors,
+                     INITIALIZE_QUADRATURE_DATA,
+                     INITIALIZE_GEOMETRY_DATA,
+                     INITIALIZE_GEOMETRY_ALIASES,
+                     problem_set_degrees,
+                     (void*)&input
+                    );
 
   
   double* Au = P4EST_ALLOC_ZERO(double, local_nodes);
   double* rhs = P4EST_ALLOC_ZERO(double, local_nodes);
   double* u = P4EST_ALLOC_ZERO(double, local_nodes);
   double* u_prev = P4EST_ALLOC_ZERO(double, local_nodes);
-  
   
   d4est_elliptic_problem_data_t prob_vecs;
   prob_vecs.rhs = rhs;
@@ -482,13 +475,13 @@ problem_init
      amr_marker
     );
 
+  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data->user;
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
   penalty_data.u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
   penalty_data.gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh;
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
   penalty_data.sipg_flux_h = sipg_params->sipg_flux_h;
-
 
   problem_save_vtk
     (
@@ -501,14 +494,11 @@ problem_init
      u,
      input_file
     );
-
-
   
   for (int level = 0; level < input.num_of_amr_levels; ++level){
 
     if (world_rank == 0)
       printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level);
-    
 
     d4est_estimator_bi_compute
       (
@@ -613,24 +603,21 @@ problem_init
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
-  
-  d4est_mesh_geometry_storage_destroy(geometric_factors);
-  d4est_poisson_flux_sipg_params_destroy(sipg_params);
-  
+    
   if (ghost) {
     p4est_ghost_destroy (ghost);
     P4EST_FREE (ghost_data);
     ghost = NULL;
     ghost_data = NULL;
   }
-
-  d4est_hp_amr_smooth_pred_destroy(scheme);
   
+  d4est_mesh_geometry_storage_destroy(geometric_factors);
+  d4est_hp_amr_smooth_pred_destroy(scheme);
+  d4est_poisson_flux_destroy(flux_data);  
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
 
   P4EST_FREE(Au);
   P4EST_FREE(rhs);
   P4EST_FREE(u_prev);
-  /* P4EST_FREE(u_analytic); */
   P4EST_FREE(u);
 }

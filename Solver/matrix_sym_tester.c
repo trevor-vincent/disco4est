@@ -468,8 +468,8 @@ serial_matrix_sym_tester
   }
 
   if (print == 3){
-    /* mpi_assert(curved); */
-    mpi_assert(geom != NULL);
+    /* D4EST_ASSERT(curved); */
+    D4EST_ASSERT(geom != NULL);
     printf("(i,j) Pairs that aren't equal\n");
     for (int i = 0; i < local_nodes; i++){
       for (int j = 0; j <= i; j++){
@@ -485,7 +485,7 @@ serial_matrix_sym_tester
   }
 
   if (print == 4){
-    mpi_assert(geom != NULL);
+    D4EST_ASSERT(geom != NULL);
     printf("(i,j) Pairs that aren't equal\n");
     for (int i = 0; i < local_nodes; i++){
       for (int j = 0; j <= i; j++){
@@ -827,11 +827,11 @@ matrix_sym_tester_parallel_aux
 
   
   if (p4est->mpirank == mpirank_i){
-    mpi_assert(i < vecs->local_nodes);
+    D4EST_ASSERT(i < vecs->local_nodes);
     ui[i] = 1.;
   }
   if (p4est->mpirank == mpirank_j){
-    mpi_assert(j < vecs->local_nodes);
+    D4EST_ASSERT(j < vecs->local_nodes);
     uj[j] = 1.;
   }
   

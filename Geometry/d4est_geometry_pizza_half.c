@@ -24,12 +24,12 @@ int d4est_geometry_pizza_half_input_handler
 {
   d4est_geometry_pizza_half_input_t* pconfig = (d4est_geometry_pizza_half_input_t*)user;
   if (util_match_couple(section,"geometry",name,"R0")) {
-    mpi_assert(pconfig->R0 == -1);
+    D4EST_ASSERT(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
     pconfig->count += 1;
   }
   else if (util_match_couple(section,"geometry",name,"R1")) {
-    mpi_assert(pconfig->R1 == -1);
+    D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
     pconfig->count += 1;
   }
@@ -53,10 +53,10 @@ d4est_geometry_pizza_half_input
   input.R1 = -1;
   
   if (ini_parse(input_file, d4est_geometry_pizza_half_input_handler, &input) < 0) {
-    mpi_abort("Can't load input file");
+    D4EST_ABORT("Can't load input file");
   }
 
-  mpi_assert(input.count == num_of_options);
+  D4EST_ASSERT(input.count == num_of_options);
   return input;
 }
 
@@ -139,7 +139,7 @@ d4est_geometry_pizza_half_new
  d4est_geometry_t* d4est_geom
 )
 {
-  mpi_assert((P4EST_DIM)==2);
+  D4EST_ASSERT((P4EST_DIM)==2);
   d4est_geometry_pizza_half_input_t input = d4est_geometry_pizza_half_input(input_file);
   p4est_geometry_t *pizza_half_geometry = P4EST_ALLOC(p4est_geometry_t,1);
   p4est_connectivity_t* conn = NULL;
