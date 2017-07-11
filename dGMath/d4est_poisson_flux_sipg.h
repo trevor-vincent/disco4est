@@ -34,6 +34,6 @@ typedef struct {
 
 /* This file was automatically generated.  Do not edit! */
 void d4est_poisson_flux_sipg_params_destroy(d4est_poisson_flux_data_t *data);
-void d4est_poisson_flux_sipg_params_new(p4est_t *p4est,d4est_grid_fcn_t boundary_condition,const char *print_prefix,const char *input_file,d4est_poisson_flux_data_t *d4est_poisson_flux_data);
+void d4est_poisson_flux_sipg_params_new(p4est_t *p4est,d4est_xyz_fcn_t boundary_condition,const char *print_prefix,const char *input_file,d4est_poisson_flux_data_t *d4est_poisson_flux_data);
 
 #endif

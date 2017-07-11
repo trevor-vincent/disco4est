@@ -7,7 +7,7 @@
 #include <petscsnes.h>
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <limits.h>
 
 #define D4EST_TEST_EPS DBL_EPSILON

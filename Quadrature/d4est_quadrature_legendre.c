@@ -1,7 +1,7 @@
 #include <d4est_operators.h>
 #include <d4est_quadrature.h>
 #include <d4est_quadrature_legendre.h>
-#include <util.h>
+#include <d4est_util.h>
 
 void
 d4est_quadrature_legendre_new

@@ -1,5 +1,5 @@
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <ini.h>
 #include <d4est_operators.h>
 #include <d4est_element_data.h>
@@ -152,11 +152,11 @@ d4est_poisson_flux_dirichlet
     u_at_bndry_lobatto[i] =  d4est_poisson_flux_params->boundary_condition
                             (
                              xyz_on_f_m[0][i],
-                             xyz_on_f_m[1][i]
+                             xyz_on_f_m[1][i],
 #if (P4EST_DIM)==3
-                             ,
-                             xyz_on_f_m[2][i]
+                             xyz_on_f_m[2][i],
 #endif
+                             d4est_poisson_flux_params->user
                             );
   }
 
@@ -304,9 +304,9 @@ d4est_poisson_flux_interface
   for (int i = 0; i < faces_m; i++)
     for (int j = 0; j < faces_p; j++){
       /* find max degree for each face pair of the two sides*/
-      deg_mortar_quad[i+j] = util_max_int( e_m[i]->deg_quad,
+      deg_mortar_quad[i+j] = d4est_util_max_int( e_m[i]->deg_quad,
                                            e_p_oriented[j]->deg_quad);
-      deg_mortar_lobatto[i+j] = util_max_int( e_m[i]->deg,
+      deg_mortar_lobatto[i+j] = d4est_util_max_int( e_m[i]->deg,
                                               e_p_oriented[j]->deg );      
       nodes_mortar_quad[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
       nodes_mortar_lobatto[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
@@ -813,9 +813,9 @@ int d4est_poisson_flux_input_handler
 )
 {
   d4est_poisson_flux_data_t* pconfig = (d4est_poisson_flux_data_t*)user;
-  if (util_match_couple(section,"flux",name,"name")) {
+  if (d4est_util_match_couple(section,"flux",name,"name")) {
     D4EST_ASSERT(pconfig->flux_type == FLUX_NOT_SET);
-    if (util_match(value,"sipg")){
+    if (d4est_util_match(value,"sipg")){
       pconfig->flux_type = FLUX_SIPG;
     }
     else {
@@ -863,7 +863,7 @@ d4est_poisson_flux_new
 (
  p4est_t* p4est,
  const char* input_file,
- d4est_grid_fcn_t boundary_condition
+ d4est_xyz_fcn_t boundary_condition
 )
 {
   d4est_poisson_flux_data_t* data = P4EST_ALLOC(d4est_poisson_flux_data_t, 1);

@@ -3,7 +3,7 @@
 #include <d4est_geometry.h>
 #include <d4est_quadrature.h>
 #include <d4est_quadrature_lobatto.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <sc_reduce.h>
 #include <d4est_linalg.h>
 
@@ -759,9 +759,10 @@ d4est_mesh_init_field
 (
  p4est_t* p4est,
  double* node_vec,
- d4est_grid_fcn_t init_fcn,
+ d4est_xyz_fcn_t init_fcn,
  d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom
+ d4est_geometry_t* d4est_geom,
+ void* user
 )
 {
 
@@ -837,11 +838,11 @@ d4est_mesh_init_field
         
         for (int i = 0; i < volume_nodes; i++){
           node_vec[ed->nodal_stride + i] = init_fcn(xyz_temp[0][i],
-                                                    xyz_temp[1][i]
+                                                    xyz_temp[1][i],
 #if (P4EST_DIM)==3
- ,  
-                                                    xyz_temp[2][i]
+                                                    xyz_temp[2][i],
 #endif
+                                                    user
                                                    );
 
         }
@@ -860,7 +861,7 @@ d4est_mesh_init_field_ext
 (
  p4est_t* p4est,
  double* node_vec,
- grid_fcn_ext_t fofxyzv,
+ d4est_xyz_fcn_ext_t fofxyzv,
  double* v,
  double* fofxyzv_user,
  d4est_operators_t* d4est_ops,

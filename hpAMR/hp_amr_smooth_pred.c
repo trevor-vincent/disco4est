@@ -3,7 +3,7 @@
 #include "../EllipticSystem/problem_data.h"
 #include "../EllipticSystem/d4est_elliptic_eqns.h"
 #include "../LinearAlgebra/d4est_linalg.h"
-#include "../Utilities/util.h"
+#include "../Utilities/d4est_util.h"
 #include "../hpAMR/hp_amr.h"
 #include "../hpAMR/hp_amr_smooth_pred.h"
 
@@ -309,15 +309,15 @@ hp_amr_smooth_pred_set_refinement
   if (is_marked){
     /* it's smooth! -> p-refine*/
     if (eta2 <= elem_data->local_predictor && elem_data->deg < smooth_pred_data->max_degree){
-      hp_amr_data->refinement_log[info->quadid] = util_min_int(elem_data->deg + 1, smooth_pred_data->max_degree);
+      hp_amr_data->refinement_log[info->quadid] = d4est_util_min_int(elem_data->deg + 1, smooth_pred_data->max_degree);
       eta2_pred = smooth_pred_data->gamma_p*eta2;
     }
     else {
       hp_amr_data->refinement_log[info->quadid] = -elem_data->deg;
       /* if (smooth_pred_data->norm_type == DG_NORM) */
-        eta2_pred = smooth_pred_data->gamma_h*eta2*util_dbl_pow_int(.5, 2*(elem_data->deg))*(ONE_OVER_CHILDREN);
+        eta2_pred = smooth_pred_data->gamma_h*eta2*d4est_util_dbl_pow_int(.5, 2*(elem_data->deg))*(ONE_OVER_CHILDREN);
       /* else if (smooth_pred_data->norm_type == L2_NORM) */
-        /* eta2_pred = smooth_pred_data->gamma_h*eta2*util_dbl_pow_int(.5, 2*(elem_data->deg + 1))*(ONE_OVER_CHILDREN); */
+        /* eta2_pred = smooth_pred_data->gamma_h*eta2*d4est_util_dbl_pow_int(.5, 2*(elem_data->deg + 1))*(ONE_OVER_CHILDREN); */
       /* else */
         /* D4EST_ABORT("[D4EST_ERROR]: Not a supported norm type"); */
     }
@@ -383,7 +383,7 @@ hp_amr_smooth_pred_balance_replace_callback (
     child_data = (element_data_t*) incoming[i]->p.user_data;
     /* child_data->deg = parent_data->deg; */
     /* printf("child_data->deg = %d\n", child_data->deg); */
-    child_data->local_predictor = (ONE_OVER_CHILDREN)*smooth_pred_data->gamma_h*util_dbl_pow_int(.5, 2*(h_pow))*parent_data->local_predictor;
+    child_data->local_predictor = (ONE_OVER_CHILDREN)*smooth_pred_data->gamma_h*d4est_util_dbl_pow_int(.5, 2*(h_pow))*parent_data->local_predictor;
     d4est_linalg_copy_1st_to_2nd(&temp_data[volume_nodes*i], &child_data->u_elem[0], volume_nodes);
   }
 

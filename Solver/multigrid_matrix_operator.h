@@ -27,8 +27,8 @@ struct multigrid_matrix_op_t{
 
 /* This file was automatically generated.  Do not edit! */
 void multigrid_matrix_operator_destroy(multigrid_user_callbacks_t *user_callbacks);
-void multigrid_matrix_curved_fofu_fofv_mass_operator_setup_deg_quad_eq_deg(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double *u,double *v,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx,multigrid_matrix_op_t *matrix_op,int(*set_deg_gauss)(void *,void *),void *set_deg_gauss_ctx);
-void multigrid_matrix_fofu_fofv_mass_operator_setup_deg_quad_eq_deg(p4est_t *p4est,d4est_operators_t *d4est_ops,double *u,double *v,grid_fcn_ext_t fofu_fcn,void *fofu_ctx,grid_fcn_ext_t fofv_fcn,void *fofv_ctx,multigrid_matrix_op_t *matrix_op);
+void multigrid_matrix_curved_fofu_fofv_mass_operator_setup_deg_quad_eq_deg(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double *u,double *v,d4est_xyz_fcn_ext_t fofu_fcn,void *fofu_ctx,d4est_xyz_fcn_ext_t fofv_fcn,void *fofv_ctx,multigrid_matrix_op_t *matrix_op,int(*set_deg_gauss)(void *,void *),void *set_deg_gauss_ctx);
+void multigrid_matrix_fofu_fofv_mass_operator_setup_deg_quad_eq_deg(p4est_t *p4est,d4est_operators_t *d4est_ops,double *u,double *v,d4est_xyz_fcn_ext_t fofu_fcn,void *fofu_ctx,d4est_xyz_fcn_ext_t fofv_fcn,void *fofv_ctx,multigrid_matrix_op_t *matrix_op);
 multigrid_user_callbacks_t *multigrid_matrix_operator_init(p4est_t *p4est,int num_of_levels,d4est_operators_t *d4est_ops,int(*get_local_matrix_nodes)(p4est_t *),void *user);
 
 

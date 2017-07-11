@@ -1,6 +1,6 @@
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
@@ -37,7 +37,7 @@
 #include <ip_flux_params.h>
 #include <ip_flux.h>
 #include "time.h"
-#include "util.h"
+#include "d4est_util.h"
 
 /* soon to be in the input files */
 static const double pi = 3.1415926535897932384626433832795;
@@ -178,71 +178,71 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match_couple(section,"problem",name,"solve_with_multigrid")) {
+  if (d4est_util_match_couple(section,"problem",name,"solve_with_multigrid")) {
     D4EST_ASSERT(pconfig->solve_with_multigrid == -1);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->solve_with_multigrid = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"use_mg_as_pc_for_ksp")) {
+  else if (d4est_util_match_couple(section,"problem",name,"use_mg_as_pc_for_ksp")) {
     D4EST_ASSERT(pconfig->use_mg_as_pc_for_ksp == -1);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->use_mg_as_pc_for_ksp = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"use_non_varying_penalty")) {
+  else if (d4est_util_match_couple(section,"problem",name,"use_non_varying_penalty")) {
     D4EST_ASSERT(pconfig->use_non_varying_penalty == -1);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->use_non_varying_penalty = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"use_matrix_operator")) {
+  else if (d4est_util_match_couple(section,"problem",name,"use_matrix_operator")) {
     D4EST_ASSERT(pconfig->use_matrix_operator == -1);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->use_matrix_operator = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"num_of_amr_levels")) {
+  else if (d4est_util_match_couple(section,"problem",name,"num_of_amr_levels")) {
     D4EST_ASSERT(pconfig->num_of_amr_levels == -1);
     pconfig->num_of_amr_levels = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"num_unifrefs")) {
+  else if (d4est_util_match_couple(section,"problem",name,"num_unifrefs")) {
     D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R0")) {
     D4EST_ASSERT(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R0")) {
     D4EST_ASSERT(pconfig->deg_quad_R0 == -1);
     pconfig->deg_quad_R0 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_stiffness_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_stiffness_R0")) {
     D4EST_ASSERT(pconfig->deg_stiffness_R0 == -1);
     pconfig->deg_stiffness_R0 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R1")) {
     D4EST_ASSERT(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R1")) {
     D4EST_ASSERT(pconfig->deg_quad_R1 == -1);
     pconfig->deg_quad_R1 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_stiffness_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_stiffness_R1")) {
     D4EST_ASSERT(pconfig->deg_stiffness_R1 == -1);
     pconfig->deg_stiffness_R1 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R2")) {
     D4EST_ASSERT(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R2")) {
     D4EST_ASSERT(pconfig->deg_quad_R2 == -1);
     pconfig->deg_quad_R2 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_stiffness_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_stiffness_R2")) {
     D4EST_ASSERT(pconfig->deg_stiffness_R2 == -1);
     pconfig->deg_stiffness_R2 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
     D4EST_ASSERT(pconfig->deg_offset_for_nonlinear_quad == -1);
     pconfig->deg_offset_for_nonlinear_quad = atoi(value);
   }  
@@ -495,7 +495,7 @@ problem_save_to_vtk
           d4est_element_data_t* ed = quad->p.user_data;
           deg_array[stride] = ed->deg;
           eta_array[stride] = ed->local_estimator;
-          vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
+          vtk_nodes = d4est_util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
           stride++;
         }
       }
@@ -1152,7 +1152,7 @@ problem_init
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
   /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
-  /* d4est_grid_fcn_t boundary_flux_fcn = zero_fcn; */
+  /* d4est_xyz_fcn_t boundary_flux_fcn = zero_fcn; */
   /* twopunctures_params_t tp_params; */
   /* init_twopunctures_data(&tp_params, input.deg_offset_for_nonlinear_quad); */
   /* /\* init_S_puncture_data(p4est, &tp_params, input.deg_offset_for_nonlinear_quad); *\/ */

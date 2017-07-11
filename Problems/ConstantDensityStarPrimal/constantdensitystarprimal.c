@@ -6,7 +6,7 @@
 #define _GNU_SOURCE
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 
 #include <d4est_element_data.h>
@@ -391,51 +391,51 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match_couple(section,"amr",name,"amr_levels")) {
+  if (d4est_util_match_couple(section,"amr",name,"amr_levels")) {
     D4EST_ASSERT(pconfig->endlevel == -1);
     pconfig->endlevel = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name, "initial_degree")) {
+  } else if (d4est_util_match_couple(section,"amr",name, "initial_degree")) {
     D4EST_ASSERT(pconfig->degree == -1);
     pconfig->degree = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"percentile")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"percentile")) {
     D4EST_ASSERT(pconfig->percentile == -1);
     pconfig->percentile = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"degmax")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"degmax")) {
     D4EST_ASSERT(pconfig->degmax == -1);
     pconfig->degmax = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"gamma_h")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"gamma_h")) {
     D4EST_ASSERT(pconfig->gamma_h == -1);
     pconfig->gamma_h = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"gamma_p")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"gamma_p")) {
     D4EST_ASSERT(pconfig->gamma_p == -1);
     pconfig->gamma_p = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
+  } else if (d4est_util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"rho0_div_rhoc")) {
+  } else if (d4est_util_match_couple(section,"problem",name,"rho0_div_rhoc")) {
     D4EST_ASSERT(pconfig->rho0_div_rhoc == -1);
     pconfig->rho0_div_rhoc = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"domain_size")) {
+  } else if (d4est_util_match_couple(section,"problem",name,"domain_size")) {
     D4EST_ASSERT(pconfig->domain_size == -1);
     pconfig->domain_size = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"use_gauss_quad")) {
+  } else if (d4est_util_match_couple(section,"problem",name,"use_gauss_quad")) {
     D4EST_ASSERT(pconfig->use_gauss_quad == -1);
     pconfig->use_gauss_quad = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
+  } else if (d4est_util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
     D4EST_ASSERT(pconfig->deg_offset_for_nonlinear_quad == -1);
     pconfig->deg_offset_for_nonlinear_quad = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"amr_inflation_size")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"amr_inflation_size")) {
     D4EST_ASSERT(pconfig->amr_inflation_size == -1);
     pconfig->amr_inflation_size = atoi(value);
     pconfig->count += 1;
@@ -532,7 +532,7 @@ problem_save_to_vtk
           d4est_element_data_t* ed = quad->p.user_data;
           deg_array[stride] = ed->deg;
           eta_array[stride] = ed->local_estimator;
-          vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
+          vtk_nodes = d4est_util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
           stride++;
         }
       }
@@ -650,7 +650,7 @@ problem_init
   penalty_calc_t bi_u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
   penalty_calc_t bi_gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh;
   
-  D4EST_ASSERT( !util_bisection(solve_for_alpha, alpha_crit, 1000*alpha_crit, DBL_EPSILON, 100000, &alpha) );
+  D4EST_ASSERT( !d4est_util_bisection(solve_for_alpha, alpha_crit, 1000*alpha_crit, DBL_EPSILON, 100000, &alpha) );
 
   double u_alpha_at_R = sqrt(alpha*R)/sqrt(R*R + alpha*R*alpha*R);
   beta = R*(C0*u_alpha_at_R - 1.);
@@ -988,7 +988,7 @@ problem_init
         double slope;
         double intercept;
         int num_of_hpamr_levels = level + 1;
-        util_linear_regression
+        d4est_util_linear_regression
           (
            dgerr_data_for_fit,
            dof_data_for_fit,

@@ -3,7 +3,7 @@
 #include <pXest.h>
 #include <d4est_operators.h>
 #include <d4est_linalg.h>
-#include <util.h>
+#include <d4est_util.h>
 
 #define D4EST_REAL_EPS 1e-15
 
@@ -83,7 +83,7 @@ test_d4est_operators_interp_lobatto_to_gauss
   int error = 0;
   /* double max_error = 0.; */
   for (int i = 0; i < volume_nodes_gauss; i++){
-    error += !(util_compare_double(poly_lobatto_to_gauss[i],poly_gauss[i],D4EST_REAL_EPS));
+    error += !(d4est_util_compare_double(poly_lobatto_to_gauss[i],poly_gauss[i],D4EST_REAL_EPS));
     /* error_tmp = fabs(poly_lobatto_to_gauss[i] - poly_gauss[i]); */
     /* max_error = ; */
   }
@@ -135,9 +135,9 @@ test_d4est_operators_mass_1d
     }
   }
   double* mij_2 = d4est_operators_fetch_mij_1d(d4est_ops, deg);
-  if (util_compare_vecs(mij, mij_2, nodes*nodes, D4EST_REAL_EPS) == 0){
-    util_print_matrices(w,x, nodes, 1, "w,x = ");
-    util_print_matrices(mij, mij_2, nodes*nodes, 1, "mij, mij_2 = ");
+  if (d4est_util_compare_vecs(mij, mij_2, nodes*nodes, D4EST_REAL_EPS) == 0){
+    d4est_util_print_matrices(w,x, nodes, 1, "w,x = ");
+    d4est_util_print_matrices(mij, mij_2, nodes*nodes, 1, "mij, mij_2 = ");
     P4EST_FREE(mij);
     printf("[D4EST_ERROR]:mij and mij_2 not equal\n");
     exit(1);
@@ -237,9 +237,9 @@ test_d4est_operators_lagrange
     l_2[j] = test_d4est_operators_lagrange_defn(xp, x, j, deg);
   }
 
-  if (util_compare_vecs(l, l_2, nodes, 100*D4EST_REAL_EPS) == 0){
-    util_print_matrices(w,x, nodes, 1, "w,x = ");
-    util_print_matrices(l, l_2, nodes, 1, "l, l_2 = ");
+  if (d4est_util_compare_vecs(l, l_2, nodes, 100*D4EST_REAL_EPS) == 0){
+    d4est_util_print_matrices(w,x, nodes, 1, "w,x = ");
+    d4est_util_print_matrices(l, l_2, nodes, 1, "l, l_2 = ");
     P4EST_FREE(l);
     P4EST_FREE(l_2);
     printf("[D4EST_ERROR]:l and l_2 not equal\n");
@@ -288,9 +288,9 @@ test_d4est_operators_inv_vandermonde
   test_d4est_operators_v1d(invVij_2, x, deg);
   d4est_linalg_invert(invVij_2, nodes);
 
-  if (util_compare_vecs(invVij, invVij_2, nodes*nodes, 100*D4EST_REAL_EPS) == 0){
-    util_print_matrices(w,x, nodes, 1, "w,x = ");
-    util_print_matrices(invVij, invVij_2, nodes*nodes, 1, "invVij, invVij_2 = ");
+  if (d4est_util_compare_vecs(invVij, invVij_2, nodes*nodes, 100*D4EST_REAL_EPS) == 0){
+    d4est_util_print_matrices(w,x, nodes, 1, "w,x = ");
+    d4est_util_print_matrices(invVij, invVij_2, nodes*nodes, 1, "invVij, invVij_2 = ");
     P4EST_FREE(invVij_2);
     P4EST_FREE(invVij);
     printf("[D4EST_ERROR]:invVij and invVij_2 not equal\n");
@@ -359,13 +359,13 @@ test_d4est_operators_p_projection
     for (int j = 0; j < nodes_h; j++)
       invVij_h_trunc[i*nodes_h + j] = invVij_h[i*nodes_h + j];
   d4est_linalg_mat_multiply(Vij_H, invVij_h_trunc, Pij_3, nodes_H, nodes_H, nodes_h);
-  /* util_print_matrices(Pij, Pij_2, nodes_H*nodes_h, 1, "Pij, Pij_2 = "); */
-  /* util_print_matrices(Pij, Pij_3, nodes_H*nodes_h, 1, "Pij, Pij_3 = "); */
+  /* d4est_util_print_matrices(Pij, Pij_2, nodes_H*nodes_h, 1, "Pij, Pij_2 = "); */
+  /* d4est_util_print_matrices(Pij, Pij_3, nodes_H*nodes_h, 1, "Pij, Pij_3 = "); */
     
-  if (util_compare_vecs(Pij, Pij_2, nodes_H*nodes_h, 100*D4EST_REAL_EPS) == 0){
-    /* d4est_util_print_matrices(w,x, nodes, 1, "w,x = "); */
-    util_print_matrices(Pij, Pij_2, nodes_H*nodes_h, 1, "Pij, Pij_2 = ");
-    util_print_matrices(Pij, Pij_3, nodes_H*nodes_h, 1, "Pij, Pij_3 = ");
+  if (d4est_util_compare_vecs(Pij, Pij_2, nodes_H*nodes_h, 100*D4EST_REAL_EPS) == 0){
+    /* d4est_d4est_util_print_matrices(w,x, nodes, 1, "w,x = "); */
+    d4est_util_print_matrices(Pij, Pij_2, nodes_H*nodes_h, 1, "Pij, Pij_2 = ");
+    d4est_util_print_matrices(Pij, Pij_3, nodes_H*nodes_h, 1, "Pij, Pij_3 = ");
     P4EST_FREE(Pij);
     P4EST_FREE(invVij_h_trunc);
     P4EST_FREE(Vij_H);

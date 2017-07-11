@@ -4,7 +4,7 @@
 #include <d4est_quadrature_legendre.h>
 #include <d4est_quadrature_lobatto.h>
 #include <d4est_quadrature_compactified.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <ini.h>
 
@@ -27,7 +27,7 @@ int d4est_quadrature_input_handler
 {
   d4est_quadrature_input_t* pconfig = (d4est_quadrature_input_t*)user;
 
-  if (util_match_couple(section,pconfig->input_section,name,"name")) {
+  if (d4est_util_match_couple(section,pconfig->input_section,name,"name")) {
     D4EST_ASSERT(pconfig->name == NULL);
     D4EST_ASPRINTF(pconfig->name,"%s",value);
   }
@@ -77,31 +77,31 @@ d4est_quadrature_new
   d4est_quadrature_input_t input = d4est_quadrature_input(input_file, input_section, printf_prefix);
   d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t, 1);
 
-  if (util_match(input.name,"legendre")) {
+  if (d4est_util_match(input.name,"legendre")) {
     d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE;
     d4est_quadrature_legendre_new(d4est_quad, d4est_geom, input_file);
   }
-  else if (util_match(input.name,"lobatto")) {
+  else if (d4est_util_match(input.name,"lobatto")) {
     d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_LOBATTO;
     d4est_quadrature_lobatto_new(d4est_quad, d4est_geom, input_file);
   }
-  else if (util_match(input.name,"legendre_compactified_c1pc2t_neg4")){
+  else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg4")){
     d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4;
     d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
   }
-  else if (util_match(input.name,"legendre_compactified_c1pc2t_neg3")){
+  else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg3")){
     d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG3;
     d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
   }
-  else if (util_match(input.name,"legendre_compactified_c1pc2t_neg2")){
+  else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg2")){
     d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG2;
     d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
   }
-  else if (util_match(input.name,"legendre_compactified_c1pc2t_neg1")){
+  else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg1")){
     d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG1;
     d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
   }
-  else if (util_match(input.name,"none")){
+  else if (d4est_util_match(input.name,"none")){
   }
   else {
     printf("[D4EST_ERROR]: You tried to use %s quadrature\n", input.name);
@@ -492,9 +492,9 @@ void d4est_quadrature_apply_mass_matrix
 /*  int deg_quad, */
 /*  int dim, */
 /*  double* out, */
-/*  grid_fcn_ext_t fofu_fcn, */
+/*  d4est_xyz_fcn_ext_t fofu_fcn, */
 /*  void* fofu_ctx, */
-/*  grid_fcn_ext_t fofv_fcn, */
+/*  d4est_xyz_fcn_ext_t fofv_fcn, */
 /*  void* fofv_ctx */
 /* ) */
 /* { */
@@ -606,9 +606,9 @@ void d4est_quadrature_apply_fofufofvlilj
  double* jac_quad,
  int deg_quad,
  double* out,
- grid_fcn_ext_t fofu_fcn,
+ d4est_xyz_fcn_ext_t fofu_fcn,
  void* fofu_ctx,
- grid_fcn_ext_t fofv_fcn,
+ d4est_xyz_fcn_ext_t fofv_fcn,
  void* fofv_ctx
 )
 {
@@ -715,9 +715,9 @@ void d4est_quadrature_apply_fofufofvlj
  double* xyz_quad [(P4EST_DIM)],
  int deg_quad,
  double* out,
- grid_fcn_ext_t fofu_fcn,
+ d4est_xyz_fcn_ext_t fofu_fcn,
  void* fofu_ctx,
- grid_fcn_ext_t fofv_fcn,
+ d4est_xyz_fcn_ext_t fofv_fcn,
  void* fofv_ctx
 )
 {

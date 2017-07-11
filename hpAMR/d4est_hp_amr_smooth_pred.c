@@ -3,7 +3,7 @@
 #include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
 #include <d4est_linalg.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_hp_amr.h>
 #include <d4est_hp_amr_smooth_pred.h>
 
@@ -147,12 +147,12 @@ d4est_hp_amr_smooth_pred_set_refinement
   
   if (is_marked){
     if (eta2 <= elem_data->local_predictor && elem_data->deg < smooth_pred_data->max_degree){
-      d4est_hp_amr_data->refinement_log[elem_data->id] = util_min_int(elem_data->deg + 1, smooth_pred_data->max_degree);
+      d4est_hp_amr_data->refinement_log[elem_data->id] = d4est_util_min_int(elem_data->deg + 1, smooth_pred_data->max_degree);
       eta2_pred = gamma_hpn.gamma_p*eta2;
     }
     else {
       d4est_hp_amr_data->refinement_log[elem_data->id] = -elem_data->deg;
-      eta2_pred = gamma_hpn.gamma_h*eta2*util_dbl_pow_int(.5, 2*(elem_data->deg))*(ONE_OVER_CHILDREN);
+      eta2_pred = gamma_hpn.gamma_h*eta2*d4est_util_dbl_pow_int(.5, 2*(elem_data->deg))*(ONE_OVER_CHILDREN);
     }
   }
   else {
@@ -198,7 +198,7 @@ d4est_hp_amr_smooth_pred_balance_replace_callback (
     
   for (i = 0; i < (P4EST_CHILDREN); i++){
     child_data = (d4est_element_data_t*) incoming[i]->p.user_data;   
-    child_data->local_predictor = (ONE_OVER_CHILDREN)*gamma_hpn.gamma_h*util_dbl_pow_int(.5, 2*(h_pow))*parent_data->local_predictor;
+    child_data->local_predictor = (ONE_OVER_CHILDREN)*gamma_hpn.gamma_h*d4est_util_dbl_pow_int(.5, 2*(h_pow))*parent_data->local_predictor;
   }
 
 }

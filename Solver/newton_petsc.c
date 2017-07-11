@@ -1,6 +1,6 @@
 #include <pXest.h>
 #include <d4est_linalg.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_elliptic_data.h>
 #include <newton_petsc.h>
 #include <krylov_petsc.h>
@@ -18,49 +18,49 @@ int newton_petsc_input_handler
 {
   newton_petsc_params_t* pconfig = (newton_petsc_params_t*)user;
 
-  if (util_match_couple(section,"newton_petsc",name,"snes_type")) {
+  if (d4est_util_match_couple(section,"newton_petsc",name,"snes_type")) {
     D4EST_ASSERT(pconfig->snes_type[0] == '*');
     snprintf (pconfig->snes_type, sizeof(pconfig->snes_type), "%s", value);
   }
-  else if (util_match_couple(section,"newton_petsc",name,"snes_atol")) {
+  else if (d4est_util_match_couple(section,"newton_petsc",name,"snes_atol")) {
     D4EST_ASSERT(pconfig->snes_atol[0] == '*');
     snprintf (pconfig->snes_atol, sizeof(pconfig->snes_atol), "%s", value);
   }
-  else if (util_match_couple(section,"newton_petsc",name,"snes_rtol")) {
+  else if (d4est_util_match_couple(section,"newton_petsc",name,"snes_rtol")) {
     D4EST_ASSERT(pconfig->snes_rtol[0] == '*');
     snprintf (pconfig->snes_rtol, sizeof(pconfig->snes_rtol), "%s", value);
   }
-  else if (util_match_couple(section,"newton_petsc",name,"snes_stol")) {
+  else if (d4est_util_match_couple(section,"newton_petsc",name,"snes_stol")) {
     D4EST_ASSERT(pconfig->snes_stol[0] == '*');
     snprintf (pconfig->snes_stol, sizeof(pconfig->snes_stol), "%s", value);
   }
- else if (util_match_couple(section,"newton_petsc",name,"snes_trtol")) {
+ else if (d4est_util_match_couple(section,"newton_petsc",name,"snes_trtol")) {
     D4EST_ASSERT(pconfig->snes_trtol[0] == '*');
     snprintf (pconfig->snes_trtol, sizeof(pconfig->snes_trtol), "%s", value);
   } 
-  else if (util_match_couple(section,"newton_petsc",name,"snes_max_funcs")) {
+  else if (d4est_util_match_couple(section,"newton_petsc",name,"snes_max_funcs")) {
     D4EST_ASSERT(pconfig->snes_max_funcs[0] == '*');
     snprintf (pconfig->snes_max_funcs, sizeof(pconfig->snes_max_funcs), "%s", value);
   }
-  else if (util_match_couple(section,"newton_petsc",name,"snes_max_it")) {
+  else if (d4est_util_match_couple(section,"newton_petsc",name,"snes_max_it")) {
     D4EST_ASSERT(pconfig->snes_max_it[0] == '*');
     snprintf (pconfig->snes_max_it, sizeof(pconfig->snes_max_it), "%s", value);
   }
-  else if (util_match_couple(section,"newton_petsc",name,"snes_linesearch_monitor")) {
+  else if (d4est_util_match_couple(section,"newton_petsc",name,"snes_linesearch_monitor")) {
     D4EST_ASSERT(pconfig->snes_linesearch_monitor == -1);
     pconfig->snes_linesearch_monitor = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
   }  
-  else if (util_match_couple(section,"newton_petsc",name,"snes_linesearch_order")) {
+  else if (d4est_util_match_couple(section,"newton_petsc",name,"snes_linesearch_order")) {
     D4EST_ASSERT(pconfig->snes_linesearch_order[0] == '*');
     snprintf (pconfig->snes_linesearch_order, sizeof(pconfig->snes_linesearch_order), "%s", value);
   }
-  else if (util_match_couple(section,"newton_petsc",name,"snes_monitor")) {
+  else if (d4est_util_match_couple(section,"newton_petsc",name,"snes_monitor")) {
     D4EST_ASSERT(pconfig->snes_monitor == -1);
     pconfig->snes_monitor = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
   }
-  else if (util_match_couple(section,"newton_petsc",name,"snes_view")) {
+  else if (d4est_util_match_couple(section,"newton_petsc",name,"snes_view")) {
     D4EST_ASSERT(pconfig->snes_view == -1);
     pconfig->snes_view = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
@@ -105,11 +105,11 @@ newton_petsc_input
   D4EST_CHECK_INPUT("newton_petsc", input->snes_max_it[0], '*');
   D4EST_CHECK_INPUT("newton_petsc", input->snes_max_funcs[0], '*');
 
-  if(util_match(input->snes_type,"newtonls")){
+  if(d4est_util_match(input->snes_type,"newtonls")){
     D4EST_CHECK_INPUT("newton_petsc", input->snes_linesearch_order[0], '*');
     D4EST_CHECK_INPUT("newton_petsc", input->snes_linesearch_monitor, -1);
   }
-  else if(util_match(input->snes_type,"newtontr")){
+  else if(d4est_util_match(input->snes_type,"newtontr")){
     D4EST_CHECK_INPUT("newton_petsc", input->snes_trtol[0], '*');
   }  
   
@@ -125,11 +125,11 @@ newton_petsc_input
     printf("%s: snes_stol = %s\n",printf_prefix, input->snes_stol);
     printf("%s: snes_maxit = %s\n",printf_prefix, input->snes_max_it);
     printf("%s: snes_maxfuncs = %s\n",printf_prefix, input->snes_max_funcs);
-    if(util_match(input->snes_type,"newtonls")){
+    if(d4est_util_match(input->snes_type,"newtonls")){
       printf("%s: snes_linesearch_order = %s\n",printf_prefix, input->snes_max_funcs);
       printf("%s: snes_linesearch_monitor = %d\n",printf_prefix, input->snes_linesearch_monitor);
     }
-    if(util_match(input->snes_type,"newtontr")){
+    if(d4est_util_match(input->snes_type,"newtontr")){
       printf("%s: snes_trtol = %s\n",printf_prefix, input->snes_trtol);
     }
   } 
@@ -298,7 +298,7 @@ newton_petsc_set_options_database_from_params
     PetscOptionsSetValue(NULL,"-snes_stol", input->snes_stol);
   }
     
-  if(util_match(input->snes_type,"newtonls")){
+  if(d4est_util_match(input->snes_type,"newtonls")){
     PetscOptionsClearValue(NULL,"-snes_linesearch_order");
     PetscOptionsSetValue(NULL,"-snes_linesearch_order", input->snes_linesearch_order);
     if(input->snes_linesearch_monitor){
@@ -308,7 +308,7 @@ newton_petsc_set_options_database_from_params
       PetscOptionsClearValue(NULL,"-snes_linesearch_monitor");
     }
   }
-  else if(util_match(input->snes_type,"newtontr")){
+  else if(d4est_util_match(input->snes_type,"newtontr")){
     PetscOptionsClearValue(NULL,"-snes_trtol");
     PetscOptionsSetValue(NULL,"-snes_trtol", input->snes_trtol);
   }  

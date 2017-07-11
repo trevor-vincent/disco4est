@@ -1,7 +1,7 @@
 #ifndef DGMATH_NODES_AND_WEIGHTS_H
 #define DGMATH_NODES_AND_WEIGHTS_H 
 
-#include <util.h>
+#include <d4est_util.h>
 
 void d4est_operators_gauss_nodes_and_weights ( int n, double x[], double w[] )
 

@@ -1,5 +1,5 @@
 #include <d4est_geometry_trap.h>
-#include <util.h>
+#include <d4est_util.h>
 
 static p4est_connectivity_t *
 p4est_connectivity_new_trap (void)

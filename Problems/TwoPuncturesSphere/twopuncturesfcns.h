@@ -121,10 +121,10 @@ init_random_puncture_data
   double rand_px [MAX_PUNCTURES];
   double rand_py [MAX_PUNCTURES];
 
-  util_gen_rand_vec(&rand_x[0], num_punctures, 1532413243, -5., 5.);
-  util_gen_rand_vec(&rand_y[0], num_punctures, 1532413243, -5., 5.);
-  util_gen_rand_vec(&rand_px[0], num_punctures, 13232413243, -.2, .2);
-  util_gen_rand_vec(&rand_py[0], num_punctures, 14432413243, -.2, .2);
+  d4est_util_gen_rand_vec(&rand_x[0], num_punctures, 1532413243, -5., 5.);
+  d4est_util_gen_rand_vec(&rand_y[0], num_punctures, 1532413243, -5., 5.);
+  d4est_util_gen_rand_vec(&rand_px[0], num_punctures, 13232413243, -.2, .2);
+  d4est_util_gen_rand_vec(&rand_py[0], num_punctures, 14432413243, -.2, .2);
   
   for (int i = 0; i < num_punctures; i++){
     params->M_bh[i] = M/(double)(num_punctures);

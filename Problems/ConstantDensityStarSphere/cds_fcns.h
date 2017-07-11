@@ -69,43 +69,43 @@ int problem_input_handler
 )
 {
   constantdensitystar_params_t* pconfig = (constantdensitystar_params_t*)user;
-  if (util_match_couple(section,"amr",name,"num_of_amr_levels")) {
+  if (d4est_util_match_couple(section,"amr",name,"num_of_amr_levels")) {
     D4EST_ASSERT(pconfig->num_of_amr_levels == -1);
     pconfig->num_of_amr_levels = atoi(value);
   }
-  else if (util_match_couple(section,"amr",name,"num_unifrefs")) {
+  else if (d4est_util_match_couple(section,"amr",name,"num_unifrefs")) {
     D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
   }
-  else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
+  else if (d4est_util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R0")) {
     D4EST_ASSERT(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R0")) {
     D4EST_ASSERT(pconfig->deg_quad_R0 == -1);
     pconfig->deg_quad_R0 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R1")) {
     D4EST_ASSERT(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R1")) {
     D4EST_ASSERT(pconfig->deg_quad_R1 == -1);
     pconfig->deg_quad_R1 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R2")) {
     D4EST_ASSERT(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R2")) {
     D4EST_ASSERT(pconfig->deg_quad_R2 == -1);
     pconfig->deg_quad_R2 = atoi(value);
   }  
-  else if (util_match_couple(section,"problem",name,"rho0_div_rhoc")) {
+  else if (d4est_util_match_couple(section,"problem",name,"rho0_div_rhoc")) {
     D4EST_ASSERT(pconfig->rho0_div_rhoc == -1);
     pconfig->rho0_div_rhoc = atof(value);
   } 
@@ -183,7 +183,7 @@ constantdensitystar_input
   double C0 = pow(1./(2.*pi*rho0/3.),.25);
   double alpha = 386.266;
 
-  D4EST_ASSERT( !util_bisection(solve_for_alpha, alpha_crit, 1000*alpha_crit, DBL_EPSILON, 100000, &alpha, &input));
+  D4EST_ASSERT( !d4est_util_bisection(solve_for_alpha, alpha_crit, 1000*alpha_crit, DBL_EPSILON, 100000, &alpha, &input));
 
   double u_alpha_at_R = sqrt(alpha*R)/sqrt(R*R + alpha*R*alpha*R);
   double beta = R*(C0*u_alpha_at_R - 1.);

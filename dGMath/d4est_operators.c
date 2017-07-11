@@ -2,7 +2,7 @@
 #include <d4est_operators.h>
 #include <assert.h>
 #include <d4est_linalg.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <GL_and_GLL_nodes_and_weights.h>
 
 d4est_operators_t* d4est_ops_init(int max_degree) {
@@ -1307,7 +1307,7 @@ void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double* in, int di
 
   double* lift_1d = d4est_operators_fetch_lift_1d(d4est_ops, deg);
 
-  /* int nodes = util_pow_int(deg+1, DIM); */
+  /* int nodes = d4est_util_pow_int(deg+1, DIM); */
 
   int dir;  /* x <-> 0; y <-> 1; z <-> 2  */
   int side; /* left <-> 0; right <-> 1 */
@@ -1370,7 +1370,7 @@ void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double* in, int di
 void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int dim,
                          int face, int deg, double* out) {
   D4EST_ASSERT(face < 2 * (dim));
-  /* int nodes = util_pow_int(deg+1, DIM); */
+  /* int nodes = d4est_util_pow_int(deg+1, DIM); */
 
   double* slicer_1d = d4est_operators_fetch_lift_1d(d4est_ops, deg);
 
@@ -1401,7 +1401,7 @@ void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int 
     D4EST_ABORT("ERROR 0: d4est_operators_lift_boundary_vec");
   }
 
-  /* util_print_matrix(slicer_1d, (deg+1), 1, "slicer_1d = ", 0); */
+  /* d4est_util_print_matrix(slicer_1d, (deg+1), 1, "slicer_1d = ", 0); */
 
   if (dim == 2){
 
@@ -1553,10 +1553,10 @@ void d4est_operators_apply_hp_prolong_transpose(d4est_operators_t* d4est_ops, do
     d4est_operators_hp_apply_nd_prolong_transpose_with_ptr(
         tmp, degH, &in[stride], degh[c], dim, c, hp_prolong_transpose_1d);
     /* printf("child = %d\n",c); */
-    /* util_print_matrix(tmp, nodesH, 1, "tmp = ", 0); */
-    /* util_print_matrix(&uh[stride], nodesh, 1, "uh[stride] = ", 0); */
+    /* d4est_util_print_matrix(tmp, nodesH, 1, "tmp = ", 0); */
+    /* d4est_util_print_matrix(&uh[stride], nodesh, 1, "uh[stride] = ", 0); */
     d4est_linalg_vec_axpy(1.0, tmp, out, nodesH);
-    /* util_print_matrix(uH, nodesH, 1, "uH = ", 0); */
+    /* d4est_util_print_matrix(uH, nodesH, 1, "uH = ", 0); */
     stride += d4est_lgl_get_nodes(dim, degh[c]);
   }
 

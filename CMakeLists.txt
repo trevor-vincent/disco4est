@@ -79,7 +79,7 @@ SET (
   SRCS
   Utilities/ini.c
   Utilities/arbquad.c
-  Utilities/util.c
+  Utilities/d4est_util.c
   LinearAlgebra/d4est_linalg.c
   EllipticSystem/d4est_elliptic_eqns.c
   EllipticSystem/d4est_elliptic_data.c

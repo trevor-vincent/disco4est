@@ -1,6 +1,6 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_cubed_sphere_outer_shell_block.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <ini.h>
 
 
@@ -22,15 +22,15 @@ int d4est_geometry_cubed_sphere_outer_shell_block_input_handler
 )
 {
   d4est_geometry_cubed_sphere_outer_shell_block_input_t* pconfig = (d4est_geometry_cubed_sphere_outer_shell_block_input_t*)user;
-  if (util_match_couple(section,"geometry",name,"R0")) {
+  if (d4est_util_match_couple(section,"geometry",name,"R0")) {
     D4EST_ASSERT(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
   }
-  else if (util_match_couple(section,"geometry",name,"R1")) {
+  else if (d4est_util_match_couple(section,"geometry",name,"R1")) {
     D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
   }
-  else if (util_match_couple(section,"geometry",name,"compactify")) {
+  else if (d4est_util_match_couple(section,"geometry",name,"compactify")) {
     D4EST_ASSERT(pconfig->compactify == -1);
     pconfig->compactify = atoi(value);
     D4EST_ASSERT(pconfig->compactify == 0 || pconfig->compactify == 1);

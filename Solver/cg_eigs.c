@@ -1,7 +1,7 @@
 #include "../pXest/pXest.h"
 #include "../Solver/cg_eigs.h"
 #include "../LinearAlgebra/d4est_linalg.h"
-#include "../Utilities/util.h"
+#include "../Utilities/d4est_util.h"
 #include "sc_reduce.h"
 #include <signal.h>
 
@@ -134,13 +134,13 @@ cg_eigs
   double alpha_old, beta_old;
   double temp_max, temp_min;
 
-  /* util_print_matrix(u, vecs->local_nodes, 1, "u in cg_eigs",0); */
+  /* d4est_util_print_matrix(u, vecs->local_nodes, 1, "u in cg_eigs",0); */
   
   for (i = 0; i < imax; i++){
     
   /* while ( iterate == 1) { */
 
-    /* util_print_matrix( u, vecs->local_nodes, 1, "u = ", 0); */
+    /* d4est_util_print_matrix( u, vecs->local_nodes, 1, "u = ", 0); */
     
     /* Au = A*d; */
     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom, d4est_quad);
@@ -196,8 +196,8 @@ cg_eigs
   /* printf("i = %d, eig_min, eig_max, temp_min, temp_max = %f,%f,%f,%f\n", i , *eig_min, *eig_max, temp_min, temp_max); */
 
   if (i > 0){
-      /* *eig_min = util_min( *eig_min, temp_min ); */
-      *eig_max = util_max( *eig_max, temp_max );  
+      /* *eig_min = d4est_util_min( *eig_min, temp_min ); */
+      *eig_max = d4est_util_max( *eig_max, temp_max );  
     }
   else{
     /* *eig_min = temp_min; */

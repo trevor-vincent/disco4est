@@ -26,7 +26,7 @@
 #include <pXest.h>
 #include "d4est_vtk.h"
 #include "d4est_geometry.h"
-#include <util.h>
+#include <d4est_util.h>
 #ifdef P4_TO_P8
 /* #include <p8est_vtk.h> */
 /* #include <p8est_nodes.h> */
@@ -1030,7 +1030,7 @@ d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, d4est_operators_t* d4est_
 
   Ncells = 0;
   for (int i = 0; i < p4est->local_num_quadrants; i++){
-    Ncells += util_int_pow_int(deg_array[i], (P4EST_DIM));
+    Ncells += d4est_util_int_pow_int(deg_array[i], (P4EST_DIM));
   }
   /* Ncells = p4est->local_num_quadrants; */
 
@@ -1125,7 +1125,7 @@ d4est_vtk_write_dg_header (d4est_vtk_context_t * cont, d4est_operators_t* d4est_
         h2 = .5 * intsize * P4EST_QUADRANT_LEN (quad->level);
         k = 0;
 
-        int num_cells_in_element = util_int_pow_int(deg_array[quad_count], (P4EST_DIM));
+        int num_cells_in_element = d4est_util_int_pow_int(deg_array[quad_count], (P4EST_DIM));
         for (int ec = 0; ec < num_cells_in_element; ec++) {
           for (int corn = 0; corn < (P4EST_CHILDREN); corn++){
 
@@ -1952,7 +1952,7 @@ d4est_vtk_write_dg_cell_scalar (d4est_vtk_context_t * cont,
     quadrants = &tree->quadrants;
     num_quads = quadrants->elem_count;
     for (zz = 0; zz < num_quads; ++zz, ++sk, ++il) {
-      int num_cells_in_element = util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
+      int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
       for (int ec = 0; ec < num_cells_in_element; ec++, tc++){
         fprintf (cont->vtufile,
 #ifdef D4EST_VTK_DOUBLES
@@ -2184,7 +2184,7 @@ d4est_vtk_write_dg_cell_datav (d4est_vtk_context_t * cont,
       tree = p4est_tree_array_index (trees, jt);
       num_quads = tree->quadrants.elem_count;
       for (zz = 0; zz < num_quads; ++zz, ++sk, ++il) {
-        int num_cells_in_element = util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
+        int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
         for (int ec = 0; ec < num_cells_in_element; ec++){
           fprintf (cont->vtufile, " %lld", (long long) jt);
           if (!(sk % 20) && il != (Ncells - 1))
@@ -2205,7 +2205,7 @@ d4est_vtk_write_dg_cell_datav (d4est_vtk_context_t * cont,
       quadrants = &tree->quadrants;
       num_quads = quadrants->elem_count;
       for (zz = 0; zz < num_quads; ++zz, ++sk, ++il) {
-        int num_cells_in_element = util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
+        int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
         for (int ec = 0; ec < num_cells_in_element; ec++){
           quad = p4est_quadrant_array_index (quadrants, zz);
           fprintf (cont->vtufile, " %d", (int) quad->level);
@@ -2227,7 +2227,7 @@ d4est_vtk_write_dg_cell_datav (d4est_vtk_context_t * cont,
       quadrants = &tree->quadrants;
       num_quads = quadrants->elem_count;
       for (zz = 0; zz < num_quads; ++zz, ++sk, ++il) {
-        int num_cells_in_element = util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
+        int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
         for (int ec = 0; ec < num_cells_in_element; ec++){
           quad = p4est_quadrant_array_index (quadrants, zz);
           fprintf (cont->vtufile, " %d", (int) cont->deg_array[il]);
@@ -2401,8 +2401,8 @@ d4est_vtk_convert_nodal_to_vtk(p4est_t* p4est,
     num_quads = quadrants->elem_count;
 
     for (zz = 0; zz < num_quads; ++zz, ++il) {
-      int num_points_in_element = util_int_pow_int(cont->deg_array[il], (P4EST_DIM))*(P4EST_CHILDREN);
-      int num_nodes_in_element = util_int_pow_int(cont->deg_array[il] + 1, (P4EST_DIM));
+      int num_points_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM))*(P4EST_CHILDREN);
+      int num_nodes_in_element = d4est_util_int_pow_int(cont->deg_array[il] + 1, (P4EST_DIM));
       d4est_operators_convert_nodal_to_vtk(
                                   d4est_ops,
                                   &values[nodal_stride],

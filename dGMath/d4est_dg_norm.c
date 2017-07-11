@@ -2,7 +2,7 @@
 #include "../ElementData/d4est_element_data.h"
 #include "../dGMath/d4est_operators.h"
 #include "../LinearAlgebra/d4est_linalg.h"
-#include "../Utilities/util.h"
+#include "../Utilities/d4est_util.h"
 #include "../Flux/d4est_mortar_compute_flux.h"
 #include <curved_dg_norm.h>
 #include <ip_flux_params.h>
@@ -14,7 +14,7 @@ curved_dg_norm_boundary
 (
  d4est_element_data_t* e_m,
  int f_m,
- d4est_grid_fcn_t bndry_fcn,
+ d4est_xyz_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  void* params
@@ -210,9 +210,9 @@ curved_dg_norm_interface
   for (int i = 0; i < faces_m; i++)
     for (int j = 0; j < faces_p; j++){
       /* find max degree for each face pair of the two sides*/
-      deg_mortar_quad[i+j] = util_max_int( e_m[i]->deg_quad,
+      deg_mortar_quad[i+j] = d4est_util_max_int( e_m[i]->deg_quad,
                                             e_p_oriented[j]->deg_quad);
-      deg_mortar_lobatto[i+j] = util_max_int( e_m[i]->deg,
+      deg_mortar_lobatto[i+j] = d4est_util_max_int( e_m[i]->deg,
                                               e_p_oriented[j]->deg );      
       nodes_mortar_quad[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
       nodes_mortar_lobatto[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     

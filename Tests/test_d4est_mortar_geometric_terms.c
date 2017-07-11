@@ -10,7 +10,7 @@
 #include <petscsnes.h>
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <limits.h>
 
 #define DEG_LOBATTO 2
@@ -151,9 +151,9 @@ curved_test_mortarjacobianterms_interface
   for (int i = 0; i < faces_m; i++)
     for (int j = 0; j < faces_p; j++){
       /* find max degree for each face pair of the two sides*/
-      deg_mortar_quad[i+j] = util_max_int( e_m[i]->deg_quad,
+      deg_mortar_quad[i+j] = d4est_util_max_int( e_m[i]->deg_quad,
                                             e_p_oriented[j]->deg_quad);
-      deg_mortar_lobatto[i+j] = util_max_int( e_m[i]->deg,
+      deg_mortar_lobatto[i+j] = d4est_util_max_int( e_m[i]->deg,
                                               e_p_oriented[j]->deg );      
       nodes_mortar_quad[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
       nodes_mortar_lobatto[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
@@ -476,13 +476,13 @@ curved_test_mortarjacobianterms_interface
                        total_nodes_mortar_quad);
   
 
-  double max_error = util_max_error(sjvol_p_on_f_p_mortar_quad_reoriented, sjvol_m_on_f_m_mortar_quad, total_nodes_mortar_quad);
+  double max_error = d4est_util_max_error(sjvol_p_on_f_p_mortar_quad_reoriented, sjvol_m_on_f_m_mortar_quad, total_nodes_mortar_quad);
   printf("max error 1 = %f\n", max_error);
-  max_error += util_max_error(nvol_m_on_f_m_mortar_quad[0],  nvol_p_on_f_p_mortar_quad_reoriented[0], total_nodes_mortar_quad);
-  max_error += util_max_error(nvol_m_on_f_m_mortar_quad[1],  nvol_p_on_f_p_mortar_quad_reoriented[1], total_nodes_mortar_quad);
+  max_error += d4est_util_max_error(nvol_m_on_f_m_mortar_quad[0],  nvol_p_on_f_p_mortar_quad_reoriented[0], total_nodes_mortar_quad);
+  max_error += d4est_util_max_error(nvol_m_on_f_m_mortar_quad[1],  nvol_p_on_f_p_mortar_quad_reoriented[1], total_nodes_mortar_quad);
   
 #if (P4EST_DIM)==3
-    max_error += util_max_error(nvol_m_on_f_m_mortar_quad[2],  nvol_p_on_f_p_mortar_quad_reoriented[2], total_nodes_mortar_quad);
+    max_error += d4est_util_max_error(nvol_m_on_f_m_mortar_quad[2],  nvol_p_on_f_p_mortar_quad_reoriented[2], total_nodes_mortar_quad);
 #endif
   printf("max error 6 = %f\n", max_error);
   

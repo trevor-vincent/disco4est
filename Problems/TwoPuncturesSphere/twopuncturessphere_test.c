@@ -1,6 +1,6 @@
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <problem.h>
 #include <d4est_elliptic_data.h>
@@ -17,7 +17,7 @@
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
 #include <d4est_cg.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <time.h>
 
 
@@ -110,23 +110,23 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match_couple(section,"problem",name,"num_unifrefs")) {
+  if (d4est_util_match_couple(section,"problem",name,"num_unifrefs")) {
     D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg")) {
     D4EST_ASSERT(pconfig->deg == -1);
     pconfig->deg = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad")) {
     D4EST_ASSERT(pconfig->deg_quad == -1);
     pconfig->deg_quad = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_stiffness")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_stiffness")) {
     D4EST_ASSERT(pconfig->deg_stiffness == -1);
     pconfig->deg_stiffness = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"rhs_use_lobatto")) {
+  else if (d4est_util_match_couple(section,"problem",name,"rhs_use_lobatto")) {
     D4EST_ASSERT(pconfig->rhs_use_lobatto == -1);
     pconfig->rhs_use_lobatto = atoi(value);
   }  
@@ -340,7 +340,7 @@ void problem_build_rhs
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
 
-        /* if (util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){ */
+        /* if (d4est_util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){ */
         d4est_quadrature_volume_t mesh_object;
         mesh_object.dq = ed->dq;
         mesh_object.tree = ed->tree;

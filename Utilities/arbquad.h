@@ -3,7 +3,7 @@
 
 #include <pXest.h>
 #include <math.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <float.h>

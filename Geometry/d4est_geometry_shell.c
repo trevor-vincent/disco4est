@@ -3,7 +3,7 @@
 #include <ini.h>
 #include <p8est_connectivity.h>
 #include <p8est_geometry.h>
-#include <util.h>
+#include <d4est_util.h>
 
 typedef struct {
 
@@ -23,12 +23,12 @@ int d4est_geometry_shell_input_handler
 )
 {
   d4est_geometry_shell_input_t* pconfig = (d4est_geometry_shell_input_t*)user;
-  if (util_match_couple(section,"geometry",name,"R1")) {
+  if (d4est_util_match_couple(section,"geometry",name,"R1")) {
     D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"geometry",name,"R2")) {
+  else if (d4est_util_match_couple(section,"geometry",name,"R2")) {
     D4EST_ASSERT(pconfig->R2 == -1);
     pconfig->R2 = atof(value);
     pconfig->count += 1;

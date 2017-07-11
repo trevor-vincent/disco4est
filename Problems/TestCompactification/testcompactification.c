@@ -1,6 +1,6 @@
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
@@ -20,7 +20,7 @@
 #include <d4est_vtk.h>
 #include <ini.h>
 #include "time.h"
-#include "util.h"
+#include "d4est_util.h"
 
 double global_Rinf;
 double global_sigma;
@@ -134,87 +134,87 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match_couple(section,"amr",name,"num_unifrefs")) {
+  if (d4est_util_match_couple(section,"amr",name,"num_unifrefs")) {
     D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"amr",name,"num_randrefs")) {
+  else if (d4est_util_match_couple(section,"amr",name,"num_randrefs")) {
     D4EST_ASSERT(pconfig->num_randrefs == -1);
     pconfig->num_randrefs = atoi(value);
     pconfig->count += 1;
   }
-  /* else if (util_match_couple(section,"amr",name, "initial_degree")) { */
+  /* else if (d4est_util_match_couple(section,"amr",name, "initial_degree")) { */
     /* D4EST_ASSERT(pconfig->degree == -1); */
     /* pconfig->degree = atoi(value); */
     /* pconfig->count += 1; */
   /* } */
-  else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
+  else if (d4est_util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } 
-  /* else if (util_match_couple(section,"problem",name,"gauss_quad_deg")) { */
+  /* else if (d4est_util_match_couple(section,"problem",name,"gauss_quad_deg")) { */
   /*   D4EST_ASSERT(pconfig->gauss_quad_deg == -1); */
   /*   pconfig->gauss_quad_deg = atoi(value); */
   /*   pconfig->count += 1; */
   /* } */
-  else if (util_match_couple(section,"problem",name,"R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"R0")) {
     D4EST_ASSERT(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"R1")) {
     D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"R2")) {
     D4EST_ASSERT(pconfig->R2 == -1);
     pconfig->R2 = atof(value);
     pconfig->count += 1;
   }
-  /* else if (util_match_couple(section,"problem",name,"Rinf")) { */
+  /* else if (d4est_util_match_couple(section,"problem",name,"Rinf")) { */
     /* D4EST_ASSERT(pconfig->Rinf == -1); */
     /* pconfig->Rinf = atof(value); */
     /* pconfig->count += 1; */
   /* } */
-  /* else if (util_match_couple(section,"problem",name,"w")) { */
+  /* else if (d4est_util_match_couple(section,"problem",name,"w")) { */
     /* D4EST_ASSERT(pconfig->w == -1); */
     /* pconfig->w = atof(value); */
     /* pconfig->count += 1; */
   /* } */
-  else if (util_match_couple(section,"problem",name,"deg_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R0")) {
     D4EST_ASSERT(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R0")) {
     D4EST_ASSERT(pconfig->deg_quad_R0 == -1);
     pconfig->deg_quad_R0 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R1")) {
     D4EST_ASSERT(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R1")) {
     D4EST_ASSERT(pconfig->deg_quad_R1 == -1);
     pconfig->deg_quad_R1 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R2")) {
     D4EST_ASSERT(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R2")) {
     D4EST_ASSERT(pconfig->deg_quad_R2 == -1);
     pconfig->deg_quad_R2 = atoi(value);
     pconfig->count += 1;
   }  
-  /* else if (util_match_couple(section,"solver",name,"krylov_type")) { */
+  /* else if (d4est_util_match_couple(section,"solver",name,"krylov_type")) { */
   /*   D4EST_ASSERT(pconfig->krylov_type = ""); */
   /*   if (strcmp("cg", value) == 0){ */
   /*     pconfig->krylov_type = KSPCG; */
@@ -488,7 +488,7 @@ problem_init
   /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
 
-  /* d4est_grid_fcn_t boundary_flux_fcn = zero_fcn; */
+  /* d4est_xyz_fcn_t boundary_flux_fcn = zero_fcn; */
   
   d4est_elliptic_data_t prob_vecs;
   prob_vecs.rhs = rhs;
@@ -763,14 +763,14 @@ problem_init
            p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
            d4est_element_data_t* ed = quad->p.user_data;
            deg_array[stride] = ed->deg;
-           vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
+           vtk_nodes = d4est_util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
            stride++;
          }
        }
 
 
   /* for (int i = 0; i < p4est->local_num_quadrants; i++){ */
-  /*   printf("util_int_pow_int(deg_array[i], (P4EST_DIM)) = %d\n",util_int_pow_int(deg_array[i], (P4EST_DIM))); */
+  /*   printf("d4est_util_int_pow_int(deg_array[i], (P4EST_DIM)) = %d\n",d4est_util_int_pow_int(deg_array[i], (P4EST_DIM))); */
   /*   printf("deg_array[i] = %d\n",deg_array[i]); */
   /*   printf("(P4EST_DIM) = %d\n",(P4EST_DIM)); */
   /* } */

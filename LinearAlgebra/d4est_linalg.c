@@ -649,8 +649,8 @@ d4est_linalg_matvec_plus_vec (double alpha, double *A, double *v, double beta,
   int                 incv = 1;
 
   /* printf("\n\nmatvec plus vec\n\n"); */
-  /* util_print_matrix(A, m, n, "A = ", 0); */
-  /* util_print_matrix(v, n, 1, "v = ", 0); */
+  /* d4est_util_print_matrix(A, m, n, "A = ", 0); */
+  /* d4est_util_print_matrix(v, n, 1, "v = ", 0); */
 
   dgemv_ (&ytran, &dimN, &dimM, &alpha, A, &dimN, v, &incv, &beta, b, &incb);
 }

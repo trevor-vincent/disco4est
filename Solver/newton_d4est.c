@@ -1,6 +1,6 @@
 #include "../pXest/pXest.h"
 #include "../LinearAlgebra/d4est_linalg.h"
-#include "../Utilities/util.h"
+#include "../Utilities/d4est_util.h"
 #include "../Solver/matrix_sym_tester.h"
 #include <ini.h>
 #include <krylov_pc.h>
@@ -29,23 +29,23 @@ int newton_d4est_input_handler
 {
   newton_d4est_params_t* pconfig = (newton_d4est_params_t*)user;
   
-  if (util_match_couple(section,"newton_d4est",name,"atol")) {
+  if (d4est_util_match_couple(section,"newton_d4est",name,"atol")) {
     D4EST_ASSERT(pconfig->atol == -1);
     pconfig->atol = atof(value);
   }
-  else if (util_match_couple(section,"newton_d4est",name,"rtol")) {
+  else if (d4est_util_match_couple(section,"newton_d4est",name,"rtol")) {
     D4EST_ASSERT(pconfig->rtol == -1);
     pconfig->rtol = atof(value);
   }
-  else if (util_match_couple(section,"newton_d4est",name,"imax")) {
+  else if (d4est_util_match_couple(section,"newton_d4est",name,"imax")) {
     D4EST_ASSERT(pconfig->imax == -1);
     pconfig->imax = atoi(value);
   }
-  else if (util_match_couple(section,"newton_d4est",name,"monitor")) {
+  else if (d4est_util_match_couple(section,"newton_d4est",name,"monitor")) {
     D4EST_ASSERT(pconfig->monitor == -1);
     pconfig->monitor = atoi(value);
   }
-  else if (util_match_couple(section,"newton_d4est",name,"imin")) {
+  else if (d4est_util_match_couple(section,"newton_d4est",name,"imin")) {
     D4EST_ASSERT(pconfig->imin == -1);
     pconfig->imin = atoi(value);
   }

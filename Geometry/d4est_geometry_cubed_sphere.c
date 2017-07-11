@@ -2,7 +2,7 @@
 #include <d4est_geometry.h>
 #include <ini.h>
 #include <p8est_connectivity.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <petscsnes.h>
 #include <arbquad.h>
 
@@ -26,27 +26,27 @@ int d4est_geometry_cubed_sphere_input_handler
 )
 {
   d4est_geometry_cubed_sphere_attr_t* pconfig = user;
-  if (util_match_couple(section,pconfig->input_section,name,"R0")) {
+  if (d4est_util_match_couple(section,pconfig->input_section,name,"R0")) {
     D4EST_ASSERT(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
     D4EST_ASSERT(pconfig->R0 > 0);
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"R1")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"R1")) {
     D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
     D4EST_ASSERT(pconfig->R1 > 0);
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"R2")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"R2")) {
     D4EST_ASSERT(pconfig->R2 == -1);
     pconfig->R2 = atof(value);
     D4EST_ASSERT(pconfig->R2 > 0);
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"compactify_outer_shell")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"compactify_outer_shell")) {
     D4EST_ASSERT(pconfig->compactify_outer_shell == -1);
     pconfig->compactify_outer_shell = atoi(value);
     D4EST_ASSERT(pconfig->compactify_outer_shell == 0 || pconfig->compactify_outer_shell == 1);
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"compactify_inner_shell")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"compactify_inner_shell")) {
     D4EST_ASSERT(pconfig->compactify_inner_shell == -1);
     pconfig->compactify_inner_shell = atoi(value);
     D4EST_ASSERT(pconfig->compactify_inner_shell == 0 || pconfig->compactify_inner_shell == 1);

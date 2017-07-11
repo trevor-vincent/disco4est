@@ -1,6 +1,6 @@
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
@@ -38,7 +38,7 @@
 #include <multigrid_element_data_updater_curved.h>
 #include <krylov_pc_multigrid.h>
 #include "time.h"
-#include "util.h"
+#include "d4est_util.h"
 #include <newton_d4est.h>
 #include <newton_petsc.h>
 
@@ -180,57 +180,57 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match_couple(section,"amr",name,"num_of_amr_levels")) {
+  if (d4est_util_match_couple(section,"amr",name,"num_of_amr_levels")) {
     D4EST_ASSERT(pconfig->num_of_amr_levels == -1);
     pconfig->num_of_amr_levels = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"amr",name,"num_unifrefs")) {
+  else if (d4est_util_match_couple(section,"amr",name,"num_unifrefs")) {
     D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
+  else if (d4est_util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } 
-  else if (util_match_couple(section,"problem",name,"deg_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R0")) {
     D4EST_ASSERT(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"use_cactus")) {
+  else if (d4est_util_match_couple(section,"problem",name,"use_cactus")) {
     D4EST_ASSERT(pconfig->use_cactus == -1);
     pconfig->use_cactus = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R0")) {
     D4EST_ASSERT(pconfig->deg_quad_R0 == -1);
     pconfig->deg_quad_R0 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R1")) {
     D4EST_ASSERT(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R1")) {
     D4EST_ASSERT(pconfig->deg_quad_R1 == -1);
     pconfig->deg_quad_R1 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R2")) {
     D4EST_ASSERT(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R2")) {
     D4EST_ASSERT(pconfig->deg_quad_R2 == -1);
     pconfig->deg_quad_R2 = atoi(value);
     pconfig->count += 1;
   }  
-  else if (util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_offset_for_nonlinear_quad")) {
     D4EST_ASSERT(pconfig->deg_offset_for_nonlinear_quad == -1);
     pconfig->deg_offset_for_nonlinear_quad = atoi(value);
     pconfig->count += 1;
@@ -461,7 +461,7 @@ problem_save_to_vtk
           d4est_element_data_t* ed = quad->p.user_data;
           deg_array[stride] = ed->deg;
           eta_array[stride] = ed->local_estimator;
-          vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
+          vtk_nodes = d4est_util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
           stride++;
         }
       }
@@ -585,7 +585,7 @@ problem_init
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
   /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
-  /* d4est_grid_fcn_t boundary_flux_fcn = zero_fcn; */
+  /* d4est_xyz_fcn_t boundary_flux_fcn = zero_fcn; */
   twopunctures_params_t tp_params;
   init_twopunctures_data(&tp_params, input.deg_offset_for_nonlinear_quad);
   /* init_S_puncture_data(p4est, &tp_params, input.deg_offset_for_nonlinear_quad); */

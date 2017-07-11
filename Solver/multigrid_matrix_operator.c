@@ -152,9 +152,9 @@ multigrid_matrix_fofu_fofv_mass_operator_setup_deg_quad_eq_deg
  d4est_operators_t* d4est_ops,
  double* u,
  double* v,
- grid_fcn_ext_t fofu_fcn,
+ d4est_xyz_fcn_ext_t fofu_fcn,
  void* fofu_ctx,
- grid_fcn_ext_t fofv_fcn,
+ d4est_xyz_fcn_ext_t fofv_fcn,
  void* fofv_ctx,
  multigrid_matrix_op_t* matrix_op
 )
@@ -232,9 +232,9 @@ multigrid_matrix_curved_fofu_fofv_mass_operator_setup_deg_quad_eq_deg
  d4est_geometry_t* d4est_geom,
  double* u,
  double* v,
- grid_fcn_ext_t fofu_fcn,
+ d4est_xyz_fcn_ext_t fofu_fcn,
  void* fofu_ctx,
- grid_fcn_ext_t fofv_fcn,
+ d4est_xyz_fcn_ext_t fofv_fcn,
  void* fofv_ctx,
  multigrid_matrix_op_t* matrix_op,
  int(*set_deg_quad)(void*, void*),

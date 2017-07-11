@@ -1,6 +1,6 @@
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 /* #include <sipg_flux_vector_fcns.h> */
@@ -40,7 +40,7 @@
 #include <ip_flux_params.h>
 #include <ip_flux.h>
 #include "time.h"
-#include "util.h"
+#include "d4est_util.h"
 
 /* #define NASTY_DEBUG */
 
@@ -186,59 +186,59 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-    if (util_match_couple(section,"problem",name,"solve_with_multigrid")) {
+    if (d4est_util_match_couple(section,"problem",name,"solve_with_multigrid")) {
     D4EST_ASSERT(pconfig->solve_with_multigrid == -1);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->solve_with_multigrid = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"use_mg_as_pc_for_ksp")) {
+  else if (d4est_util_match_couple(section,"problem",name,"use_mg_as_pc_for_ksp")) {
     D4EST_ASSERT(pconfig->use_mg_as_pc_for_ksp == -1);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->use_mg_as_pc_for_ksp = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"num_unifrefs")) {
+  else if (d4est_util_match_couple(section,"problem",name,"num_unifrefs")) {
     D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"rhs_compute_method")) {
+  else if (d4est_util_match_couple(section,"problem",name,"rhs_compute_method")) {
     D4EST_ASSERT(pconfig->rhs_compute_method[0] == '*');
     snprintf (pconfig->rhs_compute_method, sizeof(pconfig->rhs_compute_method), "%s", value);
-    D4EST_ASSERT(util_match(pconfig->rhs_compute_method, "COMPUTE_RHS_ON_QUADRATURE") ||
-               util_match(pconfig->rhs_compute_method, "COMPUTE_RHS_ON_LOBATTO") );
+    D4EST_ASSERT(d4est_util_match(pconfig->rhs_compute_method, "COMPUTE_RHS_ON_QUADRATURE") ||
+               d4est_util_match(pconfig->rhs_compute_method, "COMPUTE_RHS_ON_LOBATTO") );
   }
-  else if (util_match_couple(section,"problem",name,"deg_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R0")) {
     D4EST_ASSERT(pconfig->deg_R0 == -1);
     pconfig->deg_R0 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R0")) {
     D4EST_ASSERT(pconfig->deg_quad_R0 == -1);
     pconfig->deg_quad_R0 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_stiffness_R0")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_stiffness_R0")) {
     D4EST_ASSERT(pconfig->deg_stiffness_R0 == -1);
     pconfig->deg_stiffness_R0 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R1")) {
     D4EST_ASSERT(pconfig->deg_R1 == -1);
     pconfig->deg_R1 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R1")) {
     D4EST_ASSERT(pconfig->deg_quad_R1 == -1);
     pconfig->deg_quad_R1 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_stiffness_R1")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_stiffness_R1")) {
     D4EST_ASSERT(pconfig->deg_stiffness_R1 == -1);
     pconfig->deg_stiffness_R1 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_R2")) {
     D4EST_ASSERT(pconfig->deg_R2 == -1);
     pconfig->deg_R2 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad_R2")) {
     D4EST_ASSERT(pconfig->deg_quad_R2 == -1);
     pconfig->deg_quad_R2 = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_stiffness_R2")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_stiffness_R2")) {
     D4EST_ASSERT(pconfig->deg_stiffness_R2 == -1);
     pconfig->deg_stiffness_R2 = atoi(value);
   }
@@ -553,7 +553,7 @@ void problem_build_rhs
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
 
-        /* if (util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){ */
+        /* if (d4est_util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){ */
         d4est_quadrature_volume_t mesh_object;
         mesh_object.dq = ed->dq;
         mesh_object.tree = ed->tree;
@@ -580,7 +580,7 @@ void problem_build_rhs
           );
         
         /* } */
-        /* else if(util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_QUADRATURE")){ */
+        /* else if(d4est_util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_QUADRATURE")){ */
           /* d4est_element_data_apply_fofufofvlj */
             /* ( */
              /* d4est_ops, */
@@ -667,7 +667,7 @@ void problem_build_rhs
 /*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
 /*         d4est_element_data_t* ed = quad->p.user_data; */
         
-/*         if (util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){ */
+/*         if (d4est_util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_LOBATTO")){ */
 /*           d4est_operators_apply_curved_mass_matrix(d4est_ops, */
 /*                                           &f[ed->nodal_stride], */
 /*                                           ed->deg, */
@@ -678,7 +678,7 @@ void problem_build_rhs
 /*                                           &prob_vecs->rhs[ed->nodal_stride] */
 /*                                          ); */
 /*         } */
-/*         else if(util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_QUADRATURE")){ */
+/*         else if(d4est_util_match(input->rhs_compute_method,"COMPUTE_RHS_ON_QUADRATURE")){ */
 /*           d4est_element_data_apply_fofufofvlj */
 /*             ( */
 /*              d4est_ops, */

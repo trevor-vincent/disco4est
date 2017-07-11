@@ -1,5 +1,5 @@
 #include <d4est_cg.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <ini.h>
 #include <d4est_linalg.h>
 #include <sc_reduce.h>
@@ -16,20 +16,20 @@ int d4est_cg_input_handler
 )
 {
   d4est_cg_params_t* pconfig = (d4est_cg_params_t*)user;
-  if (util_match_couple(section,pconfig->input_section,name,"atol")) {
+  if (d4est_util_match_couple(section,pconfig->input_section,name,"atol")) {
     D4EST_ASSERT(pconfig->atol == -1);
     pconfig->atol = atof(value);
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"rtol")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"rtol")) {
     D4EST_ASSERT(pconfig->rtol == -1);
     pconfig->rtol = atof(value);
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"monitor")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"monitor")) {
     D4EST_ASSERT(pconfig->monitor == -1);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
     pconfig->monitor = atoi(value);
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"iter")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"iter")) {
     D4EST_ASSERT(pconfig->iter == -1);
     D4EST_ASSERT(atoi(value) >= 0);
     pconfig->iter = atoi(value);

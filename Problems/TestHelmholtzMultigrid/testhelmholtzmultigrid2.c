@@ -1,6 +1,6 @@
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <element_data.h>
 #include <sipg_flux_vector_fcns.h>
@@ -141,27 +141,27 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match_couple(section,"amr",name,"amr_levels")) {
+  if (d4est_util_match_couple(section,"amr",name,"amr_levels")) {
     D4EST_ASSERT(pconfig->endlevel == -1);
     pconfig->endlevel = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name, "initial_degree")) {
+  } else if (d4est_util_match_couple(section,"amr",name, "initial_degree")) {
     D4EST_ASSERT(pconfig->degree == -1);
     pconfig->degree = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"sigma")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"sigma")) {
     D4EST_ASSERT(pconfig->sigma == -1);
     pconfig->sigma = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"gamma_h")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"gamma_h")) {
     D4EST_ASSERT(pconfig->gamma_h == -1);
     pconfig->gamma_h = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"gamma_p")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"gamma_p")) {
     D4EST_ASSERT(pconfig->gamma_p == -1);
     pconfig->gamma_p = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
+  } else if (d4est_util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
@@ -937,7 +937,7 @@ problem_init
 
 
       element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, d4est_ops);
-      /* util_print_matrix(u_analytic, prob_vecs.local_nodes, 1, " u_analytic = ", 0); */
+      /* d4est_util_print_matrix(u_analytic, prob_vecs.local_nodes, 1, " u_analytic = ", 0); */
 
       /* element_data_print(p4est); */
 
@@ -1056,7 +1056,7 @@ problem_init
         double slope;
         double intercept;
         int num_of_hpamr_levels = level + 1;
-        util_linear_regression
+        d4est_util_linear_regression
           (
            dgerr_data_for_fit,
            dof_data_for_fit,

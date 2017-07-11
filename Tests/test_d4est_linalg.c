@@ -1,5 +1,5 @@
 #include <d4est_linalg.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -268,10 +268,10 @@ void test_d4est_linalg_sym_eigvecs()
 
   for (i = 0; i < 10; i++){
     d4est_linalg_matvec_plus_vec(1.0, &A[0][0], &A_copy[i][0], 0.0, &evec[0], 10, 10);
-    /* util_print_matrix(&evec[0], 10, 1, "evec before scale= ", 0); */
+    /* d4est_util_print_matrix(&evec[0], 10, 1, "evec before scale= ", 0); */
     d4est_linalg_vec_scale(1./eig_vals[i], &evec[0], 10);
-    /* util_print_matrix(&A_copy[i][0], 10, 1, "A_copy = ", 0); */
-    /* util_print_matrix(&evec[0], 10, 1, "evec = ", 0); */
+    /* d4est_util_print_matrix(&A_copy[i][0], 10, 1, "A_copy = ", 0); */
+    /* d4est_util_print_matrix(&evec[0], 10, 1, "evec = ", 0); */
 
     err_max += test_d4est_linalg_point_error_max(&A_copy[i][0], &evec[0], 10);
   }

@@ -1,7 +1,7 @@
 #include <pXest.h>
 #include <d4est_hp_amr.h>
 #include <d4est_xyz_functions.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 

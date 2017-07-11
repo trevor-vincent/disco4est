@@ -1,7 +1,7 @@
 #include <multigrid_smoother_cheby_d4est.h>
 #include <d4est_linalg.h>
 #include <ini.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <cg_eigs.h>
 
 static
@@ -16,35 +16,35 @@ multigrid_smoother_cheby_d4est_input_handler
 {  
   multigrid_smoother_cheby_d4est_t* pconfig = ((multigrid_smoother_cheby_d4est_t*)user);
 
-  if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_imax")) {
+  if (d4est_util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_imax")) {
     D4EST_ASSERT(pconfig->cheby_imax == -1);
     pconfig->cheby_imax = atoi(value);
   }
-  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_cg_imax")) {
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_cg_imax")) {
     D4EST_ASSERT(pconfig->cheby_eigs_cg_imax == -1);
     pconfig->cheby_eigs_cg_imax = atoi(value);
   }
-  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_lmax_lmin_ratio")) {
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_lmax_lmin_ratio")) {
     D4EST_ASSERT(pconfig->cheby_eigs_lmax_lmin_ratio == -1);
     pconfig->cheby_eigs_lmax_lmin_ratio = atof(value);
   }
-  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_max_multiplier")) {
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_max_multiplier")) {
     D4EST_ASSERT(pconfig->cheby_eigs_max_multiplier == -1);
     pconfig->cheby_eigs_max_multiplier = atof(value);
   }
-  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_reuse_fromdownvcycle")) {
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_reuse_fromdownvcycle")) {
     D4EST_ASSERT(pconfig->cheby_eigs_reuse_fromdownvcycle == -1);
     pconfig->cheby_eigs_reuse_fromdownvcycle = atoi(value);
   }
-  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_reuse_fromlastvcycle")) {
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_eigs_reuse_fromlastvcycle")) {
     D4EST_ASSERT(pconfig->cheby_eigs_reuse_fromlastvcycle == -1);
     pconfig->cheby_eigs_reuse_fromlastvcycle = atoi(value);
   }
-  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_print_residual_norm")) {
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_print_residual_norm")) {
     D4EST_ASSERT(pconfig->cheby_print_residual_norm == -1);
     pconfig->cheby_print_residual_norm = atoi(value);
   }
-  else if (util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_print_eigs")) {
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby_d4est",name,"cheby_print_eigs")) {
     D4EST_ASSERT(pconfig->cheby_print_eigs == -1);
     pconfig->cheby_print_eigs = atoi(value);
   }

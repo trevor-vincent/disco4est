@@ -1,5 +1,5 @@
 #include <d4est_element_data.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <multigrid_element_data_updater_curved.h>
 
 

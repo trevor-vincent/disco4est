@@ -1,13 +1,13 @@
 #include "sc_reduce.h"
 #include "../pXest/pXest.h"
 #include "../LinearAlgebra/d4est_linalg.h"
-#include "../Utilities/util.h"
+#include "../Utilities/d4est_util.h"
 #include "../dGMath/d4est_operators.h"
 #include "../Solver/multigrid.h"
 #include "../Solver/cg_eigs.h"
 #include "../hpAMR/hp_amr.h"
 #include <ini.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <multigrid_callbacks.h>
 #include <multigrid_smoother_cheby_d4est.h>
 #include <multigrid_smoother_krylov_petsc.h>
@@ -127,23 +127,23 @@ int multigrid_input_handler
 {
   multigrid_data_t* mg_data = ((multigrid_data_t*)user);
   
-  if (util_match_couple(section,"multigrid",name,"vcycle_imax")) {
+  if (d4est_util_match_couple(section,"multigrid",name,"vcycle_imax")) {
     D4EST_ASSERT(mg_data->vcycle_imax == -1);
     mg_data->vcycle_imax = atoi(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"vcycle_rtol")) {
+  else if (d4est_util_match_couple(section,"multigrid",name,"vcycle_rtol")) {
     D4EST_ASSERT(mg_data->vcycle_rtol == -1);
     mg_data->vcycle_rtol = atof(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"vcycle_atol")) {
+  else if (d4est_util_match_couple(section,"multigrid",name,"vcycle_atol")) {
     D4EST_ASSERT(mg_data->vcycle_atol == -1);
     mg_data->vcycle_atol = atof(value);
   }
-  else if (util_match_couple(section,"multigrid",name,"smoother_name")) {
+  else if (d4est_util_match_couple(section,"multigrid",name,"smoother_name")) {
     D4EST_ASSERT(mg_data->smoother_name[0] == '*');
     snprintf (mg_data->smoother_name, sizeof(mg_data->smoother_name), "%s", value);
   }
-  else if (util_match_couple(section,"multigrid",name,"bottom_solver_name")) {
+  else if (d4est_util_match_couple(section,"multigrid",name,"bottom_solver_name")) {
     D4EST_ASSERT(mg_data->bottom_solver_name[0] == '*');
     snprintf (mg_data->bottom_solver_name, sizeof(mg_data->bottom_solver_name), "%s", value);
   }
@@ -157,10 +157,10 @@ int multigrid_input_handler
 void
 multigrid_set_smoother(p4est_t* p4est, const char* input_file, multigrid_data_t* mg_data){
 
-  if(util_match(mg_data->smoother_name, "mg_smoother_krylov_petsc")){
+  if(d4est_util_match(mg_data->smoother_name, "mg_smoother_krylov_petsc")){
     mg_data->smoother = multigrid_smoother_krylov_petsc_init(p4est, input_file);
   }
-  else if(util_match(mg_data->smoother_name, "mg_smoother_cheby_d4est")){
+  else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_cheby_d4est")){
     mg_data->smoother = multigrid_smoother_cheby_d4est_init
                         (
                          p4est,
@@ -178,10 +178,10 @@ multigrid_set_smoother(p4est_t* p4est, const char* input_file, multigrid_data_t*
 void
 multigrid_destroy_smoother(multigrid_data_t* mg_data){
 
-  if(util_match(mg_data->smoother_name, "mg_smoother_krylov_petsc")){
+  if(d4est_util_match(mg_data->smoother_name, "mg_smoother_krylov_petsc")){
     multigrid_smoother_krylov_petsc_destroy(mg_data->smoother);
   }
-  else if(util_match(mg_data->smoother_name, "mg_smoother_cheby_d4est")){
+  else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_cheby_d4est")){
     multigrid_smoother_cheby_d4est_destroy(mg_data->smoother);
   }
   else {
@@ -193,14 +193,14 @@ multigrid_destroy_smoother(multigrid_data_t* mg_data){
 void
 multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file, multigrid_data_t* mg_data){
 
-  if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_krylov_petsc")){
+  if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_krylov_petsc")){
     mg_data->bottom_solver = multigrid_bottom_solver_krylov_petsc_init
                                                (
                                                 p4est,
                                                 input_file
                                                );
   }
-  else if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cheby_d4est")){
+  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cheby_d4est")){
     mg_data->bottom_solver = multigrid_bottom_solver_cheby_d4est_init
                                                (
                                                 p4est,
@@ -208,7 +208,7 @@ multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file, multigrid_da
                                                 input_file
                                                );
   }
-  else if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cg_d4est")){
+  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cg_d4est")){
     mg_data->bottom_solver = multigrid_bottom_solver_cg_d4est_init
                                                (
                                                 p4est,
@@ -225,19 +225,19 @@ multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file, multigrid_da
 void
 multigrid_destroy_bottom_solver(multigrid_data_t* mg_data){
 
-  if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_krylov_petsc")){
+  if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_krylov_petsc")){
     multigrid_bottom_solver_krylov_petsc_destroy
                                                (
                                                 mg_data->bottom_solver
                                                );
   }
-  else if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cheby_d4est")){
+  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cheby_d4est")){
     multigrid_bottom_solver_cheby_d4est_destroy
                                                (
                                                 mg_data->bottom_solver
                                                );
   }
-  else if(util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cg_d4est")){
+  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cg_d4est")){
     multigrid_bottom_solver_cg_d4est_destroy
       (
        mg_data->bottom_solver
@@ -676,7 +676,7 @@ multigrid_vcycle
 
   mg_data->mg_state = COARSE_POST_SOLVE; multigrid_update_components(p4est, level, &vecs_for_bottom_solve);   
 
-  /* util_print_matrix(&rres_at0[stride_to_fine_data],mg_data->coarse_nodes,1,"rres coarse solve= ", 0); */
+  /* d4est_util_print_matrix(&rres_at0[stride_to_fine_data],mg_data->coarse_nodes,1,"rres coarse solve= ", 0); */
   
   /**********************************************************/
   /**********************************************************/

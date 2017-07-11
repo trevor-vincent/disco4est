@@ -2,7 +2,7 @@
 #define D4EST_REFERENCE_H 
 
 #include <assert.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <pXest.h>
 
 typedef struct {

@@ -2,7 +2,7 @@
 
 #include "../Solver/cg.h"
 #include "../LinearAlgebra/d4est_linalg.h"
-#include "../Utilities/util.h"
+#include "../Utilities/d4est_util.h"
 #include "../pXest/pXest.h"
 #include "sc_reduce.h"
 

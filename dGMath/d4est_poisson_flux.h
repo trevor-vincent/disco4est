@@ -80,7 +80,7 @@ void (*d4est_poisson_flux_boundary_fcn_t)
  d4est_element_data_t*,
  int,
  int,
- d4est_grid_fcn_t,
+ d4est_xyz_fcn_t,
  d4est_operators_t*,
  d4est_geometry_t*,
  d4est_quadrature_t*,
@@ -97,7 +97,7 @@ struct d4est_poisson_flux_data{
   d4est_poisson_flux_type_t flux_type; 
   d4est_poisson_flux_interface_fcn_t interface_fcn;
   d4est_poisson_flux_boundary_fcn_t boundary_fcn;
-  d4est_grid_fcn_t boundary_condition;
+  d4est_xyz_fcn_t boundary_condition;
   void* user;
   void (*destroy)(d4est_poisson_flux_data_t*);
   
@@ -105,7 +105,7 @@ struct d4est_poisson_flux_data{
 
 /* This file was automatically generated.  Do not edit! */
 void d4est_poisson_flux_destroy(d4est_poisson_flux_data_t *data);
-d4est_poisson_flux_data_t *d4est_poisson_flux_new(p4est_t *p4est,const char *input_file,d4est_grid_fcn_t boundary_condition);
+d4est_poisson_flux_data_t *d4est_poisson_flux_new(p4est_t *p4est,const char *input_file,d4est_xyz_fcn_t boundary_condition);
 d4est_mortar_fcn_ptrs_t d4est_poisson_flux_fetch_fcns(d4est_poisson_flux_data_t *data);
 
 

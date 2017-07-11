@@ -1,7 +1,7 @@
 #include <pXest.h>
 #include <d4est_lgl.h>
 #include <math.h>
-#include <util.h>
+#include <d4est_util.h>
 
 int d4est_lgl_get_nodes(int dim, int deg) {
   D4EST_ASSERT(dim > 0 && dim < 4 && deg > 0);

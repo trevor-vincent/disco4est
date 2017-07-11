@@ -3,7 +3,7 @@
 
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <element_data.h>
 #include <sipg_flux_vector_fcns.h>
@@ -57,9 +57,9 @@ double analytic_solution_fcn
                   );
 
 #if (P4EST_DIM)==2  
-  return x*(1.-x)*y*(1.-y)*util_dbl_pow_int(rp, 3);
+  return x*(1.-x)*y*(1.-y)*d4est_util_dbl_pow_int(rp, 3);
 #else
-  return x*(1.-x)*y*(1.-y)*z*(1.-z)*util_dbl_pow_int(rp, 3);
+  return x*(1.-x)*y*(1.-y)*z*(1.-z)*d4est_util_dbl_pow_int(rp, 3);
 #endif
 }
 
@@ -105,34 +105,34 @@ double f_fcn
   }
 
   else
-    return ((util_dbl_pow_int(c2x,2) + util_dbl_pow_int(c2y,2) - 2*c2x*x + util_dbl_pow_int(x,2) - 2*c2y*y + util_dbl_pow_int(y,2))*(-2*util_dbl_pow_int(c2x,2)*x - 6*c2y*x - 2*util_dbl_pow_int(c2y,2)*x + 4*c2x*util_dbl_pow_int(x,2) + 2*util_dbl_pow_int(c2x,2)*util_dbl_pow_int(x,2) + 6*c2y*util_dbl_pow_int(x,2) +
-       2*util_dbl_pow_int(c2y,2)*util_dbl_pow_int(x,2) - 2*util_dbl_pow_int(x,3) - 4*c2x*util_dbl_pow_int(x,3) + 2*util_dbl_pow_int(x,4) - 6*c2x*y - 2*util_dbl_pow_int(c2x,2)*y - 2*util_dbl_pow_int(c2y,2)*y + 21*x*y + 16*c2x*x*y + 16*c2y*x*y - 29*util_dbl_pow_int(x,2)*y -
-       16*c2y*util_dbl_pow_int(x,2)*y + 6*c2x*util_dbl_pow_int(y,2) + 2*util_dbl_pow_int(c2x,2)*util_dbl_pow_int(y,2) + 4*c2y*util_dbl_pow_int(y,2) + 2*util_dbl_pow_int(c2y,2)*util_dbl_pow_int(y,2) - 29*x*util_dbl_pow_int(y,2) - 16*c2x*x*util_dbl_pow_int(y,2) + 37*util_dbl_pow_int(x,2)*util_dbl_pow_int(y,2) -
-                                                                                                                          2*util_dbl_pow_int(y,3) - 4*c2y*util_dbl_pow_int(y,3) + 2*util_dbl_pow_int(y,4)))/sqrt(util_dbl_pow_int(-c2x + x,2) + util_dbl_pow_int(-c2y + y,2));
+    return ((d4est_util_dbl_pow_int(c2x,2) + d4est_util_dbl_pow_int(c2y,2) - 2*c2x*x + d4est_util_dbl_pow_int(x,2) - 2*c2y*y + d4est_util_dbl_pow_int(y,2))*(-2*d4est_util_dbl_pow_int(c2x,2)*x - 6*c2y*x - 2*d4est_util_dbl_pow_int(c2y,2)*x + 4*c2x*d4est_util_dbl_pow_int(x,2) + 2*d4est_util_dbl_pow_int(c2x,2)*d4est_util_dbl_pow_int(x,2) + 6*c2y*d4est_util_dbl_pow_int(x,2) +
+       2*d4est_util_dbl_pow_int(c2y,2)*d4est_util_dbl_pow_int(x,2) - 2*d4est_util_dbl_pow_int(x,3) - 4*c2x*d4est_util_dbl_pow_int(x,3) + 2*d4est_util_dbl_pow_int(x,4) - 6*c2x*y - 2*d4est_util_dbl_pow_int(c2x,2)*y - 2*d4est_util_dbl_pow_int(c2y,2)*y + 21*x*y + 16*c2x*x*y + 16*c2y*x*y - 29*d4est_util_dbl_pow_int(x,2)*y -
+       16*c2y*d4est_util_dbl_pow_int(x,2)*y + 6*c2x*d4est_util_dbl_pow_int(y,2) + 2*d4est_util_dbl_pow_int(c2x,2)*d4est_util_dbl_pow_int(y,2) + 4*c2y*d4est_util_dbl_pow_int(y,2) + 2*d4est_util_dbl_pow_int(c2y,2)*d4est_util_dbl_pow_int(y,2) - 29*x*d4est_util_dbl_pow_int(y,2) - 16*c2x*x*d4est_util_dbl_pow_int(y,2) + 37*d4est_util_dbl_pow_int(x,2)*d4est_util_dbl_pow_int(y,2) -
+                                                                                                                          2*d4est_util_dbl_pow_int(y,3) - 4*c2y*d4est_util_dbl_pow_int(y,3) + 2*d4est_util_dbl_pow_int(y,4)))/sqrt(d4est_util_dbl_pow_int(-c2x + x,2) + d4est_util_dbl_pow_int(-c2y + y,2));
 
 #else
   if (x == c2x && y == c2y && z == c2z){
     return 0.;
   }
   else{
-    return (-2*(1 - x)*x*(1 - y)*y*util_dbl_pow_int(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2),2) + 
-     9*(1 - x)*x*(1 - y)*y*(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*(1 - z)*
+    return (-2*(1 - x)*x*(1 - y)*y*d4est_util_dbl_pow_int(d4est_util_dbl_pow_int(c2x - x,2) + d4est_util_dbl_pow_int(c2y - y,2) + d4est_util_dbl_pow_int(c2z - z,2),2) + 
+     9*(1 - x)*x*(1 - y)*y*(d4est_util_dbl_pow_int(c2x - x,2) + d4est_util_dbl_pow_int(c2y - y,2) + d4est_util_dbl_pow_int(c2z - z,2))*(1 - z)*
      z + 6*(1 - x)*(-c2x + x)*(1 - y)*y*
-     (util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*(1 - z)*z - 
-     6*x*(-c2x + x)*(1 - y)*y*(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*
+     (d4est_util_dbl_pow_int(c2x - x,2) + d4est_util_dbl_pow_int(c2y - y,2) + d4est_util_dbl_pow_int(c2z - z,2))*(1 - z)*z - 
+     6*x*(-c2x + x)*(1 - y)*y*(d4est_util_dbl_pow_int(c2x - x,2) + d4est_util_dbl_pow_int(c2y - y,2) + d4est_util_dbl_pow_int(c2z - z,2))*
      (1 - z)*z + 6*(1 - x)*x*(1 - y)*(-c2y + y)*
-     (util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*(1 - z)*z - 
-     6*(1 - x)*x*y*(-c2y + y)*(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*
-     (1 - z)*z - 2*(1 - x)*x*util_dbl_pow_int(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2),
-                                              2)*(1 - z)*z - 2*(1 - y)*y*util_dbl_pow_int(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + 
-                                                                                          util_dbl_pow_int(c2z - z,2),2)*(1 - z)*z - 
-     3*util_dbl_pow_int(c2x - x,2)*(-1 + x)*x*(-1 + y)*y*(-1 + z)*z - 
-     3*(-1 + x)*x*util_dbl_pow_int(c2y - y,2)*(-1 + y)*y*(-1 + z)*z - 
-     3*(-1 + x)*x*(-1 + y)*y*util_dbl_pow_int(c2z - z,2)*(-1 + z)*z + 
-     6*(1 - x)*x*(1 - y)*y*(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*(1 - z)*
+     (d4est_util_dbl_pow_int(c2x - x,2) + d4est_util_dbl_pow_int(c2y - y,2) + d4est_util_dbl_pow_int(c2z - z,2))*(1 - z)*z - 
+     6*(1 - x)*x*y*(-c2y + y)*(d4est_util_dbl_pow_int(c2x - x,2) + d4est_util_dbl_pow_int(c2y - y,2) + d4est_util_dbl_pow_int(c2z - z,2))*
+     (1 - z)*z - 2*(1 - x)*x*d4est_util_dbl_pow_int(d4est_util_dbl_pow_int(c2x - x,2) + d4est_util_dbl_pow_int(c2y - y,2) + d4est_util_dbl_pow_int(c2z - z,2),
+                                              2)*(1 - z)*z - 2*(1 - y)*y*d4est_util_dbl_pow_int(d4est_util_dbl_pow_int(c2x - x,2) + d4est_util_dbl_pow_int(c2y - y,2) + 
+                                                                                          d4est_util_dbl_pow_int(c2z - z,2),2)*(1 - z)*z - 
+     3*d4est_util_dbl_pow_int(c2x - x,2)*(-1 + x)*x*(-1 + y)*y*(-1 + z)*z - 
+     3*(-1 + x)*x*d4est_util_dbl_pow_int(c2y - y,2)*(-1 + y)*y*(-1 + z)*z - 
+     3*(-1 + x)*x*(-1 + y)*y*d4est_util_dbl_pow_int(c2z - z,2)*(-1 + z)*z + 
+     6*(1 - x)*x*(1 - y)*y*(d4est_util_dbl_pow_int(c2x - x,2) + d4est_util_dbl_pow_int(c2y - y,2) + d4est_util_dbl_pow_int(c2z - z,2))*(1 - z)*
      (-c2z + z) - 6*(1 - x)*x*(1 - y)*y*
-     (util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2))*z*(-c2z + z))/
-      sqrt(util_dbl_pow_int(c2x - x,2) + util_dbl_pow_int(c2y - y,2) + util_dbl_pow_int(c2z - z,2));
+     (d4est_util_dbl_pow_int(c2x - x,2) + d4est_util_dbl_pow_int(c2y - y,2) + d4est_util_dbl_pow_int(c2z - z,2))*z*(-c2z + z))/
+      sqrt(d4est_util_dbl_pow_int(c2x - x,2) + d4est_util_dbl_pow_int(c2y - y,2) + d4est_util_dbl_pow_int(c2z - z,2));
   }
 #endif
 }
@@ -299,42 +299,42 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match_couple(section,"amr",name,"amr_levels")) {
+  if (d4est_util_match_couple(section,"amr",name,"amr_levels")) {
     D4EST_ASSERT(pconfig->endlevel == -1);
     pconfig->endlevel = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name, "initial_degree")) {
+  } else if (d4est_util_match_couple(section,"amr",name, "initial_degree")) {
     D4EST_ASSERT(pconfig->degree == -1);
     pconfig->degree = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"sigma")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"sigma")) {
     D4EST_ASSERT(pconfig->sigma == -1);
     pconfig->sigma = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"gamma_h")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"gamma_h")) {
     D4EST_ASSERT(pconfig->gamma_h == -1);
     pconfig->gamma_h = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"gamma_p")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"gamma_p")) {
     D4EST_ASSERT(pconfig->gamma_p == -1);
     pconfig->gamma_p = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
+  } else if (d4est_util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } 
-  else if (util_match_couple(section,"problem",name,"c2x")) {
+  else if (d4est_util_match_couple(section,"problem",name,"c2x")) {
     D4EST_ASSERT(pconfig->c2x == -1);
     pconfig->c2x = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"c2y")) {
+  else if (d4est_util_match_couple(section,"problem",name,"c2y")) {
     D4EST_ASSERT(pconfig->c2y == -1);
     pconfig->c2y = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"c2z")) {
+  else if (d4est_util_match_couple(section,"problem",name,"c2z")) {
     D4EST_ASSERT(pconfig->c2z == -1);
     pconfig->c2z = atof(value);
     pconfig->count += 1;
@@ -841,7 +841,7 @@ problem_init
         double slope;
         double intercept;
         int num_of_hpamr_levels = level + 1;
-        util_linear_regression
+        d4est_util_linear_regression
           (
            dgerr_data_for_fit,
            dof_data_for_fit,

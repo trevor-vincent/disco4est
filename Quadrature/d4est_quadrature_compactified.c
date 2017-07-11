@@ -8,7 +8,7 @@
 #include <d4est_mortars.h>
 #include <d4est_linalg.h>
 #include <arbquad.h>
-#include <util.h>
+#include <d4est_util.h>
 
 /* store only weights and abscissas and compute rst on the spot */
 
@@ -789,7 +789,7 @@ d4est_quadrature_compactified_compute_mortar_strides_and_sizes_interface
       
   for (int i = 0; i < faces_m; i++){
     for (int j = 0; j < faces_p; j++){
-      int deg_mortar_quad = util_max_int(e_m[i]->deg_quad,e_p_oriented[j]->deg_quad);
+      int deg_mortar_quad = d4est_util_max_int(e_m[i]->deg_quad,e_p_oriented[j]->deg_quad);
       storage->mortar_strides_1d[mortar_side_id_m*(P4EST_HALF) + i + j] = storage->total_mortar_quad_nodes_1d;
       storage->mortar_strides_2d[mortar_side_id_m*(P4EST_HALF) + i + j] = storage->total_mortar_quad_nodes_2d;
       storage->total_mortar_quad_nodes_2d += d4est_lgl_get_nodes(2, deg_mortar_quad);
@@ -828,7 +828,7 @@ d4est_quadrature_compactified_store_data_for_interface
     
   for (int i = 0; i < faces_m; i++){
     for (int j = 0; j < faces_p; j++){
-      deg_mortar_quad[i+j] = util_max_int(e_m[i]->deg_quad,e_p_oriented[j]->deg_quad);
+      deg_mortar_quad[i+j] = d4est_util_max_int(e_m[i]->deg_quad,e_p_oriented[j]->deg_quad);
     }
   }
 

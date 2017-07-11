@@ -2,7 +2,7 @@
 #define D4EST_POISSON_H 
 
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_element_data.h>
 #include <d4est_elliptic_data.h>
 #include <d4est_operators.h>

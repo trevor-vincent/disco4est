@@ -8,7 +8,7 @@
 #include <d4est_xyz_functions.h>
 #include <d4est_quadrature.h>
 #include <d4est_mortars.h>
-#include <util.h>
+#include <d4est_util.h>
 
 void
 d4est_poisson_apply_aij

@@ -1,5 +1,5 @@
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
 #include <d4est_element_data.h>
@@ -16,7 +16,7 @@ d4est_estimator_bi_dirichlet
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
- d4est_grid_fcn_t bndry_fcn,
+ d4est_xyz_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -37,7 +37,7 @@ d4est_estimator_bi_dirichlet
   double h, h_min;
 
   if (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
-    h_min = util_min_dbl_array(j_div_sj_quad, face_nodes_m_quad);
+    h_min = d4est_util_min_dbl_array(j_div_sj_quad, face_nodes_m_quad);
   }
   for (int i = 0; i < face_nodes_m_quad; i++){
     int is_it_min = (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN);
@@ -127,8 +127,8 @@ d4est_estimator_bi_interface
   
   double hm_min, hp_min;
   if (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
-    hp_min = util_min_dbl_array(j_div_sj_on_f_p_mortar_quad, total_nodes_mortar_quad);
-    hm_min = util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
+    hp_min = d4est_util_min_dbl_array(j_div_sj_on_f_p_mortar_quad, total_nodes_mortar_quad);
+    hm_min = d4est_util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
   }
   double* Je1_prefactor = P4EST_ALLOC(double, total_nodes_mortar_quad);
   double* Je1 = P4EST_ALLOC(double, total_nodes_mortar_quad);
@@ -271,7 +271,7 @@ d4est_estimator_bi_compute
  d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  d4est_estimator_bi_penalty_data_t bi_penalty_data,
- d4est_grid_fcn_t u_bndry_fcn,
+ d4est_xyz_fcn_t u_bndry_fcn,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,

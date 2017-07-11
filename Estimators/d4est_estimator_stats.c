@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include <d4est_estimator_stats.h>
 #include <d4est_element_data.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <float.h>
@@ -148,7 +148,7 @@ d4est_estimator_stats_compute_stats
  double total_eta2
 )
 {
-  util_sort_double(eta2, sample_size);
+  d4est_util_sort_double(eta2, sample_size);
 
   if (sample_size > 0){
 

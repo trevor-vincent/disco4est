@@ -5,11 +5,11 @@ double
 zero_fcn
 (
  double x,
- double y
+ double y,
 #if (P4EST_DIM)==3
- ,  
- double z
+ double z,
 #endif
+ void* user
 )
 {
   return 0.;
@@ -19,11 +19,11 @@ double
 sinpix_fcn
 (
  double x,
- double y
+ double y,
 #if (P4EST_DIM)==3
- ,  
- double z
+ double z,
 #endif
+ void* user
 )
 {
   double pi = 3.1415926535897932384626433832795;

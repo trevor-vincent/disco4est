@@ -1,6 +1,6 @@
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
@@ -22,7 +22,7 @@
 #include <d4est_vtk.h>
 #include <ini.h>
 #include "time.h"
-#include "util.h"
+#include "d4est_util.h"
 
 double global_Rinf;
 double global_sigma;
@@ -119,32 +119,32 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match_couple(section,"amr",name,"num_unifrefs")) {
+  if (d4est_util_match_couple(section,"amr",name,"num_unifrefs")) {
     D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"amr",name,"num_randrefs")) {
+  else if (d4est_util_match_couple(section,"amr",name,"num_randrefs")) {
     D4EST_ASSERT(pconfig->num_randrefs == -1);
     pconfig->num_randrefs = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"flux",name,"use_ip_flux")) {
+  else if (d4est_util_match_couple(section,"flux",name,"use_ip_flux")) {
     D4EST_ASSERT(pconfig->use_ip_flux == -1);
     pconfig->use_ip_flux = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
+  else if (d4est_util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
   } 
-  else if (util_match_couple(section,"problem",name,"deg")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg")) {
     D4EST_ASSERT(pconfig->deg == -1);
     pconfig->deg = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad")) {
     D4EST_ASSERT(pconfig->deg_quad == -1);
     pconfig->deg_quad = atoi(value);
     pconfig->count += 1;
@@ -425,7 +425,7 @@ problem_init
   /* d4est_mesh_geometry_storage_t* geometric_factors = geometric_factors_init(p4est); */
 
 
-  /* d4est_grid_fcn_t boundary_flux_fcn = zero_fcn; */
+  /* d4est_xyz_fcn_t boundary_flux_fcn = zero_fcn; */
   
   d4est_elliptic_data_t prob_vecs;
   prob_vecs.rhs = rhs;
@@ -595,7 +595,7 @@ problem_init
      
 
   /* for (int i = 0; i < local_nodes; i++){ */
-  /*   u[i] = util_uniform_rand(14234232, 0., 1.); */
+  /*   u[i] = d4est_util_uniform_rand(14234232, 0., 1.); */
   /* } */
   
   d4est_linalg_fill_vec(prob_vecs.u, 0., local_nodes);

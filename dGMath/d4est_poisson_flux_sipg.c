@@ -1,5 +1,5 @@
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <ini.h>
 #include <d4est_operators.h>
 #include <d4est_element_data.h>
@@ -16,7 +16,7 @@ d4est_poisson_flux_sipg_dirichlet
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
- d4est_grid_fcn_t bndry_fcn,
+ d4est_xyz_fcn_t bndry_fcn,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -63,7 +63,7 @@ d4est_poisson_flux_sipg_dirichlet
   double* sigma = P4EST_ALLOC(double, face_nodes_m_quad);
   double h, h_min;
   if (ip_flux_params->sipg_flux_h ==H_EQ_J_DIV_SJ_MIN){
-    h_min = util_min_dbl_array(j_div_sj_quad, face_nodes_m_quad);
+    h_min = d4est_util_min_dbl_array(j_div_sj_quad, face_nodes_m_quad);
   }
   for (int i = 0; i < face_nodes_m_quad; i++){
     int is_it_min = (ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN);
@@ -293,8 +293,8 @@ d4est_poisson_flux_sipg_interface
 
   double hm_min, hp_min;
   if (ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
-    hp_min = util_min_dbl_array(j_div_sj_on_f_p_mortar_quad, total_nodes_mortar_quad);
-    hm_min = util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
+    hp_min = d4est_util_min_dbl_array(j_div_sj_on_f_p_mortar_quad, total_nodes_mortar_quad);
+    hm_min = d4est_util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
   }
   
   int stride = 0;
@@ -582,10 +582,10 @@ d4est_poisson_flux_sipg_get_penalty_fcn_from_string
  const char* string
 )
 {
-  if (util_match(string,"maxp_sqr_over_minh")){
+  if (d4est_util_match(string,"maxp_sqr_over_minh")){
     return d4est_poisson_flux_sipg_penalty_maxp_sqr_over_minh;
   }
-  else if (util_match(string,"meanp_sqr_over_meanh")){
+  else if (d4est_util_match(string,"meanp_sqr_over_meanh")){
     return d4est_poisson_flux_sipg_penalty_meanp_sqr_over_meanh;
   }
   else {
@@ -605,20 +605,20 @@ int d4est_poisson_flux_sipg_params_input_handler
 {
   d4est_poisson_flux_sipg_params_t* pconfig = (d4est_poisson_flux_sipg_params_t*)user;
   
-  if (util_match_couple(section,"flux",name,"sipg_penalty_prefactor")) {
+  if (d4est_util_match_couple(section,"flux",name,"sipg_penalty_prefactor")) {
     D4EST_ASSERT(pconfig->sipg_penalty_prefactor == -1);
     pconfig->sipg_penalty_prefactor = atof(value);
   }
-  else if (util_match_couple(section,"flux",name,"sipg_penalty_fcn")) {
+  else if (d4est_util_match_couple(section,"flux",name,"sipg_penalty_fcn")) {
     D4EST_ASSERT(pconfig->sipg_penalty_fcn == NULL);
     pconfig->sipg_penalty_fcn = d4est_poisson_flux_sipg_get_penalty_fcn_from_string(value);
   }
-  else if (util_match_couple(section,"flux",name,"sipg_flux_h")) {
+  else if (d4est_util_match_couple(section,"flux",name,"sipg_flux_h")) {
     D4EST_ASSERT(pconfig->sipg_flux_h == H_EQ_NOTSET);
-    if(util_match(value, "H_EQ_J_DIV_SJ")){
+    if(d4est_util_match(value, "H_EQ_J_DIV_SJ")){
       pconfig->sipg_flux_h = H_EQ_J_DIV_SJ;
     }
-    else if(util_match(value, "H_EQ_J_DIV_SJ_MIN")){
+    else if(d4est_util_match(value, "H_EQ_J_DIV_SJ_MIN")){
       pconfig->sipg_flux_h = H_EQ_J_DIV_SJ_MIN;
     }
     else {
@@ -674,7 +674,7 @@ void
 d4est_poisson_flux_sipg_params_new
 (
  p4est_t* p4est,
- d4est_grid_fcn_t boundary_condition,
+ d4est_xyz_fcn_t boundary_condition,
  const char* print_prefix,
  const char* input_file,
  d4est_poisson_flux_data_t* d4est_poisson_flux_data

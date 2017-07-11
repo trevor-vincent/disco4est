@@ -1,5 +1,5 @@
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_geometry.h>
@@ -624,7 +624,7 @@ void d4est_mortar_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *inf
           e_p[0] =
               (d4est_element_data_t *)side[s_p]->is.full.quad->p.user_data;
 
-        int sum_ghost_array = util_sum_array_int(e_m_is_ghost, (P4EST_HALF));
+        int sum_ghost_array = d4est_util_sum_array_int(e_m_is_ghost, (P4EST_HALF));
 
         if (sum_ghost_array != 0 && sum_ghost_array != 4) {
           int dd;

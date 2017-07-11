@@ -1,7 +1,7 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_2pac.h>
 #include <ini.h>
-#include <util.h>
+#include <d4est_util.h>
 
 #undef P4_TO_P8
 
@@ -23,12 +23,12 @@ int d4est_geometry_2pac_input_handler
 )
 {
   d4est_geometry_2pac_input_t* pconfig = (d4est_geometry_2pac_input_t*)user;
-  if (util_match_couple(section,"geometry",name,"R0")) {
+  if (d4est_util_match_couple(section,"geometry",name,"R0")) {
     D4EST_ASSERT(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"geometry",name,"R1")) {
+  else if (d4est_util_match_couple(section,"geometry",name,"R1")) {
     D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
     pconfig->count += 1;

@@ -3,7 +3,7 @@
 
 #include <ini.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 
 typedef struct {
 
@@ -24,13 +24,13 @@ int pXest_input_handler
 )
 {
   pXest_input_t* pconfig = (pXest_input_t*)user;
-  if (util_match_couple(section,"p4est",name,"min_quadrants")) {
+  if (d4est_util_match_couple(section,"p4est",name,"min_quadrants")) {
     pconfig->min_quadrants = atoi(value);
-  } else if (util_match_couple(section,"p4est",name, "min_level")) {
+  } else if (d4est_util_match_couple(section,"p4est",name, "min_level")) {
     pconfig->min_level = atoi(value);
-  } else if (util_match_couple(section,"p4est",name,"fill_uniform")) {
+  } else if (d4est_util_match_couple(section,"p4est",name,"fill_uniform")) {
     pconfig->fill_uniform = atoi(value);
-  } else if (util_match_couple(section,"p4est",name,"print_elements_per_proc")) {
+  } else if (d4est_util_match_couple(section,"p4est",name,"print_elements_per_proc")) {
     pconfig->print_elements_per_proc = atoi(value);
   } else {
     return 0;  /* unknown section/name, error */
@@ -68,7 +68,7 @@ pXest_input_parse(const char* input_file){
   if(
      proc_size != 1
      &&
-     util_int_pow_int((P4EST_CHILDREN), pXest_input.min_level) < proc_size
+     d4est_util_int_pow_int((P4EST_CHILDREN), pXest_input.min_level) < proc_size
      &&
      pXest_input.min_quadrants < proc_size
   ){

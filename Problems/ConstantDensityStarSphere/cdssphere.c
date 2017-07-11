@@ -1,6 +1,6 @@
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
@@ -28,7 +28,7 @@
 #include <jacobian_tester.h>
 #include "cds_fcns.h"
 #include "time.h"
-#include "util.h"
+#include "d4est_util.h"
 
 /* soon to be in the input files */
 //static const double pi = 3.1415926535897932384626433832795;
@@ -267,7 +267,7 @@ problem_save_to_vtk
           d4est_element_data_t* ed = quad->p.user_data;
           deg_array[stride] = ed->deg;
           eta_array[stride] = ed->local_estimator;
-          vtk_nodes = util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
+          vtk_nodes = d4est_util_int_pow_int(deg_array[stride], (P4EST_DIM))*(P4EST_CHILDREN);
           stride++;
         }
       }

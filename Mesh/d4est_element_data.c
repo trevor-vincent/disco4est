@@ -1,12 +1,12 @@
 #include <pXest.h>
 #include <d4est_element_data.h>
 #include <d4est_xyz_functions.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <sc_reduce.h>
 
 /* typedef struct { */
-/*   d4est_grid_fcn_t init_fcn; */
+/*   d4est_xyz_fcn_t init_fcn; */
 /*   double* vec; */
 /*   int* stride; */
 /* } init_node_vec_user_data_t; */
@@ -27,7 +27,7 @@
 /*   p4est_quadrant_t* q = info->quad; */
 /*   d4est_element_data_t* elem_data = (d4est_element_data_t*) q->p.user_data; */
 /*   init_node_vec_user_data_t* inv_user_data = (init_node_vec_user_data_t*) user_data; */
-/*   d4est_grid_fcn_t init_fcn = inv_user_data->init_fcn; */
+/*   d4est_xyz_fcn_t init_fcn = inv_user_data->init_fcn; */
 /*   double* vec = inv_user_data->vec; */
 /*   /\* d4est_operators_t* d4est_ops = (d4est_operators_t*)info->p4est->user_pointer; *\/ */
   

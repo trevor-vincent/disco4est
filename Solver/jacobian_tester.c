@@ -1,7 +1,7 @@
 #include <pXest.h>
 #include <jacobian_tester.h>
 #include "../LinearAlgebra/d4est_linalg.h"
-#include "../Utilities/util.h"
+#include "../Utilities/d4est_util.h"
 
 void
 jacobian_tester

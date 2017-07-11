@@ -1,4 +1,4 @@
-#include <util.h>
+#include <d4est_util.h>
 #include <pXest.h>
 #include <d4est_linalg.h>
 #include <d4est_elliptic_data.h>
@@ -17,25 +17,25 @@ int krylov_petsc_input_handler
 )
 {
   krylov_petsc_params_t* pconfig = (krylov_petsc_params_t*)user;
-  if (util_match_couple(section,pconfig->input_section,name,"ksp_atol")) {
+  if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_atol")) {
     D4EST_ASSERT(pconfig->ksp_atol[0] == '*');
     snprintf (pconfig->ksp_atol, sizeof(pconfig->ksp_atol), "%s", value);
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_atol",value); */
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"ksp_rtol")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_rtol")) {
     D4EST_ASSERT(pconfig->ksp_rtol[0] == '*');
     snprintf (pconfig->ksp_rtol, sizeof(pconfig->ksp_rtol), "%s", value);
 
     /* pconfig->ksp_rtol = atof(value); */
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_rtol",value); */
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"ksp_max_it")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_max_it")) {
     D4EST_ASSERT(pconfig->ksp_max_it[0] == '*');
     snprintf (pconfig->ksp_max_it, sizeof(pconfig->ksp_max_it), "%s", value);
     D4EST_ASSERT(atoi(value) > -1);
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_max_it",value); */
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"ksp_view")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_view")) {
     D4EST_ASSERT(pconfig->ksp_view == -1);
     pconfig->ksp_view = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
@@ -43,7 +43,7 @@ int krylov_petsc_input_handler
       /* PetscOptionsSetValue(pconfig->petsc_options,"-s_view",""); */
     /* } */
   }  
-  else if (util_match_couple(section,pconfig->input_section,name,"ksp_monitor")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_monitor")) {
     D4EST_ASSERT(pconfig->ksp_monitor == -1);
     pconfig->ksp_monitor = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
@@ -51,7 +51,7 @@ int krylov_petsc_input_handler
       /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_monitor",""); */
     /* } */
   } 
-  else if (util_match_couple(section,pconfig->input_section,name,"ksp_converged_reason")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_converged_reason")) {
     D4EST_ASSERT(pconfig->ksp_converged_reason == -1);
     pconfig->ksp_converged_reason = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
@@ -59,11 +59,11 @@ int krylov_petsc_input_handler
       /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_converged_reason",""); */
     /* } */
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"ksp_monitor_singular_value")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_monitor_singular_value")) {
     pconfig->ksp_monitor_singular_value = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
   }      
-  else if (util_match_couple(section,pconfig->input_section,name,"ksp_initial_guess_nonzero")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_initial_guess_nonzero")) {
     D4EST_ASSERT(pconfig->ksp_initial_guess_nonzero == -1);
     pconfig->ksp_initial_guess_nonzero = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
@@ -71,22 +71,22 @@ int krylov_petsc_input_handler
       /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_initial_guess_nonzero",""); */
     /* } */
   }  
-  else if (util_match_couple(section,pconfig->input_section,name,"ksp_type")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_type")) {
     D4EST_ASSERT(pconfig->ksp_type[0] == '*');
     snprintf (pconfig->ksp_type, sizeof(pconfig->ksp_type), "%s", value);
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_type",value); */
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"ksp_chebyshev_esteig_steps")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_chebyshev_esteig_steps")) {
     D4EST_ASSERT(pconfig->ksp_chebyshev_esteig_steps[0] == '*');
     snprintf (pconfig->ksp_chebyshev_esteig_steps, sizeof(pconfig->ksp_chebyshev_esteig_steps), "%s", value);
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_chebyshev_esteig_steps",value); */
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"ksp_chebyshev_esteig")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_chebyshev_esteig")) {
     D4EST_ASSERT(pconfig->ksp_chebyshev_esteig[0] == '*');
     snprintf (pconfig->ksp_chebyshev_esteig, sizeof(pconfig->ksp_chebyshev_esteig), "%s", value);
     /* PetscOptionsSetValue(pconfig->petsc_options,"-ksp_chebyshev_esteig",value); */
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"ksp_chebyshev_esteig_random")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_chebyshev_esteig_random")) {
     D4EST_ASSERT(pconfig->ksp_chebyshev_esteig_random == -1);
     pconfig->ksp_chebyshev_esteig_random = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
@@ -141,7 +141,7 @@ krylov_petsc_set_options_database_from_params
   PetscOptionsClearValue(NULL,"-ksp_max_it");
   PetscOptionsSetValue(NULL,"-ksp_max_it", input->ksp_max_it);
 
-  if(util_match(input->ksp_type,"chebyshev")){
+  if(d4est_util_match(input->ksp_type,"chebyshev")){
     PetscOptionsClearValue(NULL,"-ksp_chebyshev_esteig_steps");
     PetscOptionsSetValue(NULL,"-ksp_chebyshev_esteig_steps",input->ksp_chebyshev_esteig_steps);
     PetscOptionsClearValue(NULL,"-ksp_chebyshev_esteig");
@@ -191,7 +191,7 @@ krylov_petsc_input
   D4EST_CHECK_INPUT(input_section, input->ksp_rtol[0], '*');
   D4EST_CHECK_INPUT(input_section, input->ksp_max_it[0], '*');
 
-  if(util_match(input->ksp_type,"chebyshev")){
+  if(d4est_util_match(input->ksp_type,"chebyshev")){
     D4EST_CHECK_INPUT(input_section, input->ksp_chebyshev_esteig_steps[0], '*');
     D4EST_CHECK_INPUT(input_section, input->ksp_chebyshev_esteig[0], '*');
     D4EST_CHECK_INPUT(input_section, input->ksp_chebyshev_esteig_random, -1);
@@ -206,7 +206,7 @@ krylov_petsc_input
     printf("%s: ksp_maxit = %s\n",printf_prefix, input->ksp_max_it);
     printf("%s: ksp_converged_reason = %d\n",printf_prefix, input->ksp_converged_reason);
     printf("%s: ksp_initial_guess_nonzero = %d\n",printf_prefix, input->ksp_initial_guess_nonzero);
-    if(util_match(input->ksp_type,"chebyshev")){
+    if(d4est_util_match(input->ksp_type,"chebyshev")){
       printf("%s: ksp_chebyshev_esteig_steps = %s\n",printf_prefix, input->ksp_chebyshev_esteig_steps);
       printf("%s: ksp_chebyshev_esteig = %s\n",printf_prefix, input->ksp_chebyshev_esteig);
       printf("%s: ksp_chebyshev_esteig_random = %d\n",printf_prefix, input->ksp_chebyshev_esteig_random);

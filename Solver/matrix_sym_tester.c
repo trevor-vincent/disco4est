@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include "../Solver/matrix_sym_tester.h"
 #include "../LinearAlgebra/d4est_linalg.h"
-#include "../Utilities/util.h"
+#include "../Utilities/d4est_util.h"
 #include <sc_reduce.h>
 #include <sc_allgather.h>
 
@@ -52,7 +52,7 @@
 /*   } */
 
 /*   d4est_linalg_mat_transpose(a_mat, a_mat_trans, local_nodes); */
-/*   int compare = util_compare_vecs(a_mat, a_mat_trans, local_nodes, .000001); */
+/*   int compare = d4est_util_compare_vecs(a_mat, a_mat_trans, local_nodes, .000001); */
 
 /*   if (compare == 1) */
 /*     printf("A_{DG} is symmetric\n"); */
@@ -60,11 +60,11 @@
 /*     printf("A_{DG} is NOT symmetric\n"); */
 
 /*   if (print == 1) */
-/*     util_print_matrix(a_mat, local_nodes, local_nodes, "A_{DG} = ",0); */
+/*     d4est_util_print_matrix(a_mat, local_nodes, local_nodes, "A_{DG} = ",0); */
 
 /*   if (print == 2){ */
 /*     printf("Printing vectors of %d length\n", local_nodes*local_nodes); */
-/*     util_print_matrices(a_mat, a_mat_trans, local_nodes*local_nodes, 1, "A, A^T = "); */
+/*     d4est_util_print_matrices(a_mat, a_mat_trans, local_nodes*local_nodes, 1, "A, A^T = "); */
 /*   } */
     
 /*   vecs->u = tmp; */
@@ -150,7 +150,7 @@
 /*     double* Au = vecs->Au; */
 /*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops); */
 
-/*     /\* util_print_matrices(vecs->u, vecs->Au, vecs->local_nodes, 1, "u, Au = "); *\/ */
+/*     /\* d4est_util_print_matrices(vecs->u, vecs->Au, vecs->local_nodes, 1, "u, Au = "); *\/ */
 
     
 /*     vTAu_local = d4est_linalg_vec_dot(v, Au, vecs->local_nodes); */
@@ -281,7 +281,7 @@
     
     
 /*     vecs->u = u; */
-/*     /\* util_print_matrix(vecs->u, vecs->local_nodes, 1, "u = ", 0); *\/ */
+/*     /\* d4est_util_print_matrix(vecs->u, vecs->local_nodes, 1, "u = ", 0); *\/ */
 
 /*     /\* printf(" u = {\n"); *\/ */
 /*     /\* for (i = 0; i < vecs->local_nodes; i++){ *\/ */
@@ -294,7 +294,7 @@
 /*     double* Au = vecs->Au; */
 /*     fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops); */
 
-/*     /\* util_print_matrices(vecs->u, vecs->Au, vecs->local_nodes, 1, "u, Au = "); *\/ */
+/*     /\* d4est_util_print_matrices(vecs->u, vecs->Au, vecs->local_nodes, 1, "u, Au = "); *\/ */
 
 /*     vTAu_local = d4est_linalg_vec_dot(v, Au, vecs->local_nodes); */
 
@@ -424,7 +424,7 @@ serial_matrix_sym_tester
     /* to make parallel send stride as well */
     d4est_linalg_set_column(a_mat, vecs->Au, i, vecs->local_nodes, vecs->local_nodes);
 
-    /* util_print_matrix(vecs->Au, vecs->local_nodes, 1, "Au = ", 0); */
+    /* d4est_util_print_matrix(vecs->Au, vecs->local_nodes, 1, "Au = ", 0); */
     vecs->u[i] = 0.;
   }
 
@@ -439,12 +439,12 @@ serial_matrix_sym_tester
     /*   printf("fabs(a_mat[i] - a_mat_trans[i]) = %.25f\n", fabs(a_mat[i] - a_mat_trans[i])); */
     /* } */
   /* } */
-  int compare = util_compare_vecs(a_mat, a_mat_trans, local_nodes*local_nodes, sym_eps);
+  int compare = d4est_util_compare_vecs(a_mat, a_mat_trans, local_nodes*local_nodes, sym_eps);
 
   double biggest_err = -1.;
   int biggest_id = -1;
 
-  util_find_biggest_error(a_mat, a_mat_trans, local_nodes*local_nodes, &biggest_err, &biggest_id);
+  d4est_util_find_biggest_error(a_mat, a_mat_trans, local_nodes*local_nodes, &biggest_err, &biggest_id);
   
   if (compare == 1){
     printf("A_{DG} is symmetric\n");
@@ -456,11 +456,11 @@ serial_matrix_sym_tester
     /* print = 2; */
   }
   if (print == 1)
-    util_print_matrix(a_mat, local_nodes, local_nodes, "A_{DG} = ",0);
+    d4est_util_print_matrix(a_mat, local_nodes, local_nodes, "A_{DG} = ",0);
 
   if (print == 2){
     printf("Printing vectors of %d length\n", local_nodes*local_nodes);
-    /* util_print_matrices(a_mat, a_mat_trans, local_nodes*local_nodes, 1, "A, A^T = "); */
+    /* d4est_util_print_matrices(a_mat, a_mat_trans, local_nodes*local_nodes, 1, "A, A^T = "); */
     for (int i = 0; i < local_nodes; i++){
       for (int j = 0; j < local_nodes; j++)
         printf("%d,%d A A^t: %.20f %.20f\n", i,j, a_mat[i*local_nodes + j], a_mat_trans[i*local_nodes + j]);
@@ -621,11 +621,11 @@ serial_matrix_sym_tester
 
 /*   if (p4est->mpirank == 0){ */
 /*     d4est_linalg_mat_transpose(amat_global, amat_trans_global, global_nodes); */
-/*     int compare = util_compare_vecs(amat_global, amat_trans_global, global_nodes*global_nodes, sym_eps); */
+/*     int compare = d4est_util_compare_vecs(amat_global, amat_trans_global, global_nodes*global_nodes, sym_eps); */
 
 /*     double biggest_err; */
 /*     int biggest_id; */
-/*   util_find_biggest_error(amat_global, amat_trans_global, global_nodes*global_nodes, &biggest_err, &biggest_id); */
+/*   d4est_util_find_biggest_error(amat_global, amat_trans_global, global_nodes*global_nodes, &biggest_err, &biggest_id); */
   
 /*   if (compare == 1){ */
 /*     printf("A_{DG} is symmetric\n"); */
@@ -638,11 +638,11 @@ serial_matrix_sym_tester
 /*   } */
   
 /*     if (print == 1) */
-/*       util_print_matrix(amat_global, global_nodes, global_nodes, "A_{DG} = ",0); */
+/*       d4est_util_print_matrix(amat_global, global_nodes, global_nodes, "A_{DG} = ",0); */
 
 /*     if (print == 2){ */
 /*       printf("Printing vectors of %d length\n", global_nodes*global_nodes); */
-/*       /\* util_print_matrices(a_mat, a_mat_trans, global_nodes*global_nodes, 1, "A, A^T = "); *\/ */
+/*       /\* d4est_util_print_matrices(a_mat, a_mat_trans, global_nodes*global_nodes, 1, "A, A^T = "); *\/ */
 /*       for (int i = 0; i < global_nodes*global_nodes; i++){ */
 /*         printf("A A^t [%d]: %.20f %.20f\n", i, amat_global[i], amat_trans_global[i]); */
 /*       } */

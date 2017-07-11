@@ -1,6 +1,6 @@
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <problem.h>
 #include <d4est_elliptic_data.h>
@@ -16,7 +16,7 @@
 #include <d4est_element_data.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
-#include <util.h>
+#include <d4est_util.h>
 #include "./twopuncturesfcns_nomg.h"
 #include <time.h>
 
@@ -183,15 +183,15 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match_couple(section,"problem",name,"num_of_amr_levels")) {
+  if (d4est_util_match_couple(section,"problem",name,"num_of_amr_levels")) {
     D4EST_ASSERT(pconfig->num_of_amr_levels == -1);
     pconfig->num_of_amr_levels = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg")) {
     D4EST_ASSERT(pconfig->deg == -1);
     pconfig->deg = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad")) {
     D4EST_ASSERT(pconfig->deg_quad == -1);
     pconfig->deg_quad = atoi(value);
   }

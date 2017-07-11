@@ -1,6 +1,6 @@
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <sipg_flux_vector_fcns.h>
@@ -37,7 +37,7 @@
 #include <ip_flux_params.h>
 #include <ip_flux.h>
 #include "time.h"
-#include "util.h"
+#include "d4est_util.h"
 
 /* soon to be in the input files */
 static const double pi = 3.1415926535897932384626433832795;
@@ -125,31 +125,31 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match_couple(section,"problem",name,"num_unifrefs")) {
+  if (d4est_util_match_couple(section,"problem",name,"num_unifrefs")) {
     D4EST_ASSERT(pconfig->num_unifrefs == -1);
     pconfig->num_unifrefs = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"solve_with_multigrid")) {
+  else if (d4est_util_match_couple(section,"problem",name,"solve_with_multigrid")) {
     D4EST_ASSERT(pconfig->solve_with_multigrid == -1);
     pconfig->solve_with_multigrid = atoi(value);
   }
-  else if (util_match_couple(section,"problem", name,"use_mg_as_pc_for_ksp")) {
+  else if (d4est_util_match_couple(section,"problem", name,"use_mg_as_pc_for_ksp")) {
     D4EST_ASSERT(pconfig->use_mg_as_pc_for_ksp == -1);
     pconfig->use_mg_as_pc_for_ksp = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg")) {
     D4EST_ASSERT(pconfig->deg == -1);
     pconfig->deg = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_quad")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_quad")) {
     D4EST_ASSERT(pconfig->deg_quad == -1);
     pconfig->deg_quad = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"deg_stiffness")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_stiffness")) {
     D4EST_ASSERT(pconfig->deg_stiffness == -1);
     pconfig->deg_stiffness = atoi(value);
   }
-  else if (util_match_couple(section,"problem",name,"rhs_use_lobatto")) {
+  else if (d4est_util_match_couple(section,"problem",name,"rhs_use_lobatto")) {
     D4EST_ASSERT(pconfig->rhs_use_lobatto == -1);
     pconfig->rhs_use_lobatto = atoi(value);
   }  

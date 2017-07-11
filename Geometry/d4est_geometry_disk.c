@@ -1,5 +1,5 @@
 #include <ini.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <pXest.h>
 #include <d4est_geometry.h>
 
@@ -27,19 +27,19 @@ int d4est_geometry_disk_input_handler
 {
   d4est_geometry_disk_attr_t* pconfig = (d4est_geometry_disk_attr_t*)user;
   
-  if (util_match_couple(section,pconfig->input_section,name,"R0")) {
+  if (d4est_util_match_couple(section,pconfig->input_section,name,"R0")) {
     D4EST_ASSERT(pconfig->R0 == -1);
     pconfig->R0 = atof(value);
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"R1")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"R1")) {
     D4EST_ASSERT(pconfig->R1 == -1);
     pconfig->R1 = atof(value);
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"R2")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"R2")) {
     D4EST_ASSERT(pconfig->R2 == -1);
     pconfig->R2 = atof(value);
   }
-  else if (util_match_couple(section,pconfig->input_section,name,"compactify_outer_wedge")) {
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"compactify_outer_wedge")) {
     D4EST_ASSERT(pconfig->compactify_outer_wedge == -1);
     pconfig->compactify_outer_wedge = atoi(value);
   }

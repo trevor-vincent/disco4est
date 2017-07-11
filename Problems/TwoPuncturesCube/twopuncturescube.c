@@ -7,7 +7,7 @@
 
 #include <sc_reduce.h>
 #include <pXest.h>
-#include <util.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <element_data.h>
 #include <sipg_flux_vector_fcns.h>
@@ -797,59 +797,59 @@ int problem_input_handler
 )
 {
   problem_input_t* pconfig = (problem_input_t*)user;
-  if (util_match_couple(section,"amr",name,"amr_levels")) {
+  if (d4est_util_match_couple(section,"amr",name,"amr_levels")) {
     D4EST_ASSERT(pconfig->endlevel == -1);
     pconfig->endlevel = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name, "initial_degree")) {
+  } else if (d4est_util_match_couple(section,"amr",name, "initial_degree")) {
     D4EST_ASSERT(pconfig->degree == -1);
     pconfig->degree = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"percentile")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"percentile")) {
     D4EST_ASSERT(pconfig->percentile == -1);
     pconfig->percentile = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"gamma_h")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"gamma_h")) {
     D4EST_ASSERT(pconfig->gamma_h == -1);
     pconfig->gamma_h = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"gamma_p")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"gamma_p")) {
     D4EST_ASSERT(pconfig->gamma_p == -1);
     pconfig->gamma_p = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"amr",name,"degmax")) {
+  } else if (d4est_util_match_couple(section,"amr",name,"degmax")) {
     D4EST_ASSERT(pconfig->degmax == -1);
     pconfig->degmax = atoi(value);
     pconfig->count += 1;
-  }else if (util_match_couple(section,"flux",name,"ip_flux_penalty")) {
+  }else if (d4est_util_match_couple(section,"flux",name,"ip_flux_penalty")) {
     D4EST_ASSERT(pconfig->ip_flux_penalty == -1);
     pconfig->ip_flux_penalty = atof(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"hrefine_til_inview")) {
+  } else if (d4est_util_match_couple(section,"problem",name,"hrefine_til_inview")) {
     D4EST_ASSERT(pconfig->hrefine_til_inview == -1);
     pconfig->hrefine_til_inview = atoi(value);
     pconfig->count += 1;
-  } else if (util_match_couple(section,"problem",name,"domain_size")) {
+  } else if (d4est_util_match_couple(section,"problem",name,"domain_size")) {
     D4EST_ASSERT(pconfig->domain_size == -1);
     pconfig->domain_size = atof(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"use_gauss_quad")) {
+  else if (d4est_util_match_couple(section,"problem",name,"use_gauss_quad")) {
     D4EST_ASSERT(pconfig->use_gauss_quad == -1);
     pconfig->use_gauss_quad = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"problem",name,"deg_offset_for_gauss_quad")) {
+  else if (d4est_util_match_couple(section,"problem",name,"deg_offset_for_gauss_quad")) {
     D4EST_ASSERT(pconfig->deg_offset_for_gauss_quad == -1);
     pconfig->deg_offset_for_gauss_quad = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"amr",name,"amr_inflation_size")) {
+  else if (d4est_util_match_couple(section,"amr",name,"amr_inflation_size")) {
     D4EST_ASSERT(pconfig->amr_inflation_size == -1);
     pconfig->amr_inflation_size = atoi(value);
     pconfig->count += 1;
   }
-  else if (util_match_couple(section,"solver",name,"krylov_type")) {
+  else if (d4est_util_match_couple(section,"solver",name,"krylov_type")) {
 
     if (strcmp("cg", value) == 0){
       pconfig->krylov_type = KSPCG;
@@ -1279,7 +1279,7 @@ problem_init
 
     if (world_rank == 0){
       begin = clock();
-      /* util_print_matrix(u, local_nodes, 1, "u = ", 0); */
+      /* d4est_util_print_matrix(u, local_nodes, 1, "u = ", 0); */
     }
 
     flt = p4est->first_local_tree;
@@ -1371,7 +1371,7 @@ problem_init
     /* params.atol = 1e-18; */
     /* params.rtol = 1e-4; */
     /* params.max_iter = 3 + level; */
-    /* /\* params.max_iter_linear = util_int_pow_int(10, level+1); *\/ */
+    /* /\* params.max_iter_linear = d4est_util_int_pow_int(10, level+1); *\/ */
     /* params.eta_max = .01; */
     /* params.mg_data = &mg_data; */
     /* params.mpi_rank = world_rank; */
@@ -1393,7 +1393,7 @@ problem_init
     /* params.atol = 1e-18; */
     /* params.rtol = newton_rtol; */
     /* params.max_iter = 3 + level; */
-    /* params.max_iter_linear = util_int_pow_int(10, level+1); */
+    /* params.max_iter_linear = d4est_util_int_pow_int(10, level+1); */
     /* params.eta_max = newton_eta_max; */
     /* /\* params.gamma = .9; *\/ */
     /* params.mpi_rank = world_rank; */
@@ -1561,7 +1561,7 @@ problem_init
         double slope;
         double intercept;
         int num_of_hpamr_levels = level + 1;
-        util_linear_regression
+        d4est_util_linear_regression
           (
            dgerr_data_for_fit,
            dof_data_for_fit,

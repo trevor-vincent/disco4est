@@ -10,24 +10,24 @@
  * where x,y,z is a 
  * grid point
  * 
- * @param d4est_grid_fcn_t 
+ * @param d4est_xyz_fcn_t 
  * 
  * @return 
  */
 typedef double
-(*d4est_grid_fcn_t)
+(*d4est_xyz_fcn_t)
 (
  double,
- double
+ double,
 #if (P4EST_DIM)==3
- ,  
- double
-#endif // (P4EST_DIM)==3
+ double,
+#endif 
+ void* user
 );
 
 
 typedef double
-(*grid_fcn_ext_t)
+(*d4est_xyz_fcn_ext_t)
 (
  double, //x
  double, //y
@@ -42,11 +42,11 @@ typedef double
 double zero_fcn
 (
  double x,
- double y
+ double y,
 #if (P4EST_DIM)==3
- ,  
- double z
-#endif // (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
 );
 
 double identity_fcn
@@ -64,11 +64,11 @@ double
 sinpix_fcn
 (
  double x,
- double y
+ double y,
 #if (P4EST_DIM)==3
- ,  
- double z
+ double z,
 #endif
+ void* user
 );
 
 #endif
