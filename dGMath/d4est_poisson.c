@@ -16,7 +16,7 @@ d4est_poisson_apply_aij
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_poisson_flux_data_t* flux_fcn_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,

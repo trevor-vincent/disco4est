@@ -30,7 +30,7 @@ void
 multigrid_smoother_cheby_d4est_iterate
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  double* r,
  int iter,

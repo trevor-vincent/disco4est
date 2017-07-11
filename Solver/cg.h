@@ -21,7 +21,7 @@ void
 cg_nr_solve
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  d4est_operators_t* d4est_ops,
  p4est_ghost_t* ghost,
@@ -38,7 +38,7 @@ void
 cg_solve
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  d4est_operators_t* d4est_ops,
  p4est_ghost_t* ghost,
@@ -49,7 +49,7 @@ cg_solve
 void curved_cg_solve
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,

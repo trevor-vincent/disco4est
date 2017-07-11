@@ -157,7 +157,7 @@ build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -175,7 +175,7 @@ static
 void problem_build_rhs
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_elliptic_eqns_t* prob_fcns,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
@@ -392,7 +392,7 @@ problem_init
 
   /* d4est_grid_fcn_t boundary_flux_fcn = zero_fcn; */
   
-  d4est_elliptic_problem_data_t prob_vecs;
+  d4est_elliptic_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;

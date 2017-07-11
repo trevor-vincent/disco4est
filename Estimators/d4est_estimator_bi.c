@@ -268,7 +268,7 @@ void
 d4est_estimator_bi_compute
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  d4est_estimator_bi_penalty_data_t bi_penalty_data,
  d4est_grid_fcn_t u_bndry_fcn,

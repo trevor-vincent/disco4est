@@ -98,7 +98,7 @@ void
 (*krylov_solver_fcn_t)
 (
  p4est_t*,
- d4est_elliptic_problem_data_t*,
+ d4est_elliptic_data_t*,
  d4est_elliptic_eqns_t*,
  double*,
  int
@@ -124,7 +124,7 @@ int
 newton_d4est_solve
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  p4est_ghost_t** ghost,
  void** ghost_data, 
@@ -146,8 +146,8 @@ newton_d4est_solve
   int ierr = 0;
   int local_nodes = vecs->local_nodes;
   int n = local_nodes;
-  d4est_elliptic_problem_data_t vecs_for_linsolve;
-  d4est_elliptic_problem_data_t vecs_for_res_build;
+  d4est_elliptic_data_t vecs_for_linsolve;
+  d4est_elliptic_data_t vecs_for_res_build;
 
 
   double* xt = P4EST_ALLOC(double, local_nodes);
@@ -158,8 +158,8 @@ newton_d4est_solve
   
   /* these don't change */
   double* x = vecs->u;
-  problem_data_copy_ptrs(vecs, &vecs_for_linsolve);
-  problem_data_copy_ptrs(vecs, &vecs_for_res_build);
+  d4est_elliptic_data_copy_ptrs(vecs, &vecs_for_linsolve);
+  d4est_elliptic_data_copy_ptrs(vecs, &vecs_for_res_build);
   
   /******** external parameters ********/
   newton_d4est_params_t nr_params = newton_d4est_input(p4est,input_file);

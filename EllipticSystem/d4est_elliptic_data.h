@@ -1,6 +1,5 @@
-#ifndef PROBLEM_DATA_H
-#define PROBLEM_DATA_H 
-
+#ifndef D4EST_ELLIPTIC_DATA_H
+#define D4EST_ELLIPTIC_DATA_H 
 
 typedef struct {
 
@@ -29,13 +28,13 @@ typedef struct {
   /* convenience pointer for the user */
   void* user;
   
-} d4est_elliptic_problem_data_t;
+} d4est_elliptic_data_t;
 
 void
-problem_data_copy_ptrs
+d4est_elliptic_data_copy_ptrs
 (
- d4est_elliptic_problem_data_t* pd1,
- d4est_elliptic_problem_data_t* pd2
+ d4est_elliptic_data_t* pd1,
+ d4est_elliptic_data_t* pd2
 );
 
 #endif

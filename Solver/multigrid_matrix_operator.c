@@ -52,7 +52,7 @@ multigrid_matrix_operator_update_callback
 (
  p4est_t* p4est,
  int level,
- d4est_elliptic_problem_data_t* vecs
+ d4est_elliptic_data_t* vecs
 )
 {
   multigrid_data_t* mg_data = p4est->user_pointer;

@@ -284,8 +284,8 @@ void d4est_quadrature_apply_stiffness_matrix
   int nodes_lobatto = deg_lobatto + 1;
   int nodes_quad = deg_quad + 1;
 
-    int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad);
-    int volume_nodes_lobatto = d4est_lgl_get_nodes(dim, deg_lobatto);
+  int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad);
+  int volume_nodes_lobatto = d4est_lgl_get_nodes(dim, deg_lobatto);
   
   for (int dir = 0; dir < dim; dir++){
     interp_lobatto_to_quad[dir] = d4est_quadrature->get_interp

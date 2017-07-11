@@ -16,6 +16,8 @@
 #include <d4est_element_data.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
+#include <newton_petsc.h>
+#include <krylov_petsc.h>
 #include <util.h>
 #include "./twopuncturesfcns_nomg.h"
 #include <time.h>
@@ -436,6 +438,7 @@ problem_init
 
   
   double* Au = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* error = P4EST_ALLOC_ZERO(double, local_nodes);
   double* rhs = P4EST_ALLOC_ZERO(double, local_nodes);
   double* u = P4EST_ALLOC_ZERO(double, local_nodes);
   double* u_prev = P4EST_ALLOC_ZERO(double, local_nodes);
@@ -577,73 +580,95 @@ problem_init
 
     u_prev = P4EST_REALLOC(u_prev, double, local_nodes);
     Au = P4EST_REALLOC(Au, double, local_nodes);
+    error = P4EST_REALLOC(error, double, local_nodes);
     prob_vecs.Au = Au;
     prob_vecs.u = u;
     prob_vecs.u0 = u;
     prob_vecs.local_nodes = local_nodes;
     d4est_linalg_copy_1st_to_2nd(u, u_prev, local_nodes);
 
-    /* newton_petsc_solve */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs, */
-    /*    (void*)&prob_fcns, */
-    /*    &ghost, */
-    /*    (void**)&ghost_data, */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    input_file, */
-    /*    NULL */
-    /*   ); */
+    krylov_petsc_params_t krylov_params;
+    krylov_petsc_input
+      (
+       p4est,
+       input_file,
+       "krylov_petsc",
+       "[KRYLOV_PETSC]",
+       &krylov_params
+      );
+       /*  */
+    newton_petsc_params_t newton_params;
+    newton_petsc_input
+      (
+       p4est,
+       input_file,
+       "[NEWTON_PETSC]",
+       &newton_params
+      );
+    
+    newton_petsc_solve
+      (
+       p4est,
+       &prob_vecs,
+       &prob_fcns,
+       &ghost,
+       &ghost_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       &krylov_params,
+       &newton_params,
+       NULL
+      );
+
+    d4est_linalg_vec_axpyeqz(-1., u_prev, u, error, local_nodes);
+    
+   double local_l2_norm_sqr = d4est_mesh_compute_l2_norm_sqr
+                                (
+                                 p4est,
+                                 d4est_ops,
+                                 d4est_geom,
+                                 d4est_quad,
+                                 error,
+                                 local_nodes,
+                                 DO_NOT_STORE_LOCALLY
+                                );
 
     
-   /* double local_l2_norm_sqr = d4est_mesh_compute_l2_norm_sqr */
-   /*                              ( */
-   /*                               p4est, */
-   /*                               u_prev, */
-   /*                               local_nodes, */
-   /*                               d4est_ops, */
-   /*                               DO_NOT_STORE_LOCALLY */
-   /*                              );    */
+    double local_nodes_dbl = (double)local_nodes;
+    double local_reduce [3];
+    double global_reduce [3];
 
+    local_reduce[0] = local_l2_norm_sqr;
+    local_reduce[1] = local_nodes_dbl;
+    local_reduce[2] = local_eta2;
     
-   /*  double local_nodes_dbl = (double)local_nodes; */
-   /*  double local_reduce [3]; */
-   /*  double global_reduce [3]; */
+    sc_reduce
+      (
+       &local_reduce[0],
+       &global_reduce[0],
+       3,
+       sc_MPI_DOUBLE,
+       sc_MPI_SUM,
+       0,
+       sc_MPI_COMM_WORLD
+      );
 
-   /*  local_reduce[0] = local_l2_norm_sqr; */
-   /*  local_reduce[1] = local_nodes_dbl; */
-   /*  local_reduce[2] = local_eta2; */
-    
-   /*  sc_reduce */
-   /*    ( */
-   /*     &local_reduce[0], */
-   /*     &global_reduce[0], */
-   /*     3, */
-   /*     sc_MPI_DOUBLE, */
-   /*     sc_MPI_SUM, */
-   /*     0, */
-   /*     sc_MPI_COMM_WORLD */
-   /*    ); */
+    double global_l2_norm_sqr = global_reduce[0];
+    double global_nodes_dbl = global_reduce[1];
+    double global_eta2 = global_reduce[2];
 
-   /*  double global_l2_norm_sqr = global_reduce[0]; */
-   /*  double global_nodes_dbl = global_reduce[1]; */
-   /*  double global_eta2 = global_reduce[2]; */
-
-   /*  if (world_rank == 0){ */
-   /*    end = clock(); */
-   /*    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC; */
-   /*  printf */
-   /*    ( */
-   /*     "[HP_AMR]: %d, %d, %d, %.25f, %.25f, %f\n", */
-   /*     level, */
-   /*     (int)p4est->global_num_quadrants, */
-   /*     (int)global_nodes_dbl, */
-   /*     sqrt(global_eta2), */
-   /*     sqrt(global_l2_norm_sqr), */
-   /*     time_spent */
-   /*    ); */
-   /*  } */
+    if (world_rank == 0){
+    printf
+      (
+       "[HP_AMR]: %d, %d, %d, %.25f, %.25f\n",
+       level,
+       (int)p4est->global_num_quadrants,
+       (int)global_nodes_dbl,
+       sqrt(global_eta2),
+       sqrt(global_l2_norm_sqr)
+      );
+    }
     
 
     
@@ -664,6 +689,7 @@ problem_init
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
 
   P4EST_FREE(Au);
+  P4EST_FREE(error);
   P4EST_FREE(rhs);
   P4EST_FREE(u_prev);
   P4EST_FREE(u);

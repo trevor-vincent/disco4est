@@ -1,9 +1,9 @@
 #ifndef NEWTON_PETSC_H
 #define NEWTON_PETSC_H 
 
-#include "../pXest/pXest.h"
-#include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/d4est_elliptic_eqns.h"
+#include <pXest.h>
+#include <d4est_elliptic_data.h>
+#include <d4est_elliptic_eqns.h>
 #include <d4est_petsc.h>
 #include <krylov_petsc.h>
 
@@ -25,28 +25,9 @@ typedef struct {
   
 } newton_petsc_params_t;
 
-
-void newton_petsc_solve
-(
- p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
- void* fcns,
- p4est_ghost_t** ghost,
- void** ghost_data, 
- d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom,
- krylov_petsc_params_t* krylov_options,
- newton_petsc_params_t* newton_options,
- krylov_pc_t* krylov_pc
-);
-
-void
-newton_petsc_input
-(
- p4est_t* p4est,
- const char* input_file,
- const char* printf_prefix,
- newton_petsc_params_t* input
-);
+/* This file was automatically generated.  Do not edit! */
+void newton_petsc_solve(p4est_t *p4est,d4est_elliptic_data_t *vecs,d4est_elliptic_eqns_t *fcns,p4est_ghost_t **ghost,d4est_element_data_t **ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,krylov_petsc_params_t *krylov_options,newton_petsc_params_t *newton_options,krylov_pc_t *krylov_pc);
+void newton_petsc_set_options_database_from_params(newton_petsc_params_t *input);
+void newton_petsc_input(p4est_t *p4est,const char *input_file,const char *printf_prefix,newton_petsc_params_t *input);
 
 #endif

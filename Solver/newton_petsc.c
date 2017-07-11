@@ -1,9 +1,10 @@
-#include "../pXest/pXest.h"
-#include "../LinearAlgebra/d4est_linalg.h"
-#include "../Utilities/util.h"
-#include "../Solver/newton_petsc.h"
-#include "../Solver/krylov_petsc.h"
-#include "petscsnes.h"
+#include <pXest.h>
+#include <d4est_linalg.h>
+#include <util.h>
+#include <d4est_elliptic_data.h>
+#include <newton_petsc.h>
+#include <krylov_petsc.h>
+#include <petscsnes.h>
 #include <ini.h>
 
 static
@@ -161,7 +162,7 @@ PetscErrorCode newton_petsc_save_x0
 
   PetscErrorCode ierr;
   petsc_ctx_t* petsc_ctx = (petsc_ctx_t*) ctx;
-  d4est_elliptic_problem_data_t* vecs = petsc_ctx->vecs;
+  d4est_elliptic_data_t* vecs = petsc_ctx->vecs;
   const double* px0;
   ierr = VecGetArrayRead( x0, &px0 ); CHKERRQ(ierr);
 
@@ -192,30 +193,27 @@ PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
   VecGetArray(f,&ftemp); 
   VecGetArrayRead(x,&xx);
 
-  d4est_elliptic_problem_data_t* vecs = petsc_ctx->vecs;
-  p4est_t* p4est = petsc_ctx->p4est;
-  p4est_ghost_t* ghost = *petsc_ctx->ghost;
-  d4est_operators_t* d4est_ops = petsc_ctx->d4est_ops;
-  d4est_geometry_t* d4est_geom = petsc_ctx->d4est_geom;
-  d4est_quadrature_t* d4est_quad = petsc_ctx->d4est_quad;
-  
-  d4est_elliptic_problem_data_t vecs_for_res_build;
-  problem_data_copy_ptrs(vecs, &vecs_for_res_build);
+  d4est_elliptic_data_t* vecs = petsc_ctx->vecs;
+  d4est_elliptic_data_t vecs_for_res_build;
+  d4est_elliptic_data_copy_ptrs(vecs, &vecs_for_res_build);
   vecs_for_res_build.u = (double*)xx;//x_temp;
   vecs_for_res_build.u0 = (double*)xx;//x_temp;
   vecs_for_res_build.Au = ftemp;
 
-  /* if (d4est_geom != NULL){ */
-  /*   ((curved_d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (d4est_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_res_build, d4est_ops,d4est_geom); */
-  /* } */
-  /* else { */
-  ((d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->build_residual(p4est, ghost, (petsc_ctx->ghost_data), &vecs_for_res_build, d4est_ops, d4est_geom, d4est_quad);
-  /* } */
-  VecRestoreArray(f,&ftemp);//CHKERRQ(ierr);
-  VecRestoreArrayRead(x,&xx);
-
-  /* P4EST_FREE(x_temp); */
+  d4est_elliptic_eqns_build_residual
+    (
+     petsc_ctx->p4est,
+     *petsc_ctx->ghost,
+     *petsc_ctx->ghost_data,
+     petsc_ctx->fcns,
+     &vecs_for_res_build,
+     petsc_ctx->d4est_ops,
+     petsc_ctx->d4est_geom,
+     petsc_ctx->d4est_quad
+    );
   
+  VecRestoreArray(f,&ftemp);
+  VecRestoreArrayRead(x,&xx);
   return 0;
 }
 
@@ -235,41 +233,24 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
   ierr = VecGetArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecGetArray( y, &py ); CHKERRQ(ierr);
 
-  d4est_elliptic_problem_data_t* vecs = petsc_ctx->vecs;
-  p4est_t* p4est = petsc_ctx->p4est;
-  p4est_ghost_t* ghost = *petsc_ctx->ghost;
-  d4est_operators_t* d4est_ops = petsc_ctx->d4est_ops;
-  d4est_geometry_t* d4est_geom = petsc_ctx->d4est_geom;
-  d4est_quadrature_t* d4est_quad = petsc_ctx->d4est_quad;
-
-
-  /* int i; */
-  /* for (i = 0; i < vecs->local_nodes; i++){ */
-    /* vecs->u[i] = px[i]; */
-  /* } */
-
-  d4est_elliptic_problem_data_t vecs_for_jac;
-  problem_data_copy_ptrs(vecs, &vecs_for_jac);
+  d4est_elliptic_data_t* vecs = petsc_ctx->vecs;
+  d4est_elliptic_data_t vecs_for_jac;
+  d4est_elliptic_data_copy_ptrs(vecs, &vecs_for_jac);
 
   vecs_for_jac.u = (double*)px;
   vecs_for_jac.Au = py;
-  /* vecs->u is already set above */
-  /* vecs->u0 is already set by newton_petsc_save_x0 */
-
-
-  /* if (d4est_geom != NULL){ */
-    /* ((curved_d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->apply_lhs(p4est, ghost, (d4est_element_data_t*)(petsc_ctx->ghost_data), &vecs_for_jac, d4est_ops,d4est_geom); */
-  /* } */
-  /* else { */
-((d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
-                                                ghost,
-                                                (petsc_ctx->ghost_data),
-                                                &vecs_for_jac,
-                                                d4est_ops,
-                                                d4est_geom,
-                                                d4est_quad
-                                               );
-  /* } */
+ 
+  d4est_elliptic_eqns_apply_lhs
+    (
+     petsc_ctx->p4est,
+     *petsc_ctx->ghost,
+     *petsc_ctx->ghost_data,
+     petsc_ctx->fcns,
+     &vecs_for_jac,
+     petsc_ctx->d4est_ops,
+     petsc_ctx->d4est_geom,
+     petsc_ctx->d4est_quad
+    );
   
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecRestoreArray( y, &py ); CHKERRQ(ierr);
@@ -337,12 +318,13 @@ newton_petsc_set_options_database_from_params
 void newton_petsc_solve
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
- void* fcns,
+ d4est_elliptic_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  p4est_ghost_t** ghost,
- void** ghost_data, 
+ d4est_element_data_t** ghost_data, 
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  krylov_petsc_params_t* krylov_options,
  newton_petsc_params_t* newton_options,
  krylov_pc_t* krylov_pc
@@ -354,8 +336,6 @@ void newton_petsc_solve
   SNES snes;
   KSP ksp;
   Vec x,r;
-  /* PetscMPIInt size; */
-  /* double* u_temp; */
   SNESCreate(PETSC_COMM_WORLD,&snes);//CHKERRQ(ierr);
   VecCreate(PETSC_COMM_WORLD,&x);//CHKERRQ(ierr);
   VecSetSizes(x, vecs->local_nodes, PETSC_DECIDE);//CHKERRQ(ierr);
@@ -370,42 +350,11 @@ void newton_petsc_solve
   petsc_ctx.ghost_data = ghost_data;
   petsc_ctx.d4est_ops = d4est_ops;
   petsc_ctx.d4est_geom = d4est_geom;
+  petsc_ctx.d4est_quad = d4est_quad;
   
   SNESSetFunction(snes,r,newton_petsc_get_residual,(void*)&petsc_ctx);//CHKERRQ(ierr);
   SNESGetKSP(snes,&ksp);
-  /* PetscOptionsSetValue(NULL,"-snes_mf",""); */
-  /* PetscOptionsSetValue(NULL,"-snes_converged_reason",""); */
-  /* PetscOptionsSetValue(NULL,"-ksp_converged_reason",""); */
-  /* PetscOptionsSetValue(NULL,"-ksp_monitor_true_residual",""); */
-  /* PetscOptionsSetValue(NULL,"-snes_monitor",""); */
-  /* PetscOptionsSetValue("-snes_monitor_solution",""); */
 
-  
-  /* PetscOptionsSetValue(NULL,"-ksp_atol","1e-50"); */
-  /* PetscOptionsSetValue(NULL,"-ksp_rtol","1e-5"); */
-  /* PetscOptionsSetValue(NULL,"-ksp_max_it","1000000"); */
-
-  /* PetscOptionsSetValue(NULL,"-snes_rtol","1e-5"); */
-  /* PetscOptionsSetValue(NULL,"-snes_atol","1e-50"); */
-  /* PetscOptionsSetValue(NULL,"-snes_linesearch_monitor",""); */
-  /* PetscOptionsSetValue(NULL,"-ksp_view",""); */
-  /* PetscOptionsSetValue(NULL,"-info","100000"); */
-
-  /* absurdly large number */
-  /* PetscOptionsSetValue(NULL,"-snes_max_funcs","10000000000000000"); */
-  /* PetscOptionsSetValue(NULL,"-ksp_type",krylov_params->ksp_type); */
-
-  /* PetscOptionsSetValue(NULL,"-snes_linesearch_order","3"); */
-  /* if (krylov_params->ksp_monitor == 1) */
-    /* PetscOptionsSetValue(NULL,"-ksp_monitor",""); */
-
-
-  /* PetscOptionsSetValue(NULL,"-ksp_monitor",""); */
-  /* PetscOptionsSetValue(NULL,"-ksp_converged_reason",""); */
-  /* PetscOptionsSetValue(NULL,"-ksp_atol","1e-20"); */
-  /* PetscOptionsSetValue(NULL,"-with-debugging","1"); */
-  /* PetscOptionsSetValue(NULL,"-ksp_rtol","1e-5"); */
-  /* PetscOptionsSetValue(NULL,"-ksp_max_it","1000000"); */
   PC pc;
   KSPGetPC(ksp,&pc);
   if (krylov_pc != NULL) {
@@ -421,18 +370,7 @@ void newton_petsc_solve
     PCSetType(pc,PCNONE);//CHKERRQ(ierr);
   }
   
-  /* KSPSetType(ksp, krylov_params.ksp_type); */
   KSPSetFromOptions(ksp);
-  
-  /* END SET PRECONDITIONER */
-  /* END SET PRECONDITIONER */
-  /* END SET PRECONDITIONER */
-
-  /* PetscOptionsSetValue(NULL,"-pc_type","none"); */
-  /* PetscOptionsSetValue(NULL,"-ksp_type","cg");   */
-  /* PetscOptionsSetValue(NULL,"-ksp_view",""); */
-  /* PetscOptionsSetValue(NULL,"-snes_mf_operator",""); */
-  /* PetscOptionsSetValue(NULL,"-snes_view",""); */
   SNESSetFromOptions(snes);//CHKERRQ(ierr);
     
   double* u0 = P4EST_ALLOC(double, vecs->local_nodes);
@@ -450,23 +388,12 @@ void newton_petsc_solve
      &J
     );
   
-
-  /* MatSetFromOptions(J); */
   MatShellSetOperation(J,MATOP_MULT,(void(*)())newton_petsc_apply_jacobian);
-  /* MatCreateSNESMF(snes, &J); */
   SNESSetJacobian(snes,J,J,newton_petsc_save_x0,(void*)&petsc_ctx);
-
-  /* d4est_linalg_copy_1st_to_2nd(vecs->u, u_temp, vecs->local_nodes); */
-
-  VecPlaceArray(x, vecs->u);
- 
-  
+  VecPlaceArray(x, vecs->u);  
   SNESSolve(snes,NULL,x);
 
-  /* d4est_linalg_copy_1st_to_2nd(u_temp, vecs->u, vecs->local_nodes); */
-
   P4EST_FREE(u0);
-  /* VecRestoreArray(x,&u_temp); */
   VecResetArray(x);
   VecDestroy(&x);//CHKERRQ(ierr);  
   VecDestroy(&r);//CHKERRQ(ierr);

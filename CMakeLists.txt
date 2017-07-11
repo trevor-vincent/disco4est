@@ -82,6 +82,7 @@ SET (
   Utilities/util.c
   LinearAlgebra/d4est_linalg.c
   EllipticSystem/d4est_elliptic_eqns.c
+  EllipticSystem/d4est_elliptic_data.c
   dGMath/d4est_operators.c
   dGMath/d4est_lgl.c
   dGMath/d4est_reference.c
@@ -105,6 +106,8 @@ SET (
   Quadrature/d4est_quadrature_lobatto.c
   Visualization/d4est_vtk.c
   Solver/d4est_cg.c
+  Solver/krylov_petsc.c
+  Solver/newton_petsc.c
   )
 
 
@@ -293,7 +296,8 @@ target_compile_definitions(test_d4est_geometry_2d PRIVATE NDEBUG DIM=2)
 # add_d4est_problem_3d(twopuncturessphere_driver twopuncturessphere.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopuncturessphere_mg_driver twopuncturessphere_mg.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopunctures_testfcns_driver twopunctures_testfcns.c TwoPuncturesSphere)
-add_d4est_problem_3d(twopunctures_estonly_driver twopuncturessphere_estonly.c TwoPuncturesSphere)
+# add_d4est_problem_3d(twopunctures_estonly_driver twopuncturessphere_estonly.c TwoPuncturesSphere)
+add_d4est_problem_3d(twopunctures_nomg_driver twopunctures_nomg.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopunctures_test_driver twopuncturessphere_test.c TwoPuncturesSphere)
 # add_d4est_problem_2d(twopunctures_estonly_driver_2d twopuncturessphere_estonly.c TwoPuncturesSphere)
 # add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)

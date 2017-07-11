@@ -55,7 +55,7 @@ void
 (
  p4est_t*,
  int, /* current level */
- d4est_elliptic_problem_data_t*
+ d4est_elliptic_data_t*
 );
 
 typedef
@@ -96,7 +96,7 @@ void
 (*multigrid_smoother_fcn_t)
 (
  p4est_t*,
- d4est_elliptic_problem_data_t*,
+ d4est_elliptic_data_t*,
  d4est_elliptic_eqns_t*,
  double*,
  int
@@ -107,7 +107,7 @@ void
 (*multigrid_bottom_solver_fcn_t)
 (
  p4est_t*,
- d4est_elliptic_problem_data_t*,
+ d4est_elliptic_data_t*,
  d4est_elliptic_eqns_t*,
  double*
 );
@@ -225,7 +225,7 @@ void
 multigrid_solve
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  multigrid_data_t* mg_data
 );

@@ -1,7 +1,7 @@
-#include "./pXest/pXest.h"
-#include "./pXest/pXest_input.h"
-#include "./Problems/problem.h"
-#include "./Geometry/d4est_geometry.h"
+#include <pXest.h>
+#include <pXest_input.h>
+#include <problem.h>
+#include <d4est_geometry.h>
 #include <petscsnes.h>
 
 int main(int argc, char *argv[])
@@ -84,8 +84,6 @@ int main(int argc, char *argv[])
   /* free pXest */
   p4est_destroy(p4est);
   d4est_geometry_destroy(d4est_geom);
-
-
   PetscFinalize();
   /* sc_finalize (); */
   return 0;

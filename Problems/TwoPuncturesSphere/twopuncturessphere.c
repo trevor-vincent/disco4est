@@ -557,7 +557,7 @@ problem_init
   init_cactus_puncture_data(&tp_cactus_params, input.deg_offset_for_nonlinear_quad);
 
   
-  d4est_elliptic_problem_data_t prob_vecs;
+  d4est_elliptic_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
@@ -881,13 +881,13 @@ problem_init
     /* double* Au_cactus = P4EST_ALLOC(double, local_nodes); */
     /* double* u_test = P4EST_ALLOC_ZERO(double, local_nodes); */
     
-    /* d4est_elliptic_problem_data_t prob_vecs_spec; */
-    /* d4est_elliptic_problem_data_t prob_vecs_me; */
-    /* d4est_elliptic_problem_data_t prob_vecs_cactus; */
+    /* d4est_elliptic_data_t prob_vecs_spec; */
+    /* d4est_elliptic_data_t prob_vecs_me; */
+    /* d4est_elliptic_data_t prob_vecs_cactus; */
     
-    /* problem_data_copy_ptrs(&prob_vecs, &prob_vecs_spec); */
-    /* problem_data_copy_ptrs(&prob_vecs, &prob_vecs_me); */
-    /* problem_data_copy_ptrs(&prob_vecs, &prob_vecs_cactus); */
+    /* d4est_elliptic_data_copy_ptrs(&prob_vecs, &prob_vecs_spec); */
+    /* d4est_elliptic_data_copy_ptrs(&prob_vecs, &prob_vecs_me); */
+    /* d4est_elliptic_data_copy_ptrs(&prob_vecs, &prob_vecs_cactus); */
 
     /* prob_vecs_spec.Au = Au_spec; */
     /* prob_vecs_spec.u = u_test; */

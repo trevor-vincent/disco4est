@@ -729,7 +729,7 @@ void apply_helmholtz
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
@@ -785,7 +785,7 @@ void apply_helmholtz_matrix
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
@@ -845,7 +845,7 @@ void apply_helmholtz_matrix_2
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
@@ -885,7 +885,7 @@ static
 void problem_build_rhs
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_elliptic_eqns_t* prob_fcns,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
@@ -999,7 +999,7 @@ build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  void* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
@@ -1068,7 +1068,7 @@ problem_init
   /* init_cactus_puncture_data(&tp_cactus_params, input.deg_offset_for_nonlinear_quad); */
 
   
-  d4est_elliptic_problem_data_t prob_vecs;
+  d4est_elliptic_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;
@@ -1463,13 +1463,13 @@ problem_init
     /* double* Au_cactus = P4EST_ALLOC(double, local_nodes); */
     /* double* u_test = P4EST_ALLOC_ZERO(double, local_nodes); */
     
-    /* d4est_elliptic_problem_data_t prob_vecs_spec; */
-    /* d4est_elliptic_problem_data_t prob_vecs_me; */
-    /* d4est_elliptic_problem_data_t prob_vecs_cactus; */
+    /* d4est_elliptic_data_t prob_vecs_spec; */
+    /* d4est_elliptic_data_t prob_vecs_me; */
+    /* d4est_elliptic_data_t prob_vecs_cactus; */
     
-    /* problem_data_copy_ptrs(&prob_vecs, &prob_vecs_spec); */
-    /* problem_data_copy_ptrs(&prob_vecs, &prob_vecs_me); */
-    /* problem_data_copy_ptrs(&prob_vecs, &prob_vecs_cactus); */
+    /* d4est_elliptic_data_copy_ptrs(&prob_vecs, &prob_vecs_spec); */
+    /* d4est_elliptic_data_copy_ptrs(&prob_vecs, &prob_vecs_me); */
+    /* d4est_elliptic_data_copy_ptrs(&prob_vecs, &prob_vecs_cactus); */
 
     /* prob_vecs_spec.Au = Au_spec; */
     /* prob_vecs_spec.u = u_test; */

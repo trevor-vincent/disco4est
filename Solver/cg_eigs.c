@@ -41,7 +41,7 @@ void
 cg_eigs
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,

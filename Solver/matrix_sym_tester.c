@@ -23,7 +23,7 @@
 /* curved_matrix_sym_tester */
 /* ( */
 /*  p4est_t* p4est, */
-/*  d4est_elliptic_problem_data_t* vecs, /\* only needed for # of nodes *\/ */
+/*  d4est_elliptic_data_t* vecs, /\* only needed for # of nodes *\/ */
 /*  curved_d4est_elliptic_eqns_t* fcns, */
 /*  int print, */
 /*  d4est_operators_t* d4est_ops */
@@ -89,7 +89,7 @@
 /* matrix_sym_tester_parallel */
 /* ( */
 /*  p4est_t* p4est, */
-/*  d4est_elliptic_problem_data_t* vecs, /\* only needed for # of nodes *\/ */
+/*  d4est_elliptic_data_t* vecs, /\* only needed for # of nodes *\/ */
 /*  d4est_elliptic_eqns_t* fcns, */
 /*  int mpi_rank, */
 /*  int tests, */
@@ -224,7 +224,7 @@
 /* curved_matrix_sym_tester_parallel */
 /* ( */
 /*  p4est_t* p4est, */
-/*  d4est_elliptic_problem_data_t* vecs, /\* only needed for # of nodes *\/ */
+/*  d4est_elliptic_data_t* vecs, /\* only needed for # of nodes *\/ */
 /*  curved_d4est_elliptic_eqns_t* fcns, */
 /*  int mpi_rank, */
 /*  int tests, */
@@ -382,7 +382,7 @@ void
 serial_matrix_sym_tester
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs, /* only needed for # of nodes */
+ d4est_elliptic_data_t* vecs, /* only needed for # of nodes */
  d4est_elliptic_eqns_t* fcns,
  double sym_eps,
  d4est_operators_t* d4est_ops,
@@ -519,7 +519,7 @@ serial_matrix_sym_tester
 /* parallel_matrix_sym_tester */
 /* ( */
 /*  p4est_t* p4est, */
-/*  d4est_elliptic_problem_data_t* vecs, /\* only needed for # of nodes *\/ */
+/*  d4est_elliptic_data_t* vecs, /\* only needed for # of nodes *\/ */
 /*  void* fcns, */
 /*  double sym_eps, */
 /*  d4est_operators_t* d4est_ops, */
@@ -666,7 +666,7 @@ int
 matrix_sym_tester_parallel
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs, 
+ d4est_elliptic_data_t* vecs, 
  void* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
@@ -735,7 +735,7 @@ int
 matrix_spd_tester_parallel
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs, 
+ d4est_elliptic_data_t* vecs, 
  void* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
@@ -798,7 +798,7 @@ void
 matrix_sym_tester_parallel_aux
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs, 
+ d4est_elliptic_data_t* vecs, 
  void* fcns,
  p4est_ghost_t* ghost,
  void* ghost_data,
@@ -812,8 +812,8 @@ matrix_sym_tester_parallel_aux
  double* Aij
 )
 {
-  d4est_elliptic_problem_data_t vecs_for_sym_test;
-  problem_data_copy_ptrs(vecs, &vecs_for_sym_test);
+  d4est_elliptic_data_t vecs_for_sym_test;
+  d4est_elliptic_data_copy_ptrs(vecs, &vecs_for_sym_test);
   
   double uj_A_ui_local; //Aji
   double ui_A_uj_local; //Aij

@@ -1,9 +1,9 @@
 #include <util.h>
 #include <pXest.h>
-#include <ip_flux.h>
-#include "../LinearAlgebra/d4est_linalg.h"
-#include "../Solver/krylov_petsc.h"
-#include "petscsnes.h"
+#include <d4est_linalg.h>
+#include <d4est_elliptic_data.h>
+#include <krylov_petsc.h>
+#include <petscsnes.h>
 #include <krylov_pc.h>
 #include <ini.h>
 
@@ -235,24 +235,25 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   /* d4est_elliptic_eqns_t* fcns = petsc_ctx->fcns; */
   p4est_t* p4est = petsc_ctx->p4est;
   p4est_ghost_t* ghost = *petsc_ctx->ghost;
-  d4est_operators_t* d4est_ops = petsc_ctx->d4est_ops;
 
-  d4est_elliptic_problem_data_t vecs_for_aij;
-  problem_data_copy_ptrs(petsc_ctx->vecs, &vecs_for_aij);
+  d4est_elliptic_data_t vecs_for_aij;
+  d4est_elliptic_data_copy_ptrs(petsc_ctx->vecs, &vecs_for_aij);
 
   vecs_for_aij.u = (double*)px;
   vecs_for_aij.Au = py;
-
-  ((d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->apply_lhs(p4est,
-                                                  ghost,
-                                                  (*petsc_ctx->ghost_data),
-                                                  &vecs_for_aij,
-            ((d4est_elliptic_eqns_t*)(petsc_ctx->fcns))->flux_fcn_data,
-                                                  d4est_ops,
-                                                  petsc_ctx->d4est_geom,
-                                                  petsc_ctx->d4est_quad
-                                                 );
-
+ 
+  d4est_elliptic_eqns_apply_lhs
+    (
+     petsc_ctx->p4est,
+     *petsc_ctx->ghost,
+     *petsc_ctx->ghost_data,
+     petsc_ctx->fcns,
+     &vecs_for_aij,
+     petsc_ctx->d4est_ops,
+     petsc_ctx->d4est_geom,
+     petsc_ctx->d4est_quad
+    );
+  
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecRestoreArray( y, &py ); CHKERRQ(ierr);
   return ierr;
@@ -262,10 +263,10 @@ krylov_info_t
 krylov_petsc_solve
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
- void* fcns,
+ d4est_elliptic_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
  p4est_ghost_t** ghost,
- void** ghost_data, 
+ d4est_element_data_t** ghost_data, 
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -274,10 +275,7 @@ krylov_petsc_solve
 )
 {
   krylov_petsc_set_options_database_from_params(krylov_petsc_params);
-  /* PetscOptionsSetFromOptions(petsc_options); */
-  /* krylov_petsc_params_t krylov_params = krylov_petsc_input(p4est,input_file); */
-  /* krylov_params.pc = krylov_pc; */
-  
+
   krylov_info_t info;
   KSP ksp;
   Vec x,b;

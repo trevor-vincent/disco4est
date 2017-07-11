@@ -408,33 +408,35 @@ d4est_mesh_compute_l2_norm_sqr
         d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
 
-
-      d4est_quadrature_volume_t mesh_object;
-      mesh_object.dq = ed->dq;
-      mesh_object.tree = ed->tree;
-      mesh_object.element_id = ed->id;
-      mesh_object.q[0] = ed->q[0];
-      mesh_object.q[1] = ed->q[1];
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq = ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
 #if (P4EST_DIM)==3
-      mesh_object.q[2] = ed->q[2];
+        mesh_object.q[2] = ed->q[2];
 #endif
 
-      d4est_quadrature_apply_mass_matrix
-        (
-         d4est_ops,
-         d4est_geom,
-         d4est_quad,
-         &mesh_object,
-         QUAD_OBJECT_VOLUME,
-         QUAD_INTEGRAND_UNKNOWN,
-         &nodal_vec[ed->nodal_stride],
-         ed->deg,
-         ed->J_quad,
-         ed->deg_quad,
-         &Mvec[ed->nodal_stride]
-        );
+        d4est_quadrature_apply_mass_matrix
+          (
+           d4est_ops,
+           d4est_geom,
+           d4est_quad,
+           &mesh_object,
+           QUAD_OBJECT_VOLUME,
+           QUAD_INTEGRAND_UNKNOWN,
+           &nodal_vec[ed->nodal_stride],
+           ed->deg,
+           ed->J_quad,
+           ed->deg_quad,
+           &Mvec[ed->nodal_stride]
+          );
       
-        double norm2 = d4est_linalg_vec_dot(&nodal_vec[ed->nodal_stride], &Mvec[ed->nodal_stride], volume_nodes);
+        double norm2
+          = d4est_linalg_vec_dot(&nodal_vec[ed->nodal_stride],
+                                 &Mvec[ed->nodal_stride],
+                                 volume_nodes);
         
         if (store_local == STORE_LOCALLY){
           ed->local_estimator = norm2;

@@ -197,7 +197,7 @@ double two_punctures_adm_quadral_volume
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -390,7 +390,7 @@ build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -459,7 +459,7 @@ build_residual_gauss
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -540,7 +540,7 @@ void apply_jac
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -614,7 +614,7 @@ void apply_jac_gauss
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  element_data_t* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops
 )
 {
@@ -693,7 +693,7 @@ void apply_jac_gauss
 /* void problem_build_rhs */
 /* ( */
 /*  p4est_t* p4est, */
-/*  d4est_elliptic_problem_data_t* prob_vecs, */
+/*  d4est_elliptic_data_t* prob_vecs, */
 /*  d4est_elliptic_eqns_t* prob_fcns, */
 /*  p4est_ghost_t* ghost, */
 /*  element_data_t* ghost_data, */
@@ -1031,7 +1031,7 @@ problem_init
   ip_flux_params.sipg_penalty_prefactor = input.ip_flux_penalty;
   ip_flux_params.sipg_penalty_fcn = sipg_flux_vector_calc_penalty_maxp2_over_minh;
   
-  d4est_elliptic_problem_data_t prob_vecs;
+  d4est_elliptic_data_t prob_vecs;
   /* prob_vecs.rhs = rhs; */
   prob_vecs.Au = Au;
   prob_vecs.u = u;

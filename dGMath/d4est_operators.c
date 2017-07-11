@@ -5,50 +5,50 @@
 #include <util.h>
 #include <GL_and_GLL_nodes_and_weights.h>
 
-d4est_operators_t* d4est_ops_init(int deg_max) {
+d4est_operators_t* d4est_ops_init(int max_degree) {
   d4est_operators_t* d4est_ops = P4EST_ALLOC(d4est_operators_t, 1);
-  d4est_ops->max_degree = deg_max;
+  d4est_ops->max_degree = max_degree;
   
-  d4est_ops->mij_1d_table = P4EST_ALLOC(double*, deg_max);
-  d4est_ops->invmij_1d_table = P4EST_ALLOC(double*, deg_max);
-  d4est_ops->invvij_1d_table = P4EST_ALLOC(double*, deg_max);
-  d4est_ops->lobatto_nodes_1d_table = P4EST_ALLOC(double*, deg_max);
-  d4est_ops->lobatto_weights_1d_table = P4EST_ALLOC(double*, deg_max);
-  d4est_ops->gauss_nodes_1d_table = P4EST_ALLOC(double*, deg_max);
-  d4est_ops->gauss_weights_1d_table = P4EST_ALLOC(double*, deg_max);
-  d4est_ops->dij_1d_table = P4EST_ALLOC(double*, deg_max);
-  d4est_ops->lift_1d_table = P4EST_ALLOC(double*, deg_max);
-  d4est_ops->vtk_rst_2d_table = P4EST_ALLOC(double*, deg_max); /* 2-> DIM = 2 or 3  */
-  d4est_ops->vtk_rst_3d_table = P4EST_ALLOC(double*, deg_max); /* 2-> DIM = 2 or 3  */
-  d4est_ops->lobatto_rst_2d_table = P4EST_ALLOC(double*, deg_max); /* 2-> DIM = 2 or 3  */
-  d4est_ops->lobatto_rst_3d_table = P4EST_ALLOC(double*, deg_max); /* 2-> DIM = 2 or 3  */
-  d4est_ops->gauss_rst_2d_table = P4EST_ALLOC(double*, deg_max); /* 2-> DIM = 2 or 3  */
-  d4est_ops->gauss_rst_3d_table = P4EST_ALLOC(double*, deg_max); /* 2-> DIM = 2 or 3  */
-  d4est_ops->flip_1d_table = P4EST_ALLOC(double*, deg_max);
-  d4est_ops->vtk_interp_1d_table = P4EST_ALLOC(double*, deg_max);
+  d4est_ops->mij_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->invmij_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->invvij_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->lobatto_nodes_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->lobatto_weights_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->gauss_nodes_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->gauss_weights_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->dij_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->lift_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->vtk_rst_2d_table = P4EST_ALLOC(double*, max_degree); 
+  d4est_ops->vtk_rst_3d_table = P4EST_ALLOC(double*, max_degree); 
+  d4est_ops->lobatto_rst_2d_table = P4EST_ALLOC(double*, max_degree); 
+  d4est_ops->lobatto_rst_3d_table = P4EST_ALLOC(double*, max_degree); 
+  d4est_ops->gauss_rst_2d_table = P4EST_ALLOC(double*, max_degree); 
+  d4est_ops->gauss_rst_3d_table = P4EST_ALLOC(double*, max_degree); 
+  d4est_ops->flip_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->vtk_interp_1d_table = P4EST_ALLOC(double*, max_degree);
   
-  d4est_ops->hp_prolong_1d_table = P4EST_ALLOC(double**, deg_max);
-  d4est_ops->hp_restrict_1d_table = P4EST_ALLOC(double**, deg_max);
-  d4est_ops->hp_restrict_interp_1d_table = P4EST_ALLOC(double**, deg_max);
-  d4est_ops->p_restrict_1d_table = P4EST_ALLOC(double**, deg_max);
-  d4est_ops->p_restrict_interp_1d_table = P4EST_ALLOC(double**, deg_max);
-  d4est_ops->p_prolong_1d_table = P4EST_ALLOC(double**, deg_max);
-  d4est_ops->hp_prolong_transpose_1d_table = P4EST_ALLOC(double**, deg_max);
-  d4est_ops->p_prolong_transpose_1d_table = P4EST_ALLOC(double**, deg_max);
-  d4est_ops->lobatto_to_gauss_interp_1d_table = P4EST_ALLOC(double**, deg_max);
-  d4est_ops->lobatto_to_gauss_interp_trans_1d_table = P4EST_ALLOC(double**, deg_max);
+  d4est_ops->hp_prolong_1d_table = P4EST_ALLOC(double**, max_degree);
+  d4est_ops->hp_restrict_1d_table = P4EST_ALLOC(double**, max_degree);
+  d4est_ops->hp_restrict_interp_1d_table = P4EST_ALLOC(double**, max_degree);
+  d4est_ops->p_restrict_1d_table = P4EST_ALLOC(double**, max_degree);
+  d4est_ops->p_restrict_interp_1d_table = P4EST_ALLOC(double**, max_degree);
+  d4est_ops->p_prolong_1d_table = P4EST_ALLOC(double**, max_degree);
+  d4est_ops->hp_prolong_transpose_1d_table = P4EST_ALLOC(double**, max_degree);
+  d4est_ops->p_prolong_transpose_1d_table = P4EST_ALLOC(double**, max_degree);
+  d4est_ops->lobatto_to_gauss_interp_1d_table = P4EST_ALLOC(double**, max_degree);
+  d4est_ops->lobatto_to_gauss_interp_trans_1d_table = P4EST_ALLOC(double**, max_degree);
 
   for (int i = 0; i < d4est_ops->max_degree; i++){
-    d4est_ops->hp_prolong_1d_table[i] = P4EST_ALLOC(double*, deg_max);
-    d4est_ops->hp_prolong_transpose_1d_table[i] = P4EST_ALLOC(double*, deg_max);
-    d4est_ops->hp_restrict_1d_table[i] = P4EST_ALLOC(double*, deg_max);
-    d4est_ops->hp_restrict_interp_1d_table[i] = P4EST_ALLOC(double*, deg_max);
-    d4est_ops->p_restrict_1d_table[i] = P4EST_ALLOC(double*, deg_max);
-    d4est_ops->p_restrict_interp_1d_table[i] = P4EST_ALLOC(double*, deg_max);
-    d4est_ops->p_prolong_1d_table[i] = P4EST_ALLOC(double*, deg_max);
-    d4est_ops->p_prolong_transpose_1d_table[i] = P4EST_ALLOC(double*, deg_max);
-    d4est_ops->lobatto_to_gauss_interp_trans_1d_table[i] = P4EST_ALLOC(double*, deg_max);
-    d4est_ops->lobatto_to_gauss_interp_1d_table[i] = P4EST_ALLOC(double*, deg_max);
+    d4est_ops->hp_prolong_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    d4est_ops->hp_prolong_transpose_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    d4est_ops->hp_restrict_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    d4est_ops->hp_restrict_interp_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    d4est_ops->p_restrict_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    d4est_ops->p_restrict_interp_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    d4est_ops->p_prolong_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    d4est_ops->p_prolong_transpose_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    d4est_ops->lobatto_to_gauss_interp_trans_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    d4est_ops->lobatto_to_gauss_interp_1d_table[i] = P4EST_ALLOC(double*, max_degree);
     d4est_ops->vtk_interp_1d_table[i] = NULL;
     d4est_ops->mij_1d_table[i] = NULL;
     d4est_ops->lobatto_nodes_1d_table[i] = NULL;
@@ -666,25 +666,6 @@ d4est_operators_fetch_mij_1d
      d4est_operators_build_mij_1d
     );    
 }
-
-
-
-/* double* d4est_operators_fetch_mij_1d(d4est_operators_t* d4est_ops, int deg) { */
-/*   D4EST_ASSERT(deg < d4est_ops->max_degree); */
-/*   if (d4est_ops->mij_1d_table[deg] != NULL) { */
-/*     return d4est_ops->mij_1d_table[deg]; */
-/*   } */
-/*   else { */
-/*     int size = (deg + 1) * (deg + 1); */
-/*     d4est_ops->mij_1d_table[deg] = P4EST_ALLOC(double, size); */
-/*     double* op = d4est_ops->mij_1d_table[deg]; */
-/*     d4est_operators_build_mij_1d(d4est_ops, op, deg); */
-/*     return op; */
-/*   } */
-/* } */
-
-
-
 
 static void d4est_operators_build_invmij_1d(d4est_operators_t* d4est_ops,
                                    double* invmij_1d, int deg) {
@@ -2088,7 +2069,6 @@ double* d4est_operators_fetch_vtk_rst
 {
   int children = (dim == 2) ? 4 : 8;
   int deg_dim = (dim == 2) ? deg*deg : deg*deg*deg;
-  /* we need a 3 here because we zero out the z-component */
   int size = 3*deg_dim*(children);
 
   return d4est_operators_1index_2d_3d_fetch

@@ -448,7 +448,7 @@ problem_init
   p4est_partition(p4est, 0, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
   
-  d4est_elliptic_problem_data_t prob_vecs;
+  d4est_elliptic_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;

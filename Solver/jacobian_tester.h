@@ -14,7 +14,7 @@ jacobian_tester
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_elliptic_eqns_t* prob_fcns,
- d4est_elliptic_problem_data_t* prob_vecs
+ d4est_elliptic_data_t* prob_vecs
 );
 
 

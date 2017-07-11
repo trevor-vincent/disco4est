@@ -10,7 +10,7 @@ void
 cg_nr_solve
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  d4est_operators_t* d4est_ops,
  p4est_ghost_t* ghost,
@@ -44,7 +44,7 @@ cg_nr_solve
   *final_fnrm = cg_params.final_fnrm;
 }
 
-void cg_solve(p4est_t* p4est, d4est_elliptic_problem_data_t* vecs, d4est_elliptic_eqns_t* fcns,
+void cg_solve(p4est_t* p4est, d4est_elliptic_data_t* vecs, d4est_elliptic_eqns_t* fcns,
               d4est_operators_t* d4est_ops, p4est_ghost_t* ghost,
               element_data_t* ghost_data, cg_solver_params_t* params) {
 
@@ -143,7 +143,7 @@ void cg_solve(p4est_t* p4est, d4est_elliptic_problem_data_t* vecs, d4est_ellipti
 
 void curved_cg_solve(
                      p4est_t* p4est,
-                     d4est_elliptic_problem_data_t* vecs,
+                     d4est_elliptic_data_t* vecs,
                      d4est_elliptic_eqns_t* fcns,
                      d4est_operators_t* d4est_ops,
                      d4est_geometry_t* geom,

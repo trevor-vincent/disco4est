@@ -68,7 +68,7 @@ void
 multigrid_smoother_cheby_d4est_iterate
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  double* r,
  int iter,
@@ -142,7 +142,7 @@ multigrid_smoother_cheby_d4est_update
 (
  p4est_t* p4est,
  int level,
- d4est_elliptic_problem_data_t* vecs
+ d4est_elliptic_data_t* vecs
 )
 {
   multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
@@ -190,7 +190,7 @@ static void
 multigrid_smoother_cheby_d4est
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* vecs,
+ d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  double* r,
  int level

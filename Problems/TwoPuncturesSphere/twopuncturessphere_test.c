@@ -294,7 +294,7 @@ void problem_apply_lhs
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_mortar_fcn_ptrs_t* flux_fcn_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
@@ -309,7 +309,7 @@ static
 void problem_build_rhs
 (
  p4est_t* p4est,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_elliptic_eqns_t* prob_fcns,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
@@ -393,7 +393,7 @@ build_residual
  p4est_t* p4est,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
- d4est_elliptic_problem_data_t* prob_vecs,
+ d4est_elliptic_data_t* prob_vecs,
  d4est_mortar_fcn_ptrs_t* flux_fcn_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
@@ -442,7 +442,7 @@ problem_init
   p4est_partition(p4est, 0, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
   
-  d4est_elliptic_problem_data_t prob_vecs;
+  d4est_elliptic_data_t prob_vecs;
   prob_vecs.rhs = rhs;
   prob_vecs.Au = Au;
   prob_vecs.u = u;

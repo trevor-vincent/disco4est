@@ -1,10 +1,10 @@
-#include "problem_data.h"
+#include <d4est_elliptic_data.h>
 
 void
-problem_data_copy_ptrs
+d4est_elliptic_data_copy_ptrs
 (
- d4est_elliptic_problem_data_t* pd1,
- d4est_elliptic_problem_data_t* pd2
+ d4est_elliptic_data_t* pd1,
+ d4est_elliptic_data_t* pd2
 )
 {
   pd2->Au = pd1->Au;
