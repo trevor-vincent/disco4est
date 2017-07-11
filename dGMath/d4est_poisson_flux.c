@@ -783,9 +783,6 @@ d4est_poisson_flux_interface
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_p_on_f_p);
   P4EST_FREE(sj_on_f_m_mortar_quad);
-  P4EST_FREE(j_div_sj_on_f_m_mortar_quad);
-  P4EST_FREE(j_div_sj_on_f_p_mortar_quad_porder);
-  P4EST_FREE(j_div_sj_on_f_p_mortar_quad);
   P4EST_FREE(tmp);  
   P4EST_FREE(u_m_on_f_m_mortar);
   P4EST_FREE(u_m_on_f_m_mortar_quad);

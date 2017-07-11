@@ -1,5 +1,4 @@
 #include "../pXest/pXest.h"
-
 #include "../LinearAlgebra/d4est_linalg.h"
 #include "../Utilities/util.h"
 #include "../Solver/newton_petsc.h"

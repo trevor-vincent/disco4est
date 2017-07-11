@@ -605,15 +605,15 @@ int d4est_poisson_flux_sipg_params_input_handler
 {
   d4est_poisson_flux_sipg_params_t* pconfig = (d4est_poisson_flux_sipg_params_t*)user;
   
-  if (util_match_couple(section,"d4est_poisson_flux_sipg_params",name,"sipg_penalty_prefactor")) {
+  if (util_match_couple(section,"flux",name,"sipg_penalty_prefactor")) {
     D4EST_ASSERT(pconfig->sipg_penalty_prefactor == -1);
     pconfig->sipg_penalty_prefactor = atof(value);
   }
-  else if (util_match_couple(section,"d4est_poisson_flux_sipg_params",name,"sipg_penalty_fcn")) {
+  else if (util_match_couple(section,"flux",name,"sipg_penalty_fcn")) {
     D4EST_ASSERT(pconfig->sipg_penalty_fcn == NULL);
     pconfig->sipg_penalty_fcn = d4est_poisson_flux_sipg_get_penalty_fcn_from_string(value);
   }
-  else if (util_match_couple(section,"d4est_poisson_flux_sipg_params",name,"sipg_flux_h")) {
+  else if (util_match_couple(section,"flux",name,"sipg_flux_h")) {
     D4EST_ASSERT(pconfig->sipg_flux_h == H_EQ_NOTSET);
     if(util_match(value, "H_EQ_J_DIV_SJ")){
       pconfig->sipg_flux_h = H_EQ_J_DIV_SJ;
@@ -622,8 +622,8 @@ int d4est_poisson_flux_sipg_params_input_handler
       pconfig->sipg_flux_h = H_EQ_J_DIV_SJ_MIN;
     }
     else {
-      printf("d4est_poisson_flux_sipg_params_h_calc = %s\n", value);
-      D4EST_ABORT("d4est_poisson_flux_sipg_params_h_calc is not set to H_EQ_J_DIV_SJ or H_EQ_VOLUME_DIV_AREA\n");
+      printf("flux_h_calc = %s\n", value);
+      D4EST_ABORT("flux_h_calc is not set to H_EQ_J_DIV_SJ or H_EQ_VOLUME_DIV_AREA\n");
     }
   }
   else {
@@ -649,9 +649,9 @@ d4est_poisson_flux_sipg_params_input
     D4EST_ABORT("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("d4est_poisson_flux_sipg_params", input->sipg_penalty_prefactor, -1);
-  D4EST_CHECK_INPUT("d4est_poisson_flux_sipg_params", input->sipg_penalty_fcn, NULL);
-  D4EST_CHECK_INPUT("d4est_poisson_flux_sipg_params", input->sipg_flux_h, H_EQ_NOTSET);
+  D4EST_CHECK_INPUT("flux", input->sipg_penalty_prefactor, -1);
+  D4EST_CHECK_INPUT("flux", input->sipg_penalty_fcn, NULL);
+  D4EST_CHECK_INPUT("flux", input->sipg_flux_h, H_EQ_NOTSET);
   
   char penalty_calculate_fcn [50];
   char h_eq [50];

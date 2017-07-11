@@ -416,10 +416,7 @@ problem_init
   /* create space for storing the ghost data */
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
                                                    ghost->ghosts.elem_count);
-  
-
-
- 
+   
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
   
@@ -431,7 +428,6 @@ problem_init
   prob_fcns.build_residual = twopunctures_build_residual;
   prob_fcns.apply_lhs = twopunctures_apply_jac;
   prob_fcns.user = &tp_params;
-
   
   int local_nodes = d4est_mesh_update
                     (
