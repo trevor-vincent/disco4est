@@ -1,27 +1,28 @@
 #define _GNU_SOURCE
-#include <pXest.h>
-#include <d4est_geometry.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <float.h>
 #include <string.h>
-#include <d4est_util.h>
 #include <ini.h>
+#include <pXest.h>
+#include <d4est_geometry.h>
 #include <d4est_operators.h>
 #include <d4est_element_data.h>
-
 #include <d4est_linalg.h>
+#include <d4est_kron.h>
 #include <d4est_util.h>
 
 
 #if (P4EST_DIM)==3
 #include <d4est_geometry_cubed_sphere.h>
-/* #include <d4est_geometry_shell.h> */
 #endif
 
 #if (P4EST_DIM)==2
 #include <d4est_geometry_disk.h>
 #endif
+
+#include <d4est_geometry_brick.h>
 
 typedef struct {
 
@@ -159,11 +160,6 @@ d4est_geometry_new(int mpirank,
   else if (d4est_util_match(input.name,"none")){
     d4est_geom->geom_type = GEOM_NONE;
   }
-  else {
-    printf("[D4EST_ERROR]: You tried to use %s geometry\n", input.name);
-    D4EST_ABORT("[D4EST_ERROR]: this geometry is currently not supported");
-  }
-
 #endif
 #if (P4EST_DIM)==2
   if (d4est_util_match(input.name,"disk")) {
@@ -175,11 +171,18 @@ d4est_geometry_new(int mpirank,
     d4est_geom->geom_type = GEOM_DISK_OUTER_WEDGE;
   }
   else if (d4est_util_match(input.name,"none")){}
+#endif
+  else if (d4est_util_match(input.name,"brick")){
+    d4est_geometry_brick_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
+    d4est_geom->geom_type = GEOM_BRICK;
+  }
   else {
     printf("[D4EST_ERROR]: You tried to use %s geometry\n", input.name);
     D4EST_ABORT("[D4EST_ERROR]: this geometry is currently not supported");
   }
-#endif
+
+  
+  
   free(input.name);
 
   if(d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC && d4est_geom->DX == NULL){
@@ -1438,9 +1441,9 @@ d4est_geometry_compute_element_volume
   double volume = 0;
   
 #if (P4EST_DIM)==3
-  d4est_linalg_kron_vec_o_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac);
+  d4est_kron_vec_o_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac);
 #elif (P4EST_DIM)==2
-  d4est_linalg_kron_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac);
+  d4est_kron_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac);
 #else
   D4EST_ABORT("only DIM=2 or DIM=3");
 #endif
@@ -1498,9 +1501,9 @@ d4est_geometry_compute_element_volume
 /*   double area = 0; */
   
 /* #if (P4EST_DIM)==3 */
-/*   d4est_linalg_kron_vec_o_vec_dot_x(integ_weights, sj_on_face, deg + 1, Msj); */
+/*   d4est_kron_vec_o_vec_dot_x(integ_weights, sj_on_face, deg + 1, Msj); */
 /* #elif (P4EST_DIM)==2 */
-/*   d4est_linalg_kron_vec_dot_x(integ_weights, sj_on_face, deg + 1, Msj); */
+/*   d4est_kron_vec_dot_x(integ_weights, sj_on_face, deg + 1, Msj); */
 /* #else */
 /*   D4EST_ABORT("only DIM=2 or DIM=3"); */
 /* #endif */
@@ -1584,9 +1587,9 @@ d4est_geometry_compute_diam
 /*   double volume = 0; */
   
 /* #if (P4EST_DIM)==3 */
-/*   d4est_linalg_kron_vec_o_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac); */
+/*   d4est_kron_vec_o_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac); */
 /* #elif (P4EST_DIM)==2 */
-/*   d4est_linalg_kron_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac); */
+/*   d4est_kron_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac); */
 /* #else */
 /*   D4EST_ABORT("only DIM=2 or DIM=3"); */
 /* #endif */

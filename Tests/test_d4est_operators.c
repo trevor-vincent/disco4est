@@ -3,9 +3,10 @@
 #include <pXest.h>
 #include <d4est_operators.h>
 #include <d4est_linalg.h>
+#include <d4est_kron.h>
 #include <d4est_util.h>
 
-#define D4EST_REAL_EPS 1e-15
+#define D4EST_REAL_EPS 100*1e-15
 
 static double
 test_d4est_operators_poly_fcn
@@ -20,6 +21,7 @@ test_d4est_operators_poly_fcn
   poly += (dim == 3) ? pow(t,deg) : 0;
   return poly;
 }
+
 
 void
 test_d4est_operators_interp_lobatto_to_gauss
@@ -66,11 +68,11 @@ test_d4est_operators_interp_lobatto_to_gauss
   double* interp = d4est_operators_fetch_lobatto_to_gauss_interp_1d(d4est_ops, deg_lobatto, deg_gauss);
 
   if (dim == 3){
-    d4est_linalg_kron_A1A2A3x_nonsqr(poly_lobatto_to_gauss, interp, interp, interp, poly_lobatto,
+    d4est_kron_A1A2A3x_nonsqr(poly_lobatto_to_gauss, interp, interp, interp, poly_lobatto,
                                nodes_gauss, nodes_lobatto, nodes_gauss, nodes_lobatto, nodes_gauss, nodes_lobatto);
   }
   else if (dim == 2){
-    d4est_linalg_kron_A1A2x_nonsqr(poly_lobatto_to_gauss, interp, interp, poly_lobatto, nodes_gauss, nodes_lobatto,
+    d4est_kron_A1A2x_nonsqr(poly_lobatto_to_gauss, interp, interp, poly_lobatto, nodes_gauss, nodes_lobatto,
                              nodes_gauss, nodes_lobatto);
   }
   else if (dim == 1){
@@ -200,6 +202,36 @@ test_d4est_operators_lagrange_defn(double x, double* lgl, int j, int deg){
       l *= (x - lgl[i])/(lgl[j] - lgl[i]);
   }
   return l;
+}
+
+void
+test_d4est_operators_p_prolong_1d
+(
+ d4est_operators_t* d4est_ops,
+ int degH,
+ int degh
+)
+{
+
+  int nodesH = degH + 1;
+  int nodesh = degh + 1;
+  double* P = d4est_operators_fetch_p_prolong_1d(d4est_ops, degH, degh);
+  double* lgl_h = d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, degh);
+  double* lgl_H = d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, degH);
+
+  for (int i = 0; i < nodesh; i++){
+    for (int j = 0; j < nodesH; j++){
+      double x = lgl_h[i];
+      double p_ops = P[i*nodesH + j];
+      double p_lag = test_d4est_operators_lagrange_defn(x, lgl_H, j, degH);
+      double error = fabs(p_ops - p_lag);
+      if (error > D4EST_REAL_EPS){
+        printf("[D4EST_ERROR]: ERROR > D4EST_REAL_EPS -> p_ops, p_lag, error = %.15f, %.15f, %.15f\n", p_ops, p_lag, error);
+        exit(1);
+      }   
+    }
+  }
+  printf("test_d4est_operators_p_prolong_1d degH = %d, degh = %d passed\n", degH, degh);
 }
 
 static void
@@ -395,7 +427,10 @@ int main(int argc, char *argv[])
   test_d4est_operators_inv_vandermonde(d4est_ops);
   test_d4est_operators_p_projection(d4est_ops);
   test_d4est_operators_lagrange(d4est_ops);
-  for (int dim = 3; dim < 4; dim++)
+  for (int degH = 1; degH < 20; degH++)
+    for (int degh = degH; degh < 20; degh++)  
+      test_d4est_operators_p_prolong_1d(d4est_ops, degH, degh);
+  for (int dim = 2; dim < 4; dim++)
     for (int deg = 1; deg < 20; deg++)
       test_d4est_operators_interp_lobatto_to_gauss(d4est_ops,dim,deg);
   d4est_ops_destroy(d4est_ops);

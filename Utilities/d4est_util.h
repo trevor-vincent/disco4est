@@ -3,6 +3,7 @@
 
 #define _GNU_SOURCE
 #include <stdio.h>
+#include <sc.h>
 
 #ifndef NDEBUG
 

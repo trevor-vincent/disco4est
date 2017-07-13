@@ -113,19 +113,20 @@ vtk_field_plotter_debug
 )
 {
   vtk_nodal_vecs_debug_t* vecs = user;
-  vtk_ctx = d4est_vtk_write_dg_point_dataf(vtk_ctx,
-                                           4,
-                                           0,
-                                           "u",
-                                           vecs->u,
-                                           "Au",
-                                           vecs->Au,
-                                           "error",
-                                           vecs->Au_error,
-                                           "jacobian",
-                                           vecs->jacobian,
-                                           vtk_ctx
-                                          );
+  vtk_ctx = d4est_vtk_write_dg_point_dataf
+            (vtk_ctx,
+             4,
+             0,
+             "u",
+             vecs->u,
+             "Au",
+             vecs->Au,
+             "error",
+             vecs->Au_error,
+             "jacobian",
+             vecs->jacobian,
+             vtk_ctx
+            );
 
 
    vtk_ctx = d4est_vtk_write_dg_cell_dataf
@@ -596,9 +597,11 @@ problem_init
   
 
   problem_input_t input = problem_input(input_file);
-  global_cubed_sphere_attrs = *((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user);
 
-
+  kidder_params_t kidder_params;
+  kidder_params.kidder_a = 
+    
+  
   global_param_a = global_cubed_sphere_attrs->R1;
   global_param_P = 2.*a;
   global_param_E = sqrt(global_param_P*global_param_P + 4*global_param_a*global_param_a);

@@ -16,7 +16,7 @@ d4est_poisson_flux_sipg_dirichlet
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
- d4est_xyz_fcn_t bndry_fcn,
+ d4est_xyz_fcn_t boundary_condition,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -28,16 +28,16 @@ d4est_poisson_flux_sipg_dirichlet
   int face_nodes_m_lobatto = boundary_data->face_nodes_m_lobatto;
   int face_nodes_m_quad = boundary_data->face_nodes_m_quad;
   double* u_m_on_f_m_quad = boundary_data->u_m_on_f_m_quad;
-  double* u_at_bndry_lobatto_to_quad = boundary_data->u_at_bndry_lobatto_to_quad;
   double* sj_on_f_m_quad = boundary_data->sj_on_f_m_quad;
   double* j_div_sj_quad = boundary_data->j_div_sj_quad;
-  
+  double* xyz_on_f_m_lobatto [(P4EST_DIM)]; 
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_quad [(P4EST_DIM)];  
   double* n_sj_on_f_m_quad [(P4EST_DIM)];
   D4EST_COPY_DBYD_MAT(boundary_data->drst_dxyz_quad, drst_dxyz_quad);
   D4EST_COPY_DIM_VEC(boundary_data->dudx_m_on_f_m_quad, dudx_m_on_f_m_quad);
   D4EST_COPY_DIM_VEC(boundary_data->n_sj_on_f_m_quad, n_sj_on_f_m_quad);
+  D4EST_COPY_DIM_VEC(boundary_data->xyz_on_f_m_lobatto, xyz_on_f_m_lobatto);
   
   d4est_poisson_flux_sipg_params_t* ip_flux_params = (d4est_poisson_flux_sipg_params_t*) params;
   double sipg_kronbichler_flux_penalty_prefactor = ip_flux_params->sipg_penalty_prefactor;
@@ -78,6 +78,39 @@ d4est_poisson_flux_sipg_dirichlet
                );   
   }
 
+  double* u_at_bndry_lobatto = P4EST_ALLOC(double, face_nodes_m_lobatto);
+  double* u_at_bndry_lobatto_to_quad = P4EST_ALLOC(double, face_nodes_m_quad);
+  
+
+  for (int i = 0; i < face_nodes_m_lobatto; i++){
+    u_at_bndry_lobatto[i] = boundary_condition
+                            (
+                             xyz_on_f_m_lobatto[0][i],
+                             xyz_on_f_m_lobatto[1][i],
+#if (P4EST_DIM)==3
+                             xyz_on_f_m_lobatto[2][i],
+#endif
+                             ip_flux_params->user
+                            );
+  }
+
+
+  d4est_quadrature_interpolate
+    (
+     d4est_ops,
+     d4est_quad,
+     d4est_geom,
+     &face_object,
+     QUAD_OBJECT_MORTAR,
+     QUAD_INTEGRAND_UNKNOWN,
+     u_at_bndry_lobatto,
+     e_m->deg,
+     u_at_bndry_lobatto_to_quad,
+     e_m->deg_quad
+    );
+  
+
+  
   for(int i = 0; i < face_nodes_m_quad; i++){
     double u_m_on_f_m_min_u_at_bndry_quad
       = u_m_on_f_m_quad[i] - u_at_bndry_lobatto_to_quad[i];    
@@ -194,7 +227,9 @@ d4est_poisson_flux_sipg_dirichlet
     e_m->Au_elem[i] += lifted_VT_w_term3_lobatto[i];
     e_m->Au_elem[i] += lifted_VT_w_term1_lobatto[i];
   }
-  
+
+  P4EST_FREE(u_at_bndry_lobatto);
+  P4EST_FREE(u_at_bndry_lobatto_to_quad);
   P4EST_FREE(sigma);
   P4EST_FREE(ones_quad);
   P4EST_FREE(term1_quad);
@@ -677,12 +712,14 @@ d4est_poisson_flux_sipg_params_new
  d4est_xyz_fcn_t boundary_condition,
  const char* print_prefix,
  const char* input_file,
- d4est_poisson_flux_data_t* d4est_poisson_flux_data
+ d4est_poisson_flux_data_t* d4est_poisson_flux_data,
+ void* user
 )
 {
   d4est_poisson_flux_sipg_params_t* d4est_poisson_flux_sipg_params = P4EST_ALLOC(d4est_poisson_flux_sipg_params_t, 1); 
   d4est_poisson_flux_sipg_params_input(p4est, print_prefix, input_file, d4est_poisson_flux_sipg_params);
-
+  d4est_poisson_flux_sipg_params->user = user;
+  
   d4est_poisson_flux_data->user = d4est_poisson_flux_sipg_params;
   d4est_poisson_flux_data->interface_fcn = d4est_poisson_flux_sipg_interface;
   d4est_poisson_flux_data->boundary_fcn = d4est_poisson_flux_sipg_dirichlet;

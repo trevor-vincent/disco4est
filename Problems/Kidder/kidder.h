@@ -4,6 +4,15 @@
 typedef struct {
 
   d4est_poisson_flux_data_t* flux_data;
+  kidder_params_t* kidder_params;
+  
+} problem_elliptic_eqn_params_t;
+
+typedef struct {
+
+  double kidder_a;
+  double kidder_P;
+  double kidder_E;
   
 } kidder_params_t;
 
@@ -17,13 +26,15 @@ kidder_analytic_solution_fcn
  void* user
 )
 {
+  kidder_params_t* params = user;
+  
   double r2 = x*x + y*y + z*z;
   double r = sqrt(r2);
   double r3 = r*r2;
   double r4 = r2*r2;
 
-  double a = global_param_a;
-  double E = global_param_E;
+  double a = params->kidder_a;
+  double E = params->kidder_E;
   
   double t1 = 1.;
   double t2 = 2.*E/r;
@@ -44,7 +55,7 @@ kidder_boundary_fcn
  vodi* user
 )
 {
-  return analytic_solution_fcn(x,y,z,user);
+  return kidder_analytic_solution_fcn(x,y,z,user);
 }
 
 
@@ -81,21 +92,27 @@ void kidder_apply_jac
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- void* ghost_data,
+ d4est_element_data_t* ghost_data,
  d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ void* user
 )
 {
-  prob_vecs->flux_fcn_data = curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
-                                           (zero_fcn, &global_ip_flux_params);
+  problem_elliptic_eqn_params_t* params = user;
+  kidder_params_t* kidder_params = params->kidder_params;
+  d4est_poisson_flux_data_t* flux_data = params->flux_data;
+  flux_data->boundary_condition = zero_fcn;
   
   d4est_poisson_apply_aij(p4est,
                           ghost,
                           ghost_data,
                           prob_vecs,
+                          flux_data,
                           d4est_ops,
-                          d4est_geom);
+                          d4est_geom,
+                          d4est_quad);
   
   double* M_nonlinear_term = P4EST_ALLOC(double, prob_vecs->local_nodes);
 
@@ -109,22 +126,35 @@ void kidder_apply_jac
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;        
-        d4est_element_data_apply_fofufofvlilj
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq = ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
+        mesh_object.q[2] = ed->q[2];        
+
+        d4est_quadrature_apply_fofufofvlilj
           (
            d4est_ops,
            d4est_geom,
+           d4est_quad,
+           &mesh_object,
+           QUAD_OBJECT_VOLUME,
+           QUAD_INTEGRAND_UNKNOWN,
            &prob_vecs->u[ed->nodal_stride],
            &prob_vecs->u0[ed->nodal_stride],
            NULL,
-           ed,
-           ed->deg_stiffness,
-           (P4EST_DIM),
+           ed->deg,
+           ed->xyz_quad,
+           ed->J_quad,
+           ed->deg_quad,
            &M_nonlinear_term[ed->nodal_stride],
            kidder_jacobian_nonlinear_term,
-           prob_vecs->user,
+           kidder_params,
            NULL,
            NULL
-          );
+          );        
       }
     }
   
@@ -143,9 +173,10 @@ kidder_build_residual
  d4est_geometry_t* d4est_geom
 )
 {
-
-  prob_vecs->flux_fcn_data = curved_primal_sipg_kronbichler_flux_dirichlet_fetch_fcns
-                                             (boundary_fcn, &global_ip_flux_params);
+  problem_elliptic_eqn_params_t* params = user;
+  kidder_params_t* kidder_params = params->kidder_params;
+  d4est_poisson_flux_data_t* flux_data = params->flux_data;
+  flux_data->boundary_condition = kidder_boundary_fcn;
   
   d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom);
 
@@ -161,21 +192,37 @@ kidder_build_residual
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        d4est_element_data_apply_fofufofvlj_gaussnodes
+
+
+
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq = ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
+        mesh_object.q[2] = ed->q[2];
+
+        d4est_quadrature_apply_fofufofvlj
           (
            d4est_ops,
            d4est_geom,
+           d4est_quad,
+           &mesh_object,
+           QUAD_OBJECT_VOLUME,
+           QUAD_INTEGRAND_UNKNOWN,
            &prob_vecs->u[ed->nodal_stride],
            NULL,
-           ed,
-           ed->deg_quad + params->deg_offset_for_puncture_nonlinearity_quad,
-           (P4EST_DIM),
+           ed->deg,
+           ed->J_quad,
+           ed->xyz_quad,
+           ed->deg_quad,
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
            kidder_neg_1o8_K2_psi_neg7,
-           prob_vecs->user,
+           kidder_params,
            NULL,
            NULL
-          );
+          );      
         
       }
     }

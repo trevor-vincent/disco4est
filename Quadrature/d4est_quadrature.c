@@ -6,6 +6,7 @@
 #include <d4est_quadrature_compactified.h>
 #include <d4est_util.h>
 #include <d4est_linalg.h>
+#include <d4est_kron.h>
 #include <ini.h>
 
 typedef struct {
@@ -187,17 +188,17 @@ void d4est_quadrature_apply_galerkin_integral
   }
 
   if (dim == 3){
-    d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, nodes_quad, w_j_in_quad);
-    d4est_linalg_kron_A1A2A3x_nonsqr(out, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad,
+    d4est_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, nodes_quad, w_j_in_quad);
+    d4est_kron_A1A2A3x_nonsqr(out, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad,
                                nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad);
   }
   else if (dim == 2) {
-    d4est_linalg_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, w_j_in_quad);
-    d4est_linalg_kron_A1A2x_nonsqr(out, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad, nodes_lobatto, nodes_quad,
+    d4est_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, w_j_in_quad);
+    d4est_kron_A1A2x_nonsqr(out, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad, nodes_lobatto, nodes_quad,
                              nodes_lobatto, nodes_quad);
   }
   else if (dim == 1){
-    d4est_linalg_kron_vec_dot_xy(quad_weights[0], jac_quad, in_quad, nodes_quad, w_j_in_quad);
+    d4est_kron_vec_dot_xy(quad_weights[0], jac_quad, in_quad, nodes_quad, w_j_in_quad);
     d4est_linalg_matvec_plus_vec(1.0, interp_lobatto_to_quad_trans[0], w_j_in_quad, 0., out, nodes_lobatto, nodes_quad);
   }
   
@@ -344,19 +345,19 @@ void d4est_quadrature_apply_stiffness_matrix
 
         if ((P4EST_DIM) == 3) {
 
-              d4est_linalg_kron_A1A2A3x_nonsqr(V_Dl_in, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], Dl_in,
+              d4est_kron_A1A2A3x_nonsqr(V_Dl_in, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], Dl_in,
                                nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto);
               
-              d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_wxyz(quad_weights[2],quad_weights[1],quad_weights[0], jac_quad, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_quad, nodes_quad, nodes_quad, W_V_Dl_in);
-          d4est_linalg_kron_A1A2A3x_nonsqr(VT_W_V_Dl_in, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], W_V_Dl_in,
+              d4est_kron_vec1_o_vec2_o_vec3_dot_wxyz(quad_weights[2],quad_weights[1],quad_weights[0], jac_quad, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_quad, nodes_quad, nodes_quad, W_V_Dl_in);
+          d4est_kron_A1A2A3x_nonsqr(VT_W_V_Dl_in, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], W_V_Dl_in,
                                      nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad);
         }
         else if ((P4EST_DIM) == 2) {
-          d4est_linalg_kron_A1A2x_nonsqr(V_Dl_in, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], Dl_in, nodes_quad, nodes_lobatto,
+          d4est_kron_A1A2x_nonsqr(V_Dl_in, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], Dl_in, nodes_quad, nodes_lobatto,
                             nodes_quad, nodes_lobatto);
           
-          d4est_linalg_kron_vec1_o_vec2_dot_wxyz(quad_weights[1], quad_weights[0], jac_quad, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_quad, nodes_quad, W_V_Dl_in);
-          d4est_linalg_kron_A1A2x_nonsqr(VT_W_V_Dl_in, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], W_V_Dl_in, nodes_lobatto, nodes_quad,
+          d4est_kron_vec1_o_vec2_dot_wxyz(quad_weights[1], quad_weights[0], jac_quad, rst_xyz[l][k], rst_xyz[lp][k], V_Dl_in, nodes_quad, nodes_quad, W_V_Dl_in);
+          d4est_kron_A1A2x_nonsqr(VT_W_V_Dl_in, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], W_V_Dl_in, nodes_lobatto, nodes_quad,
                                    nodes_lobatto, nodes_quad);
         }
         else {
@@ -454,17 +455,17 @@ void d4est_quadrature_apply_mass_matrix
   }
   
   if (dim == 2) {
-    d4est_linalg_kron_A1A2x_nonsqr(in_quad, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], in, nodes_quad, nodes_lobatto,
+    d4est_kron_A1A2x_nonsqr(in_quad, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], in, nodes_quad, nodes_lobatto,
                              nodes_quad, nodes_lobatto);
-    d4est_linalg_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, w_j_in_quad);
-    d4est_linalg_kron_A1A2x_nonsqr(out, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad, nodes_lobatto, nodes_quad,
+    d4est_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, w_j_in_quad);
+    d4est_kron_A1A2x_nonsqr(out, interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad, nodes_lobatto, nodes_quad,
                              nodes_lobatto, nodes_quad);
   }
   else if (dim == 3){
-    d4est_linalg_kron_A1A2A3x_nonsqr(in_quad, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], in,
+    d4est_kron_A1A2A3x_nonsqr(in_quad, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], in,
                                nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto);
-    d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, nodes_quad, w_j_in_quad);
-    d4est_linalg_kron_A1A2A3x_nonsqr(out, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad,
+    d4est_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], jac_quad, in_quad, nodes_quad, nodes_quad, nodes_quad, w_j_in_quad);
+    d4est_kron_A1A2A3x_nonsqr(out, interp_lobatto_to_quad_trans[2], interp_lobatto_to_quad_trans[1], interp_lobatto_to_quad_trans[0], w_j_in_quad,
                                nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad);
   }
   else {
@@ -875,11 +876,11 @@ d4est_quadrature_interpolate
   }
   
   if (dim == 3){
-    d4est_linalg_kron_A1A2A3x_nonsqr(u_quad_out, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], u_lobatto_in,
+    d4est_kron_A1A2A3x_nonsqr(u_quad_out, interp_lobatto_to_quad[2], interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], u_lobatto_in,
                                nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto, nodes_quad, nodes_lobatto);
   }
   else if (dim == 2){
-    d4est_linalg_kron_A1A2x_nonsqr(u_quad_out, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], u_lobatto_in, nodes_quad, nodes_lobatto,
+    d4est_kron_A1A2x_nonsqr(u_quad_out, interp_lobatto_to_quad[1], interp_lobatto_to_quad[0], u_lobatto_in, nodes_quad, nodes_lobatto,
                              nodes_quad, nodes_lobatto);
   }
   else if (dim == 1){
@@ -934,26 +935,26 @@ d4est_quadrature_innerproduct
 
   if (dim == 3){
     if (v != NULL){
-      d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], u, v, nodes_quad, nodes_quad, nodes_quad, wuv);
+      d4est_kron_vec1_o_vec2_o_vec3_dot_xy(quad_weights[2], quad_weights[1], quad_weights[0], u, v, nodes_quad, nodes_quad, nodes_quad, wuv);
     }
     else {
-      d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_x(quad_weights[2], quad_weights[1], quad_weights[0], u,nodes_quad,nodes_quad,nodes_quad,wuv);
+      d4est_kron_vec1_o_vec2_o_vec3_dot_x(quad_weights[2], quad_weights[1], quad_weights[0], u,nodes_quad,nodes_quad,nodes_quad,wuv);
     }
   }
   else if (dim == 2){
     if (v != NULL){
-      d4est_linalg_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0],  u, v, nodes_quad, nodes_quad, wuv);
+      d4est_kron_vec1_o_vec2_dot_xy(quad_weights[1], quad_weights[0],  u, v, nodes_quad, nodes_quad, wuv);
     }
     else {
-      d4est_linalg_kron_vec1_o_vec2_dot_x(quad_weights[1], quad_weights[0], u, nodes_quad, nodes_quad, wuv);
+      d4est_kron_vec1_o_vec2_dot_x(quad_weights[1], quad_weights[0], u, nodes_quad, nodes_quad, wuv);
     }
   }
   else if (dim == 1){
     if (v != NULL){
-      d4est_linalg_kron_vec_dot_xy(quad_weights[0], u, v, deg_quad + 1, wuv);
+      d4est_kron_vec_dot_xy(quad_weights[0], u, v, deg_quad + 1, wuv);
     }
     else {
-      d4est_linalg_kron_vec_dot_x(quad_weights[0], u, deg_quad + 1, wuv);
+      d4est_kron_vec_dot_x(quad_weights[0], u, deg_quad + 1, wuv);
     }
   }
   else {

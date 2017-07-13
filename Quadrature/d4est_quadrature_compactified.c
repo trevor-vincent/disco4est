@@ -7,6 +7,7 @@
 #include <d4est_geometry_cubed_sphere.h>
 #include <d4est_mortars.h>
 #include <d4est_linalg.h>
+#include <d4est_kron.h>
 #include <arbquad.h>
 #include <d4est_util.h>
 
@@ -485,7 +486,7 @@ d4est_quadrature_compactified_compute_rst_volume
 
 
   if (rst_direction == 2){
-    d4est_linalg_kron_AoBoC
+    d4est_kron_AoBoC
       (
        abscissas,
        eye,
@@ -497,7 +498,7 @@ d4est_quadrature_compactified_compute_rst_volume
       );
   }
   else if (rst_direction == 1){
-    d4est_linalg_kron_AoBoC
+    d4est_kron_AoBoC
       (
        eye,
        abscissas,
@@ -509,7 +510,7 @@ d4est_quadrature_compactified_compute_rst_volume
       );
   }
   else if (rst_direction == 0){
-    d4est_linalg_kron_AoBoC
+    d4est_kron_AoBoC
       (
        eye,
        eye,
@@ -539,7 +540,7 @@ d4est_quadrature_compactified_compute_rst_face
 #if(P4EST_DIM)==3
   double* eye = P4EST_ALLOC_ZERO(double, nodes_quad_1d);
   for (int i = 0; i < nodes_quad_1d; i++) eye[i] = 1.;
-  d4est_linalg_kron_AoB(eye,
+  d4est_kron_AoB(eye,
                         abscissas,
                         rst_face[0],
                         nodes_quad_1d,
@@ -548,7 +549,7 @@ d4est_quadrature_compactified_compute_rst_face
                         1
                        );
         
-  d4est_linalg_kron_AoB(abscissas,
+  d4est_kron_AoB(abscissas,
                         eye,
                         rst_face[1],
                         nodes_quad_1d,

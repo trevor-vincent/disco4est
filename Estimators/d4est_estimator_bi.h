@@ -12,6 +12,7 @@ typedef struct {
   penalty_calc_t gradu_penalty_fcn;
   h_calc_method_t sipg_flux_h;
   double penalty_prefactor;
+  void* user;
   
 } d4est_estimator_bi_penalty_data_t;
 

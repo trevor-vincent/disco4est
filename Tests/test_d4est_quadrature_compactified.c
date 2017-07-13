@@ -342,7 +342,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_volume
         double* weights_volume = P4EST_ALLOC(double, volume_nodes_quad);
         double* gauss_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg);
         
-        d4est_linalg_kron_AoBoC(weights,
+        d4est_kron_AoBoC(weights,
                                 gauss_weights,
                                 gauss_weights,
                                 weights_volume,
@@ -501,14 +501,14 @@ test_d4est_quadrature_compactified_weights_and_abscissas_face
             double* gauss_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg);
             double* gauss_weights_GL = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg_GL);
         
-            d4est_linalg_kron_AoB(weights,
+            d4est_kron_AoB(weights,
                                   gauss_weights,
                                   weights_face,
                                   1, deg+1,
                                   1, deg+1);
           
 
-            d4est_linalg_kron_AoB(gauss_weights_GL,
+            d4est_kron_AoB(gauss_weights_GL,
                                   gauss_weights_GL,
                                   weights_face_GL,
                                   1, deg_GL+1,
@@ -528,7 +528,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_face
             double* gauss_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg);
             double* gauss_weights_GL = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg_GL);
         
-            d4est_linalg_kron_AoB(gauss_weights,
+            d4est_kron_AoB(gauss_weights,
                                   gauss_weights,
                                   weights_face,
                                   1, deg+1,
@@ -536,7 +536,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_face
           
            
 
-            d4est_linalg_kron_AoB(gauss_weights_GL,
+            d4est_kron_AoB(gauss_weights_GL,
                                   gauss_weights_GL,
                                   weights_face_GL,
                                   1, deg_GL+1,
@@ -820,7 +820,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_interp_face
           }
 
           if (f < 4){
-            d4est_linalg_kron_A1A2x_nonsqr(poly_lobatto_to_comp,
+            d4est_kron_A1A2x_nonsqr(poly_lobatto_to_comp,
                                            lobatto_to_comp_interp,
                                            lobatto_to_gauss_interp,
                                            poly_GLL,
@@ -829,7 +829,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_interp_face
                              deg + 1, deg + 1);
           }
           else {
-            d4est_linalg_kron_A1A2x_nonsqr(poly_lobatto_to_comp, lobatto_to_gauss_interp, lobatto_to_gauss_interp, poly_GLL, deg + 1, deg + 1,
+            d4est_kron_A1A2x_nonsqr(poly_lobatto_to_comp, lobatto_to_gauss_interp, lobatto_to_gauss_interp, poly_GLL, deg + 1, deg + 1,
                              deg + 1, deg + 1);
           }
 
@@ -1039,7 +1039,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_galerkin_integral_face
           }
 
           if (f < 4){
-            d4est_linalg_kron_A1A2x_nonsqr(poly_lobatto_to_comp,
+            d4est_kron_A1A2x_nonsqr(poly_lobatto_to_comp,
                                            lobatto_to_comp_interp,
                                            lobatto_to_gauss_interp,
                                            poly_GLL,
@@ -1048,7 +1048,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_galerkin_integral_face
                              deg + 1, deg + 1);
           }
           else {
-            d4est_linalg_kron_A1A2x_nonsqr(poly_lobatto_to_comp, lobatto_to_gauss_interp, lobatto_to_gauss_interp, poly_GLL, deg + 1, deg + 1,
+            d4est_kron_A1A2x_nonsqr(poly_lobatto_to_comp, lobatto_to_gauss_interp, lobatto_to_gauss_interp, poly_GLL, deg + 1, deg + 1,
                              deg + 1, deg + 1);
           }
 

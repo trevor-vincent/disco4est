@@ -48,6 +48,7 @@ typedef enum {GEOM_CUBED_SPHERE_13TREE,
               GEOM_CUBED_SPHERE_WITH_CUBE_HOLE,
               GEOM_DISK_5TREE,
               GEOM_DISK_OUTER_WEDGE,
+              GEOM_BRICK,
               GEOM_NONE} d4est_geometry_type_t;
 
 /**

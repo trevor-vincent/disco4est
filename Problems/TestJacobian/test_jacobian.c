@@ -641,11 +641,11 @@ problem_init
 
           double* eye = P4EST_ALLOC_ZERO(double, nodes);
           for (int i = 0; i < nodes; i++) eye[i] = 1.;
-          d4est_linalg_kron_AoBoC(eye, eye, gauss_nodes, jacmap_rst[0], nodes, 1, nodes, 1, nodes,
+          d4est_kron_AoBoC(eye, eye, gauss_nodes, jacmap_rst[0], nodes, 1, nodes, 1, nodes,
                             1);
-          d4est_linalg_kron_AoBoC(eye, gauss_nodes, eye, jacmap_rst[1], nodes, 1, nodes, 1,
+          d4est_kron_AoBoC(eye, gauss_nodes, eye, jacmap_rst[1], nodes, 1, nodes, 1,
                             nodes, 1);
-          d4est_linalg_kron_AoBoC(jacmap_abscissas_dbl, eye, eye, jacmap_rst[2], nodes, 1,
+          d4est_kron_AoBoC(jacmap_abscissas_dbl, eye, eye, jacmap_rst[2], nodes, 1,
                             nodes, 1, nodes, 1);
 
 
@@ -669,7 +669,7 @@ problem_init
           }
 
     
-          d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_x(jacmap_weights_dbl,
+          d4est_kron_vec1_o_vec2_o_vec3_dot_x(jacmap_weights_dbl,
                                                gauss_weights,
                                                gauss_weights,
                                                jac,
@@ -679,7 +679,7 @@ problem_init
                                                wgau_wgau_wjac_jac
                                               );
 
-          d4est_linalg_kron_vec1_o_vec2_o_vec3_dot_x(gauss_weights,
+          d4est_kron_vec1_o_vec2_o_vec3_dot_x(gauss_weights,
                                                gauss_weights,
                                                gauss_weights,
                                                ed->J_quad,
@@ -708,7 +708,7 @@ problem_init
 
           double* s_points_inverse_map = P4EST_ALLOC(double, face_nodes_quad);
           
-          d4est_linalg_kron_AoB(jacmap_abscissas_dbl,
+          d4est_kron_AoB(jacmap_abscissas_dbl,
                           eye,
                           s_points_inverse_map,
                           nodes,

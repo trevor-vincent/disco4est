@@ -7,7 +7,6 @@
 #include <arbquad.h>
 
 /* #define P4EST_DIM 3 */
-#if (P4EST_DIM)==3
 #include <d4est_geometry_cubed_sphere.h>
 
 static inline double
@@ -1679,7 +1678,4 @@ which_tree == 12 will never occur */
     printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
   }
 }
-
-
-#endif
 

@@ -16,7 +16,7 @@ d4est_estimator_bi_dirichlet
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
- d4est_xyz_fcn_t bndry_fcn,
+ d4est_xyz_fcn_t boundary_condition,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -26,12 +26,19 @@ d4est_estimator_bi_dirichlet
 {
   d4est_estimator_bi_penalty_data_t* penalty_data = params;
   d4est_quadrature_mortar_t* face_object = boundary_data->face_object;
+  int face_nodes_m_lobatto = boundary_data->face_nodes_m_lobatto;
   int face_nodes_m_quad = boundary_data->face_nodes_m_quad;
   double* u_m_on_f_m_quad = boundary_data->u_m_on_f_m_quad;
-  double* u_at_bndry_lobatto_to_quad = boundary_data->u_at_bndry_lobatto_to_quad;
-  double** n_on_f_m_quad = boundary_data->n_on_f_m_quad;
   double* sj_on_f_m_quad = boundary_data->sj_on_f_m_quad;
-  double* j_div_sj_quad = boundary_data->j_div_sj_quad;  
+  double* j_div_sj_quad = boundary_data->j_div_sj_quad;
+  double* xyz_on_f_m_lobatto [(P4EST_DIM)]; 
+  double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
+  double* dudx_m_on_f_m_quad [(P4EST_DIM)];  
+  double* n_on_f_m_quad [(P4EST_DIM)];
+  D4EST_COPY_DBYD_MAT(boundary_data->drst_dxyz_quad, drst_dxyz_quad);
+  D4EST_COPY_DIM_VEC(boundary_data->dudx_m_on_f_m_quad, dudx_m_on_f_m_quad);
+  D4EST_COPY_DIM_VEC(boundary_data->n_on_f_m_quad, n_on_f_m_quad);
+  D4EST_COPY_DIM_VEC(boundary_data->xyz_on_f_m_lobatto, xyz_on_f_m_lobatto); 
   double* Je2_prefactor = P4EST_ALLOC(double, face_nodes_m_quad);
   double* Je2 = P4EST_ALLOC(double, face_nodes_m_quad);
   double h, h_min;
@@ -51,6 +58,37 @@ d4est_estimator_bi_dirichlet
                         penalty_data->penalty_prefactor
                        );
   }  
+
+  double* u_at_bndry_lobatto = P4EST_ALLOC(double, face_nodes_m_lobatto);
+  double* u_at_bndry_lobatto_to_quad = P4EST_ALLOC(double, face_nodes_m_quad);
+  
+  for (int i = 0; i < face_nodes_m_lobatto; i++){
+    u_at_bndry_lobatto[i] = boundary_condition
+                            (
+                             boundary_data->xyz_on_f_m_lobatto[0][i],
+                             boundary_data->xyz_on_f_m_lobatto[1][i],
+#if (P4EST_DIM)==3
+                             boundary_data->xyz_on_f_m_lobatto[2][i],
+#endif
+                             penalty_data->user
+                            );
+  }
+
+
+  d4est_quadrature_interpolate
+    (
+     d4est_ops,
+     d4est_quad,
+     d4est_geom,
+     &face_object,
+     QUAD_OBJECT_MORTAR,
+     QUAD_INTEGRAND_UNKNOWN,
+     u_at_bndry_lobatto,
+     e_m->deg,
+     u_at_bndry_lobatto_to_quad,
+     e_m->deg_quad
+    );
+
   
   for (int dim = 0; dim < (P4EST_DIM); dim++){
 
@@ -106,6 +144,8 @@ d4est_estimator_bi_interface
   d4est_quadrature_mortar_t* mortar_face_object = interface_data->mortar_face_object;
   
   int faces_mortar = interface_data->faces_mortar;
+  int total_side_nodes_m_lobatto = interface_data->total_side_nodes_m_lobatto;
+  int total_nodes_mortar_lobatto = interface_data->total_nodes_mortar_lobatto;
   int total_nodes_mortar_quad = interface_data->total_nodes_mortar_quad;
   
   double* u_m_on_f_m_mortar_quad = interface_data->u_m_on_f_m_mortar_quad;
@@ -114,15 +154,24 @@ d4est_estimator_bi_interface
   double* u_p_on_f_p_mortar_quad = interface_data->u_p_on_f_p_mortar_quad;
   double* j_div_sj_on_f_p_mortar_quad = interface_data->j_div_sj_on_f_p_mortar_quad;
   
-  double** dudx_m_on_f_m_mortar_quad = interface_data->dudx_m_on_f_m_mortar_quad;
-  double** dudx_p_on_f_p_mortar_quad = interface_data->dudx_p_on_f_p_mortar_quad;
-  double** n_on_f_m_mortar_quad = interface_data->n_on_f_m_mortar_quad;
+  double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
+  double* dudx_m_on_f_m_mortar_quad [(P4EST_DIM)];
+  double* dudx_p_on_f_p_mortar_quad [(P4EST_DIM)];
+  double* n_on_f_m_mortar_quad [(P4EST_DIM)];
 
+  D4EST_COPY_DBYD_MAT(interface_data->drst_dxyz_m_on_mortar_quad, drst_dxyz_m_on_mortar_quad);
+  D4EST_COPY_DIM_VEC(interface_data->dudx_m_on_f_m_mortar_quad, dudx_m_on_f_m_mortar_quad);
+  D4EST_COPY_DIM_VEC(interface_data->dudx_p_on_f_p_mortar_quad, dudx_p_on_f_p_mortar_quad);
+  D4EST_COPY_DIM_VEC(interface_data->n_on_f_m_mortar_quad, n_on_f_m_mortar_quad);
+  
   int* deg_mortar_quad = interface_data->deg_mortar_quad;
   int* nodes_mortar_quad = interface_data->nodes_mortar_quad;
+  int* nodes_mortar_lobatto = interface_data->nodes_mortar_lobatto;
+  int* deg_mortar_lobatto = interface_data->deg_mortar_lobatto;
+  int* face_nodes_m_lobatto = interface_data->deg_mortar_lobatto;
   int* deg_m_lobatto = interface_data->deg_m_lobatto;
   int* deg_p_lobatto = interface_data->deg_p_lobatto;
-
+  
   d4est_estimator_bi_penalty_data_t* penalty_data = params;
   
   double hm_min, hp_min;

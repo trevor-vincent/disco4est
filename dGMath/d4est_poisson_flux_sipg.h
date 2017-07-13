@@ -27,13 +27,14 @@ typedef struct {
   /* For curved elements, h is not well defined, therefore we try two methods  */
   /* 1. H_EQ_J_DIV_SJ ----->  h(+,-) ~ jacobian(+,-)/surface_jacobian */
   /* 2. H_EQ_J_DIV_SJ_MIN */
-  
   h_calc_method_t sipg_flux_h;
 
+  void* user;
+  
 } d4est_poisson_flux_sipg_params_t;
 
 /* This file was automatically generated.  Do not edit! */
 void d4est_poisson_flux_sipg_params_destroy(d4est_poisson_flux_data_t *data);
-void d4est_poisson_flux_sipg_params_new(p4est_t *p4est,d4est_xyz_fcn_t boundary_condition,const char *print_prefix,const char *input_file,d4est_poisson_flux_data_t *d4est_poisson_flux_data);
+void d4est_poisson_flux_sipg_params_new(p4est_t *p4est,d4est_xyz_fcn_t boundary_condition,const char *print_prefix,const char *input_file,d4est_poisson_flux_data_t *d4est_poisson_flux_data,void *user);
 
 #endif

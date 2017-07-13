@@ -67,6 +67,7 @@ include_directories(${CMAKE_SOURCE_DIR}/Operators)
 include_directories(${CMAKE_SOURCE_DIR}/Visualization)
 include_directories(${CMAKE_SOURCE_DIR}/Quadrature)
 include_directories(${CMAKE_SOURCE_DIR}/Utilities)
+include_directories(${CMAKE_SOURCE_DIR}/Kron)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${MPI_C_INCLUDE_PATH})
 # include_directories(${OpenBLAS_INCLUDE_DIR})
@@ -75,6 +76,17 @@ include_directories(${MPI_C_INCLUDE_PATH})
 ## Add MPI compile flags for the whole project
 ##
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MPI_C_COMPILE_FLAG}")
+
+SET (
+  SRCS_3D_ONLY
+  Geometry/d4est_geometry_cubed_sphere.c
+  )
+
+SET (
+  SRCS_2D_ONLY
+  Geometry/d4est_geometry_disk.c
+  )
+
 SET (
   SRCS
   Utilities/ini.c
@@ -83,14 +95,14 @@ SET (
   LinearAlgebra/d4est_linalg.c
   EllipticSystem/d4est_elliptic_eqns.c
   EllipticSystem/d4est_elliptic_data.c
+  Kron/d4est_kron.c
   dGMath/d4est_operators.c
   dGMath/d4est_lgl.c
   dGMath/d4est_reference.c
   dGMath/d4est_poisson.c
   dGMath/d4est_poisson_flux.c
   dGMath/d4est_poisson_flux_sipg.c
-  Geometry/d4est_geometry_cubed_sphere.c
-  Geometry/d4est_geometry_disk.c
+  Geometry/d4est_geometry_brick.c
   Geometry/d4est_geometry.c
   Estimators/d4est_estimator_stats.c
   Estimators/d4est_estimator_bi.c
@@ -114,8 +126,8 @@ SET (
 ##
 ## D8EST Library
 ##
-add_library(d8est ${SRCS})
-add_library(d4est ${SRCS})
+add_library(d8est ${SRCS} ${SRCS_3D_ONLY})
+add_library(d4est ${SRCS} ${SRCS_2D_ONLY})
 
 add_dependencies(d8est build_bundled_libs)
 add_dependencies(d4est build_bundled_libs)
@@ -229,6 +241,13 @@ add_executable(test_d4est_operators Tests/test_d4est_operators.c)
 target_link_libraries(test_d4est_operators d8est)
 add_test(test_d4est_operators_test test_d4est_operators)
 target_compile_definitions(test_d4est_operators PRIVATE NDEBUG DIM=3)
+
+
+add_executable(test_d4est_kron Tests/test_d4est_kron.c)
+target_link_libraries(test_d4est_kron d8est)
+add_test(test_d4est_kron_test test_d4est_kron)
+target_compile_definitions(test_d4est_kron PRIVATE NDEBUG DIM=3)
+
 
 
 add_executable(test_d4est_geometry Tests/test_d4est_geometry.c)

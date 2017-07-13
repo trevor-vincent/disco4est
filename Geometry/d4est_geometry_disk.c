@@ -2,8 +2,6 @@
 #include <d4est_util.h>
 #include <pXest.h>
 #include <d4est_geometry.h>
-
-#if (P4EST_DIM)==2
 #include <d4est_geometry_disk.h>
 #include <p4est_connectivity.h>
 
@@ -12,8 +10,6 @@ static double
 secant_fcn(double x){
   return 1./cos(x);
 }
-
-
 
 
 static
@@ -520,5 +516,3 @@ d4est_geometry_disk_outer_wedge_new
     printf("%s: compactify outer wedge = %d\n", printf_prefix,  input->compactify_outer_wedge);
   }
 }
-
-#endif

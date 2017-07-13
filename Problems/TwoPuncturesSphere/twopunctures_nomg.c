@@ -411,7 +411,7 @@ problem_init
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
   
-  d4est_poisson_flux_data_t* flux_data = d4est_poisson_flux_new(p4est, input_file, zero_fcn);
+  d4est_poisson_flux_data_t* flux_data = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
   twopunctures_params_t tp_params;
   init_twopunctures_data(&tp_params, flux_data);
   

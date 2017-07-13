@@ -2,6 +2,7 @@
 #include <d4est_operators.h>
 #include <assert.h>
 #include <d4est_linalg.h>
+#include <d4est_kron.h>
 #include <d4est_util.h>
 #include <GL_and_GLL_nodes_and_weights.h>
 
@@ -292,7 +293,7 @@ void d4est_operators_hp_apply_nd_prolong_with_ptr(double* Uh, int degh, double* 
     int cx = d4est_reference_is_child_left_or_right(c, 0);
     int cy = d4est_reference_is_child_left_or_right(c, 1);
 
-       d4est_linalg_kron_A1A2x_nonsqr(Uh, &hp_prolong_matrix_1d[cy * nodesh * nodesH],
+       d4est_kron_A1A2x_nonsqr(Uh, &hp_prolong_matrix_1d[cy * nodesh * nodesH],
                            &hp_prolong_matrix_1d[cx * nodesh * nodesH], UH,
                            nodesh, nodesH, nodesh, nodesH);
     
@@ -302,7 +303,7 @@ void d4est_operators_hp_apply_nd_prolong_with_ptr(double* Uh, int degh, double* 
     int cz = d4est_reference_is_child_left_or_right(c, 2);
 
 
-    d4est_linalg_kron_A1A2A3x_nonsqr(Uh,
+    d4est_kron_A1A2A3x_nonsqr(Uh,
                                &hp_prolong_matrix_1d[cz * nodesh * nodesH],
                                &hp_prolong_matrix_1d[cy * nodesh * nodesH],
                                &hp_prolong_matrix_1d[cx * nodesh * nodesH], UH,
@@ -521,7 +522,7 @@ void d4est_operators_hp_apply_nd_restrict_with_ptr(double* uH, int degH, double*
 
 
 
-    d4est_linalg_kron_A1A2x_nonsqr(uH, &hp_restrict_matrix_1d[cy * nodesh * nodesH],
+    d4est_kron_A1A2x_nonsqr(uH, &hp_restrict_matrix_1d[cy * nodesh * nodesH],
                              &hp_restrict_matrix_1d[cx * nodesh * nodesH], uh,
                              nodesH, nodesh, nodesH, nodesh);
 
@@ -531,7 +532,7 @@ void d4est_operators_hp_apply_nd_restrict_with_ptr(double* uH, int degH, double*
     int cz = d4est_reference_is_child_left_or_right(c, 2);
 
 
-    d4est_linalg_kron_A1A2A3x_nonsqr(uH, &hp_restrict_matrix_1d[cz * nodesh * nodesH],
+    d4est_kron_A1A2A3x_nonsqr(uH, &hp_restrict_matrix_1d[cz * nodesh * nodesH],
                                &hp_restrict_matrix_1d[cy * nodesh * nodesH],
                                &hp_restrict_matrix_1d[cx * nodesh * nodesH], uh,
                                nodesH, nodesh, nodesH, nodesh, nodesH, nodesh);
@@ -716,10 +717,10 @@ void d4est_operators_apply_mij(d4est_operators_t* d4est_ops, double* in, int dim
   if (dim == 1)
     d4est_linalg_matvec_plus_vec(1.0, mass_1d, in, 0., out, nodes, nodes);
   else if (dim == 2) {
-    d4est_linalg_kron_A1A2x_nonsqr(out, mass_1d, mass_1d, in, nodes, nodes,
+    d4est_kron_A1A2x_nonsqr(out, mass_1d, mass_1d, in, nodes, nodes,
                              nodes, nodes);
   } else if (dim == 3) {
-    d4est_linalg_kron_A1A2A3x_nonsqr(out, mass_1d, mass_1d, mass_1d, in,
+    d4est_kron_A1A2A3x_nonsqr(out, mass_1d, mass_1d, mass_1d, in,
                                nodes, nodes, nodes, nodes, nodes, nodes);
   } else {
     D4EST_ABORT("[D4EST_ERROR]: Apply mass matrix ref space, wrong dimension.");
@@ -735,10 +736,10 @@ void d4est_operators_apply_invmij(d4est_operators_t* d4est_ops, double* in, int 
   if (dim == 1)
     d4est_linalg_matvec_plus_vec(1.0, inv_mass_1d, in, 0., out, nodes, nodes);
   else if (dim == 2) {
-    d4est_linalg_kron_A1A2x_nonsqr(out, inv_mass_1d, inv_mass_1d, in, nodes,
+    d4est_kron_A1A2x_nonsqr(out, inv_mass_1d, inv_mass_1d, in, nodes,
                              nodes, nodes, nodes);
   } else if (dim == 3) {
-    d4est_linalg_kron_A1A2A3x_nonsqr(out, inv_mass_1d, inv_mass_1d,
+    d4est_kron_A1A2A3x_nonsqr(out, inv_mass_1d, inv_mass_1d,
                                inv_mass_1d, in, nodes, nodes, nodes, nodes,
                                nodes, nodes);
   } else {
@@ -772,14 +773,14 @@ void d4est_operators_apply_dij_transpose(d4est_operators_t* d4est_ops, double* i
     d4est_linalg_matvec_plus_vec(1.0, Dr_1d_transpose, in, 0., out, nodes, nodes);
   else if (dim == 2) {
 
-    if (dir == 0) d4est_linalg_kron_IoMATx_SQR(out, Dr_1d_transpose, in, nodes);
-    if (dir == 1) d4est_linalg_kron_MAToIx_SQR(out, Dr_1d_transpose, in, nodes);
+    if (dir == 0) d4est_kron_IoMATx_SQR(out, Dr_1d_transpose, in, nodes);
+    if (dir == 1) d4est_kron_MAToIx_SQR(out, Dr_1d_transpose, in, nodes);
     
   } else if (dim == 3) {
 
-    if (dir == 0) d4est_linalg_kron_IoIoMATx_SQR(out, Dr_1d_transpose, in, nodes);
-    if (dir == 1) d4est_linalg_kron_IoMAToIx_SQR(out, Dr_1d_transpose, in, nodes);
-    if (dir == 2) d4est_linalg_kron_MAToIoIx_SQR(out, Dr_1d_transpose, in, nodes);
+    if (dir == 0) d4est_kron_IoIoMATx_SQR(out, Dr_1d_transpose, in, nodes);
+    if (dir == 1) d4est_kron_IoMAToIx_SQR(out, Dr_1d_transpose, in, nodes);
+    if (dir == 2) d4est_kron_MAToIoIx_SQR(out, Dr_1d_transpose, in, nodes);
 
   } else {
     P4EST_FREE(Dr_1d_transpose);
@@ -880,7 +881,7 @@ void d4est_operators_hp_apply_nd_prolong_transpose_with_ptr(
     int cy = d4est_reference_is_child_left_or_right(c, 1);
 
 
-    d4est_linalg_kron_A1A2x_nonsqr(
+    d4est_kron_A1A2x_nonsqr(
         uH, &hp_prolong_transpose_matrix_1d[cy * nodesh * nodesH],
         &hp_prolong_transpose_matrix_1d[cx * nodesh * nodesH], uh, nodesH,
         nodesh, nodesH, nodesh);
@@ -891,7 +892,7 @@ void d4est_operators_hp_apply_nd_prolong_transpose_with_ptr(
     int cz = d4est_reference_is_child_left_or_right(c, 2);
 
 
-    d4est_linalg_kron_A1A2A3x_nonsqr(
+    d4est_kron_A1A2A3x_nonsqr(
         uH, &hp_prolong_transpose_matrix_1d[cz * nodesh * nodesH],
         &hp_prolong_transpose_matrix_1d[cy * nodesh * nodesH],
         &hp_prolong_transpose_matrix_1d[cx * nodesh * nodesH], uh, nodesH,
@@ -968,10 +969,10 @@ void d4est_operators_apply_p_prolong(d4est_operators_t* d4est_ops, double* in, i
   if (dim == 1) {
     d4est_linalg_matvec_plus_vec(1.0, p_prolong_1d, in, 0., out, nodesh, nodesH);
   } else if (dim == 2) {
-    d4est_linalg_kron_A1A2x_nonsqr(out, p_prolong_1d, p_prolong_1d, in, nodesh,
+    d4est_kron_A1A2x_nonsqr(out, p_prolong_1d, p_prolong_1d, in, nodesh,
                              nodesH, nodesh, nodesH);
   } else if (dim == 3) {
-    d4est_linalg_kron_A1A2A3x_nonsqr(out, p_prolong_1d, p_prolong_1d, p_prolong_1d,
+    d4est_kron_A1A2A3x_nonsqr(out, p_prolong_1d, p_prolong_1d, p_prolong_1d,
                                in, nodesh, nodesH, nodesh, nodesH, nodesh,
                                nodesH);
   } else {
@@ -1066,10 +1067,10 @@ void d4est_operators_apply_p_restrict(d4est_operators_t* d4est_ops, double* in, 
   if (dim == 1)
     d4est_linalg_matvec_plus_vec(1.0, p_restrict_1d, in, 0., out, nodesH, nodesh);
   else if (dim == 2) {
-    d4est_linalg_kron_A1A2x_nonsqr(out, p_restrict_1d, p_restrict_1d, in, nodesH,
+    d4est_kron_A1A2x_nonsqr(out, p_restrict_1d, p_restrict_1d, in, nodesH,
                              nodesh, nodesH, nodesh);
   } else if (dim == 3) {
-    d4est_linalg_kron_A1A2A3x_nonsqr(out, p_restrict_1d, p_restrict_1d, p_restrict_1d,
+    d4est_kron_A1A2A3x_nonsqr(out, p_restrict_1d, p_restrict_1d, p_restrict_1d,
                                in, nodesH, nodesh, nodesH, nodesh, nodesH,
                                nodesh);
   } else {
@@ -1157,17 +1158,17 @@ static void d4est_operators_build_lobatto_rst_nd(d4est_operators_t* d4est_ops, d
   if (dim == 2) {
 
 
-    d4est_linalg_kron_AoB(eye, lgl, &ref_xyz_nd[0], (nodes), 1, (nodes), 1);
-    d4est_linalg_kron_AoB(lgl, eye, &ref_xyz_nd[nodes * nodes], (nodes), 1, (nodes), 1);
+    d4est_kron_AoB(eye, lgl, &ref_xyz_nd[0], (nodes), 1, (nodes), 1);
+    d4est_kron_AoB(lgl, eye, &ref_xyz_nd[nodes * nodes], (nodes), 1, (nodes), 1);
 
   } else if (dim == 3) {
 
 
-    d4est_linalg_kron_AoBoC(eye, eye, lgl, &ref_xyz_nd[0], nodes, 1, nodes, 1, nodes,
+    d4est_kron_AoBoC(eye, eye, lgl, &ref_xyz_nd[0], nodes, 1, nodes, 1, nodes,
                       1);
-    d4est_linalg_kron_AoBoC(eye, lgl, eye, &ref_xyz_nd[vol_nodes], nodes, 1, nodes, 1,
+    d4est_kron_AoBoC(eye, lgl, eye, &ref_xyz_nd[vol_nodes], nodes, 1, nodes, 1,
                       nodes, 1);
-    d4est_linalg_kron_AoBoC(lgl, eye, eye, &ref_xyz_nd[2 * vol_nodes], nodes, 1,
+    d4est_kron_AoBoC(lgl, eye, eye, &ref_xyz_nd[2 * vol_nodes], nodes, 1,
                       nodes, 1, nodes, 1);
 
   } else
@@ -1189,17 +1190,17 @@ static void d4est_operators_build_gauss_rst_nd(d4est_operators_t* d4est_ops, dou
 
   if (dim == 2) {
 
-    d4est_linalg_kron_AoB(eye, gl, &ref_xyz_nd[0], (nodes), 1, (nodes), 1);
-    d4est_linalg_kron_AoB(gl, eye, &ref_xyz_nd[nodes * nodes], (nodes), 1, (nodes), 1);
+    d4est_kron_AoB(eye, gl, &ref_xyz_nd[0], (nodes), 1, (nodes), 1);
+    d4est_kron_AoB(gl, eye, &ref_xyz_nd[nodes * nodes], (nodes), 1, (nodes), 1);
 
   } else if (dim == 3) {
 
 
-    d4est_linalg_kron_AoBoC(eye, eye, gl, &ref_xyz_nd[0], nodes, 1, nodes, 1, nodes,
+    d4est_kron_AoBoC(eye, eye, gl, &ref_xyz_nd[0], nodes, 1, nodes, 1, nodes,
                       1);
-    d4est_linalg_kron_AoBoC(eye, gl, eye, &ref_xyz_nd[vol_nodes], nodes, 1, nodes, 1,
+    d4est_kron_AoBoC(eye, gl, eye, &ref_xyz_nd[vol_nodes], nodes, 1, nodes, 1,
                       nodes, 1);
-    d4est_linalg_kron_AoBoC(gl, eye, eye, &ref_xyz_nd[2 * vol_nodes], nodes, 1,
+    d4est_kron_AoBoC(gl, eye, eye, &ref_xyz_nd[2 * vol_nodes], nodes, 1,
                       nodes, 1, nodes, 1);
 
   } else
@@ -1246,12 +1247,12 @@ void d4est_operators_apply_dij
   if (dim == 1)
     d4est_linalg_matvec_plus_vec(1.0, Dr_1d, in, 0., out, nodes, nodes);
   else if (dim == 2) {
-    if (dir == 0) d4est_linalg_kron_IoMATx_SQR(out, Dr_1d, in, nodes);
-    if (dir == 1) d4est_linalg_kron_MAToIx_SQR(out, Dr_1d, in, nodes);
+    if (dir == 0) d4est_kron_IoMATx_SQR(out, Dr_1d, in, nodes);
+    if (dir == 1) d4est_kron_MAToIx_SQR(out, Dr_1d, in, nodes);
   } else if (dim == 3) {
-    if (dir == 0) d4est_linalg_kron_IoIoMATx_SQR(out, Dr_1d, in, nodes);
-    if (dir == 1) d4est_linalg_kron_IoMAToIx_SQR(out, Dr_1d, in, nodes);
-    if (dir == 2) d4est_linalg_kron_MAToIoIx_SQR(out, Dr_1d, in, nodes);
+    if (dir == 0) d4est_kron_IoIoMATx_SQR(out, Dr_1d, in, nodes);
+    if (dir == 1) d4est_kron_IoMAToIx_SQR(out, Dr_1d, in, nodes);
+    if (dir == 2) d4est_kron_MAToIoIx_SQR(out, Dr_1d, in, nodes);
   } else {
     D4EST_ABORT("ERROR: d4est_operators_apply_dij");
   }
@@ -1340,9 +1341,9 @@ void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double* in, int di
   if (dim == 2){
     
     if (dir == 0)
-      d4est_linalg_kron_IoVECx_SQR(out, &lift_1d[side * nodes], in, nodes);
+      d4est_kron_IoVECx_SQR(out, &lift_1d[side * nodes], in, nodes);
     else if (dir == 1)
-      d4est_linalg_kron_VECoIx_SQR(out, &lift_1d[side * nodes], in, nodes);
+      d4est_kron_VECoIx_SQR(out, &lift_1d[side * nodes], in, nodes);
     else 
       D4EST_ABORT("dim == 2 so dir == 0 OR 1");
     
@@ -1352,11 +1353,11 @@ void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double* in, int di
   else if (dim == 3){
 
   if (dir == 0)
-    d4est_linalg_kron_IoIoVECx_SQR(out, &lift_1d[side * nodes], in, nodes);
+    d4est_kron_IoIoVECx_SQR(out, &lift_1d[side * nodes], in, nodes);
   else if (dir == 1)
-    d4est_linalg_kron_IoVECoIx_SQR(out, &lift_1d[side * nodes], in, nodes);
+    d4est_kron_IoVECoIx_SQR(out, &lift_1d[side * nodes], in, nodes);
   else if (dir == 2)
-    d4est_linalg_kron_VECoIoIx_SQR(out, &lift_1d[side * nodes], in, nodes);
+    d4est_kron_VECoIoIx_SQR(out, &lift_1d[side * nodes], in, nodes);
   else
     D4EST_ABORT("DIM = 3 so DIR = 0,1,2");
   
@@ -1406,10 +1407,10 @@ void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int 
   if (dim == 2){
 
     if (dir == 0)
-      d4est_linalg_kron_IoVEC_TRANSx_SQR(out, &slicer_1d[side * (deg + 1)], in,
+      d4est_kron_IoVEC_TRANSx_SQR(out, &slicer_1d[side * (deg + 1)], in,
                                  deg + 1);
     else if (dir == 1)
-      d4est_linalg_kron_VEC_TRANSoIx_SQR(out, &slicer_1d[side * (deg + 1)], in,
+      d4est_kron_VEC_TRANSoIx_SQR(out, &slicer_1d[side * (deg + 1)], in,
                                  deg + 1);
     else
       D4EST_ABORT("DIM == 2, so dir == 0,1");
@@ -1418,11 +1419,11 @@ void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int 
   else if (dim == 3){
 
     if (dir == 0)
-      d4est_linalg_kron_IoIoVEC_TRANSx_SQR(out, &slicer_1d[side * (deg + 1)], in, deg + 1);
+      d4est_kron_IoIoVEC_TRANSx_SQR(out, &slicer_1d[side * (deg + 1)], in, deg + 1);
     else if (dir == 1)
-      d4est_linalg_kron_IoVEC_TRANSoIx_SQR(out, &slicer_1d[side * (deg + 1)], in, deg + 1);
+      d4est_kron_IoVEC_TRANSoIx_SQR(out, &slicer_1d[side * (deg + 1)], in, deg + 1);
     else if (dir == 2)
-      d4est_linalg_kron_VEC_TRANSoIoIx_SQR(out, &slicer_1d[side * (deg + 1)], in,
+      d4est_kron_VEC_TRANSoIoIx_SQR(out, &slicer_1d[side * (deg + 1)], in,
                                    deg + 1);
     else
       D4EST_ABORT("DIM == 3 so DIR=0,1 or 2");
@@ -1447,10 +1448,10 @@ void d4est_operators_convert_nodal_to_modal(d4est_operators_t* d4est_ops, double
   if (dim == 1)
     d4est_linalg_matvec_plus_vec(1.0, invvij_1d, in, 0., out, nodes, nodes);
   else if (dim == 2) {
-    d4est_linalg_kron_A1A2x_nonsqr(out, invvij_1d, invvij_1d, in, nodes, nodes, nodes,
+    d4est_kron_A1A2x_nonsqr(out, invvij_1d, invvij_1d, in, nodes, nodes, nodes,
                              nodes);
   } else if (dim == 3) {
-    d4est_linalg_kron_A1A2A3x_nonsqr(out, invvij_1d, invvij_1d, invvij_1d, in, nodes,
+    d4est_kron_A1A2A3x_nonsqr(out, invvij_1d, invvij_1d, invvij_1d, in, nodes,
                                nodes, nodes, nodes, nodes, nodes);
   } else {
     D4EST_ABORT("[D4EST_ERROR]: Apply mass matrix ref space, wrong dimension.");
@@ -1582,11 +1583,11 @@ void d4est_operators_apply_p_prolong_transpose(d4est_operators_t* d4est_ops, dou
     d4est_linalg_matvec_plus_vec(1.0, p_prolong_transpose_1d, in, 0., out, nodesH,
                            nodesh);
   else if (dim == 2) {
-    d4est_linalg_kron_A1A2x_nonsqr(out, p_prolong_transpose_1d,
+    d4est_kron_A1A2x_nonsqr(out, p_prolong_transpose_1d,
                              p_prolong_transpose_1d, in, nodesH, nodesh, nodesH,
                              nodesh);
   } else if (dim == 3) {
-    d4est_linalg_kron_A1A2A3x_nonsqr(out, p_prolong_transpose_1d,
+    d4est_kron_A1A2A3x_nonsqr(out, p_prolong_transpose_1d,
                                p_prolong_transpose_1d, p_prolong_transpose_1d,
                                in, nodesH, nodesh, nodesH, nodesh, nodesH,
                                nodesh);
@@ -1784,10 +1785,10 @@ void d4est_operators_apply_p_restrict_interp(d4est_operators_t* d4est_ops, doubl
   if (dim == 1)
     d4est_linalg_matvec_plus_vec(1.0, p_restrict_1d, in, 0., out, nodesH, nodesh);
   else if (dim == 2) {
-    d4est_linalg_kron_A1A2x_nonsqr(out, p_restrict_1d, p_restrict_1d, in, nodesH,
+    d4est_kron_A1A2x_nonsqr(out, p_restrict_1d, p_restrict_1d, in, nodesH,
                              nodesh, nodesH, nodesh);
   } else if (dim == 3) {
-    d4est_linalg_kron_A1A2A3x_nonsqr(out, p_restrict_1d, p_restrict_1d, p_restrict_1d,
+    d4est_kron_A1A2A3x_nonsqr(out, p_restrict_1d, p_restrict_1d, p_restrict_1d,
                                in, nodesH, nodesh, nodesH, nodesh, nodesH,
                                nodesh);
   } else {
@@ -1825,10 +1826,10 @@ void d4est_operators_apply_flip(d4est_operators_t* d4est_ops, double* in, int di
   if (dim == 1)
     d4est_linalg_matvec_plus_vec(1.0, flip_1d, in, 0., out, nodes, nodes);
   else if (dim == 2) {
-    if (dir == 0) d4est_linalg_kron_IoMATx_SQR(out, flip_1d, in, nodes);
-    if (dir == 1) d4est_linalg_kron_MAToIx_SQR(out, flip_1d, in, nodes);
+    if (dir == 0) d4est_kron_IoMATx_SQR(out, flip_1d, in, nodes);
+    if (dir == 1) d4est_kron_MAToIx_SQR(out, flip_1d, in, nodes);
     if (dir == 2)
-      d4est_linalg_kron_A1A2x_nonsqr(out, flip_1d, flip_1d, in, nodes, nodes, nodes,
+      d4est_kron_A1A2x_nonsqr(out, flip_1d, flip_1d, in, nodes, nodes, nodes,
                                nodes);
   } else {
     D4EST_ABORT("[D4EST_ERROR]: flip not supported in this dimension atm.");
@@ -1988,14 +1989,14 @@ void d4est_operators_apply_vtk_interp
   else if (dim == 2) {
     int cx = d4est_reference_is_child_left_or_right(c, 0);
     int cy = d4est_reference_is_child_left_or_right(c, 1);
-    d4est_linalg_kron_A1A2x_nonsqr(out, &vtk_interp_1d[cx * nodes_in * nodes_out],
+    d4est_kron_A1A2x_nonsqr(out, &vtk_interp_1d[cx * nodes_in * nodes_out],
                              &vtk_interp_1d[cy * nodes_in * nodes_out], in,
                              nodes_out, nodes_in, nodes_out, nodes_in);
   } else if (dim == 3) {
     int cx = d4est_reference_is_child_left_or_right(c, 0);
     int cy = d4est_reference_is_child_left_or_right(c, 1);
     int cz = d4est_reference_is_child_left_or_right(c, 2);
-    d4est_linalg_kron_A1A2A3x_nonsqr(out, &vtk_interp_1d[cx * nodes_in * nodes_out],
+    d4est_kron_A1A2A3x_nonsqr(out, &vtk_interp_1d[cx * nodes_in * nodes_out],
                                &vtk_interp_1d[cy * nodes_in * nodes_out],
                                &vtk_interp_1d[cz * nodes_in * nodes_out], in,
                                nodes_out, nodes_in, nodes_out, nodes_in, nodes_out, nodes_in);
