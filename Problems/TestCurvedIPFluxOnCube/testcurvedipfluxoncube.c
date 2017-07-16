@@ -922,7 +922,7 @@ problem_init
     /* double time_spent = (double)(end - begin) / CLOCKS_PER_SEC; */
     printf
       (
-       "\n\n[HP_AMR]: %d %d %.25f %d %.25f %f \n\n",
+       "\n\n[AMR]: %d %d %.25f %d %.25f %f \n\n",
        /* degree, */
        (int)p4est->global_num_quadrants,
        (int)global_nodes_dbl,

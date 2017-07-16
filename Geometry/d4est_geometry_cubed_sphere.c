@@ -427,22 +427,19 @@ d4est_geometry_cubed_sphere_inner_shell_block_X(
   
 /* } */
 
-
-
 static void 
-d4est_geometry_cubed_sphere_outer_shell_block_X(
-                                                d4est_geometry_t * geom,
-                                                p4est_topidx_t which_tree,
-                                                p4est_qcoord_t q0 [(P4EST_DIM)],
-                                                p4est_qcoord_t dq,
-                                                const double coords[(P4EST_DIM)],
-                                                coords_type_t coords_type,
-                                                double xyz[(P4EST_DIM)]
+d4est_geometry_cubed_sphere_outer_shell_block_X_aux(
+                                                    int compactify_outer_shell,
+                                                    double R1,
+                                                    double R2,
+                                                    p4est_qcoord_t q0 [(P4EST_DIM)],
+                                                    p4est_qcoord_t dq,
+                                                    const double coords[(P4EST_DIM)],
+                                                    coords_type_t coords_type,
+                                                    double xyz[(P4EST_DIM)]
 )
 {
-  d4est_geometry_cubed_sphere_attr_t* sphere = geom->user;
   double tcoords [(P4EST_DIM)];
-
   d4est_geometry_get_tree_coords_in_range_0_to_1(q0, dq, coords, coords_type, tcoords);
 
   /* transform topog coordinates in [0,1]^3 to cubed sphere vertex space [-1,1]^2 x [1,2]  */
@@ -454,18 +451,49 @@ d4est_geometry_cubed_sphere_outer_shell_block_X(
   double R = -1.;
   double x = tan (abc[0] * M_PI_4);
   double y = tan (abc[1] * M_PI_4);
-  if (sphere->compactify_outer_shell){
-    double m = (2. - 1.)/((1./sphere->R2) - (1./sphere->R1));
-    double t = (1.*sphere->R1 - 2.*sphere->R2)/(sphere->R1 - sphere->R2);
+  if (compactify_outer_shell){
+    double m = (2. - 1.)/((1./R2) - (1./R1));
+    double t = (1.*R1 - 2.*R2)/(R1 - R2);
     R = m/(abc[2] - t);
   }
   else {
-    R = sphere->R1*(2. - abc[2]) + sphere->R2*(abc[2] - 1.);
+    R = R1*(2. - abc[2]) + R2*(abc[2] - 1.);
   }
   double q = R / sqrt (x * x + y * y + 1.);  
   xyz[0] = +q * x;
   xyz[1] = +q * y;
   xyz[2] = +q;
+
+}
+
+
+static void 
+d4est_geometry_cubed_sphere_outer_shell_block_X(
+                                                d4est_geometry_t * d4est_geom,
+                                                p4est_topidx_t which_tree,
+                                                p4est_qcoord_t q0 [(P4EST_DIM)],
+                                                p4est_qcoord_t dq,
+                                                const double coords[(P4EST_DIM)],
+                                                coords_type_t coords_type,
+                                                double xyz[(P4EST_DIM)]
+)
+{
+  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
+  double R0 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R0;
+  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
+  
+  d4est_geometry_cubed_sphere_outer_shell_block_X_aux
+    (
+     compactify_outer_shell,
+     R1,
+     R2,
+     q0,
+     dq,
+     coords,
+     coords_type,
+     xyz
+  );
 }
 
 
@@ -559,7 +587,98 @@ d4est_geometry_cubed_sphere_X(
   }
 }
 
+static void
+d4est_geometry_cubed_sphere_with_sphere_hole_X(
+                              d4est_geometry_t * geom,
+                              p4est_topidx_t which_tree,
+                              p4est_qcoord_t q0 [3],
+                              p4est_qcoord_t dq,
+                              const double coords[3],
+                              coords_type_t coords_type,
+                              double xyz[3]
+)
+{
+  d4est_geometry_cubed_sphere_attr_t* sphere = geom->user;
 
+  double              x, y, R, q;
+  double              abc[3];
+
+  double tcoords [3];
+  d4est_geometry_get_tree_coords_in_range_0_to_1(q0, dq, coords, coords_type, tcoords);
+  
+  /* transform from the reference cube into vertex space */
+  d4est_geometry_octree_to_vertex (geom->p4est_conn, which_tree, tcoords, abc);
+
+  /* assert that input points are in the expected range */
+  P4EST_ASSERT (0 <= which_tree && which_tree < 13);
+  if (which_tree < 6) {         /* outer shell */
+    x = tan (abc[0] * M_PI_4);
+    y = tan (abc[1] * M_PI_4);
+    if (sphere->compactify_outer_shell){
+      double m = (2. - 1.)/((1./sphere->R2) - (1./sphere->R1));
+      double t = (1.*sphere->R1 - 2.*sphere->R2)/(sphere->R1 - sphere->R2);
+      R = m/(abc[2] - t);
+    }
+    else {
+      R = sphere->R1*(2. - abc[2]) + sphere->R2*(abc[2] - 1.);
+    }
+    q = R / sqrt (x * x + y * y + 1.);
+  }
+  else if (which_tree < 12) {   /* inner shell */
+    x = tan (abc[0] * M_PI_4);
+    y = tan (abc[1] * M_PI_4);
+    if (sphere->compactify_inner_shell){
+      double m = (2. - 1.)/((1./sphere->R1) - (1./sphere->R0));
+      double t = (1.*sphere->R0 - 2.*sphere->R1)/(sphere->R0 - sphere->R1);
+      R = m/(abc[2] - t);
+    }
+    else {
+      R = sphere->R0*(2. - abc[2]) + sphere->R1*(abc[2] - 1.);
+    }
+    q = R / sqrt (x * x + y * y + 1.);
+  }
+  else {                        /* center cube */
+    xyz[0] = abc[0] * sphere->Clength;
+    xyz[1] = abc[1] * sphere->Clength;
+    xyz[2] = abc[2] * sphere->Clength;
+
+    return;
+  }  
+  switch (which_tree % 6) {
+  case 0:                      /* front */
+    xyz[0] = +q * x;
+    xyz[1] = -q;
+    xyz[2] = +q * y;
+    break;
+  case 1:                      /* top */
+    xyz[0] = +q * x;
+    xyz[1] = +q * y;
+    xyz[2] = +q;
+    break;
+  case 2:                      /* back */
+    xyz[0] = +q * x;
+    xyz[1] = +q;
+    xyz[2] = -q * y;
+    break;
+  case 3:                      /* right */
+    xyz[0] = +q;
+    xyz[1] = -q * x;
+    xyz[2] = -q * y;
+    break;
+  case 4:                      /* bottom */
+    xyz[0] = -q * y;
+    xyz[1] = -q * x;
+    xyz[2] = -q;
+    break;
+  case 5:                      /* left */
+    xyz[0] = -q;
+    xyz[1] = -q * x;
+    xyz[2] = +q * y;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED();
+  }
+}
 static void
 d4est_geometry_cubed_sphere_7tree_X(
                               d4est_geometry_t * geom,
@@ -1028,8 +1147,9 @@ d4est_geometry_cubed_sphere_outer_shell_block_jac(d4est_geometry_t* d4est_geom,
 
 
 static void
-d4est_geometry_cubed_sphere_outer_shell_block_DX(d4est_geometry_t* d4est_geom,
-                                                 p4est_topidx_t which_tree,
+d4est_geometry_cubed_sphere_outer_shell_block_DX_aux(int compactify_outer_shell,
+                                                     double R1,
+                                                     double R2,
                                                  p4est_qcoord_t q0 [3],
                                                  p4est_qcoord_t dq,
                                                  const double rst[3], /* [-1,1]^3 */
@@ -1037,9 +1157,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_DX(d4est_geometry_t* d4est_geom,
                                                 )
 {
 
-  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
-  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
-  double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
+
 
   /* Element integration weight x-coordinates in [-1,1]^3 space of the element*/
   double r = rst[0];
@@ -1096,6 +1214,29 @@ d4est_geometry_cubed_sphere_outer_shell_block_DX(d4est_geometry_t* d4est_geom,
 
 
 static void
+d4est_geometry_cubed_sphere_outer_shell_block_DX(d4est_geometry_t* d4est_geom,
+                                                 p4est_topidx_t which_tree,
+                                                 p4est_qcoord_t q0 [3],
+                                                 p4est_qcoord_t dq,
+                                                 const double rst[3], /* [-1,1]^3 */
+                                                 double dxyz_drst[3][3]
+                                                )
+{
+  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
+  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
+
+  d4est_geometry_cubed_sphere_outer_shell_block_DX_aux(compactify_outer_shell,
+                                                       R1,
+                                                       R2,
+                                                       q0,
+                                                       dq,
+                                                       rst,
+                                                       dxyz_drst);
+  
+}
+
+static void
 d4est_geometry_cubed_sphere_innerouter_shell_X
 (
  d4est_geometry_t * geom,
@@ -1109,12 +1250,12 @@ d4est_geometry_cubed_sphere_innerouter_shell_X
 {
   if (which_tree == 0){
     d4est_geometry_cubed_sphere_outer_shell_block_X(geom,
-                                                     which_tree,
-                                                     q0,
-                                                     dq,
-                                                     coords,
+                                                    which_tree,
+                                                    q0,
+                                                    dq,
+                                                    coords,
                                                     coords_type,
-                                                     xyz);
+                                                    xyz);
   }
   else if (which_tree == 1){
     d4est_geometry_cubed_sphere_inner_shell_block_X(geom,
@@ -1160,6 +1301,81 @@ d4est_geometry_cubed_sphere_innerouter_shell_DX(d4est_geometry_t* d4est_geom,
   }
 }
 
+static void
+d4est_geometry_cubed_sphere_DX_aux_rotate
+(
+ int which_tree,
+ double dxyz_drst_top [(P4EST_DIM)][(P4EST_DIM)],
+ double dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]
+)
+{
+  switch (which_tree % 6) {
+  case 0:                      /* front */
+    /* xyz[0] = +q * x; */
+    /* xyz[1] = -q; */
+    /* xyz[2] = +q * y; */
+    for (int d = 0; d < (P4EST_DIM); d++){
+      dxyz_drst[0][d] = dxyz_drst_top[0][d];
+      dxyz_drst[1][d] = -dxyz_drst_top[2][d];
+      dxyz_drst[2][d] = dxyz_drst_top[1][d];
+    }
+    break;
+ case 1:                      /* top */
+   /* xyz[0] = +q * x; */
+   /* xyz[1] = +q * y; */
+   /* xyz[2] = +q; */
+   for (int d = 0; d < (P4EST_DIM); d++){
+     dxyz_drst[0][d] = dxyz_drst_top[0][d];
+     dxyz_drst[1][d] = dxyz_drst_top[1][d];
+     dxyz_drst[2][d] = dxyz_drst_top[2][d];
+    
+   }
+   break;
+ case 2:                      /* back */
+   /* xyz[0] = +q * x; */
+   /* xyz[1] = +q; */
+   /* xyz[2] = -q * y; */
+   for (int d = 0; d < (P4EST_DIM); d++){
+     dxyz_drst[0][d] = dxyz_drst_top[0][d];
+     dxyz_drst[1][d] = dxyz_drst_top[2][d];
+     dxyz_drst[2][d] = -dxyz_drst_top[1][d];
+   }
+   break;
+ case 3:                      /* right */
+   /* xyz[0] = +q; */
+   /* xyz[1] = -q * x; */
+   /* xyz[2] = -q * y; */
+   for (int d = 0; d < (P4EST_DIM); d++){
+     dxyz_drst[0][d] = dxyz_drst_top[2][d];
+     dxyz_drst[1][d] = -dxyz_drst_top[0][d];
+     dxyz_drst[2][d] = -dxyz_drst_top[1][d];
+   }
+   break;
+ case 4:                      /* bottom */
+   /* xyz[0] = -q * y; */
+   /* xyz[1] = -q * x; */
+   /* xyz[2] = -q; */
+   for (int d = 0; d < (P4EST_DIM); d++){
+     dxyz_drst[0][d] = -dxyz_drst_top[1][d];
+     dxyz_drst[1][d] = -dxyz_drst_top[0][d];
+     dxyz_drst[2][d] = -dxyz_drst_top[2][d];      
+   }
+   break;
+ case 5:                      /* left */
+   /* xyz[0] = -q; */
+   /* xyz[1] = -q * x; */
+   /* xyz[2] = +q * y; */
+   for (int d = 0; d < (P4EST_DIM); d++){
+     dxyz_drst[0][d] = -dxyz_drst_top[2][d];
+     dxyz_drst[1][d] = -dxyz_drst_top[0][d];
+     dxyz_drst[2][d] = dxyz_drst_top[1][d];
+   }
+   break;
+  default:
+    SC_ABORT_NOT_REACHED();
+  }
+}
+
 
 static void
 d4est_geometry_cubed_sphere_DX(d4est_geometry_t* d4est_geom,
@@ -1198,10 +1414,6 @@ d4est_geometry_cubed_sphere_DX(d4est_geometry_t* d4est_geom,
 
     double Clength = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->Clength;
     
-    double r = rst[0];
-    double s = rst[1];
-    double t = rst[2];
-
     /* topological coordinates of element corners */
     double amin = q0[0];
     double amax = q0[0] + dq;
@@ -1234,73 +1446,68 @@ d4est_geometry_cubed_sphere_DX(d4est_geometry_t* d4est_geom,
     dxyz_drst[2][2] = .5*(cmax - cmin);
     return;
   }
+
+  d4est_geometry_cubed_sphere_DX_aux_rotate
+    (
+     which_tree,
+     dxyz_drst_temp,
+     dxyz_drst
+    );
   
-  switch (which_tree % 6) {
-  case 0:                      /* front */
-    /* xyz[0] = +q * x; */
-    /* xyz[1] = -q; */
-    /* xyz[2] = +q * y; */
-    for (int d = 0; d < (P4EST_DIM); d++){
-      dxyz_drst[0][d] = dxyz_drst_temp[0][d];
-      dxyz_drst[1][d] = -dxyz_drst_temp[2][d];
-      dxyz_drst[2][d] = dxyz_drst_temp[1][d];
-    }
-    break;
- case 1:                      /* top */
-   /* xyz[0] = +q * x; */
-   /* xyz[1] = +q * y; */
-   /* xyz[2] = +q; */
-   for (int d = 0; d < (P4EST_DIM); d++){
-     dxyz_drst[0][d] = dxyz_drst_temp[0][d];
-     dxyz_drst[1][d] = dxyz_drst_temp[1][d];
-     dxyz_drst[2][d] = dxyz_drst_temp[2][d];
-    
-   }
-   break;
- case 2:                      /* back */
-   /* xyz[0] = +q * x; */
-   /* xyz[1] = +q; */
-   /* xyz[2] = -q * y; */
-   for (int d = 0; d < (P4EST_DIM); d++){
-     dxyz_drst[0][d] = dxyz_drst_temp[0][d];
-     dxyz_drst[1][d] = dxyz_drst_temp[2][d];
-     dxyz_drst[2][d] = -dxyz_drst_temp[1][d];
-   }
-   break;
- case 3:                      /* right */
-   /* xyz[0] = +q; */
-   /* xyz[1] = -q * x; */
-   /* xyz[2] = -q * y; */
-   for (int d = 0; d < (P4EST_DIM); d++){
-     dxyz_drst[0][d] = dxyz_drst_temp[2][d];
-     dxyz_drst[1][d] = -dxyz_drst_temp[0][d];
-     dxyz_drst[2][d] = -dxyz_drst_temp[1][d];
-   }
-   break;
- case 4:                      /* bottom */
-   /* xyz[0] = -q * y; */
-   /* xyz[1] = -q * x; */
-   /* xyz[2] = -q; */
-   for (int d = 0; d < (P4EST_DIM); d++){
-     dxyz_drst[0][d] = -dxyz_drst_temp[1][d];
-     dxyz_drst[1][d] = -dxyz_drst_temp[0][d];
-     dxyz_drst[2][d] = -dxyz_drst_temp[2][d];      
-   }
-   break;
- case 5:                      /* left */
-   /* xyz[0] = -q; */
-   /* xyz[1] = -q * x; */
-   /* xyz[2] = +q * y; */
-   for (int d = 0; d < (P4EST_DIM); d++){
-     dxyz_drst[0][d] = -dxyz_drst_temp[2][d];
-     dxyz_drst[1][d] = -dxyz_drst_temp[0][d];
-     dxyz_drst[2][d] = dxyz_drst_temp[1][d];
-   }
-   break;
-  default:
-    SC_ABORT_NOT_REACHED();
-  }
 }
+
+static void
+d4est_geometry_cubed_sphere_with_sphere_hole_DX(d4est_geometry_t* d4est_geom,
+                         p4est_topidx_t which_tree,
+                         p4est_qcoord_t q0 [(P4EST_DIM)],
+                         p4est_qcoord_t dq,
+                         const double rst[(P4EST_DIM)], /* [-1,1]^3 */
+                         double dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]
+                                                )
+{
+  double dxyz_drst_temp [(P4EST_DIM)][(P4EST_DIM)];
+  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
+  int compactify_inner_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_inner_shell;
+  double R0 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R0;
+  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
+  
+  /* outer spherical shell wedges */
+  if (which_tree < 6){
+    d4est_geometry_cubed_sphere_outer_shell_block_DX_aux
+      (
+       compactify_outer_shell,
+       R1,
+       R2,
+       q0,
+       dq,
+       rst,
+       dxyz_drst_temp
+      );
+  }
+  /* inner spherical shell wedges */
+  else if (which_tree < 12){
+    d4est_geometry_cubed_sphere_outer_shell_block_DX_aux
+      (
+       compactify_inner_shell,
+       R0,
+       R1,
+       q0,
+       dq,
+       rst,
+       dxyz_drst_temp
+      );
+  }
+
+  d4est_geometry_cubed_sphere_DX_aux_rotate
+    (
+     which_tree,
+     dxyz_drst_temp,
+     dxyz_drst
+    );
+  
+}
+
 
 
 static void
@@ -1679,3 +1886,33 @@ which_tree == 12 will never occur */
   }
 }
 
+
+void
+d4est_geometry_cubed_sphere_with_sphere_hole_new
+(
+ int mpirank,
+ const char* input_file,
+ const char* input_section,
+ const char* printf_prefix,
+ d4est_geometry_t* d4est_geom
+)
+{
+  d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_input(input_file, input_section);
+  p4est_connectivity_t* conn = d4est_connectivity_new_sphere_with_cube_hole();
+  
+  d4est_geom->p4est_conn = conn; 
+  d4est_geom->user = sphere_attrs;
+  d4est_geom->X = d4est_geometry_cubed_sphere_with_sphere_hole_X;
+  d4est_geom->DX = d4est_geometry_cubed_sphere_with_sphere_hole_DX; 
+  d4est_geom->JAC = NULL;
+  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
+  
+  if (mpirank == 0){
+    printf("%s: NAME = cubed sphere with sphere hole\n", printf_prefix );
+    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
+    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
+    printf("%s: R2 = %.25f\n", printf_prefix , sphere_attrs->R2);
+    printf("%s: compactify_outer_shell = %d\n", printf_prefix , sphere_attrs->compactify_outer_shell);
+    printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
+  }
+}

@@ -5,7 +5,7 @@
 #include "../dGMath/d4est_operators.h"
 #include "../Solver/multigrid.h"
 #include "../Solver/cg_eigs.h"
-#include "../hpAMR/hp_amr.h"
+#include "../hpAMR/amr.h"
 #include <ini.h>
 #include <d4est_util.h>
 #include <multigrid_callbacks.h>

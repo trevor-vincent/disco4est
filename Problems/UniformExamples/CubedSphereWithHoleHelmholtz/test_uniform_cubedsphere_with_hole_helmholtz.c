@@ -1131,7 +1131,7 @@ problem_init
       double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf
       (
-       "[HP_AMR]: %d, %d, %d, %.25f, %f\n",
+       "[AMR]: %d, %d, %d, %.25f, %f\n",
        level,
        (int)p4est->global_num_quadrants,
        (int)global_nodes_dbl,

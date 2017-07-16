@@ -12,12 +12,12 @@
 #include <problem_data.h>
 #include <d4est_elliptic_eqns.h>
 #include <poisson_operator.h>
-#include <hp_amr_smooth_pred.h>
-#include <hp_amr_uniform.h>
+#include <amr_smooth_pred.h>
+#include <amr_uniform.h>
 #include <bi_estimator.h>
 #include <estimator_stats.h>
 #include <bi_estimator_flux_fcns.h>
-#include <hp_amr.h>
+#include <amr.h>
 #include <multigrid.h>
 #include <hacked_p4est_vtk.h>
 #include <dg_norm.h>
@@ -468,19 +468,19 @@ problem_init
     );
   
  
-  hp_amr_scheme_t* scheme =
-    hp_amr_smooth_pred_init
+  amr_scheme_t* scheme =
+    amr_smooth_pred_init
     (
      p4est,
      gamma_h,
      gamma_p,
      1.,
      7,
-     hp_amr_smooth_pred_get_sigaverage_marker(&sigma)
+     amr_smooth_pred_get_sigaverage_marker(&sigma)
     );
 
 
-  hp_amr_scheme_t* scheme_uni = hp_amr_uniform();
+  amr_scheme_t* scheme_uni = amr_uniform();
 
   
   element_data_init_node_vec(p4est, u_analytic, analytic_solution_fcn, d4est_ops);    
@@ -532,11 +532,11 @@ problem_init
     if (world_rank == 0){
       printf
         (
-         "[HP_AMR]: Level Elements Nodes Eta2 L2-Norm DG-Norm Time\n"
+         "[AMR]: Level Elements Nodes Eta2 L2-Norm DG-Norm Time\n"
         );
       printf
         (
-         "\n\n[HP_AMR]: %d %d %d %.25f %.25f %.25f %f \n\n",
+         "\n\n[AMR]: %d %d %d %.25f %.25f %.25f %f \n\n",
          0,
          (int)p4est->global_num_quadrants,
          (int)global_nodes_dbl,
@@ -613,7 +613,7 @@ problem_init
     d4est_linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
     
     char sol_save_as [500];
-    sprintf(sol_save_as, "%s_hp_amr_level_%d_sols", P4EST_STRING, level);
+    sprintf(sol_save_as, "%s_amr_level_%d_sols", P4EST_STRING, level);
 
     hacked_p4est_vtk_write_all
       (p4est,
@@ -645,7 +645,7 @@ problem_init
       estimator_stats_print(stats);
     
     int curved = 0;
-    hp_amr(p4est,
+    amr(p4est,
            d4est_ops,
            &u,
            &stats,
@@ -824,7 +824,7 @@ problem_init
       double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
       printf
         (
-         "\n\n[HP_AMR]: %d %d %d %.25f %.25f %.25f %f \n\n",
+         "\n\n[AMR]: %d %d %d %.25f %.25f %.25f %f \n\n",
          level,
          (int)p4est->global_num_quadrants,
          (int)global_nodes_dbl,
@@ -849,9 +849,9 @@ problem_init
            &intercept,
            num_of_hpamr_levels
           );
-        printf("[HP_AMR_FIT](1): ||err||DG = C1*exp(-C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
-        printf("[HP_AMR_FIT](2): LEV SLOPE DG_ERR\n");
-        printf("[HP_AMR_FIT](3): %d %.25f %.25f, \n\n", level, slope, sqrt(global_dg_norm_sqr));
+        printf("[AMR_FIT](1): ||err||DG = C1*exp(-C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
+        printf("[AMR_FIT](2): LEV SLOPE DG_ERR\n");
+        printf("[AMR_FIT](3): %d %.25f %.25f, \n\n", level, slope, sqrt(global_dg_norm_sqr));
       }      
     }
   }
@@ -886,7 +886,7 @@ problem_init
   d4est_linalg_vec_fabs(u_error_vertex, (P4EST_CHILDREN)*p4est->local_num_quadrants);
   
   char sol_save_as [500];
-  sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta2", P4EST_STRING, level);
+  sprintf(sol_save_as, "%s_amr_level_%d_sols_noeta2", P4EST_STRING, level);
 
   hacked_p4est_vtk_write_all
     (p4est,
@@ -913,8 +913,8 @@ problem_init
   P4EST_FREE(u_error_vertex);
   P4EST_FREE(u_vertex);   
 
-  hp_amr_smooth_pred_destroy(scheme);
-  hp_amr_uniform_destroy(scheme_uni);
+  amr_smooth_pred_destroy(scheme);
+  amr_uniform_destroy(scheme_uni);
   
   /* if (ghost) { */
   p4est_ghost_destroy (ghost);

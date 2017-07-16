@@ -617,7 +617,12 @@ d4est_poisson_flux_interface
      j_div_sj_on_f_m_mortar_quad,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
-  
+
+#ifdef POISSON_FLUX_COMPUTE_PORDER_MORTAR_GEOM
+  double* sj_on_f_p_mortar_quad_porder = P4EST_ALLOC(double, total_nodes_mortar_quad);
+  double* n_on_f_p_mortar_quad_porder [(P4EST_DIM)];
+  D4EST_ALLOC_DIM_VEC(n_on_f_p_mortar_quad_porder, total_nodes_mortar_quad);
+#endif
 
   d4est_mortars_compute_geometric_data_on_mortar
     (
@@ -634,9 +639,15 @@ d4est_poisson_flux_interface
      &deg_mortar_quad_porder[0],
      f_p,
      drst_dxyz_p_on_mortar_quad_porder,
+#ifdef POISSON_FLUX_COMPUTE_PORDER_MORTAR_GEOM
+     sj_on_f_p_mortar_quad_porder,
+     n_on_f_p_mortar_quad_porder,
+     NULL,
+#else
      NULL,
      NULL,
      NULL,
+#endif
      j_div_sj_on_f_p_mortar_quad_porder,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
@@ -752,6 +763,14 @@ d4est_poisson_flux_interface
      &interface_data,
      d4est_poisson_flux_params->user
     );
+
+#ifdef POISSON_FLUX_COMPUTE_PORDER_MORTAR_GEOM
+     double* sj_on_f_p_mortar_quad_porder = P4EST_ALLOC(double, total_nodes_mortar_quad);
+     P4EST_FREE(sj_on_f_p_mortar_quad_porder);
+     D4EST_FREE_DIM_VEC(n_on_f_p_mortar_quad_porder);
+#endif
+
+     
 
   P4EST_FREE(j_div_sj_on_f_m_mortar_quad);
   P4EST_FREE(j_div_sj_on_f_p_mortar_quad_porder);

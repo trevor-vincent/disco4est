@@ -1,13 +1,19 @@
-#ifndef D4EST_HP_AMR_H
-#define D4EST_HP_AMR_H 
+#ifndef D4EST_AMR_H
+#define D4EST_AMR_H 
 
 #include <pXest.h>
 #include <d4est_operators.h>
 #include <d4est_estimator_stats.h>
 
+typedef enum {AMR_NOT_SET,
+              AMR_SMOOTH_PRED,
+              AMR_UNIFORM_H,
+              AMR_UNIFORM_P,
+              AMR_RANDOM_H,
+              AMR_RANDOM_HP} d4est_amr_scheme_type_t;
 
 /**
- * @file   hp_amr.c
+ * @file   amr.c
  * @author Trevor Vincent <tvincent@cita.utoronto.ca>
  * @date   Mon Nov  2 01:08:28 2015
  * 
@@ -31,40 +37,42 @@
 
 typedef struct {
 
+  d4est_amr_scheme_type_t amr_scheme_type;
+ 
   void (*post_balance_callback) (p4est_t*, void*);
   void (*pre_refine_callback) (p4est_t*, void*);
   p4est_replace_t refine_replace_callback_fcn_ptr;
   p4est_replace_t balance_replace_callback_fcn_ptr;  
-  p4est_iter_volume_t iter_volume;
-  void* hp_amr_scheme_data;
+  p4est_iter_volume_t mark_elements;
+  void* amr_scheme_data;
 
-} d4est_hp_amr_scheme_t;
+} d4est_amr_scheme_t;
 
 typedef struct {
-  
-  double* data;
+
+  /* externally set */
+  int num_of_amr_steps;
+  int max_degree;
+
+  /* internal use */
+  int log_initial_size;
   int* refinement_log;
-  int refinement_log_stride;
-  void* hp_amr_scheme_data;
+  int* initial_log;
+  int* balance_log;
+
+  d4est_amr_scheme_t* scheme;
   d4est_operators_t* d4est_ops;  
-  p4est_replace_t refine_replace_callback_fcn_ptr;
-  p4est_replace_t balance_replace_callback_fcn_ptr;
   d4est_estimator_stats_t** d4est_estimator_stats;
-  int elements_marked_for_hrefine;
-  int elements_marked_for_prefine;
-  double* (*get_storage)(d4est_element_data_t*);
   
-} d4est_hp_amr_data_t;
+} d4est_amr_t;
 
 void
-d4est_hp_amr
+d4est_amr
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  double** data_to_hp_refine,
- d4est_estimator_stats_t** stats,
- d4est_hp_amr_scheme_t* scheme,
- double* (*get_storage)(d4est_element_data_t*)
+ d4est_estimator_stats_t** stats
 );
 
 #endif

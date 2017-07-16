@@ -13,8 +13,8 @@
 #include <krylov_petsc.h>
 #include <matrix_sym_tester.h>
 #include <dg_norm.h>
-#include <hp_amr.h>
-#include <hp_amr_curved_smooth_pred.h>
+#include <amr.h>
+#include <amr_curved_smooth_pred.h>
 #include <d4est_geometry.h>
 #include <d4est_geometry_sphere.h>
 #include <d4est_geometry_disk.h>
@@ -286,9 +286,9 @@ problem_save_to_vtk
 
     char sol_save_as [500];
     if (with_eta)
-      sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_witheta", "cds", level);
+      sprintf(sol_save_as, "%s_amr_level_%d_sols_witheta", "cds", level);
     else
-      sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta", "cds", level);
+      sprintf(sol_save_as, "%s_amr_level_%d_sols_noeta", "cds", level);
     
     d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, sol_save_as);
     d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
@@ -525,8 +525,8 @@ problem_init
     amr_marker.set_element_gamma_fcn = amr_set_element_gamma;
     amr_marker.name = "puncture_marker";
 
-    hp_amr_scheme_t* scheme =
-      hp_amr_curved_smooth_pred_init
+    amr_scheme_t* scheme =
+      amr_curved_smooth_pred_init
       (
        p4est,
        (MAX_DEGREE)-2,
@@ -647,7 +647,7 @@ problem_init
       );
   
     
-    hp_amr(p4est,
+    amr(p4est,
            d4est_ops,
            &u,
            &stats[0],
@@ -750,7 +750,7 @@ problem_init
       double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf
       (
-       "[HP_AMR]: %d, %d, %d, %.25f, %.25f, %f\n",
+       "[AMR]: %d, %d, %d, %.25f, %.25f, %f\n",
        level,
        (int)p4est->global_num_quadrants,
        (int)global_nodes_dbl,

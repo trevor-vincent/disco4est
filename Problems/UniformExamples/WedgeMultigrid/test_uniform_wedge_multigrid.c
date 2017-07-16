@@ -12,9 +12,9 @@
 #include <krylov_petsc.h>
 #include <matrix_sym_tester.h>
 #include <dg_norm.h>
-#include <hp_amr.h>
-#include <hp_amr_curved_smooth_pred.h>
-#include <hp_amr_curved_uniform.h>
+#include <amr.h>
+#include <amr_curved_smooth_pred.h>
+#include <amr_curved_uniform.h>
 #include <d4est_geometry.h>
 #include <d4est_geometry_cubed_sphere.h>
 #include <d4est_geometry_disk.h>
@@ -983,7 +983,7 @@ problem_init
       double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf
       (
-       "[HP_AMR]: %d, %d, %d, %.25f, %f\n",
+       "[AMR]: %d, %d, %d, %.25f, %f\n",
        level,
        (int)p4est->global_num_quadrants,
        (int)global_nodes_dbl,

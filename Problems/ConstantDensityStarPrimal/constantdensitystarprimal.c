@@ -17,12 +17,12 @@
 #include <problem_data.h>
 #include <d4est_elliptic_eqns.h>
 #include <poisson_operator.h>
-#include <hp_amr_curved_smooth_pred.h>
+#include <amr_curved_smooth_pred.h>
 #include <curved_bi_estimator.h>
 #include <estimator_stats.h>
 #include <curved_bi_estimator_flux_fcns.h>
 #include <bi_estimator_flux_fcns.h>
-#include <hp_amr.h>
+#include <amr.h>
 #include <newton_petsc.h>
 #include <d4est_vtk.h>
 #include <dg_norm.h>
@@ -543,9 +543,9 @@ problem_save_to_vtk
 
     char sol_save_as [500];
     if (with_eta)
-      sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_witheta", "cds", level);
+      sprintf(sol_save_as, "%s_amr_level_%d_sols_witheta", "cds", level);
     else
-      sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta", "cds", level);
+      sprintf(sol_save_as, "%s_amr_level_%d_sols_noeta", "cds", level);
     
     d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, sol_save_as);
     d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
@@ -740,8 +740,8 @@ problem_init
   amr_marker.name = "cds_marker";
   amr_marker.user = (void*)&input;
 
-  hp_amr_scheme_t* scheme =
-    hp_amr_curved_smooth_pred_init
+  amr_scheme_t* scheme =
+    amr_curved_smooth_pred_init
     (
      p4est,
      input.degmax,
@@ -800,11 +800,11 @@ problem_init
     if (world_rank == 0){
       printf
         (
-         "[HP_AMR]: Level Elements Nodes Eta2 L2-Norm DG-Norm Time\n"
+         "[AMR]: Level Elements Nodes Eta2 L2-Norm DG-Norm Time\n"
         );
       printf
         (
-         "\n\n[HP_AMR]: %d %d %d %.25f %.25f %.25f %f \n\n",
+         "\n\n[AMR]: %d %d %d %.25f %.25f %.25f %f \n\n",
          0,
          (int)p4est->global_num_quadrants,
          (int)global_nodes_dbl,
@@ -855,7 +855,7 @@ problem_init
     printf("p4est->local_num_quadrants*p4est->mpisize < input.amr_inflation_size -> %d < %d = %d\n", p4est->local_num_quadrants*p4est->mpisize,input.amr_inflation_size, p4est->local_num_quadrants*p4est->mpisize < input.amr_inflation_size);
 
     int curved = 1;
-    hp_amr(p4est,
+    amr(p4est,
            d4est_ops,
            &u,
            &stats,
@@ -971,7 +971,7 @@ problem_init
       double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
       printf
         (
-         "\n\n[HP_AMR]: %d %d %d %.25f %.25f %.25f %f \n\n",
+         "\n\n[AMR]: %d %d %d %.25f %.25f %.25f %f \n\n",
          level,
          (int)p4est->global_num_quadrants,
          (int)global_nodes_dbl,
@@ -996,9 +996,9 @@ problem_init
            &intercept,
            num_of_hpamr_levels
           );
-        printf("[HP_AMR_FIT](1): ||err||DG = C1*exp(-C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
-        printf("[HP_AMR_FIT](2): LEV SLOPE DG_ERR\n");
-        printf("[HP_AMR_FIT](3): %d %.25f %.25f, \n\n", level, slope, sqrt(global_dg_norm_sqr));
+        printf("[AMR_FIT](1): ||err||DG = C1*exp(-C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
+        printf("[AMR_FIT](2): LEV SLOPE DG_ERR\n");
+        printf("[AMR_FIT](3): %d %.25f %.25f, \n\n", level, slope, sqrt(global_dg_norm_sqr));
       }      
     }
 
@@ -1025,7 +1025,7 @@ problem_init
   int with_eta = 0;
   problem_save_to_vtk(p4est, d4est_ops, u, u_analytic, u_error, level, with_eta);
   
-  hp_amr_curved_smooth_pred_destroy(scheme);
+  amr_curved_smooth_pred_destroy(scheme);
   geometric_factors_destroy(geometric_factors);
   
   /* if (ghost) { */

@@ -145,6 +145,11 @@ d4est_geometry_new(int mpirank,
     d4est_geometry_cubed_sphere_with_cube_hole_new(mpirank, input_file, input_section, printf_prefix,  d4est_geom);
     d4est_geom->geom_type = GEOM_CUBED_SPHERE_WITH_CUBE_HOLE;
   }
+  else if (d4est_util_match(input.name,"cubed_sphere_with_sphere_hole")) {
+    d4est_geometry_cubed_sphere_with_sphere_hole_new(mpirank, input_file, input_section, printf_prefix,  d4est_geom);
+    d4est_geom->geom_type = GEOM_CUBED_SPHERE_WITH_SPHERE_HOLE;
+  }
+  
   else if (d4est_util_match(input.name,"cubed_sphere_innerouter_shell")) {
     d4est_geometry_cubed_sphere_innerouter_shell_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
     d4est_geom->geom_type = GEOM_CUBED_SPHERE_INNEROUTER_SHELL;

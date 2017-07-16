@@ -443,8 +443,8 @@ problem_init
   amr_marker.set_element_gamma_fcn = amr_set_element_gamma;
   amr_marker.name = "puncture_marker";
 
-  d4est_hp_amr_scheme_t* scheme =
-    d4est_hp_amr_smooth_pred_init
+  d4est_amr_scheme_t* scheme =
+    d4est_amr_smooth_pred_init
     (
      p4est,
      8,
@@ -532,7 +532,7 @@ problem_init
       );
 
     
-    d4est_hp_amr(p4est,
+    d4est_amr(p4est,
                  d4est_ops,
                  &u,
                  &stats[0],
@@ -649,7 +649,7 @@ problem_init
     if (world_rank == 0){
     printf
       (
-       "[HP_AMR]: %d, %d, %d, %.25f, %.25f\n",
+       "[AMR]: %d, %d, %d, %.25f, %.25f\n",
        level,
        (int)p4est->global_num_quadrants,
        (int)global_nodes_dbl,
@@ -672,7 +672,7 @@ problem_init
   }
   
   d4est_mesh_geometry_storage_destroy(geometric_factors);
-  d4est_hp_amr_smooth_pred_destroy(scheme);
+  d4est_amr_smooth_pred_destroy(scheme);
   d4est_poisson_flux_destroy(flux_data);  
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
 

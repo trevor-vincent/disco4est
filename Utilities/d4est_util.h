@@ -130,6 +130,10 @@
 #define D4EST_ASSERT(c) D4EST_NOOP()
 #endif
 
+#define D4EST_ALLOC(a,b) P4EST_ALLOC(a,b)
+#define D4EST_ALLOC_ZERO(a,b) P4EST_ALLOC_ZERO(a,b)
+#define D4EST_REALLOC(a,b,c) P4EST_REALLOC(a,b,c)
+
 #define D4EST_ABORT(c) SC_ABORT(c)
 #define D4EST_ABORT_IF(q, ...) ((q) ? D4EST_ABORT(__VA_ARGS__) : (void)0)
 #define D4EST_ABORT_IF_NOT(q, ...) D4EST_ABORT_IF(!(q), __VA_ARGS__)

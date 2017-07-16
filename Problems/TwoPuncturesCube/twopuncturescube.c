@@ -16,11 +16,11 @@
 #include <problem_data.h>
 #include <d4est_elliptic_eqns.h>
 #include <poisson_operator.h>
-#include <hp_amr_smooth_pred.h>
-#include <hp_amr_uniform.h>
+#include <amr_smooth_pred.h>
+#include <amr_uniform.h>
 #include <bi_estimator.h>
 #include <bi_estimator_flux_fcns.h>
-#include <hp_amr.h>
+#include <amr.h>
 #include <ini.h>
 #include <newton_petsc.h>
 #include <hacked_p4est_vtk.h>
@@ -1060,15 +1060,15 @@ problem_init
     prob_fcns.build_residual = build_residual;
   }
 
-  hp_amr_scheme_t* scheme =
-    hp_amr_smooth_pred_init
+  amr_scheme_t* scheme =
+    amr_smooth_pred_init
     (
      p4est,
      gamma_h,
      gamma_p,
      1.,
      input.degmax,
-     hp_amr_smooth_pred_get_NULL_marker()
+     amr_smooth_pred_get_NULL_marker()
     );
 
   /* force a balance if we're loading from checkpoint with autopartition */
@@ -1144,8 +1144,8 @@ problem_init
        
     /* if(save_hp_img && (level && !(level % save_hp_img_period))){ */
     /*   char save_as [500]; */
-    /*   sprintf(save_as, "%s_hp_amr_level_%d", P4EST_STRING,level-1); */
-    /*   hp_amr_save_to_vtk */
+    /*   sprintf(save_as, "%s_amr_level_%d", P4EST_STRING,level-1); */
+    /*   amr_save_to_vtk */
     /*     ( */
     /*      p4est, */
     /*      save_as, */
@@ -1169,7 +1169,7 @@ problem_init
       );
     
     char sol_save_as [500];
-    sprintf(sol_save_as, "%s_hp_amr_level_%d_sols", P4EST_STRING, level);
+    sprintf(sol_save_as, "%s_amr_level_%d_sols", P4EST_STRING, level);
     hacked_p4est_vtk_write_all
       (p4est,
        NULL,
@@ -1196,30 +1196,30 @@ problem_init
 
     printf("p4est->local_num_quadrants*p4est->mpisize < input.amr_inflation_size -> %d < %d = %d\n", p4est->local_num_quadrants*p4est->mpisize,input.amr_inflation_size, p4est->local_num_quadrants*p4est->mpisize < input.amr_inflation_size);
     if (p4est->local_num_quadrants*p4est->mpisize < input.amr_inflation_size){
-      hp_amr_smooth_pred_set_marker
+      amr_smooth_pred_set_marker
         (
          scheme,
-         hp_amr_smooth_pred_get_percentile_marker(&inflation_percentile)
+         amr_smooth_pred_get_percentile_marker(&inflation_percentile)
         );
     }
     else {
-      hp_amr_smooth_pred_set_marker
+      amr_smooth_pred_set_marker
         (
          scheme,
-         hp_amr_smooth_pred_get_percentile_marker(&percentile)
+         amr_smooth_pred_get_percentile_marker(&percentile)
         );
     }
 
     if (global_h_min > separation && hrefine_til_inview){
       printf("[INFO]: Still only h-refining\n");
-      hp_amr_smooth_pred_set_gammah(scheme, 0.);
+      amr_smooth_pred_set_gammah(scheme, 0.);
     }
     else {
       printf("[INFO]: Starting to p-refine\n");
-      hp_amr_smooth_pred_set_gammah(scheme, gamma_h);
+      amr_smooth_pred_set_gammah(scheme, gamma_h);
     }
     
-    hp_amr(p4est,
+    amr(p4est,
            d4est_ops,
            &u,
            &stats,
@@ -1228,7 +1228,7 @@ problem_init
         
     
     /* if (level < endlevel - 1) */
-    /* hp_amr_smooth_pred_save_predictor(p4est, smooth_pred_data); */
+    /* amr_smooth_pred_save_predictor(p4est, smooth_pred_data); */
         
     p4est_ghost_destroy(ghost);
     P4EST_FREE(ghost_data);
@@ -1539,7 +1539,7 @@ problem_init
       double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
       printf
         (
-         "[HP_AMR]: %d %d %d %d %.25f .25f %.25f %.25f %.25f %f\n",
+         "[AMR]: %d %d %d %d %.25f .25f %.25f %.25f %.25f %f\n",
          level,
          degree,
          (int)p4est->global_num_quadrants,
@@ -1569,9 +1569,9 @@ problem_init
            &intercept,
            num_of_hpamr_levels
           );
-        printf("[HP_AMR_FIT](1): ||err||DG = C1*exp(-C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
-        printf("[HP_AMR_FIT](2): LEV SLOPE DG_ERR\n");
-        printf("[HP_AMR_FIT](3): %d %.25f %.25f, \n\n", level, slope, sqrt(global_dg_norm_sqr));
+        printf("[AMR_FIT](1): ||err||DG = C1*exp(-C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
+        printf("[AMR_FIT](2): LEV SLOPE DG_ERR\n");
+        printf("[AMR_FIT](3): %d %.25f %.25f, \n\n", level, slope, sqrt(global_dg_norm_sqr));
       }      
 
 
@@ -1592,7 +1592,7 @@ problem_init
 
       sc_MPI_Barrier(sc_MPI_COMM_WORLD);
       char save_as1 [500];
-      sprintf(save_as1, "two_punctures_u_3d_hp_amr_level_%d", level+1);
+      sprintf(save_as1, "two_punctures_u_3d_amr_level_%d", level+1);
       element_data_print_node_vec
         (
          p4est,
@@ -1615,7 +1615,7 @@ problem_init
     );
   
   char sol_save_as [500];
-  sprintf(sol_save_as, "%s_hp_amr_level_%d_sols_noeta2", P4EST_STRING, level);
+  sprintf(sol_save_as, "%s_amr_level_%d_sols_noeta2", P4EST_STRING, level);
 
   hacked_p4est_vtk_write_all
     (p4est,
@@ -1634,7 +1634,7 @@ problem_init
 
   P4EST_FREE(u_vertex);   
   
-  hp_amr_smooth_pred_destroy(scheme);
+  amr_smooth_pred_destroy(scheme);
   
   /* if (ghost) { */
   p4est_ghost_destroy (ghost);

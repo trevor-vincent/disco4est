@@ -106,8 +106,8 @@ SET (
   Geometry/d4est_geometry.c
   Estimators/d4est_estimator_stats.c
   Estimators/d4est_estimator_bi.c
-  hpAMR/d4est_hp_amr.c
-  hpAMR/d4est_hp_amr_smooth_pred.c
+  hpAMR/d4est_amr.c
+  hpAMR/d4est_amr_smooth_pred.c
   Mesh/d4est_element_data.c
   Mesh/d4est_mesh.c
   Mesh/d4est_xyz_functions.c
@@ -241,7 +241,6 @@ add_executable(test_d4est_operators Tests/test_d4est_operators.c)
 target_link_libraries(test_d4est_operators d8est)
 add_test(test_d4est_operators_test test_d4est_operators)
 target_compile_definitions(test_d4est_operators PRIVATE NDEBUG DIM=3)
-
 
 add_executable(test_d4est_kron Tests/test_d4est_kron.c)
 target_link_libraries(test_d4est_kron d8est)

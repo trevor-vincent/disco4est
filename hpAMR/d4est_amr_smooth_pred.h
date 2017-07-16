@@ -1,9 +1,9 @@
-#ifndef D4EST_HP_AMR_SMOOTH_PRED_H
-#define D4EST_HP_AMR_SMOOTH_PRED_H 
+#ifndef D4EST_AMR_SMOOTH_PRED_H
+#define D4EST_AMR_SMOOTH_PRED_H 
 
 #include <pXest.h>
 #include <d4est_xyz_functions.h>
-#include <d4est_hp_amr.h>
+#include <d4est_amr.h>
 #include <d4est_element_data.h>
 
 
@@ -46,12 +46,12 @@ typedef struct {
   smooth_pred_marker_t marker;
   double* predictors; 
   
-} d4est_hp_amr_smooth_pred_data_t;
+} d4est_amr_smooth_pred_data_t;
 
 /* This file was automatically generated.  Do not edit! */
-d4est_hp_amr_scheme_t *d4est_hp_amr_smooth_pred_init(p4est_t *p4est,int max_degree,smooth_pred_marker_t marker);
-void d4est_hp_amr_smooth_pred_destroy(d4est_hp_amr_scheme_t *scheme);
-void d4est_hp_amr_smooth_pred_print(p4est_t *p4est);
+d4est_amr_scheme_t *d4est_amr_smooth_pred_init(p4est_t *p4est,int max_degree,smooth_pred_marker_t marker);
+void d4est_amr_smooth_pred_destroy(d4est_amr_scheme_t *scheme);
+void d4est_amr_smooth_pred_print(p4est_t *p4est);
 
 
 

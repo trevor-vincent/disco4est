@@ -6,8 +6,8 @@
 #include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
 #include <d4est_estimator_bi.h>
-#include <d4est_hp_amr.h>
-#include <d4est_hp_amr_smooth_pred.h>
+#include <d4est_amr.h>
+#include <d4est_amr_smooth_pred.h>
 #include <d4est_geometry.h>
 #include <d4est_geometry_disk.h>
 #include <d4est_vtk.h>
@@ -680,7 +680,7 @@ problem_init
       double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf
       (
-       "[HP_AMR]: %d, %d, %d, %.25f, %f\n",
+       "[AMR]: %d, %d, %d, %.25f, %f\n",
        level,
        (int)p4est->global_num_quadrants,
        (int)global_nodes_dbl,

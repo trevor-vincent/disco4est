@@ -4,8 +4,8 @@
 #include <d4est_elliptic_eqns.h>
 #include <d4est_linalg.h>
 #include <d4est_util.h>
-#include <d4est_hp_amr.h>
-#include <d4est_hp_amr_smooth_pred.h>
+#include <d4est_amr.h>
+#include <d4est_amr_smooth_pred.h>
 
 #if (P4EST_DIM)==3
 #define ONE_OVER_CHILDREN 0.125
@@ -14,7 +14,7 @@
 #endif
 
 void
-d4est_hp_amr_smooth_pred_print
+d4est_amr_smooth_pred_print
 (
  p4est_t* p4est
 )
@@ -37,14 +37,14 @@ d4est_hp_amr_smooth_pred_print
 
 
 static void
-d4est_hp_amr_smooth_pred_pre_refine_callback
+d4est_amr_smooth_pred_pre_refine_callback
 (
  p4est_t* p4est,
  void* user
 )
 {
-  d4est_hp_amr_smooth_pred_data_t* smooth_pred_data =
-    (d4est_hp_amr_smooth_pred_data_t*)user;
+  d4est_amr_smooth_pred_data_t* smooth_pred_data =
+    (d4est_amr_smooth_pred_data_t*)user;
 
   if (smooth_pred_data->predictors == NULL){
     smooth_pred_data->predictors = P4EST_REALLOC
@@ -74,14 +74,14 @@ d4est_hp_amr_smooth_pred_pre_refine_callback
 }
 
 static void
-d4est_hp_amr_smooth_pred_post_balance_callback
+d4est_amr_smooth_pred_post_balance_callback
 (
  p4est_t* p4est,
  void* user
 )
 {
-  d4est_hp_amr_smooth_pred_data_t* smooth_pred_data =
-    (d4est_hp_amr_smooth_pred_data_t*)user;
+  d4est_amr_smooth_pred_data_t* smooth_pred_data =
+    (d4est_amr_smooth_pred_data_t*)user;
   smooth_pred_data->predictors = P4EST_REALLOC
                                  (
                                   smooth_pred_data->predictors,
@@ -106,20 +106,17 @@ d4est_hp_amr_smooth_pred_post_balance_callback
  
 }
 
-
-
-
 static void
-d4est_hp_amr_smooth_pred_set_refinement
+d4est_amr_smooth_pred_mark_elements
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
-  d4est_hp_amr_data_t* d4est_hp_amr_data = (d4est_hp_amr_data_t*) info->p4est->user_pointer;
-  d4est_hp_amr_smooth_pred_data_t* smooth_pred_data = (d4est_hp_amr_smooth_pred_data_t*) (d4est_hp_amr_data->hp_amr_scheme_data);
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
+  d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->amr_scheme_data);
   d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
-  d4est_estimator_stats_t** stats = d4est_hp_amr_data->d4est_estimator_stats;
+  d4est_estimator_stats_t** stats = d4est_amr->d4est_estimator_stats;
   
   double eta2 = elem_data->local_estimator;
   double eta2_pred = elem_data->local_predictor;
@@ -147,24 +144,24 @@ d4est_hp_amr_smooth_pred_set_refinement
   
   if (is_marked){
     if (eta2 <= elem_data->local_predictor && elem_data->deg < smooth_pred_data->max_degree){
-      d4est_hp_amr_data->refinement_log[elem_data->id] = d4est_util_min_int(elem_data->deg + 1, smooth_pred_data->max_degree);
+      d4est_amr->refinement_log[elem_data->id] = d4est_util_min_int(elem_data->deg + 1, smooth_pred_data->max_degree);
       eta2_pred = gamma_hpn.gamma_p*eta2;
     }
     else {
-      d4est_hp_amr_data->refinement_log[elem_data->id] = -elem_data->deg;
+      d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;
       eta2_pred = gamma_hpn.gamma_h*eta2*d4est_util_dbl_pow_int(.5, 2*(elem_data->deg))*(ONE_OVER_CHILDREN);
     }
   }
   else {
     eta2_pred = gamma_hpn.gamma_n*eta2_pred;
-    d4est_hp_amr_data->refinement_log[elem_data->id] = elem_data->deg;
+    d4est_amr->refinement_log[elem_data->id] = elem_data->deg;
   }
   
   elem_data->local_predictor = eta2_pred;
 }
 
 static void
-d4est_hp_amr_smooth_pred_balance_replace_callback (
+d4est_amr_smooth_pred_balance_replace_callback (
 			     p4est_t * p4est,
 			     p4est_topidx_t which_tree,
 			     int num_outgoing,
@@ -173,13 +170,11 @@ d4est_hp_amr_smooth_pred_balance_replace_callback (
 			     p4est_quadrant_t * incoming[]
 			     )
 {
-#ifdef SAFETY  
   D4EST_ASSERT(num_outgoing == 1);
-#endif
-  d4est_hp_amr_data_t* d4est_hp_amr_data = (d4est_hp_amr_data_t*) p4est->user_pointer;
-  d4est_operators_t* d4est_ops = d4est_hp_amr_data->d4est_ops;
-  d4est_hp_amr_smooth_pred_data_t* smooth_pred_data = (d4est_hp_amr_smooth_pred_data_t*) (d4est_hp_amr_data->hp_amr_scheme_data);
-  d4est_estimator_stats_t** stats = d4est_hp_amr_data->d4est_estimator_stats;
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) p4est->user_pointer;
+  d4est_operators_t* d4est_ops = d4est_amr->d4est_ops;
+  d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->amr_scheme_data);
+  d4est_estimator_stats_t** stats = d4est_amr->d4est_estimator_stats;
   d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
   d4est_element_data_t* child_data;
   int i;
@@ -205,7 +200,7 @@ d4est_hp_amr_smooth_pred_balance_replace_callback (
 
 
 static void
-d4est_hp_amr_smooth_pred_refine_replace_callback (
+d4est_amr_smooth_pred_refine_replace_callback (
 			     p4est_t * p4est,
 			     p4est_topidx_t which_tree,
 			     int num_outgoing,
@@ -214,23 +209,11 @@ d4est_hp_amr_smooth_pred_refine_replace_callback (
 			     p4est_quadrant_t * incoming[]
 			     )
 {
-#ifdef SAFETY  
   D4EST_ASSERT(num_outgoing == 1);
-#endif
-  d4est_hp_amr_data_t* d4est_hp_amr_data = (d4est_hp_amr_data_t*) p4est->user_pointer;
-  d4est_operators_t* d4est_ops = d4est_hp_amr_data->d4est_ops;
-
   d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
   d4est_element_data_t* child_data;
-  int i;
 
-  int degh [(P4EST_CHILDREN)];
-  int degH = parent_data->deg;
-    
-  for (i = 0; i < (P4EST_CHILDREN); i++)
-    degh[i] = degH;
-
-  for (i = 0; i < (P4EST_CHILDREN); i++){
+  for (int i = 0; i < (P4EST_CHILDREN); i++){
     child_data = (d4est_element_data_t*) incoming[i]->p.user_data;
     child_data->local_predictor = parent_data->local_predictor;
   }
@@ -238,10 +221,10 @@ d4est_hp_amr_smooth_pred_refine_replace_callback (
 
 
 void
-d4est_hp_amr_smooth_pred_destroy(d4est_hp_amr_scheme_t* scheme){
+d4est_amr_smooth_pred_destroy(d4est_amr_scheme_t* scheme){
 
-  d4est_hp_amr_smooth_pred_data_t* smooth_pred_data =
-    (d4est_hp_amr_smooth_pred_data_t*)scheme->hp_amr_scheme_data;  
+  d4est_amr_smooth_pred_data_t* smooth_pred_data =
+    (d4est_amr_smooth_pred_data_t*)scheme->amr_scheme_data;  
   P4EST_FREE(smooth_pred_data->predictors);
   P4EST_FREE(smooth_pred_data);
   P4EST_FREE(scheme);
@@ -249,38 +232,41 @@ d4est_hp_amr_smooth_pred_destroy(d4est_hp_amr_scheme_t* scheme){
 
 
 
-d4est_hp_amr_scheme_t*
-d4est_hp_amr_smooth_pred_init
+d4est_amr_scheme_t*
+d4est_amr_smooth_pred_init
 (
  p4est_t* p4est,
- int max_degree,
- smooth_pred_marker_t marker
+ const char* input_file,
+ d4est_amr_scheme_t* scheme,
+ void* marker //smooth_pred_marker_t marker
 )
 {  
-  d4est_hp_amr_scheme_t* scheme = P4EST_ALLOC(d4est_hp_amr_scheme_t, 1);
-  d4est_hp_amr_smooth_pred_data_t* smooth_pred_data;
-  smooth_pred_data = P4EST_ALLOC(d4est_hp_amr_smooth_pred_data_t, 1);
-  smooth_pred_data->max_degree = max_degree;
-  smooth_pred_data->marker = marker;
-  smooth_pred_data->predictors = NULL; 
+
+  d4est_amr_smooth_pred_data_t* smooth_pred_data;
+  smooth_pred_data = P4EST_ALLOC(d4est_amr_smooth_pred_data_t, 1);
+  smooth_pred_data->marker = *((smooth_pred_marker_t*)marker);
+  smooth_pred_data->predictors = NULL;
 
   scheme->pre_refine_callback
-    = d4est_hp_amr_smooth_pred_pre_refine_callback;
+    = d4est_amr_smooth_pred_pre_refine_callback;
   
   scheme->balance_replace_callback_fcn_ptr
-    = d4est_hp_amr_smooth_pred_balance_replace_callback;
+    = d4est_amr_smooth_pred_balance_replace_callback;
 
   scheme->refine_replace_callback_fcn_ptr
-    = d4est_hp_amr_smooth_pred_refine_replace_callback;
+    = d4est_amr_smooth_pred_refine_replace_callback;
 
-  scheme->iter_volume
-    = d4est_hp_amr_smooth_pred_set_refinement;
+  scheme->mark_elements
+    = d4est_amr_smooth_pred_mark_elements;
 
-  scheme->hp_amr_scheme_data
+  scheme->amr_scheme_data
     = smooth_pred_data;
 
   scheme->post_balance_callback
-    = d4est_hp_amr_smooth_pred_post_balance_callback;
+    = d4est_amr_smooth_pred_post_balance_callback;
+
+  scheme->destroy
+    = d4est_amr_smooth_pred_destroy;
   
   return scheme;
 }
