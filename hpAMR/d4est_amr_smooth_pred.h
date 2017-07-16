@@ -49,7 +49,7 @@ typedef struct {
 } d4est_amr_smooth_pred_data_t;
 
 /* This file was automatically generated.  Do not edit! */
-d4est_amr_scheme_t *d4est_amr_smooth_pred_init(p4est_t *p4est,int max_degree,smooth_pred_marker_t marker);
+d4est_amr_scheme_t *d4est_amr_smooth_pred_init(p4est_t *p4est,const char *input_file,d4est_amr_scheme_t *scheme,void *marker);
 void d4est_amr_smooth_pred_destroy(d4est_amr_scheme_t *scheme);
 void d4est_amr_smooth_pred_print(p4est_t *p4est);
 

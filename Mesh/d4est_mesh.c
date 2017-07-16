@@ -784,8 +784,6 @@ d4est_mesh_init_field
         d4est_element_data_t* ed = quad->p.user_data;        
         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
 
-
-
         d4est_quadrature_volume_t mesh_object;
         mesh_object.dq = ed->dq;
         mesh_object.tree = ed->tree;

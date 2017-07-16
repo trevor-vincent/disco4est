@@ -11,6 +11,7 @@ typedef struct
 } d4est_geometry_brick_attr_t;
 
 /* This file was automatically generated.  Do not edit! */
-void d4est_geometry_brick_new(int mpirank,const char *input_file,const char *input_section,const char *printf_prefix, d4est_geometry_t *d4est_geom);
+void d4est_geometry_brick_new(int mpirank,const char *input_file,const char *input_section,const char *printf_prefix,d4est_geometry_t *d4est_geom);
+void d4est_geometry_brick_new_aux(d4est_geometry_t *d4est_geom,d4est_geometry_brick_attr_t *brick_attrs);
 
 #endif

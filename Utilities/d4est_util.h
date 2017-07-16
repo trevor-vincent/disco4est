@@ -131,6 +131,7 @@
 #endif
 
 #define D4EST_ALLOC(a,b) P4EST_ALLOC(a,b)
+#define D4EST_FREE(a) P4EST_FREE(a)
 #define D4EST_ALLOC_ZERO(a,b) P4EST_ALLOC_ZERO(a,b)
 #define D4EST_REALLOC(a,b,c) P4EST_REALLOC(a,b,c)
 

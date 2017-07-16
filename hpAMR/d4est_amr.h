@@ -35,18 +35,19 @@ typedef enum {AMR_NOT_SET,
  *
  */
 
-typedef struct {
+typedef struct d4est_amr_scheme d4est_amr_scheme_t;
 
-  d4est_amr_scheme_type_t amr_scheme_type;
- 
+struct d4est_amr_scheme {
+  d4est_amr_scheme_type_t amr_scheme_type; 
+
   void (*post_balance_callback) (p4est_t*, void*);
   void (*pre_refine_callback) (p4est_t*, void*);
   p4est_replace_t refine_replace_callback_fcn_ptr;
   p4est_replace_t balance_replace_callback_fcn_ptr;  
   p4est_iter_volume_t mark_elements;
+  void (*destroy)(d4est_amr_scheme_t*);
   void* amr_scheme_data;
-
-} d4est_amr_scheme_t;
+};
 
 typedef struct {
 
@@ -55,7 +56,8 @@ typedef struct {
   int max_degree;
 
   /* internal use */
-  int log_initial_size;
+  int initial_log_size;
+  int balance_log_size;
   int* refinement_log;
   int* initial_log;
   int* balance_log;
@@ -66,13 +68,10 @@ typedef struct {
   
 } d4est_amr_t;
 
-void
-d4est_amr
-(
- p4est_t* p4est,
- d4est_operators_t* d4est_ops,
- double** data_to_hp_refine,
- d4est_estimator_stats_t** stats
-);
+/* This file was automatically generated.  Do not edit! */
+void d4est_amr_destroy(d4est_amr_t *d4est_amr);
+void d4est_amr_step(p4est_t *p4est,p4est_ghost_t **ghost,d4est_element_data_t **ghost_data,d4est_operators_t *d4est_ops,d4est_amr_t *d4est_amr,double **field,d4est_estimator_stats_t **stats);
+d4est_amr_t *d4est_amr_init(p4est_t *p4est,const char *input_file,const char *printf_prefix,void *scheme_data);
+void d4est_amr_input(const char *input_file,d4est_amr_t *d4est_amr);
 
 #endif

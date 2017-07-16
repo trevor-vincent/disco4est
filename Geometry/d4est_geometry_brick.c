@@ -173,6 +173,29 @@ d4est_geometry_brick_destroy
   P4EST_FREE(geom);
 }
  
+void
+d4est_geometry_brick_new_aux
+(
+ d4est_geometry_t* d4est_geom,
+ d4est_geometry_brick_attr_t* brick_attrs
+)
+{
+#if (P4EST_DIM)==2
+  p4est_connectivity_t* conn = p4est_connectivity_new_unitsquare();
+#elif (P4EST_DIM)==3
+  p4est_connectivity_t* conn = p8est_connectivity_new_unitcube();
+#else
+  D4EST_ABORT("DIM must be 2 or 3\n");
+#endif
+    
+  d4est_geom->p4est_conn = conn; 
+  d4est_geom->user = brick_attrs;
+  d4est_geom->X = d4est_geometry_brick_X; 
+  d4est_geom->DX = d4est_geometry_brick_DX; 
+  d4est_geom->JAC = NULL;
+  d4est_geom->destroy = d4est_geometry_brick_destroy;
+}
+
 
 void
 d4est_geometry_brick_new
@@ -185,20 +208,8 @@ d4est_geometry_brick_new
 )
 {
   d4est_geometry_brick_attr_t* brick_attrs = d4est_geometry_brick_input(input_file, input_section);
-#if (P4EST_DIM)==2
-  p4est_connectivity_t* conn = p4est_connectivity_new_unitsquare();
-#elif (P4EST_DIM)==3
-  p4est_connectivity_t* conn = p8est_connectivity_new_unitcube();
-#else
-  D4EST_ABORT("DIM must be 2 or 3\n");
-#endif
-  
-  d4est_geom->p4est_conn = conn; 
-  d4est_geom->user = brick_attrs;
-  d4est_geom->X = d4est_geometry_brick_X; 
-  d4est_geom->DX = d4est_geometry_brick_DX; 
-  d4est_geom->JAC = NULL;
-  d4est_geom->destroy = d4est_geometry_brick_destroy;
+
+  d4est_geometry_brick_new_aux(d4est_geom, brick_attrs);
   
   if (mpirank == 0){
     printf("%s: NAME = brick in %d-D\n", printf_prefix, (P4EST_DIM));

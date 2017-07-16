@@ -2,6 +2,7 @@
 #include <d4est_amr.h>
 #include <d4est_xyz_functions.h>
 #include <d4est_util.h>
+#include <d4est_mesh.h>
 #include <d4est_linalg.h>
 #include <d4est_element_data.h>
 #include <d4est_amr_smooth_pred.h>
@@ -99,9 +100,10 @@ d4est_amr_balance_elements
 )
 {
   d4est_amr_t* d4est_amr = p4est->user_pointer;
-  d4est_amr->log_balance = D4EST_REALLOC(d4est_amr->balance_log,
+  d4est_amr->balance_log_size = p4est->local_num_quadrants;
+  d4est_amr->balance_log = D4EST_REALLOC(d4est_amr->balance_log,
                                           int,
-                                          p4est->local_num_quadrants);
+                                         d4est_amr->balance_log_size);
   
   /* we need the quad-ids to store the balance info, so update them */
   int id_stride = 0;
@@ -116,7 +118,7 @@ d4est_amr_balance_elements
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* elem_data = (d4est_element_data_t*)(quad->p.user_data);
         elem_data->id = id_stride;
-        d4est_amr->log_balance[id_stride] = elem_data->deg;
+        d4est_amr->balance_log[id_stride] = elem_data->deg;
         id_stride++;
       }
     }
@@ -155,20 +157,20 @@ d4est_amr_mark_elements
 {
   d4est_amr_t* d4est_amr = p4est->user_pointer;
   
-  d4est_amr->log_initial_size = p4est->local_num_quadrants;
+  d4est_amr->initial_log_size = p4est->local_num_quadrants;
 
   d4est_amr->initial_log = D4EST_REALLOC
                      (
                       d4est_amr->initial_log,
                       int,
-                      d4est_amr->log_initial_size
+                      d4est_amr->initial_log_size
                      );
 
   d4est_amr->refinement_log = D4EST_REALLOC
                         (
                          d4est_amr->refinement_log,
                          int,
-                         d4est_amr->log_initial_size
+                         d4est_amr->initial_log_size
                         );
 
   p4est_iterate(p4est,
@@ -186,7 +188,8 @@ d4est_amr_mark_elements
 static void
 d4est_amr_interpolate_field_on_element
 (
- d4est_t* d4est,
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
  double* in,
  int in_deg,
  double* out,
@@ -208,7 +211,7 @@ d4est_amr_interpolate_field_on_element
   if (interp_code < 0){
     d4est_operators_apply_hp_prolong
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        in,
        in_deg,
        (P4EST_DIM),
@@ -221,7 +224,7 @@ d4est_amr_interpolate_field_on_element
   else if (interp_code >= in_deg){
     d4est_operators_apply_p_prolong
       (
-       dgmath_jit_dbase,
+       d4est_ops,
        in,
        in_deg,
        (P4EST_DIM),
@@ -231,15 +234,17 @@ d4est_amr_interpolate_field_on_element
   }
 
   else {
-    D4EST_ABORT("[D4EST_ERROR]: hp amr code should be >= deg or -deg\n
-                 (h)p-coarsening is currently not supported in amr\n");
+    D4EST_ABORT("[D4EST_ERROR]: hp amr code should be >= deg or -deg, coarsening is currently not supported in amr\n");
   }
   
   D4EST_FREE(out_deg);
 }
 
+static void
 d4est_amr_interpolate_field
 (
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
  d4est_amr_t* d4est_amr,
  double** field,
  int post_balance_nodes
@@ -250,31 +255,32 @@ d4est_amr_interpolate_field
   /* interpolate from initial to auxiliary (unbalanced) grid */
   int pre_refine_stride = 0;
   int post_refine_stride = 0;
-  for (int i = 0; i < d4est_amr->log_initial_size; i++){
+  for (int i = 0; i < d4est_amr->initial_log_size; i++){
     int pre_volume_nodes =  d4est_lgl_get_nodes
                             (
                              (P4EST_DIM),
-                             d4est_amr->initial_log[j]
+                             d4est_amr->initial_log[i]
                             );
         
     int post_volume_nodes = d4est_lgl_get_nodes
                             (
                              (P4EST_DIM),
-                             abs(d4est_amr->refinement_log[j])
+                             abs(d4est_amr->refinement_log[i])
                             );
 
         
-    if(d4est_amr->refinement_log[j] < 0)
+    if(d4est_amr->refinement_log[i] < 0)
       post_volume_nodes *= (P4EST_CHILDREN);
 
 
     d4est_amr_interpolate_field_on_element
       (
-       d4est_amr->d4est,
+       p4est,
+       d4est_ops,
        &((*field)[pre_refine_stride]),
-       d4est_amr->log_initial[i],
+       d4est_amr->initial_log[i],
        &aux[post_refine_stride],
-       d4est_amr->log_refine[j]
+       d4est_amr->refinement_log[i]
       );
 
     pre_refine_stride += pre_volume_nodes;
@@ -286,34 +292,36 @@ d4est_amr_interpolate_field
   /* interpolate from auxiliary to balanced grid */
   int pre_balance_stride = 0;
   int post_balance_stride = 0;
-  for (int i = 0; i < d4est_amr->log_initial_size; i++){
+  for (int i = 0; i < d4est_amr->balance_log_size; i++){
     int pre_balance_volume_nodes =  d4est_lgl_get_nodes
                                     (
                                      (P4EST_DIM),
-                                     abs(d4est_amr->balance_log[j])
+                                     abs(d4est_amr->balance_log[i])
                                     );
         
     int post_balance_volume_nodes = d4est_lgl_get_nodes
                                     (
                                      (P4EST_DIM),
-                                     abs(d4est_amr->balance_log[j])
+                                     abs(d4est_amr->balance_log[i])
                                     );
 
         
-    if(d4est_amr->balance_log[j] < 0)
+    if(d4est_amr->balance_log[i] < 0)
       post_balance_volume_nodes *= (P4EST_CHILDREN);
 
 
     d4est_amr_interpolate_field_on_element
-      (d4est_amr->d4est,
+      (
+       p4est,
+       d4est_ops,
        &aux[pre_balance_stride],
        abs(d4est_amr->balance_log[i]),
        &((*field)[post_balance_stride]),
-       d4est_amr->balance_log[j]
+       d4est_amr->balance_log[i]
       );
 
-    pre_balance_stride += pre_volume_nodes;
-    post_balance_stride += post_volume_nodes;
+    pre_balance_stride += pre_balance_volume_nodes;
+    post_balance_stride += post_balance_volume_nodes;
   }
     
   D4EST_FREE(aux);
@@ -400,11 +408,10 @@ d4est_amr_input
 d4est_amr_t*
 d4est_amr_init
 (
-
  p4est_t* p4est,
  const char* input_file,
  const char* printf_prefix,
- void* scheme_data,
+ void* scheme_data
 )
 {
   d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
@@ -415,7 +422,7 @@ d4est_amr_init
   d4est_amr->refinement_log = NULL;
   d4est_amr->initial_log = NULL;
   
-  d4est_amr_input(input_file, input_section, printf_prefix, d4est_amr);
+  d4est_amr_input(input_file, d4est_amr);
   
   if (scheme->amr_scheme_type == AMR_SMOOTH_PRED) {
     d4est_amr_smooth_pred_init(p4est, input_file, scheme, scheme_data);
@@ -426,11 +433,10 @@ d4est_amr_init
   }
   else if (scheme->amr_scheme_type == AMR_RANDOM_H ||
           scheme->amr_scheme_type == AMR_RANDOM_HP){
-    d4est_amr_uniform_init(p4est, input_file, scheme, scheme_data);
+    d4est_amr_random_init(p4est, input_file, scheme, scheme_data);
   }
   else {
-    printf("[D4EST_ERROR]: You tried to use %s geometry\n", input.name);
-    D4EST_ABORT("[D4EST_ERROR]: this geometry is currently not supported");
+    D4EST_ABORT("[D4EST_ERROR]: this amr scheme is currently not supported");
   }
 
   return d4est_amr;
@@ -441,13 +447,15 @@ void
 d4est_amr_step
 (
  p4est_t* p4est,
+ p4est_ghost_t** ghost,
+ d4est_element_data_t** ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_amr_t* d4est_amr,
  double** field,
  d4est_estimator_stats_t** stats
 )
 {
-  d4est_amr->estimator_stats = stats;
+  d4est_amr->d4est_estimator_stats = stats;
 
   void* backup = p4est->user_pointer;
   p4est->user_pointer = d4est_amr;
@@ -466,12 +474,21 @@ d4est_amr_step
 
   d4est_amr_interpolate_field
     (
+     p4est,
+     d4est_ops,
      d4est_amr,
      field,
      d4est_mesh_get_local_nodes(p4est)
     );
   
   p4est->user_pointer = backup;
+
+  p4est_ghost_destroy(*ghost);
+  P4EST_FREE(*ghost_data);
+  *ghost = NULL;
+  *ghost_data = NULL; 
+  *ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE);
+  *ghost_data = P4EST_ALLOC(d4est_element_data_t, (*ghost)->ghosts.elem_count);
 }
 
 void 

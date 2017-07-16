@@ -1,0 +1,12 @@
+[amr]
+scheme = uniform_h
+max_degree = 10
+num_of_amr_steps = 2
+
+[geometry]
+X0 = -2
+X1 = 2
+Y0 = -2
+Y1 = 2
+Z0 = -2
+Z1 = 2

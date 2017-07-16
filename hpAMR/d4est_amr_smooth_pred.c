@@ -114,7 +114,7 @@ d4est_amr_smooth_pred_mark_elements
 )
 {
   d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
-  d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->amr_scheme_data);
+  d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
   d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
   d4est_estimator_stats_t** stats = d4est_amr->d4est_estimator_stats;
   
@@ -173,7 +173,7 @@ d4est_amr_smooth_pred_balance_replace_callback (
   D4EST_ASSERT(num_outgoing == 1);
   d4est_amr_t* d4est_amr = (d4est_amr_t*) p4est->user_pointer;
   d4est_operators_t* d4est_ops = d4est_amr->d4est_ops;
-  d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->amr_scheme_data);
+  d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
   d4est_estimator_stats_t** stats = d4est_amr->d4est_estimator_stats;
   d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data;
   d4est_element_data_t* child_data;

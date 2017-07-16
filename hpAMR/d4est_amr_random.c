@@ -2,7 +2,7 @@
 #include <d4est_amr.h>
 #include <d4est_amr_random.h>
 #include <d4est_element_data.h>
-#include <rand.h>
+#include <stdlib.h>
 
 void
 d4est_amr_random_mark_elements
@@ -17,21 +17,21 @@ d4est_amr_random_mark_elements
 
   if (d4est_amr->scheme->amr_scheme_type == AMR_RANDOM_HP){
     if (x < 0.3){
-      hp_amr_data->refinement_log[elem_data->id] = -elem_data->deg;
+      d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;
     }
     else if (x < 0.6){
-      hp_amr_data->refinement_log[elem_data->id] = elem_data->deg + 1;
+      d4est_amr->refinement_log[elem_data->id] = elem_data->deg + 1;
     }
     else {
-      hp_amr_data->refinement_log[elem_data->id] = elem_data->deg;
+      d4est_amr->refinement_log[elem_data->id] = elem_data->deg;
     }
   }
   else if (d4est_amr->scheme->amr_scheme_type == AMR_RANDOM_H){
     if (x < 0.5){
-      hp_amr_data->refinement_log[elem_data->id] = -elem_data->deg;
+      d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;
     }
     else {
-      hp_amr_data->refinement_log[elem_data->id] = elem_data->deg;
+      d4est_amr->refinement_log[elem_data->id] = elem_data->deg;
     }
   }
   else {
@@ -49,7 +49,7 @@ d4est_amr_random_init
 )
 {
   /* TODO: Put in input file */
-  srand(142343214231);
+  srand(14234331);
   
   scheme->pre_refine_callback
     = NULL;
@@ -70,10 +70,10 @@ d4est_amr_random_init
     = d4est_amr_random_mark_elements;
   
   scheme->destroy
-    = d4est_amr_smooth_pred_destroy;
+    = d4est_amr_random_destroy;
 
   D4EST_ASSERT(scheme->amr_scheme_type == AMR_RANDOM_H ||
-               scheme->amr_scheme_type == AMR_RANDOM_P);
+               scheme->amr_scheme_type == AMR_RANDOM_HP);
   
   return scheme;
 }

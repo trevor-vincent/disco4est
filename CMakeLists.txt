@@ -107,6 +107,8 @@ SET (
   Estimators/d4est_estimator_stats.c
   Estimators/d4est_estimator_bi.c
   hpAMR/d4est_amr.c
+  hpAMR/d4est_amr_uniform.c
+  hpAMR/d4est_amr_random.c
   hpAMR/d4est_amr_smooth_pred.c
   Mesh/d4est_element_data.c
   Mesh/d4est_mesh.c
@@ -247,7 +249,10 @@ target_link_libraries(test_d4est_kron d8est)
 add_test(test_d4est_kron_test test_d4est_kron)
 target_compile_definitions(test_d4est_kron PRIVATE NDEBUG DIM=3)
 
-
+add_executable(test_d4est_amr Tests/test_d4est_amr.c)
+target_link_libraries(test_d4est_amr d8est)
+add_test(test_d4est_amr_test test_d4est_amr)
+target_compile_definitions(test_d4est_amr PRIVATE DIM=3)
 
 add_executable(test_d4est_geometry Tests/test_d4est_geometry.c)
 target_link_libraries(test_d4est_geometry d8est)
@@ -258,6 +263,12 @@ add_executable(test_d4est_geometry_2d Tests/test_d4est_geometry.c)
 target_link_libraries(test_d4est_geometry_2d d4est)
 add_test(test_d4est_geometry_test_2d test_d4est_geometry_2d)
 target_compile_definitions(test_d4est_geometry_2d PRIVATE NDEBUG DIM=2)
+
+add_custom_command(
+  TARGET test_d4est_operators POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy
+  ${CMAKE_SOURCE_DIR}/Tests/*.input
+  ${CMAKE_CURRENT_BINARY_DIR}/)  
 
 # add_executable(test_d4est_quadrature_compactified Tests/test_d4est_quadrature_compactified.c)
 # target_link_libraries(test_d4est_quadrature_compactified d8est)
@@ -315,7 +326,7 @@ target_compile_definitions(test_d4est_geometry_2d PRIVATE NDEBUG DIM=2)
 # add_d4est_problem_3d(twopuncturessphere_mg_driver twopuncturessphere_mg.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopunctures_testfcns_driver twopunctures_testfcns.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopunctures_estonly_driver twopuncturessphere_estonly.c TwoPuncturesSphere)
-add_d4est_problem_3d(twopunctures_nomg_driver twopunctures_nomg.c TwoPuncturesSphere)
+# add_d4est_problem_3d(twopunctures_nomg_driver twopunctures_nomg.c TwoPuncturesSphere)
 # add_d4est_problem_3d(twopunctures_test_driver twopuncturessphere_test.c TwoPuncturesSphere)
 # add_d4est_problem_2d(twopunctures_estonly_driver_2d twopuncturessphere_estonly.c TwoPuncturesSphere)
 # add_d4est_problem_3d(testmortarjacobianterms_driver_3d testmortarjacobianterms.c TestMortarJacobianTerms)

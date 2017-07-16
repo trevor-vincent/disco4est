@@ -6,7 +6,7 @@
 #include <d4est_operators.h>
 #include <d4est_quadrature.h>
 
-#define MAX_DEGREE 5
+#define MAX_DEGREE 20
 #if (P4EST_DIM) == 3
 #define MAX_NODES (MAX_DEGREE + 1) * (MAX_DEGREE + 1) * (MAX_DEGREE + 1)
 #else
