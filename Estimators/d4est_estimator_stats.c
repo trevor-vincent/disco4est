@@ -12,8 +12,7 @@
 void d4est_estimator_stats_compute
 (
  p4est_t* p4est,
- d4est_estimator_stats_t* stats,
- int curved
+ d4est_estimator_stats_t* stats
 )
 {
   double* eta2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
@@ -36,7 +35,7 @@ void d4est_estimator_stats_compute
 
   stats->tree = -1;
   stats->mpirank = p4est->mpirank;
-  d4est_estimator_stats_compute_stats
+  d4est_estimator_stats_compute_aux
     (
      stats,
      eta2,
@@ -83,7 +82,7 @@ d4est_estimator_stats_compute_per_bin
 
         stats[b]->tree = -1;
         stats[b]->mpirank = p4est->mpirank;
-        d4est_estimator_stats_compute_stats
+        d4est_estimator_stats_compute_aux
           (
            stats[b],
            eta2,
@@ -98,7 +97,7 @@ d4est_estimator_stats_compute_per_bin
   return local_eta2;
 }
 
-double d4est_estimator_stats_compute_per_tree(p4est_t* p4est, d4est_estimator_stats_t** stats, int curved){
+double d4est_estimator_stats_compute_per_tree(p4est_t* p4est, d4est_estimator_stats_t** stats){
 
   double* eta2 = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
   double local_eta2 = 0.;
@@ -113,18 +112,14 @@ double d4est_estimator_stats_compute_per_tree(p4est_t* p4est, d4est_estimator_st
       double total_eta2_per_tree = 0.;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        if(curved)
-          eta2[q] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
-        else{
-          D4EST_ABORT("Soon to be deprecated\n");
-        }
+        eta2[q] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
         total_eta2_per_tree += eta2[q];
         local_eta2 += eta2[q];
       }
 
       stats[tt]->tree = tt;
       stats[tt]->mpirank = p4est->mpirank;
-      d4est_estimator_stats_compute_stats
+      d4est_estimator_stats_compute_aux
         (
          stats[tt],
          eta2,
@@ -140,7 +135,7 @@ double d4est_estimator_stats_compute_per_tree(p4est_t* p4est, d4est_estimator_st
 
 
 void
-d4est_estimator_stats_compute_stats
+d4est_estimator_stats_compute_aux
 (
  d4est_estimator_stats_t* stats,
  double* eta2,

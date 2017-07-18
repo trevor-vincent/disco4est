@@ -47,7 +47,7 @@ int d4est_geometry_input_handler
 
   if (d4est_util_match_couple(section,pconfig->input_section,name,"name")) {
     D4EST_ASSERT(pconfig->name == NULL);
-    D4EST_ASPRINTF(pconfig->name,"%s",value);
+    asprintf(&pconfig->name,"%s",value);
   }
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"DX_compute_method")) {
     if(d4est_util_match(value, "numerical")){

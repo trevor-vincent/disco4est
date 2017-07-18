@@ -30,7 +30,7 @@ int d4est_quadrature_input_handler
 
   if (d4est_util_match_couple(section,pconfig->input_section,name,"name")) {
     D4EST_ASSERT(pconfig->name == NULL);
-    D4EST_ASPRINTF(pconfig->name,"%s",value);
+    asprintf(&pconfig->name,"%s",value);
   }
   else {
     return 0;  /* unknown section/name, error */

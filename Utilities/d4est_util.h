@@ -140,13 +140,13 @@
 #define D4EST_ABORT_IF_NOT(q, ...) D4EST_ABORT_IF(!(q), __VA_ARGS__)
 
 
-#define D4EST_ASPRINTF(write_to, ...) {         \
-    char *tmp_string_for_extend = (write_to);   \
-    if(asprintf(&(write_to), __VA_ARGS__) <0){  \
-      D4EST_ABORT("ASPRINTF_ERROR");              \
-    }                                           \
-    free(tmp_string_for_extend);                \
-  }
+/* #define D4EST_ASPRINTF(write_to, ...) {         \ */
+/*     char *tmp_string_for_extend = (write_to);   \ */
+/*     if(asprintf(&(write_to), __VA_ARGS__) <0){  \ */
+/*       D4EST_ABORT("ASPRINTF_ERROR");              \ */
+/*     }                                           \ */
+/*     free(tmp_string_for_extend);                \ */
+/*   } */
 
 #define D4EST_FREE_MAT(a, n1, n2) do {          \
     for (int i = 0; i < n1; i++) {              \

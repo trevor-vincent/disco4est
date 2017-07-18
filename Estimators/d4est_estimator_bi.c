@@ -321,7 +321,7 @@ d4est_estimator_bi_interface
 
 
 
-double
+void
 d4est_estimator_bi_compute
 (
  p4est_t* p4est,
@@ -411,20 +411,4 @@ d4est_estimator_bi_compute
      &flux_fcns,
      EXCHANGE_GHOST_DATA
     );
-
-  double local_eta2 = 0.;
-  for (p4est_topidx_t tt = p4est->first_local_tree;
-       tt <= p4est->last_local_tree;
-       ++tt)
-    {
-      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-      sc_array_t* tquadrants = &tree->quadrants;
-      int Q = (p4est_locidx_t) tquadrants->elem_count;
-      for (int q = 0; q < Q; ++q) {
-        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        d4est_element_data_t* ed = quad->p.user_data; 
-        local_eta2 += ed->local_estimator;
-      }
-    }
-  return local_eta2;
 }

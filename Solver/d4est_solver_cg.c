@@ -126,8 +126,6 @@ void d4est_solver_cg_solve
   
   d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
 
-  DEBUG_PRINT_2ARR_DBL(Au, rhs, local_nodes);
-
   /* r = f - Au ; Au is stored in r so r = rhs - r */
   d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
   d4est_linalg_copy_1st_to_2nd(r, d, local_nodes);
@@ -144,23 +142,9 @@ void d4est_solver_cg_solve
 
   /* start working on d */
   vecs->u = d;
-  /* DEBUG_PRINT_2ARR_DBL(d, rhs, vecs->local_nodes); */
-  /* printf("d sum = %.25f\n", d4est_linalg_vec_sum(d, vecs->local_nodes)); */
-  
-  int i;
 
-#ifdef NASTY_DEBUG
-  printf("imax = %d\n", imax);
-  printf("monitor = %d\n", params->monitor);
-  printf("delta_new > atol*atol + delta_0 * rtol * rtol = %d\n", delta_new > atol*atol + delta_0 * rtol * rtol);
-  DEBUG_PRINT_2ARR_DBL(vecs->u, vecs->rhs, vecs->local_nodes);
-#endif
-  /* DEBUG_PRINT_2ARR_DBL(u, r, local_nodes); */
+  for (int i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++) {
     
-  for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++) {
-
-    
-    /* Au = A*d; */
     d4est_elliptic_eqns_apply_lhs
       (
      p4est,
@@ -172,6 +156,7 @@ void d4est_solver_cg_solve
      d4est_geom,
      d4est_quad
       );
+    
     d_dot_Au = d4est_linalg_vec_dot(d, Au, local_nodes);
 
     sc_allreduce(&d_dot_Au, &d_dot_Au_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,
