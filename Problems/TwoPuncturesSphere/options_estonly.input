@@ -38,6 +38,3 @@ iter = 1
 monitor = 1
 rtol = 1e-20
 atol = 1e-20
-
-[quadrature]
-name = legendre

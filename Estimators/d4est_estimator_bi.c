@@ -9,6 +9,14 @@
 #include <d4est_poisson_flux.h>
 #include <d4est_mortars.h>
 
+static double
+d4est_estimator_get_diam
+(
+ d4est_element_data_t* ed
+)
+{
+  return d4est_geometry_compute_diam(ed->xyz,ed->deg, NO_DIAM_APPROX); 
+}
 
 static void
 d4est_estimator_bi_dirichlet
@@ -313,7 +321,7 @@ d4est_estimator_bi_interface
 
 
 
-void
+double
 d4est_estimator_bi_compute
 (
  p4est_t* p4est,
@@ -325,8 +333,7 @@ d4est_estimator_bi_compute
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad,
- double (*get_diam)(d4est_element_data_t*)
+ d4est_quadrature_t* d4est_quad
 )
 {
   d4est_elliptic_eqns_build_residual
@@ -366,7 +373,7 @@ d4est_estimator_bi_compute
         int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg);
         double* eta2 = &(ed->local_estimator);
         /* handle ||R||^2 * h^2/p^2 term */
-        double h = get_diam(ed);
+        double h = d4est_estimator_get_diam(ed);
         *eta2 *= h*h/(deg*deg);
 
 
@@ -404,4 +411,20 @@ d4est_estimator_bi_compute
      &flux_fcns,
      EXCHANGE_GHOST_DATA
     );
+
+  double local_eta2 = 0.;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data; 
+        local_eta2 += ed->local_estimator;
+      }
+    }
+  return local_eta2;
 }

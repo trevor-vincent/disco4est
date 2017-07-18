@@ -1,13 +1,11 @@
-#include <d4est_cg.h>
+#include <d4est_solver_cg.h>
 #include <d4est_util.h>
 #include <ini.h>
 #include <d4est_linalg.h>
 #include <sc_reduce.h>
 
-#define NASTY_DEBUG
-
 static
-int d4est_cg_input_handler
+int d4est_solver_cg_input_handler
 (
  void* user,
  const char* section,
@@ -15,7 +13,7 @@ int d4est_cg_input_handler
  const char* value
 )
 {
-  d4est_cg_params_t* pconfig = (d4est_cg_params_t*)user;
+  d4est_solver_cg_params_t* pconfig = (d4est_solver_cg_params_t*)user;
   if (d4est_util_match_couple(section,pconfig->input_section,name,"atol")) {
     D4EST_ASSERT(pconfig->atol == -1);
     pconfig->atol = atof(value);
@@ -41,13 +39,13 @@ int d4est_cg_input_handler
 }
 
 void
-d4est_cg_input
+d4est_solver_cg_input
 (
  p4est_t* p4est,
  const char* input_file,
  const char* input_section,
  const char* printf_prefix,
- d4est_cg_params_t* input
+ d4est_solver_cg_params_t* input
 )
 {
   input->monitor = -1;
@@ -58,7 +56,7 @@ d4est_cg_input
   D4EST_ASSERT(sizeof(input->input_section) <= 50);
   snprintf (input->input_section, sizeof(input->input_section), "%s", input_section);
   
-  if (ini_parse(input_file, d4est_cg_input_handler, input) < 0) {
+  if (ini_parse(input_file, d4est_solver_cg_input_handler, input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
@@ -75,17 +73,17 @@ d4est_cg_input
   }
 }
 
-void d4est_cg_solve
+void d4est_solver_cg_solve
 (
  p4est_t* p4est,
  d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  p4est_ghost_t** ghost,
- void** ghost_data,
+ d4est_element_data_t** ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_cg_params_t* params
+ d4est_solver_cg_params_t* params
 )
 { 
   int local_nodes;

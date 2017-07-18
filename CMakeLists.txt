@@ -64,7 +64,7 @@ include_directories(${CMAKE_SOURCE_DIR}/hpAMR)
 include_directories(${CMAKE_SOURCE_DIR}/ElementData)
 include_directories(${CMAKE_SOURCE_DIR}/Mesh)
 include_directories(${CMAKE_SOURCE_DIR}/Operators)
-include_directories(${CMAKE_SOURCE_DIR}/Visualization)
+include_directories(${CMAKE_SOURCE_DIR}/IO)
 include_directories(${CMAKE_SOURCE_DIR}/Quadrature)
 include_directories(${CMAKE_SOURCE_DIR}/Utilities)
 include_directories(${CMAKE_SOURCE_DIR}/Kron)
@@ -118,8 +118,9 @@ SET (
   Quadrature/d4est_quadrature.c
   Quadrature/d4est_quadrature_legendre.c
   Quadrature/d4est_quadrature_lobatto.c
-  Visualization/d4est_vtk.c
-  Solver/d4est_cg.c
+  IO/d4est_vtk.c
+  IO/d4est_output.c
+  Solver/d4est_solver_cg.c
   Solver/krylov_petsc.c
   Solver/newton_petsc.c
   )
@@ -299,6 +300,7 @@ add_custom_command(
 # add_d4est_problem_3d(testcompile1 testcompile.c TestCompile)
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
+add_d4est_problem_3d(uniform_poisson_sinx_driver uniform_poisson_sinx.c UniformPoissonSinx)
 # add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
 # add_d4est_problem_2d(test_uniform_wedge_driver test_uniform_wedge.c UniformExamples/Wedge)
 # add_d4est_problem_2d(test_uniform_wedge_multigrid_driver test_uniform_wedge_multigrid.c UniformExamples/WedgeMultigrid)

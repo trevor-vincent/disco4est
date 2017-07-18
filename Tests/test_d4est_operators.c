@@ -154,10 +154,10 @@ void
 test_d4est_operators_mass_nd
 (
  d4est_operators_t* d4est_ops,
- int dim
+ int dim,
+ int deg
 )
 {
-  int deg = 2;
   int volume_nodes = d4est_lgl_get_nodes(dim, deg);
 
   double* mij = P4EST_ALLOC_ZERO(double, volume_nodes*volume_nodes);
@@ -433,6 +433,24 @@ int main(int argc, char *argv[])
   for (int dim = 2; dim < 4; dim++)
     for (int deg = 1; deg < 20; deg++)
       test_d4est_operators_interp_lobatto_to_gauss(d4est_ops,dim,deg);
+
+  /* printf("mass 2d = \n"); */
+  /* test_d4est_operators_mass_nd */
+  /*   ( */
+  /*    d4est_ops, */
+  /*    2, */
+  /*    1 */
+  /*   ); */
+  
+  /* printf("mass 3d = \n"); */
+
+  /* test_d4est_operators_mass_nd */
+  /*   ( */
+  /*    d4est_ops, */
+  /*    3, */
+  /*    1 */
+  /*   ); */
+ 
   d4est_ops_destroy(d4est_ops);
   return 0;
 }

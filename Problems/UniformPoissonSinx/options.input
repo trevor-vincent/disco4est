@@ -1,0 +1,45 @@
+[p4est]
+min_quadrants = -1
+min_level = 0
+fill_uniform = 1
+
+[problem]
+deg = 2
+deg_quad = 2
+
+[amr]
+scheme = uniform_h
+num_of_amr_steps = 10
+max_degree = 10
+
+[geometry]
+name = brick
+X0 = 0.0
+X1 = 1.0
+Y0 = 0.0
+Y1 = 1.0
+Z0 = 0.0
+Z1 = 1.0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_vtk_geometry]
+name = brick
+X0 = 0.0
+X1 = 1.0
+Y0 = 0.0
+Y1 = 1.0
+Z0 = 0.0
+Z1 = 1.0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_cg]
+iter = 1
+monitor = 1
+rtol = 1e-20
+atol = 1e-20
+
+
+[quadrature]
+name = legendre

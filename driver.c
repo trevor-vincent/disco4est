@@ -2,6 +2,7 @@
 #include <pXest_input.h>
 #include <problem.h>
 #include <d4est_geometry.h>
+#include <d4est_element_data.h>
 #include <petscsnes.h>
 
 int main(int argc, char *argv[])
@@ -44,14 +45,17 @@ int main(int argc, char *argv[])
                                                     "[D4EST_GEOMETRY]");
 
   pXest_input_t pXest_input = pXest_input_parse((argc == 2) ? argv[1] : "options.input");
-  p4est_t* p4est = problem_build_p4est
-                   (
-                    mpicomm,
-                    d4est_geom->p4est_conn,
-                    pXest_input.min_quadrants,
-                    pXest_input.min_level,
-                    pXest_input.fill_uniform
-                   );
+  p4est_t* p4est = p4est_new_ext
+    (
+     mpicomm,
+     d4est_geom->p4est_conn,
+     pXest_input.min_quadrants,
+     pXest_input.min_level,
+     pXest_input.fill_uniform,
+     sizeof(d4est_element_data_t),
+     NULL,
+     NULL
+    );
 
   if (proc_rank == 0){
     printf("[D4EST_INFO]: mpisize = %d\n", proc_size);
