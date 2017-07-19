@@ -101,8 +101,8 @@ d4est_output_norms
     double global_quad_nodes_dbl = global_reduce[2];
     double global_estimator = global_reduce[3];
 
-    double avg_deg = pow(global_nodes_dbl/p4est->global_num_quadrants, 1./(P4EST_DIM));
-    double avg_deg_quad = pow(global_quad_nodes_dbl/p4est->global_num_quadrants, 1./(P4EST_DIM));
+    double avg_deg = pow(global_nodes_dbl/p4est->global_num_quadrants, 1./(P4EST_DIM)) - 1;
+    double avg_deg_quad = pow(global_quad_nodes_dbl/p4est->global_num_quadrants, 1./(P4EST_DIM)) - 1;
     
     if (p4est->mpirank == 0){
       printf
