@@ -3,10 +3,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[         0,          0]
-NotebookDataLength[     20162,        492]
-NotebookOptionsPosition[     19203,        457]
-NotebookOutlinePosition[     19538,        472]
-CellTagsIndexPosition[     19495,        469]
+NotebookDataLength[     22167,        548]
+NotebookOptionsPosition[     21061,        508]
+NotebookOutlinePosition[     21390,        523]
+CellTagsIndexPosition[     21347,        520]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -337,7 +337,7 @@ cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - \
 cmin*t)*(Power(Tan((Pi*(amax + amin + amax*r - amin*r))/8.),2) + \
 Power(Tan((Pi*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));\"\>"], \
 "Output",
- CellChangeTimes->{3.700095275052466*^9}],
+ CellChangeTimes->{3.700095275052466*^9, 3.709472998166441*^9}],
 
 Cell[BoxData["\<\"dxyz_drst[0][1] = -((bmax - bmin)*Pi*(-2 + cmax + cmin + \
 cmax*t - cmin*t)*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax \
@@ -349,7 +349,7 @@ bmin*s))/8.))/(32.*Power(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + \
 cmin + cmax*t - cmin*t)*(Power(Tan((Pi*(amax + amin + amax*r - \
 amin*r))/8.),2) + Power(Tan((Pi*(bmax + bmin + bmax*s - \
 bmin*s))/8.),2)))/2.,1.5));\"\>"], "Output",
- CellChangeTimes->{3.7000952760705423`*^9}],
+ CellChangeTimes->{3.700095275052466*^9, 3.709472999209041*^9}],
 
 Cell[BoxData["\<\"dxyz_drst[0][2] = ((cmax - cmin)*(-((R0*(-4 + cmax + cmin + \
 cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*((amax + amin + \
@@ -370,7 +370,7 @@ bmin*s))/8.),2)))/2.)))/(32.*Power(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
 cmax + cmin + cmax*t - cmin*t)*(Power(Tan((Pi*(amax + amin + amax*r - \
 amin*r))/8.),2) + Power(Tan((Pi*(bmax + bmin + bmax*s - \
 bmin*s))/8.),2)))/2.,1.5));\"\>"], "Output",
- CellChangeTimes->{3.70009530399413*^9}],
+ CellChangeTimes->{3.700095275052466*^9, 3.709473024568248*^9}],
 
 Cell[BoxData["\<\"dxyz_drst[1][0] = -((amax - amin)*Pi*(-2 + cmax + cmin + \
 cmax*t - cmin*t)*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax \
@@ -382,7 +382,7 @@ bmin*s))/8.))/2.))/(32.*Power(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax \
 + cmin + cmax*t - cmin*t)*(Power(Tan((Pi*(amax + amin + amax*r - \
 amin*r))/8.),2) + Power(Tan((Pi*(bmax + bmin + bmax*s - \
 bmin*s))/8.),2)))/2.,1.5));\"\>"], "Output",
- CellChangeTimes->{3.70009530511235*^9}],
+ CellChangeTimes->{3.700095275052466*^9, 3.7094730256459923`*^9}],
 
 Cell[BoxData["\<\"dxyz_drst[1][1] = ((bmax - bmin)*(-(R0*(-4 + cmax + cmin + \
 cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(Pi*(-2 + cmax + \
@@ -399,7 +399,7 @@ cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - \
 cmin*t)*(Power(Tan((Pi*(amax + amin + amax*r - amin*r))/8.),2) + \
 Power(Tan((Pi*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));\"\>"], \
 "Output",
- CellChangeTimes->{3.70009531249887*^9}],
+ CellChangeTimes->{3.700095275052466*^9, 3.709473032871804*^9}],
 
 Cell[BoxData["\<\"dxyz_drst[1][2] = ((cmax - cmin)*(-((R0*(-4 + cmax + cmin + \
 cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*((bmax + bmin + \
@@ -420,7 +420,7 @@ bmin*s))/8.),2)))/2.)))/(32.*Power(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
 cmax + cmin + cmax*t - cmin*t)*(Power(Tan((Pi*(amax + amin + amax*r - \
 amin*r))/8.),2) + Power(Tan((Pi*(bmax + bmin + bmax*s - \
 bmin*s))/8.),2)))/2.,1.5));\"\>"], "Output",
- CellChangeTimes->{3.700095335009193*^9}],
+ CellChangeTimes->{3.700095275052466*^9, 3.70947305523382*^9}],
 
 Cell[BoxData["\<\"dxyz_drst[2][0] = -((amax - amin)*Pi*(-2 + cmax + cmin + \
 cmax*t - cmin*t)*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax \
@@ -430,7 +430,7 @@ cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - \
 cmin*t)*(Power(Tan((Pi*(amax + amin + amax*r - amin*r))/8.),2) + \
 Power(Tan((Pi*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));\"\>"], \
 "Output",
- CellChangeTimes->{3.7000953352938023`*^9}],
+ CellChangeTimes->{3.700095275052466*^9, 3.709473055609414*^9}],
 
 Cell[BoxData["\<\"dxyz_drst[2][1] = -((bmax - bmin)*Pi*(-2 + cmax + cmin + \
 cmax*t - cmin*t)*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax \
@@ -440,7 +440,7 @@ cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - \
 cmin*t)*(Power(Tan((Pi*(amax + amin + amax*r - amin*r))/8.),2) + \
 Power(Tan((Pi*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,1.5));\"\>"], \
 "Output",
- CellChangeTimes->{3.700095335594145*^9}],
+ CellChangeTimes->{3.700095275052466*^9, 3.709473055968274*^9}],
 
 Cell[BoxData["\<\"dxyz_drst[2][2] = ((cmax - cmin)*((R0*(-4 + cmax + cmin + \
 cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-2 + \
@@ -452,11 +452,62 @@ bmin*s))/8.),2)))/2.)))/(8.*Power(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
 cmax + cmin + cmax*t - cmin*t)*(Power(Tan((Pi*(amax + amin + amax*r - \
 amin*r))/8.),2) + Power(Tan((Pi*(bmax + bmin + bmax*s - \
 bmin*s))/8.),2)))/2.,1.5));\"\>"], "Output",
- CellChangeTimes->{3.700095337093483*^9}]
+ CellChangeTimes->{3.700095275052466*^9, 3.709473057301034*^9}]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"rad2", "[", 
+   RowBox[{"r_", ",", "s_", ",", "t_"}], "]"}], ":=", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"xf", "[", 
+     RowBox[{"r", ",", "s", ",", "t"}], "]"}], "^", "2"}], "+", 
+   RowBox[{
+    RowBox[{"yf", "[", 
+     RowBox[{"r", ",", "s", ",", "t"}], "]"}], "^", "2"}], "+", 
+   RowBox[{
+    RowBox[{"zf", "[", 
+     RowBox[{"r", ",", "s", ",", "t"}], "]"}], "^", "2"}]}]}]], "Input",
+ CellChangeTimes->{{3.709472709679329*^9, 3.709472762717609*^9}, {
+  3.7094728439949417`*^9, 3.709472848539534*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", 
+  RowBox[{"Sqrt", "[", 
+   RowBox[{"rad2", "[", 
+    RowBox[{"r", ",", "s", ",", "t"}], "]"}], "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.7094727548648043`*^9, 3.709472764670499*^9}, {
+   3.709472809303393*^9, 3.709472813111422*^9}, 3.709472845307785*^9, {
+   3.709472877776824*^9, 3.7094729159688873`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  FractionBox["1", "2"], " ", 
+  SqrtBox[
+   SuperscriptBox[
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"R1", " ", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"-", "4"}], "+", "cmax", "+", "cmin", "+", 
+         RowBox[{"cmax", " ", "t"}], "-", 
+         RowBox[{"cmin", " ", "t"}]}], ")"}]}], "-", 
+      RowBox[{"R2", " ", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"-", "2"}], "+", "cmax", "+", "cmin", "+", 
+         RowBox[{"cmax", " ", "t"}], "-", 
+         RowBox[{"cmin", " ", "t"}]}], ")"}]}]}], ")"}], "2"]]}]], "Output",
+ CellChangeTimes->{{3.709472799334519*^9, 3.709472814087604*^9}, {
+   3.709472850883819*^9, 3.709472879176598*^9}, 3.709472916612238*^9}]
 }, Open  ]]
 },
-WindowSize->{1916, 1041},
-WindowMargins->{{2, Automatic}, {Automatic, 18}},
+WindowSize->{1916, 155},
+WindowMargins->{{2, Automatic}, {373, 552}},
 FrontEndVersion->"11.0 for Linux x86 (64-bit) (July 28, 2016)",
 StyleDefinitions->"Default.nb"
 ]
@@ -477,15 +528,20 @@ Cell[3039, 97, 467, 15, 33, "Input"],
 Cell[3509, 114, 3133, 99, 209, "Input"],
 Cell[CellGroupData[{
 Cell[6667, 217, 4138, 105, 227, "Input"],
-Cell[10808, 324, 1069, 15, 112, "Output"],
-Cell[11880, 341, 730, 10, 92, "Output"],
-Cell[12613, 353, 1450, 19, 152, "Output"],
-Cell[14066, 374, 727, 10, 92, "Output"],
-Cell[14796, 386, 1068, 15, 112, "Output"],
-Cell[15867, 403, 1451, 19, 152, "Output"],
-Cell[17321, 424, 560, 8, 72, "Output"],
-Cell[17884, 434, 558, 8, 72, "Output"],
-Cell[18445, 444, 742, 10, 92, "Output"]
+Cell[10808, 324, 1091, 15, 112, "Output"],
+Cell[11902, 341, 750, 10, 92, "Output"],
+Cell[12655, 353, 1473, 19, 152, "Output"],
+Cell[14131, 374, 752, 10, 92, "Output"],
+Cell[14886, 386, 1091, 15, 112, "Output"],
+Cell[15980, 403, 1472, 19, 152, "Output"],
+Cell[17455, 424, 580, 8, 72, "Output"],
+Cell[18038, 434, 580, 8, 72, "Output"],
+Cell[18621, 444, 764, 10, 92, "Output"]
+}, Open  ]],
+Cell[19400, 457, 541, 15, 33, "Input"],
+Cell[CellGroupData[{
+Cell[19966, 476, 355, 7, 32, "Input"],
+Cell[20324, 485, 721, 20, 53, "Output"]
 }, Open  ]]
 }
 ]

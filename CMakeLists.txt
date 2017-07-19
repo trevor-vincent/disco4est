@@ -121,6 +121,7 @@ SET (
   IO/d4est_vtk.c
   IO/d4est_output.c
   Solver/d4est_solver_cg.c
+  Solver/d4est_solver_newton.c
   Solver/krylov_petsc.c
   Solver/newton_petsc.c
   )
@@ -301,6 +302,7 @@ add_custom_command(
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
 add_d4est_problem_3d(uniform_poisson_sinx_driver uniform_poisson_sinx.c UniformPoissonSinx)
+add_d4est_problem_3d(nonlinear_uniform_okendon_driver nonlinear_uniform_okendon.c NonLinearUniformOkendon)
 # add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
 # add_d4est_problem_2d(test_uniform_wedge_driver test_uniform_wedge.c UniformExamples/Wedge)
 # add_d4est_problem_2d(test_uniform_wedge_multigrid_driver test_uniform_wedge_multigrid.c UniformExamples/WedgeMultigrid)

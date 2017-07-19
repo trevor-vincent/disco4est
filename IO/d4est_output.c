@@ -6,7 +6,7 @@
 #include <d4est_estimator_stats.h>
 #include <sc_reduce.h>
 
-void
+static void
 d4est_output_calculate_analytic_error
 (
  p4est_t* p4est,
@@ -16,24 +16,25 @@ d4est_output_calculate_analytic_error
  d4est_elliptic_data_t* prob_vecs,
  d4est_xyz_fcn_t analytic_solution,
  void* analytic_solution_ctx,
+ double* u_analytic,
  double* error
 )
 {
     d4est_mesh_init_field
       (
        p4est,
-       error,
+       u_analytic,
        analytic_solution,
        d4est_ops,
        d4est_geom,
        analytic_solution_ctx
       );
     
-    d4est_linalg_vec_axpy(-1., prob_vecs->u, error, prob_vecs->local_nodes);
+    d4est_linalg_vec_axpyeqz(-1., prob_vecs->u, u_analytic, error, prob_vecs->local_nodes);
     d4est_linalg_vec_fabs(error, prob_vecs->local_nodes);
 }
 
-void
+static void
 d4est_output_norms
 (
  p4est_t* p4est,
@@ -41,11 +42,27 @@ d4est_output_norms
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_estimator_stats_t* stats,
- double* error,
- int local_nodes,
- int level
+ double* error
 )
 {
+  int local_nodes = 0;
+  int local_quad_nodes = 0;
+
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data;        
+        local_nodes += d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        local_quad_nodes += d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
+      }
+    }
+  
   double local_l2_norm_sqr = d4est_mesh_compute_l2_norm_sqr
                                 (
                                  p4est,
@@ -58,19 +75,21 @@ d4est_output_norms
                                 );
 
     double local_nodes_dbl = (double)local_nodes;
+    double local_quad_nodes_dbl = (double)local_quad_nodes;
     double local_estimator = stats->total;
-    double local_reduce [3];
-    double global_reduce [3];
+    double local_reduce [4];
+    double global_reduce [4];
     
     local_reduce[0] = local_l2_norm_sqr;
     local_reduce[1] = local_nodes_dbl;
-    local_reduce[2] = local_estimator;
+    local_reduce[2] = local_quad_nodes_dbl;
+    local_reduce[3] = local_estimator;
     
     sc_reduce
       (
        &local_reduce[0],
        &global_reduce[0],
-       3,
+       4,
        sc_MPI_DOUBLE,
        sc_MPI_SUM,
        0,
@@ -79,15 +98,16 @@ d4est_output_norms
 
     double global_l2_norm_sqr = global_reduce[0];
     double global_nodes_dbl = global_reduce[1];
-    double global_estimator = global_reduce[2];
+    double global_quad_nodes_dbl = global_reduce[2];
+    double global_estimator = global_reduce[3];
 
     if (p4est->mpirank == 0){
       printf
         (
-         "[D4EST_OUTPUT]: level %d global_elements %d global_nodes %d global_estimator %.25f global_l2 %.25f\n",
-         level,
+         "[D4EST_OUTPUT]: global_elements %d global_nodes %d global_quad_nodes %d global_estimator %.25f global_l2 %.25f\n",
          (int)p4est->global_num_quadrants,
          (int)global_nodes_dbl,
+         (int)global_quad_nodes_dbl,
          sqrt(global_estimator),
          sqrt(global_l2_norm_sqr)
         );
@@ -105,14 +125,15 @@ d4est_output_norms_using_analytic_solution
  d4est_estimator_stats_t* stats,
  d4est_elliptic_data_t* prob_vecs,
  d4est_xyz_fcn_t analytic_solution,
- void* ctx,
- int level
+ void* ctx
 )
 {
   double* error = P4EST_ALLOC(double, prob_vecs->local_nodes);
-  d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs, analytic_solution, ctx, error);
-  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, stats, error, prob_vecs->local_nodes, level);
+  double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
+  d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs, analytic_solution, ctx, u_analytic, error);
+  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, stats, error);
   P4EST_FREE(error);
+  P4EST_FREE(u_analytic);
 }
 
 
@@ -127,12 +148,14 @@ vtk_field_plotter
   vtk_ctx = d4est_vtk_write_dg_point_dataf
             (
              vtk_ctx,
-             3,
+             4,
              0,
              "u",
              vecs->u,
              "error",
              vecs->error,
+             "u_compare",
+             vecs->u_compare,
              "jacobian",
              vecs->jacobian,
              vtk_ctx
@@ -185,18 +208,18 @@ vtk_field_plotter
    }
 }
 
-void
+static void
 d4est_output_vtk
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  double* u,
+ double* u_compare,
  double* error,
- int local_nodes,
  const char* input_file,
  const char* save_as_prefix,
- d4est_output_estimator_option_t eta2_option,
+ int local_nodes,
  int level
 )
 {
@@ -209,15 +232,11 @@ d4est_output_vtk
 
     d4est_output_vtk_fields_t vtk_nodal_vecs;
     vtk_nodal_vecs.u = u;
+    vtk_nodal_vecs.u_compare = u_compare;
     vtk_nodal_vecs.error = error;
     vtk_nodal_vecs.jacobian = jacobian_lgl;
-    
-    if (eta2_option == OUTPUT_ESTIMATOR){
-      vtk_nodal_vecs.eta2 = eta2_array;
-    }
-    else{
-      vtk_nodal_vecs.eta2 = NULL;
-    }
+    vtk_nodal_vecs.eta2 = eta2_array;
+
 
     char* save_as;
     asprintf(&save_as,"%s_level_%d", save_as_prefix, level);
@@ -255,13 +274,27 @@ d4est_output_vtk_with_analytic_error
  const char* save_as_prefix,
  d4est_xyz_fcn_t analytic_solution,
  void* ctx,
- d4est_output_estimator_option_t eta2_option,
  int level
 )
 {
   double* error = P4EST_ALLOC(double, prob_vecs->local_nodes);
-  d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs, analytic_solution, ctx, error);
+  double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
+  d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs, analytic_solution, ctx, u_analytic, error);
 
-  d4est_output_vtk(p4est, d4est_ops, d4est_geom, prob_vecs->u, error, prob_vecs->local_nodes, input_file, save_as_prefix, eta2_option, level);
+  d4est_output_vtk
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom,
+     prob_vecs->u,
+     u_analytic,
+     error,
+     input_file,
+     save_as_prefix,
+     prob_vecs->local_nodes,
+     level
+    );
+  
   P4EST_FREE(error);
+  P4EST_FREE(u_analytic);
 }
