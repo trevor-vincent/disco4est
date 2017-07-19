@@ -101,13 +101,18 @@ d4est_output_norms
     double global_quad_nodes_dbl = global_reduce[2];
     double global_estimator = global_reduce[3];
 
+    double avg_deg = pow(global_nodes_dbl/p4est->global_num_quadrants, 1./(P4EST_DIM));
+    double avg_deg_quad = pow(global_quad_nodes_dbl/p4est->global_num_quadrants, 1./(P4EST_DIM));
+    
     if (p4est->mpirank == 0){
       printf
         (
-         "[D4EST_OUTPUT]: global_elements %d global_nodes %d global_quad_nodes %d global_estimator %.25f global_l2 %.25f\n",
+         "[D4EST_OUTPUT]: global_elements %d global_nodes %d avg_deg %d global_quad_nodes %d avg_deg_quad %d global_estimator %.25f global_l2 %.25f\n",
          (int)p4est->global_num_quadrants,
          (int)global_nodes_dbl,
+         (int)avg_deg,
          (int)global_quad_nodes_dbl,
+         (int)avg_deg_quad,
          sqrt(global_estimator),
          sqrt(global_l2_norm_sqr)
         );
