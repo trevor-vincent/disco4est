@@ -73,7 +73,9 @@ pXest_input_parse(const char* input_file){
      pXest_input.min_quadrants < proc_size
   ){
     if (proc_rank == 0){
-      printf("[D4EST_WARNING]: Starting p4est with elements < processes\n");
+      printf("[D4EST_ERROR]: proc_size = %d\n", proc_size);
+      printf("[D4EST_ERROR]: min_level = %d\n", pXest_input.min_level);
+      D4EST_ABORT("[D4EST_ERROR]: Starting p4est with elements < processes\n");
     }
   }
 

@@ -434,8 +434,10 @@ problem_init
        NULL,
        level);
 
-    if (p4est->mpirank == 0 && level != d4est_amr->num_of_amr_steps){
-      printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level+1);
+    if (level != d4est_amr->num_of_amr_steps){
+
+      if (p4est->mpirank == 0)
+        printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level+1);
 
       d4est_amr_step
         (
