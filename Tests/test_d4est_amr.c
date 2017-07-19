@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
                     mpicomm,
                     d4est_geom->p4est_conn,
                     -1,
-                    0,
+                    1,
                     1
                    );
   

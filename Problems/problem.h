@@ -2,6 +2,7 @@
 #define PROBLEM_H 
 
 #include <d4est_geometry.h>
+#include <d4est_element_data.h>
 #include <d4est_operators.h>
 #include <pXest.h>
 
@@ -27,23 +28,14 @@ problem_build_geom
 void
 problem_init
 (
- const char* input_file,
  p4est_t* p4est,
+ p4est_ghost_t** ghost,
+ d4est_element_data_t** ghost_data,
  d4est_geometry_t* d4est_geom,
  d4est_operators_t* d4est_ops,
- int proc_size,
+ const char* input_file,
  sc_MPI_Comm mpicomm
 );
-
-
-p4est_t*
-problem_load_p4est_from_checkpoint
-(
- const char* filename,
- sc_MPI_Comm mpicomm,
- p4est_connectivity_t** conn
-);
-
 
 void
 problem_help();

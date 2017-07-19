@@ -58,11 +58,9 @@ d4est_output_norms
                                 );
 
     double local_nodes_dbl = (double)local_nodes;
-    int local_estimator = stats->total;
-    
+    double local_estimator = stats->total;
     double local_reduce [3];
     double global_reduce [3];
-    
     
     local_reduce[0] = local_l2_norm_sqr;
     local_reduce[1] = local_nodes_dbl;

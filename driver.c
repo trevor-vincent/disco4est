@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
   if(proc_rank == 0)
     printf("[D4EST_INFO]: DEBUG MODE ON\n");
   /* p4est_init(NULL, SC_LP_ALWAYS); */
-  p4est_init(NULL, SC_LP_ERROR);
+  p4est_init(NULL, SC_LP_ALWAYS);
 #else
   if(proc_rank == 0)
     printf("[D4EST_INFO]: DEBUG MODE OFF\n");
@@ -57,6 +57,17 @@ int main(int argc, char *argv[])
      NULL
     );
 
+
+  p4est_partition(p4est, 0, NULL);
+  p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
+
+  
+  p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
+  d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
+                                                   ghost->ghosts.elem_count);
+   
+  
+  
   if (proc_rank == 0){
     printf("[D4EST_INFO]: mpisize = %d\n", proc_size);
     printf("[D4EST_INFO]: min_quadrants = %d\n", pXest_input.min_quadrants);
@@ -75,13 +86,23 @@ int main(int argc, char *argv[])
   /* Solve Problem */
   problem_init
     (
-     (argc == 2) ? argv[1] : "options.input",
      p4est,
+     &ghost,
+     &ghost_data,
      d4est_geom,
      d4est_ops,
-     proc_size,
+     (argc == 2) ? argv[1] : "options.input",
      mpicomm
     );
+
+    
+  if (ghost) {
+    p4est_ghost_destroy (ghost);
+    P4EST_FREE (ghost_data);
+    ghost = NULL;
+    ghost_data = NULL;
+  }
+  
   
   d4est_ops_destroy(d4est_ops);
   

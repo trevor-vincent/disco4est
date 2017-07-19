@@ -257,6 +257,7 @@ void d4est_estimator_stats_print(d4est_estimator_stats_t* stats){
     printf("tree = %d\n", stats->tree);
   }
   printf("sample_size = %d\n", stats->sample_size);   
+  printf("total = %.25f\n", stats->total);   
   printf("mean = %.25f\n", stats->mean);
   printf("std = %.25f\n", stats->std);
   printf("max = %.25f\n", stats->max);

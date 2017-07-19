@@ -463,9 +463,19 @@ d4est_amr_step
   if(d4est_amr->scheme->pre_refine_callback != NULL){
     d4est_amr->scheme->pre_refine_callback(p4est, d4est_amr->scheme->amr_scheme_data);
   }
-  
+  if (p4est->mpirank == 0)
+    printf("[D4EST_AMR]: Starting to mark elements\n");
+
   d4est_amr_mark_elements(p4est);
+
+  if (p4est->mpirank == 0)
+    printf("[D4EST_AMR]: Starting to refine elements\n");
+
   d4est_amr_refine_elements(p4est);
+
+  if (p4est->mpirank == 0)
+    printf("[D4EST_AMR]: Starting to balance elements\n");
+
   d4est_amr_balance_elements(p4est);
 
   if(d4est_amr->scheme->post_balance_callback != NULL){

@@ -19,6 +19,8 @@ d4est_amr_uniform_mark_elements
 {
   d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
   d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
+
+  printf("mark elements mpirank = %d\n", info->p4est->mpirank);
   
   if (d4est_amr->scheme->amr_scheme_type == AMR_UNIFORM_H){
     d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;

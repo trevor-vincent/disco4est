@@ -119,8 +119,6 @@ problem_analytic_solution
   return sin((M_PI)*x)*sin((M_PI)*y);
 #endif
 }
-
-
 double
 problem_f_fcn
 (
@@ -133,6 +131,20 @@ problem_f_fcn
 )
 {
   return (M_PI)*(M_PI)*(P4EST_DIM)*problem_analytic_solution(x,y,z,user);
+}
+
+double
+problem_initial_guess
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+)
+{
+  return 0.;
 }
 
 double
@@ -257,29 +269,18 @@ problem_build_rhs
 void
 problem_init
 (
- const char* input_file,
  p4est_t* p4est,
+ p4est_ghost_t** ghost,
+ d4est_element_data_t** ghost_data,
  d4est_geometry_t* d4est_geom,
  d4est_operators_t* d4est_ops,
- int proc_size,
+ const char* input_file,
  sc_MPI_Comm mpicomm
 )
 {
   D4EST_ASSERT(d4est_geom->geom_type == GEOM_BRICK);
   problem_input_t input = problem_input(input_file);
-  
-  D4EST_ASSERT( (P4EST_DIM) == 3 || (P4EST_DIM) == 2);
-  int world_rank, world_size;
-  sc_MPI_Comm_rank(sc_MPI_COMM_WORLD, &world_rank);
-  sc_MPI_Comm_size(sc_MPI_COMM_WORLD, &world_size);
 
-  p4est_partition(p4est, 0, NULL);
-  p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
-
-  p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
-  d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
-                                                   ghost->ghosts.elem_count);
-   
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
   d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
@@ -322,8 +323,8 @@ problem_init
     local_nodes = d4est_mesh_update
                   (
                    p4est,
-                   ghost,
-                   ghost_data,
+                   *ghost,
+                   *ghost_data,
                    d4est_ops,
                    d4est_geom,
                    d4est_quad,
@@ -335,8 +336,19 @@ problem_init
                    (void*)&input
                   );
 
-    if (level == 0)
+    if (level == 0){
       prob_vecs.u = P4EST_REALLOC(prob_vecs.u, double, local_nodes);
+      d4est_mesh_init_field
+        (
+         p4est,
+         prob_vecs.u,
+         problem_initial_guess,
+         d4est_ops,
+         d4est_geom,
+         NULL
+        );
+    }
+    
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, local_nodes);
     prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, local_nodes);
     prob_vecs.local_nodes = local_nodes;
@@ -346,8 +358,8 @@ problem_init
        p4est,
        &prob_vecs,
        &prob_fcns,
-       ghost,
-       ghost_data,
+       *ghost,
+       *ghost_data,
        d4est_ops,
        d4est_geom,
        d4est_quad,
@@ -361,8 +373,8 @@ problem_init
        &prob_fcns,
        penalty_data,
        zero_fcn,
-       ghost,
-       ghost_data,
+       *ghost,
+       *ghost_data,
        d4est_ops,
        d4est_geom,
        d4est_quad
@@ -370,7 +382,8 @@ problem_init
 
     d4est_estimator_stats_t stats;
     d4est_estimator_stats_compute(p4est, &stats);
-
+    d4est_estimator_stats_print(&stats);
+    
     d4est_solver_cg_params_t params;
     d4est_solver_cg_input
       (
@@ -386,8 +399,8 @@ problem_init
        p4est,
        &prob_vecs,
        &prob_fcns,
-       &ghost,
-       &ghost_data,
+       ghost,
+       ghost_data,
        d4est_ops,
        d4est_geom,
        d4est_quad,
@@ -421,14 +434,14 @@ problem_init
        NULL,
        level);
 
-    if (world_rank == 0 && level != d4est_amr->num_of_amr_steps){
+    if (p4est->mpirank == 0 && level != d4est_amr->num_of_amr_steps){
       printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level+1);
 
       d4est_amr_step
         (
          p4est,
-         &ghost,
-         &ghost_data,
+         ghost,
+         ghost_data,
          d4est_ops,
          d4est_amr,
          &prob_vecs.u,
@@ -440,13 +453,7 @@ problem_init
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
-    
-  if (ghost) {
-    p4est_ghost_destroy (ghost);
-    P4EST_FREE (ghost_data);
-    ghost = NULL;
-    ghost_data = NULL;
-  }
+
 
   d4est_amr_destroy(d4est_amr);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
