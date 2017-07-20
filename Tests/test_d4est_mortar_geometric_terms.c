@@ -486,11 +486,6 @@ curved_test_mortarjacobianterms_interface
 #endif
   printf("max error 6 = %f\n", max_error);
   
-  if (max_error > data->local_eps){
-    printf("HOLY FUCKS DONALD TRUMP, LOOK AT THIS ERROR\n");
-
-  }
-
   data->global_err += max_error;
 
   P4EST_FREE(u_p_on_f_p_porder);

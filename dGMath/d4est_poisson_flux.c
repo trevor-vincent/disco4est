@@ -176,19 +176,21 @@ d4est_poisson_flux_dirichlet
   D4EST_COPY_DIM_VEC(n_on_f_m_quad, boundary_data.n_on_f_m_quad);
   D4EST_COPY_DIM_VEC(n_sj_on_f_m_quad, boundary_data.n_sj_on_f_m_quad);
   D4EST_COPY_DIM_VEC(xyz_on_f_m_lobatto, boundary_data.xyz_on_f_m_lobatto);
-  
-  d4est_poisson_flux_params->boundary_fcn
-    (
-     e_m,
-     f_m,
-     mortar_side_id_m,
-     d4est_poisson_flux_params->boundary_condition,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     &boundary_data,
-     d4est_poisson_flux_params->user
-    );
+
+  if (d4est_poisson_flux_params->boundary_fcn != NULL){
+    d4est_poisson_flux_params->boundary_fcn
+      (
+       e_m,
+       f_m,
+       mortar_side_id_m,
+       d4est_poisson_flux_params->boundary_condition,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       &boundary_data,
+       d4est_poisson_flux_params->user
+      );
+  }
   
   D4EST_FREE_DIM_VEC(xyz_on_f_m_lobatto);
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m);
@@ -744,7 +746,8 @@ d4est_poisson_flux_interface
   D4EST_COPY_DIM_VEC(dudx_p_on_f_p_mortar_quad,interface_data.dudx_p_on_f_p_mortar_quad);
   D4EST_COPY_DIM_VEC(n_on_f_m_mortar_quad,interface_data.n_on_f_m_mortar_quad);
   D4EST_COPY_DIM_VEC(n_sj_on_f_m_mortar_quad,interface_data.n_sj_on_f_m_mortar_quad);
-  
+
+  if (d4est_poisson_flux_params->interface_fcn != NULL){
   d4est_poisson_flux_params->interface_fcn
     (
      e_m,
@@ -769,7 +772,7 @@ d4est_poisson_flux_interface
      P4EST_FREE(sj_on_f_p_mortar_quad_porder);
      D4EST_FREE_DIM_VEC(n_on_f_p_mortar_quad_porder);
 #endif
-
+  }
      
 
   P4EST_FREE(j_div_sj_on_f_m_mortar_quad);
