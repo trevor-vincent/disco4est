@@ -1,17 +1,112 @@
 #ifndef STAMM_FCNS_H
 #define STAMM_FCNS_H 
 
+typedef struct {
+
+  double gamma_n;
+  double gamma_h;
+  double gamma_p;
+  double sigma;
+  double c2x;
+  double c2y;
+  double c2z;
+
+} stamm_params_t;
+
+static
+int stamm_params_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  stamm_params_t* pconfig = (stamm_params_t*)user;
+   if (d4est_util_match_couple(section,"amr",name,"sigma")) {
+    D4EST_ASSERT(pconfig->sigma == -1);
+    pconfig->sigma = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"amr",name,"gamma_h")) {
+    D4EST_ASSERT(pconfig->gamma_h == -1);
+    pconfig->gamma_h = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"amr",name,"gamma_p")) {
+    D4EST_ASSERT(pconfig->gamma_p == -1);
+    pconfig->gamma_p = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"amr",name,"gamma_n")) {
+    D4EST_ASSERT(pconfig->gamma_n == -1);
+    pconfig->gamma_n = atof(value);
+  }   
+  else if (d4est_util_match_couple(section,"problem",name,"c2x")) {
+    D4EST_ASSERT(pconfig->c2x == -1);
+    pconfig->c2x = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"problem",name,"c2y")) {
+    D4EST_ASSERT(pconfig->c2y == -1);
+    pconfig->c2y = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"problem",name,"c2z")) {
+    D4EST_ASSERT(pconfig->c2z == -1);
+    pconfig->c2z = atof(value);
+  }  
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+
+static
+stamm_params_t
+stamm_params_input
+(
+ const char* input_file
+)
+{
+  stamm_params_t input;
+  input.gamma_h = -1;
+  input.gamma_n = -1;
+  input.gamma_p = -1;
+  input.sigma = -1;
+  input.c2x = -1;
+  input.c2y = -1;
+  input.c2z = -1;
+  
+  if (ini_parse(input_file, stamm_params_handler, &input) < 0) {
+    D4EST_ABORT("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT("amr", input.gamma_h, -1);
+  D4EST_CHECK_INPUT("amr", input.gamma_p, -1);
+  D4EST_CHECK_INPUT("amr", input.gamma_n, -1);
+  D4EST_CHECK_INPUT("amr", input.sigma, -1);
+  D4EST_CHECK_INPUT("problem", input.c2x, -1);
+  D4EST_CHECK_INPUT("problem", input.c2y, -1);
+  D4EST_CHECK_INPUT("problem", input.c2z, -1);
+  
+  return input;
+}
+
+
 static
 double stamm_analytic_solution
 (
  double x,
- double y
+ double y,
 #if (P4EST_DIM)==3
- ,
- double z
+ double z,
 #endif
+ void *user
 )
 {
+  stamm_params_t* params = user;
+  double c2x = params->c2x;
+  double c2y = params->c2y;
+#if (P4EST_DIM)==3
+  double c2z = params->c2z;
+#endif
   double xp = x - c2x;
   double yp = y - c2y;
 #if (P4EST_DIM)==3
@@ -35,11 +130,11 @@ static
 double stamm_boundary_fcn
 (
  double x,
- double y
+ double y,
 #if (P4EST_DIM)==3
- ,
- double z
+ double z,
 #endif
+ void* user
 )
 {
   return 0.;
@@ -49,7 +144,7 @@ static
 double stamm_rhs_fcn
 (
  double x,
- double y
+ double y,
 #if (P4EST_DIM)==3
  double z,
 #endif
@@ -62,7 +157,7 @@ double stamm_rhs_fcn
 #if (P4EST_DIM)==3
   double c2z = params->c2z;
 #endif
-  
+
   #if (P4EST_DIM)==2
   if (x == c2x && y == c2y){
     return 0.;
@@ -101,35 +196,54 @@ double stamm_rhs_fcn
 #endif
 }
 
-static
-void
-stamm_build_residual
-(
- p4est_t* p4est,
- p4est_ghost_t* ghost,
- void* ghost_data,
- d4est_elliptic_data_t* prob_vecs,
- d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom
-)
-{
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, NULL);
-  d4est_linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
-}
-
-static
-void
+static void
 stamm_apply_lhs
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
- void* ghost_data,
+ d4est_element_data_t* ghost_data,
  d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ void* user
 )
 {
-  poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, d4est_ops, NULL);
+  d4est_poisson_flux_data_t* flux_fcn_data = user;
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad);
 }
+
+
+static void
+stamm_build_residual
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ void* user
+)
+{
+  stamm_apply_lhs(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom, d4est_quad, user);
+  d4est_linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
+}
+
+static double
+stamm_initial_guess
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+)
+{
+  return 100.;
+}
+
 
 #endif

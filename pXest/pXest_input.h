@@ -24,13 +24,13 @@ int pXest_input_handler
 )
 {
   pXest_input_t* pconfig = (pXest_input_t*)user;
-  if (d4est_util_match_couple(section,"p4est",name,"min_quadrants")) {
+  if (d4est_util_match_couple(section,"initial_grid",name,"min_quadrants")) {
     pconfig->min_quadrants = atoi(value);
-  } else if (d4est_util_match_couple(section,"p4est",name, "min_level")) {
+  } else if (d4est_util_match_couple(section,"initial_grid",name, "min_level")) {
     pconfig->min_level = atoi(value);
-  } else if (d4est_util_match_couple(section,"p4est",name,"fill_uniform")) {
+  } else if (d4est_util_match_couple(section,"initial_grid",name,"fill_uniform")) {
     pconfig->fill_uniform = atoi(value);
-  } else if (d4est_util_match_couple(section,"p4est",name,"print_elements_per_proc")) {
+  } else if (d4est_util_match_couple(section,"initial_grid",name,"print_elements_per_proc")) {
     pconfig->print_elements_per_proc = atoi(value);
   } else {
     return 0;  /* unknown section/name, error */
@@ -61,9 +61,9 @@ pXest_input_parse(const char* input_file){
     D4EST_ABORT("[D4EST_ERROR]: Can't load pXest input file");
   }
 
-  D4EST_CHECK_INPUT("p4est", pXest_input.min_quadrants, -2);
-  D4EST_CHECK_INPUT("p4est", pXest_input.min_level, -2);
-  D4EST_CHECK_INPUT("p4est", pXest_input.fill_uniform, -2);
+  D4EST_CHECK_INPUT("initial_grid", pXest_input.min_quadrants, -2);
+  D4EST_CHECK_INPUT("initial_grid", pXest_input.min_level, -2);
+  D4EST_CHECK_INPUT("initial_grid", pXest_input.fill_uniform, -2);
   
   if(
      proc_size != 1

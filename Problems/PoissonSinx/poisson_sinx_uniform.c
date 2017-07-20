@@ -29,10 +29,10 @@ typedef struct {
   int deg;
   int deg_quad;
   
-} problem_input_t;
+} problem_initial_degree_input_t;
 
 static
-int problem_input_handler
+int problem_initial_degree_input_handler
 (
  void* user,
  const char* section,
@@ -40,12 +40,12 @@ int problem_input_handler
  const char* value
 )
 {
-  problem_input_t* pconfig = (problem_input_t*)user;
-  if (d4est_util_match_couple(section,"problem",name,"deg")) {
+  problem_initial_degree_input_t* pconfig = (problem_initial_degree_input_t*)user;
+  if (d4est_util_match_couple(section,"initial_grid",name,"deg")) {
     D4EST_ASSERT(pconfig->deg == -1);
     pconfig->deg = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"problem",name,"deg_quad")) {
+  else if (d4est_util_match_couple(section,"initial_grid",name,"deg_quad")) {
     D4EST_ASSERT(pconfig->deg_quad == -1);
     pconfig->deg_quad = atoi(value);
   }
@@ -57,22 +57,22 @@ int problem_input_handler
 
 
 static
-problem_input_t
-problem_input
+problem_initial_degree_input_t
+problem_initial_degree_input
 (
  const char* input_file
 )
 {
-  problem_input_t input;
+  problem_initial_degree_input_t input;
   input.deg = -1;
   input.deg_quad = -1;
   
-  if (ini_parse(input_file, problem_input_handler, &input) < 0) {
+  if (ini_parse(input_file, problem_initial_degree_input_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("problem", input.deg, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_quad, -1);
+  D4EST_CHECK_INPUT("initial_grid", input.deg, -1);
+  D4EST_CHECK_INPUT("initial_grid", input.deg_quad, -1);
   printf("[PROBLEM]: deg = %d\n",input.deg);
   printf("[PROBLEM]: deg_quad = %d\n",input.deg_quad);
   return input;
@@ -86,7 +86,7 @@ problem_set_degrees_init
  void* user_ctx
 )
 {
-  problem_input_t* input = user_ctx;
+  problem_initial_degree_input_t* input = user_ctx;
   elem_data->deg = input->deg;
   elem_data->deg_quad = input->deg_quad;
 }
@@ -115,7 +115,7 @@ problem_init
 )
 {
   D4EST_ASSERT(d4est_geom->geom_type == GEOM_BRICK);
-  problem_input_t input = problem_input(input_file);
+  problem_initial_degree_input_t input = problem_initial_degree_input(input_file);
 
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");

@@ -22,16 +22,17 @@
 #include <krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
+#include "stamm_fcns.h"
 
 typedef struct {
 
   int deg;
   int deg_quad;
   
-} problem_input_t;
+} problem_initial_degree_input_t;
 
 static
-int problem_input_handler
+int problem_initial_degree_input_handler
 (
  void* user,
  const char* section,
@@ -39,12 +40,12 @@ int problem_input_handler
  const char* value
 )
 {
-  problem_input_t* pconfig = (problem_input_t*)user;
-  if (d4est_util_match_couple(section,"problem",name,"deg")) {
+  problem_initial_degree_input_t* pconfig = (problem_initial_degree_input_t*)user;
+  if (d4est_util_match_couple(section,"initial_grid",name,"deg")) {
     D4EST_ASSERT(pconfig->deg == -1);
     pconfig->deg = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"problem",name,"deg_quad")) {
+  else if (d4est_util_match_couple(section,"initial_grid",name,"deg_quad")) {
     D4EST_ASSERT(pconfig->deg_quad == -1);
     pconfig->deg_quad = atoi(value);
   }
@@ -54,29 +55,64 @@ int problem_input_handler
   return 1;
 }
 
-
 static
-problem_input_t
-problem_input
+problem_initial_degree_input_t
+problem_initial_degree_input
 (
  const char* input_file
 )
 {
-  problem_input_t input;
+  problem_initial_degree_input_t input;
   input.deg = -1;
   input.deg_quad = -1;
   
-  if (ini_parse(input_file, problem_input_handler, &input) < 0) {
+  if (ini_parse(input_file, problem_initial_degree_input_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("problem", input.deg, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_quad, -1);
+  D4EST_CHECK_INPUT("initial_grid", input.deg, -1);
+  D4EST_CHECK_INPUT("initial_grid", input.deg_quad, -1);
   printf("[PROBLEM]: deg = %d\n",input.deg);
   printf("[PROBLEM]: deg_quad = %d\n",input.deg_quad);
   return input;
 }
 
+static
+int
+amr_mark_element
+(
+ p4est_t* p4est,
+ double eta2,
+ d4est_estimator_stats_t** stats,
+ d4est_element_data_t* elem_data,
+ void* user
+)
+{
+  stamm_params_t* params = user;
+  double eta2_avg = stats[0]->mean;
+  return (eta2 >= params->sigma*eta2_avg);
+}
+
+static
+gamma_params_t
+amr_set_element_gamma
+(
+ p4est_t* p4est,
+ double eta2,
+ d4est_estimator_stats_t** stats,
+ d4est_element_data_t* elem_data,
+ void* user
+)
+{
+  stamm_params_t* params = user;
+  
+  gamma_params_t gamma_hpn;
+  gamma_hpn.gamma_h = params->gamma_h;
+  gamma_hpn.gamma_p = params->gamma_p;
+  gamma_hpn.gamma_n = params->gamma_n;
+
+  return gamma_hpn;
+}
 
 void
 problem_set_degrees_init
@@ -85,7 +121,7 @@ problem_set_degrees_init
  void* user_ctx
 )
 {
-  problem_input_t* input = user_ctx;
+  problem_initial_degree_input_t* input = user_ctx;
   elem_data->deg = input->deg;
   elem_data->deg_quad = input->deg_quad;
 }
@@ -101,171 +137,6 @@ problem_set_degrees_after_amr
   elem_data->deg_quad = elem_data->deg;
 }
 
-
-double
-problem_analytic_solution
-(
- double x,
- double y,
-#if (P4EST_DIM)==3
- double z,
-#endif
- void* user
-)
-{
-#if (P4EST_DIM)==3
-  return sin((M_PI)*x)*sin((M_PI)*y)*sin((M_PI)*z);
-#else
-  return sin((M_PI)*x)*sin((M_PI)*y);
-#endif
-}
-double
-problem_f_fcn
-(
- double x,
- double y,
-#if (P4EST_DIM)==3
- double z,
-#endif
- void* user
-)
-{
-  return (M_PI)*(M_PI)*(P4EST_DIM)*problem_analytic_solution(x,y,z,user);
-}
-
-double
-problem_initial_guess
-(
- double x,
- double y,
-#if (P4EST_DIM)==3
- double z,
-#endif
- void* user
-)
-{
-  return 0.;
-}
-
-double
-problem_boundary_fcn
-(
- double x,
- double y,
-#if (P4EST_DIM)==3
- double z,
-#endif
- void* user
-)
-{
-  return problem_analytic_solution(x,y,z,user);
-}
-
-void
-problem_apply_lhs
-(
- p4est_t* p4est,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
- d4est_elliptic_data_t* prob_vecs,
- d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad,
- void* user
-)
-{
-  d4est_poisson_flux_data_t* flux_fcn_data = user;
-  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad);
-}
-
-
-void
-problem_build_residual
-(
- p4est_t* p4est,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
- d4est_elliptic_data_t* prob_vecs,
- d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad,
- void* user
-)
-{
-  problem_apply_lhs(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom, d4est_quad, user);
-  d4est_linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
-}
-
-void
-problem_build_rhs
-(
- p4est_t* p4est,
- d4est_elliptic_data_t* prob_vecs,
- d4est_elliptic_eqns_t* prob_fcns,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
- d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad,
- d4est_poisson_flux_data_t* flux_fcn_data_for_build_rhs
-)
-{
-  double* f = P4EST_ALLOC(double, prob_vecs->local_nodes);
-  d4est_mesh_init_field
-    (
-     p4est,
-     f,
-     problem_f_fcn,
-     d4est_ops,
-     d4est_geom,
-     NULL
-    );
-  
-  for (p4est_topidx_t tt = p4est->first_local_tree;
-       tt <= p4est->last_local_tree;
-       ++tt)
-    {
-      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-      sc_array_t* tquadrants = &tree->quadrants;
-      int Q = (p4est_locidx_t) tquadrants->elem_count;
-      for (int q = 0; q < Q; ++q) {
-        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        d4est_element_data_t* ed = quad->p.user_data;
-        d4est_quadrature_volume_t mesh_object;
-        mesh_object.dq = ed->dq;
-        mesh_object.tree = ed->tree;
-        mesh_object.element_id = ed->id;
-        mesh_object.q[0] = ed->q[0];
-        mesh_object.q[1] = ed->q[1];
-        mesh_object.q[2] = ed->q[2];
-        d4est_quadrature_apply_mass_matrix
-          (
-           d4est_ops,
-           d4est_geom,
-           d4est_quad,
-           &mesh_object,
-           QUAD_OBJECT_VOLUME,
-           QUAD_INTEGRAND_UNKNOWN,
-           &f[ed->nodal_stride],
-           ed->deg,
-           ed->J_quad,
-           ed->deg_quad,
-           &prob_vecs->rhs[ed->nodal_stride]
-          );
-      }
-    }    
-
-  int local_nodes = prob_vecs->local_nodes;
-  double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
-  double* tmp = prob_vecs->u; 
-  prob_vecs->u = u_eq_0; 
-  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data_for_build_rhs, d4est_ops, d4est_geom, d4est_quad);
-  d4est_linalg_vec_axpy(-1., prob_vecs->Au, prob_vecs->rhs, local_nodes);  
-  prob_vecs->u = tmp;
-  P4EST_FREE(u_eq_0);
-  P4EST_FREE(f);
-}
-
 void
 problem_init
 (
@@ -279,16 +150,17 @@ problem_init
 )
 {
   D4EST_ASSERT(d4est_geom->geom_type == GEOM_BRICK);
-  problem_input_t input = problem_input(input_file);
-
+  problem_initial_degree_input_t input = problem_initial_degree_input(input_file);
+  stamm_params_t stamm_params = stamm_params_input(input_file);
+  
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
   d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, problem_boundary_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, stamm_boundary_fcn, NULL);
   
   d4est_elliptic_eqns_t prob_fcns;
-  prob_fcns.build_residual = problem_build_residual;
-  prob_fcns.apply_lhs = problem_apply_lhs;
+  prob_fcns.build_residual = stamm_build_residual;
+  prob_fcns.apply_lhs = stamm_apply_lhs;
   prob_fcns.user = flux_data_for_apply_lhs;
   
   double* error = NULL;
@@ -308,6 +180,12 @@ problem_init
   penalty_data.gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh;
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
   penalty_data.sipg_flux_h = sipg_params->sipg_flux_h;
+  
+  smooth_pred_marker_t amr_marker;
+  amr_marker.user = (void*)&stamm_params;
+  amr_marker.mark_element_fcn = amr_mark_element;
+  amr_marker.set_element_gamma_fcn = amr_set_element_gamma;
+  amr_marker.name = "stamm_marker";
 
   d4est_amr_t* d4est_amr =
     d4est_amr_init
@@ -315,7 +193,7 @@ problem_init
      p4est,
      input_file,
      "[D4EST_AMR]:",
-     NULL
+     &amr_marker
     );
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
@@ -342,7 +220,7 @@ problem_init
         (
          p4est,
          prob_vecs.u,
-         problem_initial_guess,
+         stamm_initial_guess,
          d4est_ops,
          d4est_geom,
          NULL
@@ -353,19 +231,21 @@ problem_init
     prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, local_nodes);
     prob_vecs.local_nodes = local_nodes;
     
-    problem_build_rhs
+    d4est_poisson_build_rhs_with_strong_bc
       (
        p4est,
-       &prob_vecs,
-       &prob_fcns,
        *ghost,
        *ghost_data,
        d4est_ops,
        d4est_geom,
        d4est_quad,
-       flux_data_for_build_rhs
+       &prob_vecs,
+       flux_data_for_build_rhs,
+       prob_vecs.rhs,
+       stamm_rhs_fcn,
+       &stamm_params
       );
-    
+
     d4est_estimator_bi_compute
       (
        p4est,
@@ -380,9 +260,9 @@ problem_init
        d4est_quad
       );
 
-    d4est_estimator_stats_t stats;
-    d4est_estimator_stats_compute(p4est, &stats);
-    d4est_estimator_stats_print(&stats);
+    d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
+    d4est_estimator_stats_compute(p4est, stats);
+    d4est_estimator_stats_print(stats);
     
     d4est_solver_cg_params_t params;
     d4est_solver_cg_input
@@ -415,9 +295,9 @@ problem_init
        d4est_quad,
        &prob_vecs,
        input_file,
-       "uniform_poisson_sinx",
-       problem_analytic_solution,
-       NULL,
+       "uniform_stamm",
+       stamm_analytic_solution,
+       &stamm_params,
        level
       );
     
@@ -427,10 +307,10 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_quad,
-       &stats,
+       stats,
        &prob_vecs,
-       problem_analytic_solution,
-       NULL);
+       stamm_analytic_solution,
+       &stamm_params);
 
     if (level != d4est_amr->num_of_amr_steps){
 
@@ -445,16 +325,15 @@ problem_init
          d4est_ops,
          d4est_amr,
          &prob_vecs.u,
-         NULL
+         &stats
         );
       
-    }  
-    
+    }
+
+    P4EST_FREE(stats);
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
-
-
   d4est_amr_destroy(d4est_amr);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_poisson_flux_destroy(flux_data_for_apply_lhs);  

@@ -70,7 +70,6 @@ include_directories(${CMAKE_SOURCE_DIR}/Utilities)
 include_directories(${CMAKE_SOURCE_DIR}/Kron)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${MPI_C_INCLUDE_PATH})
-# include_directories(${OpenBLAS_INCLUDE_DIR})
 
 ##
 ## Add MPI compile flags for the whole project
@@ -302,6 +301,7 @@ add_custom_command(
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
 add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
+add_d4est_problem_2d(stamm_krylov_driver stamm_krylov.c Stamm)
 add_d4est_problem_3d(okendon_uniform_driver okendon_uniform.c Okendon)
 # add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
 # add_d4est_problem_2d(test_uniform_wedge_driver test_uniform_wedge.c UniformExamples/Wedge)

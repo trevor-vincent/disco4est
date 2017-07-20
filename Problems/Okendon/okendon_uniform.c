@@ -24,8 +24,16 @@
 #include <time.h>
 #include "./okendon_fcns.h"
 
+
+typedef struct {
+
+  int deg;
+  int deg_quad;
+  
+} problem_initial_degree_input_t;
+
 static
-int problem_input_handler
+int problem_initial_degree_input_handler
 (
  void* user,
  const char* section,
@@ -33,18 +41,14 @@ int problem_input_handler
  const char* value
 )
 {
-  okendon_params_t* pconfig = (okendon_params_t*)user;
-  if (d4est_util_match_couple(section,"problem",name,"deg")) {
+  problem_initial_degree_input_t* pconfig = (problem_initial_degree_input_t*)user;
+  if (d4est_util_match_couple(section,"initial_grid",name,"deg")) {
     D4EST_ASSERT(pconfig->deg == -1);
     pconfig->deg = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"problem",name,"deg_quad")) {
+  else if (d4est_util_match_couple(section,"initial_grid",name,"deg_quad")) {
     D4EST_ASSERT(pconfig->deg_quad == -1);
     pconfig->deg_quad = atoi(value);
-  }
-  else if (d4est_util_match_couple(section,"problem",name,"p")) {
-    D4EST_ASSERT(pconfig->p == -1);
-    pconfig->p = atof(value);
   }
   else {
     return 0;
@@ -54,29 +58,24 @@ int problem_input_handler
 
 
 static
-okendon_params_t
-problem_input
+problem_initial_degree_input_t
+problem_initial_degree_input
 (
  const char* input_file
 )
 {
-  okendon_params_t input;
+  problem_initial_degree_input_t input;
   input.deg = -1;
   input.deg_quad = -1;
-  input.p = -1;
   
-  if (ini_parse(input_file, problem_input_handler, &input) < 0) {
+  if (ini_parse(input_file, problem_initial_degree_input_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("problem", input.deg, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_quad, -1);
-  D4EST_CHECK_INPUT("problem", input.p, -1);
-
-  D4EST_ASSERT(input.p > 0 && input.p < 1);
+  D4EST_CHECK_INPUT("initial_grid", input.deg, -1);
+  D4EST_CHECK_INPUT("initial_grid", input.deg_quad, -1);
   printf("[PROBLEM]: deg = %d\n",input.deg);
   printf("[PROBLEM]: deg_quad = %d\n",input.deg_quad);
-  printf("[PROBLEM]: p = %f\n",input.p);
   return input;
 }
 
@@ -88,7 +87,7 @@ problem_set_degrees_init
  void* user_ctx
 )
 {
-  okendon_params_t* input = user_ctx;
+  problem_initial_degree_input_t* input = user_ctx;
   elem_data->deg = input->deg;
   elem_data->deg_quad = input->deg_quad;
 }
@@ -132,8 +131,10 @@ problem_init
  sc_MPI_Comm mpicomm
 )
 {
-  okendon_params_t input = problem_input(input_file);
+  okendon_params_t okendon_input = okendon_params(input_file);
+  problem_initial_degree_input_t initial_degree_input = problem_initial_degree_input(input_file);
 
+  
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
   d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
@@ -142,9 +143,9 @@ problem_init
   d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = okendon_build_residual;
   prob_fcns.apply_lhs = okendon_apply_jac;
-  input.flux_data_for_jac = flux_data_for_jac;
-  input.flux_data_for_residual = flux_data_for_residual;
-  prob_fcns.user = &input;
+  okendon_input.flux_data_for_jac = flux_data_for_jac;
+  okendon_input.flux_data_for_residual = flux_data_for_residual;
+  prob_fcns.user = &okendon_input;
   
   double* error = NULL;
   double* u_analytic = NULL;
@@ -157,8 +158,8 @@ problem_init
 
   d4est_poisson_flux_sipg_params_t* sipg_params_for_jac = flux_data_for_jac->user;
   d4est_poisson_flux_sipg_params_t* sipg_params_for_residual = flux_data_for_residual->user;
-  sipg_params_for_jac->user = &input;
-  sipg_params_for_residual->user = &input;
+  sipg_params_for_jac->user = &okendon_input;
+  sipg_params_for_residual->user = &okendon_input;
   
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
@@ -191,7 +192,7 @@ problem_init
                    INITIALIZE_GEOMETRY_DATA,
                    INITIALIZE_GEOMETRY_ALIASES,
                    (level == 0) ? problem_set_degrees_init : problem_set_degrees_after_amr,
-                   (void*)&input
+                   (void*)&initial_degree_input
                   );
 
     if (level == 0){
@@ -252,7 +253,7 @@ problem_init
        input_file,
        "uniform_poisson_sinx",
        okendon_analytic_solution,
-       &input,
+       &okendon_input,
        level
       );
     
@@ -265,7 +266,7 @@ problem_init
        &stats,
        &prob_vecs,
        okendon_analytic_solution,
-       &input);
+       &okendon_input);
     
     if (level != d4est_amr->num_of_amr_steps){
 
