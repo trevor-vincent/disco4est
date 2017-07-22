@@ -148,7 +148,6 @@ typedef struct {
 typedef struct {
 
 
-  int(*get_local_nodes)(p4est_t*);
   multigrid_update_callback_fcn_t update;
   void* user;
   p4est_ghost_t** ghost;

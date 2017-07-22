@@ -105,7 +105,19 @@ multigrid_smoother_cheby_d4est_iterate
   d4est_linalg_fill_vec(p, 0., local_nodes);
   for (i = 0; i < iter; i++){
     /* calculate residual r = rhs - Au */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
+
+  d4est_elliptic_eqns_apply_lhs
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     eqns,
+     vecs,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad
+    );
+  
     d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
     d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
 
@@ -129,6 +141,19 @@ multigrid_smoother_cheby_d4est_iterate
 
   /* calculate the residual */
   fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
+
+  d4est_elliptic_eqns_apply_lhs
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     eqns,
+     vecs,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad
+    );
+  
   d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
   d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
 

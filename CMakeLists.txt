@@ -255,6 +255,11 @@ target_link_libraries(test_d4est_amr d8est)
 add_test(test_d4est_amr_test test_d4est_amr)
 target_compile_definitions(test_d4est_amr PRIVATE DIM=3)
 
+add_executable(test_d4est_poisson_1_brick Tests/test_d4est_poisson_1_brick.c)
+target_link_libraries(test_d4est_poisson_1_brick d8est)
+add_test(test_d4est_poisson_1_brick_test test_d4est_poisson_1_brick)
+target_compile_definitions(test_d4est_poisson_1_brick PRIVATE DIM=3)
+
 add_executable(test_d4est_geometry Tests/test_d4est_geometry.c)
 target_link_libraries(test_d4est_geometry d8est)
 add_test(test_d4est_geometry_test test_d4est_geometry)
@@ -266,7 +271,7 @@ add_test(test_d4est_geometry_test_2d test_d4est_geometry_2d)
 target_compile_definitions(test_d4est_geometry_2d PRIVATE NDEBUG DIM=2)
 
 add_custom_command(
-  TARGET test_d4est_operators POST_BUILD
+  TARGET test_d4est_poisson_1_brick POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy
   ${CMAKE_SOURCE_DIR}/Tests/*.input
   ${CMAKE_CURRENT_BINARY_DIR}/)  

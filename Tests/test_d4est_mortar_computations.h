@@ -4,7 +4,8 @@
 typedef struct {
 
   double sj_and_n_interface_error;
-
+  double ;
+  
 } test_d4est_mortar_computations_data_t;
 
 static void
