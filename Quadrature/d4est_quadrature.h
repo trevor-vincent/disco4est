@@ -126,6 +126,7 @@ struct d4est_quadrature {
 };
 
 /* This file was automatically generated.  Do not edit! */
+double d4est_quadrature_lebesgue_measure(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *jac_object,int deg_object);
 double d4est_quadrature_innerproduct(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *u,double *v,double *jac_quad,int deg_quad);
 d4est_rst_t d4est_quadrature_get_rst_points(d4est_operators_t *d4est_ops,d4est_quadrature_t *d4est_quadrature,d4est_geometry_t *d4est_geometry,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,int degree);
 void d4est_quadrature_apply_fofufofvlj(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *u,double *v,int deg_lobatto,double *jac_quad,double *xyz_quad[(P4EST_DIM)],int deg_quad,double *out,d4est_xyz_fcn_ext_t fofu_fcn,void *fofu_ctx,d4est_xyz_fcn_ext_t fofv_fcn,void *fofv_ctx);

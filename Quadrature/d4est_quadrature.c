@@ -776,7 +776,7 @@ void d4est_quadrature_apply_fofufofvlj
 #endif
                                    (u != NULL) ? u_quad[i] : 0,
                                    fofu_ctx);
-      /* printf("xyz_quad[0][i], xyz_quad[1][i], xyz_quad[2][i], fofu_fofv[i] = %f,%f,%f,%f\n",xyz_quad[0][i], xyz_quad[1][i], xyz_quad[2][i], fofu_fofv[i]); */
+      /* printf("xyz_quad[0][i], xyz_quad[1][i], xyz_quad[2][i], u[i], fofu_fofv[i] = %f,%f,%f,%f,%f\n",xyz_quad[0][i], xyz_quad[1][i], xyz_quad[2][i], u[i], fofu_fofv[i]); */
     }
     if (v != NULL || fofv_fcn != identity_fcn){
       fofu_fofv[i] *= fofv_fcn(xyz_quad[0][i],
@@ -787,7 +787,6 @@ void d4est_quadrature_apply_fofufofvlj
                                    (v != NULL) ? v_quad[i] : 0,
                                    fofv_ctx);
     }
-
   }
  
   d4est_quadrature_apply_galerkin_integral
@@ -974,4 +973,39 @@ d4est_quadrature_innerproduct
   P4EST_FREE(wuv);
 
   return wdotuv;
+}
+
+
+double
+d4est_quadrature_lebesgue_measure
+(
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ void* object,
+ d4est_quadrature_object_type_t object_type,
+ d4est_quadrature_integrand_type_t integrand_type, 
+ double* jac_object,
+ int deg_object
+)
+{
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg_object);
+  double* ones = P4EST_ALLOC(double, volume_nodes);
+  
+  double measure = d4est_quadrature_innerproduct
+    (
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     object,
+     object_type,
+     integrand_type, 
+     ones,
+     NULL,
+     jac_object,
+     deg_object
+    );
+  
+  P4EST_FREE(ones);
+  return measure;
 }

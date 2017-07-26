@@ -9,14 +9,11 @@
 #include <ini.h>
 #include <d4est_util.h>
 #include <multigrid_callbacks.h>
-#include <multigrid_smoother_cheby_d4est.h>
+#include <multigrid_smoother_cheby.h>
 #include <multigrid_smoother_krylov_petsc.h>
 #include <multigrid_bottom_solver_cg_d4est.h>
-#include <multigrid_bottom_solver_cheby_d4est.h>
+#include <multigrid_bottom_solver_cheby.h>
 #include <multigrid_bottom_solver_krylov_petsc.h>
-
-
-
 
 void
 multigrid_get_level_range
@@ -160,8 +157,8 @@ multigrid_set_smoother(p4est_t* p4est, const char* input_file, multigrid_data_t*
   if(d4est_util_match(mg_data->smoother_name, "mg_smoother_krylov_petsc")){
     mg_data->smoother = multigrid_smoother_krylov_petsc_init(p4est, input_file);
   }
-  else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_cheby_d4est")){
-    mg_data->smoother = multigrid_smoother_cheby_d4est_init
+  else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_cheby")){
+    mg_data->smoother = multigrid_smoother_cheby_init
                         (
                          p4est,
                          mg_data->num_of_levels,
@@ -181,8 +178,8 @@ multigrid_destroy_smoother(multigrid_data_t* mg_data){
   if(d4est_util_match(mg_data->smoother_name, "mg_smoother_krylov_petsc")){
     multigrid_smoother_krylov_petsc_destroy(mg_data->smoother);
   }
-  else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_cheby_d4est")){
-    multigrid_smoother_cheby_d4est_destroy(mg_data->smoother);
+  else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_cheby")){
+    multigrid_smoother_cheby_destroy(mg_data->smoother);
   }
   else {
     printf("[D4EST_ERROR]: You chose the %s smoother\n", mg_data->smoother_name);
@@ -200,8 +197,8 @@ multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file, multigrid_da
                                                 input_file
                                                );
   }
-  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cheby_d4est")){
-    mg_data->bottom_solver = multigrid_bottom_solver_cheby_d4est_init
+  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cheby")){
+    mg_data->bottom_solver = multigrid_bottom_solver_cheby_init
                                                (
                                                 p4est,
                                                 mg_data->num_of_levels,
@@ -231,8 +228,8 @@ multigrid_destroy_bottom_solver(multigrid_data_t* mg_data){
                                                 mg_data->bottom_solver
                                                );
   }
-  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cheby_d4est")){
-    multigrid_bottom_solver_cheby_d4est_destroy
+  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cheby")){
+    multigrid_bottom_solver_cheby_destroy
                                                (
                                                 mg_data->bottom_solver
                                                );
@@ -537,7 +534,7 @@ multigrid_vcycle
     /* element_data_init(p4est, -1); */
 
     /* update surrogate info */
-    nodes_on_level_of_surrogate_multigrid[level-1] = mg_data->elem_data_updater->get_local_nodes(p4est);
+    nodes_on_level_of_surrogate_multigrid[level-1] = d4est_mesh_get_local_nodes(p4est);
     elements_on_level_of_surrogate_multigrid[level-1] = p4est->local_num_quadrants;
 
     total_elements_on_surrogate_multigrid += elements_on_level_of_surrogate_multigrid[level-1];
@@ -575,7 +572,7 @@ multigrid_vcycle
     /* update coarse grid info */
     elements_on_level_of_multigrid[level-1] = p4est->local_num_quadrants;
     total_elements_on_multigrid += elements_on_level_of_multigrid[level-1];
-    nodes_on_level_of_multigrid[level-1] = mg_data->elem_data_updater->get_local_nodes(p4est);
+    nodes_on_level_of_multigrid[level-1] = d4est_mesh_get_local_nodes(p4est);
     total_nodes_on_multigrid += nodes_on_level_of_multigrid[level-1];
 
     mg_data->fine_nodes = nodes_on_level_of_multigrid[level];

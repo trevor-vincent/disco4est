@@ -419,7 +419,6 @@ test_d4est_operators_p_projection
 }
 
 
-
 int main(int argc, char *argv[])
 {
   d4est_operators_t* d4est_ops = d4est_ops_init(20);  

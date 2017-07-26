@@ -1,7 +1,9 @@
-[p4est]
+[initial_grid]
 min_quadrants = -1
 min_level = 1
 fill_uniform = 1
+deg = 2
+deg_quad = 2
 
 [problem]
 deg = 2
@@ -16,7 +18,7 @@ sipg_penalty_fcn = meanp_sqr_over_meanh
 
 [amr]
 scheme = uniform_h
-num_of_amr_steps = 2
+num_of_amr_steps = 1
 max_degree = 7
 
 [geometry]
@@ -43,7 +45,7 @@ JAC_compute_method = numerical
 
 [d4est_solver_newton]
 imin = 10
-imax = 10000
+imax = 1
 monitor = 1
 rtol = 1e-20
 atol = 1e-20

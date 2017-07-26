@@ -246,6 +246,23 @@ problem_init
        &stamm_params
       );
 
+    stamm_build_residual
+      (
+       p4est,
+       *ghost,
+       *ghost_data,
+       &prob_vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       flux_data_for_apply_lhs
+      );
+
+    printf("local_nodes = %d\n", local_nodes);
+    DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.rhs, local_nodes);
+    DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, local_nodes);
+    DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, local_nodes);
+
     d4est_estimator_bi_compute
       (
        p4est,

@@ -74,8 +74,8 @@ problem_initial_degree_input
 
   D4EST_CHECK_INPUT("initial_grid", input.deg, -1);
   D4EST_CHECK_INPUT("initial_grid", input.deg_quad, -1);
-  printf("[PROBLEM]: deg = %d\n",input.deg);
-  printf("[PROBLEM]: deg_quad = %d\n",input.deg_quad);
+  printf("[INITIAL_GRID]: deg = %d\n",input.deg);
+  printf("[INITIAL_GRID]: deg_quad = %d\n",input.deg_quad);
   return input;
 }
 
@@ -103,22 +103,6 @@ problem_set_degrees_after_amr
   elem_data->deg_quad = elem_data->deg;
 }
 
-
-
-double
-okendon_initial_guess
-(
- double x,
- double y,
-#if (P4EST_DIM)==3
- double z,
-#endif
- void* user
-)
-{
-  return 1.;
-}
-
 void
 problem_init
 (
@@ -141,7 +125,7 @@ problem_init
   d4est_poisson_flux_data_t* flux_data_for_residual = d4est_poisson_flux_new(p4est, input_file, okendon_boundary_fcn, NULL);
   
   d4est_elliptic_eqns_t prob_fcns;
-  prob_fcns.build_residual = okendon_build_residual;
+  prob_fcns.build_residual = okendon_build_residual_strongbc;
   prob_fcns.apply_lhs = okendon_apply_jac;
   okendon_input.flux_data_for_jac = flux_data_for_jac;
   okendon_input.flux_data_for_residual = flux_data_for_residual;

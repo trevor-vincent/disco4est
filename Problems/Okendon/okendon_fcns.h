@@ -105,7 +105,7 @@ double okendon_residual_nonlinear_fofu_term
 {
   okendon_params_t* input = user;
   double p = input->p;
-  return pow(u,p);
+  return pow(u*u,.5*p);
 }
 
 
@@ -121,7 +121,7 @@ double okendon_jacobian_nonlinear_fofu0_term
 {
   okendon_params_t* input = user;
   double p = input->p;
-  return p/pow(u,1-p);
+  return p/pow(u*u,.5*(1.-p));
 }
 
 static
@@ -198,8 +198,112 @@ void okendon_apply_jac
   P4EST_FREE(M_fofu0_u_vec);
 }
 
+
+
 static void
-okendon_build_residual
+okendon_build_residual_strongbc
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ void* user
+)
+{
+  okendon_params_t* params = user;
+
+  double* Abc= P4EST_ALLOC(double, prob_vecs->local_nodes);
+  d4est_poisson_build_rhs_with_strong_bc(p4est, ghost, ghost_data, d4est_ops, d4est_geom, d4est_quad, prob_vecs, params->flux_data_for_residual, Abc, zero_fcn, NULL);
+
+  
+
+  d4est_poisson_apply_aij(p4est,
+                          ghost,
+                          ghost_data,
+                          prob_vecs,
+                          params->flux_data_for_jac,
+                          d4est_ops,
+                          d4est_geom,
+                          d4est_quad
+                         );
+
+
+  for (int i = 0; i < prob_vecs->local_nodes; i++){
+    prob_vecs->Au[i] -= Abc[i];
+  }
+
+  P4EST_FREE(Abc);
+  
+  double* M_fof_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
+
+ 
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data;
+
+
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq = ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
+        mesh_object.q[2] = ed->q[2];
+
+        d4est_quadrature_apply_fofufofvlj
+          (
+           d4est_ops,
+           d4est_geom,
+           d4est_quad,
+           &mesh_object,
+           QUAD_OBJECT_VOLUME,
+           QUAD_INTEGRAND_UNKNOWN,
+           &prob_vecs->u[ed->nodal_stride],
+           NULL,
+           ed->deg,
+           ed->J_quad,
+           ed->xyz_quad,
+           ed->deg_quad,
+           &M_fof_vec[ed->nodal_stride],
+           okendon_residual_nonlinear_fofu_term,
+           user,
+           NULL,
+           NULL
+          );
+
+        /* double* Mfofvec = &M_fof_vec[ed->nodal_stride]; */
+        /* DEBUG_PRINT_ARR_DBL(Mfofvec, d4est_lgl_get_nodes((P4EST_DIM), ed->deg)); */
+        
+      }
+    }
+
+  /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs->u, prob_vecs->local_nodes); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs->Au, prob_vecs->local_nodes); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(M_fof_vec, prob_vecs->local_nodes); */
+
+
+  d4est_linalg_vec_axpy(1.0,
+                  M_fof_vec,
+                  prob_vecs->Au,
+                  prob_vecs->local_nodes);
+
+  P4EST_FREE(M_fof_vec);
+}
+
+
+
+static void
+okendon_build_residual_weakbc
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -275,6 +379,21 @@ okendon_build_residual
                   prob_vecs->local_nodes);
 
   P4EST_FREE(M_fof_vec);
+}
+
+
+double
+okendon_initial_guess
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+)
+{
+  return 1000.;
 }
 
 

@@ -203,7 +203,7 @@ d4est_solver_newton_solve
 
     /* set initial guess */
     d4est_linalg_fill_vec(vecs_for_linsolve.u, 0., n);
-
+    
     krylov_petsc_solve
       (
        p4est,
@@ -217,7 +217,8 @@ d4est_solver_newton_solve
        &petsc_params,
        krylov_pc
       );
-    
+
+
     /* xt = x + lambda*step */
     d4est_linalg_vec_axpyeqz(1.0, step, x, xt, n);
 

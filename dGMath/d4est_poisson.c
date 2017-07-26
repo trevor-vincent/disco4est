@@ -28,7 +28,18 @@ d4est_poisson_build_rhs_with_strong_bc
  void* ctx
 )
 {
-  double* f = P4EST_ALLOC(double, prob_vecs->local_nodes);
+  int local_nodes = prob_vecs->local_nodes;
+  double* f = P4EST_ALLOC(double, local_nodes);
+  double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* Au_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
+
+  d4est_elliptic_data_t elliptic_data_for_rhs;
+  d4est_elliptic_data_copy_ptrs(prob_vecs, &elliptic_data_for_rhs);
+  elliptic_data_for_rhs.u = u_eq_0; 
+  elliptic_data_for_rhs.Au = Au_eq_0; 
+
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, &elliptic_data_for_rhs, flux_fcn_data_for_build_rhs, d4est_ops, d4est_geom, d4est_quad); 
+
   d4est_mesh_init_field
     (
      p4est,
@@ -55,7 +66,9 @@ d4est_poisson_build_rhs_with_strong_bc
         mesh_object.element_id = ed->id;
         mesh_object.q[0] = ed->q[0];
         mesh_object.q[1] = ed->q[1];
+#if (P4EST_DIM)==3
         mesh_object.q[2] = ed->q[2];
+#endif
         d4est_quadrature_apply_mass_matrix
           (
            d4est_ops,
@@ -73,14 +86,9 @@ d4est_poisson_build_rhs_with_strong_bc
       }
     }    
 
-  int local_nodes = prob_vecs->local_nodes;
-  double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
-  double* tmp = prob_vecs->u; 
-  prob_vecs->u = u_eq_0; 
-  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data_for_build_rhs, d4est_ops, d4est_geom, d4est_quad);
-  d4est_linalg_vec_axpy(-1., prob_vecs->Au, rhs, local_nodes);  
-  prob_vecs->u = tmp;
+  d4est_linalg_vec_axpy(-1., Au_eq_0, rhs, local_nodes);  
   P4EST_FREE(u_eq_0);
+  P4EST_FREE(Au_eq_0);
   P4EST_FREE(f);
 }
 
@@ -97,6 +105,14 @@ d4est_poisson_apply_aij
  d4est_quadrature_t* d4est_quad
 )
 {
+  d4est_poisson_flux_init_element_data
+    (
+     p4est,
+     d4est_ops,
+     prob_vecs->u,
+     prob_vecs->Au
+    );
+    
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)
@@ -107,31 +123,17 @@ d4est_poisson_apply_aij
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data; 
-        int deg = ed->deg;
-        int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg);
 
-        ed->Au_elem = &(prob_vecs->Au[ed->nodal_stride]);
-  
-        d4est_linalg_copy_1st_to_2nd
-          (
-           &(prob_vecs->u[ed->nodal_stride]),
-           &(ed->u_elem)[0],
-           volume_nodes_lobatto
-          );
-
-        for (int i = 0; i < (P4EST_DIM); i++){
-          d4est_operators_apply_dij(d4est_ops, &(prob_vecs->u[ed->nodal_stride]), (P4EST_DIM), ed->deg, i, &ed->dudr_elem[i][0]);
-        }
-
-        double* stiff_u = P4EST_ALLOC(double, volume_nodes_lobatto);
         d4est_quadrature_volume_t mesh_vol = {.dq = ed->dq,
                                               .tree = ed->tree,
+                                              .q[0] = ed->q[0],
+                                              .q[1] = ed->q[1],
+#if (P4EST_DIM)==3                                              
+                                              .q[2] = ed->q[2],
+#endif
                                               .element_id = ed->id
                                              };
 
-        for (int i = 0; i < (P4EST_DIM); i++)
-          mesh_vol.q[i] = ed->q[i];
-  
         d4est_quadrature_apply_stiffness_matrix
           (
            d4est_ops,
@@ -147,8 +149,6 @@ d4est_poisson_apply_aij
            ed->deg_quad,
            ed->Au_elem
           );
-  
-        P4EST_FREE(stiff_u);
       }
 
     }

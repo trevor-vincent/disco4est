@@ -255,10 +255,20 @@ target_link_libraries(test_d4est_amr d8est)
 add_test(test_d4est_amr_test test_d4est_amr)
 target_compile_definitions(test_d4est_amr PRIVATE DIM=3)
 
-add_executable(test_d4est_poisson_1_brick Tests/test_d4est_poisson_1_brick.c)
-target_link_libraries(test_d4est_poisson_1_brick d8est)
-add_test(test_d4est_poisson_1_brick_test test_d4est_poisson_1_brick)
-target_compile_definitions(test_d4est_poisson_1_brick PRIVATE DIM=3)
+add_executable(test_d4est_poisson_1_brick_3d Tests/test_d4est_poisson_1_brick.c)
+target_link_libraries(test_d4est_poisson_1_brick_3d d8est)
+add_test(test_d4est_poisson_1_brick_3d_test test_d4est_poisson_1_brick_3d)
+target_compile_definitions(test_d4est_poisson_1_brick_3d PRIVATE DIM=3)
+
+add_executable(test_d4est_poisson_2_brick_2d Tests/test_d4est_poisson_2_brick.c)
+target_link_libraries(test_d4est_poisson_2_brick_2d d4est)
+add_test(test_d4est_poisson_2_brick_2d_test test_d4est_poisson_2_brick_2d)
+target_compile_definitions(test_d4est_poisson_2_brick_2d PRIVATE DIM=2)
+
+add_executable(test_d4est_poisson_1_brick_2d Tests/test_d4est_poisson_1_brick.c)
+target_link_libraries(test_d4est_poisson_1_brick_2d d4est)
+add_test(test_d4est_poisson_1_brick_2d_test test_d4est_poisson_1_brick_2d)
+target_compile_definitions(test_d4est_poisson_1_brick_2d PRIVATE DIM=2)
 
 add_executable(test_d4est_geometry Tests/test_d4est_geometry.c)
 target_link_libraries(test_d4est_geometry d8est)
@@ -270,8 +280,14 @@ target_link_libraries(test_d4est_geometry_2d d4est)
 add_test(test_d4est_geometry_test_2d test_d4est_geometry_2d)
 target_compile_definitions(test_d4est_geometry_2d PRIVATE NDEBUG DIM=2)
 
+add_executable(test_d4est_mass_projection Tests/test_d4est_mass_projection.c)
+target_link_libraries(test_d4est_mass_projection d8est)
+add_test(test_d4est_mass_projection_test test_d4est_mass_projection)
+target_compile_definitions(test_d4est_mass_projection PRIVATE DIM=3)
+
+
 add_custom_command(
-  TARGET test_d4est_poisson_1_brick POST_BUILD
+  TARGET test_d4est_mass_projection POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy
   ${CMAKE_SOURCE_DIR}/Tests/*.input
   ${CMAKE_CURRENT_BINARY_DIR}/)  

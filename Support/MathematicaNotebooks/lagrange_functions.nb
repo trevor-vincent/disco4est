@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     35972,        905]
-NotebookOptionsPosition[     31911,        787]
-NotebookOutlinePosition[     32245,        802]
-CellTagsIndexPosition[     32202,        799]
+NotebookDataLength[     36307,        915]
+NotebookOptionsPosition[     32204,        796]
+NotebookOutlinePosition[     32541,        811]
+CellTagsIndexPosition[     32498,        808]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -435,6 +435,15 @@ Cell[BoxData[
    3.709305721800126*^9}}],
 
 Cell[BoxData[
+ RowBox[{"(*", 
+  RowBox[{"ind", " ", "must", " ", "be", " ", "1", " ", "to", " ", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{"degree", "+", "1"}], ")"}], "^", "3"}], " ", "inclusive"}], 
+  "*)"}]], "Input",
+ CellChangeTimes->{{3.7099110375390663`*^9, 3.709911082106888*^9}}],
+
+Cell[BoxData[
  RowBox[{
   RowBox[{
    RowBox[{"L3D", "[", 
@@ -785,8 +794,8 @@ Cell[BoxData["\<\"mass[7][7] = 0.296296\"\>"], "Print",
 }, Open  ]]
 }, Open  ]]
 },
-WindowSize->{1920, 1080},
-WindowMargins->{{0, Automatic}, {Automatic, 0}},
+WindowSize->{380, 1041},
+WindowMargins->{{Automatic, 1368}, {Automatic, 18}},
 FrontEndVersion->"11.0 for Linux x86 (64-bit) (July 28, 2016)",
 StyleDefinitions->"Default.nb"
 ]
@@ -837,74 +846,75 @@ Cell[13679, 366, 246, 4, 24, "Print"]
 }, Open  ]]
 }, Open  ]],
 Cell[13952, 374, 2222, 60, 104, "Input"],
-Cell[16177, 436, 1451, 34, 35, "Input"],
+Cell[16177, 436, 290, 7, 32, "Input"],
+Cell[16470, 445, 1451, 34, 35, "Input"],
 Cell[CellGroupData[{
-Cell[17653, 474, 1795, 51, 59, "Input"],
+Cell[17946, 483, 1795, 51, 59, "Input"],
 Cell[CellGroupData[{
-Cell[19473, 529, 190, 2, 24, "Print"],
-Cell[19666, 533, 190, 2, 24, "Print"],
-Cell[19859, 537, 190, 2, 24, "Print"],
-Cell[20052, 541, 193, 2, 24, "Print"],
-Cell[20248, 545, 190, 2, 24, "Print"],
-Cell[20441, 549, 193, 2, 24, "Print"],
-Cell[20637, 553, 193, 2, 24, "Print"],
-Cell[20833, 557, 190, 2, 24, "Print"],
-Cell[21026, 561, 190, 2, 24, "Print"],
-Cell[21219, 565, 190, 2, 24, "Print"],
-Cell[21412, 569, 193, 2, 24, "Print"],
-Cell[21608, 573, 190, 2, 24, "Print"],
-Cell[21801, 577, 193, 2, 24, "Print"],
-Cell[21997, 581, 190, 2, 24, "Print"],
-Cell[22190, 585, 190, 2, 24, "Print"],
-Cell[22383, 589, 193, 2, 24, "Print"],
-Cell[22579, 593, 190, 2, 24, "Print"],
-Cell[22772, 597, 193, 2, 24, "Print"],
-Cell[22968, 601, 190, 2, 24, "Print"],
-Cell[23161, 605, 192, 2, 24, "Print"],
-Cell[23356, 609, 191, 2, 24, "Print"],
-Cell[23550, 613, 190, 2, 24, "Print"],
-Cell[23743, 617, 192, 2, 24, "Print"],
-Cell[23938, 621, 190, 2, 24, "Print"],
-Cell[24131, 625, 193, 2, 24, "Print"],
-Cell[24327, 629, 190, 2, 24, "Print"],
-Cell[24520, 633, 192, 2, 24, "Print"],
-Cell[24715, 637, 192, 2, 24, "Print"],
-Cell[24910, 641, 190, 2, 24, "Print"],
-Cell[25103, 645, 191, 2, 24, "Print"],
-Cell[25297, 649, 191, 2, 24, "Print"],
-Cell[25491, 653, 190, 2, 24, "Print"],
-Cell[25684, 657, 192, 2, 24, "Print"],
-Cell[25879, 661, 191, 2, 24, "Print"],
-Cell[26073, 665, 191, 2, 24, "Print"],
-Cell[26267, 669, 192, 2, 24, "Print"],
-Cell[26462, 673, 190, 2, 24, "Print"],
-Cell[26655, 677, 190, 2, 24, "Print"],
-Cell[26848, 681, 190, 2, 24, "Print"],
-Cell[27041, 685, 193, 2, 24, "Print"],
-Cell[27237, 689, 191, 2, 24, "Print"],
-Cell[27431, 693, 190, 2, 24, "Print"],
-Cell[27624, 697, 190, 2, 24, "Print"],
-Cell[27817, 701, 191, 2, 24, "Print"],
-Cell[28011, 705, 192, 2, 24, "Print"],
-Cell[28206, 709, 192, 2, 24, "Print"],
-Cell[28401, 713, 191, 2, 24, "Print"],
-Cell[28595, 717, 192, 2, 24, "Print"],
-Cell[28790, 721, 191, 2, 24, "Print"],
-Cell[28984, 725, 190, 2, 24, "Print"],
-Cell[29177, 729, 189, 2, 24, "Print"],
-Cell[29369, 733, 191, 2, 24, "Print"],
-Cell[29563, 737, 190, 2, 24, "Print"],
-Cell[29756, 741, 193, 2, 24, "Print"],
-Cell[29952, 745, 190, 2, 24, "Print"],
-Cell[30145, 749, 190, 2, 24, "Print"],
-Cell[30338, 753, 190, 2, 24, "Print"],
-Cell[30531, 757, 191, 2, 24, "Print"],
-Cell[30725, 761, 190, 2, 24, "Print"],
-Cell[30918, 765, 190, 2, 24, "Print"],
-Cell[31111, 769, 191, 2, 24, "Print"],
-Cell[31305, 773, 190, 2, 24, "Print"],
-Cell[31498, 777, 190, 2, 24, "Print"],
-Cell[31691, 781, 192, 2, 24, "Print"]
+Cell[19766, 538, 190, 2, 24, "Print"],
+Cell[19959, 542, 190, 2, 24, "Print"],
+Cell[20152, 546, 190, 2, 24, "Print"],
+Cell[20345, 550, 193, 2, 24, "Print"],
+Cell[20541, 554, 190, 2, 24, "Print"],
+Cell[20734, 558, 193, 2, 24, "Print"],
+Cell[20930, 562, 193, 2, 24, "Print"],
+Cell[21126, 566, 190, 2, 24, "Print"],
+Cell[21319, 570, 190, 2, 24, "Print"],
+Cell[21512, 574, 190, 2, 24, "Print"],
+Cell[21705, 578, 193, 2, 24, "Print"],
+Cell[21901, 582, 190, 2, 24, "Print"],
+Cell[22094, 586, 193, 2, 24, "Print"],
+Cell[22290, 590, 190, 2, 24, "Print"],
+Cell[22483, 594, 190, 2, 24, "Print"],
+Cell[22676, 598, 193, 2, 24, "Print"],
+Cell[22872, 602, 190, 2, 24, "Print"],
+Cell[23065, 606, 193, 2, 24, "Print"],
+Cell[23261, 610, 190, 2, 24, "Print"],
+Cell[23454, 614, 192, 2, 24, "Print"],
+Cell[23649, 618, 191, 2, 24, "Print"],
+Cell[23843, 622, 190, 2, 24, "Print"],
+Cell[24036, 626, 192, 2, 24, "Print"],
+Cell[24231, 630, 190, 2, 24, "Print"],
+Cell[24424, 634, 193, 2, 24, "Print"],
+Cell[24620, 638, 190, 2, 24, "Print"],
+Cell[24813, 642, 192, 2, 24, "Print"],
+Cell[25008, 646, 192, 2, 24, "Print"],
+Cell[25203, 650, 190, 2, 24, "Print"],
+Cell[25396, 654, 191, 2, 24, "Print"],
+Cell[25590, 658, 191, 2, 24, "Print"],
+Cell[25784, 662, 190, 2, 24, "Print"],
+Cell[25977, 666, 192, 2, 24, "Print"],
+Cell[26172, 670, 191, 2, 24, "Print"],
+Cell[26366, 674, 191, 2, 24, "Print"],
+Cell[26560, 678, 192, 2, 24, "Print"],
+Cell[26755, 682, 190, 2, 24, "Print"],
+Cell[26948, 686, 190, 2, 24, "Print"],
+Cell[27141, 690, 190, 2, 24, "Print"],
+Cell[27334, 694, 193, 2, 24, "Print"],
+Cell[27530, 698, 191, 2, 24, "Print"],
+Cell[27724, 702, 190, 2, 24, "Print"],
+Cell[27917, 706, 190, 2, 24, "Print"],
+Cell[28110, 710, 191, 2, 24, "Print"],
+Cell[28304, 714, 192, 2, 24, "Print"],
+Cell[28499, 718, 192, 2, 24, "Print"],
+Cell[28694, 722, 191, 2, 24, "Print"],
+Cell[28888, 726, 192, 2, 24, "Print"],
+Cell[29083, 730, 191, 2, 24, "Print"],
+Cell[29277, 734, 190, 2, 24, "Print"],
+Cell[29470, 738, 189, 2, 24, "Print"],
+Cell[29662, 742, 191, 2, 24, "Print"],
+Cell[29856, 746, 190, 2, 24, "Print"],
+Cell[30049, 750, 193, 2, 24, "Print"],
+Cell[30245, 754, 190, 2, 24, "Print"],
+Cell[30438, 758, 190, 2, 24, "Print"],
+Cell[30631, 762, 190, 2, 24, "Print"],
+Cell[30824, 766, 191, 2, 24, "Print"],
+Cell[31018, 770, 190, 2, 24, "Print"],
+Cell[31211, 774, 190, 2, 24, "Print"],
+Cell[31404, 778, 191, 2, 24, "Print"],
+Cell[31598, 782, 190, 2, 24, "Print"],
+Cell[31791, 786, 190, 2, 24, "Print"],
+Cell[31984, 790, 192, 2, 24, "Print"]
 }, Open  ]]
 }, Open  ]]
 }

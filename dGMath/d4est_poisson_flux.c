@@ -8,6 +8,7 @@
 #include <d4est_poisson_flux_sipg.h>
 #include <d4est_mortars.h>
 #include <d4est_quadrature_compactified.h>
+#include <d4est_elliptic_data.h>
 #include <d4est_quadrature_lobatto.h>
 
 static void
@@ -53,8 +54,7 @@ d4est_poisson_flux_dirichlet
   face_object.tree = e_m->tree;
   face_object.face = f_m;
   face_object.mortar_side_id = mortar_side_id_m;
-  face_object.mortar_subface_id = 0;
-  
+  face_object.mortar_subface_id = 0;  
   face_object.q[0] = e_m->q[0];
   face_object.q[1] = e_m->q[1];
 #if (P4EST_DIM)==3
@@ -169,6 +169,7 @@ d4est_poisson_flux_dirichlet
   boundary_data.face_nodes_m_lobatto = face_nodes_m_lobatto;
   boundary_data.face_nodes_m_quad = face_nodes_m_quad;
   boundary_data.u_m_on_f_m_quad = u_m_on_f_m_quad;
+  boundary_data.u_m_on_f_m = u_m_on_f_m;
   boundary_data.sj_on_f_m_quad = sj_on_f_m_quad;
   boundary_data.j_div_sj_quad = j_div_sj_quad; 
   D4EST_COPY_DBYD_MAT(drst_dxyz_quad, boundary_data.drst_dxyz_quad);
@@ -731,6 +732,8 @@ d4est_poisson_flux_interface
   interface_data.total_nodes_mortar_quad = total_nodes_mortar_quad;
   interface_data.faces_mortar = faces_mortar;
   interface_data.u_m_on_f_m_mortar_quad = u_m_on_f_m_mortar_quad;
+  interface_data.u_m_on_f_m = u_m_on_f_m;
+  interface_data.u_p_on_f_p = u_p_on_f_p;
   interface_data.sj_on_f_m_mortar_quad = sj_on_f_m_mortar_quad;
   interface_data.j_div_sj_on_f_m_mortar_quad = j_div_sj_on_f_m_mortar_quad;
   interface_data.u_p_on_f_p_mortar_quad = u_p_on_f_p_mortar_quad;
@@ -841,6 +844,46 @@ d4est_poisson_flux_input
 
   D4EST_CHECK_INPUT("flux", input->flux_type, FLUX_NOT_SET); 
 }
+
+
+void
+d4est_poisson_flux_init_element_data
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ double* u,
+ double* Au
+){
+
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data; 
+        int deg = ed->deg;
+        int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg);
+
+        ed->Au_elem = &(Au[ed->nodal_stride]);
+  
+        d4est_linalg_copy_1st_to_2nd
+          (
+           &(u[ed->nodal_stride]),
+           &(ed->u_elem)[0],
+           volume_nodes_lobatto
+          );
+
+        for (int i = 0; i < (P4EST_DIM); i++){
+          d4est_operators_apply_dij(d4est_ops, &(u[ed->nodal_stride]), (P4EST_DIM), ed->deg, i, &ed->dudr_elem[i][0]);
+        }
+      }
+    }     
+}
+
 
 d4est_mortar_fcn_ptrs_t
 d4est_poisson_flux_fetch_fcns

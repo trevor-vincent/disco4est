@@ -974,3 +974,63 @@ int d4est_mesh_get_local_nodes(p4est_t* p4est)
   
   return local_nodes;
 }
+
+
+double
+d4est_mesh_compare_two_fields
+(
+ p4est_t* p4est,
+ double* field1,
+ double* field2,
+ const char* msg,
+ d4est_mesh_boundary_option_t boundary_option,
+ d4est_mesh_print_option_t print_option,
+ double eps
+)
+{
+  printf("%s -> \n", msg);
+  int fail = 0;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        for (int i = 0; i < volume_nodes; i++){
+          int on_bndry = d4est_geometry_does_element_touch_boundary(p4est, quad, tt);
+
+          if ((boundary_option == DISCARD_BOUNDARY && !on_bndry) ||
+              (boundary_option == DISCARD_INTERIOR && on_bndry) ||
+              (boundary_option == DISCARD_NOTHING))
+            {
+              int faili = fabs(field1[ed->nodal_stride + i] - field2[ed->nodal_stride + i]) > eps;
+              fail += faili;
+
+              if (print_option == PRINT || (print_option == PRINT_ON_ERROR && faili))
+                {
+                  printf("Element Info: id %d, deg %d, on_bndry %d x %f y %f z %f field 1 %.25f field 2 %.25f error %.25f error_>_eps %d\n",
+                         ed->id,
+                         ed->deg,
+                         on_bndry,
+                         ed->xyz[0][i],
+                         ed->xyz[1][i],
+                         ((P4EST_DIM)==3) ? ed->xyz[2][i] : 0.,
+                         field1[ed->nodal_stride + i],
+                         field2[ed->nodal_stride + i],
+                         fabs(field1[ed->nodal_stride + i] - field2[ed->nodal_stride + i]),
+                         faili
+                        );
+                }
+            }
+        }        
+      }
+    }
+
+  return (fail == 0);
+}
+ 

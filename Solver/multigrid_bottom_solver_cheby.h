@@ -13,11 +13,11 @@ typedef struct {
   int cheby_print_residual_norm;
   int cheby_print_eig;
 
-} multigrid_bottom_solver_cheby_d4est_t;
+} multigrid_bottom_solver_cheby_t;
 
 /* This file was automatically generated.  Do not edit! */
-multigrid_bottom_solver_t* multigrid_bottom_solver_cheby_d4est_init(p4est_t *p4est,int num_of_levels,const char *input_file);
+multigrid_bottom_solver_t* multigrid_bottom_solver_cheby_init(p4est_t *p4est,int num_of_levels,const char *input_file);
 
-void multigrid_bottom_solver_cheby_d4est_destroy(multigrid_bottom_solver_t* bottom_solver);
+void multigrid_bottom_solver_cheby_destroy(multigrid_bottom_solver_t* bottom_solver);
 
 #endif

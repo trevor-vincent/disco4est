@@ -1433,7 +1433,7 @@ void d4est_geometry_get_face_info(int f, d4est_geometry_face_info_t* face_info) 
 }
 
 double
-d4est_geometry_compute_element_volume
+d4est_geometry_compute_lebesgue_measure
 (
  d4est_operators_t* d4est_ops,
  int deg_GL,
@@ -1576,34 +1576,4 @@ d4est_geometry_compute_diam
 
   return diam;
 }
-
-
-/* double */
-/* d4est_geometry_compute_element_volume */
-/* ( */
-/*  d4est_operators_t* d4est_ops, */
-/*  int deg_GL, */
-/*  double* jac_GL */
-/* ) */
-/* { */
-/*   int volume_nodes_GL = d4est_lgl_get_nodes((P4EST_DIM), deg_GL); */
-/*   double* MJac = P4EST_ALLOC(double, volume_nodes_GL); */
-/*   double* integ_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg_GL); */
-/*   double volume = 0; */
-  
-/* #if (P4EST_DIM)==3 */
-/*   d4est_kron_vec_o_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac); */
-/* #elif (P4EST_DIM)==2 */
-/*   d4est_kron_vec_o_vec_dot_x(integ_weights, jac_GL, deg_GL + 1, MJac); */
-/* #else */
-/*   D4EST_ABORT("only DIM=2 or DIM=3"); */
-/* #endif */
-  
-/*   for (int i = 0; i < volume_nodes_GL; i++){ */
-/*     volume += MJac[i]; */
-/*   } */
-  
-/*   P4EST_FREE(MJac); */
-/*   return volume; */
-/* } */
 
