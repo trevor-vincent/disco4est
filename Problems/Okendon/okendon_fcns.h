@@ -32,7 +32,7 @@ int okendon_params_handler
 
 static
 okendon_params_t
-okendon_params
+okendon_params_init
 (
  const char* input_file
 )
@@ -296,6 +296,7 @@ okendon_build_residual_strongbc
                   M_fof_vec,
                   prob_vecs->Au,
                   prob_vecs->local_nodes);
+
 
   P4EST_FREE(M_fof_vec);
 }

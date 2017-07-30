@@ -8,6 +8,7 @@ typedef struct {
   d4est_quadrature_mortar_t* mortar_face_object;
   
   int total_side_nodes_m_lobatto;
+  int total_side_nodes_p_lobatto;
   int total_nodes_mortar_lobatto;
   int total_nodes_mortar_quad;
   int faces_mortar;
@@ -26,6 +27,8 @@ typedef struct {
   double* n_on_f_m_mortar_quad [(P4EST_DIM)];
   double* n_sj_on_f_m_mortar_quad [(P4EST_DIM)];
 
+  int* face_nodes_m_lobatto;
+  int* face_nodes_p_lobatto;
   int* deg_mortar_quad;
   int* nodes_mortar_quad;
   int* deg_mortar_lobatto;

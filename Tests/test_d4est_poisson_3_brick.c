@@ -363,7 +363,7 @@ test_d4est_poisson_2_brick_interface_old_style
   penalty_calc_t sipg_kronbichler_flux_penalty_calculate_fcn = ip_flux_params->sipg_penalty_fcn;
 
   double* du_m_on_f_m [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(du_m_on_f_m, total_side_nodes_m_lobatto);
-  double* du_m_on_f_m_mortar [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(du_m_on_f_m_mortar, total_side_nodes_m_lobatto);
+  double* du_m_on_f_m_mortar [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(du_m_on_f_m_mortar, total_nodes_mortar_lobatto);
   double* du_p_on_f_p [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(du_p_on_f_p, total_side_nodes_p_lobatto);
   double* du_p_on_f_p_mortar [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(du_p_on_f_p_mortar, total_nodes_mortar_lobatto);
   double* term1_old_style_mortar [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(term1_old_style_mortar, total_nodes_mortar_lobatto);
@@ -388,7 +388,7 @@ test_d4est_poisson_2_brick_interface_old_style
          &du_m_on_f_m[dir][stride]
         );
       double h = e_m[f]->dq/(double)P4EST_ROOT_LEN;
-      d4est_linalg_vec_scale(2./h, &du_m_on_f_m[dir][stride], deg_m_lobatto[f]);
+      d4est_linalg_vec_scale(2./h, &du_m_on_f_m[dir][stride], face_nodes_m_lobatto[f]);
       stride += face_nodes_m_lobatto[f];
     }
 
@@ -405,7 +405,7 @@ test_d4est_poisson_2_brick_interface_old_style
          &du_p_on_f_p[dir][stride]
         );
       double h = e_p[f]->dq/(double)P4EST_ROOT_LEN;
-      d4est_linalg_vec_scale(2./h, &du_p_on_f_p[dir][stride], deg_p_lobatto[f]);
+      d4est_linalg_vec_scale(2./h, &du_p_on_f_p[dir][stride], face_nodes_p_lobatto[f]);
       stride += face_nodes_p_lobatto[f];
     }
 
@@ -436,11 +436,75 @@ test_d4est_poisson_2_brick_interface_old_style
     for (int f = 0; f < faces_mortar; f++){
       for (int k = 0; k < nodes_mortar_lobatto[f]; k++){
         int ks = k + stride;
-        term1_old_style_mortar[dir][ks] = .5*(du_p_on_f_p_mortar[dir][ks] + du_m_on_f_m_mortar[dir][ks]);
+        /* term1_old_style_mortar[dir][ks] = .5*(du_p_on_f_p_mortar[dir][ks] + du_m_on_f_m_mortar[dir][ks]); */
+        term1_old_style_mortar[dir][ks] = 5.;
+        /* printf (".5*(du_p_on_f_p_mortar[%d][%d] + du_m_on_f_m_mortar[][] = %.25f\n", dir, ks, */
+                /* .5*(du_p_on_f_p_mortar[dir][ks] + du_m_on_f_m_mortar[dir][ks]) */
+               /* ); */
       }
       stride += nodes_mortar_lobatto[f];
     }
 
+    stride = 0;
+    for (int f = 0; f < faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        double temp = .5*(mortar_data->dudx_m_on_f_m_mortar_quad[dir][ks] + mortar_data->dudx_p_on_f_p_mortar_quad[dir][ks]);
+        /* printf ("FROM MORTAR DATA .5*(du_p_on_f_p_mortar[%d][%d] + du_m_on_f_m_mortar[][] = %.25f\n", dir, ks, temp); */
+      }
+      stride += nodes_mortar_lobatto[f];
+    }
+
+    double* term1_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
+    double* ones_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
+    double* VT_w_term1_mortar_lobatto = P4EST_ALLOC(double, total_nodes_mortar_lobatto);
+    d4est_linalg_fill_vec(ones_mortar_quad, 1., total_nodes_mortar_quad);
+  stride = 0;
+  int stride_lobatto = 0;
+  for (int f = 0; f < faces_mortar; f++){
+    for (int k = 0; k < nodes_mortar_quad[f]; k++){
+      int ks = k + stride;
+
+      term1_mortar_quad[ks] = 0.;
+      for (int d = 0; d < (P4EST_DIM); d++){
+      term1_mortar_quad[ks] += 5.*n_sj_on_f_m_mortar_quad[d][ks];
+      }
+      /* term1_mortar_quad[ks] = 0.; */
+      /* for (int d = 0; d < (P4EST_DIM); d++){ */
+        /* term1_mortar_quad[ks] += -1.*n_sj_on_f_m_mortar_quad[d][ks] */
+                                 /* *.5*(dudx_p_on_f_p_mortar_quad[d][ks] + dudx_m_on_f_m_mortar_quad[d][ks]); */
+      /* } */
+    }
+
+
+    d4est_quadrature_apply_galerkin_integral
+      (
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       mortar_face_object,
+       QUAD_OBJECT_MORTAR,
+       QUAD_INTEGRAND_UNKNOWN,
+       &term1_mortar_quad[stride],
+       deg_mortar_lobatto[f],
+       &ones_mortar_quad[stride],
+       deg_mortar_quad[f],
+       &VT_w_term1_mortar_lobatto[stride_lobatto]
+      );
+
+   for (int k = 0; k < nodes_mortar_lobatto[f]; k++){
+      int ks = k + stride;
+        printf ("USING QUADRATURE VT_w_term1_mortar_lobatto[%d] = %.25f\n", ks, VT_w_term1_mortar_lobatto[ks]);
+    }
+    
+    
+    stride += nodes_mortar_quad[f];
+    stride_lobatto += nodes_mortar_lobatto[f];
+  }
+    
+    P4EST_FREE(term1_mortar_quad);
+    P4EST_FREE(ones_mortar_quad);
+    P4EST_FREE(VT_w_term1_mortar_lobatto);
     
     stride = 0;
     for (int f = 0; f < faces_m; f++){
@@ -457,9 +521,17 @@ test_d4est_poisson_2_brick_interface_old_style
       double n [(P4EST_DIM)];
       d4est_reference_get_normal(f_m, (P4EST_DIM), &n[0]);
       d4est_linalg_vec_scale(-n[dir]*surface_jacobian, &M_term1_old_style_mortar[dir][stride], nodes_mortar_lobatto[f]);
-      
-     stride += nodes_mortar_lobatto[f];
-   }
+
+
+      for (int k = 0; k < nodes_mortar_lobatto[f]; k++){
+        int ks = k + stride;
+        double temp = 0.;
+        for (int d = 0; d < (P4EST_DIM); d++)
+          temp += M_term1_old_style_mortar[d][ks];
+        printf ("USING MIJ VT_w_term1_mortar_lobatto[%d] = %.25f\n", ks, temp);
+      }
+      stride += nodes_mortar_lobatto[f];
+    }
     
    d4est_mortars_project_mass_mortar_onto_side
       (
@@ -542,7 +614,7 @@ test_d4est_poisson_2_brick_interface_old_style
                             e_m[f]->dq
                            );
 
-      printf("i, term1_final, term1_final_2, term1_check = %d, %f, %f, %f\n", i, term1_final, term1_final_2, term1_check);
+      /* printf("i, term1_final, term1_final_2, term1_check = %d, %f, %f, %f\n", i, term1_final, term1_final_2, term1_check); */
     }
     volume_stride += volume_nodes_m;
   }

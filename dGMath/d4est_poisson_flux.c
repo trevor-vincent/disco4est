@@ -724,10 +724,23 @@ d4est_poisson_flux_interface
     face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
   }
 
+  /* We interpolated a derivative up to the mortar, but this is a different reference space, so we need
+ another dr/dx factor */
+  
+  if (faces_m != faces_mortar){
+    for (int d = 0; d < (P4EST_DIM); d++)
+      d4est_linalg_vec_scale(.5, dudx_m_on_f_m_mortar_quad[d], total_nodes_mortar_quad);
+  }
 
+  if (faces_p != faces_mortar){
+    for (int d = 0; d < (P4EST_DIM); d++)
+      d4est_linalg_vec_scale(.5, dudx_p_on_f_p_mortar_quad[d], total_nodes_mortar_quad);
+  }
+  
   d4est_poisson_flux_interface_data_t interface_data;
   interface_data.mortar_face_object = mortar_face_object_forder;
   interface_data.total_side_nodes_m_lobatto = total_side_nodes_m_lobatto;
+  interface_data.total_side_nodes_p_lobatto = total_side_nodes_p_lobatto;
   interface_data.total_nodes_mortar_lobatto = total_nodes_mortar_lobatto;
   interface_data.total_nodes_mortar_quad = total_nodes_mortar_quad;
   interface_data.faces_mortar = faces_mortar;
@@ -743,7 +756,9 @@ d4est_poisson_flux_interface
   interface_data.deg_mortar_lobatto = deg_mortar_lobatto;
   interface_data.nodes_mortar_lobatto = nodes_mortar_lobatto;
   interface_data.deg_m_lobatto = deg_m_lobatto;
+  interface_data.face_nodes_m_lobatto = face_nodes_m_lobatto;
   interface_data.deg_p_lobatto = deg_p_lobatto;
+  interface_data.face_nodes_p_lobatto = face_nodes_p_lobatto;
   D4EST_COPY_DBYD_MAT(drst_dxyz_m_on_mortar_quad,interface_data.drst_dxyz_m_on_mortar_quad);
   D4EST_COPY_DIM_VEC(dudx_m_on_f_m_mortar_quad,interface_data.dudx_m_on_f_m_mortar_quad);
   D4EST_COPY_DIM_VEC(dudx_p_on_f_p_mortar_quad,interface_data.dudx_p_on_f_p_mortar_quad);

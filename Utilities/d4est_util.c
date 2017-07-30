@@ -308,12 +308,6 @@ d4est_util_max_error(double* u, double* u_sol, int N){
   return e_max;
 }
 
-void d4est_util_gen_rand_vec(double* vec, int N, long int seed, double a, double b){
-  int i;
-  for (i = 0; i < N; i++) {
-    vec[i] = d4est_util_uniform_rand(seed,a,b);
-  }
-}
 
 int d4est_util_sum_array_int(int* array, int N)
 {

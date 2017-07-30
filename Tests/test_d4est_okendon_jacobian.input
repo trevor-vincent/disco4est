@@ -1,7 +1,10 @@
 [amr]
-scheme = random_h
+scheme = uniform_h
 max_degree = 10
-num_of_amr_steps = 2
+num_of_amr_steps = 1
+
+[problem]
+p = .5
 
 [geometry]
 X0 = 0.

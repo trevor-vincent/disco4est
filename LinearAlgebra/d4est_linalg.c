@@ -3,7 +3,9 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include <d4est_util.h>
 #include <d4est_linalg.h>
+
 
 void
 d4est_linalg_invert (double *A, int m)
@@ -186,6 +188,20 @@ d4est_linalg_vec_normalize(double*x, int N)
   double xdotx = d4est_linalg_vec_dot(x,x,N);
   double norm = sqrt(xdotx);
   d4est_linalg_vec_scale(norm, x, N); 
+}
+
+void d4est_linalg_vec_gen_random(double* vec, int N, long int seed, double a, double b){
+  int i;
+  for (i = 0; i < N; i++) {
+    vec[i] = d4est_util_uniform_rand(seed,a,b);
+  }
+}
+
+void
+d4est_linalg_vec_gen_normalized_random(double* vec, int N, long int seed, double a, double b)
+{
+  d4est_linalg_vec_gen_random(vec, N, seed, a, b);
+  d4est_linalg_vec_normalize(vec, N);
 }
 
 void

@@ -365,7 +365,7 @@ d4est_poisson_flux_sipg_interface_aux
   int* nodes_mortar_quad = mortar_data->nodes_mortar_quad;
   int* nodes_mortar_lobatto = mortar_data->nodes_mortar_lobatto;
   int* deg_mortar_lobatto = mortar_data->deg_mortar_lobatto;
-  int* face_nodes_m_lobatto = mortar_data->deg_mortar_lobatto;
+  int* face_nodes_m_lobatto = mortar_data->face_nodes_m_lobatto;
   int* deg_m_lobatto = mortar_data->deg_m_lobatto;
   int* deg_p_lobatto = mortar_data->deg_p_lobatto;
   
@@ -554,6 +554,7 @@ d4est_poisson_flux_sipg_interface_aux
                                             d,
                                             &DT_lifted_proj_VT_w_term2_mortar_lobatto[d][volume_stride]
                                            );
+
 
       }
         

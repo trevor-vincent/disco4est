@@ -22,7 +22,7 @@
 #include <krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
-#include "./okendon_fcns.h"
+#include "./boyen_york_model_fcns.h"
 
 
 typedef struct {
@@ -115,21 +115,21 @@ problem_init
  sc_MPI_Comm mpicomm
 )
 {
-  okendon_params_t okendon_input = okendon_params_init(input_file);
+  boyen_york_model_params_t boyen_york_model_input = boyen_york_model_params(input_file);
   problem_initial_degree_input_t initial_degree_input = problem_initial_degree_input(input_file);
 
   
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
   d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_for_residual = d4est_poisson_flux_new(p4est, input_file, okendon_boundary_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_residual = d4est_poisson_flux_new(p4est, input_file, boyen_york_model_boundary_fcn, NULL);
   
   d4est_elliptic_eqns_t prob_fcns;
-  prob_fcns.build_residual = okendon_build_residual_strongbc;
-  prob_fcns.apply_lhs = okendon_apply_jac;
-  okendon_input.flux_data_for_jac = flux_data_for_jac;
-  okendon_input.flux_data_for_residual = flux_data_for_residual;
-  prob_fcns.user = &okendon_input;
+  prob_fcns.build_residual = boyen_york_model_build_residual;
+  prob_fcns.apply_lhs = boyen_york_model_apply_jac;
+  boyen_york_model_input.flux_data_for_jac = flux_data_for_jac;
+  boyen_york_model_input.flux_data_for_residual = flux_data_for_residual;
+  prob_fcns.user = &boyen_york_model_input;
   
   double* error = NULL;
   double* u_analytic = NULL;
@@ -142,8 +142,8 @@ problem_init
 
   d4est_poisson_flux_sipg_params_t* sipg_params_for_jac = flux_data_for_jac->user;
   d4est_poisson_flux_sipg_params_t* sipg_params_for_residual = flux_data_for_residual->user;
-  sipg_params_for_jac->user = &okendon_input;
-  sipg_params_for_residual->user = &okendon_input;
+  sipg_params_for_jac->user = &boyen_york_model_input;
+  sipg_params_for_residual->user = &boyen_york_model_input;
   
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
@@ -185,7 +185,7 @@ problem_init
         (
          p4est,
          prob_vecs.u,
-         okendon_initial_guess,
+         boyen_york_model_initial_guess,
          d4est_ops,
          d4est_geom,
          NULL
@@ -236,8 +236,8 @@ problem_init
        &prob_vecs,
        input_file,
        "uniform_poisson_sinx",
-       okendon_analytic_solution,
-       &okendon_input,
+       boyen_york_model_analytic_solution,
+       &boyen_york_model_input,
        level
       );
     
@@ -249,8 +249,8 @@ problem_init
        d4est_quad,
        &stats,
        &prob_vecs,
-       okendon_analytic_solution,
-       &okendon_input);
+       boyen_york_model_analytic_solution,
+       &boyen_york_model_input);
     
     if (level != d4est_amr->num_of_amr_steps){
 
