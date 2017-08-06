@@ -20,7 +20,6 @@ typedef struct {
   int mpi_rank;
   
   int sqr_nodal_stride;
-  int sqr_mortar_stride;
   int nodal_stride;
   int quad_stride;
   
@@ -29,13 +28,15 @@ typedef struct {
   p4est_qcoord_t q [(P4EST_DIM)];
   p4est_qcoord_t dq;
   
-  /* geometric factors */
-  double* J_quad; /* Jacobian */
+
   double* xyz [(P4EST_DIM)]; /* points on lobatto grid */
+
+  /* geometric factors for volume quadrature */
+  double* J_quad; /* Jacobian */
   double* xyz_quad [(P4EST_DIM)]; /* points on quadrature grid */
   double* xyz_rst_quad[(P4EST_DIM)][(P4EST_DIM)]; /* mapping derivatives */
   double* rst_xyz_quad[(P4EST_DIM)][(P4EST_DIM)]; /* inverse mapping derivatives */
- 
+
   /* estimator variables */
   double local_estimator;
   double local_predictor;
@@ -46,8 +47,9 @@ typedef struct {
   double* Au_elem;  /* alias for Au */
   
   int deg; /* nodal degree */
-  int deg_quad; /* deg for quadrature */
-    
+  int deg_quad; /* deg for face quadrature */
+  int deg_stiff; /* deg for stiffness matrix quadrature */
+  
 } d4est_element_data_t;
 
 /* This file was automatically generated.  Do not edit! */

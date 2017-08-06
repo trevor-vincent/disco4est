@@ -1,6 +1,7 @@
 #include <pXest.h>
 #include <d4est_mesh.h>
 #include <d4est_geometry.h>
+#include <d4est_xyz_functions_ext.h>
 #include <d4est_quadrature.h>
 #include <d4est_quadrature_lobatto.h>
 #include <d4est_util.h>
@@ -134,15 +135,15 @@ d4est_mesh_compute_jacobian_on_lgl_grid
         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg);
 
 
-        d4est_quadrature_volume_t mesh_object;
-        mesh_object.dq = elem_data->dq;
-        mesh_object.tree = elem_data->tree;
-        mesh_object.element_id = elem_data->id;
-        mesh_object.q[0] = elem_data->q[0];
-        mesh_object.q[1] = elem_data->q[1];
-#if (P4EST_DIM)==3
-        mesh_object.q[2] = elem_data->q[2];
+        d4est_quadrature_volume_t mesh_object = {.dq = elem_data->dq,
+                                                 .tree = elem_data->tree,
+                                                 .q[0] = elem_data->q[0],
+                                                 .q[1] = elem_data->q[1],
+#if (P4EST_DIM)==3                                              
+                                                 .q[2] = elem_data->q[2],
 #endif
+                                                 .element_id = elem_data->id
+                                                };
       
         d4est_rst_t rst_points_lobatto;
         rst_points_lobatto.r = d4est_quadrature_lobatto_get_rst(d4est_ops,
@@ -855,13 +856,27 @@ d4est_mesh_init_field
 }
 
 void
+d4est_mesh_compute_point_error
+(
+ double* v1,
+ double* v2,
+ double* error,
+ int local_nodes
+)
+{
+  for (int i = 0; i < local_nodes; i++){
+    error[i] = fabs(v1[i] - v2[i]);
+  }
+}
+ 
+
+void
 d4est_mesh_init_field_ext
 (
  p4est_t* p4est,
  double* node_vec,
- d4est_xyz_fcn_ext_t fofxyzv,
- double* v,
- double* fofxyzv_user,
+ d4est_xyz_fcn_ext_t xyz_fcn,
+ void* user,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom
 )
@@ -924,14 +939,15 @@ d4est_mesh_init_field_ext
 
         
         for (int i = 0; i < volume_nodes; i++){
-          node_vec[ed->nodal_stride + i] = fofxyzv(xyz_temp[0][i],
+          node_vec[ed->nodal_stride + i] = xyz_fcn(xyz_temp[0][i],
                                                     xyz_temp[1][i],
 #if (P4EST_DIM)==3
                                                     xyz_temp[2][i],
 #endif
-                                                    v[i],
-                                                    fofxyzv_user
-                                                   );
+                                                    user,
+                                               d4est_geom,
+                                               ed
+                                              );
 
         }
       }
@@ -1013,7 +1029,8 @@ d4est_mesh_compare_two_fields
 
               if (print_option == PRINT || (print_option == PRINT_ON_ERROR && faili))
                 {
-                  printf("Element Info: id %d, deg %d, on_bndry %d x %f y %f z %f field 1 %.25f field 2 %.25f error %.25f error_>_eps %d\n",
+                  printf("Element Info: tree %d, id %d, deg %d, on_bndry %d x %f y %f z %f field 1 %.25f field 2 %.25f error %.25f error_>_eps %d\n",
+                         ed->tree,
                          ed->id,
                          ed->deg,
                          on_bndry,
@@ -1034,3 +1051,4 @@ d4est_mesh_compare_two_fields
   return (fail == 0);
 }
  
+

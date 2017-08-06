@@ -212,7 +212,7 @@ vtk_field_plotter
    }
 }
 
-static void
+void
 d4est_output_vtk
 (
  p4est_t* p4est,
@@ -224,16 +224,23 @@ d4est_output_vtk
  const char* input_file,
  const char* save_as_prefix,
  int local_nodes,
- int level
+ int level,
+ int save_estimator
 )
 {
     double* jacobian_lgl = P4EST_ALLOC(double, local_nodes);
     int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
-    double* eta2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
+
     d4est_mesh_compute_jacobian_on_lgl_grid(p4est, d4est_ops, d4est_geom, jacobian_lgl);
     d4est_mesh_get_array_of_degrees(p4est, deg_array);
-    d4est_mesh_get_array_of_estimators(p4est, eta2_array);
 
+    
+    double* eta2_array = NULL;
+    if(save_estimator){
+      eta2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
+      d4est_mesh_get_array_of_estimators(p4est, eta2_array);
+    }
+    
     d4est_output_vtk_fields_t vtk_nodal_vecs;
     vtk_nodal_vecs.u = u;
     vtk_nodal_vecs.u_compare = u_compare;
@@ -296,7 +303,8 @@ d4est_output_vtk_with_analytic_error
      input_file,
      save_as_prefix,
      prob_vecs->local_nodes,
-     level
+     level,
+     1
     );
   
   P4EST_FREE(error);

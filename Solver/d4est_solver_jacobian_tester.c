@@ -35,6 +35,19 @@ d4est_solver_jacobian_tester
 )
 {
   D4EST_ASSERT(num_vecs_to_try <= local_nodes);
+
+  printf("[D4EST_SOLVER_JACOBIAN_TESTER]: eps = %.25f\n", eps);
+  printf("[D4EST_SOLVER_JACOBIAN_TESTER]: num_vecs_to_try = %d\n", num_vecs_to_try);
+
+  if (type == JAC_TEST_FORWARD_DIFFERENCE){
+    printf("[D4EST_SOLVER_JACOBIAN_TESTER]: using forward difference\n");
+  }
+
+  if (type == JAC_TEST_CENTRAL_DIFFERENCE){
+    printf("[D4EST_SOLVER_JACOBIAN_TESTER]: using central difference\n");
+  }
+  
+  
   d4est_elliptic_data_t elliptic_vecs_jac;
   d4est_elliptic_data_t elliptic_vecs_F_u0_m_u;
   d4est_elliptic_data_t elliptic_vecs_F_u0_p_u;

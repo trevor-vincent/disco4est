@@ -112,9 +112,6 @@ d4est_geometry_input
     printf("%s: JAC computation method = %s\n", printf_prefix, "numerical");
   if (input.JAC_compute_method == GEOM_COMPUTE_ANALYTIC)
     printf("%s: JAC computation method = %s\n", printf_prefix, "analytic");
-
-
-
   
   return input;
 }

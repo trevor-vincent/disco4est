@@ -1,6 +1,7 @@
 #ifndef TWO_PUNCTURES_FCNS_H
 #define TWO_PUNCTURES_FCNS_H 
 
+#include <d4est_util.h>
 #include <d4est_element_data.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux.h>
@@ -14,8 +15,8 @@ typedef struct {
   double M_bh [MAX_PUNCTURES];
   int num_punctures;
   double puncture_eps;
-  d4est_poisson_flux_data_t* flux_data;
-  
+  d4est_poisson_flux_data_t* flux_data_for_jac;
+  d4est_poisson_flux_data_t* flux_data_for_residual;
 } twopunctures_params_t;
 
 static
@@ -26,8 +27,6 @@ init_onepuncture_data
  d4est_poisson_flux_data_t* flux_data
 )
 {
-  params->flux_data = flux_data;
-
   double M = 1.;
   params->num_punctures = 1;
   params->puncture_eps = 1e-10;
@@ -46,19 +45,15 @@ init_onepuncture_data
   params->S_bh[0][0] = 0.;
   params->S_bh[0][1] = 0.;
   params->S_bh[0][2] = 0.2*M;
-   
 }
-
 
 static
 void
 init_twopunctures_data
 (
- twopunctures_params_t* params,
- d4est_poisson_flux_data_t* flux_data
+ twopunctures_params_t* params
 )
 {
-  params->flux_data = flux_data;
   double M = 1.;
   params->num_punctures = 2;
   params->puncture_eps = 1e-10;
@@ -90,67 +85,62 @@ init_twopunctures_data
   params->S_bh[1][0] = 0.;
   params->S_bh[1][1] = 0.;
   params->S_bh[1][2] = 0.;
-
 }
 
 
 
 
-static
-void
-init_random_puncture_data
-(
- p4est_t* p4est,
- twopunctures_params_t* params,
- int num_punctures,
- d4est_poisson_flux_data_t* flux_data
-)
-{
-  params->flux_data = flux_data;
-  D4EST_ASSERT(num_punctures < (MAX_PUNCTURES));
-  params->puncture_eps = 1e-10;
-  params->num_punctures = num_punctures;
-  double M = 1.;
+/* static */
+/* void */
+/* init_random_puncture_data */
+/* ( */
+/*  p4est_t* p4est, */
+/*  twopunctures_params_t* params, */
+/*  int num_punctures */
+/* ) */
+/* { */
+/*   D4EST_ASSERT(num_punctures < (MAX_PUNCTURES)); */
+/*   params->puncture_eps = 1e-10; */
+/*   params->num_punctures = num_punctures; */
+/*   double M = 1.; */
 
-  double rand_x [MAX_PUNCTURES];
-  double rand_y [MAX_PUNCTURES];
-  double rand_px [MAX_PUNCTURES];
-  double rand_py [MAX_PUNCTURES];
+/*   double rand_x [MAX_PUNCTURES]; */
+/*   double rand_y [MAX_PUNCTURES]; */
+/*   double rand_px [MAX_PUNCTURES]; */
+/*   double rand_py [MAX_PUNCTURES]; */
 
-  d4est_util_gen_rand_vec(&rand_x[0], num_punctures, 1532413243, -5., 5.);
-  d4est_util_gen_rand_vec(&rand_y[0], num_punctures, 1532413243, -5., 5.);
-  d4est_util_gen_rand_vec(&rand_px[0], num_punctures, 13232413243, -.2, .2);
-  d4est_util_gen_rand_vec(&rand_py[0], num_punctures, 14432413243, -.2, .2);
+/*   d4est_util_gen_rand_vec(&rand_x[0], num_punctures, 1532413243, -5., 5.); */
+/*   d4est_util_gen_rand_vec(&rand_y[0], num_punctures, 1532413243, -5., 5.); */
+/*   d4est_util_gen_rand_vec(&rand_px[0], num_punctures, 13232413243, -.2, .2); */
+/*   d4est_util_gen_rand_vec(&rand_py[0], num_punctures, 14432413243, -.2, .2); */
   
-  for (int i = 0; i < num_punctures; i++){
-    params->M_bh[i] = M/(double)(num_punctures);
-    params->C_bh[i][0] = rand_x[i];
-    params->C_bh[i][1] = rand_y[i];
-    params->C_bh[i][2] = 0.;
-    params->P_bh[i][0] = rand_px[i];
-    params->P_bh[i][1] = rand_py[i];
-    params->P_bh[i][2] = 0.;
-    params->S_bh[i][0] = 0.;
-    params->S_bh[i][1] = 0.;
-    params->S_bh[i][2] = 0.;
-    if (p4est->mpirank == 0){
-    printf("Puncture %d: M_bh, x, y, z, px, py, pz, sx, sy ,sz \n", i);
-    printf(" %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f ,%.6f \n",
-           params->M_bh[i],
-           params->C_bh[i][0],
-           params->C_bh[i][1],
-           params->C_bh[i][2],
-           params->P_bh[i][0],
-           params->P_bh[i][1],
-           params->P_bh[i][2],
-           params->S_bh[i][0],
-           params->S_bh[i][1],
-           params->S_bh[i][2]);
-    }
-    
-  }
-
-}
+/*   for (int i = 0; i < num_punctures; i++){ */
+/*     params->M_bh[i] = M/(double)(num_punctures); */
+/*     params->C_bh[i][0] = rand_x[i]; */
+/*     params->C_bh[i][1] = rand_y[i]; */
+/*     params->C_bh[i][2] = 0.; */
+/*     params->P_bh[i][0] = rand_px[i]; */
+/*     params->P_bh[i][1] = rand_py[i]; */
+/*     params->P_bh[i][2] = 0.; */
+/*     params->S_bh[i][0] = 0.; */
+/*     params->S_bh[i][1] = 0.; */
+/*     params->S_bh[i][2] = 0.; */
+/*     if (p4est->mpirank == 0){ */
+/*     printf("Puncture %d: M_bh, x, y, z, px, py, pz, sx, sy ,sz \n", i); */
+/*     printf(" %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f ,%.6f \n", */
+/*            params->M_bh[i], */
+/*            params->C_bh[i][0], */
+/*            params->C_bh[i][1], */
+/*            params->C_bh[i][2], */
+/*            params->P_bh[i][0], */
+/*            params->P_bh[i][1], */
+/*            params->P_bh[i][2], */
+/*            params->S_bh[i][0], */
+/*            params->S_bh[i][1], */
+/*            params->S_bh[i][2]); */
+/*     } */
+/*   } */
+/* } */
 
 static
 double levi_civita(int a, int b, int c)
@@ -276,8 +266,10 @@ double twopunctures_neg_1o8_K2_psi_neg7
   double psi_0 = 1. + u + sumn_mn_o_2rn;
   double confAij_sqr = compute_confAij_sqr(x,y,z,user);
 
-  if (r > params->puncture_eps)
-    return (-1./8.)*confAij_sqr/(psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0);
+  if (r > params->puncture_eps){
+    /* return (-1./8.)*confAij_sqr/(psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0); */
+    return (-1./8.)*confAij_sqr/(pow(psi_0*psi_0,3.5));
+  }
   else{
     return 0.;
   }
@@ -308,8 +300,10 @@ double twopunctures_plus_7o8_K2_psi_neg8
   double psi_0 = 1. + u + sumn_mn_o_2rn;
   double confAij_sqr = compute_confAij_sqr(x,y,z,user);
 
-  if (r > params->puncture_eps)
-    return (7./8.)*confAij_sqr/(psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0);
+  if (r > params->puncture_eps){
+    /* return (7./8.)*confAij_sqr/(psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0); */
+    return (7./8.)*confAij_sqr/(pow(psi_0*psi_0,4));
+  }
   else{
     return 0.;
   }
@@ -330,7 +324,7 @@ void twopunctures_apply_jac
 )
 {
   twopunctures_params_t* params = user;
-  d4est_poisson_flux_data_t* flux_data = params->flux_data;
+  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_jac;
   D4EST_ASSERT(params->num_punctures > 0);
   d4est_poisson_apply_aij(p4est,
                           ghost,
@@ -406,7 +400,7 @@ twopunctures_build_residual
   twopunctures_params_t* params = user;
   D4EST_ASSERT(params->num_punctures > 0);
 
-  d4est_poisson_flux_data_t* flux_data = params->flux_data;
+  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_residual;
   d4est_poisson_apply_aij(p4est,
                           ghost,
                           ghost_data,

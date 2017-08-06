@@ -1,0 +1,39 @@
+[amr]
+scheme = random_h
+max_degree = 10
+num_of_amr_steps = 3
+
+[flux]
+name = sipg
+sipg_penalty_prefactor = 2.0
+sipg_flux_h = H_EQ_J_DIV_SJ
+sipg_penalty_fcn = meanp_sqr_over_meanh
+
+[geometry]
+; name = disk_outer_wedge
+; R0 = 1
+; R1 = 2
+; R2 = 3
+; compactify_outer_wedge = 0
+; compactify_inner_wedge = 0
+; DX_compute_method = analytic
+; JAC_compute_method = numerical
+name = brick
+X0 = 0.
+X1 = 1.
+Y0 = 0.
+Y1 = 1.
+Z0 = 0.
+Z1 = 1.
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_vtk_geometry]
+name = disk_outer_wedge
+R0 = 1
+R1 = 2
+R2 = 3
+compactify_outer_wedge = 0
+compactify_inner_wedge = 0
+DX_compute_method = analytic
+JAC_compute_method = numerical

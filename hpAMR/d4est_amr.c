@@ -482,14 +482,15 @@ d4est_amr_step
     d4est_amr->scheme->post_balance_callback(p4est, d4est_amr->scheme->amr_scheme_data);
   }
 
-  d4est_amr_interpolate_field
-    (
-     p4est,
-     d4est_ops,
-     d4est_amr,
-     field,
-     d4est_mesh_get_local_nodes(p4est)
-    );
+  if(*field != NULL)
+    d4est_amr_interpolate_field
+      (
+       p4est,
+       d4est_ops,
+       d4est_amr,
+       field,
+       d4est_mesh_get_local_nodes(p4est)
+      );
   
   p4est->user_pointer = backup;
 

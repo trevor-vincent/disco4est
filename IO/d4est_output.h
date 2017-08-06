@@ -20,9 +20,9 @@ typedef struct {
   double* jacobian;
 
 } d4est_output_vtk_fields_t;
-
 /* This file was automatically generated.  Do not edit! */
 void d4est_output_vtk_with_analytic_error(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_elliptic_data_t *prob_vecs,const char *input_file,const char *save_as_prefix,d4est_xyz_fcn_t analytic_solution,void *ctx,int level);
+void d4est_output_vtk(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double *u,double *u_compare,double *error,const char *input_file,const char *save_as_prefix,int local_nodes,int level,int save_estimator);
 void d4est_output_norms_using_analytic_solution(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_estimator_stats_t *stats,d4est_elliptic_data_t *prob_vecs,d4est_xyz_fcn_t analytic_solution,void *ctx);
 
 #endif

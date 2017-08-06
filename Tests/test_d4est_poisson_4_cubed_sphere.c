@@ -358,133 +358,41 @@ test_d4est_poisson_2_brick_interface_old_style
   int* deg_m_lobatto = mortar_data->deg_m_lobatto;
   int* deg_p_lobatto = mortar_data->deg_p_lobatto;
 
+  double* integrand_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
+  double* M_integrand_quad_lobatto = P4EST_ALLOC(double, total_nodes_mortar_lobatto);
+  double* M_integrand_lobatto = P4EST_ALLOC(double, total_nodes_mortar_lobatto);
+  double* proj_M_integrand_quad_lobatto = P4EST_ALLOC(double, total_side_nodes_m_lobatto);
+  double* proj_integrand_lobatto = P4EST_ALLOC(double, total_side_nodes_m_lobatto);
+  double* M_proj_integrand_lobatto = P4EST_ALLOC(double, total_side_nodes_m_lobatto);
+  double* lifted_M_proj_integrand_lobatto = P4EST_ALLOC(double, total_volume_nodes_m_lobatto);
+  double* lifted_proj_M_integrand_quad_lobatto = P4EST_ALLOC(double, total_volume_nodes_m_lobatto);
 
-  double* du_m_on_f_m [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(du_m_on_f_m, total_side_nodes_m_lobatto);
-  double* du_m_on_f_m_mortar [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(du_m_on_f_m_mortar, total_nodes_mortar_lobatto);
-  double* du_p_on_f_p [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(du_p_on_f_p, total_side_nodes_p_lobatto);
-  double* du_p_on_f_p_mortar [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(du_p_on_f_p_mortar, total_nodes_mortar_lobatto);
-  
-
-  for (int dir = 0; dir < (P4EST_DIM); dir++){
-    /* compute the (-)-u-derivative and project on the (-)-side faces and project q onto the (-)-side faces */
-    int stride = 0;
-    for (int f = 0; f < faces_m; f++){
-      d4est_operators_apply_slicer
-        (
-         d4est_ops,
-         e_m[f]->dudr_elem[dir],
-         (P4EST_DIM),
-         f_m,
-         e_m[f]->deg,
-         &du_m_on_f_m[dir][stride]
-        );
-      double h = e_m[f]->dq/(double)P4EST_ROOT_LEN;
-      d4est_linalg_vec_scale(2./h, &du_m_on_f_m[dir][stride], face_nodes_m_lobatto[f]);
-      stride += face_nodes_m_lobatto[f];
-    }
-
-    /* compute the (+)-u-derivative and project on the (+)-side faces and project q onto the (+)-side faces */
-    stride = 0;
-    for (int f = 0; f < faces_p; f++){
-      d4est_operators_apply_slicer
-        (
-         d4est_ops,
-         e_p[f]->dudr_elem[dir],
-         (P4EST_DIM),
-         f_p,
-         e_p[f]->deg,
-         &du_p_on_f_p[dir][stride]
-        );
-      double h = e_p[f]->dq/(double)P4EST_ROOT_LEN;
-      d4est_linalg_vec_scale(2./h, &du_p_on_f_p[dir][stride], face_nodes_p_lobatto[f]);
-      stride += face_nodes_p_lobatto[f];
-    }
-
-    /* project the derivatives from (-) and (+) sides onto the mortar space */
-    d4est_mortars_project_side_onto_mortar_space
-      (
-       d4est_ops,
-       du_m_on_f_m[dir],
-       faces_m,
-       deg_m_lobatto,
-       du_m_on_f_m_mortar[dir],
-       faces_mortar,
-       deg_mortar_lobatto
-      );
-
-    d4est_mortars_project_side_onto_mortar_space
-      (
-       d4est_ops,
-       du_p_on_f_p[dir],
-       faces_p,
-       deg_p_lobatto,
-       du_p_on_f_p_mortar[dir],
-       faces_mortar,
-       deg_mortar_lobatto
-      );
-  
-  }
-    double* integrand_lobatto = P4EST_ALLOC(double, total_nodes_mortar_lobatto);
-    double* integrand_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
-    double* M_integrand_quad_lobatto = P4EST_ALLOC(double, total_nodes_mortar_lobatto);
-    double* M_integrand_lobatto = P4EST_ALLOC(double, total_nodes_mortar_lobatto);
-    double* proj_M_integrand_quad_lobatto = P4EST_ALLOC(double, total_side_nodes_m_lobatto);
-    double* proj_integrand_lobatto = P4EST_ALLOC(double, total_side_nodes_m_lobatto);
-    double* M_proj_integrand_lobatto = P4EST_ALLOC(double, total_side_nodes_m_lobatto);
-    double* lifted_M_proj_integrand_lobatto = P4EST_ALLOC(double, total_volume_nodes_m_lobatto);
-    double* lifted_proj_M_integrand_quad_lobatto = P4EST_ALLOC(double, total_volume_nodes_m_lobatto);
-
-    printf("\nMORTAR DATA\n");
-    printf("faces_m = %d\n", faces_m); 
-    printf("f_m = %d\n", f_m); 
-    printf("faces_p = %d\n", faces_p); 
-    printf("f_p = %d\n", f_p); 
+  printf("\nMORTAR DATA\n");
+  printf("faces_m = %d\n", faces_m); 
+  printf("f_m = %d\n", f_m); 
+  printf("faces_p = %d\n", faces_p); 
+  printf("f_p = %d\n", f_p); 
     
-    int stride_lobatto = 0;
-    for (int f = 0; f < faces_mortar; f++){
-      for (int k = 0; k < nodes_mortar_lobatto[f]; k++){
-        int ks = k + stride_lobatto;
-        integrand_lobatto[ks] = 0.;
-        for (int dir = 0; dir < (P4EST_DIM); dir++)
-          integrand_lobatto[ks] += .5*(du_m_on_f_m_mortar[dir][ks] + du_p_on_f_p_mortar[dir][ks]);
-      }
-      stride_lobatto += nodes_mortar_lobatto[f];
-    }
 
-    stride_lobatto = 0;
-    for (int f = 0; f < faces_mortar; f++){
-      for (int k = 0; k < nodes_mortar_quad[f]; k++){
-        int ks = k + stride_lobatto;
-        integrand_quad[ks] = 0.;
+  int stride_lobatto = 0;
+  for (int f = 0; f < faces_mortar; f++){
+    for (int k = 0; k < nodes_mortar_quad[f]; k++){
+      int ks = k + stride_lobatto;
+      integrand_quad[ks] = 0.;
 
-        for (int dir = 0; dir < (P4EST_DIM); dir++){
-          /* integrand_quad[ks] += .5*(factor_m*mortar_data->dudx_m_on_f_m_mortar_quad[dir][ks] + factor_p*mortar_data->dudx_p_on_f_p_mortar_quad[dir][ks]); */
-          integrand_quad[ks] += .5*(mortar_data->dudx_m_on_f_m_mortar_quad[dir][ks] + mortar_data->dudx_p_on_f_p_mortar_quad[dir][ks]);
+      for (int dir = 0; dir < (P4EST_DIM); dir++){
+        integrand_quad[ks] += .5*(mortar_data->dudx_m_on_f_m_mortar_quad[dir][ks] + mortar_data->dudx_p_on_f_p_mortar_quad[dir][ks]);
+        double dudx_m = dudx_m_on_f_m_mortar_quad[dir][ks];
+        double dudx_p = dudx_p_on_f_p_mortar_quad[dir][ks];
 
-          printf("dudx_m dudx_p [%d][%d] = %f, %f\n",dir,ks,mortar_data->dudx_m_on_f_m_mortar_quad[dir][ks],mortar_data->dudx_p_on_f_p_mortar_quad[dir][ks]);
-          
+        if (fabs(dudx_m - dudx_p) > D4EST_REAL_EPS){
+        printf("dudx_m dudx_p [%d][%d] = %f, %f\n",dir,ks,mortar_data->dudx_m_on_f_m_mortar_quad[dir][ks],mortar_data->dudx_p_on_f_p_mortar_quad[dir][ks]);
         }
       }
-      stride_lobatto += nodes_mortar_lobatto[f];
     }
+    stride_lobatto += nodes_mortar_lobatto[f];
+  }
 
-
-
-    
-   d4est_mortars_project_mortar_onto_side
-      (
-       d4est_ops,
-       integrand_lobatto,
-       faces_mortar,
-       deg_mortar_lobatto,
-       proj_integrand_lobatto,
-       faces_m,
-       deg_m_lobatto
-      );
-
-
-   
-    
     int stride_quad = 0;
     stride_lobatto = 0;
     for (int f = 0; f < faces_mortar; f++){
@@ -518,214 +426,14 @@ test_d4est_poisson_2_brick_interface_old_style
        deg_m_lobatto
       );
     
-    stride_lobatto = 0;
-    for (int f = 0; f < faces_mortar; f++){
-      d4est_operators_apply_mij(
-                                d4est_ops,
-                                &integrand_lobatto[stride_lobatto],
-                                (P4EST_DIM) - 1,
-                                deg_mortar_lobatto[f],
-                                &M_integrand_lobatto[stride_lobatto]
-      );
-
-
-      double h = mortar_face_object->dq/(double)P4EST_ROOT_LEN;
-      double surface_jacobian = d4est_util_dbl_pow_int(.5*h, (P4EST_DIM) - 1);
-      d4est_linalg_vec_scale(surface_jacobian, &M_integrand_lobatto[stride_lobatto], nodes_mortar_lobatto[f]);
-      stride_lobatto += nodes_mortar_lobatto[f];
-    }
-
-    stride_lobatto = 0;
-    for (int f = 0; f < faces_mortar; f++){
-      for (int k = 0; k < nodes_mortar_lobatto[f]; k++){
-        int ks = k + stride_lobatto;
-        printf("M_integrand_quad[%d] = %.25f, M_integrand_lobatto[%d] = %.25f\n",
-               ks,
-               M_integrand_quad_lobatto[ks],
-               ks,
-               M_integrand_lobatto[ks]
-              );
-      }
-      stride_lobatto += nodes_mortar_lobatto[f];
-    }
-
-
-
-  stride_lobatto = 0;
-  int stride_lobatto_volume = 0;
-  for (int f = 0; f < faces_m; f++){
-     d4est_operators_apply_mij(
-                               d4est_ops,
-                               &proj_integrand_lobatto[stride_lobatto],
-                               (P4EST_DIM) - 1,
-                               e_m[f]->deg,
-                               &M_proj_integrand_lobatto[stride_lobatto]
-                              );
-
-     double h = (double)e_m[f]->dq/(double)P4EST_ROOT_LEN;
-     double surface_jacobian = d4est_util_dbl_pow_int(.5*h, (P4EST_DIM) - 1);
-     d4est_linalg_vec_scale(surface_jacobian,
-                            &M_proj_integrand_lobatto[stride_lobatto],
-                            face_nodes_m_lobatto[f]);
-      
-     d4est_operators_apply_lift(d4est_ops,
-                                &M_proj_integrand_lobatto[stride_lobatto],
-                                (P4EST_DIM),
-                                e_m[f]->deg,
-                                f_m, &lifted_M_proj_integrand_lobatto[stride_lobatto_volume]);
-
-     d4est_operators_apply_lift(d4est_ops,
-                                &proj_M_integrand_quad_lobatto[stride_lobatto],
-                                (P4EST_DIM),
-                                e_m[f]->deg,
-                                f_m, &lifted_proj_M_integrand_quad_lobatto[stride_lobatto_volume]);
-     
-
-     double* lifted_M_proj_lobatto = &lifted_M_proj_integrand_lobatto[stride_lobatto_volume];
-     double* lifted_proj_M_quad = &lifted_proj_M_integrand_quad_lobatto[stride_lobatto_volume];
-     DEBUG_PRINT_2ARR_DBL(lifted_M_proj_lobatto,lifted_proj_M_quad, d4est_lgl_get_nodes((P4EST_DIM), e_m[f]->deg));
-     
-     stride_lobatto += face_nodes_m_lobatto[f];
-     stride_lobatto_volume += d4est_lgl_get_nodes((P4EST_DIM), e_m[f]->deg);
-   }
-    
-
-    D4EST_FREE_DIM_VEC(du_m_on_f_m);
-    D4EST_FREE_DIM_VEC(du_m_on_f_m_mortar);
-    D4EST_FREE_DIM_VEC(du_p_on_f_p);
-    D4EST_FREE_DIM_VEC(du_p_on_f_p_mortar);
     P4EST_FREE(proj_M_integrand_quad_lobatto);
     P4EST_FREE(lifted_proj_M_integrand_quad_lobatto);
     P4EST_FREE(proj_integrand_lobatto);
     P4EST_FREE(M_proj_integrand_lobatto);
     P4EST_FREE(lifted_M_proj_integrand_lobatto);   
-    P4EST_FREE(integrand_lobatto);
     P4EST_FREE(integrand_quad);
     P4EST_FREE(M_integrand_quad_lobatto);
     P4EST_FREE(M_integrand_lobatto);
-}
-
-static void
-test_d4est_poisson_2_brick_interface
-(
- d4est_element_data_t** e_m,
- int faces_m,
- int f_m,
- int mortar_side_id_m,
- d4est_element_data_t** e_p,
- int faces_p,
- int f_p,
- int mortar_side_id_p,
- int* e_m_is_ghost,
- int orientation,
- d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad,
- d4est_poisson_flux_interface_data_t* mortar_data,
- void* params
-)
-{
-  test_d4est_poisson_2_brick_data_t* data = params;
-  int faces_mortar = mortar_data->faces_mortar;
-  int total_side_nodes_m_lobatto = mortar_data->total_side_nodes_m_lobatto;
-  int total_nodes_mortar_lobatto = mortar_data->total_nodes_mortar_lobatto;
-  int total_nodes_mortar_quad = mortar_data->total_nodes_mortar_quad;
-  
-  int total_volume_nodes_m_lobatto = 0;
-  for (int i = 0; i < faces_m; i++){
-    total_volume_nodes_m_lobatto += d4est_lgl_get_nodes((P4EST_DIM), e_m[i]->deg);
-  }
-
-  double* lifted_proj_VT_w_term1_mortar_lobatto = P4EST_ALLOC(double, total_volume_nodes_m_lobatto);
-  double* proj_VT_w_term1_mortar_lobatto = P4EST_ALLOC(double, total_side_nodes_m_lobatto);
-  double* VT_w_term1_mortar_lobatto = P4EST_ALLOC(double, total_nodes_mortar_lobatto);
-  double* term1_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad); 
-  double* DT_lifted_proj_VT_w_term2_mortar_lobatto [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(DT_lifted_proj_VT_w_term2_mortar_lobatto, total_volume_nodes_m_lobatto);
-  double* lifted_proj_VT_w_term2_mortar_lobatto [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(lifted_proj_VT_w_term2_mortar_lobatto, total_volume_nodes_m_lobatto);
-  double* proj_VT_w_term2_mortar_lobatto [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(proj_VT_w_term2_mortar_lobatto, total_side_nodes_m_lobatto);
-  double* VT_w_term2_mortar_lobatto [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(VT_w_term2_mortar_lobatto, total_nodes_mortar_lobatto);
-  double* term2_mortar_quad [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(term2_mortar_quad, total_nodes_mortar_quad);
-  double* lifted_proj_VT_w_term3_mortar_lobatto = P4EST_ALLOC(double, total_volume_nodes_m_lobatto);
-  double* proj_VT_w_term3_mortar_lobatto = P4EST_ALLOC(double, total_side_nodes_m_lobatto);
-  double* VT_w_term3_mortar_lobatto = P4EST_ALLOC(double, total_nodes_mortar_lobatto);
-  double* term3_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
-  
-  d4est_poisson_flux_sipg_interface_aux
-    (
-     e_m,
-     faces_m,
-     f_m,
-     mortar_side_id_m,
-     e_p,
-     faces_p,
-     f_p,
-     mortar_side_id_p,
-     e_m_is_ghost,
-     orientation,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     mortar_data,
-     data->sipg_params,
-     lifted_proj_VT_w_term1_mortar_lobatto,
-     proj_VT_w_term1_mortar_lobatto,
-     VT_w_term1_mortar_lobatto,
-     term1_mortar_quad,
-     DT_lifted_proj_VT_w_term2_mortar_lobatto,
-     lifted_proj_VT_w_term2_mortar_lobatto,
-     proj_VT_w_term2_mortar_lobatto,
-     VT_w_term2_mortar_lobatto,
-     term2_mortar_quad,
-     lifted_proj_VT_w_term3_mortar_lobatto,
-     proj_VT_w_term3_mortar_lobatto,
-     VT_w_term3_mortar_lobatto,
-     term3_mortar_quad    
-    );   
-
-  double* lifted_proj_VT_w_term1_mortar_lobatto_check = P4EST_ALLOC(double, total_volume_nodes_m_lobatto);
-  
-  int stride = 0;
-  for (int f = 0; f < faces_m; f++){
-    int volume_nodes_m = d4est_lgl_get_nodes((P4EST_DIM), e_m[f]->deg);
-    if (e_m_is_ghost[f] == 0){     
-      for (int i = 0; i < volume_nodes_m; i++){
-
-        lifted_proj_VT_w_term1_mortar_lobatto_check[i] = test_d4est_poisson_2_brick_dirichlet_term1
-                                             (
-                                              e_m[f]->deg,
-                                              f_m,
-                                              i,
-                                              data->sipg_params->sipg_penalty_prefactor,
-                                              d4est_geom,
-                                              e_m[f]->q,
-                                              e_m[f]->dq
-                                             );
-
-        printf("lifted_proj_VT_w_term1_mortar_lobatto[%d] = %.25f, lifted_proj_VT_w_term1_mortar_lobatto[%d] = %.25f\n",i, lifted_proj_VT_w_term1_mortar_lobatto[i + stride], i, lifted_proj_VT_w_term1_mortar_lobatto_check[i]);
-        
-        data->interface_term_1_err += fabs(lifted_proj_VT_w_term1_mortar_lobatto_check[i] - lifted_proj_VT_w_term1_mortar_lobatto[i + stride]);
-      }
-    }
-    stride += volume_nodes_m;
-  }
-
-  P4EST_FREE(lifted_proj_VT_w_term1_mortar_lobatto_check);
-
-  P4EST_FREE(lifted_proj_VT_w_term1_mortar_lobatto);
-  P4EST_FREE(proj_VT_w_term1_mortar_lobatto);
-  P4EST_FREE(VT_w_term1_mortar_lobatto);
-  P4EST_FREE(term1_mortar_quad);
-
-  D4EST_FREE_DIM_VEC(DT_lifted_proj_VT_w_term2_mortar_lobatto);
-  D4EST_FREE_DIM_VEC(lifted_proj_VT_w_term2_mortar_lobatto);
-  D4EST_FREE_DIM_VEC(proj_VT_w_term2_mortar_lobatto);
-  D4EST_FREE_DIM_VEC(VT_w_term2_mortar_lobatto);
-  D4EST_FREE_DIM_VEC(term2_mortar_quad);
-
-  P4EST_FREE(lifted_proj_VT_w_term3_mortar_lobatto);
-  P4EST_FREE(proj_VT_w_term3_mortar_lobatto);
-  P4EST_FREE(VT_w_term3_mortar_lobatto);
-  P4EST_FREE(term3_mortar_quad);  
 }
 
 
@@ -954,19 +662,22 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(mpicomm, &proc_rank);
   p4est_init(NULL, SC_LP_ERROR);
   
-  d4est_geometry_t* d4est_geom = P4EST_ALLOC(d4est_geometry_t, 1);
-  d4est_geom->geom_type = GEOM_BRICK;
-  d4est_geom->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
-  d4est_geom->JAC_compute_method = GEOM_COMPUTE_NUMERICAL;
 
-  d4est_geometry_brick_new(proc_rank, "test_d4est_poisson_2_brick.input", "geometry", "[Geometry]:", d4est_geom);
-    
+  /*  */
+  const char* input_file = "test_d4est_poisson_4_cubed_sphere.input";
+  
+  d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
+                                                     input_file,
+                                                    "geometry",
+                                                    "[D4EST_GEOMETRY]");
+
+  
   p4est_t* p4est = problem_build_p4est
                    (
                     mpicomm,
                     d4est_geom->p4est_conn,
                     -1,
-                    1,
+                    0,
                     1
                    );
   
@@ -977,8 +688,8 @@ int main(int argc, char *argv[])
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
   
-  d4est_poisson_flux_data_t* flux_data = d4est_poisson_flux_new(p4est, "test_d4est_poisson_2_brick.input", zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, "test_d4est_poisson_2_brick.input", poly_vec_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, input_file, poly_vec_fcn, NULL);
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
@@ -986,7 +697,7 @@ int main(int argc, char *argv[])
 
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
-                                          "test_d4est_poisson_2_brick.input",
+                                          input_file,
                                           "[TEST_D4EST_POISSON_2_BRICK]:",
                                           NULL
   );

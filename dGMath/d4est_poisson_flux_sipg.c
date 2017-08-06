@@ -512,6 +512,11 @@ d4est_poisson_flux_sipg_interface_aux
      deg_m_lobatto
     );
 
+  /* if (faces_m != faces_mortar){ */
+  /*   d4est_linalg_vec_scale(.5, proj_VT_w_term1_mortar_lobatto, total_side_nodes_m_lobatto); */
+  /* } */
+
+
   d4est_mortars_project_mass_mortar_onto_side
     (
      d4est_ops,
@@ -527,6 +532,7 @@ d4est_poisson_flux_sipg_interface_aux
   int volume_stride = 0;
   stride = 0;
   for (int f = 0; f < faces_m; f++){
+    int volume_nodes_m = d4est_lgl_get_nodes((P4EST_DIM), e_m[f]->deg);
     if (e_m_is_ghost[f] == 0){
 
       d4est_operators_apply_lift(
@@ -555,6 +561,11 @@ d4est_poisson_flux_sipg_interface_aux
                                             &DT_lifted_proj_VT_w_term2_mortar_lobatto[d][volume_stride]
                                            );
 
+        
+        if (faces_m != faces_mortar){
+            d4est_linalg_vec_scale(.5, &DT_lifted_proj_VT_w_term2_mortar_lobatto[d][volume_stride], volume_nodes_m);
+        }
+        
 
       }
         
@@ -570,7 +581,7 @@ d4est_poisson_flux_sipg_interface_aux
      
     }
 
-    volume_stride += d4est_lgl_get_nodes((P4EST_DIM), e_m[f]->deg);
+    volume_stride += volume_nodes_m;
     stride += face_nodes_m_lobatto[f];
   }
   P4EST_FREE(ones_mortar_quad);
@@ -655,7 +666,7 @@ d4est_poisson_flux_sipg_interface
      VT_w_term3_mortar_lobatto,
      term3_mortar_quad    
     );
-
+  
   
   int stride = 0;
   for (int f = 0; f < faces_m; f++){

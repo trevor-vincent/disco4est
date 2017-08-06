@@ -9,12 +9,21 @@
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
+#include <d4est_poisson.h>
+#include <d4est_poisson_flux.h>
+#include <d4est_elliptic_eqns.h>
+#include <d4est_solver_jacobian_tester.h>
 #include <d4est_util.h>
-#include <d4est_output.h>
 #include <limits.h>
+#include <ini.h>
+#include "../Problems/TwoPunctures/two_punctures_fcns.h"
 
 #define D4EST_REAL_EPS 100*1e-15
+#if (P4EST_DIM)==2
 #define TEST_DEG_INIT 2
+#else
+#define TEST_DEG_INIT 6
+#endif
 
 static void
 problem_set_degrees_init
@@ -28,6 +37,8 @@ problem_set_degrees_init
   elem_data->deg_quad = TEST_DEG_INIT;
 }
 
+
+
 double
 poly_vec_fcn
 (
@@ -38,12 +49,89 @@ poly_vec_fcn
 #endif
  void* user
 ){
-  int deg = TEST_DEG_INIT;
-  double poly = pow(x,deg) + pow(y,deg);
-  poly += ((P4EST_DIM)==3) ? pow(z,deg) : 0.;
-  return poly;
+  /* int deg = TEST_DEG_INIT; */
+  /* double poly = pow(x,deg) + pow(y,deg); */
+/* #if (P4EST_DIM)==3 */
+  /* poly += ((P4EST_DIM)==3) ? pow(z,deg) : 0.; */
+/* #endif */
+  /* return poly; */
+
+/*   double poly = x*(1.-x)*y*(1.-y); */
+/* #if (P4EST_DIM)==3 */
+/*   poly *= z*(1.-z); */
+/* #endif */
+/*   return poly; */
+
+  return x*x - y*y;
 }
 
+double
+boundary_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void *user
+)
+{
+  return poly_vec_fcn(x,
+                      y,
+#if(P4EST_DIM)==3
+                      z,
+#endif
+                      user);
+}
+
+double
+laplacian_poly_vec_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+){
+/*   int deg = TEST_DEG_INIT; */
+/*   double poly = pow(x,deg-2) + pow(y,deg-2); */
+/* #if (P4EST_DIM)==3 */
+/*   poly += ((P4EST_DIM)==3) ? pow(z,deg-2) : 0.; */
+/* #endif */
+/*   double factor = deg; */
+/*   while (factor != 0){ */
+/*     poly *= factor; */
+/*     factor -= 1; */
+/*   } */
+/*   return poly; */
+  
+/* #if (P4EST_DIM)==2 */
+/*   return 2*(-x + pow(x,2) + (-1 + y)*y); */
+/* #elif (P4EST_DIM)==3 */
+/*   return -2*(-1 + x)*x*(-1 + y)*y - 2*(-1 + x)*x*(-1 + z)*z - 2*(-1 + y)*y*(-1 + z)*z; */
+/* #else */
+/*   D4EST_ABORT(""); */
+/* #endif */
+
+  /* return -2.; */
+  return 0.;
+}
+
+
+/*  */
+
+static double
+test_d4est_twopunctures_initial_guess
+(
+ double x,
+ double y,
+ double z,
+ void* user
+)
+{
+  return 100;
+}
 
 static void
 problem_set_degrees_amr
@@ -91,36 +179,56 @@ int main(int argc, char *argv[])
   int proc_rank;
   MPI_Comm_size(mpicomm, &proc_size);
   MPI_Comm_rank(mpicomm, &proc_rank);
+
   p4est_init(NULL, SC_LP_ERROR);
 
-  d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,                                                    "test_d4est_amr.input",
+  D4EST_ASSERT(argc == 2);
+  double eps = atof(argv[1]);
+  
+  const char* input_file = "test_d4est_twopunctures_fcns.input";
+  
+  d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
+                                                    input_file,
                                                     "geometry",
                                                     "[D4EST_GEOMETRY]");
 
-      
+
+    
   p4est_t* p4est = problem_build_p4est
                    (
                     mpicomm,
                     d4est_geom->p4est_conn,
                     -1,
-                    0,
+                    1,
                     1
                    );
+
+
+
   d4est_operators_t* d4est_ops = d4est_ops_init(20);
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t, 1);
   d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE;
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
+  twopunctures_params_t twopunctures_params;
+  init_twopunctures_data(&twopunctures_params);
+
   
+  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_residual = d4est_poisson_flux_new(p4est, input_file, poly_vec_fcn, NULL);
+  twopunctures_params.flux_data_for_jac = flux_data_for_jac;
+  twopunctures_params.flux_data_for_residual = flux_data_for_residual;
+      
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
                                                    ghost->ghosts.elem_count);
 
-  d4est_amr_t* d4est_amr = d4est_amr_init(
+  d4est_amr_t* d4est_amr
+    = d4est_amr_init(
                                           p4est,
-                                          "test_d4est_amr.input",
-                                          "[TEST_D4EST_AMR]:",
+                                          input_file,
+                                          "[TEST_D4EST_TWOPUNCTURES_FCNS]:",
                                           NULL
   );
 
@@ -141,8 +249,9 @@ int main(int argc, char *argv[])
                      NULL
                     );
   
-  double* poly_vec = P4EST_ALLOC(double, local_nodes);
+  double* poly_vec = P4EST_ALLOC_ZERO(double, local_nodes);
   int same = 1;
+  int same2 = 1;
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps; ++level){
 
@@ -162,60 +271,32 @@ int main(int argc, char *argv[])
                    NULL
                   );
 
+    
     printf("level = %d, elements = %d, nodes = %d\n", level, p4est->local_num_quadrants, local_nodes);
 
-    if (level == 0){
-      d4est_mesh_init_field(p4est, poly_vec, poly_vec_fcn, d4est_ops, d4est_geom, NULL);
-    }
-    else {
-      double* poly_vec_compare = P4EST_ALLOC(double, local_nodes);
-      d4est_mesh_init_field(p4est, poly_vec_compare, poly_vec_fcn, d4est_ops, d4est_geom, NULL);
-      same = d4est_util_compare_vecs(poly_vec, poly_vec_compare, local_nodes, D4EST_REAL_EPS);
-      if (!same){
-          double biggest_poly_err;
-        int biggest_poly_id;
 
-        d4est_mesh_compare_two_fields(p4est,
-                                      poly_vec,
-                                      poly_vec_compare,
-                                      "poly_vec and poly_vec_compare = ",
-                                      DISCARD_NOTHING,
-                                      PRINT_ON_ERROR,
-                                      D4EST_REAL_EPS
-                                     );        
-        
-        /* DEBUG_PRINT_2ARR_DBL(poly_vec, poly_vec_compare, local_nodes); */
-        d4est_util_find_biggest_error(poly_vec, poly_vec_compare, local_nodes, &biggest_poly_err, &biggest_poly_id);
-        printf("Apparently poly_vec and poly_vec_compare aren't the same, biggest err = %.25f at %d\n", biggest_poly_err, biggest_poly_id);
-      }
+    d4est_elliptic_eqns_t elliptic_eqns;
+    elliptic_eqns.apply_lhs = twopunctures_apply_jac;
+    elliptic_eqns.build_residual = twopunctures_build_residual;
+    elliptic_eqns.user = &twopunctures_params;
 
-      double* error = P4EST_ALLOC(double, local_nodes);
-      d4est_mesh_compute_point_error
-        (
-         poly_vec,
-         poly_vec_compare,
-         error,
-         local_nodes
-        );
-      
-      d4est_output_vtk
-        (p4est,
-         d4est_ops,
-         d4est_geom,
-         poly_vec,
-         poly_vec_compare,
-         error,
-         "test_d4est_amr.input",
-         "test_d4est_amr",
-         local_nodes,
-         level,0);
-
-      P4EST_FREE(error);
-      P4EST_FREE(poly_vec_compare);
-    }
-
-    if (!same)
-      break;
+    int num_vecs_to_try = 5;
+    d4est_solver_jacobian_tester
+      (
+       p4est,
+       ghost,
+       ghost_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       &elliptic_eqns,
+       local_nodes,
+       test_d4est_twopunctures_initial_guess,
+       NULL,
+       eps,
+       JAC_TEST_FORWARD_DIFFERENCE,
+       num_vecs_to_try
+      );
     
     d4est_amr_step
       (
@@ -227,12 +308,11 @@ int main(int argc, char *argv[])
        &poly_vec,
        NULL
       );
-    
+
   }
 
 
   P4EST_FREE(poly_vec);
-
   if (ghost) {
     p4est_ghost_destroy (ghost);
     P4EST_FREE (ghost_data);
@@ -240,6 +320,8 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
+  d4est_poisson_flux_destroy(flux_data_for_jac);  
+  d4est_poisson_flux_destroy(flux_data_for_residual);  
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);
@@ -249,7 +331,7 @@ int main(int argc, char *argv[])
   
   PetscFinalize();
   /* sc_finalize (); */
-  if (same)
+  if (same && same2)
     return 0;
   else
     return 1;

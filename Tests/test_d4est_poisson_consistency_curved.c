@@ -12,13 +12,14 @@
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux.h>
 #include <d4est_util.h>
+#include <d4est_output.h>
 #include <limits.h>
 
 #define D4EST_REAL_EPS 100*1e-15
 #if (P4EST_DIM)==2
-#define TEST_DEG_INIT 4
+#define TEST_DEG_INIT 2
 #else
-#define TEST_DEG_INIT 6
+#define TEST_DEG_INIT 2
 #endif
 
 static void
@@ -29,7 +30,7 @@ problem_set_degrees_init
 )
 {
   /* d4est_element_data_t* elem_data = elem_data_tmp; */
-  elem_data->deg = TEST_DEG_INIT;
+  elem_data->deg = 2;
   elem_data->deg_quad = TEST_DEG_INIT;
 }
 
@@ -44,118 +45,12 @@ poly_vec_fcn
 #endif
  void* user
 ){
-  /* int deg = TEST_DEG_INIT; */
-  /* double poly = pow(x,deg) + pow(y,deg); */
-/* #if (P4EST_DIM)==3 */
-  /* poly += ((P4EST_DIM)==3) ? pow(z,deg) : 0.; */
-/* #endif */
-  /* return poly; */
 
- /*  double poly = x*(1.-x)*y*(1.-y); */
-/* #if (P4EST_DIM)==3 */
-/*   poly *= z*(1.-z); */
-/* #endif */
-/*   return poly; */
-
-  return x*x - y*y;
-}
-
-
-double
-poly_vec_fcn_ext
-(
- double x,
- double y,
 #if (P4EST_DIM)==3
- double z,
+  return x*x + y*y + z*z;
+#else
+  return x*x + y*y;
 #endif
- void * user,
- d4est_geometry_t* d4est_geom,
- d4est_element_data_t* ed
-){
-
-  d4est_geometry_brick_attr_t* brick_attrs = d4est_geom->user;
-  
-  double amin = ed->q[0];
-  double amax = ed->q[0] + ed->dq;
-  double bmin = ed->q[1];
-  double bmax = ed->q[1] + ed->dq;
-
-  /* transform element corners to [0,1]^3 topological space */
-  amin /= (double)P4EST_ROOT_LEN;
-  amax /= (double)P4EST_ROOT_LEN;
-  bmin /= (double)P4EST_ROOT_LEN;
-  bmax /= (double)P4EST_ROOT_LEN;
-  
-  double x0 = 0.;
-  double x1 = 1.;
-  double y0 = 0.;
-  double y1 = 1.;
-
-  /* transform element corners to [X0,X1] X [YO,Y1] X [Z0,Z1] topological space */
-  amin = (x1-x0)*amin + x0;
-  amax = (x1-x0)*amax + x0;
-  bmin = (y1-y0)*bmin + y0;
-  bmax = (y1-y0)*bmax + y0;
-
-  
-  return pow(-amax - amin + 2*x,2)/pow(amax - amin,2) + pow(-bmax - bmin + 2*y,2)/pow(bmax - bmin,2);
-  /* int deg = TEST_DEG_INIT; */
-  /* double poly = pow(x,deg) + pow(y,deg); */
-/* #if (P4EST_DIM)==3 */
-  /* poly += ((P4EST_DIM)==3) ? pow(z,deg) : 0.; */
-/* #endif */
-  /* return poly; */
-
- /*  double poly = x*(1.-x)*y*(1.-y); */
-/* #if (P4EST_DIM)==3 */
-/*   poly *= z*(1.-z); */
-/* #endif */
-/*   return poly; */
-
-  /* return x*x - y*y; */
-}
-
-
-double
-laplacian_poly_vec_fcn_ext
-(
- double x,
- double y,
-#if (P4EST_DIM)==3
- double z,
-#endif
- void* user,
- d4est_geometry_t* d4est_geom,
- d4est_element_data_t* ed
-){
-
-  d4est_geometry_brick_attr_t* brick_attrs = d4est_geom->user;
-  
-  double amin = ed->q[0];
-  double amax = ed->q[0] + ed->dq;
-  double bmin = ed->q[1];
-  double bmax = ed->q[1] + ed->dq;
-
-  /* transform element corners to [0,1]^3 topological space */
-  amin /= (double)P4EST_ROOT_LEN;
-  amax /= (double)P4EST_ROOT_LEN;
-  bmin /= (double)P4EST_ROOT_LEN;
-  bmax /= (double)P4EST_ROOT_LEN;
- 
-  double x0 = brick_attrs->X0;
-  double x1 = brick_attrs->X1;
-  double y0 = brick_attrs->Y0;
-  double y1 = brick_attrs->Y1;
-
-  /* transform element corners to [X0,X1] X [YO,Y1] X [Z0,Z1] topological space */
-  amin = (x1-x0)*amin + x0;
-  amax = (x1-x0)*amax + x0;
-  bmin = (y1-y0)*bmin + y0;
-  bmax = (y1-y0)*bmax + y0;
-
-  return 8./pow(amax - amin,2) + 8./pow(bmax - bmin,2);
-  /* return x*x - y*y; */
 }
 
 
@@ -179,7 +74,7 @@ boundary_fcn
 }
 
 double
-laplacian_poly_vec_fcn
+neg_laplacian_poly_vec_fcn
 (
  double x,
  double y,
@@ -188,8 +83,11 @@ laplacian_poly_vec_fcn
 #endif
  void* user
 ){
-
-  return 0.;
+#if (P4EST_DIM)==3
+  return -6.;
+#else
+  return -4.;
+#endif
 }
 
 
@@ -242,20 +140,24 @@ int main(int argc, char *argv[])
   MPI_Comm_size(mpicomm, &proc_size);
   MPI_Comm_rank(mpicomm, &proc_rank);
   p4est_init(NULL, SC_LP_ERROR);
-  
-  d4est_geometry_t* d4est_geom = P4EST_ALLOC(d4est_geometry_t, 1);
-  d4est_geom->geom_type = GEOM_BRICK;
-  d4est_geom->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
-  d4est_geom->JAC_compute_method = GEOM_COMPUTE_NUMERICAL;
 
-  d4est_geometry_brick_new(proc_rank, "test_d4est_poisson_1_brick.input", "geometry", "[Geometry]:", d4est_geom);
-    
+#if (P4EST_DIM)==3
+  const char* input_file = "test_d4est_poisson_consistency_curved_3d.input";
+#else
+  const char* input_file = "test_d4est_poisson_consistency_curved_2d.input";
+#endif
+  
+  d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
+                                                     input_file,
+                                                    "geometry",
+                                                    "[D4EST_GEOMETRY]");
+  /*  */  
   p4est_t* p4est = problem_build_p4est
                    (
                     mpicomm,
                     d4est_geom->p4est_conn,
                     -1,
-                    1,
+                    0,
                     1
                    );
   
@@ -266,17 +168,16 @@ int main(int argc, char *argv[])
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
   
-  d4est_poisson_flux_data_t* flux_data_with_homog_bc = d4est_poisson_flux_new(p4est, "test_d4est_poisson_1_brick.input", zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, "test_d4est_poisson_1_brick.input", poly_vec_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data_with_homog_bc = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, input_file, poly_vec_fcn, NULL);
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
                                                    ghost->ghosts.elem_count);
-
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
-                                          "test_d4est_poisson_1_brick.input",
-                                          "[TEST_D4EST_POISSON_1_BRICK]:",
+                                          input_file,
+                                          "[TEST_D4EST_POISSON_CONSISTENCY_CURVED]:",
                                           NULL
   );
 
@@ -336,14 +237,20 @@ int main(int argc, char *argv[])
       
     }
     else {
-      double* poly_vec_compare = P4EST_ALLOC(double, local_nodes);
-      d4est_mesh_init_field(p4est, poly_vec_compare, poly_vec_fcn, d4est_ops, d4est_geom, NULL);
-      same = d4est_util_compare_vecs(poly_vec, poly_vec_compare, local_nodes, D4EST_REAL_EPS);
-      if (!same){
-        DEBUG_PRINT_2ARR_DBL(poly_vec, poly_vec_compare, local_nodes);
-      }
-      P4EST_FREE(poly_vec_compare);
+      /* double* poly_vec_compare = P4EST_ALLOC(double, local_nodes); */
+      /* d4est_mesh_init_field(p4est, poly_vec_compare, poly_vec_fcn, d4est_ops, d4est_geom, NULL); */
+      /* same = d4est_util_compare_vecs(poly_vec, poly_vec_compare, local_nodes, D4EST_REAL_EPS); */
+      /* if (!same){ */
+      /*   double biggest_poly_err; */
+      /*   int biggest_poly_id; */
+      /*   d4est_util_find_biggest_error(poly_vec, poly_vec_compare, local_nodes, &biggest_poly_err, &biggest_poly_id); */
+      /*   printf("Apparently poly_vec and poly_vec_compare aren't the same, biggest err = %.25f\n", biggest_poly_err); */
+      /*   /\* DEBUG_PRINT_2ARR_DBL(poly_vec, poly_vec_compare, local_nodes); *\/ */
+      /* } */
+      /* P4EST_FREE(poly_vec_compare); */
 
+      d4est_mesh_init_field(p4est, poly_vec, poly_vec_fcn, d4est_ops, d4est_geom, NULL);
+      
       double* Apoly_vec = P4EST_ALLOC(double, local_nodes);
       double* Abc_poly_vec = P4EST_ALLOC(double, local_nodes);
       double* Apoly_vec_compare = P4EST_ALLOC(double, local_nodes);
@@ -372,24 +279,12 @@ int main(int argc, char *argv[])
         (
          p4est,
          f,
-         laplacian_poly_vec_fcn,
+         neg_laplacian_poly_vec_fcn,
          d4est_ops,
          d4est_geom,
          NULL
         );
-
-      /* d4est_mesh_init_field_ext */
-      /*   ( */
-      /*    p4est, */
-      /*    f, */
-      /*    laplacian_poly_vec_fcn_ext, */
-      /*    NULL, */
-      /*    d4est_ops, */
-      /*    d4est_geom */
-      /*   ); */
-  
-      
-  
+       
       for (p4est_topidx_t tt = p4est->first_local_tree;
            tt <= p4est->last_local_tree;
            ++tt)
@@ -440,10 +335,34 @@ int main(int argc, char *argv[])
                                       Apoly_vec,
                                       Apoly_vec_compare,
                                       "Apoly_vec and Apoly_vec_compare = ",
-                                      DISCARD_BOUNDARY,
-                                      PRINT,
+                                      DISCARD_NOTHING,
+                                      PRINT_ON_ERROR,
                                       D4EST_REAL_EPS
                                      );
+
+
+      double* error = P4EST_ALLOC(double, local_nodes);
+      d4est_mesh_compute_point_error
+        (
+         Apoly_vec,
+         Apoly_vec_compare,
+         error,
+         local_nodes
+        );
+      
+      d4est_output_vtk
+        (p4est,
+         d4est_ops,
+         d4est_geom,
+         Apoly_vec,
+         Apoly_vec_compare,
+         error,
+         input_file,
+         "test_d4est_poisson_2_cubed_sphere",
+         local_nodes,
+         level,0);
+
+      P4EST_FREE(error);
         
       
       P4EST_FREE(Apoly_vec);
@@ -452,9 +371,6 @@ int main(int argc, char *argv[])
       P4EST_FREE(tmp);
     }
 
-    if (!same || !same2)
-      break;
-    
     d4est_amr_step
       (
        p4est,

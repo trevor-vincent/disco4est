@@ -1,10 +1,16 @@
 [amr]
-scheme = uniform_h
+scheme = random_h
 max_degree = 10
-num_of_amr_steps = 1
+num_of_amr_steps = 3
+
+[flux]
+name = sipg
+sipg_penalty_prefactor = 2.0
+sipg_flux_h = H_EQ_J_DIV_SJ
+sipg_penalty_fcn = meanp_sqr_over_meanh
 
 [geometry]
-name = cubed_sphere
+name = cubed_sphere_outer_shell_block
 R0 = 1
 R1 = 2
 R2 = 3
@@ -14,7 +20,7 @@ DX_compute_method = analytic
 JAC_compute_method = numerical
 
 [d4est_vtk_geometry]
-name = cubed_sphere
+name = cubed_sphere_outer_shell_block
 R0 = 1
 R1 = 2
 R2 = 3

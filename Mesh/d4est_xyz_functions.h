@@ -2,7 +2,6 @@
 #define GRID_FUNCTIONS_H 
 
 #include "../pXest/pXest.h"
-
 /** 
  * Function pointer for 
  * functions of the form
@@ -25,17 +24,16 @@ typedef double
  void* user
 );
 
-
 typedef double
-(*d4est_xyz_fcn_ext_t)
+(*d4est_xyzu_fcn_t)
 (
- double, //x
- double, //y
+ double,
+ double,
 #if (P4EST_DIM)==3
- double, //z
+ double,
 #endif
- double,  //gradu or u
- void*
+ double,
+ void* user
 );
 
 

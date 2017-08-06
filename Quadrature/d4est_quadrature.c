@@ -607,9 +607,9 @@ void d4est_quadrature_apply_fofufofvlilj
  double* jac_quad,
  int deg_quad,
  double* out,
- d4est_xyz_fcn_ext_t fofu_fcn,
+ d4est_xyzu_fcn_t fofu_fcn,
  void* fofu_ctx,
- d4est_xyz_fcn_ext_t fofv_fcn,
+ d4est_xyzu_fcn_t fofv_fcn,
  void* fofv_ctx
 )
 {
@@ -716,9 +716,9 @@ void d4est_quadrature_apply_fofufofvlj
  double* xyz_quad [(P4EST_DIM)],
  int deg_quad,
  double* out,
- d4est_xyz_fcn_ext_t fofu_fcn,
+ d4est_xyzu_fcn_t fofu_fcn,
  void* fofu_ctx,
- d4est_xyz_fcn_ext_t fofv_fcn,
+ d4est_xyzu_fcn_t fofv_fcn,
  void* fofv_ctx
 )
 {

@@ -124,6 +124,7 @@ SET (
   Solver/krylov_petsc.c
   Solver/newton_petsc.c
   Solver/d4est_solver_jacobian_tester.c
+  Solver/d4est_solver_test_symmetry.c
   )
 
 
@@ -313,19 +314,20 @@ target_link_libraries(test_d4est_mass_projection d8est)
 add_test(test_d4est_mass_projection_test test_d4est_mass_projection)
 target_compile_definitions(test_d4est_mass_projection PRIVATE DIM=3)
 
-add_custom_command(
-  TARGET test_d4est_mass_projection POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy
-  ${CMAKE_SOURCE_DIR}/Tests/*.input
-  ${CMAKE_CURRENT_BINARY_DIR}/)
-
-
 add_d4est_test_3d(test_d4est_boyen_york_model_fcns test_d4est_boyen_york_model_fcns.c . test_d4est_boyen_york_model_fcns)
 
 add_d4est_test_3d(test_d4est_okendon_fcns test_d4est_okendon_fcns.c . test_d4est_okendon_fcns)
 
 add_d4est_test_2d(test_d4est_poisson_3_brick test_d4est_poisson_3_brick.c . test_d4est_poisson_3_brick)
 add_d4est_test_2d(test_d4est_poisson_4_brick test_d4est_poisson_4_brick.c . test_d4est_poisson_4_brick)
+add_d4est_test_3d(test_d4est_poisson_4_cubed_sphere test_d4est_poisson_4_cubed_sphere.c . test_d4est_poisson_4_cubed_sphere)
+
+add_d4est_test_3d(test_d4est_poisson_consistency_curved_3d test_d4est_poisson_consistency_curved.c . test_d4est_poisson_consistency_curved_3d)
+add_d4est_test_2d(test_d4est_poisson_consistency_curved_2d test_d4est_poisson_consistency_curved.c . test_d4est_poisson_consistency_curved_2d)
+
+add_d4est_test_3d(test_d4est_punctures_fcns test_d4est_puncture_fcns.c . test_d4est_puncture_fcns)
+add_d4est_test_3d(test_d4est_poisson_symmetry test_d4est_poisson_symmetry.c . test_d4est_poisson_symmetry)
+add_d4est_test_3d(test_d4est_stiffness test_d4est_stiffness.c . test_d4est_stiffness)
 
 # add_executable(test_d4est_quadrature_compactified Tests/test_d4est_quadrature_compactified.c)
 # target_link_libraries(test_d4est_quadrature_compactified d8est)

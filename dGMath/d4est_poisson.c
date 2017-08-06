@@ -60,15 +60,17 @@ d4est_poisson_build_rhs_with_strong_bc
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        d4est_quadrature_volume_t mesh_object;
-        mesh_object.dq = ed->dq;
-        mesh_object.tree = ed->tree;
-        mesh_object.element_id = ed->id;
-        mesh_object.q[0] = ed->q[0];
-        mesh_object.q[1] = ed->q[1];
-#if (P4EST_DIM)==3
-        mesh_object.q[2] = ed->q[2];
+
+        d4est_quadrature_volume_t mesh_object = {.dq = ed->dq,
+                                              .tree = ed->tree,
+                                              .q[0] = ed->q[0],
+                                              .q[1] = ed->q[1],
+#if (P4EST_DIM)==3                                              
+                                              .q[2] = ed->q[2],
 #endif
+                                              .element_id = ed->id
+                                             };
+        
         d4est_quadrature_apply_mass_matrix
           (
            d4est_ops,
@@ -93,26 +95,14 @@ d4est_poisson_build_rhs_with_strong_bc
 }
 
 void
-d4est_poisson_apply_aij
+d4est_poisson_apply_stiffness_matrix
 (
  p4est_t* p4est,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
- d4est_elliptic_data_t* prob_vecs,
- d4est_poisson_flux_data_t* flux_fcn_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad
 )
 {
-  d4est_poisson_flux_init_element_data
-    (
-     p4est,
-     d4est_ops,
-     prob_vecs->u,
-     prob_vecs->Au
-    );
-    
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)
@@ -152,7 +142,36 @@ d4est_poisson_apply_aij
       }
 
     }
+}
 
+void
+d4est_poisson_apply_aij
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_poisson_flux_data_t* flux_fcn_data,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad
+)
+{
+  d4est_poisson_flux_init_element_data
+    (
+     p4est,
+     d4est_ops,
+     prob_vecs->u,
+     prob_vecs->Au
+    );
+    
+  d4est_poisson_apply_stiffness_matrix
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad
+    );
 
   d4est_mortar_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(flux_fcn_data);
   d4est_mortar_compute_flux_on_local_elements
