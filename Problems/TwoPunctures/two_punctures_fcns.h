@@ -300,6 +300,8 @@ double twopunctures_plus_7o8_K2_psi_neg8
   double psi_0 = 1. + u + sumn_mn_o_2rn;
   double confAij_sqr = compute_confAij_sqr(x,y,z,user);
 
+  /* printf("u %.15f sumn_mn_o_2rn %.15f \n", u, sucmn_mn_o_2rn); */
+  
   if (r > params->puncture_eps){
     /* return (7./8.)*confAij_sqr/(psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0); */
     return (7./8.)*confAij_sqr/(pow(psi_0*psi_0,4));
@@ -309,9 +311,8 @@ double twopunctures_plus_7o8_K2_psi_neg8
   }
 }
 
-
 static
-void twopunctures_apply_jac
+void twopunctures_apply_jac_add_nonlinear_term
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -323,20 +324,7 @@ void twopunctures_apply_jac
  void* user
 )
 {
-  twopunctures_params_t* params = user;
-  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_jac;
-  D4EST_ASSERT(params->num_punctures > 0);
-  d4est_poisson_apply_aij(p4est,
-                          ghost,
-                          ghost_data,
-                          prob_vecs,
-                          flux_data,
-                          d4est_ops,
-                          d4est_geom,
-                          d4est_quad);
-  
   double* M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
-
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)
@@ -370,22 +358,26 @@ void twopunctures_apply_jac
            ed->deg,
            ed->xyz_quad,
            ed->J_quad,
-           ed->deg_quad,
+           ed->deg_vol_quad,
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
            twopunctures_plus_7o8_K2_psi_neg8,
            user,
            NULL,
            NULL
           );
+
+        /* double* tmp = &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride]; */
+        /* double* tmp = &prob_vecs->u0[ed->nodal_stride]; */
+        /* DEBUG_PRINT_ARR_DBL(tmp, d4est_lgl_get_nodes((P4EST_DIM), ed->deg)); */
       }
     }
   
   d4est_linalg_vec_axpy(1.0, M_plus_7o8_K2_psi_neg8_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
   P4EST_FREE(M_plus_7o8_K2_psi_neg8_of_u0_u_vec);
-}
 
-void
-twopunctures_build_residual
+}
+static
+void twopunctures_apply_jac
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -398,9 +390,8 @@ twopunctures_build_residual
 )
 {
   twopunctures_params_t* params = user;
+  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_jac;
   D4EST_ASSERT(params->num_punctures > 0);
-
-  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_residual;
   d4est_poisson_apply_aij(p4est,
                           ghost,
                           ghost_data,
@@ -408,9 +399,36 @@ twopunctures_build_residual
                           flux_data,
                           d4est_ops,
                           d4est_geom,
-                          d4est_quad
-                         );
+                          d4est_quad);
+  
 
+  twopunctures_apply_jac_add_nonlinear_term
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     prob_vecs,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     user
+    );
+  
+}
+
+static void
+twopunctures_build_residual_add_nonlinear_term
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ void* user
+)
+{
   double* M_neg_1o8_K2_psi_neg7_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
  
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -446,22 +464,13 @@ twopunctures_build_residual
            ed->deg,
            ed->J_quad,
            ed->xyz_quad,
-           ed->deg_quad,
+           ed->deg_vol_quad,
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
            twopunctures_neg_1o8_K2_psi_neg7,
            user,
            NULL,
            NULL
           );
-
-        /* DEBUG_PRINT_ARR_DBL */
-        
-        /* int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), ed->deg); */
-        /* int volume_nodes_gauss = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad); */
-        /* double* u_tmp = &prob_vecs->u[ed->nodal_stride]; */
-        /* DEBUG_PRINT_ARR_DBL(u_tmp, volume_nodes_lobatto); */
-        /* DEBUG_PRINT_ARR_DBL(ed->J_quad, volume_nodes_gauss); */
-        
       }
     }
 
@@ -471,6 +480,50 @@ twopunctures_build_residual
                   prob_vecs->local_nodes);
 
   P4EST_FREE(M_neg_1o8_K2_psi_neg7_vec);
+
+}
+
+
+static void
+twopunctures_build_residual
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ void* user
+)
+{
+  twopunctures_params_t* params = user;
+  D4EST_ASSERT(params->num_punctures > 0);
+
+  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_residual;
+  d4est_poisson_apply_aij(p4est,
+                          ghost,
+                          ghost_data,
+                          prob_vecs,
+                          flux_data,
+                          d4est_ops,
+                          d4est_geom,
+                          d4est_quad
+                         );
+
+  twopunctures_build_residual_add_nonlinear_term
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     prob_vecs,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     user
+    );
+  
+
 }
 
 #endif

@@ -19,25 +19,38 @@
 #include "../Problems/TwoPunctures/two_punctures_fcns.h"
 
 #define D4EST_REAL_EPS 100*1e-15
-#if (P4EST_DIM)==2
-#define TEST_DEG_INIT 2
-#else
-#define TEST_DEG_INIT 6
-#endif
+#define NUM_OF_TRIALS 5
 
-static void
-problem_set_degrees_init
+typedef struct {
+  
+  int deg;
+  int deg_volume_quad;
+  int deg_mortar_quad;
+  
+} test_d4est_puncture_fcns_t;
+
+/* static void */
+/* problem_set_degrees_init */
+/* ( */
+/*  d4est_element_data_t* elem_data, */
+/*  void* user_ctx */
+/* ) */
+/* { */
+/*   test_d4est_puncture_fcns_t* data = user_ctx; */
+/*   elem_data->deg = data->deg; */
+/*   elem_data->deg_vol_quad = data->deg_volume_quad; */
+/* } */
+
+static int
+get_deg_mortar_quad
 (
  d4est_element_data_t* elem_data,
  void* user_ctx
 )
 {
-  /* d4est_element_data_t* elem_data = elem_data_tmp; */
-  elem_data->deg = TEST_DEG_INIT;
-  elem_data->deg_quad = TEST_DEG_INIT;
+  test_d4est_puncture_fcns_t* data = user_ctx;
+  return data->deg_mortar_quad;
 }
-
-
 
 double
 poly_vec_fcn
@@ -49,20 +62,24 @@ poly_vec_fcn
 #endif
  void* user
 ){
-  /* int deg = TEST_DEG_INIT; */
-  /* double poly = pow(x,deg) + pow(y,deg); */
-/* #if (P4EST_DIM)==3 */
-  /* poly += ((P4EST_DIM)==3) ? pow(z,deg) : 0.; */
-/* #endif */
-  /* return poly; */
+  double r2 = (x*x + y*y + z*z);
+  if (r2 == 0)
+    return 1.;
+  else
+    return sin(r2)/sqrt(r2);
+}
 
-/*   double poly = x*(1.-x)*y*(1.-y); */
-/* #if (P4EST_DIM)==3 */
-/*   poly *= z*(1.-z); */
-/* #endif */
-/*   return poly; */
-
-  return x*x - y*y;
+double
+neg_laplacian_poly_vec_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+){
+  return NAN;
 }
 
 double
@@ -84,41 +101,6 @@ boundary_fcn
                       user);
 }
 
-double
-laplacian_poly_vec_fcn
-(
- double x,
- double y,
-#if (P4EST_DIM)==3
- double z,
-#endif
- void* user
-){
-/*   int deg = TEST_DEG_INIT; */
-/*   double poly = pow(x,deg-2) + pow(y,deg-2); */
-/* #if (P4EST_DIM)==3 */
-/*   poly += ((P4EST_DIM)==3) ? pow(z,deg-2) : 0.; */
-/* #endif */
-/*   double factor = deg; */
-/*   while (factor != 0){ */
-/*     poly *= factor; */
-/*     factor -= 1; */
-/*   } */
-/*   return poly; */
-  
-/* #if (P4EST_DIM)==2 */
-/*   return 2*(-x + pow(x,2) + (-1 + y)*y); */
-/* #elif (P4EST_DIM)==3 */
-/*   return -2*(-1 + x)*x*(-1 + y)*y - 2*(-1 + x)*x*(-1 + z)*z - 2*(-1 + y)*y*(-1 + z)*z; */
-/* #else */
-/*   D4EST_ABORT(""); */
-/* #endif */
-
-  /* return -2.; */
-  return 0.;
-}
-
-
 /*  */
 
 static double
@@ -130,7 +112,7 @@ test_d4est_twopunctures_initial_guess
  void* user
 )
 {
-  return 100;
+  return poly_vec_fcn(x,y,z,user);
 }
 
 static void
@@ -140,8 +122,9 @@ problem_set_degrees_amr
  void* user_ctx
 )
 {
-  elem_data->deg_quad = elem_data->deg;
-
+  test_d4est_puncture_fcns_t* data = user_ctx;
+  elem_data->deg = data->deg;
+  elem_data->deg_vol_quad = data->deg_volume_quad;
 }
 
 
@@ -182,11 +165,9 @@ int main(int argc, char *argv[])
 
   p4est_init(NULL, SC_LP_ERROR);
 
-  D4EST_ASSERT(argc == 2);
-  double eps = atof(argv[1]);
   
-  const char* input_file = "test_d4est_twopunctures_fcns.input";
-  
+  const char* input_file = "test_d4est_puncture_fcns.input";
+  /*  */
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                     input_file,
                                                     "geometry",
@@ -199,7 +180,7 @@ int main(int argc, char *argv[])
                     mpicomm,
                     d4est_geom->p4est_conn,
                     -1,
-                    1,
+                    0,
                     1
                    );
 
@@ -211,12 +192,18 @@ int main(int argc, char *argv[])
   d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE;
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
+  test_d4est_puncture_fcns_t deg_data;
+  deg_data.deg = atoi(argv[1]);  
+  double eps = atof(argv[2]);  
+  int num_vecs_to_try = atoi(argv[3]);  
+  D4EST_ASSERT(argc == 4);
+  
   twopunctures_params_t twopunctures_params;
   init_twopunctures_data(&twopunctures_params);
 
+  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL, get_deg_mortar_quad, &deg_data);
+  d4est_poisson_flux_data_t* flux_data_for_residual = d4est_poisson_flux_new(p4est, input_file, poly_vec_fcn, NULL, get_deg_mortar_quad, &deg_data);
   
-  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_for_residual = d4est_poisson_flux_new(p4est, input_file, poly_vec_fcn, NULL);
   twopunctures_params.flux_data_for_jac = flux_data_for_jac;
   twopunctures_params.flux_data_for_residual = flux_data_for_residual;
       
@@ -233,71 +220,139 @@ int main(int argc, char *argv[])
   );
 
 
-  int local_nodes = d4est_mesh_update
-                    (
-                     p4est,
-                     ghost,
-                     ghost_data,
-                     d4est_ops,
-                     d4est_geom,
-                     d4est_quad,
-                     geometric_factors,
-                     INITIALIZE_QUADRATURE_DATA,
-                     INITIALIZE_GEOMETRY_DATA,
-                     INITIALIZE_GEOMETRY_ALIASES,
-                     problem_set_degrees_init,
-                     NULL
-                    );
   
-  double* poly_vec = P4EST_ALLOC_ZERO(double, local_nodes);
-  int same = 1;
-  int same2 = 1;
+
+  /* int local_nodes = d4est_mesh_update */
+  /*                   ( */
+  /*                    p4est, */
+  /*                    ghost, */
+  /*                    ghost_data, */
+  /*                    d4est_ops, */
+  /*                    d4est_geom, */
+  /*                    d4est_quad, */
+  /*                    geometric_factors, */
+  /*                    INITIALIZE_QUADRATURE_DATA, */
+  /*                    INITIALIZE_GEOMETRY_DATA, */
+  /*                    INITIALIZE_GEOMETRY_ALIASES, */
+  /*                    problem_set_degrees_init, */
+  /*                    NULL */
+  /*                   ); */
+  
+
+  double jac_last_node_error [NUM_OF_TRIALS];
+  double jac_last_node [NUM_OF_TRIALS];
+
+  double res_last_node_error [NUM_OF_TRIALS];
+  double res_last_node [NUM_OF_TRIALS];
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps; ++level){
 
-    local_nodes = d4est_mesh_update
-                  (
-                   p4est,
-                   ghost,
-                   ghost_data,
-                   d4est_ops,
-                   d4est_geom,
-                   d4est_quad,
-                   geometric_factors,
-                   INITIALIZE_QUADRATURE_DATA,
-                   INITIALIZE_GEOMETRY_DATA,
-                   INITIALIZE_GEOMETRY_ALIASES,
-                   problem_set_degrees_amr,
-                   NULL
-                  );
-
+    for (int i = 0; i < NUM_OF_TRIALS; i++){
+      deg_data.deg_volume_quad = deg_data.deg + i;
+      deg_data.deg_mortar_quad = deg_data.deg + i;
+      D4EST_ASSERT(deg_data.deg > 0 && deg_data.deg_volume_quad >= deg_data.deg && deg_data.deg_mortar_quad >= deg_data.deg);
+     
+      int local_nodes = d4est_mesh_update
+                        (
+                         p4est,
+                         ghost,
+                         ghost_data,
+                         d4est_ops,
+                         d4est_geom,
+                         d4est_quad,
+                         geometric_factors,
+                         INITIALIZE_QUADRATURE_DATA,
+                         INITIALIZE_GEOMETRY_DATA,
+                         INITIALIZE_GEOMETRY_ALIASES,
+                         problem_set_degrees_amr,
+                         &deg_data
+                        );
     
-    printf("level = %d, elements = %d, nodes = %d\n", level, p4est->local_num_quadrants, local_nodes);
+        printf("level = %d, elements = %d, nodes = %d\n", level, p4est->local_num_quadrants, local_nodes);
 
+        d4est_elliptic_eqns_t elliptic_eqns;
+        elliptic_eqns.apply_lhs = twopunctures_apply_jac;
+        elliptic_eqns.build_residual = twopunctures_build_residual;
+        elliptic_eqns.user = &twopunctures_params;
 
-    d4est_elliptic_eqns_t elliptic_eqns;
-    elliptic_eqns.apply_lhs = twopunctures_apply_jac;
-    elliptic_eqns.build_residual = twopunctures_build_residual;
-    elliptic_eqns.user = &twopunctures_params;
+        double* poly_vec = P4EST_ALLOC(double, local_nodes);
+        d4est_mesh_init_field(p4est, poly_vec, poly_vec_fcn, d4est_ops, d4est_geom, d4est_geom);      
+        double* Apoly_vec = P4EST_ALLOC(double, local_nodes);
 
-    int num_vecs_to_try = 5;
-    d4est_solver_jacobian_tester
-      (
-       p4est,
-       ghost,
-       ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       &elliptic_eqns,
-       local_nodes,
-       test_d4est_twopunctures_initial_guess,
-       NULL,
-       eps,
-       JAC_TEST_FORWARD_DIFFERENCE,
-       num_vecs_to_try
-      );
-    
+        d4est_elliptic_data_t elliptic_data;
+        elliptic_data.u = poly_vec;
+        elliptic_data.u0 = poly_vec;
+        elliptic_data.Au = Apoly_vec;
+        elliptic_data.local_nodes = local_nodes;
+ 
+
+        d4est_linalg_fill_vec(Apoly_vec, 0., local_nodes);
+        twopunctures_apply_jac_add_nonlinear_term
+          (
+           p4est,
+           ghost,
+           ghost_data,
+           &elliptic_data,
+           d4est_ops,
+           d4est_geom,
+           d4est_quad,
+           &twopunctures_params
+          );
+
+        jac_last_node[i] = Apoly_vec[local_nodes-1];
+        if(i == 0){
+          jac_last_node_error[i] = -1.;
+        }
+        else{
+          jac_last_node_error[i] = fabs(jac_last_node[i] - jac_last_node[i-1]);
+        }
+              
+        d4est_linalg_fill_vec(Apoly_vec, 0., local_nodes);
+        twopunctures_build_residual_add_nonlinear_term
+          (
+           p4est,
+           ghost,
+           ghost_data,
+           &elliptic_data,
+           d4est_ops,
+           d4est_geom,
+           d4est_quad,
+           &twopunctures_params
+          );
+
+        res_last_node[i] = Apoly_vec[local_nodes-1];
+        if(i == 0){
+          res_last_node_error[i] = -1.;
+        }
+        else{
+          res_last_node_error[i] = fabs(res_last_node[i] - res_last_node[i-1]);
+        }
+
+        printf("elem %d deg %d deg_v %d deg_m %d jacl %.15f resl %.15f serr %.15f rerr %.15f \n", p4est->local_num_quadrants, deg_data.deg, deg_data.deg_volume_quad, deg_data.deg_mortar_quad, jac_last_node[i], res_last_node[i], jac_last_node_error[i],  res_last_node_error[i]);
+
+        d4est_solver_jacobian_tester
+          (
+           p4est,
+           ghost,
+           ghost_data,
+           d4est_ops,
+           d4est_geom,
+           d4est_quad,
+           &elliptic_eqns,
+           local_nodes,
+           test_d4est_twopunctures_initial_guess,
+           NULL,
+           eps,
+           JAC_TEST_FORWARD_DIFFERENCE,
+           num_vecs_to_try
+          );
+
+        P4EST_FREE(Apoly_vec);
+        P4EST_FREE(poly_vec);
+
+    }
+
+    double* tmp = NULL;
     d4est_amr_step
       (
        p4est,
@@ -305,14 +360,12 @@ int main(int argc, char *argv[])
        &ghost_data,
        d4est_ops,
        d4est_amr,
-       &poly_vec,
+       NULL,
        NULL
       );
 
   }
 
-
-  P4EST_FREE(poly_vec);
   if (ghost) {
     p4est_ghost_destroy (ghost);
     P4EST_FREE (ghost_data);
@@ -331,8 +384,4 @@ int main(int argc, char *argv[])
   
   PetscFinalize();
   /* sc_finalize (); */
-  if (same && same2)
-    return 0;
-  else
-    return 1;
 }

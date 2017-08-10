@@ -36,6 +36,8 @@ d4est_estimator_bi_dirichlet
   d4est_quadrature_mortar_t* face_object = boundary_data->face_object;
   int face_nodes_m_lobatto = boundary_data->face_nodes_m_lobatto;
   int face_nodes_m_quad = boundary_data->face_nodes_m_quad;
+  int deg_mortar_quad = boundary_data->deg_mortar_quad;
+
   double* u_m_on_f_m_quad = boundary_data->u_m_on_f_m_quad;
   double* sj_on_f_m_quad = boundary_data->sj_on_f_m_quad;
   double* j_div_sj_quad = boundary_data->j_div_sj_quad;
@@ -94,7 +96,7 @@ d4est_estimator_bi_dirichlet
      u_at_bndry_lobatto,
      e_m->deg,
      u_at_bndry_lobatto_to_quad,
-     e_m->deg_quad
+     deg_mortar_quad
     );
 
   
@@ -116,7 +118,7 @@ d4est_estimator_bi_dirichlet
                       Je2,
                       Je2,
                       sj_on_f_m_quad,
-                      e_m->deg_quad
+                      deg_mortar_quad
                      );
 
 
@@ -333,7 +335,9 @@ d4est_estimator_bi_compute
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad
+ d4est_quadrature_t* d4est_quad,
+ int (*get_deg_mortar_quad)(d4est_element_data_t*, void*),
+ void* get_deg_mortar_quad_ctx
 )
 {
   d4est_elliptic_eqns_build_residual
@@ -398,6 +402,8 @@ d4est_estimator_bi_compute
   flux_data.boundary_fcn = d4est_estimator_bi_dirichlet;
   flux_data.boundary_condition = u_bndry_fcn;
   flux_data.user = &bi_penalty_data;
+  flux_data.get_deg_mortar_quad = get_deg_mortar_quad;
+  flux_data.get_deg_mortar_quad_ctx = get_deg_mortar_quad_ctx;
   d4est_mortar_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(&flux_data);
   
   d4est_mortar_compute_flux_on_local_elements

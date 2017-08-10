@@ -11,6 +11,14 @@
 #include <d4est_quadrature_lobatto.h>
 #include <d4est_poisson_flux.h>
 
+/* #define NO_TERM1 */
+/* #define NO_TERM3 */
+/* #define NO_TERM2 */
+
+/* #define NO_TERM1_BC */
+/* #define NO_TERM2_BC */
+/* #define NO_TERM3_BC */
+
 void
 d4est_poisson_flux_sipg_dirichlet_aux
 (
@@ -38,6 +46,7 @@ d4est_poisson_flux_sipg_dirichlet_aux
  double* u_at_bndry_lobatto_to_quad
 ){
   d4est_quadrature_mortar_t* face_object = boundary_data->face_object;
+  int deg_mortar_quad = boundary_data->deg_mortar_quad;
   int face_nodes_m_lobatto = boundary_data->face_nodes_m_lobatto;
   int face_nodes_m_quad = boundary_data->face_nodes_m_quad;
   double* u_m_on_f_m_quad = boundary_data->u_m_on_f_m_quad;
@@ -103,7 +112,7 @@ d4est_poisson_flux_sipg_dirichlet_aux
      u_at_bndry_lobatto,
      e_m->deg,
      u_at_bndry_lobatto_to_quad,
-     e_m->deg_quad
+     deg_mortar_quad
     );
   
 
@@ -141,7 +150,7 @@ d4est_poisson_flux_sipg_dirichlet_aux
      term1_quad,
      e_m->deg,
      ones_quad,
-     e_m->deg_quad,
+     deg_mortar_quad,
      VT_w_term1_lobatto
     );
 
@@ -158,7 +167,7 @@ d4est_poisson_flux_sipg_dirichlet_aux
        term2_quad[d],
        e_m->deg,
        ones_quad,
-       e_m->deg_quad,
+       deg_mortar_quad,
        VT_w_term2_lobatto[d]
       );
   }
@@ -174,7 +183,7 @@ d4est_poisson_flux_sipg_dirichlet_aux
      term3_quad,
      e_m->deg,
      ones_quad,
-     e_m->deg_quad,
+     deg_mortar_quad,
      VT_w_term3_lobatto
     );
   
@@ -284,10 +293,16 @@ d4est_poisson_flux_sipg_dirichlet
   int volume_nodes_m = d4est_lgl_get_nodes((P4EST_DIM), e_m->deg);
   for (int i = 0; i < volume_nodes_m; i++){
     for (int d = 0; d < (P4EST_DIM); d++){
+#ifndef NO_TERM2_BC
       e_m->Au_elem[i] += DT_lifted_VT_w_term2_lobatto[d][i];
+#endif
     }
+#ifndef NO_TERM3_BC
     e_m->Au_elem[i] += lifted_VT_w_term3_lobatto[i];
+#endif
+#ifndef NO_TERM1_BC
     e_m->Au_elem[i] += lifted_VT_w_term1_lobatto[i];
+#endif
   }
 
   P4EST_FREE(u_at_bndry_lobatto);
@@ -674,10 +689,16 @@ d4est_poisson_flux_sipg_interface
     if (e_m_is_ghost[f] == 0){     
       for (int i = 0; i < volume_nodes_m; i++){
         for (int d = 0; d < (P4EST_DIM); d++){
+#ifndef NO_TERM2
           e_m[f]->Au_elem[i] += DT_lifted_proj_VT_w_term2_mortar_lobatto[d][i + stride];
+#endif
         }
+#ifndef NO_TERM3
         e_m[f]->Au_elem[i] += lifted_proj_VT_w_term3_mortar_lobatto[i + stride];
+#endif
+#ifndef NO_TERM1
         e_m[f]->Au_elem[i] += lifted_proj_VT_w_term1_mortar_lobatto[i + stride];
+#endif
       }
     }
     stride += volume_nodes_m;

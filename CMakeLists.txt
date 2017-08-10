@@ -113,7 +113,7 @@ SET (
   Mesh/d4est_mesh.c
   Mesh/d4est_xyz_functions.c
   Mesh/d4est_mortars.c
-  Quadrature/d4est_quadrature_compactified.c
+  # Quadrature/d4est_quadrature_compactified.c
   Quadrature/d4est_quadrature.c
   Quadrature/d4est_quadrature_legendre.c
   Quadrature/d4est_quadrature_lobatto.c
@@ -269,64 +269,60 @@ set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppr
 # target_compile_definitions(test_d4est_linalg PRIVATE NDEBUG)
 
 
-add_executable(test_d4est_operators Tests/test_d4est_operators.c)
-target_link_libraries(test_d4est_operators d8est)
-add_test(test_d4est_operators_test test_d4est_operators)
-target_compile_definitions(test_d4est_operators PRIVATE NDEBUG DIM=3)
+# add_executable(test_d4est_operators Tests/test_d4est_operators.c)
+# target_link_libraries(test_d4est_operators d8est)
+# add_test(test_d4est_operators_test test_d4est_operators)
+# target_compile_definitions(test_d4est_operators PRIVATE NDEBUG DIM=3)
 
-add_executable(test_d4est_kron Tests/test_d4est_kron.c)
-target_link_libraries(test_d4est_kron d8est)
-add_test(test_d4est_kron_test test_d4est_kron)
-target_compile_definitions(test_d4est_kron PRIVATE NDEBUG DIM=3)
+# add_executable(test_d4est_kron Tests/test_d4est_kron.c)
+# target_link_libraries(test_d4est_kron d8est)
+# add_test(test_d4est_kron_test test_d4est_kron)
+# target_compile_definitions(test_d4est_kron PRIVATE NDEBUG DIM=3)
 
-add_executable(test_d4est_amr Tests/test_d4est_amr.c)
-target_link_libraries(test_d4est_amr d8est)
-add_test(test_d4est_amr_test test_d4est_amr)
-target_compile_definitions(test_d4est_amr PRIVATE DIM=3)
+# add_executable(test_d4est_amr Tests/test_d4est_amr.c)
+# target_link_libraries(test_d4est_amr d8est)
+# add_test(test_d4est_amr_test test_d4est_amr)
+# target_compile_definitions(test_d4est_amr PRIVATE DIM=3)
 
-add_executable(test_d4est_poisson_1_brick_3d Tests/test_d4est_poisson_1_brick.c)
-target_link_libraries(test_d4est_poisson_1_brick_3d d8est)
-add_test(test_d4est_poisson_1_brick_3d_test test_d4est_poisson_1_brick_3d)
-target_compile_definitions(test_d4est_poisson_1_brick_3d PRIVATE DIM=3)
+# add_executable(test_d4est_poisson_1_brick_3d Tests/test_d4est_poisson_1_brick.c)
+# target_link_libraries(test_d4est_poisson_1_brick_3d d8est)
+# add_test(test_d4est_poisson_1_brick_3d_test test_d4est_poisson_1_brick_3d)
+# target_compile_definitions(test_d4est_poisson_1_brick_3d PRIVATE DIM=3)
 
-add_executable(test_d4est_poisson_2_brick_2d Tests/test_d4est_poisson_2_brick.c)
-target_link_libraries(test_d4est_poisson_2_brick_2d d4est)
-add_test(test_d4est_poisson_2_brick_2d_test test_d4est_poisson_2_brick_2d)
-target_compile_definitions(test_d4est_poisson_2_brick_2d PRIVATE DIM=2)
+# add_executable(test_d4est_poisson_2_brick_2d Tests/test_d4est_poisson_2_brick.c)
+# target_link_libraries(test_d4est_poisson_2_brick_2d d4est)
+# add_test(test_d4est_poisson_2_brick_2d_test test_d4est_poisson_2_brick_2d)
+# target_compile_definitions(test_d4est_poisson_2_brick_2d PRIVATE DIM=2)
 
-add_executable(test_d4est_poisson_1_brick_2d Tests/test_d4est_poisson_1_brick.c)
-target_link_libraries(test_d4est_poisson_1_brick_2d d4est)
-add_test(test_d4est_poisson_1_brick_2d_test test_d4est_poisson_1_brick_2d)
-target_compile_definitions(test_d4est_poisson_1_brick_2d PRIVATE DIM=2)
+# add_executable(test_d4est_poisson_1_brick_2d Tests/test_d4est_poisson_1_brick.c)
+# target_link_libraries(test_d4est_poisson_1_brick_2d d4est)
+# add_test(test_d4est_poisson_1_brick_2d_test test_d4est_poisson_1_brick_2d)
+# target_compile_definitions(test_d4est_poisson_1_brick_2d PRIVATE DIM=2)
 
-add_executable(test_d4est_geometry Tests/test_d4est_geometry.c)
-target_link_libraries(test_d4est_geometry d8est)
-add_test(test_d4est_geometry_test test_d4est_geometry)
-target_compile_definitions(test_d4est_geometry PRIVATE NDEBUG DIM=3)
+# add_executable(test_d4est_geometry Tests/test_d4est_geometry.c)
+# target_link_libraries(test_d4est_geometry d8est)
+# add_test(test_d4est_geometry_test test_d4est_geometry)
+# target_compile_definitions(test_d4est_geometry PRIVATE NDEBUG DIM=3)
 
-add_executable(test_d4est_geometry_2d Tests/test_d4est_geometry.c)
-target_link_libraries(test_d4est_geometry_2d d4est)
-add_test(test_d4est_geometry_test_2d test_d4est_geometry_2d)
-target_compile_definitions(test_d4est_geometry_2d PRIVATE NDEBUG DIM=2)
+# add_executable(test_d4est_geometry_2d Tests/test_d4est_geometry.c)
+# target_link_libraries(test_d4est_geometry_2d d4est)
+# add_test(test_d4est_geometry_test_2d test_d4est_geometry_2d)
+# target_compile_definitions(test_d4est_geometry_2d PRIVATE NDEBUG DIM=2)
 
-add_executable(test_d4est_mass_projection Tests/test_d4est_mass_projection.c)
-target_link_libraries(test_d4est_mass_projection d8est)
-add_test(test_d4est_mass_projection_test test_d4est_mass_projection)
-target_compile_definitions(test_d4est_mass_projection PRIVATE DIM=3)
+# add_executable(test_d4est_mass_projection Tests/test_d4est_mass_projection.c)
+# target_link_libraries(test_d4est_mass_projection d8est)
+# add_test(test_d4est_mass_projection_test test_d4est_mass_projection)
+# target_compile_definitions(test_d4est_mass_projection PRIVATE DIM=3)
 
-add_d4est_test_3d(test_d4est_boyen_york_model_fcns test_d4est_boyen_york_model_fcns.c . test_d4est_boyen_york_model_fcns)
-
-add_d4est_test_3d(test_d4est_okendon_fcns test_d4est_okendon_fcns.c . test_d4est_okendon_fcns)
-
-add_d4est_test_2d(test_d4est_poisson_3_brick test_d4est_poisson_3_brick.c . test_d4est_poisson_3_brick)
-add_d4est_test_2d(test_d4est_poisson_4_brick test_d4est_poisson_4_brick.c . test_d4est_poisson_4_brick)
-add_d4est_test_3d(test_d4est_poisson_4_cubed_sphere test_d4est_poisson_4_cubed_sphere.c . test_d4est_poisson_4_cubed_sphere)
-
-add_d4est_test_3d(test_d4est_poisson_consistency_curved_3d test_d4est_poisson_consistency_curved.c . test_d4est_poisson_consistency_curved_3d)
-add_d4est_test_2d(test_d4est_poisson_consistency_curved_2d test_d4est_poisson_consistency_curved.c . test_d4est_poisson_consistency_curved_2d)
-
-add_d4est_test_3d(test_d4est_punctures_fcns test_d4est_puncture_fcns.c . test_d4est_puncture_fcns)
-add_d4est_test_3d(test_d4est_poisson_symmetry test_d4est_poisson_symmetry.c . test_d4est_poisson_symmetry)
+# add_d4est_test_3d(test_d4est_boyen_york_model_fcns test_d4est_boyen_york_model_fcns.c . test_d4est_boyen_york_model_fcns)
+# add_d4est_test_3d(test_d4est_okendon_fcns test_d4est_okendon_fcns.c . test_d4est_okendon_fcns)
+# add_d4est_test_2d(test_d4est_poisson_3_brick test_d4est_poisson_3_brick.c . test_d4est_poisson_3_brick)
+# add_d4est_test_2d(test_d4est_poisson_4_brick test_d4est_poisson_4_brick.c . test_d4est_poisson_4_brick)
+# add_d4est_test_3d(test_d4est_poisson_4_cubed_sphere test_d4est_poisson_4_cubed_sphere.c . test_d4est_poisson_4_cubed_sphere)
+# add_d4est_test_3d(test_d4est_poisson_consistency_curved_3d test_d4est_poisson_consistency_curved.c . test_d4est_poisson_consistency_curved_3d)
+# add_d4est_test_2d(test_d4est_poisson_consistency_curved_2d test_d4est_poisson_consistency_curved.c . test_d4est_poisson_consistency_curved_2d)
+add_d4est_test_3d(test_d4est_puncture_fcns test_d4est_puncture_fcns.c . test_d4est_puncture_fcns)
+# add_d4est_test_3d(test_d4est_poisson_symmetry test_d4est_poisson_symmetry.c . test_d4est_poisson_symmetry)
 add_d4est_test_3d(test_d4est_stiffness test_d4est_stiffness.c . test_d4est_stiffness)
 
 # add_executable(test_d4est_quadrature_compactified Tests/test_d4est_quadrature_compactified.c)
@@ -358,10 +354,10 @@ add_d4est_test_3d(test_d4est_stiffness test_d4est_stiffness.c . test_d4est_stiff
 # add_d4est_problem_3d(testcompile1 testcompile.c TestCompile)
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
-add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
+# add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
 add_d4est_problem_2d(stamm_krylov_driver stamm_krylov.c Stamm)
-add_d4est_problem_3d(okendon_uniform_driver okendon_uniform.c Okendon)
-add_d4est_problem_3d(boyen_york_model_driver boyen_york_model_uniform.c BoyenYorkModel)
+# add_d4est_problem_3d(okendon_uniform_driver okendon_uniform.c Okendon)
+# add_d4est_problem_3d(boyen_york_model_driver boyen_york_model_uniform.c BoyenYorkModel)
 # add_d4est_problem_2d(stammhpmultigrid_driver stammhpmultigrid.c StammHPMultigrid)
 # add_d4est_problem_2d(test_uniform_wedge_driver test_uniform_wedge.c UniformExamples/Wedge)
 # add_d4est_problem_2d(test_uniform_wedge_multigrid_driver test_uniform_wedge_multigrid.c UniformExamples/WedgeMultigrid)

@@ -87,9 +87,12 @@ d4est_solver_jacobian_tester
   double max_err = -1;
   int max_err_i = -1;
   int max_err_j = -1;
+
+  double max_err_avg = 0.;
+  double l2_err_avg = 0.;
   
   for (int i = 0; i < num_vecs_to_try; i++){
-    u[i] = 1.;
+    u[i] = (type == JAC_TEST_CENTRAL_DIFFERENCE) ? 2*eps : eps;
     d4est_elliptic_eqns_apply_lhs
       (
        p4est,
@@ -102,17 +105,13 @@ d4est_solver_jacobian_tester
        d4est_quad
       );
 
-    /* double sum1 = d4est_linalg_vec_sum(J_u,local_nodes); */
-    double divisor = 0.;
     if (type == JAC_TEST_CENTRAL_DIFFERENCE){
-      d4est_linalg_vec_axpyeqz(eps, u, u0, u0_p_u, local_nodes);
-      d4est_linalg_vec_axpyeqz(-eps, u, u0, u0_m_u, local_nodes);
-      divisor = 2.*eps;
+      d4est_linalg_vec_axpyeqz(1.0, u, u0, u0_p_u, local_nodes);
+      d4est_linalg_vec_axpyeqz(-1.0, u, u0, u0_m_u, local_nodes);
     }
     else if (type == JAC_TEST_FORWARD_DIFFERENCE){
-      d4est_linalg_vec_axpyeqz(eps, u, u0, u0_p_u, local_nodes);
+      d4est_linalg_vec_axpyeqz(1.0, u, u0, u0_p_u, local_nodes);
       d4est_linalg_vec_axpyeqz(0., u, u0, u0_m_u, local_nodes);
-      divisor = eps;
     }
     else{
       D4EST_ABORT("Not a supported jacobian tester type");
@@ -144,7 +143,7 @@ d4est_solver_jacobian_tester
 
     double* error_vec = P4EST_ALLOC(double, local_nodes);
     for (int j = 0; j < local_nodes; j++){
-      J_u_from_res[j] = (F_u0_p_u[j] - F_u0_m_u[j])/(divisor);
+      J_u_from_res[j] = (F_u0_p_u[j] - F_u0_m_u[j]);
       /* printf("J_u_from_res[j], Ju[j] =  %.25f, %.25f\n",J_u_from_res[j], J_u[j]); */
       double err = fabs(J_u_from_res[j] - J_u[j]);
       max_err_i = (err > max_err) ? i : max_err_i;
@@ -154,12 +153,16 @@ d4est_solver_jacobian_tester
 
     d4est_linalg_vec_axpyeqz(-1., J_u_from_res, J_u, error_vec, local_nodes);
     double l2_err = d4est_mesh_compute_l2_norm_sqr(p4est, d4est_ops, d4est_geom, d4est_quad, error_vec, local_nodes, DO_NOT_STORE_LOCALLY);
+    l2_err_avg += l2_err;
+    max_err_avg += max_err;
 
-    printf("[D4EST_SOLVER_JACOBIAN_TESTER]: l2_err, max_err = %.25f, %.25f\n", sqrt(l2_err), max_err);
-    
     P4EST_FREE(error_vec);
     u[i] = 0.;
   }
+
+  l2_err_avg /= num_vecs_to_try;
+  max_err_avg /= num_vecs_to_try;
+  printf("[D4EST_SOLVER_JACOBIAN_TESTER]: l2_err_avg, max_err_avg = %.25f, %.25f\n", sqrt(l2_err_avg), max_err_avg);
   
   P4EST_FREE(u);
   P4EST_FREE(u0);

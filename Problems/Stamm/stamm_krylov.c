@@ -123,8 +123,21 @@ problem_set_degrees_init
 {
   problem_initial_degree_input_t* input = user_ctx;
   elem_data->deg = input->deg;
-  elem_data->deg_quad = input->deg_quad;
+  elem_data->deg_vol_quad = input->deg_quad;
 }
+
+
+int
+problem_set_mortar_degree_init
+(
+ d4est_element_data_t* elem_data,
+ void* user_ctx
+)
+{
+  problem_initial_degree_input_t* input = user_ctx;
+  return input->deg_quad;
+}
+
 
 
 void
@@ -134,7 +147,7 @@ problem_set_degrees_after_amr
  void* user_ctx
 )
 {
-  elem_data->deg_quad = elem_data->deg;
+  elem_data->deg_vol_quad = elem_data->deg;
 }
 
 void
@@ -155,8 +168,8 @@ problem_init
   
   d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, stamm_boundary_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL, problem_set_mortar_degree_init, &input);
+  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, stamm_boundary_fcn, NULL, problem_set_mortar_degree_init, &input);
   
   d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = stamm_build_residual;
@@ -274,7 +287,9 @@ problem_init
        *ghost_data,
        d4est_ops,
        d4est_geom,
-       d4est_quad
+       d4est_quad,
+       problem_set_mortar_degree_init,
+       &input
       );
 
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);

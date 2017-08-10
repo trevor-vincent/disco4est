@@ -86,22 +86,22 @@ d4est_quadrature_new
     d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_LOBATTO;
     d4est_quadrature_lobatto_new(d4est_quad, d4est_geom, input_file);
   }
-  else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg4")){
-    d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4;
-    d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
-  }
-  else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg3")){
-    d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG3;
-    d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
-  }
-  else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg2")){
-    d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG2;
-    d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
-  }
-  else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg1")){
-    d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG1;
-    d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section);
-  }
+  /* else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg4")){ */
+    /* d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4; */
+    /* d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section); */
+  /* } */
+  /* else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg3")){ */
+    /* d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG3; */
+    /* d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section); */
+  /* } */
+  /* else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg2")){ */
+    /* d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG2; */
+    /* d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section); */
+  /* } */
+  /* else if (d4est_util_match(input.name,"legendre_compactified_c1pc2t_neg1")){ */
+    /* d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG1; */
+    /* d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, input_file, input_section); */
+  /* } */
   else if (d4est_util_match(input.name,"none")){
   }
   else {

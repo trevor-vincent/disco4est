@@ -482,7 +482,7 @@ d4est_amr_step
     d4est_amr->scheme->post_balance_callback(p4est, d4est_amr->scheme->amr_scheme_data);
   }
 
-  if(*field != NULL)
+  if(field != NULL)
     d4est_amr_interpolate_field
       (
        p4est,

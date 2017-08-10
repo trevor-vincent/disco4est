@@ -147,9 +147,9 @@ d4est_quadrature_compactified_compute_storage_for_volume
         storage->volume_strides_2d[k] = stride_2d_quad;
         storage->volume_strides_3d[k] = stride_3d_quad;
         storage->volume_deg_lobatto[k] = ed->deg;
-        storage->volume_deg_quad[k] = ed->deg_quad;
+        storage->volume_deg_quad[k] = ed->deg_vol_quad;
 
-        int nodes_quad_1d = ed->deg_quad + 1;
+        int nodes_quad_1d = ed->deg_vol_quad + 1;
         
         double* eye = P4EST_ALLOC_ZERO(double, nodes_quad_1d);
         for (int i = 0; i < nodes_quad_1d; i++) eye[i] = 1.;
@@ -163,7 +163,7 @@ d4est_quadrature_compactified_compute_storage_for_volume
            ed->tree,
            ed->q,
            ed->dq,
-           ed->deg_quad
+           ed->deg_vol_quad
           );
 
         double* rst_volume [(P4EST_DIM)];
@@ -176,7 +176,7 @@ d4est_quadrature_compactified_compute_storage_for_volume
           d4est_quadrature_compactified_compute_rst_volume
             (
              &storage->volume_abscissas[stride_1d_quad],
-             ed->deg_quad,
+             ed->deg_vol_quad,
              rst_volume[i],
              i
             );
@@ -189,10 +189,10 @@ d4est_quadrature_compactified_compute_storage_for_volume
            &storage->volume_interp[stride_2d_quad],
            &storage->volume_interp_trans[stride_2d_quad],
            ed->deg,
-           ed->deg_quad
+           ed->deg_vol_quad
           );
        
-        int nodes_1d = ed->deg_quad + 1;
+        int nodes_1d = ed->deg_vol_quad + 1;
         stride_1d_quad += nodes_1d;
         stride_2d_quad += nodes_1d*nodes_1d;
         stride_3d_quad += nodes_1d*nodes_1d*nodes_1d;

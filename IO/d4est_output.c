@@ -59,7 +59,7 @@ d4est_output_norms
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;        
         local_nodes += d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
-        local_quad_nodes += d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
+        local_quad_nodes += d4est_lgl_get_nodes((P4EST_DIM), ed->deg_vol_quad);
       }
     }
   

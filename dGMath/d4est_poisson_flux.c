@@ -25,8 +25,9 @@ d4est_poisson_flux_dirichlet
 {
   d4est_poisson_flux_data_t* d4est_poisson_flux_params = params;
   int face_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg);
-  int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
 
+  int deg_quad = d4est_poisson_flux_params->get_deg_mortar_quad(e_m, d4est_poisson_flux_params->get_deg_mortar_quad_ctx);
+  int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, deg_quad);
   double* u_m_on_f_m = P4EST_ALLOC(double, face_nodes_m_lobatto);
   double* u_m_on_f_m_quad = P4EST_ALLOC(double, face_nodes_m_quad);
   double* j_div_sj_quad = P4EST_ALLOC(double, face_nodes_m_quad);
@@ -74,7 +75,7 @@ d4est_poisson_flux_dirichlet
      mortar_side_id_m,
      1,
      1,
-     &e_m->deg_quad,
+     &deg_quad,
      f_m,
      drst_dxyz_quad,
      sj_on_f_m_quad,
@@ -106,7 +107,7 @@ d4est_poisson_flux_dirichlet
        dudr_m_on_f_m[d],
        e_m->deg,
        dudr_m_on_f_m_quad[d],
-       e_m->deg_quad
+       deg_quad
       );
   }
 
@@ -160,11 +161,12 @@ d4est_poisson_flux_dirichlet
      u_m_on_f_m,
      e_m->deg,
      u_m_on_f_m_quad,
-     e_m->deg_quad
+    deg_quad
     );
 
 
   d4est_poisson_flux_boundary_data_t boundary_data;
+  boundary_data.deg_mortar_quad = deg_quad;
   boundary_data.face_object = &face_object;
   boundary_data.face_nodes_m_lobatto = face_nodes_m_lobatto;
   boundary_data.face_nodes_m_quad = face_nodes_m_quad;
@@ -233,6 +235,8 @@ d4est_poisson_flux_interface
   int face_nodes_p_lobatto [(P4EST_HALF)];
   int face_nodes_p_quad [(P4EST_HALF)];
   int deg_m_lobatto [(P4EST_HALF)];
+  int deg_m_quad [(P4EST_HALF)];
+  int deg_p_quad [(P4EST_HALF)];
   int face_nodes_m_lobatto [(P4EST_HALF)];
   int face_nodes_m_quad [(P4EST_HALF)];
   int nodes_mortar_quad [(P4EST_HALF)];
@@ -251,12 +255,10 @@ d4est_poisson_flux_interface
   int total_side_nodes_m_quad = 0;
   for (int i = 0; i < faces_m; i++){
     deg_m_lobatto[i] = e_m[i]->deg;
-
-    int volume_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM), e_m[i]->deg);
-    max_volume_nodes_m_lobatto = (volume_nodes_m_lobatto > max_volume_nodes_m_lobatto) ? volume_nodes_m_lobatto : max_volume_nodes_m_lobatto;
+    deg_m_quad[i] = d4est_poisson_flux_params->get_deg_mortar_quad(e_m[i], d4est_poisson_flux_params->get_deg_mortar_quad_ctx);
     
     face_nodes_m_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
-    face_nodes_m_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg_quad);
+    face_nodes_m_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_m_quad[i]);
     
     total_side_nodes_m_lobatto += face_nodes_m_lobatto[i];
     total_side_nodes_m_quad += face_nodes_m_quad[i];
@@ -267,11 +269,11 @@ d4est_poisson_flux_interface
   int total_side_nodes_p_quad = 0;
   for (int i = 0; i < faces_p; i++){
     deg_p_lobatto[i] = e_p_oriented[i]->deg;
+    deg_p_quad[i] = d4est_poisson_flux_params->get_deg_mortar_quad(e_p_oriented[i], d4est_poisson_flux_params->get_deg_mortar_quad_ctx);
     deg_p_lobatto_porder[i] = e_p[i]->deg;
-    /* deg_p_quad[i] = e_p_oriented[i]->deg_quad; */
 
     face_nodes_p_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
-    face_nodes_p_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg_quad);
+    face_nodes_p_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_p_quad[i]);
     
     total_side_nodes_p_lobatto += face_nodes_p_lobatto[i];
     total_side_nodes_p_quad += face_nodes_p_quad[i];
@@ -283,8 +285,8 @@ d4est_poisson_flux_interface
   for (int i = 0; i < faces_m; i++)
     for (int j = 0; j < faces_p; j++){
       /* find max degree for each face pair of the two sides*/
-      deg_mortar_quad[i+j] = d4est_util_max_int( e_m[i]->deg_quad,
-                                           e_p_oriented[j]->deg_quad);
+      deg_mortar_quad[i+j] = d4est_util_max_int(deg_m_quad[i],
+                                          deg_p_quad[j]);
       deg_mortar_lobatto[i+j] = d4est_util_max_int( e_m[i]->deg,
                                               e_p_oriented[j]->deg );      
       nodes_mortar_quad[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
@@ -920,14 +922,19 @@ d4est_poisson_flux_new
  p4est_t* p4est,
  const char* input_file,
  d4est_xyz_fcn_t boundary_condition,
- void* user
+ void* flux_user,
+ int (*get_deg_mortar_quad)(d4est_element_data_t*, void*),
+ void* get_deg_mortar_quad_ctx
 )
 {
   d4est_poisson_flux_data_t* data = P4EST_ALLOC(d4est_poisson_flux_data_t, 1);
   d4est_poisson_flux_input(input_file, data);
+
+  data->get_deg_mortar_quad = get_deg_mortar_quad;
+  data->get_deg_mortar_quad_ctx = get_deg_mortar_quad_ctx;
   
   if (data->flux_type == FLUX_SIPG) {
-    d4est_poisson_flux_sipg_params_new(p4est, boundary_condition, "[SIPG_FLUX]", input_file, data, user);
+    d4est_poisson_flux_sipg_params_new(p4est, boundary_condition, "[SIPG_FLUX]", input_file, data, flux_user);
   }
   else {
     D4EST_ABORT("[D4EST_ERROR]: this flux is currently not supported");

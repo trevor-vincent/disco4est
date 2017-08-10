@@ -46,6 +46,7 @@ typedef struct {
   int face_nodes_m_lobatto;
   int face_nodes_m_quad;
 
+  int deg_mortar_quad;
   double* xyz_on_f_m_lobatto [(P4EST_DIM)];
   double* u_m_on_f_m_quad;  
   double* u_m_on_f_m;  
@@ -101,6 +102,9 @@ struct d4est_poisson_flux_data{
   d4est_poisson_flux_type_t flux_type; 
   d4est_poisson_flux_interface_fcn_t interface_fcn;
   d4est_poisson_flux_boundary_fcn_t boundary_fcn;
+  int (*get_deg_mortar_quad)(d4est_element_data_t*, void*);
+  void* get_deg_mortar_quad_ctx;
+
   d4est_xyz_fcn_t boundary_condition;
   void* user;
   void (*destroy)(d4est_poisson_flux_data_t*);
@@ -109,9 +113,8 @@ struct d4est_poisson_flux_data{
 
 /* This file was automatically generated.  Do not edit! */
 void d4est_poisson_flux_destroy(d4est_poisson_flux_data_t *data);
-d4est_poisson_flux_data_t *d4est_poisson_flux_new(p4est_t *p4est,const char *input_file,d4est_xyz_fcn_t boundary_condition,void *user);
+d4est_poisson_flux_data_t *d4est_poisson_flux_new(p4est_t *p4est,const char *input_file,d4est_xyz_fcn_t boundary_condition,void *flux_user,int(*get_deg_mortar_quad)(d4est_element_data_t *,void *),void *get_deg_mortar_quad_ctx);
 d4est_mortar_fcn_ptrs_t d4est_poisson_flux_fetch_fcns(d4est_poisson_flux_data_t *data);
 void d4est_poisson_flux_init_element_data(p4est_t *p4est,d4est_operators_t *d4est_ops,double *u,double *Au);
-
 
 #endif

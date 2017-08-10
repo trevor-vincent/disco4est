@@ -28,8 +28,8 @@ typedef struct {
   p4est_qcoord_t q [(P4EST_DIM)];
   p4est_qcoord_t dq;
   
-
-  double* xyz [(P4EST_DIM)]; /* points on lobatto grid */
+  /* points on lobatto grid */
+  double* xyz [(P4EST_DIM)]; 
 
   /* geometric factors for volume quadrature */
   double* J_quad; /* Jacobian */
@@ -47,8 +47,7 @@ typedef struct {
   double* Au_elem;  /* alias for Au */
   
   int deg; /* nodal degree */
-  int deg_quad; /* deg for face quadrature */
-  int deg_stiff; /* deg for stiffness matrix quadrature */
+  int deg_vol_quad; /* deg for volume quadrature */
   
 } d4est_element_data_t;
 
