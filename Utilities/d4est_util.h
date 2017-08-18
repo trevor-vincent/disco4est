@@ -213,7 +213,9 @@
       D4EST_ABORT("");                                                    \
     }                                                                   \
   } while(0)
-    
+
+
+typedef enum {D4EST_INT, D4EST_DOUBLE} d4est_builtin_t;
 
 
 /* This file was automatically generated.  Do not edit! */

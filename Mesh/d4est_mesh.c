@@ -64,7 +64,8 @@ void
 d4est_mesh_get_array_of_degrees
 (
  p4est_t* p4est,
- int* deg_array
+ void* deg_array,
+ d4est_builtin_t type
 )
 {
   int stride = 0;
@@ -78,7 +79,12 @@ d4est_mesh_get_array_of_degrees
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        deg_array[stride] = ed->deg;
+        if (type == D4EST_INT)
+          ((int*)deg_array)[stride] = ed->deg;
+        else if (type == D4EST_DOUBLE)
+          ((double*)deg_array)[stride] = (double)ed->deg;
+        else
+          D4EST_ABORT("Not a supported builtin-type");
         stride++;
       }
     }

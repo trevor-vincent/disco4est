@@ -51,86 +51,6 @@ static const int    d4est_vtk_wrap_rank = 0;
 
 /* #define D4EST_VTK_DEBUG */
 
-/** Write a cell scalar field to the VTU file.
- *
- * Writing a VTK file is split into a few routines.
- * This allows there to be an arbitrary number of fields.
- * When in doubt, please use \ref d4est_vtk_write_cell_data instead.
- *
- * \param [in,out] cont    A VTK context created by \ref d4est_vtk_context_new.
- * \param [in] scalar_name The name of the scalar field.
- * \param [in] values      The cell values that will be written.
- *
- * \return          On success, the context that has been passed in.
- *                  On failure, returns NULL and deallocates the context.
- */
-static
-d4est_vtk_context_t *d4est_vtk_write_cell_scalar (d4est_vtk_context_t *
-                                                  cont,
-                                                  const char *scalar_name,
-                                                  sc_array_t * values);
-
-/** Write a 3-vector cell field to the VTU file.
- *
- * Writing a VTK file is split into a few routines.
- * This allows there to be an arbitrary number of fields.
- * When in doubt, please use \ref d4est_vtk_write_cell_data instead.
- *
- * \param [in,out] cont    A VTK context created by \ref d4est_vtk_context_new.
- * \param [in] vector_name The name of the vector field.
- * \param [in] values      The cell values that will be written.
- *
- * \return          On success, the context that has been passed in.
- *                  On failure, returns NULL and deallocates the context.
- */
-static
-d4est_vtk_context_t *d4est_vtk_write_cell_vector (d4est_vtk_context_t *
-                                                  cont,
-                                                  const char *vector_name,
-                                                  sc_array_t * values);
-
-/** Write a point scalar field to the VTU file.
- *
- * Writing a VTK file is split into a few routines.
- * This allows there to be an arbitrary number of fields.
- * When in doubt, please use \ref d4est_vtk_write_point_data instead.
- *
- * \param [in,out] cont    A VTK context created by \ref d4est_vtk_context_new.
- * \param [in] scalar_name The name of the scalar field.
- * \param [in] values      The point values that will be written.
- *
- * \return          On success, the context that has been passed in.
- *                  On failure, returns NULL and deallocates the context.
- */
-static
-d4est_vtk_context_t *d4est_vtk_write_point_scalar (d4est_vtk_context_t *
-                                                   cont,
-                                                   const char *scalar_name,
-                                                   sc_array_t * values);
-
-/** Write a 3-vector point field to the VTU file.
- *
- * Writing a VTK file is split into a few routines.
- * This allows there to be an arbitrary number of fields.
- * When in doubt, please use \ref d4est_vtk_write_point_data instead.
- *
- * \param [in,out] cont    A VTK context created by \ref d4est_vtk_context_new.
- * \param [in] vector_name The name of the vector field.
- * \param [in] values      The point values that will be written.
- *
- * \return          On success, the context that has been passed in.
- *                  On failure, returns NULL and deallocates the context.
- */
-static
-d4est_vtk_context_t *d4est_vtk_write_point_vector (d4est_vtk_context_t *
-                                                   cont,
-                                                   const char *vector_name,
-                                                   sc_array_t * values);
-
-/* #ifdef P4_TO_P8 */
-/* #define d4est_vtk_context               p8est_vtk_context */
-/* #endif */
-
 #ifndef D4EST_VTK_DOUBLES
 #define D4EST_VTK_FLOAT_NAME "Float32"
 #define D4EST_VTK_FLOAT_TYPE float
@@ -2727,3 +2647,42 @@ d4est_vtk_save_geometry_and_dg_fields
 
     d4est_geometry_destroy(geom_vtk);
 }
+
+void
+d4est_vtk_save_geometry_and_cell_fields
+(
+ const char* save_as_filename,
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ const char* input_file,
+ const char* input_section,
+ d4est_vtk_user_fcn_t d4est_vtk_user_fcn,
+ void* vtk_user
+){
+    d4est_geometry_t* geom_vtk = d4est_geometry_new
+                                 (
+                                  p4est->mpirank,
+                                  input_file,
+                                  input_section,
+                                  "[D4EST_VTK_GEOMETRY]"
+                                 );
+
+    d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, save_as_filename);
+    d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
+    d4est_vtk_context_set_scale(vtk_ctx, .99);
+
+    int* deg_array_fake = P4EST_ALLOC(int, p4est->local_num_quadrants);
+    for (int i = 0; i < p4est->local_num_quadrants; i++) deg_array_fake[i] = 1;
+         
+    d4est_vtk_context_set_deg_array(vtk_ctx, deg_array_fake);
+    vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, d4est_ops);    
+    d4est_vtk_user_fcn(
+                       vtk_ctx,
+                       vtk_user
+                      );
+    
+    d4est_vtk_write_footer(vtk_ctx);
+    d4est_geometry_destroy(geom_vtk);
+    P4EST_FREE(deg_array_fake);
+}
+

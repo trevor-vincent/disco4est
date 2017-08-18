@@ -55,7 +55,7 @@ void d4est_mesh_print_number_of_elements_per_tree(p4est_t *p4est);
 int d4est_mesh_get_local_matrix_nodes(p4est_t *p4est);
 void d4est_mesh_compute_jacobian_on_lgl_grid(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double *jacobian_lgl);
 void d4est_mesh_get_array_of_estimators(p4est_t *p4est,double *eta2_array);
-void d4est_mesh_get_array_of_degrees(p4est_t *p4est,int *deg_array);
+void d4est_mesh_get_array_of_degrees(p4est_t *p4est,void *deg_array,d4est_builtin_t type);
 void d4est_mesh_geometry_storage_destroy(d4est_mesh_geometry_storage_t *geometric_factors);
 d4est_mesh_geometry_storage_t *d4est_mesh_geometry_storage_init();
 

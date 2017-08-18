@@ -21,6 +21,7 @@ d4est_amr_random_mark_elements
     }
     else if (x < 0.6){
       d4est_amr->refinement_log[elem_data->id] = elem_data->deg + 1;
+      printf("elem_data->deg+1 = %d\n", elem_data->deg + 1);
     }
     else {
       d4est_amr->refinement_log[elem_data->id] = elem_data->deg;
@@ -38,6 +39,7 @@ d4est_amr_random_mark_elements
     D4EST_ABORT("[D4EST_ERROR]: must be AMR_RANDOM_HP or AMR_RANDOM_H");
   }
 }
+
 
 d4est_amr_scheme_t*
 d4est_amr_random_init

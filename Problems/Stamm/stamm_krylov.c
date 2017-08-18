@@ -135,7 +135,7 @@ problem_set_mortar_degree_init
 )
 {
   problem_initial_degree_input_t* input = user_ctx;
-  return input->deg_quad;
+  return elem_data->deg;
 }
 
 
@@ -149,6 +149,35 @@ problem_set_degrees_after_amr
 {
   elem_data->deg_vol_quad = elem_data->deg;
 }
+
+static void
+init_vec_with_elem_data
+(
+ p4est_t* p4est,
+ double* u
+)
+{
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+
+        for (int i = 0; i < volume_nodes; i++){
+          double x = ed->xyz[0][i];
+          double y = ed->xyz[1][i];
+          u[ed->nodal_stride + i] = (x*x + y*y)*(ed->id + 1);
+        }
+      }
+    }
+}
+
 
 void
 problem_init
@@ -188,9 +217,9 @@ problem_init
 
   d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->user;
   d4est_estimator_bi_penalty_data_t penalty_data;
-  penalty_data.u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
-  penalty_data.u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
-  penalty_data.gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh;
+  penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
+  penalty_data.u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
+  penalty_data.gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
   penalty_data.sipg_flux_h = sipg_params->sipg_flux_h;
   
@@ -208,8 +237,10 @@ problem_init
      "[D4EST_AMR]:",
      &amr_marker
     );
-  
-  for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
+
+  d4est_amr_t* d4est_amr_uniform = d4est_amr_init_uniform_h(p4est);
+  d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, d4est_amr->max_degree, d4est_amr->num_of_amr_steps);
+
 
     local_nodes = d4est_mesh_update
                   (
@@ -223,11 +254,10 @@ problem_init
                    INITIALIZE_QUADRATURE_DATA,
                    INITIALIZE_GEOMETRY_DATA,
                    INITIALIZE_GEOMETRY_ALIASES,
-                   (level == 0) ? problem_set_degrees_init : problem_set_degrees_after_amr,
+                   problem_set_degrees_init,
                    (void*)&input
                   );
 
-    if (level == 0){
       prob_vecs.u = P4EST_REALLOC(prob_vecs.u, double, local_nodes);
       d4est_mesh_init_field
         (
@@ -238,7 +268,6 @@ problem_init
          d4est_geom,
          NULL
         );
-    }
     
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, local_nodes);
     prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, local_nodes);
@@ -259,23 +288,34 @@ problem_init
        &stamm_params
       );
 
-    stamm_build_residual
+
+  
+  for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
+
+    /* stamm_build_residual */
+    /*   ( */
+    /*    p4est, */
+    /*    *ghost, */
+    /*    *ghost_data, */
+    /*    &prob_vecs, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*    flux_data_for_apply_lhs */
+    /*   ); */
+
+    /* printf("local_nodes = %d\n", local_nodes); */
+    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.rhs, local_nodes); */
+    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, local_nodes); */
+    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, local_nodes); */
+
+    init_vec_with_elem_data
       (
        p4est,
-       *ghost,
-       *ghost_data,
-       &prob_vecs,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       flux_data_for_apply_lhs
+       prob_vecs.u
       );
 
-    printf("local_nodes = %d\n", local_nodes);
-    DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.rhs, local_nodes);
-    DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, local_nodes);
-    DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, local_nodes);
-
+    
     d4est_estimator_bi_compute
       (
        p4est,
@@ -295,29 +335,6 @@ problem_init
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
     d4est_estimator_stats_compute(p4est, stats);
     d4est_estimator_stats_print(stats);
-    
-    d4est_solver_cg_params_t params;
-    d4est_solver_cg_input
-      (
-       p4est,
-       input_file,
-       "d4est_solver_cg",
-       "[D4EST_SOLVER_CG]",
-       &params
-      );
-    
-    d4est_solver_cg_solve
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       ghost,
-       ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       &params
-      );
 
     d4est_output_vtk_with_analytic_error
       (
@@ -332,6 +349,18 @@ problem_init
        &stamm_params,
        level
       );
+
+    d4est_output_vtk_degree_mesh
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       input_file,
+       "uniform_stamm_degree_mesh",
+       1,
+       level
+      );
     
     d4est_output_norms_using_analytic_solution
       (
@@ -344,6 +373,8 @@ problem_init
        stamm_analytic_solution,
        &stamm_params);
 
+    P4EST_FREE(stats);
+    
     if (level != d4est_amr->num_of_amr_steps){
 
       if (p4est->mpirank == 0)
@@ -355,23 +386,105 @@ problem_init
          ghost,
          ghost_data,
          d4est_ops,
-         d4est_amr,
+         d4est_amr_random,//(level > 1) ? d4est_amr : d4est_amr_uniform,
          &prob_vecs.u,
          &stats
         );
       
     }
 
-    P4EST_FREE(stats);
+
+    local_nodes = d4est_mesh_update
+                  (
+                   p4est,
+                   *ghost,
+                   *ghost_data,
+                   d4est_ops,
+                   d4est_geom,
+                   d4est_quad,
+                   geometric_factors,
+                   INITIALIZE_QUADRATURE_DATA,
+                   INITIALIZE_GEOMETRY_DATA,
+                   INITIALIZE_GEOMETRY_ALIASES,
+                   problem_set_degrees_after_amr,
+                   (void*)&input
+                  );
+
+    
+    prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, local_nodes);
+    prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, local_nodes);
+    prob_vecs.local_nodes = local_nodes;
+    
+    
+    d4est_poisson_build_rhs_with_strong_bc
+      (
+       p4est,
+       *ghost,
+       *ghost_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       &prob_vecs,
+       flux_data_for_build_rhs,
+       prob_vecs.rhs,
+       stamm_rhs_fcn,
+       &stamm_params
+      );
+
+    init_vec_with_elem_data
+      (
+       p4est,
+       prob_vecs.u
+      );
+
+    
+    d4est_poisson_apply_aij(p4est, *ghost, *ghost_data, &prob_vecs, flux_data_for_apply_lhs, d4est_ops, d4est_geom, d4est_quad);
+
+    DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, local_nodes);
+    DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, local_nodes);
+    DEBUG_PRINT_ARR_DBL(prob_vecs.u, local_nodes);
+    
+    int checksum = p4est_checksum(p4est);
+    printf("p4est checksum = %d\n", checksum);
+    
+    /* d4est_solver_cg_params_t params; */
+    /* d4est_solver_cg_input */
+    /*   ( */
+    /*    p4est, */
+    /*    input_file, */
+    /*    "d4est_solver_cg", */
+    /*    "[D4EST_SOLVER_CG]", */
+    /*    &params */
+    /*   ); */
+
+
+    /* krylov_petsc_params_t krylov_petsc_params; */
+    /* krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params); */
+
+    /* krylov_petsc_solve */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    &prob_fcns, */
+    /*    ghost, */
+    /*    ghost_data,  */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*    &krylov_petsc_params, */
+    /*    NULL */
+    /*   ); */
+
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
+  d4est_amr_destroy(d4est_amr_uniform);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_poisson_flux_destroy(flux_data_for_apply_lhs);  
   d4est_poisson_flux_destroy(flux_data_for_build_rhs);  
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
-
+  /*  */
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
 }

@@ -141,13 +141,21 @@ d4est_amr_smooth_pred_mark_elements
      smooth_pred_data->marker.user
     );
 
+  int max_degree = d4est_amr->max_degree;
+
+  /* printf("\n **ELEMENT %d\n", elem_data->id); */
+  /* printf("local_predictor = %.15f\n", elem_data->local_predictor); */
+  /* printf("eta2 = %.15f\n", elem_data->local_estimator); */
+  /* printf("max_degree = %d\n", max_degree); */
   
   if (is_marked){
-    if (eta2 <= elem_data->local_predictor && elem_data->deg < smooth_pred_data->max_degree){
-      d4est_amr->refinement_log[elem_data->id] = d4est_util_min_int(elem_data->deg + 1, smooth_pred_data->max_degree);
+    if (eta2 <= elem_data->local_predictor && elem_data->deg < max_degree){
+      /* printf("ELEMENT %d P-REFINED\n", elem_data->id); */
+      d4est_amr->refinement_log[elem_data->id] = d4est_util_min_int(elem_data->deg + 1, max_degree);
       eta2_pred = gamma_hpn.gamma_p*eta2;
     }
     else {
+      /* printf("ELEMENT %d H-REFINED\n", elem_data->id); */
       d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;
       eta2_pred = gamma_hpn.gamma_h*eta2*d4est_util_dbl_pow_int(.5, 2*(elem_data->deg))*(ONE_OVER_CHILDREN);
     }

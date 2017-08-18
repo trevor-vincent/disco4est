@@ -380,6 +380,7 @@ d4est_estimator_bi_compute
         double h = d4est_estimator_get_diam(ed);
         *eta2 *= h*h/(deg*deg);
 
+        printf("id Nsqre0, h = %d, %f, %f\n", ed->id, *eta2, h);
 
         d4est_linalg_copy_1st_to_2nd
           (

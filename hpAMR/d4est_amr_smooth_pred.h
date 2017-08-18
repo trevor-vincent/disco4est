@@ -42,7 +42,6 @@ typedef struct {
 
 typedef struct {
   
-  int max_degree;
   smooth_pred_marker_t marker;
   double* predictors; 
   

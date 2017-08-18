@@ -142,13 +142,13 @@ d4est_output_norms_using_analytic_solution
 
 
 static void
-vtk_field_plotter
+vtk_dg_field_plotter
 (
  d4est_vtk_context_t* vtk_ctx,
  void* user
 )
 {
-  d4est_output_vtk_fields_t* vecs = user;
+  d4est_output_vtk_dg_fields_t* vecs = user;
   vtk_ctx = d4est_vtk_write_dg_point_dataf
             (
              vtk_ctx,
@@ -166,18 +166,18 @@ vtk_field_plotter
             );
 
 
-   vtk_ctx = d4est_vtk_write_dg_cell_dataf
-                (
-                 vtk_ctx,
-                 1,
-                 1,
-                 1,
-                 0,
-                 1,
-                 0,
-                 0,
-                 vtk_ctx
-                );
+   /* vtk_ctx = d4est_vtk_write_dg_cell_dataf */
+   /*              ( */
+   /*               vtk_ctx, */
+   /*               1, */
+   /*               1, */
+   /*               1, */
+   /*               0, */
+   /*               1, */
+   /*               0, */
+   /*               0, */
+   /*               vtk_ctx */
+   /*              ); */
 
    if (vecs->eta2 != NULL){
    vtk_ctx = d4est_vtk_write_dg_cell_dataf
@@ -232,7 +232,7 @@ d4est_output_vtk
     int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
 
     d4est_mesh_compute_jacobian_on_lgl_grid(p4est, d4est_ops, d4est_geom, jacobian_lgl);
-    d4est_mesh_get_array_of_degrees(p4est, deg_array);
+    d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
 
     
     double* eta2_array = NULL;
@@ -241,7 +241,7 @@ d4est_output_vtk
       d4est_mesh_get_array_of_estimators(p4est, eta2_array);
     }
     
-    d4est_output_vtk_fields_t vtk_nodal_vecs;
+    d4est_output_vtk_dg_fields_t vtk_nodal_vecs;
     vtk_nodal_vecs.u = u;
     vtk_nodal_vecs.u_compare = u_compare;
     vtk_nodal_vecs.error = error;
@@ -261,7 +261,7 @@ d4est_output_vtk
        deg_array,
        input_file,
        "d4est_vtk_geometry",
-       vtk_field_plotter,
+       vtk_dg_field_plotter,
        (void*)&vtk_nodal_vecs
       );
 
@@ -270,6 +270,98 @@ d4est_output_vtk
     P4EST_FREE(deg_array);
     P4EST_FREE(eta2_array);
 
+}
+
+
+static void
+vtk_cell_field_plotter
+(
+ d4est_vtk_context_t* vtk_ctx,
+ void* user
+)
+{
+  d4est_output_vtk_cell_fields_t* vecs = user;
+
+  if (vecs->eta2 != NULL){
+    vtk_ctx = d4est_vtk_write_dg_cell_dataf
+              (
+               vtk_ctx,
+               1,
+               1,
+               1,
+               0,
+               1,
+               2,
+               0,
+               "degree_dbl",
+               vecs->deg,
+               "eta",
+               vecs->eta2,
+               vtk_ctx
+              );
+
+  }
+  else {
+    vtk_ctx = d4est_vtk_write_dg_cell_dataf
+              (
+               vtk_ctx,
+               1,
+               1,
+               1,
+               0,
+               1,
+               0,
+               0,
+               vtk_ctx
+              );
+  }
+}
+
+
+void
+d4est_output_vtk_degree_mesh
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ const char* input_file,
+ const char* save_as_prefix,
+ int save_estimator,
+ int level
+){
+    double* deg_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
+    d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_DOUBLE);
+    
+    double* eta2_array = NULL;
+    if(save_estimator){
+      eta2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
+      d4est_mesh_get_array_of_estimators(p4est, eta2_array);
+    }
+    
+    d4est_output_vtk_cell_fields_t vtk_cell_vecs;
+    vtk_cell_vecs.eta2 = eta2_array;
+    vtk_cell_vecs.deg = deg_array;
+    
+    char* save_as;
+    asprintf(&save_as,"%s_level_%d", save_as_prefix, level);
+    
+    /* vtk output */
+    d4est_vtk_save_geometry_and_cell_fields
+      (
+       save_as,
+       p4est,
+       d4est_ops,
+       input_file,
+       "d4est_vtk_geometry",
+       vtk_cell_field_plotter,
+       (void*)&vtk_cell_vecs
+      );
+
+    free(save_as);
+    P4EST_FREE(deg_array);
+    P4EST_FREE(eta2_array); 
+  
 }
 
 
@@ -310,3 +402,6 @@ d4est_output_vtk_with_analytic_error
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
 }
+
+
+

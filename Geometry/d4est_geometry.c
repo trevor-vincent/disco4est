@@ -1571,6 +1571,7 @@ d4est_geometry_compute_diam
     }
   }
 
+  printf("DONALD TRUMP DIAM = %f\n", diam);
   return diam;
 }
 
