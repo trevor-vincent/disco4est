@@ -15,7 +15,7 @@ d4est_estimator_get_diam
  d4est_element_data_t* ed
 )
 {
-  return d4est_geometry_compute_diam(ed->xyz,ed->deg, NO_DIAM_APPROX); 
+  return d4est_geometry_compute_diam(ed->xyz,ed->deg, DIAM_APPROX_CUBE); 
 }
 
 static void
@@ -51,14 +51,17 @@ d4est_estimator_bi_dirichlet
   D4EST_COPY_DIM_VEC(boundary_data->xyz_on_f_m_lobatto, xyz_on_f_m_lobatto); 
   double* Je2_prefactor = P4EST_ALLOC(double, face_nodes_m_quad);
   double* Je2 = P4EST_ALLOC(double, face_nodes_m_quad);
-  double h, h_min;
+  double h_alt;
 
   if (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
-    h_min = d4est_util_min_dbl_array(j_div_sj_quad, face_nodes_m_quad);
+    h_alt = d4est_util_min_dbl_array(j_div_sj_quad, face_nodes_m_quad);
+  }
+  else if (penalty_data->sipg_flux_h == H_EQ_TREE_H){
+    h_alt = e_m->dq/(double)(P4EST_ROOT_LEN);
   }
   for (int i = 0; i < face_nodes_m_quad; i++){
-    int is_it_min = (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN);
-    double h = (is_it_min) ? h_min : j_div_sj_quad[i];
+    int is_it_alt = (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN || penalty_data->sipg_flux_h == H_EQ_TREE_H);
+    double h = (is_it_alt) ? h_alt : j_div_sj_quad[i];
     Je2_prefactor[i] = penalty_data->u_dirichlet_penalty_fcn
                        (
                         e_m->deg,
@@ -105,8 +108,11 @@ d4est_estimator_bi_dirichlet
     for(int i = 0; i < face_nodes_m_quad; i++){
       double u_m_on_f_m_min_u_at_bndry_quad = u_m_on_f_m_quad[i] - u_at_bndry_lobatto_to_quad[i];    
       Je2[i] = n_on_f_m_quad[dim][i]*Je2_prefactor[i]*(u_m_on_f_m_min_u_at_bndry_quad);
+    /* printf("Je2_prefactor = %f\n", Je2_prefactor[i]); */
     }
 
+
+    
     double Je2MJe2 = d4est_quadrature_innerproduct
                      (
                       d4est_ops,
@@ -122,7 +128,6 @@ d4est_estimator_bi_dirichlet
                      );
 
 
-    
     e_m->local_estimator += Je2MJe2;
 
   }
@@ -184,11 +189,17 @@ d4est_estimator_bi_interface
   
   d4est_estimator_bi_penalty_data_t* penalty_data = params;
   
-  double hm_min, hp_min;
+  double hm_alt, hp_alt;
   if (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
-    hp_min = d4est_util_min_dbl_array(j_div_sj_on_f_p_mortar_quad, total_nodes_mortar_quad);
-    hm_min = d4est_util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
+    hp_alt = d4est_util_min_dbl_array(j_div_sj_on_f_p_mortar_quad, total_nodes_mortar_quad);
+    hm_alt = d4est_util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
   }
+  else if (penalty_data->sipg_flux_h == H_EQ_TREE_H){
+    hp_alt = e_p[0]->dq/(double)P4EST_ROOT_LEN;
+    hm_alt = e_m[0]->dq/(double)P4EST_ROOT_LEN;
+  }
+
+  
   double* Je1_prefactor = P4EST_ALLOC(double, total_nodes_mortar_quad);
   double* Je1 = P4EST_ALLOC(double, total_nodes_mortar_quad);
   double* Je2_prefactor = P4EST_ALLOC(double, total_nodes_mortar_quad);
@@ -198,9 +209,9 @@ d4est_estimator_bi_interface
   for (int f = 0; f < faces_mortar; f++){
     for (int k = 0; k < nodes_mortar_quad[f]; k++){
       int ks = k + stride;
-      int is_it_min = (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN);
-      double hp = (is_it_min) ? hp_min : j_div_sj_on_f_p_mortar_quad[ks];
-      double hm = (is_it_min) ? hm_min : j_div_sj_on_f_m_mortar_quad[ks];
+      int is_it_alt = (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN || penalty_data->sipg_flux_h == H_EQ_TREE_H);
+      double hp = (is_it_alt) ? hp_alt : j_div_sj_on_f_p_mortar_quad[ks];
+      double hm = (is_it_alt) ? hm_alt : j_div_sj_on_f_m_mortar_quad[ks];
 
       Je1_prefactor[ks] = penalty_data->gradu_penalty_fcn
                           (
@@ -380,7 +391,7 @@ d4est_estimator_bi_compute
         double h = d4est_estimator_get_diam(ed);
         *eta2 *= h*h/(deg*deg);
 
-        printf("id Nsqre0, h = %d, %f, %f\n", ed->id, *eta2, h);
+        /* printf("id Nsqre0, h = %d, %f, %f\n", ed->id, *eta2, h); */
 
         d4est_linalg_copy_1st_to_2nd
           (

@@ -309,11 +309,11 @@ problem_init
     /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, local_nodes); */
     /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, local_nodes); */
 
-    init_vec_with_elem_data
-      (
-       p4est,
-       prob_vecs.u
-      );
+    /* init_vec_with_elem_data */
+    /*   ( */
+    /*    p4est, */
+    /*    prob_vecs.u */
+    /*   ); */
 
     
     d4est_estimator_bi_compute
@@ -386,7 +386,8 @@ problem_init
          ghost,
          ghost_data,
          d4est_ops,
-         d4est_amr_random,//(level > 1) ? d4est_amr : d4est_amr_uniform,
+         (level > 1) ? d4est_amr : d4est_amr_uniform,
+         /* d4est_amr_random,//(level > 1) ? d4est_amr : d4est_amr_uniform, */
          &prob_vecs.u,
          &stats
         );
@@ -431,18 +432,18 @@ problem_init
        &stamm_params
       );
 
-    init_vec_with_elem_data
-      (
-       p4est,
-       prob_vecs.u
-      );
+    /* init_vec_with_elem_data */
+    /*   ( */
+    /*    p4est, */
+    /*    prob_vecs.u */
+    /*   ); */
 
     
-    d4est_poisson_apply_aij(p4est, *ghost, *ghost_data, &prob_vecs, flux_data_for_apply_lhs, d4est_ops, d4est_geom, d4est_quad);
+    /* d4est_poisson_apply_aij(p4est, *ghost, *ghost_data, &prob_vecs, flux_data_for_apply_lhs, d4est_ops, d4est_geom, d4est_quad); */
 
-    DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, local_nodes);
-    DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, local_nodes);
-    DEBUG_PRINT_ARR_DBL(prob_vecs.u, local_nodes);
+    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, local_nodes); */
+    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, local_nodes); */
+    /* DEBUG_PRINT_ARR_DBL(prob_vecs.u, local_nodes); */
     
     int checksum = p4est_checksum(p4est);
     printf("p4est checksum = %d\n", checksum);
@@ -458,22 +459,22 @@ problem_init
     /*   ); */
 
 
-    /* krylov_petsc_params_t krylov_petsc_params; */
-    /* krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params); */
+    krylov_petsc_params_t krylov_petsc_params;
+    krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
 
-    /* krylov_petsc_solve */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs, */
-    /*    &prob_fcns, */
-    /*    ghost, */
-    /*    ghost_data,  */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    d4est_quad, */
-    /*    &krylov_petsc_params, */
-    /*    NULL */
-    /*   ); */
+    krylov_petsc_solve
+      (
+       p4est,
+       &prob_vecs,
+       &prob_fcns,
+       ghost,
+       ghost_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       &krylov_petsc_params,
+       NULL
+      );
 
   }
 

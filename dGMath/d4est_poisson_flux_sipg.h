@@ -15,7 +15,7 @@ typedef double
  double //penalty prefactor
 );
 
-typedef enum { H_EQ_J_DIV_SJ, H_EQ_J_DIV_SJ_MIN, H_EQ_BRICK_VOLUME_DIV_AREA, H_EQ_VOLUME_DIV_AREA, H_EQ_NOTSET } h_calc_method_t;
+typedef enum { H_EQ_J_DIV_SJ, H_EQ_J_DIV_SJ_MIN, H_EQ_TREE_H, H_EQ_VOLUME_DIV_AREA, H_EQ_NOTSET } h_calc_method_t;
 
 typedef struct {
   double sipg_penalty_prefactor;

@@ -34,7 +34,6 @@ d4est_amr_refine_callback
   else {
     if (refinement_log[elem_data->id] > d4est_amr->max_degree){
       refinement_log[elem_data->id] = d4est_amr->max_degree;
-      printf("FUCK TRUMPY ASS max_degree = %d\n",d4est_amr->max_degree);
     }
     elem_data->deg = refinement_log[elem_data->id];
     return 0;

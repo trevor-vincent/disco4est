@@ -1536,42 +1536,48 @@ d4est_geometry_compute_diam
   double diam = 0.;
     
   /* Use an approximate method to calculate diam: iterate through corners of element*/
-  if (option == DIAM_APPROX || option == DIAM_APPROX_CUBE){
-    for (int i = 0; i < (P4EST_CHILDREN); i++){
-      for (int j = 0; j < (P4EST_CHILDREN); j++){
-        int corner_node_i = d4est_reference_corner_to_node((P4EST_DIM), deg, i);
-        int corner_node_j = d4est_reference_corner_to_node((P4EST_DIM), deg, j);
-        double diam_temp = 0;
-        for (int d = 0; d < (P4EST_DIM); d++){
-          double diam_dx = xyz[d][corner_node_i] - xyz[d][corner_node_j];
-          diam_temp += diam_dx*diam_dx;
-        }
-        diam_temp = sqrt(diam_temp);      
-        diam = (diam_temp > diam) ? diam_temp : diam;
-      }
-    }
+  /* if (option == DIAM_APPROX || option == DIAM_APPROX_CUBE){ */
+  /*   for (int i = 0; i < (P4EST_CHILDREN); i++){ */
+  /*     for (int j = 0; j < (P4EST_CHILDREN); j++){ */
+  /*       int corner_node_i = d4est_reference_corner_to_node((P4EST_DIM), deg, i); */
+  /*       int corner_node_j = d4est_reference_corner_to_node((P4EST_DIM), deg, j); */
+  /*       double diam_temp = 0; */
+  /*       for (int d = 0; d < (P4EST_DIM); d++){ */
+  /*         double diam_dx = xyz[d][corner_node_i] - xyz[d][corner_node_j]; */
+  /*         diam_temp += diam_dx*diam_dx; */
+  /*       } */
+  /*       diam_temp = sqrt(diam_temp);       */
+  /*       diam = (diam_temp > diam) ? diam_temp : diam; */
+  /*     } */
+  /*   } */
 
-    if (option == DIAM_APPROX_CUBE){
-      diam *= 1./sqrt(3.);
-    }
+  /*   if (option == DIAM_APPROX_CUBE){ */
+  /*     diam *= 1./sqrt(3.); */
+  /*   } */
     
-  }
-  else {
+  /* } */
+  /* else { */
     int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg);
     for (int i = 0; i < volume_nodes; i++){
       for (int j = 0; j < volume_nodes; j++){
         double diam_temp = 0;
+        /* printf("\n"); */
         for (int d = 0; d < (P4EST_DIM); d++){
           double diam_dx = xyz[d][i] - xyz[d][j];
+          /* printf("diam_dx = %f\n", diam_dx); */
           diam_temp += diam_dx*diam_dx;
         }
+        /* printf("diam_temp = %f\n",diam_temp);        */
         diam_temp = sqrt(diam_temp);      
         diam = (diam_temp > diam) ? diam_temp : diam;
       }
     }
-  }
 
-  printf("DONALD TRUMP DIAM = %f\n", diam);
+
+    if (option == DIAM_APPROX_CUBE){
+      diam *= 1./sqrt((P4EST_DIM));
+    }
+
   return diam;
 }
 

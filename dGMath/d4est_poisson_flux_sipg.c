@@ -72,11 +72,11 @@ d4est_poisson_flux_sipg_dirichlet_aux
   if (ip_flux_params->sipg_flux_h ==H_EQ_J_DIV_SJ_MIN){
     h_alt = d4est_util_min_dbl_array(j_div_sj_quad, face_nodes_m_quad);
   }
-  else if (ip_flux_params->sipg_flux_h == H_EQ_BRICK_VOLUME_DIV_AREA){
-    h_alt = d4est_geometry_compute_diam(e_m->xyz, e_m->deg, DIAM_APPROX_CUBE);
+  else if (ip_flux_params->sipg_flux_h == H_EQ_TREE_H){
+    h_alt = e_m->dq/(double)(P4EST_ROOT_LEN);
   }
   for (int i = 0; i < face_nodes_m_quad; i++){
-    int is_it_alt = (ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN || ip_flux_params->sipg_flux_h == H_EQ_BRICK_VOLUME_DIV_AREA);
+    int is_it_alt = (ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN || ip_flux_params->sipg_flux_h == H_EQ_TREE_H);
     double h = (is_it_alt) ? h_alt : j_div_sj_quad[i];
     sigma[i] = sipg_kronbichler_flux_penalty_calculate_fcn
                (
@@ -129,14 +129,21 @@ d4est_poisson_flux_sipg_dirichlet_aux
     for (int l = 0; l < (P4EST_DIM); l++){
       term2_quad[l][i] = 0.;
       for (int d = 0; d < (P4EST_DIM); d++){
+        /* term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i] */
+                            /* *n_sj_on_f_m_quad[d][i] */
+                            /* *2.*u_m_on_f_m_min_u_at_bndry_quad; */
         term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i]
                             *n_sj_on_f_m_quad[d][i]
                             *2.*u_m_on_f_m_min_u_at_bndry_quad;
       }
     }
+    /* term3_quad[i] = sj_on_f_m_quad[i] */
+                    /* *sigma[i] */
+                    /* *2.*u_m_on_f_m_min_u_at_bndry_quad; */
     term3_quad[i] = sj_on_f_m_quad[i]
                     *sigma[i]
-                    *2.*u_m_on_f_m_min_u_at_bndry_quad;
+                    *u_m_on_f_m_min_u_at_bndry_quad;
+    
   }
   
   d4est_quadrature_apply_galerkin_integral
@@ -397,9 +404,9 @@ d4est_poisson_flux_sipg_interface_aux
     hp_alt = d4est_util_min_dbl_array(j_div_sj_on_f_p_mortar_quad, total_nodes_mortar_quad);
     hm_alt = d4est_util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
   }
-  else if (ip_flux_params->sipg_flux_h == H_EQ_BRICK_VOLUME_DIV_AREA){
-    hp_alt = d4est_geometry_compute_diam(e_p[0]->xyz, e_p[0]->deg, DIAM_APPROX_CUBE);
-    hm_alt = d4est_geometry_compute_diam(e_m[0]->xyz, e_m[0]->deg, DIAM_APPROX_CUBE);
+  else if (ip_flux_params->sipg_flux_h == H_EQ_TREE_H){
+    hp_alt = e_p[0]->dq/(double)P4EST_ROOT_LEN;
+    hm_alt = e_m[0]->dq/(double)P4EST_ROOT_LEN;
   }
   
   int stride = 0;
@@ -407,7 +414,7 @@ d4est_poisson_flux_sipg_interface_aux
   for (int f = 0; f < faces_mortar; f++){
     for (int k = 0; k < nodes_mortar_quad[f]; k++){
       int ks = k + stride;
-      int is_it_alt = (ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN || ip_flux_params->sipg_flux_h == H_EQ_BRICK_VOLUME_DIV_AREA);
+      int is_it_alt = (ip_flux_params->sipg_flux_h == H_EQ_J_DIV_SJ_MIN || ip_flux_params->sipg_flux_h == H_EQ_TREE_H);
       double hp = (is_it_alt) ? hp_alt : j_div_sj_on_f_p_mortar_quad[ks];
       double hm = (is_it_alt) ? hm_alt : j_div_sj_on_f_m_mortar_quad[ks];
         sigma[ks] = sipg_kronbichler_flux_penalty_calculate_fcn
@@ -862,9 +869,12 @@ int d4est_poisson_flux_sipg_params_input_handler
     else if(d4est_util_match(value, "H_EQ_J_DIV_SJ_MIN")){
       pconfig->sipg_flux_h = H_EQ_J_DIV_SJ_MIN;
     }
+    else if(d4est_util_match(value, "H_EQ_TREE_H")){
+      pconfig->sipg_flux_h = H_EQ_TREE_H;
+    }
     else {
       printf("flux_h_calc = %s\n", value);
-      D4EST_ABORT("flux_h_calc is not set to H_EQ_J_DIV_SJ or H_EQ_VOLUME_DIV_AREA\n");
+      D4EST_ABORT("flux_h_calc is not set to a supported value\n");
     }
   }
   else {

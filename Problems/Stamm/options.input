@@ -12,9 +12,9 @@ c2z = .5
 
 [flux]
 name = sipg
-sipg_penalty_prefactor = 2.5
+sipg_penalty_prefactor = 5.0
 sipg_flux_h = H_EQ_J_DIV_SJ
-sipg_penalty_fcn = meanp_sqr_over_meanh
+sipg_penalty_fcn = maxp_sqr_over_minh
 
 [amr]
 scheme = smooth_pred
