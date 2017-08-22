@@ -15,7 +15,9 @@ typedef struct {
 
 } gamma_params_t;
 
-typedef struct {
+typedef d4est_amr_smooth_pred_marker d4est_amr_smooth_pred_marker_t;
+
+struct d4est_amr_smooth_pred_marker {
 
   int (*mark_element_fcn)
   (
@@ -38,17 +40,29 @@ typedef struct {
   const char* name;
   void* user;
   
-} smooth_pred_marker_t;
+};
 
 typedef struct {
   
-  smooth_pred_marker_t marker;
+  double gamma_h;
+  double gamma_p;
+  double gamma_n;
+  double sigma;
+  int percentile;
+  int inflation_size;
+  
+} d4est_amr_smooth_pred_params_t;
+
+typedef struct {
+  
+  d4est_amr_smooth_pred_marker_t marker;
   double* predictors; 
   
 } d4est_amr_smooth_pred_data_t;
 
 /* This file was automatically generated.  Do not edit! */
 d4est_amr_scheme_t *d4est_amr_smooth_pred_init(p4est_t *p4est,const char *input_file,d4est_amr_scheme_t *scheme,void *marker);
+d4est_amr_smooth_pred_params_t d4est_amr_smooth_pred_params_input(const char *input_file);
 void d4est_amr_smooth_pred_destroy(d4est_amr_scheme_t *scheme);
 void d4est_amr_smooth_pred_print(p4est_t *p4est);
 

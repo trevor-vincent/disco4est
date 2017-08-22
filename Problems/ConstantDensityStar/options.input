@@ -1,0 +1,71 @@
+;R = 1/(2*domain_size);
+
+[initial_grid]
+min_quadrants = -1
+min_level = 0
+fill_uniform = 1
+deg = 2
+deg_quad = 5
+
+[amr]
+scheme = smooth_pred
+num_of_amr_steps = 15
+max_degree = 7 
+gamma_h = .25
+gamma_p = 0.1
+gamma_n = 1.
+amr_inflation_size = 128
+percentile = 5
+
+[flux]
+ip_flux_penalty = 2.0
+
+[problem]
+rho0_div_rhoc = .001
+R = .0625
+cx = .5
+cy = .5
+cz = .5
+
+[geometry]
+name = brick
+X0 = 0.0
+X1 = 1.0
+Y0 = 0.0
+Y1 = 1.0
+Z0 = 0.0
+Z1 = 1.0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_vtk_geometry]
+name = brick
+X0 = 0.0
+X1 = 1.0
+Y0 = 0.0
+Y1 = 1.0
+Z0 = 0.0
+Z1 = 1.0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_solver_newton]
+imin = 10
+imax = 1
+monitor = 1
+rtol = 1e-20
+atol = 1e-20
+
+[krylov_petsc]
+ksp_type = cg
+ksp_atol = 1e-15
+ksp_rtol = 1e-50
+ksp_max_it = 10000
+ksp_view = 1
+ksp_monitor = 1
+ksp_converged_reason = 1
+ksp_initial_guess_nonzero = 0
+ksp_monitor_singular_value = 1
+
+[quadrature]
+name = legendre

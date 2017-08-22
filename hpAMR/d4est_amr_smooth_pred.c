@@ -128,7 +128,7 @@ d4est_amr_smooth_pred_mark_elements
      eta2,
      stats,
      elem_data,
-     smooth_pred_data->marker.user
+     smooth_pred_data->marker
     );
   
   int is_marked = 
@@ -138,7 +138,7 @@ d4est_amr_smooth_pred_mark_elements
      eta2,
      stats,
      elem_data,
-     smooth_pred_data->marker.user
+     smooth_pred_data->marker
     );
 
   int max_degree = d4est_amr->max_degree;
@@ -236,6 +236,73 @@ d4est_amr_smooth_pred_destroy(d4est_amr_scheme_t* scheme){
   P4EST_FREE(smooth_pred_data->predictors);
   P4EST_FREE(smooth_pred_data);
   P4EST_FREE(scheme);
+}
+
+
+static
+int d4est_amr_smooth_pred_params_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_amr_smooth_pred_params_t* pconfig = (d4est_amr_smooth_pred_params_t*)user;
+   if (d4est_util_match_couple(section,"amr",name,"sigma")) {
+    D4EST_ASSERT(pconfig->sigma == -1);
+    pconfig->sigma = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"amr",name,"gamma_h")) {
+    D4EST_ASSERT(pconfig->gamma_h == -1);
+    pconfig->gamma_h = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"amr",name,"gamma_p")) {
+    D4EST_ASSERT(pconfig->gamma_p == -1);
+    pconfig->gamma_p = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"amr",name,"gamma_n")) {
+    D4EST_ASSERT(pconfig->gamma_n == -1);
+    pconfig->gamma_n = atof(value);
+  }   
+  else if (d4est_util_match_couple(section,"amr",name,"percentile")) {
+    D4EST_ASSERT(pconfig->percentile == -1);
+    pconfig->percentile = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"amr",name,"inflation_size")) {
+    D4EST_ASSERT(pconfig->inflation_size == -1);
+    pconfig->inflation_size = atoi(value);
+  }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+d4est_amr_smooth_pred_params_t
+d4est_amr_smooth_pred_params_input
+(
+ const char* input_file
+)
+{
+  d4est_amr_smooth_pred_params_t input;
+  input.gamma_h = -1;
+  input.gamma_n = -1;
+  input.gamma_p = -1;
+  input.sigma = -1;
+  input.percentile = -1;
+  input.inflation_size = -1;
+  
+  if (ini_parse(input_file, d4est_amr_smooth_pred_params_handler, &input) < 0) {
+    D4EST_ABORT("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT("amr", input.gamma_h, -1);
+  D4EST_CHECK_INPUT("amr", input.gamma_p, -1);
+  D4EST_CHECK_INPUT("amr", input.gamma_n, -1);
+  D4EST_ASSERT((input.sigma != -1) || (input.percentile != -1));
+  
+  return input;
 }
 
 

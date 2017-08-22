@@ -1,0 +1,51 @@
+[amr]
+scheme = random_h
+max_degree = 10
+num_of_amr_steps = 3
+
+[flux]
+name = sipg
+sipg_penalty_prefactor = 2.0
+sipg_flux_h = H_EQ_J_DIV_SJ
+sipg_penalty_fcn = meanp_sqr_over_meanh
+
+[problem]
+cx = .5
+cy = .5
+cz = .5
+R = 0.0625
+rho0_div_rhoc = .001
+
+[geometry]
+name = brick
+X0 = 0.
+X1 = 1.
+Y0 = 0.
+Y1 = 1.
+Z0 = 0.
+Z1 = 1.
+; name = cubed_sphere_outer_shell_block
+; R0 = 10
+; R1 = 100
+; R2 = 10000
+; compactify_outer_shell = 1
+; compactify_inner_shell = 0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_vtk_geometry]
+name = brick
+X0 = 0.
+X1 = 1.
+Y0 = 0.
+Y1 = 1.
+Z0 = 0.
+Z1 = 1.
+; name = cubed_sphere_outer_shell_block
+; R0 = 10
+; R1 = 100
+; R2 = 10000
+; compactify_outer_shell = 1
+; compactify_inner_shell = 0
+DX_compute_method = analytic
+JAC_compute_method = numerical
