@@ -5,6 +5,7 @@
 #include <d4est_linalg.h>
 #include <d4est_util.h>
 #include <d4est_amr.h>
+#include <ini.h>
 #include <d4est_amr_smooth_pred.h>
 
 #if (P4EST_DIM)==3
@@ -128,7 +129,7 @@ d4est_amr_smooth_pred_mark_elements
      eta2,
      stats,
      elem_data,
-     smooth_pred_data->marker
+     smooth_pred_data->marker.user
     );
   
   int is_marked = 
@@ -138,7 +139,7 @@ d4est_amr_smooth_pred_mark_elements
      eta2,
      stats,
      elem_data,
-     smooth_pred_data->marker
+     smooth_pred_data->marker.user
     );
 
   int max_degree = d4est_amr->max_degree;
@@ -319,7 +320,7 @@ d4est_amr_smooth_pred_init
 
   d4est_amr_smooth_pred_data_t* smooth_pred_data;
   smooth_pred_data = P4EST_ALLOC(d4est_amr_smooth_pred_data_t, 1);
-  smooth_pred_data->marker = *((smooth_pred_marker_t*)marker);
+  smooth_pred_data->marker = *((d4est_amr_smooth_pred_marker_t*)marker);
   smooth_pred_data->predictors = NULL;
 
   scheme->pre_refine_callback

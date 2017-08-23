@@ -1,9 +1,10 @@
 #include <pXest.h>
-#include <pXest_input.h>
+#include <d4est_initial_grid_input.h>
 #include <problem.h>
 #include <d4est_geometry.h>
 #include <d4est_element_data.h>
 #include <petscsnes.h>
+
 
 int main(int argc, char *argv[])
 {  
@@ -44,19 +45,20 @@ int main(int argc, char *argv[])
                                                     "geometry",
                                                     "[D4EST_GEOMETRY]");
 
-  pXest_input_t pXest_input = pXest_input_parse((argc == 2) ? argv[1] : "options.input");
+  d4est_initial_grid_t initial_grid_input = d4est_initial_grid_parse((argc == 2) ? argv[1] : "options.input");
+  
   p4est_t* p4est = p4est_new_ext
     (
      mpicomm,
      d4est_geom->p4est_conn,
-     pXest_input.min_quadrants,
-     pXest_input.min_level,
-     pXest_input.fill_uniform,
+     initial_grid_input.min_quadrants,
+     initial_grid_input.min_level,
+     initial_grid_input.fill_uniform,
      sizeof(d4est_element_data_t),
      NULL,
      NULL
     );
-
+  
 
   p4est_partition(p4est, 0, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
@@ -66,15 +68,14 @@ int main(int argc, char *argv[])
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
                                                    ghost->ghosts.elem_count);
    
-  
-  
+
   if (proc_rank == 0){
     printf("[D4EST_INFO]: mpisize = %d\n", proc_size);
-    printf("[D4EST_INFO]: min_quadrants = %d\n", pXest_input.min_quadrants);
-    printf("[D4EST_INFO]: min_level = %d\n", pXest_input.min_level);
-    printf("[D4EST_INFO]: fill_uniform = %d\n", pXest_input.fill_uniform);
+    printf("[D4EST_INFO]: min_quadrants = %d\n", initial_grid_input.min_quadrants);
+    printf("[D4EST_INFO]: min_level = %d\n", initial_grid_input.min_level);
+    printf("[D4EST_INFO]: fill_uniform = %d\n", initial_grid_input.fill_uniform);
   }
-  if(pXest_input.print_elements_per_proc){
+  if(initial_grid_input.print_elements_per_proc){
     sc_MPI_Barrier(mpicomm);
     printf("[D4EST_INFO]: elements on proc %d = %d\n", proc_rank, p4est->local_num_quadrants);
     sc_MPI_Barrier(mpicomm);
@@ -82,6 +83,24 @@ int main(int argc, char *argv[])
   
   /* start just-in-time dg-math */
   d4est_operators_t* d4est_ops = d4est_ops_init(20);  
+  d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
+  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature", "[QUADRATURE]");
+  
+  int local_nodes = d4est_mesh_update
+                    (
+                     p4est,
+                     ghost,
+                     ghost_data,
+                     d4est_ops,
+                     d4est_geom,
+                     d4est_quad,
+                     geometric_factors,
+                     INITIALIZE_QUADRATURE_DATA,
+                     INITIALIZE_GEOMETRY_DATA,
+                     INITIALIZE_GEOMETRY_ALIASES,
+                     d4est_initial_grid_degree_init,
+                     (void*)&initial_grid_input
+                    );
   
   /* Solve Problem */
   problem_init
@@ -89,13 +108,18 @@ int main(int argc, char *argv[])
      p4est,
      &ghost,
      &ghost_data,
-     d4est_geom,
      d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     geometric_factors,
+     local_nodes,
      (argc == 2) ? argv[1] : "options.input",
      mpicomm
     );
 
-    
+  d4est_mesh_geometry_storage_destroy(geometric_factors);
+  d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
+  
   if (ghost) {
     p4est_ghost_destroy (ghost);
     P4EST_FREE (ghost_data);

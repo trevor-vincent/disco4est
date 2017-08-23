@@ -202,10 +202,10 @@ int main(int argc, char *argv[])
   constant_density_star_params_t constant_density_star_params = constant_density_star_input(input_file);
 
   d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL, get_deg_mortar_quad, &deg_data);
-  d4est_poisson_flux_data_t* flux_data_for_residual = d4est_poisson_flux_new(p4est, input_file, poly_vec_fcn, NULL, get_deg_mortar_quad, &deg_data);
+  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file, poly_vec_fcn, NULL, get_deg_mortar_quad, &deg_data);
   
-  constant_density_star_params.flux_data_for_jac = flux_data_for_jac;
-  constant_density_star_params.flux_data_for_residual = flux_data_for_residual;
+  ctx.flux_data_for_jac = flux_data_for_jac;
+  ctx.flux_data_for_res = flux_data_for_res;
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,

@@ -15,9 +15,7 @@ typedef struct {
 
 } gamma_params_t;
 
-typedef d4est_amr_smooth_pred_marker d4est_amr_smooth_pred_marker_t;
-
-struct d4est_amr_smooth_pred_marker {
+typedef struct {
 
   int (*mark_element_fcn)
   (
@@ -40,7 +38,7 @@ struct d4est_amr_smooth_pred_marker {
   const char* name;
   void* user;
   
-};
+} d4est_amr_smooth_pred_marker_t;
 
 typedef struct {
   

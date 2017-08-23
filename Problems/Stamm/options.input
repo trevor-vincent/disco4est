@@ -12,13 +12,13 @@ c2z = .5
 
 [flux]
 name = sipg
-sipg_penalty_prefactor = 5.0
-sipg_flux_h = H_EQ_J_DIV_SJ
+sipg_penalty_prefactor = 10.0
+sipg_flux_h = H_EQ_TREE_H
 sipg_penalty_fcn = maxp_sqr_over_minh
 
 [amr]
 scheme = smooth_pred
-num_of_amr_steps = 3
+num_of_amr_steps = 15
 max_degree = 7 
 gamma_h = 10.0
 gamma_p = 0.1
@@ -57,12 +57,12 @@ atol = 1e-20
 name = legendre
 
 [krylov_petsc]
-ksp_type = gmres
+ksp_type = cg
 ksp_atol = 1e-15
 ksp_rtol = 1e-20
 ksp_max_it = 100000
 ksp_view = 0
-ksp_monitor = 0
+ksp_monitor = 1
 ksp_converged_reason = 1
 ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 0

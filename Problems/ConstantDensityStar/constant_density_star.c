@@ -16,66 +16,15 @@
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
+#include <d4est_estimator_stats.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
-#include <newton_petsc.h>
+#include <d4est_solver_newton.h>
 #include <krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
 #include "constant_density_star_fcns.h"
 
-typedef struct {
-
-  int deg;
-  int deg_quad;
-  
-} problem_initial_degree_input_t;
-
-static
-int problem_initial_degree_input_handler
-(
- void* user,
- const char* section,
- const char* name,
- const char* value
-)
-{
-  problem_initial_degree_input_t* pconfig = (problem_initial_degree_input_t*)user;
-  if (d4est_util_match_couple(section,"initial_grid",name,"deg")) {
-    D4EST_ASSERT(pconfig->deg == -1);
-    pconfig->deg = atoi(value);
-  }
-  else if (d4est_util_match_couple(section,"initial_grid",name,"deg_quad")) {
-    D4EST_ASSERT(pconfig->deg_quad == -1);
-    pconfig->deg_quad = atoi(value);
-  }
-  else {
-    return 0;
-  }
-  return 1;
-}
-
-static
-problem_initial_degree_input_t
-problem_initial_degree_input
-(
- const char* input_file
-)
-{
-  problem_initial_degree_input_t input;
-  input.deg = -1;
-  input.deg_quad = -1;
-  
-  if (ini_parse(input_file, problem_initial_degree_input_handler, &input) < 0) {
-    D4EST_ABORT("Can't load input file");
-  }
-
-  D4EST_CHECK_INPUT("initial_grid", input.deg, -1);
-  D4EST_CHECK_INPUT("initial_grid", input.deg_quad, -1);
-  printf("[PROBLEM]: deg = %d\n",input.deg);
-  printf("[PROBLEM]: deg_quad = %d\n",input.deg_quad);
-  return input;
-}
 
 static
 int
@@ -88,15 +37,17 @@ amr_mark_element
  void* user
 )
 {
-  constant_density_star_params_t* params = user;
-  if (p4est->local_num_quadrants*p4est->mpisize < input->amr_inflation_size){
+  problem_ctx_t* ctx = user;
+  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
+  
+  if (p4est->local_num_quadrants*p4est->mpisize < params->inflation_size){
     double eta2_percentile
-      = estimator_stats_get_percentile(*stats,25);
+      = d4est_estimator_stats_get_percentile(*stats,25);
     return (eta2 >= eta2_percentile);
   }
   else{
     double eta2_percentile
-      = estimator_stats_get_percentile(*stats,params->percentile);
+      = d4est_estimator_stats_get_percentile(*stats,params->percentile);
     return (eta2 >= eta2_percentile);
   }
 }
@@ -112,7 +63,8 @@ amr_set_element_gamma
  void* user
 )
 {
-  constant_density_star_params_t* params = user;
+  problem_ctx_t* ctx = user;
+  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
   
   gamma_params_t gamma_hpn;
   gamma_hpn.gamma_h = params->gamma_h;
@@ -122,27 +74,14 @@ amr_set_element_gamma
   return gamma_hpn;
 }
 
-void
-problem_set_degrees_init
-(
- d4est_element_data_t* elem_data,
- void* user_ctx
-)
-{
-  problem_initial_degree_input_t* input = user_ctx;
-  elem_data->deg = input->deg;
-  elem_data->deg_vol_quad = input->deg_quad;
-}
-
 
 int
-problem_set_mortar_degree_init
+problem_set_mortar_degree
 (
  d4est_element_data_t* elem_data,
  void* user_ctx
 )
 {
-  problem_initial_degree_input_t* input = user_ctx;
   return elem_data->deg;
 }
 
@@ -155,8 +94,9 @@ problem_set_degrees_after_amr
  void* user_ctx
 )
 {
-  elem_data->deg_vol_quad = elem_data->deg + 3;
+  elem_data->deg_vol_quad = elem_data->deg;
 }
+
 
 
 void
@@ -165,37 +105,44 @@ problem_init
  p4est_t* p4est,
  p4est_ghost_t** ghost,
  d4est_element_data_t** ghost_data,
- d4est_geometry_t* d4est_geom,
  d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* geometric_factors,
+ int initial_nodes,
  const char* input_file,
  sc_MPI_Comm mpicomm
 )
 {
-  D4EST_ASSERT(d4est_geom->geom_type == GEOM_BRICK);
-  problem_initial_degree_input_t input = problem_initial_degree_input(input_file);
-  constant_density_star_params_t constant_density_star_params = constant_density_star_params_input(input_file);
+  constant_density_star_params_t constant_density_star_params = constant_density_star_input(input_file);
   
-  d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
-  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL, problem_set_mortar_degree_init, &constant_density_star_params);
-  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, constant_density_star_boundary_fcn, NULL, problem_set_mortar_degree_init, &constant_density_star_params);
+  d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
   
+  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL, problem_set_mortar_degree, NULL);
+  
+  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file, constant_density_star_boundary_fcn, NULL, problem_set_mortar_degree, NULL);
+
+  problem_ctx_t ctx;
+  ctx.constant_density_star_params = &constant_density_star_params;
+  ctx.smooth_pred_params = &smooth_pred_params;
+  ctx.flux_data_for_jac = flux_data_for_jac;
+  ctx.flux_data_for_res = flux_data_for_res;
+                           
   d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = constant_density_star_build_residual;
-  prob_fcns.apply_lhs = constant_density_star_apply_lhs;
-  prob_fcns.user = flux_data_for_apply_lhs;
+  prob_fcns.apply_lhs = constant_density_star_apply_jac;
+  prob_fcns.user = &ctx;
   
   double* error = NULL;
   double* u_analytic = NULL;
-  int local_nodes = 0;
   
   d4est_elliptic_data_t prob_vecs;
-  prob_vecs.Au = NULL;
-  prob_vecs.u = NULL;
-  prob_vecs.rhs = NULL;
-  prob_vecs.local_nodes = 0;
+  prob_vecs.Au = P4EST_ALLOC(double, initial_nodes);
+  prob_vecs.u = P4EST_ALLOC(double, initial_nodes);
+  prob_vecs.local_nodes = initial_nodes;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->user;
+  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_jac->user;
+  
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
   penalty_data.u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
@@ -203,11 +150,10 @@ problem_init
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
   penalty_data.sipg_flux_h = sipg_params->sipg_flux_h;
   
-  smooth_pred_marker_t amr_marker;
-  amr_marker.user = (void*)&constant_density_star_params;
+  d4est_amr_smooth_pred_marker_t amr_marker;
+  amr_marker.user = (void*)&ctx;
   amr_marker.mark_element_fcn = amr_mark_element;
   amr_marker.set_element_gamma_fcn = amr_set_element_gamma;
-  amr_marker.name = "constant_density_star_marker";
 
   d4est_amr_t* d4est_amr =
     d4est_amr_init
@@ -218,56 +164,19 @@ problem_init
      &amr_marker
     );
 
-  /* d4est_amr_t* d4est_amr_uniform = d4est_amr_init_uniform_h(p4est); */
-  d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, d4est_amr->max_degree, d4est_amr->num_of_amr_steps);
+  d4est_amr_t* d4est_amr_uniform = d4est_amr_init_uniform_h(p4est);
 
-
-    local_nodes = d4est_mesh_update
-                  (
-                   p4est,
-                   *ghost,
-                   *ghost_data,
-                   d4est_ops,
-                   d4est_geom,
-                   d4est_quad,
-                   geometric_factors,
-                   INITIALIZE_QUADRATURE_DATA,
-                   INITIALIZE_GEOMETRY_DATA,
-                   INITIALIZE_GEOMETRY_ALIASES,
-                   problem_set_degrees_init,
-                   (void*)&input
-                  );
-
-      prob_vecs.u = P4EST_REALLOC(prob_vecs.u, double, local_nodes);
-      d4est_mesh_init_field
-        (
-         p4est,
-         prob_vecs.u,
-         constant_density_star_initial_guess,
-         d4est_ops,
-         d4est_geom,
-         NULL
-        );
+  d4est_mesh_init_field
+    (
+     p4est,
+     prob_vecs.u,
+     constant_density_star_initial_guess,
+     d4est_ops,
+     d4est_geom,
+     NULL
+    );
     
-    prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, local_nodes);
-    prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, local_nodes);
-    prob_vecs.local_nodes = local_nodes;
-    
-    d4est_poisson_build_rhs_with_strong_bc
-      (
-       p4est,
-       *ghost,
-       *ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       &prob_vecs,
-       flux_data_for_build_rhs,
-       prob_vecs.rhs,
-       constant_density_star_rhs_fcn,
-       &constant_density_star_params
-      );
-
+  
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
     
     d4est_estimator_bi_compute
@@ -282,8 +191,8 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_quad,
-       problem_set_mortar_degree_init,
-       &input
+       problem_set_mortar_degree,
+       NULL
       );
 
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
@@ -298,9 +207,9 @@ problem_init
        d4est_quad,
        &prob_vecs,
        input_file,
-       "constant_density_star",
+       "uniform_constant_density_star",
        constant_density_star_analytic_solution,
-       &constant_density_star_params,
+       &ctx,
        level
       );
 
@@ -311,7 +220,7 @@ problem_init
        d4est_geom,
        d4est_quad,
        input_file,
-       "constant_density_star_degree_mesh",
+       "uniform_constant_density_star_degree_mesh",
        1,
        level
       );
@@ -325,7 +234,7 @@ problem_init
        stats,
        &prob_vecs,
        constant_density_star_analytic_solution,
-       &constant_density_star_params);
+       &ctx);
 
     P4EST_FREE(stats);
     
@@ -348,7 +257,7 @@ problem_init
     }
 
 
-    local_nodes = d4est_mesh_update
+    prob_vecs.local_nodes = d4est_mesh_update
                   (
                    p4est,
                    *ghost,
@@ -361,32 +270,12 @@ problem_init
                    INITIALIZE_GEOMETRY_DATA,
                    INITIALIZE_GEOMETRY_ALIASES,
                    problem_set_degrees_after_amr,
-                   (void*)&input
+                   NULL
                   );
 
     
-    prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, local_nodes);
-    prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, local_nodes);
-    prob_vecs.local_nodes = local_nodes;
-    
-    
-    d4est_poisson_build_rhs_with_strong_bc
-      (
-       p4est,
-       *ghost,
-       *ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       &prob_vecs,
-       flux_data_for_build_rhs,
-       prob_vecs.rhs,
-       constant_density_star_rhs_fcn,
-       &constant_density_star_params
-      );
-
-
-    
+    prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
+ 
     d4est_solver_newton_solve
       (
        p4est,
@@ -400,16 +289,17 @@ problem_init
        input_file,
        NULL
       );
+
+
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
-  /* d4est_amr_destroy(d4est_amr_uniform); */
-  d4est_mesh_geometry_storage_destroy(geometric_factors);
-  d4est_poisson_flux_destroy(flux_data_for_apply_lhs);  
-  d4est_poisson_flux_destroy(flux_data_for_build_rhs);  
-  d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
-  /*  */
+  d4est_amr_destroy(d4est_amr_uniform);
+  d4est_poisson_flux_destroy(flux_data_for_jac);  
+  d4est_poisson_flux_destroy(flux_data_for_res);  
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
+  P4EST_FREE(prob_vecs.u);
+  P4EST_FREE(prob_vecs.Au);
 }

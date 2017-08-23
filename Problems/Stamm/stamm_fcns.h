@@ -13,6 +13,16 @@ typedef struct {
 
 } stamm_params_t;
 
+
+typedef struct {
+
+  d4est_amr_smooth_pred_params_t* smooth_pred_params;
+  d4est_poisson_flux_data_t* flux_data_for_apply_lhs;
+  d4est_poisson_flux_data_t* flux_data_for_build_rhs;
+  stamm_params_t* stamm_params;
+
+} problem_ctx_t;
+
 static
 int stamm_params_handler
 (
@@ -23,23 +33,7 @@ int stamm_params_handler
 )
 {
   stamm_params_t* pconfig = (stamm_params_t*)user;
-   if (d4est_util_match_couple(section,"amr",name,"sigma")) {
-    D4EST_ASSERT(pconfig->sigma == -1);
-    pconfig->sigma = atof(value);
-  }
-  else if (d4est_util_match_couple(section,"amr",name,"gamma_h")) {
-    D4EST_ASSERT(pconfig->gamma_h == -1);
-    pconfig->gamma_h = atof(value);
-  }
-  else if (d4est_util_match_couple(section,"amr",name,"gamma_p")) {
-    D4EST_ASSERT(pconfig->gamma_p == -1);
-    pconfig->gamma_p = atof(value);
-  }
-  else if (d4est_util_match_couple(section,"amr",name,"gamma_n")) {
-    D4EST_ASSERT(pconfig->gamma_n == -1);
-    pconfig->gamma_n = atof(value);
-  }   
-  else if (d4est_util_match_couple(section,"problem",name,"c2x")) {
+  if (d4est_util_match_couple(section,"problem",name,"c2x")) {
     D4EST_ASSERT(pconfig->c2x == -1);
     pconfig->c2x = atof(value);
   }
@@ -66,10 +60,6 @@ stamm_params_input
 )
 {
   stamm_params_t input;
-  input.gamma_h = -1;
-  input.gamma_n = -1;
-  input.gamma_p = -1;
-  input.sigma = -1;
   input.c2x = -1;
   input.c2y = -1;
   input.c2z = -1;
@@ -78,10 +68,6 @@ stamm_params_input
     D4EST_ABORT("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("amr", input.gamma_h, -1);
-  D4EST_CHECK_INPUT("amr", input.gamma_p, -1);
-  D4EST_CHECK_INPUT("amr", input.gamma_n, -1);
-  D4EST_CHECK_INPUT("amr", input.sigma, -1);
   D4EST_CHECK_INPUT("problem", input.c2x, -1);
   D4EST_CHECK_INPUT("problem", input.c2y, -1);
   D4EST_CHECK_INPUT("problem", input.c2z, -1);
@@ -101,7 +87,9 @@ double stamm_analytic_solution
  void *user
 )
 {
-  stamm_params_t* params = user;
+  problem_ctx_t* ctx = user;
+  stamm_params_t* params = ctx->stamm_params;
+  
   double c2x = params->c2x;
   double c2y = params->c2y;
 #if (P4EST_DIM)==3
@@ -151,7 +139,8 @@ double stamm_rhs_fcn
  void* user
 )
 {
-  stamm_params_t* params = user;
+  problem_ctx_t* ctx = user;
+  stamm_params_t* params = ctx->stamm_params;
   double c2x = params->c2x;
   double c2y = params->c2y;
 #if (P4EST_DIM)==3
@@ -215,7 +204,9 @@ stamm_apply_lhs
  void* user
 )
 {
-  d4est_poisson_flux_data_t* flux_fcn_data = user;
+  problem_ctx_t* ctx = user;
+  stamm_params_t* params = ctx->stamm_params;
+  d4est_poisson_flux_data_t* flux_fcn_data = ctx->flux_data_for_apply_lhs;
   d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad);
 }
 

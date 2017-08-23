@@ -1,6 +1,8 @@
 #ifndef CONSTANT_DENSITY_STAR_FCNS_H
 #define CONSTANT_DENSITY_STAR_FCNS_H 
 
+#include <d4est_amr_smooth_pred.h>
+
 typedef struct {
 
   /* set externally */
@@ -16,17 +18,16 @@ typedef struct {
   double rho0;
   double C0;
 
-  int percentile;
-  int amr_inflation_size;
-  int gamma_h;
-  int gamma_p;
-  int gamma_n;
-
-  d4est_poisson_flux_data_t* flux_data_for_jac;
-  d4est_poisson_flux_data_t* flux_data_for_residual;
-  
 } constant_density_star_params_t;
 
+typedef struct {
+  
+  constant_density_star_params_t* constant_density_star_params;
+  d4est_poisson_flux_data_t* flux_data_for_jac;
+  d4est_poisson_flux_data_t* flux_data_for_res;
+  d4est_amr_smooth_pred_params_t* smooth_pred_params;
+  
+} problem_ctx_t;
 
 static
 double u_alpha
@@ -82,31 +83,6 @@ int problem_input_handler
     D4EST_ASSERT(pconfig->rho0_div_rhoc == -1);
     pconfig->rho0_div_rhoc = atof(value);
   }
-  else if (d4est_util_match_couple(section,"amr",name,"gamma_h")) {
-    D4EST_ASSERT(pconfig->gamma_h == -1);
-    pconfig->gamma_h = atof(value);
-  }
-  else if (d4est_util_match_couple(section,"amr",name,"gamma_p")) {
-    D4EST_ASSERT(pconfig->gamma_p == -1);
-    pconfig->gamma_p = atof(value);
-  }
-  else if (d4est_util_match_couple(section,"amr",name,"gamma_n")) {
-    D4EST_ASSERT(pconfig->gamma_n == -1);
-    pconfig->gamma_n = atof(value);
-  }
-  else if (d4est_util_match_couple(section,"amr",name,"percentile")) {
-    D4EST_ASSERT(pconfig->percentile == -1);
-    pconfig->percentile = atof(value);
-  }   
-  else if (d4est_util_match_couple(section,"amr",name,"amr_inflation_size")) {
-    D4EST_ASSERT(pconfig->amr_inflation_size == -1);
-    pconfig->amr_inflation_size = atof(value);
-  }     
-  else if (d4est_util_match_couple(section,"amr",name,"rho0_div_rhoc")) {
-    D4EST_ASSERT(pconfig->rho0_div_rhoc == -1);
-    pconfig->rho0_div_rhoc = atof(value);
-  } 
-  
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -154,11 +130,6 @@ constant_density_star_input
   D4EST_CHECK_INPUT("problem",input.cy,-1);
   D4EST_CHECK_INPUT("problem",input.cz,-1);
   D4EST_CHECK_INPUT("problem",input.rho0_div_rhoc,-1);
-  D4EST_CHECK_INPUT("amr", input.gamma_h, -1);
-  D4EST_CHECK_INPUT("amr", input.gamma_p, -1);
-  D4EST_CHECK_INPUT("amr", input.gamma_n, -1);
-  D4EST_CHECK_INPUT("amr", input.percentile, -1);
-  D4EST_CHECK_INPUT("amr", input.amr_inflation_size, -1);
   
   double R = input.R;
   double cx = input.cx;
@@ -270,7 +241,7 @@ double rho_fcn
 }
 
 static
-double constant_density_star_analytic_solution_fcn
+double constant_density_star_analytic_solution
 (
  double x,
  double y,
@@ -400,10 +371,9 @@ constant_density_star_build_residual
  void* user
 )
 {
-
-  constant_density_star_params_t* params = (constant_density_star_params_t*)user;
-
-  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_residual;
+  problem_ctx_t* ctx = user;
+  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_res;
+  
   d4est_poisson_apply_aij(p4est,
                           ghost,
                           ghost_data,
@@ -507,9 +477,9 @@ void constant_density_star_apply_jac
 )
 
 {
-  constant_density_star_params_t* params = (constant_density_star_params_t*)user;
-
-  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_jac;
+  problem_ctx_t* ctx = user;
+  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_jac;
+  
   d4est_poisson_apply_aij(p4est,
                           ghost,
                           ghost_data,
@@ -532,6 +502,21 @@ void constant_density_star_apply_jac
      user
     );
   
+}
+
+
+static double
+constant_density_star_initial_guess
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+)
+{
+  return 1.;
 }
 
 

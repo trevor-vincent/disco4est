@@ -5,7 +5,7 @@ min_quadrants = -1
 min_level = 0
 fill_uniform = 1
 deg = 2
-deg_quad = 5
+deg_quad = 2
 
 [amr]
 scheme = smooth_pred
@@ -14,11 +14,14 @@ max_degree = 7
 gamma_h = .25
 gamma_p = 0.1
 gamma_n = 1.
-amr_inflation_size = 128
+inflation_size = 128
 percentile = 5
 
 [flux]
-ip_flux_penalty = 2.0
+name = sipg
+sipg_penalty_prefactor = 2.0
+sipg_flux_h = H_EQ_TREE_H
+sipg_penalty_fcn = maxp_sqr_over_minh
 
 [problem]
 rho0_div_rhoc = .001
