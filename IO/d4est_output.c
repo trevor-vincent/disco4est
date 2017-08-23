@@ -404,4 +404,12 @@ d4est_output_vtk_with_analytic_error
 }
 
 
+/* void */
+/* d4est_output_data_under_constraint */
+/* ( */
+ 
+/* ){ */
 
+
+
+/* } */

@@ -38,7 +38,8 @@ double u_alpha
  void* user
 )
 {
-  constant_density_star_params_t* params = user;
+  problem_ctx_t* ctx = user;
+  constant_density_star_params_t* params = ctx->constant_density_star_params;
   double cx = params->cx;
   double cy = params->cy;
   double cz = params->cz;
@@ -96,7 +97,8 @@ double solve_for_alpha
  void* user
 )
 {
-  constant_density_star_params_t* params = user;
+  problem_ctx_t* ctx = user;
+  constant_density_star_params_t* params = ctx->constant_density_star_params;
   double R = params->R;
   double rho0 = params->rho0;
   
@@ -156,8 +158,11 @@ constant_density_star_input
   printf("[CONSTANT_DENSITY_STAR_PARAMS]: cy = %.25f\n", cy);
   printf("[CONSTANT_DENSITY_STAR_PARAMS]: cz = %.25f\n", cz);
   printf("[CONSTANT_DENSITY_STAR_PARAMS]: rho0/rhoc = %.25f\n", input.rho0_div_rhoc);
+
+  problem_ctx_t ctx;
+  ctx.constant_density_star_params = &input;
   
-  D4EST_ASSERT( !d4est_util_bisection(solve_for_alpha, alpha_crit, 1000*alpha_crit, DBL_EPSILON, 100000, &alpha, &input));
+  D4EST_ASSERT( !d4est_util_bisection(solve_for_alpha, alpha_crit, 1000*alpha_crit, DBL_EPSILON, 100000, &alpha, &ctx));
 
   double u_alpha_at_R = sqrt(alpha*R)/sqrt(R*R + alpha*R*alpha*R);
   double beta = R*(C0*u_alpha_at_R - 1.);
@@ -166,11 +171,11 @@ constant_density_star_input
   input.beta = beta;
   
   D4EST_ASSERT(
-             (C0*u_alpha(R + cx,cy,cz, &input) == 1. + beta/R)
+             (C0*u_alpha(R + cx,cy,cz, &ctx) == 1. + beta/R)
              &&
-             (C0*u_alpha(cx,R + cy,cz, &input) == 1. + beta/R)
+             (C0*u_alpha(cx,R + cy,cz, &ctx) == 1. + beta/R)
              &&
-             (C0*u_alpha(cx,cy,R + cz, &input) == 1. + beta/R)
+             (C0*u_alpha(cx,cy,R + cz, &ctx) == 1. + beta/R)
             );
 
   /* printf("[CONSTANT_DENSITY_STAR_PARAMS]: R = %.25f\n", R); */
@@ -195,7 +200,9 @@ double psi_fcn
  void* user
 )
 {
-  constant_density_star_params_t* params = user;
+  problem_ctx_t* ctx = user;
+  constant_density_star_params_t* params = ctx->constant_density_star_params;
+  
   double cx = params->cx;
   double cy = params->cy;
   double cz = params->cz;
@@ -222,7 +229,8 @@ double rho_fcn
  void* user
 )
 {
-  constant_density_star_params_t* params = user;
+  problem_ctx_t* ctx = user;
+  constant_density_star_params_t* params = ctx->constant_density_star_params;
   double cx = params->cx;
   double cy = params->cy;
   double cz = params->cz;
