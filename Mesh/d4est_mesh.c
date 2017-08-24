@@ -1058,3 +1058,86 @@ d4est_mesh_compare_two_fields
 }
  
 
+/* double */
+/* d4est_mesh_surface_integral */
+/* ( */
+/*  p4est_t* p4est, */
+/*  d4est_operators_t* d4est_ops, */
+/*  d4est_geometry_t* d4est_geom, */
+/*  d4est_quadrature_t* d4est_quad, */
+/*  int (*is_it_on_surface)(d4est_element_data_t*, int, void*), */
+/*  double (*compute_face_integral)(d4est_element_data_t*, int, double*, double* [(P4EST_DIM)], double* [(P4EST_DIM)], double* [(P4EST_DIM)][(P4EST_DIM)], void*), */
+/*  void* user */
+/* ) */
+/* { */
+
+/*   double integral = 0.; */
+/*   for (p4est_topidx_t tt = p4est->first_local_tree; */
+/*        tt <= p4est->last_local_tree; */
+/*        ++tt) */
+/*     { */
+/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
+/*       sc_array_t* tquadrants = &tree->quadrants; */
+/*       int QQ = (p4est_locidx_t) tquadrants->elem_count; */
+/*       for (int qq = 0; qq < QQ; ++qq) { */
+/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq); */
+/*         d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data); */
+/*         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg); */
+/*         for (int f = 0; f < (P4EST_FACES); f++){ */
+/*           int on_surface = is_it_on_surface(ed, f, user); */
+
+
+/*           double* normal_quad [(P4EST_DIM)]; */
+/*           double* xyz_quad [(P4EST_DIM)]; */
+/*           double* sj_quad; */
+/*           double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)]; */
+
+
+/*           d4est_geometry_compute_xyz_face_analytic */
+/*             ( */
+/*              d4est_ops, */
+/*              d4est_geom, */
+             
+          
+/*   d4est_quadrature_mortar_t face_object; */
+/*   face_object.dq = ed->dq; */
+/*   face_object.tree = ed->tree; */
+/*   face_object.face = f; */
+/*   face_object.mortar_side_id = ed->id*(P4EST_FACES) + f; */
+/*   face_object.mortar_subface_id = 0;   */
+/*   face_object.q[0] = ed->q[0]; */
+/*   face_object.q[1] = ed->q[1]; */
+/* #if (P4EST_DIM)==3 */
+/*   face_object */
+/*     .q[2] = ed->q[2]; */
+/* #endif */
+  
+/*   d4est_mortars_compute_geometric_data_on_mortar */
+/*     ( */
+/*      d4est_ops, */
+/*      d4est_geom, */
+/*      d4est_quad, */
+/*      QUAD_INTEGRAND_UNKNOWN, */
+/*      ed->tree, */
+/*      ed->q, */
+/*      ed->dq, */
+/*      ed->id*(P4EST_FACES) + f, */
+/*      1, */
+/*      1, */
+/*      &ed->deg_vol_quad, */
+/*      f, */
+/*      drst_dxyz_quad, */
+/*      sj_quad, */
+/*      normal_quad, */
+/*      NULL, */
+/*      NULL, */
+/*      COMPUTE_NORMAL_USING_JACOBIAN */
+/*     ); */
+          
+/*           if (on_surface){ */
+/*             integral += compute_face_integral(ed, f, sj_quad, normal_quad, xyz_quad, user);  */
+/*           } */
+/*         } */
+/*       } */
+/*     } */
+/* } */

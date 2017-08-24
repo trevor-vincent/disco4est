@@ -25,6 +25,52 @@
 #include <time.h>
 #include "two_punctures_fcns.h"
 
+typedef struct {
+  
+  int do_not_solve;
+  
+} two_punctures_init_params_t;
+
+static
+int two_punctures_init_params_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  two_punctures_init_params_t* pconfig = (two_punctures_init_params_t*)user;
+  if (d4est_util_match_couple(section,"problem",name,"do_not_solve")) {
+    D4EST_ASSERT(pconfig->do_not_solve == -1);
+    pconfig->do_not_solve = atoi(value);
+  }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+
+static
+two_punctures_init_params_t
+two_punctures_init_params_input
+(
+ const char* input_file
+)
+{
+  two_punctures_init_params_t input;
+  input.do_not_solve = -1;
+
+  if (ini_parse(input_file, two_punctures_init_params_handler, &input) < 0) {
+    D4EST_ABORT("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT("problem", input.do_not_solve, -1);
+  
+  return input;
+}
+
 
 static
 int
@@ -157,6 +203,11 @@ problem_init
  sc_MPI_Comm mpicomm
 )
 {
+
+
+two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file
+);
+  
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
   
@@ -351,21 +402,22 @@ problem_init
     u_prev = P4EST_REALLOC(u_prev, double, prob_vecs.local_nodes);
     error = P4EST_REALLOC(error, double, prob_vecs.local_nodes);
     d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
- 
-    /* d4est_solver_newton_solve */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs, */
-    /*    &prob_fcns, */
-    /*    ghost, */
-    /*    ghost_data, */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    d4est_quad, */
-    /*    input_file, */
-    /*    NULL */
-    /*   ); */
 
+    if (!init_params.do_not_solve){
+    d4est_solver_newton_solve
+      (
+       p4est,
+       &prob_vecs,
+       &prob_fcns,
+       ghost,
+       ghost_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       input_file,
+       NULL
+      );
+    }
 
   }
 

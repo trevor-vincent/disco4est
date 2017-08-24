@@ -1,6 +1,6 @@
 [initial_grid]
 min_quadrants = -1
-min_level = 0
+min_level = 2
 fill_uniform = 1
 deg = 2
 deg_quad = 5
@@ -37,19 +37,21 @@ compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
+[problem]
+do_not_solve = 1
 
 [d4est_solver_newton]
-imin = 10
+imin = 3
 imax = 3
 monitor = 1
 rtol = 1e-20
 atol = 1e-15
 
 [krylov_petsc]
-ksp_type = cg
+ksp_type = gmres
 ksp_atol = 1e-15
-ksp_rtol = 1e-50
-ksp_max_it = 10000
+ksp_rtol = 1e-20
+ksp_max_it = 40
 ksp_view = 1
 ksp_monitor = 1
 ksp_converged_reason = 1
