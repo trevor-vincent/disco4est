@@ -12,10 +12,11 @@
 static double
 d4est_estimator_get_diam
 (
- d4est_element_data_t* ed
+ d4est_element_data_t* ed,
+ diam_compute_option_t diam_opt
 )
 {
-  return d4est_geometry_compute_diam(ed->xyz,ed->deg, DIAM_APPROX_CUBE); 
+  return d4est_geometry_compute_diam(ed->xyz,ed->deg,diam_opt); 
 }
 
 static void
@@ -347,6 +348,7 @@ d4est_estimator_bi_compute
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ diam_compute_option_t diam_opt,
  int (*get_deg_mortar_quad)(d4est_element_data_t*, void*),
  void* get_deg_mortar_quad_ctx
 )
@@ -388,7 +390,7 @@ d4est_estimator_bi_compute
         int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg);
         double* eta2 = &(ed->local_estimator);
         /* handle ||R||^2 * h^2/p^2 term */
-        double h = d4est_estimator_get_diam(ed);
+        double h = d4est_estimator_get_diam(ed, diam_opt);
         *eta2 *= h*h/(deg*deg);
 
         /* printf("id Nsqre0, h = %d, %f, %f\n", ed->id, *eta2, h); */

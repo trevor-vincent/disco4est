@@ -34,14 +34,14 @@ d4est_output_calculate_analytic_error
     d4est_linalg_vec_fabs(error, prob_vecs->local_nodes);
 }
 
-static void
+void
 d4est_output_norms
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_estimator_stats_t* stats,
+ double estimator,
  double* error
 )
 {
@@ -76,7 +76,7 @@ d4est_output_norms
 
     double local_nodes_dbl = (double)local_nodes;
     double local_quad_nodes_dbl = (double)local_quad_nodes;
-    double local_estimator = stats->total;
+    double local_estimator = estimator;
     double local_reduce [4];
     double global_reduce [4];
     
@@ -135,7 +135,7 @@ d4est_output_norms_using_analytic_solution
   double* error = P4EST_ALLOC(double, prob_vecs->local_nodes);
   double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
   d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs, analytic_solution, ctx, u_analytic, error);
-  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, stats, error);
+  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, stats->total, error);
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
 }
@@ -413,3 +413,4 @@ d4est_output_vtk_with_analytic_error
 
 
 /* } */
+/* This file was automatically generated.  Do not edit! */

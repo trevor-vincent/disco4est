@@ -191,6 +191,7 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       DIAM_APPROX_CUBE,
        problem_set_mortar_degree,
        NULL
       );

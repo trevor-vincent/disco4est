@@ -358,6 +358,7 @@ add_d4est_test_3d(test_d4est_stiffness test_d4est_stiffness.c . test_d4est_stiff
 # add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
 add_d4est_problem_2d(stamm_krylov_driver stamm_krylov.c Stamm)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star.c ConstantDensityStar)
+add_d4est_problem_3d(two_punctures_driver two_punctures.c TwoPunctures)
 # add_d4est_problem_2d(constant_density_star_driver stamm_krylov.c Stamm)
 # add_d4est_problem_3d(okendon_uniform_driver okendon_uniform.c Okendon)
 # add_d4est_problem_3d(boyen_york_model_driver boyen_york_model_uniform.c BoyenYorkModel)

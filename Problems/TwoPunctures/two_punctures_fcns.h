@@ -15,21 +15,28 @@ typedef struct {
   double M_bh [MAX_PUNCTURES];
   int num_punctures;
   double puncture_eps;
+} two_punctures_params_t;
+
+
+typedef struct {
+  
+  two_punctures_params_t* two_punctures_params;
   d4est_poisson_flux_data_t* flux_data_for_jac;
-  d4est_poisson_flux_data_t* flux_data_for_residual;
-} twopunctures_params_t;
+  d4est_poisson_flux_data_t* flux_data_for_res;
+  
+} problem_ctx_t;
 
 static
 void
 init_onepuncture_data
 (
- twopunctures_params_t* params,
+ two_punctures_params_t* params,
  d4est_poisson_flux_data_t* flux_data
 )
 {
   double M = 1.;
   params->num_punctures = 1;
-  params->puncture_eps = 1e-10;
+  params->puncture_eps = 1e-15;
   D4EST_ASSERT(params->num_punctures < (MAX_PUNCTURES));
   
   params->M_bh[0] = M;
@@ -49,14 +56,14 @@ init_onepuncture_data
 
 static
 void
-init_twopunctures_data
+init_two_punctures_data
 (
- twopunctures_params_t* params
+ two_punctures_params_t* params
 )
 {
   double M = 1.;
   params->num_punctures = 2;
-  params->puncture_eps = 1e-10;
+  params->puncture_eps = 1e-15;
   D4EST_ASSERT(params->num_punctures < (MAX_PUNCTURES));
 
   params->M_bh[0] = .5*M;
@@ -95,7 +102,7 @@ init_twopunctures_data
 /* init_random_puncture_data */
 /* ( */
 /*  p4est_t* p4est, */
-/*  twopunctures_params_t* params, */
+/*  two_punctures_params_t* params, */
 /*  int num_punctures */
 /* ) */
 /* { */
@@ -181,7 +188,8 @@ double compute_confAij
  void* user
 )
 {
-  twopunctures_params_t* params = user;
+  problem_ctx_t* ctx = user;
+  two_punctures_params_t* params = ctx->two_punctures_params;
   
   double nvec[MAX_PUNCTURES][3];
   double confAij = 0.;
@@ -242,7 +250,7 @@ double compute_confAij_sqr
 
 
 static
-double twopunctures_neg_1o8_K2_psi_neg7
+double two_punctures_neg_1o8_K2_psi_neg7
 (
  double x,
  double y,
@@ -251,7 +259,8 @@ double twopunctures_neg_1o8_K2_psi_neg7
  void* user
 )
 {
-  twopunctures_params_t* params = user;
+  problem_ctx_t* ctx = user;
+  two_punctures_params_t* params = ctx->two_punctures_params;
   double sumn_mn_o_2rn = 0.;
   double dxn, dyn, dzn, r;
   for (int n = 0; n < params->num_punctures; n++){
@@ -277,7 +286,7 @@ double twopunctures_neg_1o8_K2_psi_neg7
 
 
 static
-double twopunctures_plus_7o8_K2_psi_neg8
+double two_punctures_plus_7o8_K2_psi_neg8
 (
  double x,
  double y,
@@ -286,7 +295,8 @@ double twopunctures_plus_7o8_K2_psi_neg8
  void* user
 )
 {
-  twopunctures_params_t* params = user;
+  problem_ctx_t* ctx = user;
+  two_punctures_params_t* params = ctx->two_punctures_params;
   double sumn_mn_o_2rn = 0.;
   double dxn, dyn, dzn, r;
   for (int n = 0; n < params->num_punctures; n++){
@@ -303,7 +313,6 @@ double twopunctures_plus_7o8_K2_psi_neg8
   /* printf("u %.15f sumn_mn_o_2rn %.15f \n", u, sucmn_mn_o_2rn); */
   
   if (r > params->puncture_eps){
-    /* return (7./8.)*confAij_sqr/(psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0*psi_0); */
     return (7./8.)*confAij_sqr/(pow(psi_0*psi_0,4));
   }
   else{
@@ -312,7 +321,7 @@ double twopunctures_plus_7o8_K2_psi_neg8
 }
 
 static
-void twopunctures_apply_jac_add_nonlinear_term
+void two_punctures_apply_jac_add_nonlinear_term
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -360,15 +369,12 @@ void twopunctures_apply_jac_add_nonlinear_term
            ed->J_quad,
            ed->deg_vol_quad,
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
-           twopunctures_plus_7o8_K2_psi_neg8,
+           two_punctures_plus_7o8_K2_psi_neg8,
            user,
            NULL,
            NULL
           );
 
-        /* double* tmp = &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride]; */
-        /* double* tmp = &prob_vecs->u0[ed->nodal_stride]; */
-        /* DEBUG_PRINT_ARR_DBL(tmp, d4est_lgl_get_nodes((P4EST_DIM), ed->deg)); */
       }
     }
   
@@ -377,7 +383,7 @@ void twopunctures_apply_jac_add_nonlinear_term
 
 }
 static
-void twopunctures_apply_jac
+void two_punctures_apply_jac
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -389,8 +395,9 @@ void twopunctures_apply_jac
  void* user
 )
 {
-  twopunctures_params_t* params = user;
-  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_jac;
+  problem_ctx_t* ctx = user;
+  two_punctures_params_t* params = ctx->two_punctures_params;
+  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_jac;
   D4EST_ASSERT(params->num_punctures > 0);
   d4est_poisson_apply_aij(p4est,
                           ghost,
@@ -402,7 +409,7 @@ void twopunctures_apply_jac
                           d4est_quad);
   
 
-  twopunctures_apply_jac_add_nonlinear_term
+  two_punctures_apply_jac_add_nonlinear_term
     (
      p4est,
      ghost,
@@ -417,7 +424,7 @@ void twopunctures_apply_jac
 }
 
 static void
-twopunctures_build_residual_add_nonlinear_term
+two_punctures_build_residual_add_nonlinear_term
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -466,7 +473,7 @@ twopunctures_build_residual_add_nonlinear_term
            ed->xyz_quad,
            ed->deg_vol_quad,
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
-           twopunctures_neg_1o8_K2_psi_neg7,
+           two_punctures_neg_1o8_K2_psi_neg7,
            user,
            NULL,
            NULL
@@ -485,7 +492,7 @@ twopunctures_build_residual_add_nonlinear_term
 
 
 static void
-twopunctures_build_residual
+two_punctures_build_residual
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -497,10 +504,10 @@ twopunctures_build_residual
  void* user
 )
 {
-  twopunctures_params_t* params = user;
-  D4EST_ASSERT(params->num_punctures > 0);
-
-  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_residual;
+  problem_ctx_t* ctx = user;
+  two_punctures_params_t* params = ctx->two_punctures_params;
+  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_res;
+  
   d4est_poisson_apply_aij(p4est,
                           ghost,
                           ghost_data,
@@ -511,7 +518,7 @@ twopunctures_build_residual
                           d4est_quad
                          );
 
-  twopunctures_build_residual_add_nonlinear_term
+  two_punctures_build_residual_add_nonlinear_term
     (
      p4est,
      ghost,
@@ -522,8 +529,24 @@ twopunctures_build_residual
      d4est_quad,
      user
     );
-  
+}
 
+static double
+two_punctures_initial_guess
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+)
+{
+  /* double r2 = x*x + y*y + z*z; */
+  /* if (r2 > 10.) */
+  /*   return 1/(r2); */
+  /* else */
+  return 0.;
 }
 
 #endif
