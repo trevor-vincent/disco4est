@@ -223,3 +223,35 @@ d4est_geometry_brick_new
 #endif
   }
 }
+
+
+int
+d4est_geometry_brick_which_child_of_root
+(
+ p4est_qcoord_t q [(P4EST_DIM)],
+ p4est_qcoord_t dq
+)
+{
+  p4est_qcoord_t child_origin [(P4EST_DIM)];
+  p4est_qcoord_t root_half = (P4EST_ROOT_LEN)/2;
+  
+  for (int i = 0; i < (P4EST_CHILDREN); i++){
+    for (int j = 0; j < (P4EST_DIM); j++){
+      child_origin[j] = d4est_reference_is_child_left_or_right(i,j)*root_half;
+    }
+    
+    int check = 0;
+    for (int j = 0; j < (P4EST_DIM); j++){
+      if (q[j] >= child_origin[j] && q[j] <= child_origin[j] + root_half
+          && q[j] + dq >= child_origin[j] && q[j] + dq <= child_origin[j] + root_half
+         )
+        {
+          check += 1;
+        }
+    }
+    if(check == (P4EST_DIM)){
+      return i;
+    }
+  }
+  D4EST_ABORT("quadrant should exist in some child of the root node");
+}

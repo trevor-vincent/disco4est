@@ -12,7 +12,7 @@
 #include <d4est_quadrature_lobatto.h>
 
 static void
-d4est_poisson_flux_dirichlet
+d4est_poisson_flux_boundary
 (
  d4est_element_data_t* e_m,
  int f_m,
@@ -50,12 +50,12 @@ d4est_poisson_flux_dirichlet
   D4EST_ALLOC_DIM_VEC(n_on_f_m_quad, face_nodes_m_quad);
   D4EST_ALLOC_DIM_VEC(n_sj_on_f_m_quad, face_nodes_m_quad);
 
-  d4est_quadrature_mortar_t face_object;
+  d4est_quadrature_mortar_t face_object; /* will not be used anyway */
   face_object.dq = e_m->dq;
   face_object.tree = e_m->tree;
   face_object.face = f_m;
   face_object.mortar_side_id = mortar_side_id_m;
-  face_object.mortar_subface_id = 0;  
+  face_object.mortar_subface_id = 0;
   face_object.q[0] = e_m->q[0];
   face_object.q[1] = e_m->q[1];
 #if (P4EST_DIM)==3
@@ -77,6 +77,7 @@ d4est_poisson_flux_dirichlet
      1,
      &deg_quad,
      f_m,
+     NULL,
      drst_dxyz_quad,
      sj_on_f_m_quad,
      n_on_f_m_quad,
@@ -346,7 +347,7 @@ d4est_poisson_flux_interface
     mortar_face_object_forder[f].dq = mortar_dq_forder;
     mortar_face_object_forder[f].tree = e_m[0]->tree;
     mortar_face_object_forder[f].mortar_side_id = mortar_side_id_m;
-    mortar_face_object_forder[f].mortar_subface_id = f;   
+    mortar_face_object_forder[f].mortar_subface_id = f;
     mortar_face_object_forder[f].face = f_m;
     mortar_face_object_forder[f].q[0] = mortar_q0_forder[f][0];
     mortar_face_object_forder[f].q[1] = mortar_q0_forder[f][1];
@@ -363,7 +364,7 @@ d4est_poisson_flux_interface
     mortar_face_object_porder[f].q[1] = mortar_q0_porder[f][1];
 #if (P4EST_DIM)==3
     mortar_face_object_porder[f].q[2] = mortar_q0_porder[f][2];
-#endif    
+#endif
   }
   
   double* u_m_on_f_m = P4EST_ALLOC(double, total_side_nodes_m_lobatto);
@@ -617,6 +618,7 @@ d4est_poisson_flux_interface
      faces_mortar,
      &deg_mortar_quad[0],
      f_m,
+     NULL,
      drst_dxyz_m_on_mortar_quad,
      sj_on_f_m_mortar_quad,
      n_on_f_m_mortar_quad,
@@ -639,6 +641,7 @@ d4est_poisson_flux_interface
      faces_mortar,
      &deg_mortar_quad_porder[0],
      f_p,
+     NULL,
      drst_dxyz_p_on_mortar_quad_porder,
 #ifdef POISSON_FLUX_COMPUTE_PORDER_MORTAR_GEOM
      sj_on_f_p_mortar_quad_porder,
@@ -900,7 +903,7 @@ d4est_poisson_flux_fetch_fcns
 {
   d4est_mortar_fcn_ptrs_t flux_fcns;
   flux_fcns.flux_interface_fcn = d4est_poisson_flux_interface;
-  flux_fcns.flux_boundary_fcn = d4est_poisson_flux_dirichlet;
+  flux_fcns.flux_boundary_fcn = d4est_poisson_flux_boundary;
   flux_fcns.user_ctx = (void*)data;
   return flux_fcns;
 }

@@ -96,6 +96,8 @@ SET (
   EllipticSystem/d4est_elliptic_data.c
   Kron/d4est_kron.c
   dGMath/d4est_operators.c
+  dGMath/d4est_gradient.c
+  dGMath/d4est_ip_energy_norm.c
   dGMath/d4est_lgl.c
   dGMath/d4est_reference.c
   dGMath/d4est_poisson.c

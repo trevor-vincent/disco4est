@@ -19,6 +19,7 @@ d4est_mortars_compute_geometric_data_on_mortar_aux
  int num_faces_mortar,
  int* deg_mortar_quad,
  int face,
+ double* xyz_on_mortar_quad [(P4EST_DIM)],
  double* drst_dxyz_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)],
  double* sj_on_mortar_quad,
  double* n_on_mortar_quad [(P4EST_DIM)],
@@ -90,6 +91,22 @@ d4est_mortars_compute_geometric_data_on_mortar_aux
     else {
       D4EST_ABORT("[D4EST_ERROR]: compute method type for DX not supported");
     }
+
+    if (xyz_on_mortar_quad != NULL){
+      d4est_geometry_compute_xyz_face_analytic
+        (
+         d4est_ops,
+         d4est_geom,
+         rst_quad_mortar[face_mortar],
+         q,
+         mortar_dq,
+         e0_tree,
+         face,
+         deg_mortar_quad[face_mortar],
+         xyz_on_mortar_quad
+        );
+    }
+    
 
     if (d4est_geom->JAC_compute_method == GEOM_COMPUTE_NUMERICAL){
       d4est_geometry_compute_jacobian
@@ -255,6 +272,7 @@ d4est_mortars_compute_geometric_data_on_mortar
  int num_faces_mortar,
  int* deg_mortar_quad,
  int face,
+ double* xyz_on_mortar_quad [(P4EST_DIM)],
  double* drst_dxyz_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)],
  double* sj_on_mortar_quad,
  double* n_on_mortar_quad [(P4EST_DIM)],
@@ -294,6 +312,7 @@ d4est_mortars_compute_geometric_data_on_mortar
      num_faces_mortar,
      deg_mortar_quad,
      face,
+     xyz_on_mortar_quad,
      drst_dxyz_on_mortar_quad,
      sj_on_mortar_quad,
      n_on_mortar_quad,
@@ -365,6 +384,16 @@ d4est_mortars_compute_rst_on_mortar
   
 }
 
+/** 
+ * This computes the qcoords of the 0 corners of the elements touching the mortar
+ * This DOES NOT compute the qcoords of the mortar, we would not want 
+ * this because the d4est_geometry functions can only work with qcoords of the element
+ * not qcoords of the mortar. It is non-trivial to calculate the qcoords of the 0 corners
+ * of the elements touching the mortar. First we must compute the q-coord vectors of the 
+ * mortar face, then add these to the 0 corner qcoords of the touching element. If the 
+ * num_faces_side = num_faces_mortar then our job is made very easy, these are then just
+ * the same qcoords as on the mortar
+ */
 void
 d4est_mortars_compute_qcoords_on_mortar
 (

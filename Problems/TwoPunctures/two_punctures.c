@@ -346,6 +346,11 @@ two_punctures_init_params_t init_params = two_punctures_init_params_input(input_
        1,
        level
       );
+
+    d4est_ip_energy_norm_data_t ip_norm_data;
+    ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
+    ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
+    ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
     
     d4est_output_norms
       (
@@ -353,6 +358,9 @@ two_punctures_init_params_t init_params = two_punctures_init_params_input(input_
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       *ghost,
+       *ghost_data,
+       &ip_norm_data,
        stats[0]->total + stats[1]->total + stats[2]->total,
        error
       );

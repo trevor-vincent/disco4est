@@ -4,6 +4,7 @@
 #include <d4est_util.h>
 #include <d4est_linalg.h>
 #include <d4est_estimator_stats.h>
+#include <d4est_ip_energy_norm.h>
 #include <sc_reduce.h>
 
 static void
@@ -41,6 +42,9 @@ d4est_output_norms
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ d4est_ip_energy_norm_data_t* energy_norm_data,
  double estimator,
  double* error
 )
@@ -73,23 +77,38 @@ d4est_output_norms
                                  local_nodes,
                                  DO_NOT_STORE_LOCALLY
                                 );
+  
+  double local_energy_norm_sqr = -1.;
+  if (energy_norm_data != NULL)
+    local_energy_norm_sqr = d4est_ip_energy_norm_compute
+                  (
+                   p4est,
+                   error,
+                   energy_norm_data,
+                   ghost,
+                   ghost_data,
+                   d4est_ops,
+                   d4est_geom,
+                   d4est_quad
+                  );
 
     double local_nodes_dbl = (double)local_nodes;
     double local_quad_nodes_dbl = (double)local_quad_nodes;
     double local_estimator = estimator;
-    double local_reduce [4];
-    double global_reduce [4];
+    double local_reduce [5];
+    double global_reduce [5];
     
     local_reduce[0] = local_l2_norm_sqr;
     local_reduce[1] = local_nodes_dbl;
     local_reduce[2] = local_quad_nodes_dbl;
     local_reduce[3] = local_estimator;
+    local_reduce[4] = local_energy_norm_sqr;
     
     sc_reduce
       (
        &local_reduce[0],
        &global_reduce[0],
-       4,
+       5,
        sc_MPI_DOUBLE,
        sc_MPI_SUM,
        0,
@@ -100,20 +119,22 @@ d4est_output_norms
     double global_nodes_dbl = global_reduce[1];
     double global_quad_nodes_dbl = global_reduce[2];
     double global_estimator = global_reduce[3];
+    double global_energy_norm_sqr = global_reduce[4];
 
     int avg_deg = pow((int)(global_nodes_dbl/p4est->global_num_quadrants), 1./(P4EST_DIM)) - 1.f + .5f;
     int avg_deg_quad = pow((int)(global_quad_nodes_dbl/p4est->global_num_quadrants), 1./(P4EST_DIM)) - 1.f + .5f;
     if (p4est->mpirank == 0){
       printf
         (
-         "[D4EST_OUTPUT]: global_elements %d global_nodes %d avg_deg %d global_quad_nodes %d avg_deg_quad %d global_estimator %.25f global_l2 %.25f\n",
+         "[D4EST_OUTPUT]: global_elements %d global_nodes %d avg_deg %d global_quad_nodes %d avg_deg_quad %d global_estimator %.25f global_l2 %.25f global_enorm %.25f\n",
          (int)p4est->global_num_quadrants,
          (int)global_nodes_dbl,
          avg_deg,
          (int)global_quad_nodes_dbl,
          avg_deg_quad,
          sqrt(global_estimator),
-         sqrt(global_l2_norm_sqr)
+         sqrt(global_l2_norm_sqr),
+         sqrt(global_energy_norm_sqr)
         );
     }
 }
@@ -126,8 +147,11 @@ d4est_output_norms_using_analytic_solution
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
  d4est_estimator_stats_t* stats,
  d4est_elliptic_data_t* prob_vecs,
+ d4est_ip_energy_norm_data_t* energy_norm_data,
  d4est_xyz_fcn_t analytic_solution,
  void* ctx
 )
@@ -135,7 +159,7 @@ d4est_output_norms_using_analytic_solution
   double* error = P4EST_ALLOC(double, prob_vecs->local_nodes);
   double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
   d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs, analytic_solution, ctx, u_analytic, error);
-  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, stats->total, error);
+  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, ghost, ghost_data, energy_norm_data, stats->total, error);
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
 }
