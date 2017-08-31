@@ -159,7 +159,7 @@ d4est_output_norms_using_analytic_solution
   double* error = P4EST_ALLOC(double, prob_vecs->local_nodes);
   double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
   d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs, analytic_solution, ctx, u_analytic, error);
-  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, ghost, ghost_data, energy_norm_data, stats->total, error);
+  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, ghost, ghost_data, energy_norm_data, (stats != NULL) ? stats->total : -1., error);
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
 }
@@ -401,6 +401,7 @@ d4est_output_vtk_with_analytic_error
  const char* save_as_prefix,
  d4est_xyz_fcn_t analytic_solution,
  void* ctx,
+ int save_estimator,
  int level
 )
 {
@@ -420,7 +421,7 @@ d4est_output_vtk_with_analytic_error
      save_as_prefix,
      prob_vecs->local_nodes,
      level,
-     1
+     save_estimator
     );
   
   P4EST_FREE(error);

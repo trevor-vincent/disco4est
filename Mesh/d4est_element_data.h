@@ -49,15 +49,11 @@ typedef struct {
   int deg; /* nodal degree */
   int deg_vol_quad; /* deg for volume quadrature */
 
-#ifdef D4EST_TEST_MIXED
-  double* q_elem;
-  double* du_elem [(P4EST_DIM)];
-  double* qstart_min_q[(P4EST_DIM)];
-  double surface_jacobian;
-  double jacobian;
-  double xyz_corner[3];
-  double h;
-#endif
+  double j_div_sj_min_lobatto;
+  double diam_face_h [(P4EST_FACES)];
+  double diam_volume_h;
+  double area [(P4EST_FACES)];
+  double volume;
   
 } d4est_element_data_t;
 

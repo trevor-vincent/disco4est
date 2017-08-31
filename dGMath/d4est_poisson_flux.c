@@ -38,6 +38,7 @@ d4est_poisson_flux_boundary
   double* u_at_bndry_lobatto_to_quad = P4EST_ALLOC(double, face_nodes_m_quad);
   double* sj_on_f_m_quad = P4EST_ALLOC(double, face_nodes_m_quad);
   double* n_on_f_m_quad [(P4EST_DIM)];
+  double* xyz_on_f_m_quad [(P4EST_DIM)];
   double* n_sj_on_f_m_quad [(P4EST_DIM)];
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* xyz_on_f_m_lobatto [(P4EST_DIM)];
@@ -49,6 +50,7 @@ d4est_poisson_flux_boundary
   D4EST_ALLOC_DIM_VEC(dudx_m_on_f_m_quad,  face_nodes_m_quad);
   D4EST_ALLOC_DIM_VEC(n_on_f_m_quad, face_nodes_m_quad);
   D4EST_ALLOC_DIM_VEC(n_sj_on_f_m_quad, face_nodes_m_quad);
+  D4EST_ALLOC_DIM_VEC(xyz_on_f_m_quad, face_nodes_m_quad);
 
   d4est_quadrature_mortar_t face_object; /* will not be used anyway */
   face_object.dq = e_m->dq;
@@ -77,7 +79,7 @@ d4est_poisson_flux_boundary
      1,
      &deg_quad,
      f_m,
-     NULL,
+     xyz_on_f_m_quad,
      drst_dxyz_quad,
      sj_on_f_m_quad,
      n_on_f_m_quad,
@@ -181,6 +183,7 @@ d4est_poisson_flux_boundary
   D4EST_COPY_DIM_VEC(dudx_m_on_f_m_quad, boundary_data.dudx_m_on_f_m_quad);
   D4EST_COPY_DIM_VEC(n_on_f_m_quad, boundary_data.n_on_f_m_quad);
   D4EST_COPY_DIM_VEC(n_sj_on_f_m_quad, boundary_data.n_sj_on_f_m_quad);
+  D4EST_COPY_DIM_VEC(xyz_on_f_m_quad, boundary_data.xyz_on_f_m_quad);
   D4EST_COPY_DIM_VEC(xyz_on_f_m_lobatto, boundary_data.xyz_on_f_m_lobatto);
 
   if (d4est_poisson_flux_params->boundary_fcn != NULL){
@@ -189,16 +192,17 @@ d4est_poisson_flux_boundary
        e_m,
        f_m,
        mortar_side_id_m,
-       d4est_poisson_flux_params->boundary_condition,
        d4est_ops,
        d4est_geom,
        d4est_quad,
        &boundary_data,
-       d4est_poisson_flux_params->user
+       d4est_poisson_flux_params->bc_data,
+       d4est_poisson_flux_params->flux_data
       );
   }
   
   D4EST_FREE_DIM_VEC(xyz_on_f_m_lobatto);
+  D4EST_FREE_DIM_VEC(xyz_on_f_m_quad);
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m);
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m_quad);
   D4EST_FREE_DIM_VEC(dudx_m_on_f_m_quad);
@@ -783,7 +787,7 @@ d4est_poisson_flux_interface
      d4est_geom,
      d4est_quad,
      &interface_data,
-     d4est_poisson_flux_params->user
+     d4est_poisson_flux_params->flux_data
     );
 
   }
@@ -914,8 +918,8 @@ d4est_poisson_flux_new
 (
  p4est_t* p4est,
  const char* input_file,
- d4est_xyz_fcn_t boundary_condition,
- void* flux_user,
+ d4est_poisson_bc_t bc_type,
+ void* bc_data,
  int (*get_deg_mortar_quad)(d4est_element_data_t*, void*),
  void* get_deg_mortar_quad_ctx
 )
@@ -925,9 +929,11 @@ d4est_poisson_flux_new
 
   data->get_deg_mortar_quad = get_deg_mortar_quad;
   data->get_deg_mortar_quad_ctx = get_deg_mortar_quad_ctx;
+  data->bc_type = bc_type;
+  data->bc_data = bc_data;
   
   if (data->flux_type == FLUX_SIPG) {
-    d4est_poisson_flux_sipg_params_new(p4est, boundary_condition, "[SIPG_FLUX]", input_file, data, flux_user);
+    d4est_poisson_flux_sipg_params_new(p4est, "[SIPG_FLUX]", input_file, data);
   }
   else {
     D4EST_ABORT("[D4EST_ERROR]: this flux is currently not supported");
@@ -935,6 +941,7 @@ d4est_poisson_flux_new
 
   return data;
 }
+
 
 void
 d4est_poisson_flux_destroy

@@ -297,9 +297,9 @@ krylov_petsc_solve
   double* u = vecs->u;
   double* rhs = vecs->rhs;
 
-  printf("PRE KRYLOV SOLVE REDUCTIONS\n");
-  DEBUG_PRINT_ARR_DBL_SUM(u, local_nodes);
-  DEBUG_PRINT_ARR_DBL_SUM(rhs, local_nodes);
+  /* printf("PRE KRYLOV SOLVE REDUCTIONS\n"); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(u, local_nodes); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(rhs, local_nodes); */
   
   KSPCreate(PETSC_COMM_WORLD,&ksp);  
   VecCreate(PETSC_COMM_WORLD,&x);//CHKERRQ(ierr);

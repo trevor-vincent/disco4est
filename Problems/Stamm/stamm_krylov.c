@@ -104,10 +104,17 @@ problem_init
 {
   stamm_params_t stamm_params = stamm_params_input(input_file);
   d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
+
+
+  d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
+  bc_data_for_lhs.dirichlet_fcn = zero_fcn;
+
+  d4est_poisson_dirichlet_bc_t bc_data_for_rhs;
+  bc_data_for_rhs.dirichlet_fcn = stamm_boundary_fcn;
   
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL, problem_set_mortar_degree, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs, problem_set_mortar_degree, NULL);
   
-  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, stamm_boundary_fcn, NULL, problem_set_mortar_degree, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_for_rhs, problem_set_mortar_degree, NULL);
 
   problem_ctx_t ctx;
   ctx.stamm_params = &stamm_params;
@@ -129,7 +136,7 @@ problem_init
   prob_vecs.rhs = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.local_nodes = initial_nodes;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->user;
+  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
   
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
@@ -216,6 +223,7 @@ problem_init
        "uniform_stamm",
        stamm_analytic_solution,
        &ctx,
+       1,
        level
       );
 

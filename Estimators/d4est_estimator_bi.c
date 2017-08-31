@@ -25,15 +25,16 @@ d4est_estimator_bi_dirichlet
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
- d4est_xyz_fcn_t boundary_condition,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_poisson_flux_boundary_data_t* boundary_data,
- void* params
+ void* boundary_condition_fcn_data,
+ void* flux_parameter_data
 )
 {
-  d4est_estimator_bi_penalty_data_t* penalty_data = params;
+  d4est_poisson_dirichlet_bc_t* bc_data = boundary_condition_fcn_data;
+  d4est_estimator_bi_penalty_data_t* penalty_data = flux_parameter_data;
   d4est_quadrature_mortar_t* face_object = boundary_data->face_object;
   int face_nodes_m_lobatto = boundary_data->face_nodes_m_lobatto;
   int face_nodes_m_quad = boundary_data->face_nodes_m_quad;
@@ -52,32 +53,41 @@ d4est_estimator_bi_dirichlet
   D4EST_COPY_DIM_VEC(boundary_data->xyz_on_f_m_lobatto, xyz_on_f_m_lobatto); 
   double* Je2_prefactor = P4EST_ALLOC(double, face_nodes_m_quad);
   double* Je2 = P4EST_ALLOC(double, face_nodes_m_quad);
-  double h_alt;
 
-  if (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
-    h_alt = d4est_util_min_dbl_array(j_div_sj_quad, face_nodes_m_quad);
-  }
-  else if (penalty_data->sipg_flux_h == H_EQ_TREE_H){
-    h_alt = e_m->dq/(double)(P4EST_ROOT_LEN);
-  }
+  double* h_quad = P4EST_ALLOC(double, face_nodes_m_quad);
+  d4est_poisson_flux_sipg_calculate_h
+    (
+     &e_m,
+     f_m,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     penalty_data->sipg_flux_h,
+     j_div_sj_quad,
+     h_quad,
+     1,
+     1,
+     &face_nodes_m_quad
+    );
+  
   for (int i = 0; i < face_nodes_m_quad; i++){
-    int is_it_alt = (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN || penalty_data->sipg_flux_h == H_EQ_TREE_H);
-    double h = (is_it_alt) ? h_alt : j_div_sj_quad[i];
     Je2_prefactor[i] = penalty_data->u_dirichlet_penalty_fcn
                        (
                         e_m->deg,
-                        h,
+                        h_quad[i],
                         e_m->deg,
-                        h,
+                        h_quad[i],
                         penalty_data->penalty_prefactor
                        );
-  }  
+  }
+
+  P4EST_FREE(h_quad);
 
   double* u_at_bndry_lobatto = P4EST_ALLOC(double, face_nodes_m_lobatto);
   double* u_at_bndry_lobatto_to_quad = P4EST_ALLOC(double, face_nodes_m_quad);
   
   for (int i = 0; i < face_nodes_m_lobatto; i++){
-    u_at_bndry_lobatto[i] = boundary_condition
+    u_at_bndry_lobatto[i] = bc_data->dirichlet_fcn
                             (
                              boundary_data->xyz_on_f_m_lobatto[0][i],
                              boundary_data->xyz_on_f_m_lobatto[1][i],
@@ -189,18 +199,43 @@ d4est_estimator_bi_interface
   int* deg_p_lobatto = interface_data->deg_p_lobatto;
   
   d4est_estimator_bi_penalty_data_t* penalty_data = params;
-  
-  double hm_alt, hp_alt;
-  if (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
-    hp_alt = d4est_util_min_dbl_array(j_div_sj_on_f_p_mortar_quad, total_nodes_mortar_quad);
-    hm_alt = d4est_util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
-  }
-  else if (penalty_data->sipg_flux_h == H_EQ_TREE_H){
-    hp_alt = e_p[0]->dq/(double)P4EST_ROOT_LEN;
-    hm_alt = e_m[0]->dq/(double)P4EST_ROOT_LEN;
-  }
+   double* hm_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
+  double* hp_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
 
+  d4est_poisson_flux_sipg_calculate_h
+    (
+     e_m,
+     f_m,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     penalty_data->sipg_flux_h,
+     j_div_sj_on_f_m_mortar_quad,
+     hm_mortar_quad,
+     interface_data->faces_mortar,
+     faces_m,
+     nodes_mortar_quad
+    );
+
+
+  d4est_element_data_t* e_p_oriented [(P4EST_HALF)];
+ d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
   
+    d4est_poisson_flux_sipg_calculate_h
+    (
+     &e_p_oriented[0],
+     f_p,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     penalty_data->sipg_flux_h,
+     j_div_sj_on_f_p_mortar_quad,
+     hp_mortar_quad,
+     interface_data->faces_mortar,
+     faces_p,
+     nodes_mortar_quad
+    );
+
   double* Je1_prefactor = P4EST_ALLOC(double, total_nodes_mortar_quad);
   double* Je1 = P4EST_ALLOC(double, total_nodes_mortar_quad);
   double* Je2_prefactor = P4EST_ALLOC(double, total_nodes_mortar_quad);
@@ -210,25 +245,22 @@ d4est_estimator_bi_interface
   for (int f = 0; f < faces_mortar; f++){
     for (int k = 0; k < nodes_mortar_quad[f]; k++){
       int ks = k + stride;
-      int is_it_alt = (penalty_data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN || penalty_data->sipg_flux_h == H_EQ_TREE_H);
-      double hp = (is_it_alt) ? hp_alt : j_div_sj_on_f_p_mortar_quad[ks];
-      double hm = (is_it_alt) ? hm_alt : j_div_sj_on_f_m_mortar_quad[ks];
-
+      
       Je1_prefactor[ks] = penalty_data->gradu_penalty_fcn
                           (
                            (faces_m == faces_mortar) ? deg_m_lobatto[f] : deg_m_lobatto[0],
-                           hm,
+                           hm_mortar_quad[ks],
                            (faces_p == faces_mortar) ? deg_p_lobatto[f] : deg_p_lobatto[0],
-                           hp,
+                           hp_mortar_quad[ks],
                            penalty_data->penalty_prefactor
                           ); 
 
       Je2_prefactor[ks] = penalty_data->u_penalty_fcn
                           (
                            (faces_m == faces_mortar) ? deg_m_lobatto[f] : deg_m_lobatto[0],
-                           hm,
+                           hm_mortar_quad[ks],
                            (faces_p == faces_mortar) ? deg_p_lobatto[f] : deg_p_lobatto[0],
-                           hp,
+                           hp_mortar_quad[ks],
                            penalty_data->penalty_prefactor
                           );    
       
@@ -237,7 +269,8 @@ d4est_estimator_bi_interface
     stride += nodes_mortar_quad[f];
   }
 
-  
+  P4EST_FREE(hm_mortar_quad);
+  P4EST_FREE(hp_mortar_quad);  
 
   /* calculate symmetric interior penalty flux */
   int k;
@@ -414,8 +447,16 @@ d4est_estimator_bi_compute
   d4est_poisson_flux_data_t flux_data;
   flux_data.interface_fcn = d4est_estimator_bi_interface;
   flux_data.boundary_fcn = d4est_estimator_bi_dirichlet;
-  flux_data.boundary_condition = u_bndry_fcn;
-  flux_data.user = &bi_penalty_data;
+
+
+  d4est_poisson_dirichlet_bc_t bc_data;
+  bc_data.dirichlet_fcn = u_bndry_fcn;
+  bc_data.user = NULL;
+
+  flux_data.bc_type = BC_DIRICHLET;
+  flux_data.bc_data = &bc_data;
+  
+  flux_data.flux_data = &bi_penalty_data;
   flux_data.get_deg_mortar_quad = get_deg_mortar_quad;
   flux_data.get_deg_mortar_quad_ctx = get_deg_mortar_quad_ctx;
   d4est_mortar_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(&flux_data);

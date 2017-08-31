@@ -194,8 +194,16 @@ int main(int argc, char *argv[])
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
 
-  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL, get_deg_mortar_quad, &deg_data);
-  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file, poly_vec_fcn, NULL, get_deg_mortar_quad, &deg_data);
+  d4est_poisson_dirichlet_bc_t bc_data_for_jac;
+  bc_data_for_jac.dirichlet_fcn = zero_fcn;
+
+  d4est_poisson_dirichlet_bc_t bc_data_for_res;
+  bc_data_for_res.dirichlet_fcn = boundary_fcn;
+
+  
+  d4est_poisson_flux_data_t* flux_data_for_jac =
+    d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, get_deg_mortar_quad, &deg_data);
+  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_res, get_deg_mortar_quad, &deg_data);
   
   problem_ctx_t ctx;
   ctx.flux_data_for_res = flux_data_for_res;

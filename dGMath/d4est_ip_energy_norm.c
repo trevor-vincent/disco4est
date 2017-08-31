@@ -12,16 +12,16 @@
 #include <d4est_mortars.h>
 
 static void
-d4est_ip_energy_norm_dirichlet
+d4est_ip_energy_norm_boundary
 (
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
- d4est_xyz_fcn_t boundary_condition,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_poisson_flux_boundary_data_t* boundary_data,
+ void* bc_params,
  void* params
 )
 {
@@ -44,27 +44,34 @@ d4est_ip_energy_norm_dirichlet
   D4EST_COPY_DIM_VEC(boundary_data->xyz_on_f_m_lobatto, xyz_on_f_m_lobatto); 
   double* ip_energy_norm_prefactor = P4EST_ALLOC(double, face_nodes_m_quad);
   double* ip_energy_norm = P4EST_ALLOC(double, face_nodes_m_quad);
-  double h_alt;
 
-  if (data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
-    h_alt = d4est_util_min_dbl_array(j_div_sj_quad, face_nodes_m_quad);
-  }
-  else if (data->sipg_flux_h == H_EQ_TREE_H){
-    h_alt = e_m->dq/(double)(P4EST_ROOT_LEN);
-  }
+  double* h_quad = P4EST_ALLOC(double, face_nodes_m_quad);
+  d4est_poisson_flux_sipg_calculate_h
+    (
+     &e_m,
+     f_m,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     data->sipg_flux_h,
+     j_div_sj_quad,
+     h_quad,
+     1,
+     1,
+     &face_nodes_m_quad
+    );
+
   for (int i = 0; i < face_nodes_m_quad; i++){
-    int is_it_alt = (data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN || data->sipg_flux_h == H_EQ_TREE_H);
-    double h = (is_it_alt) ? h_alt : j_div_sj_quad[i];
     ip_energy_norm_prefactor[i] = data->u_penalty_fcn
                        (
                         e_m->deg,
-                        h,
+                        h_quad[i],
                         e_m->deg,
-                        h,
+                        h_quad[i],
                         data->penalty_prefactor
                        );
   }  
-
+  P4EST_FREE(h_quad);
 
     for(int i = 0; i < face_nodes_m_quad; i++){
       ip_energy_norm[i] = 0.;
@@ -146,33 +153,58 @@ d4est_ip_energy_norm_interface
   
   d4est_ip_energy_norm_data_t* data = params;
   
-  double hm_alt, hp_alt;
-  if (data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN){
-    hp_alt = d4est_util_min_dbl_array(j_div_sj_on_f_p_mortar_quad, total_nodes_mortar_quad);
-    hm_alt = d4est_util_min_dbl_array(j_div_sj_on_f_m_mortar_quad,total_nodes_mortar_quad);
-  }
-  else if (data->sipg_flux_h == H_EQ_TREE_H){
-    hp_alt = e_p[0]->dq/(double)P4EST_ROOT_LEN;
-    hm_alt = e_m[0]->dq/(double)P4EST_ROOT_LEN;
-  }
-  
+
   double* ip_energy_norm_prefactor = P4EST_ALLOC(double, total_nodes_mortar_quad);
   double* ip_energy_norm = P4EST_ALLOC(double, total_nodes_mortar_quad);
+
+
+  double* hm_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
+  double* hp_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
+
+  d4est_poisson_flux_sipg_calculate_h
+    (
+     e_m,
+     f_m,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     data->sipg_flux_h,
+     j_div_sj_on_f_m_mortar_quad,
+     hm_mortar_quad,
+    interface_data->faces_mortar,
+     faces_m,
+     nodes_mortar_quad
+    );
+
+
+  d4est_element_data_t* e_p_oriented [(P4EST_HALF)];
+ d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
+  
+    d4est_poisson_flux_sipg_calculate_h
+    (
+     &e_p_oriented[0],
+     f_p,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     data->sipg_flux_h,
+     j_div_sj_on_f_p_mortar_quad,
+     hp_mortar_quad,
+     interface_data->faces_mortar,
+     faces_p,
+     nodes_mortar_quad
+    );
   
   int stride = 0;
   for (int f = 0; f < faces_mortar; f++){
     for (int k = 0; k < nodes_mortar_quad[f]; k++){
       int ks = k + stride;
-      int is_it_alt = (data->sipg_flux_h == H_EQ_J_DIV_SJ_MIN || data->sipg_flux_h == H_EQ_TREE_H);
-      double hp = (is_it_alt) ? hp_alt : j_div_sj_on_f_p_mortar_quad[ks];
-      double hm = (is_it_alt) ? hm_alt : j_div_sj_on_f_m_mortar_quad[ks];
-
       ip_energy_norm_prefactor[ks] = data->u_penalty_fcn
                           (
                            (faces_m == faces_mortar) ? deg_m_lobatto[f] : deg_m_lobatto[0],
-                           hm,
+                           hm_mortar_quad[ks],
                            (faces_p == faces_mortar) ? deg_p_lobatto[f] : deg_p_lobatto[0],
-                           hp,
+                           hp_mortar_quad[ks],
                            data->penalty_prefactor
                           );    
       
@@ -181,7 +213,8 @@ d4est_ip_energy_norm_interface
     stride += nodes_mortar_quad[f];
   }
 
- 
+  P4EST_FREE(hm_mortar_quad);
+  P4EST_FREE(hp_mortar_quad);
   /* calculate symmetric interior penalty flux */
   int k;
   int f;
@@ -306,9 +339,9 @@ d4est_ip_energy_norm_compute
   
   d4est_poisson_flux_data_t flux_data;
   flux_data.interface_fcn = d4est_ip_energy_norm_interface;
-  flux_data.boundary_fcn = d4est_ip_energy_norm_dirichlet;
-  flux_data.boundary_condition = NULL;
-  flux_data.user = energy_norm_data;
+  flux_data.boundary_fcn = d4est_ip_energy_norm_boundary;
+  flux_data.bc_type = BC_NOT_SET;
+  flux_data.flux_data = energy_norm_data;
   flux_data.get_deg_mortar_quad = d4est_ip_energy_norm_get_deg_mortar_quad;
   flux_data.get_deg_mortar_quad_ctx = NULL;
   d4est_mortar_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(&flux_data);

@@ -61,6 +61,7 @@ poisson_sinx_boundary_fcn
   return poisson_sinx_analytic_solution(x,y,z,user);
 }
 
+
 static void
 poisson_sinx_apply_lhs
 (

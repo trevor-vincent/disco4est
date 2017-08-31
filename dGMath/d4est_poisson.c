@@ -208,5 +208,6 @@ d4est_poisson_apply_aij
      d4est_ops,
      d4est_geom,
      d4est_quad
-    );  
+    );
+
 }

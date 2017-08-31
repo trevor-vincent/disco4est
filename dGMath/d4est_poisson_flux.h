@@ -53,6 +53,7 @@ typedef struct {
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_quad [(P4EST_DIM)];
   double* n_on_f_m_quad [(P4EST_DIM)];
+  double* xyz_on_f_m_quad [(P4EST_DIM)];
   double* n_sj_on_f_m_quad [(P4EST_DIM)];
   double* sj_on_f_m_quad;
   double* j_div_sj_quad;
@@ -86,15 +87,17 @@ void (*d4est_poisson_flux_boundary_fcn_t)
  d4est_element_data_t*,
  int,
  int,
- d4est_xyz_fcn_t,
  d4est_operators_t*,
  d4est_geometry_t*,
  d4est_quadrature_t*,
  d4est_poisson_flux_boundary_data_t*,
+ void*,
  void*
 );
 
 typedef enum {FLUX_SIPG, FLUX_NIPG, FLUX_IIPG, FLUX_NOT_SET} d4est_poisson_flux_type_t;
+typedef enum {BC_ROBIN, BC_DIRICHLET, BC_NOT_SET} d4est_poisson_bc_t;
+
 typedef struct d4est_poisson_flux_data d4est_poisson_flux_data_t;
 
 struct d4est_poisson_flux_data{
@@ -102,18 +105,53 @@ struct d4est_poisson_flux_data{
   d4est_poisson_flux_type_t flux_type; 
   d4est_poisson_flux_interface_fcn_t interface_fcn;
   d4est_poisson_flux_boundary_fcn_t boundary_fcn;
+  void* flux_data;
+
   int (*get_deg_mortar_quad)(d4est_element_data_t*, void*);
   void* get_deg_mortar_quad_ctx;
 
-  d4est_xyz_fcn_t boundary_condition;
-  void* user;
+  d4est_poisson_bc_t bc_type;
+  void* bc_data;
+  
   void (*destroy)(d4est_poisson_flux_data_t*);
   
 };
 
+typedef 
+double (*d4est_poisson_mortar_xyz_fcn_t)(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user,
+ d4est_poisson_flux_boundary_data_t* boundary_data,
+ int mortar_node
+);
+
+typedef struct {
+
+  d4est_poisson_mortar_xyz_fcn_t robin_rhs;
+  d4est_poisson_mortar_xyz_fcn_t robin_coeff;
+  void* user;
+
+} d4est_poisson_robin_bc_t;
+
+
+typedef struct {
+
+  d4est_xyz_fcn_t dirichlet_fcn;
+  void* user;
+
+} d4est_poisson_dirichlet_bc_t;
+
+
+
+
+
 /* This file was automatically generated.  Do not edit! */
 void d4est_poisson_flux_destroy(d4est_poisson_flux_data_t *data);
-d4est_poisson_flux_data_t *d4est_poisson_flux_new(p4est_t *p4est,const char *input_file,d4est_xyz_fcn_t boundary_condition,void *flux_user,int(*get_deg_mortar_quad)(d4est_element_data_t *,void *),void *get_deg_mortar_quad_ctx);
+d4est_poisson_flux_data_t *d4est_poisson_flux_new(p4est_t *p4est,const char *input_file,d4est_poisson_bc_t bc_type,void *bc_data,int(*get_deg_mortar_quad)(d4est_element_data_t *,void *),void *get_deg_mortar_quad_ctx);
 d4est_mortar_fcn_ptrs_t d4est_poisson_flux_fetch_fcns(d4est_poisson_flux_data_t *data);
 void d4est_poisson_flux_init_element_data(p4est_t *p4est,d4est_operators_t *d4est_ops,double *u,double *Au);
 

@@ -118,9 +118,15 @@ problem_init
   
   d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
   
-  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL, problem_set_mortar_degree, NULL);
+   d4est_poisson_dirichlet_bc_t bc_data_for_jac;
+  bc_data_for_jac.dirichlet_fcn = zero_fcn;
+
+  d4est_poisson_dirichlet_bc_t bc_data_for_res;
+  bc_data_for_res.dirichlet_fcn = constant_density_star_boundary_fcn;
   
-  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file, constant_density_star_boundary_fcn, NULL, problem_set_mortar_degree, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_jac =
+    d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, problem_set_mortar_degree, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_res, problem_set_mortar_degree, NULL);
 
   problem_ctx_t ctx;
   ctx.constant_density_star_params = &constant_density_star_params;
@@ -141,7 +147,7 @@ problem_init
   prob_vecs.u = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.local_nodes = initial_nodes;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_jac->user;
+  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_jac->flux_data;
   
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
@@ -216,6 +222,7 @@ problem_init
        "uniform_constant_density_star",
        constant_density_star_analytic_solution,
        &ctx,
+       1,
        level
       );
 

@@ -29,6 +29,13 @@ d4est_solver_test_symmetry
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ int local_nodes,
+ d4est_elliptic_eqns_t* fcns,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  int print,
  double sym_eps,
 )
