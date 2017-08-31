@@ -72,7 +72,6 @@ two_punctures_init_params_input
 }
 
 
-
 static
 int
 amr_mark_element
@@ -84,19 +83,28 @@ amr_mark_element
  void* user
 )
 {
-  problem_ctx_t* ctx = user;
-  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
-  
-  if (p4est->local_num_quadrants*p4est->mpisize < params->inflation_size){
-    double eta2_percentile
-      = d4est_estimator_stats_get_percentile(*stats,25);
-    return (eta2 >= eta2_percentile);
+  int elem_bin;
+
+  /* outer shell */
+  if (elem_data->tree < 6){
+    elem_bin = 0;
   }
-  else{
-    double eta2_percentile
-      = d4est_estimator_stats_get_percentile(*stats,params->percentile);
-    return (eta2 >= eta2_percentile);
+  /* inner shell */
+  else if(elem_data->tree < 12){
+    elem_bin = 1;
   }
+  /* center cube */
+  else {
+    elem_bin = 2;
+  }
+ 
+  double eta2_percentile
+    = d4est_estimator_stats_get_percentile(stats[elem_bin], 5);
+
+  if (elem_bin == 2)
+    return (eta2 >= eta2_percentile);
+  else
+    return 0;
 }
 
 static
@@ -110,17 +118,39 @@ amr_set_element_gamma
  void* user
 )
 {
-  problem_ctx_t* ctx = user;
-  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
-  
   gamma_params_t gamma_hpn;
-  gamma_hpn.gamma_h = params->gamma_h;
-  gamma_hpn.gamma_p = params->gamma_p;
-  gamma_hpn.gamma_n = params->gamma_n;
+  gamma_hpn.gamma_h = 0;
+  gamma_hpn.gamma_p = 0;
+  gamma_hpn.gamma_n = 0;
 
   return gamma_hpn;
 }
 
+
+int
+in_bin_fcn
+(
+ d4est_element_data_t* elem_data,
+ int bin
+)
+{
+  int elem_bin;
+
+  /* outer shell */
+  if (elem_data->tree < 6){
+    elem_bin = 0;
+  }
+  /* inner shell */
+  else if(elem_data->tree < 12){
+    elem_bin = 1;
+  }
+  /* center cube */
+  else {
+    elem_bin = 2;
+  }
+
+  return (elem_bin == bin);
+}
 
 int
 problem_set_mortar_degree
@@ -141,7 +171,19 @@ problem_set_degrees_after_amr
  void* user_ctx
 )
 {
-  elem_data->deg_vol_quad = elem_data->deg;
+  /* outer shell */
+  if (elem_data->tree < 6){
+    elem_data->deg_vol_quad = elem_data->deg + 4;
+  }
+  /* inner shell */
+  else if(elem_data->tree < 12){
+    elem_data->deg_vol_quad = elem_data->deg + 4;
+  }
+  /* center cube */
+  else {
+    elem_data->deg_vol_quad = elem_data->deg;
+  }
+
 }
 
 
@@ -162,14 +204,14 @@ problem_init
 )
 {
 
+  /*  */
+  two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file
+                                                                           );
+  
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
   
-
-  two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file
-                                                                           );
-  D4EST_ASSERT(d4est_geom->geom_type == GEOM_BRICK);
-
+  /* d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file); */
   d4est_poisson_robin_bc_t bc_data_for_jac;
   bc_data_for_jac.robin_coeff = two_punctures_robin_coeff_brick_fcn;
   bc_data_for_jac.robin_rhs = two_punctures_robin_bc_rhs_fcn;
@@ -185,11 +227,9 @@ problem_init
   
   d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_for_res, problem_set_mortar_degree, NULL);
 
-  d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
-    
   problem_ctx_t ctx;
   ctx.two_punctures_params = &two_punctures_params;
-  ctx.smooth_pred_params = &smooth_pred_params;
+  /* ctx.smooth_pred_params = &smooth_pred_params; */
   ctx.flux_data_for_jac = flux_data_for_jac;
   ctx.flux_data_for_res = flux_data_for_res;
                            
@@ -262,10 +302,31 @@ problem_init
        NULL
       );
 
+  d4est_estimator_stats_t* stats [3];
+    for (int i = 0; i < 3; i++){
+      stats[i] = P4EST_ALLOC(d4est_estimator_stats_t, 1);
+    }
+    
+    double local_eta2 = d4est_estimator_stats_compute_per_bin
+                        (
+                         p4est,
+                         &stats[0],
+                         3,
+                         in_bin_fcn
+                        );
 
-    d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
-    d4est_estimator_stats_compute(p4est, stats);
-    d4est_estimator_stats_print(stats);
+    d4est_mesh_print_number_of_elements_per_tree(p4est);
+    d4est_estimator_stats_compute_max_percentiles_across_proc
+      (
+       stats,
+       3
+      );
+
+    if (p4est->mpirank == 0){
+      for (int i = 0; i < 3; i++){
+        d4est_estimator_stats_print(stats[i]);
+      }
+    }
 
     d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_prev, error, prob_vecs.local_nodes);
     
@@ -310,12 +371,14 @@ problem_init
        *ghost,
        *ghost_data,
        &ip_norm_data,
-       stats->total,
+       stats[0]->total + stats[1]->total + stats[2]->total,
        error
       );
 
 
-    P4EST_FREE(stats);
+    for (int i = 0; i < 3; i++){
+      P4EST_FREE(stats[i]);
+    }
     
     if (level != d4est_amr->num_of_amr_steps){
 
@@ -330,7 +393,7 @@ problem_init
          d4est_ops,
          d4est_amr,
          &prob_vecs.u,
-         &stats
+         stats
         );
       
     }
