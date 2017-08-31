@@ -3,6 +3,7 @@
 
 #include <d4est_util.h>
 #include <d4est_element_data.h>
+#include <d4est_amr_smooth_pred.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux.h>
 
@@ -23,6 +24,7 @@ typedef struct {
   two_punctures_params_t* two_punctures_params;
   d4est_poisson_flux_data_t* flux_data_for_jac;
   d4est_poisson_flux_data_t* flux_data_for_res;
+  d4est_amr_smooth_pred_params_t* smooth_pred_params;
   
 } problem_ctx_t;
 
@@ -30,8 +32,7 @@ static
 void
 init_onepuncture_data
 (
- two_punctures_params_t* params,
- d4est_poisson_flux_data_t* flux_data
+ two_punctures_params_t* params
 )
 {
   double M = 1.;
@@ -529,6 +530,49 @@ two_punctures_build_residual
      d4est_quad,
      user
     );
+}
+
+double
+two_punctures_robin_coeff_brick_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user,
+ d4est_poisson_flux_boundary_data_t* boundary_data,
+ int mortar_node
+)
+{
+  double r2 = x*x + y*y + z*z;
+  if (fabs(boundary_data->n_on_f_m_quad[0][mortar_node]) > 0.)
+    return x/r2;
+  else if (fabs(boundary_data->n_on_f_m_quad[1][mortar_node]) > 0.)
+    return y/r2;
+  else if (fabs(boundary_data->n_on_f_m_quad[2][mortar_node]) > 0.)
+    return z/r2;
+  else{
+    D4EST_ABORT("Should not occur");
+    return NAN;
+  }
+}
+
+
+double
+two_punctures_robin_bc_rhs_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user,
+ d4est_poisson_flux_boundary_data_t* boundary_data,
+ int mortar_node
+)
+{
+  return 0.;
 }
 
 static double
