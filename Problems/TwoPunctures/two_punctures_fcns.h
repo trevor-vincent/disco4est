@@ -558,6 +558,24 @@ two_punctures_robin_coeff_brick_fcn
   }
 }
 
+double
+two_punctures_robin_coeff_sphere_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user,
+ d4est_poisson_flux_boundary_data_t* boundary_data,
+ int mortar_node
+)
+{
+  double r2 = x*x + y*y + z*z;
+  return 1/sqrt(r2);
+}
+
+
 
 double
 two_punctures_robin_bc_rhs_fcn

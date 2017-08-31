@@ -213,11 +213,11 @@ problem_init
   
   /* d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file); */
   d4est_poisson_robin_bc_t bc_data_for_jac;
-  bc_data_for_jac.robin_coeff = two_punctures_robin_coeff_brick_fcn;
+  bc_data_for_jac.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
   bc_data_for_jac.robin_rhs = two_punctures_robin_bc_rhs_fcn;
 
   d4est_poisson_robin_bc_t bc_data_for_res;
-   bc_data_for_res.robin_coeff = two_punctures_robin_coeff_brick_fcn;
+   bc_data_for_res.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
   bc_data_for_res.robin_rhs = two_punctures_robin_bc_rhs_fcn;
   
   d4est_poisson_dirichlet_bc_t bc_data_for_res_bi;
