@@ -51,7 +51,7 @@ d4est_poisson_flux_sipg_calculate_h
     int stride = 0;
     double h [P4EST_HALF];
     for (int f = 0; f < num_faces_mortar; f++){
-      h[f] = (num_faces_side == num_faces_mortar) ? elems_side[f]->j_div_sj_min_lobatto : elems_side[0]->j_div_sj_min_lobatto;
+      h[f] = (num_faces_side == num_faces_mortar) ? elems_side[f]->j_div_sj_min_lobatto[face_side] : elems_side[0]->j_div_sj_min_lobatto[face_side];
     }
                  
     for (int f = 0; f < num_faces_mortar; f++){

@@ -991,6 +991,9 @@ d4est_quadrature_lebesgue_measure
 {
   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg_object);
   double* ones = P4EST_ALLOC(double, volume_nodes);
+
+  for (int i = 0; i < volume_nodes; i++)
+    ones[i] = 1.;
   
   double measure = d4est_quadrature_innerproduct
     (

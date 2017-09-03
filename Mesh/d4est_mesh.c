@@ -60,6 +60,154 @@ d4est_mesh_geometry_storage_destroy
   }
 }
 
+void
+d4est_mesh_calculate_element_sizes
+(
+ d4est_element_data_t* ed
+)
+{
+  d4est_quadrature_t* quad = P4EST_ALLOC(d4est_quadrature_t,1);
+  d4est_quadrature_lobatto_new(quad, NULL, NULL);
+
+  d4est_rst_t rst_points_quad;
+  rst_points_quad = d4est_quadrature_get_rst_points
+                    (
+                     d4est_ops,
+                     d4est_quad,
+                     d4est_geom,
+                     NULL,
+                     QUAD_OBJECT_VOLUME,
+                     QUAD_INTEGRAND_UNKNOWN,
+                     ed->deg
+                    );
+
+
+  d4est_geometry_compute_xyz
+    (
+     d4est_ops,
+     d4est_geom,
+     rst_points_lobatto,
+     tt,
+     deg_vol_lobatto,
+     q,
+     dq,
+     xyz_lobatto
+    );
+
+  double diam_volume = -1;
+  for (int i = 0; i < volume_nodes_lobatto; i++){
+    for (int j = i + 1; j < volume_nodes_lobatto; j++){
+      double diam_temp = 0.;
+      for (int d = 0; d < (P4EST_DIM); d++){
+        diam_temp += pow(fabs(xyz_lobatto[d][i] - xyz_lobatto[d][j]), 2);
+      }
+      diam_temp = sqrt(diam_temp);
+      if (diam_temp > diam_volume)
+        diam_volume = diam_temp;
+    }
+  }
+  
+  d4est_geometry_compute_dxyz_drst
+    (
+     d4est_ops,
+     d4est_geom,
+     rst_points_lobatto,
+     tree,
+     q,
+     dq,
+     deg_vol_lobatto,           
+     xyz_rst_lobatto
+    );
+
+    
+  d4est_geometry_compute_jacobian
+    (
+     xyz_rst_lobatto,
+     J_lobatto,
+     volume_nodes_lobatto
+    );
+  
+  double* ones = P4EST_ALLOC(double, volume_nodes_lobatto);
+  for (int i = 0; i < volume_nodes_lobatto; i++)
+    ones[i] = 1.;
+
+  double volume = d4est_quadrature_innerproduct
+    (
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     NULL,
+     QUAD_OBJECT_VOLUME,
+     QUAD_INTEGRAND_UNKNOWN,
+     ones,
+     NULL,
+     J_lobatto,
+     ed->deg
+    );
+
+
+  for (int f = 0; f < (P4EST_FACES); f++){
+
+  d4est_mortars_compute_geometric_data_on_mortar
+    (
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     QUAD_INTEGRAND_UNKNOWN,
+     e_m->tree,
+     e_m->q,
+     e_m->dq,
+     -1,
+     1,
+     1,
+     &deg_lobatto,
+     f_m,
+     xyz_on_f_m_quad,
+     NULL,
+     sj_on_f_m_quad,
+     NULL,
+     NULL,
+     j_div_sj_quad,
+     COMPUTE_NORMAL_USING_JACOBIAN
+    );
+
+  area[f] = d4est_quadrature_innerproduct
+    (
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     NULL,
+     QUAD_OBJECT_MORTAR,
+     QUAD_INTEGRAND_UNKNOWN,
+     ones,
+     NULL,
+     sj_on_f_m_quad,
+     ed->deg
+    );
+
+
+  double diam_face = -1;
+  for (int i = 0; i < face_nodes_lobatto; i++){
+    for (int j = i + 1; j < face_nodes_lobatto; j++){
+      double diam_temp = 0.;
+      for (int d = 0; d < (P4EST_DIM); d++){
+        diam_temp += pow(fabs(xyz_on_f_m_quad[d][i] - xyz_on_f_m_quad[d][j]), 2);
+      }
+      diam_temp = sqrt(diam_temp);
+      if (diam_temp > diam_face)
+        diam_face = diam_temp;
+    }
+  }
+
+  diam_face_h[f] = diam_face;
+
+  j_div_sj[f] = d4est_util_min_dbl_array(j_div_sj_quad, face_nodes_lobatto);
+ 
+  } 
+     
+  P4EST_FREE(ones);
+  P4EST_FREE(quad);
+}
 
 void
 d4est_mesh_get_array_of_degrees
