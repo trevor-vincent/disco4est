@@ -327,6 +327,7 @@ set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppr
 # add_d4est_test_3d(test_d4est_constant_density_star_fcns test_d4est_constant_density_star_fcns.c . test_d4est_constant_density_star_fcns)
 # add_d4est_test_3d(test_d4est_poisson_symmetry test_d4est_poisson_symmetry.c . test_d4est_poisson_symmetry)
 # add_d4est_test_3d(test_d4est_stiffness test_d4est_stiffness.c . test_d4est_stiffness)
+add_d4est_test_3d(test_d4est_brick_fcns test_d4est_brick_fcns.c . test_d4est_brick_fcns)
 
 # add_executable(test_d4est_quadrature_compactified Tests/test_d4est_quadrature_compactified.c)
 # target_link_libraries(test_d4est_quadrature_compactified d8est)
@@ -358,12 +359,18 @@ set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppr
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
 # add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
+
+
+add_test(test_d4est_brick_fcns test_d4est_brick_fcns)
+
 add_d4est_problem_2d(stamm_krylov_driver stamm_krylov.c Stamm)
 add_d4est_problem_2d(poisson_exp_robin_driver poisson_exp_robin.c PoissonExpRobin)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star.c ConstantDensityStar)
+add_d4est_problem_3d(constant_density_star_inbin_driver constant_density_star_inbin.c ConstantDensityStar)
 add_d4est_problem_3d(two_punctures_robin_brick_driver two_punctures_robin_brick.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_sphere_driver two_punctures_robin_sphere.c TwoPunctures)
-add_d4est_problem_3d(two_punctures_driver two_punctures.c TwoPunctures)
+add_d4est_problem_3d(two_punctures_robin_sphere_hp_driver two_punctures_robin_sphere_hp.c TwoPunctures)
+# add_d4est_problem_3d(two_punctures_driver two_punctures.c TwoPunctures)
 # add_d4est_problem_2d(constant_density_star_driver stamm_krylov.c Stamm)
 # add_d4est_problem_3d(okendon_uniform_driver okendon_uniform.c Okendon)
 # add_d4est_problem_3d(boyen_york_model_driver boyen_york_model_uniform.c BoyenYorkModel)

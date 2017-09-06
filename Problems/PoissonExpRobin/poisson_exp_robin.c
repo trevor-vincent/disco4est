@@ -207,11 +207,12 @@ problem_init
        d4est_quad,
        *ghost,
        *ghost_data,
-       NULL,
+       -1,
        &prob_vecs,
        NULL,
        poisson_exp_robin_analytic_solution,
-       NULL       
+       NULL       ,
+       NULL
       );
 
 

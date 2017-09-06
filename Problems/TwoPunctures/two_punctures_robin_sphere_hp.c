@@ -87,6 +87,7 @@ two_punctures_init_params_input
 }
 
 
+
 static
 int
 amr_mark_element
@@ -98,8 +99,11 @@ amr_mark_element
  void* user
 )
 {
-  int elem_bin;
+  problem_ctx_t* ctx = user;
+  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
 
+  int elem_bin;
+  
   /* outer shell */
   if (elem_data->tree < 6){
     elem_bin = 0;
@@ -114,12 +118,9 @@ amr_mark_element
   }
  
   double eta2_percentile
-    = d4est_estimator_stats_get_percentile(stats[elem_bin], 5);
+    = d4est_estimator_stats_get_percentile(stats[elem_bin], params->percentile);
 
-  if (elem_bin == 2)
-    return (eta2 >= eta2_percentile);
-  else
-    return 0;
+  return (eta2 >= eta2_percentile);
 }
 
 static
@@ -133,13 +134,18 @@ amr_set_element_gamma
  void* user
 )
 {
+  problem_ctx_t* ctx = user;
+  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
+  
   gamma_params_t gamma_hpn;
-  gamma_hpn.gamma_h = 0;
-  gamma_hpn.gamma_p = 0;
-  gamma_hpn.gamma_n = 0;
+  gamma_hpn.gamma_h = params->gamma_h;
+  gamma_hpn.gamma_p = params->gamma_p;
+  gamma_hpn.gamma_n = params->gamma_n;
 
   return gamma_hpn;
 }
+
+
 
 
 int
@@ -186,13 +192,16 @@ problem_set_degrees_after_amr
  void* user_ctx
 )
 {
+
+  two_punctures_init_params_t* init_params = user_ctx;
+  
   /* outer shell */
   if (elem_data->tree < 6){
-    elem_data->deg_vol_quad = elem_data->deg + 4;
+    elem_data->deg_vol_quad = elem_data->deg + init_params->deg_vol_quad_inc_outer;
   }
   /* inner shell */
   else if(elem_data->tree < 12){
-    elem_data->deg_vol_quad = elem_data->deg + 4;
+    elem_data->deg_vol_quad = elem_data->deg + init_params->deg_vol_quad_inc_inner;
   }
   /* center cube */
   else {
@@ -226,7 +235,7 @@ problem_init
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
   
-  /* d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file); */
+  d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
   d4est_poisson_robin_bc_t bc_data_for_jac;
   bc_data_for_jac.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
   bc_data_for_jac.robin_rhs = two_punctures_robin_bc_rhs_fcn;
@@ -244,7 +253,7 @@ problem_init
 
   problem_ctx_t ctx;
   ctx.two_punctures_params = &two_punctures_params;
-  /* ctx.smooth_pred_params = &smooth_pred_params; */
+  ctx.smooth_pred_params = &smooth_pred_params;
   ctx.flux_data_for_jac = flux_data_for_jac;
   ctx.flux_data_for_res = flux_data_for_res;
                            
@@ -461,7 +470,7 @@ problem_init
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
   d4est_poisson_flux_destroy(flux_data_for_jac);  
-  d4est_poisson_flux_destroy(flux_data_for_res);
+  d4est_poisson_flux_destroy(flux_data_for_res);  
   d4est_output_destroy_energy_norm_fit(fit);
   P4EST_FREE(error);
   P4EST_FREE(u_prev);

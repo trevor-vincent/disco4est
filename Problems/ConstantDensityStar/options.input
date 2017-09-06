@@ -2,7 +2,7 @@
 
 [initial_grid]
 min_quadrants = -1
-min_level = 0
+min_level = 1
 fill_uniform = 1
 deg = 2
 deg_quad = 2
@@ -54,15 +54,15 @@ JAC_compute_method = numerical
 
 [d4est_solver_newton]
 imin = 10
-imax = 1
+imax = 10
 monitor = 1
-rtol = 1e-20
-atol = 1e-20
+rtol = 1e-15
+atol = 1e-15
 
 [krylov_petsc]
-ksp_type = cg
+ksp_type = fcg
 ksp_atol = 1e-15
-ksp_rtol = 1e-50
+ksp_rtol = 1e-15
 ksp_max_it = 10000
 ksp_view = 1
 ksp_monitor = 1

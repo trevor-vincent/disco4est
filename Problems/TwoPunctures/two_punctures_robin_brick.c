@@ -311,7 +311,8 @@ problem_init
        *ghost_data,
        &ip_norm_data,
        stats->total,
-       error
+       error,
+       NULL
       );
 
 

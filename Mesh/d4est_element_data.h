@@ -49,9 +49,9 @@ typedef struct {
   int deg; /* nodal degree */
   int deg_vol_quad; /* deg for volume quadrature */
 
-  double j_div_sj_min_lobatto [(P4EST_FACES)];
-  double diam_face_h [(P4EST_FACES)];
-  double diam_volume_h;
+  double j_div_sj_min [(P4EST_FACES)];
+  double diam_face [(P4EST_FACES)];
+  double diam_volume;
   double area [(P4EST_FACES)];
   double volume;
   
