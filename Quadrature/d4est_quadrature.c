@@ -42,6 +42,7 @@ static
 d4est_quadrature_input_t
 d4est_quadrature_input
 (
+ int mpirank,
  const char* input_file,
  const char* input_section,
  const char* printf_prefix
@@ -57,8 +58,9 @@ d4est_quadrature_input
   }
 
   D4EST_CHECK_INPUT(input_section, input.name, NULL); 
-  printf("%s: Loading %s quadrature\n", printf_prefix, input.name);
-
+  if (mpirank == 0){
+    printf("%s: Loading %s quadrature\n", printf_prefix, input.name);
+  }
   return input;
 }
 
@@ -75,7 +77,7 @@ d4est_quadrature_new
 )
 {
   
-  d4est_quadrature_input_t input = d4est_quadrature_input(input_file, input_section, printf_prefix);
+  d4est_quadrature_input_t input = d4est_quadrature_input(p4est->mpirank,input_file, input_section, printf_prefix);
   d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t, 1);
 
   if (d4est_util_match(input.name,"legendre")) {

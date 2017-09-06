@@ -53,6 +53,7 @@ d4est_output_new_energy_norm_fit
 void
 d4est_output_energy_norm_fit
 (
+ p4est_t* p4est,
  d4est_output_energy_norm_fit_t* fit
 )
 {
@@ -67,12 +68,15 @@ d4est_output_energy_norm_fit
      fit->stride
     );
 
-  printf("[D4EST_OUTPUT_FIT](2): C1 = %f, C2 = %.15f\n", intercept, slope);
+  if (p4est->mpirank == 0){
+    printf("[D4EST_OUTPUT_FIT](2): C1 = %f, C2 = %.15f\n", intercept, slope);
+  }
 }
 
 void
 d4est_output_energy_norm_add_entry_and_fit
 (
+ p4est_t* p4est,
  d4est_output_energy_norm_fit_t* fit,
  double global_energy_norm_sqr,
  double global_dof
@@ -82,9 +86,11 @@ d4est_output_energy_norm_add_entry_and_fit
   fit->stride += 1;
 
   if (fit->stride >= 2){
-    printf("[D4EST_OUTPUT_FIT](1): ||err|| = C1*exp(C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
-    printf("[D4EST_OUTPUT_FIT](1): ||err|| = %.15f\n",sqrt(global_energy_norm_sqr));
-    d4est_output_energy_norm_fit(fit);
+    if (p4est->mpirank == 0){
+      printf("[D4EST_OUTPUT_FIT](1): ||err|| = C1*exp(C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
+      printf("[D4EST_OUTPUT_FIT](1): ||err|| = %.15f\n",sqrt(global_energy_norm_sqr));
+    }
+    d4est_output_energy_norm_fit(p4est,fit);
   }
 }
 
@@ -191,7 +197,7 @@ d4est_output_norms
     int avg_deg_quad = pow((int)(global_quad_nodes_dbl/p4est->global_num_quadrants), 1./(P4EST_DIM)) - 1.f + .5f;
 
     if(energy_norm_data != NULL && fit != NULL){
-      d4est_output_energy_norm_add_entry_and_fit(fit, global_energy_norm_sqr, global_nodes_dbl);
+      d4est_output_energy_norm_add_entry_and_fit(p4est,fit, global_energy_norm_sqr, global_nodes_dbl);
     }
     
     if (p4est->mpirank == 0){

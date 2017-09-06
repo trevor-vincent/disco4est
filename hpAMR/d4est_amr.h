@@ -56,6 +56,7 @@ typedef struct {
   int max_degree;
 
   /* internal use */
+  int mpirank;
   int initial_log_size;
   int balance_log_size;
   int* refinement_log;

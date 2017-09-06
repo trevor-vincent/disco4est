@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
     printf("[D4EST_INFO]: DIM = 2\n");
 #endif
 
-
-  printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] : "options.input");
+  if (proc_rank == 0)
+    printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] : "options.input");
  
  
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,

@@ -83,6 +83,7 @@ static
 d4est_geometry_input_t
 d4est_geometry_input
 (
+ int mpirank,
  const char* input_file,
  const char* input_section,
  const char* printf_prefix
@@ -102,7 +103,8 @@ d4est_geometry_input
   D4EST_CHECK_INPUT(input_section, input.name, NULL);
   D4EST_CHECK_INPUT(input_section, input.DX_compute_method, GEOM_COMPUTE_NOT_SET);
   D4EST_CHECK_INPUT(input_section, input.JAC_compute_method, GEOM_COMPUTE_NOT_SET);
- 
+
+  if(mpirank == 0){
   printf("%s: Loading %s geometry\n", printf_prefix, input.name);
   if (input.DX_compute_method == GEOM_COMPUTE_NUMERICAL)
     printf("%s: Dx computation method = %s\n", printf_prefix, "numerical");
@@ -112,7 +114,7 @@ d4est_geometry_input
     printf("%s: JAC computation method = %s\n", printf_prefix, "numerical");
   if (input.JAC_compute_method == GEOM_COMPUTE_ANALYTIC)
     printf("%s: JAC computation method = %s\n", printf_prefix, "analytic");
-  
+  }
   return input;
 }
 
@@ -124,7 +126,7 @@ d4est_geometry_new(int mpirank,
                    const char* printf_prefix)
 {
 
-  d4est_geometry_input_t input = d4est_geometry_input(input_file, input_section, printf_prefix);
+  d4est_geometry_input_t input = d4est_geometry_input(mpirank, input_file, input_section, printf_prefix);
   d4est_geometry_t* d4est_geom = P4EST_ALLOC(d4est_geometry_t, 1);
   d4est_geom->DX_compute_method = input.DX_compute_method;
   d4est_geom->JAC_compute_method = input.JAC_compute_method;

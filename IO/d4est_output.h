@@ -47,8 +47,8 @@ void d4est_output_vtk(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry
 void d4est_output_norms_using_analytic_solution(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,double local_estimator,d4est_elliptic_data_t *prob_vecs,d4est_ip_energy_norm_data_t *energy_norm_data,d4est_xyz_fcn_t analytic_solution,void *ctx,d4est_output_energy_norm_fit_t *fit);
 void d4est_output_norms(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_ip_energy_norm_data_t *energy_norm_data,double estimator,double *error,d4est_output_energy_norm_fit_t *fit);
 void d4est_output_destroy_energy_norm_fit(d4est_output_energy_norm_fit_t *fit);
-void d4est_output_energy_norm_add_entry_and_fit(d4est_output_energy_norm_fit_t *fit,double global_energy_norm_sqr,double global_dof);
-void d4est_output_energy_norm_fit(d4est_output_energy_norm_fit_t *fit);
+void d4est_output_energy_norm_add_entry_and_fit(p4est_t *p4est,d4est_output_energy_norm_fit_t *fit,double global_energy_norm_sqr,double global_dof);
+void d4est_output_energy_norm_fit(p4est_t *p4est,d4est_output_energy_norm_fit_t *fit);
 d4est_output_energy_norm_fit_t *d4est_output_new_energy_norm_fit(int num_of_entries);
 
 #endif

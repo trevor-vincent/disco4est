@@ -343,23 +343,28 @@ int d4est_amr_input_handler
   if (d4est_util_match_couple(section,"amr",name,"scheme")) {
     if(d4est_util_match(value, "smooth_pred")){
       pconfig->scheme->amr_scheme_type = AMR_SMOOTH_PRED;
-      printf("[D4EST_AMR]: loading scheme = %s\n", "smooth_pred");
+      if(pconfig->mpirank == 0)
+        printf("[D4EST_AMR]: loading scheme = %s\n", "smooth_pred");
     }
     else if (d4est_util_match(value, "uniform_h")){
       pconfig->scheme->amr_scheme_type = AMR_UNIFORM_H;
-      printf("[D4EST_AMR]: loading scheme = %s\n", "uniform_h");
+      if(pconfig->mpirank == 0)
+        printf("[D4EST_AMR]: loading scheme = %s\n", "uniform_h");
     }
     else if (d4est_util_match(value, "uniform_p")){
       pconfig->scheme->amr_scheme_type = AMR_UNIFORM_P;
-      printf("[D4EST_AMR]: loading scheme = %s\n", "uniform_p");
+      if(pconfig->mpirank == 0)
+        printf("[D4EST_AMR]: loading scheme = %s\n", "uniform_p");
     }
     else if (d4est_util_match(value, "random_h")){
       pconfig->scheme->amr_scheme_type = AMR_RANDOM_H;
-      printf("[D4EST_AMR]: loading scheme = %s\n", "random_h");
+      if(pconfig->mpirank == 0)
+        printf("[D4EST_AMR]: loading scheme = %s\n", "random_h");
     }
     else if (d4est_util_match(value, "random_hp")){
       pconfig->scheme->amr_scheme_type = AMR_RANDOM_HP;
-      printf("[D4EST_AMR]: loading scheme = %s\n", "random_hp");
+      if(pconfig->mpirank == 0)
+        printf("[D4EST_AMR]: loading scheme = %s\n", "random_hp");
     }    
     else {
       printf("[D4EST_ERROR]: You tried to use %s as a mapping type\n", value);
@@ -400,9 +405,11 @@ d4est_amr_input
   D4EST_CHECK_INPUT("amr", d4est_amr->scheme->amr_scheme_type, AMR_NOT_SET);
   D4EST_CHECK_INPUT("amr", d4est_amr->max_degree, -1);
   D4EST_CHECK_INPUT("amr", d4est_amr->num_of_amr_steps, -1);
- 
-  printf("[D4EST_AMR]: num_of_amr_steps = %d\n",  d4est_amr->num_of_amr_steps);
-  printf("[D4EST_AMR]: max_degree = %d\n",  d4est_amr->max_degree);
+
+  if(d4est_amr->mpirank == 0){
+    printf("[D4EST_AMR]: num_of_amr_steps = %d\n",  d4est_amr->num_of_amr_steps);
+    printf("[D4EST_AMR]: max_degree = %d\n",  d4est_amr->max_degree);
+  }
 }
 
 d4est_amr_t*
@@ -416,7 +423,8 @@ d4est_amr_init
 {
   d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
   d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
-  
+
+  d4est_amr->mpirank = p4est->mpirank;
   d4est_amr->scheme = scheme;
   d4est_amr->balance_log = NULL;
   d4est_amr->refinement_log = NULL;
