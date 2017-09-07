@@ -138,7 +138,10 @@ amr_set_element_gamma
   d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
   
   gamma_params_t gamma_hpn;
-  gamma_hpn.gamma_h = params->gamma_h;
+  if (ctx->amr_level <= 5)
+    gamma_hpn.gamma_h = params->gamma_h;
+  else
+    gamma_hpn.gamma_h = 10000000.; 
   gamma_hpn.gamma_p = params->gamma_p;
   gamma_hpn.gamma_n = params->gamma_n;
 
@@ -311,6 +314,8 @@ problem_init
   d4est_output_energy_norm_fit_t* fit = d4est_output_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
+
+    ctx.amr_level = level;
     
     d4est_estimator_bi_compute
       (
