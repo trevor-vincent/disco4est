@@ -98,57 +98,57 @@ init_two_punctures_data
 
 
 
-/* static */
-/* void */
-/* init_random_puncture_data */
-/* ( */
-/*  p4est_t* p4est, */
-/*  two_punctures_params_t* params, */
-/*  int num_punctures */
-/* ) */
-/* { */
-/*   D4EST_ASSERT(num_punctures < (MAX_PUNCTURES)); */
-/*   params->puncture_eps = 1e-10; */
-/*   params->num_punctures = num_punctures; */
-/*   double M = 1.; */
+static
+void
+init_random_puncture_data
+(
+ p4est_t* p4est,
+ two_punctures_params_t* params,
+ int num_punctures
+)
+{
+  D4EST_ASSERT(num_punctures < (MAX_PUNCTURES));
+  params->puncture_eps = 1e-15;
+  params->num_punctures = num_punctures;
+  double M = 1.;
 
-/*   double rand_x [MAX_PUNCTURES]; */
-/*   double rand_y [MAX_PUNCTURES]; */
-/*   double rand_px [MAX_PUNCTURES]; */
-/*   double rand_py [MAX_PUNCTURES]; */
+  double rand_x [MAX_PUNCTURES];
+  double rand_y [MAX_PUNCTURES];
+  double rand_px [MAX_PUNCTURES];
+  double rand_py [MAX_PUNCTURES];
 
-/*   d4est_util_gen_rand_vec(&rand_x[0], num_punctures, 1532413243, -5., 5.); */
-/*   d4est_util_gen_rand_vec(&rand_y[0], num_punctures, 1532413243, -5., 5.); */
-/*   d4est_util_gen_rand_vec(&rand_px[0], num_punctures, 13232413243, -.2, .2); */
-/*   d4est_util_gen_rand_vec(&rand_py[0], num_punctures, 14432413243, -.2, .2); */
+  d4est_util_gen_rand_vec(&rand_x[0], num_punctures, 1532413243, -5., 5.);
+  d4est_util_gen_rand_vec(&rand_y[0], num_punctures, 1532413243, -5., 5.);
+  d4est_util_gen_rand_vec(&rand_px[0], num_punctures, 13232413243, -.2, .2);
+  d4est_util_gen_rand_vec(&rand_py[0], num_punctures, 14432413243, -.2, .2);
   
-/*   for (int i = 0; i < num_punctures; i++){ */
-/*     params->M_bh[i] = M/(double)(num_punctures); */
-/*     params->C_bh[i][0] = rand_x[i]; */
-/*     params->C_bh[i][1] = rand_y[i]; */
-/*     params->C_bh[i][2] = 0.; */
-/*     params->P_bh[i][0] = rand_px[i]; */
-/*     params->P_bh[i][1] = rand_py[i]; */
-/*     params->P_bh[i][2] = 0.; */
-/*     params->S_bh[i][0] = 0.; */
-/*     params->S_bh[i][1] = 0.; */
-/*     params->S_bh[i][2] = 0.; */
-/*     if (p4est->mpirank == 0){ */
-/*     printf("Puncture %d: M_bh, x, y, z, px, py, pz, sx, sy ,sz \n", i); */
-/*     printf(" %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f ,%.6f \n", */
-/*            params->M_bh[i], */
-/*            params->C_bh[i][0], */
-/*            params->C_bh[i][1], */
-/*            params->C_bh[i][2], */
-/*            params->P_bh[i][0], */
-/*            params->P_bh[i][1], */
-/*            params->P_bh[i][2], */
-/*            params->S_bh[i][0], */
-/*            params->S_bh[i][1], */
-/*            params->S_bh[i][2]); */
-/*     } */
-/*   } */
-/* } */
+  for (int i = 0; i < num_punctures; i++){
+    params->M_bh[i] = M/(double)(num_punctures);
+    params->C_bh[i][0] = rand_x[i];
+    params->C_bh[i][1] = rand_y[i];
+    params->C_bh[i][2] = 0.;
+    params->P_bh[i][0] = rand_px[i];
+    params->P_bh[i][1] = rand_py[i];
+    params->P_bh[i][2] = 0.;
+    params->S_bh[i][0] = 0.;
+    params->S_bh[i][1] = 0.;
+    params->S_bh[i][2] = 0.;
+    if (p4est->mpirank == 0){
+    printf("Puncture %d: M_bh, x, y, z, px, py, pz, sx, sy ,sz \n", i);
+    printf(" %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f ,%.6f \n",
+           params->M_bh[i],
+           params->C_bh[i][0],
+           params->C_bh[i][1],
+           params->C_bh[i][2],
+           params->P_bh[i][0],
+           params->P_bh[i][1],
+           params->P_bh[i][2],
+           params->S_bh[i][0],
+           params->S_bh[i][1],
+           params->S_bh[i][2]);
+    }
+  }
+}
 
 static
 double levi_civita(int a, int b, int c)

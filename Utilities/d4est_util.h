@@ -219,6 +219,7 @@ typedef enum {D4EST_INT, D4EST_DOUBLE} d4est_builtin_t;
 
 
 /* This file was automatically generated.  Do not edit! */
+void d4est_util_gen_rand_vec(double *vec,int N,int seed,double a,double b);
 double d4est_util_min_dbl_array(double *arr,int N);
 void d4est_util_compute_error_array(double *arr1,double *arr2,double *err,int N);
 int d4est_util_match(const char *str1,const char *str2);
@@ -233,7 +234,6 @@ double d4est_util_parallel_checksum_dbl(double *vec,int N);
 void d4est_util_sort_double(double *a,size_t n);
 double d4est_util_sum_array_dbl(double *array,int N);
 int d4est_util_sum_array_int(int *array,int N);
-void d4est_util_gen_rand_vec(double *vec,int N,long int seed,double a,double b);
 double d4est_util_max_error(double *u,double *u_sol,int N);
 int d4est_util_uniform_rand_int(long int seed,int a,int b);
 double d4est_util_uniform_rand(long int seed,double a,double b);

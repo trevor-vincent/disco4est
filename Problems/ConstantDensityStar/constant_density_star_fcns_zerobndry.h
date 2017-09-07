@@ -258,7 +258,7 @@ double constant_density_star_analytic_solution
 )
 {
   /* psi = u + 1 */
-  return psi_fcn(x,y,z,user);
+  return psi_fcn(x,y,z,user) - 1;
 }
 
 static
@@ -270,10 +270,7 @@ double constant_density_star_boundary_fcn
  void* user
 )
 {
-  problem_ctx_t ctx;
-  constant_density_star_params_t* params = user;
-  ctx.constant_density_star_params = params;
-  return psi_fcn(x,y,z,&ctx);
+  return zero_fcn(x,y,z,user);
 }
 
 
@@ -283,11 +280,11 @@ double neg_10pi_rho_up1_neg4
  double x,
  double y,
  double z,
- double psi,
+ double u,
  void* ctx
 )
 {
-  return (-10.*M_PI)*rho_fcn(x,y,z,ctx)*(psi)*(psi)*(psi)*(psi);
+  return (-10.*M_PI)*rho_fcn(x,y,z,ctx)*(u+1)*(u+1)*(u+1)*(u+1);
 }
 
 static
@@ -296,11 +293,11 @@ double neg_2pi_rho_up1_neg5
  double x,
  double y,
  double z,
- double psi,
+ double u,
  void* ctx
 )
 {
-  return (-2.*M_PI)*rho_fcn(x,y,z,ctx)*(psi)*(psi)*(psi)*(psi)*(psi);
+  return (-2.*M_PI)*rho_fcn(x,y,z,ctx)*(u+1)*(u+1)*(u+1)*(u+1)*(u+1);
 }
 
 

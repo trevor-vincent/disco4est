@@ -556,7 +556,7 @@ d4est_mesh_print_element_data_debug
         
         int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), ed->deg );
        
-        
+#ifndef NDEBUG
 #if (P4EST_DIM)==2 
         printf("q = %d, %d, dq = %d\n", ed->q[0], ed->q[1], ed->dq);
         DEBUG_PRINT_2ARR_DBL(ed->xyz[0], ed->xyz[1], volume_nodes);
@@ -567,7 +567,7 @@ d4est_mesh_print_element_data_debug
 #else
         D4EST_ABORT("DIM = 2 or 3");
 #endif
-        
+#endif        
 /* #else */
         /* D4EST_ABORT("DEBUG flag must be set"); */
 /* #endif */

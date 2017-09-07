@@ -344,6 +344,7 @@ d4est_ip_energy_norm_compute
   flux_data.flux_data = energy_norm_data;
   flux_data.get_deg_mortar_quad = d4est_ip_energy_norm_get_deg_mortar_quad;
   flux_data.get_deg_mortar_quad_ctx = NULL;
+  
   d4est_mortar_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(&flux_data);
   
   d4est_mortar_compute_flux_on_local_elements

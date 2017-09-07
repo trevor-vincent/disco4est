@@ -39,16 +39,20 @@ amr_mark_element
 {
   problem_ctx_t* ctx = user;
   d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
+
+  printf("p4est->local_num_quadrants*p4est->mpisize < params->inflation_size = %d\n",p4est->local_num_quadrants*p4est->mpisize < params->inflation_size);
   
   if (p4est->local_num_quadrants*p4est->mpisize < params->inflation_size){
+
     double eta2_percentile
       = d4est_estimator_stats_get_percentile(*stats,25);
-    return (eta2 >= eta2_percentile);
+    printf("Inflation with 25 percentile, eta2_percentile = %.15f\n", eta2_percentile);
+    return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
   }
   else{
     double eta2_percentile
       = d4est_estimator_stats_get_percentile(*stats,params->percentile);
-    return (eta2 >= eta2_percentile);
+    return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
   }
 }
 
@@ -94,7 +98,7 @@ problem_set_degrees_after_amr
  void* user_ctx
 )
 {
-  elem_data->deg_vol_quad = elem_data->deg;
+  elem_data->deg_vol_quad = elem_data->deg + 3;
 }
 
 
@@ -120,10 +124,12 @@ problem_init
   
    d4est_poisson_dirichlet_bc_t bc_data_for_jac;
   bc_data_for_jac.dirichlet_fcn = zero_fcn;
+  bc_data_for_jac.user = &constant_density_star_params;
 
   d4est_poisson_dirichlet_bc_t bc_data_for_res;
   bc_data_for_res.dirichlet_fcn = constant_density_star_boundary_fcn;
-  
+  bc_data_for_res.user = &constant_density_star_params;
+                         
   d4est_poisson_flux_data_t* flux_data_for_jac =
     d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, problem_set_mortar_degree, NULL);
   d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_res, problem_set_mortar_degree, NULL);
@@ -155,6 +161,7 @@ problem_init
   penalty_data.gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
   penalty_data.sipg_flux_h = sipg_params->sipg_flux_h;
+  penalty_data.user = &constant_density_star_params;
   
   d4est_amr_smooth_pred_marker_t amr_marker;
   amr_marker.user = (void*)&ctx;
@@ -182,7 +189,7 @@ problem_init
      NULL
     );
 
-  d4est_output_energy_norm_fit_t* fit = d4est_output_new_energy_norm_fit(d4est_amr->num_of_amr_steps);
+  d4est_output_energy_norm_fit_t* fit = d4est_output_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
   
     d4est_ip_energy_norm_data_t ip_norm_data;
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
@@ -211,7 +218,7 @@ problem_init
        &prob_vecs,
        &prob_fcns,
        penalty_data,
-       zero_fcn,
+       constant_density_star_boundary_fcn,
        *ghost,
        *ghost_data,
        d4est_ops,
@@ -307,7 +314,10 @@ problem_init
 
     
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
- 
+
+    /* DEBUG_PRINT_ARR_DBL(prob_vecs.u, prob_vecs.local_nodes); */
+    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, prob_vecs.local_nodes); */
+    
     d4est_solver_newton_solve
       (
        p4est,
@@ -321,6 +331,9 @@ problem_init
        input_file,
        NULL
       );
+
+    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, prob_vecs.local_nodes); */
+    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, prob_vecs.local_nodes); */
 
 
   }

@@ -233,7 +233,7 @@ problem_init
                                                                            );
   
   two_punctures_params_t two_punctures_params;
-  init_two_punctures_data(&two_punctures_params);
+  init_random_puncture_data(p4est,&two_punctures_params,4);
   
   d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
   d4est_poisson_robin_bc_t bc_data_for_jac;
