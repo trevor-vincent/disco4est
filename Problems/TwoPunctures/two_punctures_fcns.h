@@ -20,7 +20,8 @@ typedef struct {
 
 
 typedef struct {
-  
+
+  int amr_level;
   two_punctures_params_t* two_punctures_params;
   d4est_poisson_flux_data_t* flux_data_for_jac;
   d4est_poisson_flux_data_t* flux_data_for_res;

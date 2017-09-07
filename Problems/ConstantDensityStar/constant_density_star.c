@@ -23,7 +23,7 @@
 #include <krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
-#include "constant_density_star_fcns.h"
+#include "constant_density_star_fcns_zerobndry.h"
 
 
 static
