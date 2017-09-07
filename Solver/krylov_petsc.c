@@ -324,6 +324,7 @@ krylov_petsc_solve
 
 
   KSPSetFromOptions(ksp);
+  /* KSPSetUp(ksp); */
   /* Create matrix-free shell for Aij */
   Mat A;
   MatCreateShell
@@ -348,7 +349,7 @@ krylov_petsc_solve
   KSPGetIterationNumber(ksp, &(info.iterations));
   KSPGetResidualNorm(ksp, &(info.residual_norm));
 
-
+  MatDestroy(&A);
   VecResetArray(b);
   VecResetArray(x);
   VecDestroy(&x);

@@ -143,6 +143,9 @@ d4est_estimator_bi_dirichlet
 
   }
 
+
+  P4EST_FREE(u_at_bndry_lobatto);
+  P4EST_FREE(u_at_bndry_lobatto_to_quad);
   P4EST_FREE(Je2_prefactor);
   P4EST_FREE(Je2);
 }

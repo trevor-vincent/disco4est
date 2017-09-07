@@ -700,6 +700,8 @@ void d4est_quadrature_apply_fofufofvlilj
   if (v != NULL){
     P4EST_FREE(v_quad);
   }
+
+  P4EST_FREE(fofu_fofv_jac);
   
 }
 
