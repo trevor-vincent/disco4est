@@ -50,6 +50,7 @@ double u_alpha
   double dy = y - cy;
   double dz = z - cz;
   double r2 = dx*dx + dy*dy + dz*dz;
+  
   return sqrt(alpha*R)/sqrt(r2 + alpha*R*alpha*R);
 }
 
@@ -162,8 +163,11 @@ constant_density_star_input
   problem_ctx_t ctx;
   ctx.constant_density_star_params = &input;
   
-  D4EST_ASSERT( !d4est_util_bisection(solve_for_alpha, alpha_crit, 1000*alpha_crit, DBL_EPSILON, 100000, &alpha, &ctx));
 
+  int success = d4est_util_bisection(solve_for_alpha, alpha_crit, 1000*alpha_crit, DBL_EPSILON, 100000, &alpha, &ctx);
+  D4EST_ASSERT(success);
+                               
+                               
   double u_alpha_at_R = sqrt(alpha*R)/sqrt(R*R + alpha*R*alpha*R);
   double beta = R*(C0*u_alpha_at_R - 1.);
 
@@ -258,6 +262,7 @@ double constant_density_star_analytic_solution
 )
 {
   /* psi = u + 1 */
+  /* printf("x,y,z,u_analytic = %f,%f,%f,%f\n", x,y,z,psi_fcn(x,y,z,user)); */
   return psi_fcn(x,y,z,user);
 }
 

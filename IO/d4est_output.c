@@ -30,6 +30,9 @@ d4est_output_calculate_analytic_error
        d4est_geom,
        analytic_solution_ctx
       );
+
+    /* for (int i = 0; i < prob_vecs->local_nodes; i++) */
+      /* printf("u_analytic[%d] = %.25f\n",i, u_analytic[i]); */
     
     d4est_linalg_vec_axpyeqz(-1., prob_vecs->u, u_analytic, error, prob_vecs->local_nodes);
     d4est_linalg_vec_fabs(error, prob_vecs->local_nodes);
@@ -488,6 +491,12 @@ d4est_output_vtk_with_analytic_error
   double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
   d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs, analytic_solution, ctx, u_analytic, error);
 
+  /* double error_sum = 0.; */
+  /* for (int i = 0; i < prob_vecs->local_nodes; i++) */
+  /*   error_sum += error[i]; */
+  /* printf("error sum = %.25f\n", error_sum); */
+
+  
   d4est_output_vtk
     (
      p4est,
@@ -502,7 +511,7 @@ d4est_output_vtk_with_analytic_error
      level,
      save_estimator
     );
-  
+
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
 }

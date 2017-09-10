@@ -145,87 +145,9 @@ multigrid_matrix_operator_init
   return user_callbacks;
 }
 
-void
-multigrid_matrix_fofu_fofv_mass_operator_setup_deg_quad_eq_deg
-(
- p4est_t* p4est,
- d4est_operators_t* d4est_ops,
- double* u,
- double* v,
- d4est_xyz_fcn_ext_t fofu_fcn,
- void* fofu_ctx,
- d4est_xyz_fcn_ext_t fofv_fcn,
- void* fofv_ctx,
- multigrid_matrix_op_t* matrix_op
-)
-{
-  int nodal_stride = 0;
-  int matrix_nodal_stride = 0;
-  for (p4est_topidx_t tt = p4est->first_local_tree;
-       tt <= p4est->last_local_tree;
-       ++tt)
-    {
-      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-      sc_array_t* tquadrants = &tree->quadrants;
-      int Q = (p4est_locidx_t) tquadrants->elem_count;
-      for (int q = 0; q < Q; ++q) {
-        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        element_data_t* ed = quad->p.user_data;
-        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
-        int matrix_volume_nodes = volume_nodes*volume_nodes;
-        int volume_nodes_gauss = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
-
-        double* jac_gauss = P4EST_ALLOC(double, volume_nodes_gauss);
-        d4est_linalg_fill_vec(jac_gauss, ed->jacobian, volume_nodes_gauss);
-
-        double* r_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), ed->deg, 0);
-        double* s_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), ed->deg, 1);
-        double* x_GL = P4EST_ALLOC(double, volume_nodes_gauss);
-        double* y_GL = P4EST_ALLOC(double, volume_nodes_gauss);
-        d4est_reference_rtox_array(r_GL, ed->xyz_corner[0], ed->h, x_GL, volume_nodes_gauss);
-        d4est_reference_rtox_array(s_GL, ed->xyz_corner[1], ed->h, y_GL, volume_nodes_gauss);
-
-
-#if (P4EST_DIM)==3        
-        double* t_GL = d4est_operators_fetch_gauss_rst_nd(d4est_ops, (P4EST_DIM), ed->deg, 2);
-        double* z_GL = P4EST_ALLOC(double, volume_nodes_gauss);
-        d4est_reference_rtox_array(t_GL, ed->xyz_corner[2], ed->h, z_GL, volume_nodes_gauss);
-#endif
-        
-        double* xyz_gauss [(P4EST_DIM)] = {x_GL, y_GL
-#if(P4EST_DIM)==3
-                                           ,z_GL
-#endif
-                                          };
-          
-        d4est_operators_form_fofufofvlilj_matrix
-          (
-           d4est_ops,
-           (u == NULL) ? NULL : &u[nodal_stride],
-           (v == NULL) ? NULL : &v[nodal_stride],
-           ed->deg,
-           xyz_gauss,
-           jac_gauss,
-           ed->deg,
-           QUAD_GAUSS,
-           (P4EST_DIM),
-           &matrix_op->matrix_at0[matrix_nodal_stride],
-           fofu_fcn,
-           fofu_ctx,
-           fofv_fcn,
-           fofv_ctx
-          );
-
-        P4EST_FREE(jac_gauss);
-        nodal_stride += volume_nodes;
-        matrix_nodal_stride += matrix_volume_nodes;
-      }
-    }
-}
-
 
 void
-multigrid_matrix_curved_fofu_fofv_mass_operator_setup_deg_quad_eq_deg
+multigrid_matrix_setup_fofu_mass_operator
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,

@@ -23,7 +23,7 @@
 #include <krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
-#include "constant_density_star_fcns_zerobndry.h"
+#include "constant_density_star_fcns.h"
 
 
 static
@@ -317,6 +317,12 @@ problem_init
 
     /* DEBUG_PRINT_ARR_DBL(prob_vecs.u, prob_vecs.local_nodes); */
     /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, prob_vecs.local_nodes); */
+
+    /* double u_sum = 0.; */
+    /* for (int i = 0; i < prob_vecs.local_nodes; i++) */
+      /* u_sum += prob_vecs.u[i]; */
+    /* printf("u sum = %.25f\n", u_sum); */
+    
     
     d4est_solver_newton_solve
       (
@@ -332,6 +338,12 @@ problem_init
        NULL
       );
 
+
+    /* u_sum = 0.; */
+    /* for (int i = 0; i < prob_vecs.local_nodes; i++) */
+    /*   u_sum += prob_vecs.u[i]; */
+    /* printf("u sum = %.25f\n", u_sum); */
+    
     /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, prob_vecs.local_nodes); */
     /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, prob_vecs.local_nodes); */
 
