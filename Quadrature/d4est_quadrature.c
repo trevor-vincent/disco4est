@@ -406,7 +406,7 @@ void d4est_quadrature_apply_mass_matrix
   double* interp_lobatto_to_quad_trans [(P4EST_DIM)];
   double* interp_lobatto_to_quad [(P4EST_DIM)]; 
 
-  int dim = (P4EST_DIM);
+  int dim = (object_type == QUAD_OBJECT_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   int nodes_lobatto = deg_lobatto+1;
   int nodes_quad = deg_quad+1;
   int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad);
@@ -612,7 +612,8 @@ void d4est_quadrature_apply_fofufofvlilj
  d4est_xyzu_fcn_t fofu_fcn,
  void* fofu_ctx,
  d4est_xyzu_fcn_t fofv_fcn,
- void* fofv_ctx
+ void* fofv_ctx,
+ d4est_quadrature_apply_or_compute_matrix_t apply_or_compute_matrix
 )
 {
   if (fofu_fcn == NULL)
@@ -679,7 +680,8 @@ void d4est_quadrature_apply_fofufofvlilj
     }
   }
 
-  /* if (APPLY_MATRIX) */
+  if (apply_or_compute_matrix == QUAD_APPLY_MATRIX){
+    D4EST_ASSERT(vec != NULL);
     d4est_quadrature_apply_mass_matrix
       (
        d4est_ops,
@@ -694,22 +696,23 @@ void d4est_quadrature_apply_fofufofvlilj
        deg_quad,
        out
       );
- /*  else if (COMPUTE_MATRIX) */
- /*    d4est_quadrature_compute_mass_matrix */
- /*    ( */
- /*     d4est_ops, */
- /*     d4est_geom, */
- /*     d4est_quad, */
- /*     object, */
- /*     object_type, */
- /*     integrand_type, */
- /*     deg_lobatto, */
- /*     deg_quad, */
- /*     fofu_fofv_jac, */
- /*     out */
- /*    ); */
- /* else */
- /*   D4EST_ABORT("Not a supported option"); */
+  }
+  else if (apply_or_compute_matrix == QUAD_COMPUTE_MATRIX)
+    d4est_quadrature_compute_mass_matrix
+    (
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       object,
+       object_type,
+       integrand_type,
+       deg_lobatto,
+       fofu_fofv_jac,
+       deg_quad,
+       out
+    );
+ else
+   D4EST_ABORT("Not a supported option");
   
   if (u != NULL){
     P4EST_FREE(u_quad);
@@ -1039,18 +1042,18 @@ d4est_quadrature_lebesgue_measure
 void d4est_quadrature_compute_mass_matrix
 (
  d4est_operators_t* d4est_ops,
- d4est_quadrature_t* d4est_quadrature,
  d4est_geometry_t* d4est_geometry,
+ d4est_quadrature_t* d4est_quadrature,
  void* object,
  d4est_quadrature_object_type_t object_type,
  d4est_quadrature_integrand_type_t integrand_type,
  int deg_lobatto,
- int deg_quad,
- int dim,
  double* jac_quad,
- double* M
+ int deg_quad,
+ double* out
 )
 {
+  int dim = (object_type == QUAD_OBJECT_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   int volume_nodes_lobatto = d4est_lgl_get_nodes(dim,deg_lobatto);
   
   double* u = P4EST_ALLOC_ZERO(double, volume_nodes_lobatto);
@@ -1073,7 +1076,7 @@ void d4est_quadrature_compute_mass_matrix
        Mu
       );
     
-    d4est_linalg_set_column(M, Mu, i, volume_nodes_lobatto, volume_nodes_lobatto);
+    d4est_linalg_set_column(out, Mu, i, volume_nodes_lobatto, volume_nodes_lobatto);
     u[i] = 0.;
   }
 
@@ -1195,3 +1198,5 @@ void d4est_quadrature_compute_mass_matrix
 /*   } */
   
 /* } */
+/* This file was automatically generated.  Do not edit! */
+/* This file was automatically generated.  Do not edit! */

@@ -373,7 +373,8 @@ void two_punctures_apply_jac_add_nonlinear_term
            two_punctures_plus_7o8_K2_psi_neg8,
            user,
            NULL,
-           NULL
+           NULL,
+           QUAD_APPLY_MATRIX
           );
 
       }

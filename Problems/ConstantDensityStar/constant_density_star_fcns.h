@@ -164,7 +164,7 @@ constant_density_star_input
   
 
   int success = d4est_util_bisection(solve_for_alpha, alpha_crit, 1000*alpha_crit, DBL_EPSILON, 100000, &alpha, &ctx);
-  D4EST_ASSERT(success);
+  D4EST_ASSERT(!success);
                                
                                
   double u_alpha_at_R = sqrt(alpha*R)/sqrt(R*R + alpha*R*alpha*R);
@@ -468,7 +468,8 @@ void constant_density_star_apply_jac_add_nonlinear_term
            neg_10pi_rho_up1_neg4,
            user,
            NULL,
-           NULL
+           NULL,
+           QUAD_APPLY_MATRIX
           );
         
       }

@@ -94,7 +94,8 @@ amr_mark_element
   problem_ctx_t* ctx = user;
   d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
 
-  printf("p4est->local_num_quadrants*p4est->mpisize < params->inflation_size = %d\n",p4est->local_num_quadrants*p4est->mpisize < params->inflation_size);
+  if (p4est->mpirank == 0)
+    printf("p4est->local_num_quadrants*p4est->mpisize < params->inflation_size = %d\n",p4est->local_num_quadrants*p4est->mpisize < params->inflation_size);
   
   if (p4est->local_num_quadrants*p4est->mpisize < params->inflation_size){
 

@@ -29,6 +29,8 @@ typedef enum {QUAD_TYPE_GAUSS_LEGENDRE,
 typedef enum {QUAD_OBJECT_MORTAR,
               QUAD_OBJECT_VOLUME} d4est_quadrature_object_type_t;
 
+typedef enum {QUAD_APPLY_MATRIX, QUAD_COMPUTE_MATRIX} d4est_quadrature_apply_or_compute_matrix_t;
+
 typedef enum
   {
     QUAD_INTEGRAND_JAC_TIMES_POLY,
@@ -125,13 +127,13 @@ struct d4est_quadrature {
   d4est_quadrature_reinit_fcn_t user_reinit;
 };
 
-/* This file was automatically generated.  Do not edit! */
 double d4est_quadrature_lebesgue_measure(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *jac_object,int deg_object);
 double d4est_quadrature_innerproduct(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *u,double *v,double *jac_quad,int deg_quad);
 d4est_rst_t d4est_quadrature_get_rst_points(d4est_operators_t *d4est_ops,d4est_quadrature_t *d4est_quadrature,d4est_geometry_t *d4est_geometry,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,int degree);
 void d4est_quadrature_apply_fofufofvlj(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *u,double *v,int deg_lobatto,double *jac_quad,double *xyz_quad[(P4EST_DIM)],int deg_quad,double *out,d4est_xyzu_fcn_t fofu_fcn,void *fofu_ctx,d4est_xyzu_fcn_t fofv_fcn,void *fofv_ctx);
+void d4est_quadrature_compute_mass_matrix(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geometry,d4est_quadrature_t *d4est_quadrature,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,int deg_lobatto,double *jac_quad,int deg_quad,double *out);
 void d4est_quadrature_interpolate(d4est_operators_t *d4est_ops,d4est_quadrature_t *d4est_quadrature,d4est_geometry_t *d4est_geometry,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *u_lobatto_in,int deg_lobatto,double *u_quad_out,int deg_quad);
-void d4est_quadrature_apply_fofufofvlilj(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *vec,double *u,double *v,int deg_lobatto,double *xyz_quad[(P4EST_DIM)],double *jac_quad,int deg_quad,double *out,d4est_xyzu_fcn_t fofu_fcn,void *fofu_ctx,d4est_xyzu_fcn_t fofv_fcn,void *fofv_ctx);
+void d4est_quadrature_apply_fofufofvlilj(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *vec,double *u,double *v,int deg_lobatto,double *xyz_quad[(P4EST_DIM)],double *jac_quad,int deg_quad,double *out,d4est_xyzu_fcn_t fofu_fcn,void *fofu_ctx,d4est_xyzu_fcn_t fofv_fcn,void *fofv_ctx,d4est_quadrature_apply_or_compute_matrix_t apply_or_compute_matrix);
 void d4est_quadrature_apply_mass_matrix(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geometry,d4est_quadrature_t *d4est_quadrature,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *in,int deg_lobatto,double *jac_quad,int deg_quad,double *out);
 void d4est_quadrature_apply_stiffness_matrix(d4est_operators_t *d4est_ops,d4est_quadrature_t *d4est_quadrature,d4est_geometry_t *d4est_geometry,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *in,int deg_lobatto,double *jac_quad,double *rst_xyz[(P4EST_DIM)][(P4EST_DIM)],int deg_quad,double *out);
 void d4est_quadrature_apply_galerkin_integral(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geometry,d4est_quadrature_t *d4est_quadrature,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *in_quad,int deg_lobatto,double *jac_quad,int deg_quad,double *out);
