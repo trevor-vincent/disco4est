@@ -112,9 +112,7 @@ int main(int argc, char *argv[])
                                                    ghost->ghosts.elem_count);
 
 
-  d4est_amr_t* d4est_amr_uniform = d4est_amr_init_uniform_h(p4est);
-  d4est_amr_uniform->num_of_amr_steps = 5;
-  d4est_amr_uniform->max_degree = 7;
+  d4est_amr_t* d4est_amr_uniform = d4est_amr_init_uniform_h(p4est,7,5);
 
   int local_nodes = d4est_mesh_update
                     (

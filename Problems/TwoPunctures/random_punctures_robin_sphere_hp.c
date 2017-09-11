@@ -30,6 +30,7 @@ typedef struct {
   int do_not_solve;
   int deg_vol_quad_inc_inner;
   int deg_vol_quad_inc_outer;
+  int amr_level_for_uniform_p;
   
 } two_punctures_init_params_t;
 
@@ -55,7 +56,10 @@ int two_punctures_init_params_handler
     D4EST_ASSERT(pconfig->deg_vol_quad_inc_outer == -1);
     pconfig->deg_vol_quad_inc_outer = atoi(value);
   }
-    
+  else if (d4est_util_match_couple(section,"amr",name,"amr_level_for_uniform_p")) {
+    D4EST_ASSERT(pconfig->amr_level_for_uniform_p == -1);
+    pconfig->amr_level_for_uniform_p = atoi(value);
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -74,6 +78,7 @@ two_punctures_init_params_input
   input.do_not_solve = -1;
   input.deg_vol_quad_inc_inner = -1;
   input.deg_vol_quad_inc_outer = -1;
+  input.amr_level_for_uniform_p = -1;
 
   if (ini_parse(input_file, two_punctures_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
@@ -82,6 +87,7 @@ two_punctures_init_params_input
   D4EST_CHECK_INPUT("problem", input.do_not_solve, -1);
   D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc_inner, -1);
   D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc_outer, -1);
+  D4EST_CHECK_INPUT("amr", input.amr_level_for_uniform_p, -1);
   
   return input;
 }
@@ -138,10 +144,7 @@ amr_set_element_gamma
   d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
   
   gamma_params_t gamma_hpn;
-  if (ctx->amr_level <= 5)
-    gamma_hpn.gamma_h = params->gamma_h;
-  else
-    gamma_hpn.gamma_h = 10000000.; 
+  gamma_hpn.gamma_h = params->gamma_h;
   gamma_hpn.gamma_p = params->gamma_p;
   gamma_hpn.gamma_n = params->gamma_n;
 
@@ -297,6 +300,9 @@ problem_init
      &amr_marker
     );
 
+  
+  d4est_amr_t* d4est_amr_uniform_p = d4est_amr_init_uniform_p(p4est, d4est_amr->max_degree, d4est_amr->num_of_amr_steps);
+
 
   d4est_mesh_init_field
     (
@@ -314,8 +320,6 @@ problem_init
   d4est_output_energy_norm_fit_t* fit = d4est_output_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
-
-    ctx.amr_level = level;
     
     d4est_estimator_bi_compute
       (
@@ -420,7 +424,7 @@ problem_init
          ghost,
          ghost_data,
          d4est_ops,
-         d4est_amr,
+         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr,
          &prob_vecs.u,
          stats
         );
@@ -474,7 +478,7 @@ problem_init
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
-  d4est_poisson_flux_destroy(flux_data_for_jac);  
+  d4est_amr_destroy(d4est_amr_uniform_p); d4est_poisson_flux_destroy(flux_data_for_jac);  
   d4est_poisson_flux_destroy(flux_data_for_res);  
   d4est_output_destroy_energy_norm_fit(fit);
   P4EST_FREE(error);

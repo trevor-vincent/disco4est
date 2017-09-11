@@ -21,7 +21,6 @@ typedef struct {
 } constant_density_star_params_t;
 
 typedef struct {
-  
   constant_density_star_params_t* constant_density_star_params;
   d4est_poisson_flux_data_t* flux_data_for_jac;
   d4est_poisson_flux_data_t* flux_data_for_res;

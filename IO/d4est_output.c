@@ -84,16 +84,18 @@ d4est_output_energy_norm_add_entry_and_fit
  double global_energy_norm_sqr,
  double global_dof
 ){
-  fit->log_energy_norm_data[fit->stride] = log(sqrt(global_energy_norm_sqr));
-  fit->dof_data[fit->stride] = pow(global_dof, 1./(2.*(P4EST_DIM)-1.));
-  fit->stride += 1;
+  if (global_energy_norm_sqr > 0.){
+    fit->log_energy_norm_data[fit->stride] = log(sqrt(global_energy_norm_sqr));
+    fit->dof_data[fit->stride] = pow(global_dof, 1./(2.*(P4EST_DIM)-1.));
+    fit->stride += 1;
 
-  if (fit->stride >= 2){
-    if (p4est->mpirank == 0){
-      printf("[D4EST_OUTPUT_FIT](1): ||err|| = C1*exp(C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
-      printf("[D4EST_OUTPUT_FIT](1): ||err|| = %.15f\n",sqrt(global_energy_norm_sqr));
+    if (fit->stride >= 2){
+      if (p4est->mpirank == 0){
+        printf("[D4EST_OUTPUT_FIT](1): ||err|| = C1*exp(C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
+        printf("[D4EST_OUTPUT_FIT](1): ||err|| = %.15f\n",sqrt(global_energy_norm_sqr));
+      }
+      d4est_output_energy_norm_fit(p4est,fit);
     }
-    d4est_output_energy_norm_fit(p4est,fit);
   }
 }
 

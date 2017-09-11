@@ -21,7 +21,6 @@ typedef struct {
 
 typedef struct {
 
-  int amr_level;
   two_punctures_params_t* two_punctures_params;
   d4est_poisson_flux_data_t* flux_data_for_jac;
   d4est_poisson_flux_data_t* flux_data_for_res;
@@ -122,7 +121,7 @@ init_random_puncture_data
   d4est_util_gen_rand_vec(&rand_y[0], num_punctures, 1532413243, -5., 5.);
   d4est_util_gen_rand_vec(&rand_px[0], num_punctures, 13232413243, -.2, .2);
   d4est_util_gen_rand_vec(&rand_py[0], num_punctures, 14432413243, -.2, .2);
-  
+
   for (int i = 0; i < num_punctures; i++){
     params->M_bh[i] = M/(double)(num_punctures);
     params->C_bh[i][0] = rand_x[i];

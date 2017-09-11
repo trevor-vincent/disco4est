@@ -1035,7 +1035,7 @@ d4est_mesh_init_field
           );
 
 
-        double node_vec_sum = 0.;
+        /* double node_vec_sum = 0.; */
         for (int i = 0; i < volume_nodes; i++){
           node_vec[ed->nodal_stride + i] = init_fcn(xyz_temp[0][i],
                                                     xyz_temp[1][i],
@@ -1044,9 +1044,9 @@ d4est_mesh_init_field
 #endif
                                                     user
                                                    );
-          node_vec_sum += node_vec[ed->nodal_stride + i];
+          /* node_vec_sum += node_vec[ed->nodal_stride + i]; */
         }
-        printf("node_vec sum = %.25f\n", node_vec_sum);
+        /* printf("node_vec sum = %.25f\n", node_vec_sum); */
 
       }
     }

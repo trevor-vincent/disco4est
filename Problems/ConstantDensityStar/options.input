@@ -16,6 +16,7 @@ gamma_p = 0.1
 gamma_n = 1.
 inflation_size = 128
 percentile = 5
+amr_level_for_uniform_p = 16
 
 [flux]
 name = sipg
@@ -29,6 +30,7 @@ R = .0625
 cx = .5
 cy = .5
 cz = .5
+do_not_solve = 0
 
 [geometry]
 name = brick

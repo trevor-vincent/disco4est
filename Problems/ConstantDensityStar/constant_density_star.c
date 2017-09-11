@@ -25,6 +25,60 @@
 #include <time.h>
 #include "constant_density_star_fcns.h"
 
+typedef struct {
+  
+  int do_not_solve;
+  int amr_level_for_uniform_p;
+  
+} constant_density_star_init_params_t;
+
+static
+int two_punctures_init_params_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  constant_density_star_init_params_t* pconfig = (constant_density_star_init_params_t*)user;
+  if (d4est_util_match_couple(section,"problem",name,"do_not_solve")) {
+    D4EST_ASSERT(pconfig->do_not_solve == -1);
+    pconfig->do_not_solve = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"amr",name,"amr_level_for_uniform_p")) {
+    D4EST_ASSERT(pconfig->amr_level_for_uniform_p == -1);
+    pconfig->amr_level_for_uniform_p = atoi(value);
+  }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+
+static
+constant_density_star_init_params_t
+constant_density_star_init_params_input
+(
+ const char* input_file
+)
+{
+  constant_density_star_init_params_t input;
+  input.do_not_solve = -1;
+  input.amr_level_for_uniform_p = -1;
+
+  if (ini_parse(input_file, two_punctures_init_params_handler, &input) < 0) {
+    D4EST_ABORT("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT("problem", input.do_not_solve, -1);
+  D4EST_CHECK_INPUT("amr", input.amr_level_for_uniform_p, -1);
+  
+  return input;
+}
+
+
 
 static
 int
@@ -118,6 +172,11 @@ problem_init
  sc_MPI_Comm mpicomm
 )
 {
+    /*  */
+  constant_density_star_init_params_t init_params = constant_density_star_init_params_input(input_file
+                                                                           );
+
+  
   constant_density_star_params_t constant_density_star_params = constant_density_star_input(input_file);
   
   d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
@@ -177,8 +236,8 @@ problem_init
      &amr_marker
     );
 
-  d4est_amr_t* d4est_amr_uniform = d4est_amr_init_uniform_h(p4est);
-
+  d4est_amr_t* d4est_amr_uniform_p = d4est_amr_init_uniform_p(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps);
+  
   d4est_mesh_init_field
     (
      p4est,
@@ -209,7 +268,7 @@ problem_init
        &ip_norm_data,
        constant_density_star_analytic_solution,
        &ctx, NULL);
-    
+
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
     
     d4est_estimator_bi_compute
@@ -288,7 +347,7 @@ problem_init
          ghost,
          ghost_data,
          d4est_ops,
-         d4est_amr,
+         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr,
          &prob_vecs.u,
          &stats
         );
@@ -323,7 +382,7 @@ problem_init
       /* u_sum += prob_vecs.u[i]; */
     /* printf("u sum = %.25f\n", u_sum); */
     
-    
+    if (!init_params.do_not_solve){
     d4est_solver_newton_solve
       (
        p4est,
@@ -337,7 +396,7 @@ problem_init
        input_file,
        NULL
       );
-
+    }
 
     /* u_sum = 0.; */
     /* for (int i = 0; i < prob_vecs.local_nodes; i++) */
@@ -352,7 +411,7 @@ problem_init
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
-  d4est_amr_destroy(d4est_amr_uniform);
+  d4est_amr_destroy(d4est_amr_uniform_p);
   d4est_poisson_flux_destroy(flux_data_for_jac);  
   d4est_poisson_flux_destroy(flux_data_for_res);  
   d4est_output_destroy_energy_norm_fit(fit);

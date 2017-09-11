@@ -234,6 +234,9 @@ d4est_amr_interpolate_field_on_element
   }
 
   else {
+    printf("interp_code = %d\n", interp_code);
+    printf("indeg = %d\n", in_deg);
+    printf("out_deg[0] = %d\n", out_deg[0]);
     D4EST_ABORT("[D4EST_ERROR]: hp amr code should be >= deg or -deg, coarsening is currently not supported in amr\n");
   }
   
@@ -453,7 +456,9 @@ d4est_amr_init
 d4est_amr_t*
 d4est_amr_init_uniform_h
 (
- p4est_t* p4est
+ p4est_t* p4est,
+ int max_degree,
+ int num_of_amr_steps
 )
 {
   d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
@@ -463,12 +468,39 @@ d4est_amr_init_uniform_h
   d4est_amr->balance_log = NULL;
   d4est_amr->refinement_log = NULL;
   d4est_amr->initial_log = NULL;
+  d4est_amr->max_degree = max_degree;
+  d4est_amr->num_of_amr_steps = num_of_amr_steps;
   scheme->amr_scheme_type = AMR_UNIFORM_H;
   d4est_amr_uniform_init(p4est, NULL, scheme, NULL);
 
   return d4est_amr;
 
 }
+
+d4est_amr_t*
+d4est_amr_init_uniform_p
+(
+ p4est_t* p4est,
+ int max_degree,
+ int num_of_amr_steps
+)
+{
+  d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
+  d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
+  
+  d4est_amr->scheme = scheme;
+  d4est_amr->balance_log = NULL;
+  d4est_amr->refinement_log = NULL;
+  d4est_amr->initial_log = NULL;
+  d4est_amr->max_degree = max_degree;
+  d4est_amr->num_of_amr_steps = num_of_amr_steps;
+  scheme->amr_scheme_type = AMR_UNIFORM_P;
+  d4est_amr_uniform_init(p4est, NULL, scheme, NULL);
+
+  return d4est_amr;
+
+}
+
 
 d4est_amr_t*
 d4est_amr_init_random_hp
