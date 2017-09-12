@@ -203,6 +203,10 @@ d4est_solver_newton_solve
 
     /* set initial guess */
     d4est_linalg_fill_vec(vecs_for_linsolve.u, 0., n);
+
+    if (krylov_pc != NULL && krylov_pc->pc_setup != NULL){
+      krylov_pc->pc_setup(krylov_pc);
+    }
     
     krylov_petsc_solve
       (

@@ -66,3 +66,26 @@ ksp_monitor = 1
 ksp_converged_reason = 1
 ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 0
+
+[multigrid]
+vcycle_imax = 3;
+vcycle_rtol = 1e-9;
+vcycle_atol = 0.;
+smoother_name = mg_smoother_cheby_d4est
+bottom_solver_name = mg_bottom_solver_krylov_petsc
+
+[mg_bottom_solver_cg_d4est]
+bottom_iter = 10000;
+bottom_rtol = 1e-10;
+bottom_atol = 0.;
+bottom_print_residual_norm = 1;
+
+[mg_smoother_cheby_d4est]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 1;
+cheby_print_eigs = 1;

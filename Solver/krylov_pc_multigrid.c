@@ -66,13 +66,16 @@ krylov_pc_multigrid_create
   krylov_pc_multigrid_data_t* kpcmgdata = P4EST_ALLOC(krylov_pc_multigrid_data_t,1);
   kpcmgdata->mg_data = mg_data;
   kpcmgdata->user_setup_fcn = user_setup_fcn;
+  
   pc->pc_apply = krylov_pc_multigrid_apply;
+
   if (user_setup_fcn != NULL){
     pc->pc_setup = krylov_pc_multigrid_setup;
   }
   else{
     pc->pc_setup = NULL;
   }
+  
   pc->pc_data = kpcmgdata;
 
   return pc;

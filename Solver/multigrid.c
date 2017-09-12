@@ -1,17 +1,18 @@
-#include "sc_reduce.h"
-#include "../pXest/pXest.h"
-#include "../LinearAlgebra/d4est_linalg.h"
-#include "../Utilities/d4est_util.h"
-#include "../dGMath/d4est_operators.h"
-#include "../Solver/multigrid.h"
-#include "../Solver/cg_eigs.h"
-#include "../hpAMR/amr.h"
+#include <sc_reduce.h>
+#include <pXest.h>
+#include <d4est_linalg.h>
+#include <d4est_util.h>
+#include <d4est_mesh.h>
+#include <d4est_operators.h>
+#include <multigrid.h>
+#include <cg_eigs.h>
+#include <d4est_amr.h>
 #include <ini.h>
 #include <d4est_util.h>
 #include <multigrid_callbacks.h>
 #include <multigrid_smoother_cheby.h>
 #include <multigrid_smoother_krylov_petsc.h>
-#include <multigrid_bottom_solver_cg_d4est.h>
+#include <multigrid_bottom_solver_cg.h>
 #include <multigrid_bottom_solver_cheby.h>
 #include <multigrid_bottom_solver_krylov_petsc.h>
 
@@ -252,6 +253,8 @@ multigrid_data_init
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  int num_of_levels,
  multigrid_logger_t* logger,
  multigrid_user_callbacks_t* user_callbacks,
@@ -263,6 +266,8 @@ multigrid_data_init
   D4EST_ASSERT(num_of_levels > 0);
 
   mg_data->d4est_ops = d4est_ops;
+  mg_data->d4est_geom = d4est_geom;
+  mg_data->d4est_quad = d4est_quad;
   mg_data->num_of_levels = num_of_levels;
   mg_data->vcycle_atol = -1;
   mg_data->vcycle_rtol = -1;
@@ -845,7 +850,7 @@ multigrid_compute_residual
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   p4est_ghost_t* ghost = *(updater->ghost);
   void* ghost_data = *(updater->ghost_data);
-  d4est_geometry_t* d4est_geom = updater->d4est_geom;
+  /* d4est_geometry_t* d4est_geom = mg_data->d4est_geom; */
   
   if (mg_data->mg_state == START){
     double* Au; 
@@ -854,7 +859,20 @@ multigrid_compute_residual
     Au = vecs->Au;
     rhs = vecs->rhs;
     double* r = P4EST_ALLOC(double, vecs->local_nodes);
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, mg_data->d4est_ops, d4est_geom);  
+
+    d4est_elliptic_eqns_apply_lhs
+      (
+       p4est,
+       ghost,
+       ghost_data,
+       fcns,
+       vecs,
+       mg_data->d4est_ops,
+       mg_data->d4est_geom,
+       mg_data->d4est_quad
+      );
+
+    
     d4est_linalg_vec_axpyeqz(-1., Au, rhs, r, local_nodes);
     double r2_0_local = d4est_linalg_vec_dot(r,r,local_nodes);  
     P4EST_FREE(r);

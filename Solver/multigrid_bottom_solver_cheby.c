@@ -70,7 +70,8 @@ multigrid_bottom_solver_cheby
      *(updater->ghost),
      *(updater->ghost_data),
      mg_data->d4est_ops,
-     updater->d4est_geom,
+     mg_data->d4est_geom,
+     mg_data->d4est_quad,
      cheby->cheby_eigs_cg_imax,
      &cheby->eig
     );

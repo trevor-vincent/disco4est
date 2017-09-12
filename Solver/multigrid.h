@@ -1,13 +1,12 @@
-#ifndef HO_H
-#define HO_H 
+#ifndef MULTIGRID_H
+#define MULTIGRID_H 
 
-#include "../EllipticSystem/problem_data.h"
-#include "../EllipticSystem/d4est_elliptic_eqns.h"
-#include "../dGMath/d4est_operators.h"
+#include <d4est_mesh.h>
+#include <d4est_elliptic_data.h>
+#include <d4est_elliptic_eqns.h>
+#include <d4est_operators.h>
 
 typedef struct multigrid_data_t multigrid_data_t;
-
-
 
 typedef struct {
 
@@ -145,21 +144,19 @@ typedef struct {
   
 } multigrid_user_callbacks_t;
 
+
 typedef struct {
 
 
   multigrid_update_callback_fcn_t update;
-  void* user;
-  p4est_ghost_t** ghost;
-  void** ghost_data;
-  
-  /* extra stuff for use with curved infrastructure */
-  d4est_geometry_t* d4est_geom;
-  void(*element_data_init_user_fcn)(void*,void*);
   d4est_mesh_geometry_storage_t** geometric_factors;
+  p4est_ghost_t** ghost;
+  d4est_element_data_t** ghost_data;
+  
+  void(*element_data_init_user_fcn)(d4est_element_data_t*,void*);
+  void* user;
   
 } multigrid_element_data_updater_t;
-
 
 struct multigrid_data_t {
  
@@ -179,6 +176,8 @@ struct multigrid_data_t {
   multigrid_state_t mg_state;
   multigrid_refine_data_t* coarse_grid_refinement;
   d4est_operators_t* d4est_ops;
+  d4est_geometry_t* d4est_geom;
+  d4est_quadrature_t* d4est_quad;
   
   /* Helper strides */
   int stride;
@@ -219,38 +218,14 @@ struct multigrid_data_t {
   
 };
 
-
-void
-multigrid_solve
-(
- p4est_t* p4est,
- d4est_elliptic_data_t* vecs,
- d4est_elliptic_eqns_t* fcns,
- multigrid_data_t* mg_data
-);
-
-void multigrid_data_destroy
-(multigrid_data_t*);
-
-
-multigrid_data_t*
-multigrid_data_init
-(
- p4est_t* p4est,
- d4est_operators_t* d4est_ops,
- int num_of_levels,
- multigrid_logger_t* logger,
- multigrid_user_callbacks_t* user_callbacks,
- multigrid_element_data_updater_t* updater,
- const char* input_file
-);
-
-void
-multigrid_get_level_range
-(
- p4est_t* p4est,
- int* min_level,
- int* max_level
-);
+/* This file was automatically generated.  Do not edit! */
+void multigrid_solve(p4est_t *p4est,d4est_elliptic_data_t *vecs,d4est_elliptic_eqns_t *fcns,multigrid_data_t *mg_data);
+void multigrid_data_destroy(multigrid_data_t *mg_data);
+multigrid_data_t *multigrid_data_init(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,int num_of_levels,multigrid_logger_t *logger,multigrid_user_callbacks_t *user_callbacks,multigrid_element_data_updater_t *updater,const char *input_file);
+void multigrid_destroy_bottom_solver(multigrid_data_t *mg_data);
+void multigrid_set_bottom_solver(p4est_t *p4est,const char *input_file,multigrid_data_t *mg_data);
+void multigrid_destroy_smoother(multigrid_data_t *mg_data);
+void multigrid_set_smoother(p4est_t *p4est,const char *input_file,multigrid_data_t *mg_data);
+void multigrid_get_level_range(p4est_t *p4est,int *min_level,int *max_level);
 
 #endif

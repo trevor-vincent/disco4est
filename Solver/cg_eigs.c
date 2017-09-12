@@ -103,8 +103,19 @@ cg_eigs
   /* fcns->build_rhs(p4est, ghost, ghost_data, vecs); */
   /* debug("Build RHS in CG solve ends"); */
   
-  /* first iteration data, store Au in r */
-  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom, d4est_quad);
+  /* first iteration data, store Au in r */  
+  d4est_elliptic_eqns_apply_lhs
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     fcns,
+     vecs,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad
+    );
+
   d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
   /* r = f - Au ; Au is stored in r so r = rhs - r */
   d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
@@ -143,13 +154,18 @@ cg_eigs
     /* d4est_util_print_matrix( u, vecs->local_nodes, 1, "u = ", 0); */
     
     /* Au = A*d; */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom, d4est_quad);
-
-    /* printf("i = %d, cg_eigs Au sum at i = %.25f\n",i, d4est_linalg_vec_sum(vecs->Au, vecs->local_nodes)); */
-    /* printf("cg_eigs u sum at i = %.25f\n", d4est_linalg_vec_sum(vecs->u, vecs->local_nodes)); */
-    /* printf("cg_eigs rhs sum at i = %.25f\n", d4est_linalg_vec_sum(vecs->rhs, vecs->local_nodes)); */
     
-    /* sc_MPI_Barrier(sc_MPI_COMM_WORLD); */
+  d4est_elliptic_eqns_apply_lhs
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     fcns,
+     vecs,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad
+    );
 
     d_dot_Au = d4est_linalg_vec_dot(d,Au,local_nodes);
 

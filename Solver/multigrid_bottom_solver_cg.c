@@ -1,4 +1,4 @@
-#include <multigrid_bottom_solver_cg_d4est.h>
+#include <multigrid_bottom_solver_cg.h>
 #include <d4est_util.h>
 #include <ini.h>
 #include <d4est_linalg.h>
@@ -58,7 +58,7 @@ multigrid_bottom_solver_cg_d4est
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   p4est_ghost_t* ghost = *(updater->ghost);
   void* ghost_data = *(updater->ghost_data);
-  d4est_geometry_t* d4est_geom = updater->d4est_geom;
+  d4est_geometry_t* d4est_geom = mg_data->d4est_geom;
   
   int local_nodes;
   double delta_new, delta_0, delta_old, beta, alpha;
@@ -85,8 +85,20 @@ multigrid_bottom_solver_cg_d4est
   d = P4EST_ALLOC(double, local_nodes);
   
   /* first iteration data, store Au in r */ 
-  fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
+  /* fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom); */
 
+  d4est_elliptic_eqns_apply_lhs
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     fcns,
+     vecs,
+     mg_data->d4est_ops,
+     mg_data->d4est_geom,
+     mg_data->d4est_quad
+    );
+  
   d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
   
   /* r = f - Au ; Au is stored in r so r = rhs - r */
@@ -116,7 +128,19 @@ multigrid_bottom_solver_cg_d4est
   for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++){
   
     /* Au = A*d; */
-    fcns->apply_lhs(p4est, ghost, ghost_data, vecs, d4est_ops, d4est_geom);
+    d4est_elliptic_eqns_apply_lhs
+      (
+       p4est,
+       ghost,
+       ghost_data,
+       fcns,
+       vecs,
+       mg_data->d4est_ops,
+       mg_data->d4est_geom,
+       mg_data->d4est_quad
+      );
+  
+    
     /* sc_MPI_Barrier(sc_MPI_COMM_WORLD); */
 
     d_dot_Au = d4est_linalg_vec_dot(d,Au,local_nodes);

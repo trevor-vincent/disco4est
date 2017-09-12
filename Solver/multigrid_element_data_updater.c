@@ -11,20 +11,18 @@ multigrid_element_data_updater_init
  p4est_ghost_t** ghost,
  d4est_element_data_t** ghost_data,
  d4est_mesh_geometry_storage_t* d4est_mesh_geometry_storage_toplevel,
- d4est_geometry_t* d4est_geom,
- void(*element_data_init_user_fcn)(void*,void*),
+ void(*element_data_init_user_fcn)(d4est_element_data_t*,void*),
  void* user
 )
 {
   multigrid_element_data_updater_t* updater = P4EST_ALLOC(multigrid_element_data_updater_t,1);
   updater->update = multigrid_element_data_updater_update;
   updater->ghost = ghost;
-  updater->ghost_data = (void**)ghost_data;
+  updater->ghost_data = ghost_data;
   
   /* for curved infrastructure*/
   updater->element_data_init_user_fcn = element_data_init_user_fcn;
   updater->user = user;
-  updater->d4est_geom = d4est_geom;
   updater->geometric_factors = P4EST_ALLOC(d4est_mesh_geometry_storage_t*, num_of_levels);
 
   for (int level = 0; level < num_of_levels-1; level++){
@@ -36,11 +34,6 @@ multigrid_element_data_updater_init
   if (element_data_init_user_fcn == NULL){
     D4EST_ABORT("You must set the element data init user fcn for the element data updater\n");
   }
-
-  if (d4est_geom == NULL){
-    D4EST_ABORT("You must set the d4est geometry for the element data updater\n");
-  }
-
 
   if (d4est_mesh_geometry_storage_toplevel == NULL){
     D4EST_ABORT("You must set the geometric_factors for the element data updater\n");
@@ -84,14 +77,14 @@ multigrid_element_data_updater_update
        p4est,
        NULL,
        NULL,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
+       mg_data->d4est_ops,
+       mg_data->d4est_geom,
+       mg_data->d4est_quad,
        NULL,
        DO_NOT_INITIALIZE_QUADRATURE_DATA,
        DO_NOT_INITIALIZE_GEOMETRY_DATA,
        DO_NOT_INITIALIZE_GEOMETRY_ALIASES,
-       updater->element_data_init_user_fcn
+       updater->element_data_init_user_fcn,
        updater->user    
       );
   }
@@ -113,14 +106,14 @@ multigrid_element_data_updater_update
        p4est,
        *(updater->ghost),
        *(updater->ghost_data),
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
+       mg_data->d4est_ops,
+       mg_data->d4est_geom,
+       mg_data->d4est_quad,
        updater->geometric_factors[level - 1],
        INITIALIZE_QUADRATURE_DATA,
        INITIALIZE_GEOMETRY_DATA,
        INITIALIZE_GEOMETRY_ALIASES,
-       updater->element_data_init_user_fcn
+       updater->element_data_init_user_fcn,
        updater->user    
       );
   }
@@ -138,14 +131,14 @@ multigrid_element_data_updater_update
        p4est,
        *(updater->ghost),
        *(updater->ghost_data),
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
+       mg_data->d4est_ops,
+       mg_data->d4est_geom,
+       mg_data->d4est_quad,
        updater->geometric_factors[level + 1],
        INITIALIZE_QUADRATURE_DATA,
        DO_NOT_INITIALIZE_GEOMETRY_DATA,
        INITIALIZE_GEOMETRY_ALIASES,
-       updater->element_data_init_user_fcn
+       updater->element_data_init_user_fcn,
        updater->user    
       );
        

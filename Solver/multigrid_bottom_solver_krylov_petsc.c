@@ -15,7 +15,6 @@ multigrid_bottom_solver_krylov_petsc
   multigrid_data_t* mg_data = p4est->user_pointer;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   krylov_petsc_params_t* params = mg_data->bottom_solver->user;
-  d4est_geometry_t* d4est_geom = updater->d4est_geom;
 
   krylov_petsc_solve(p4est,
                      vecs,
@@ -23,7 +22,8 @@ multigrid_bottom_solver_krylov_petsc
                      updater->ghost,
                      updater->ghost_data,
                      mg_data->d4est_ops,
-                     d4est_geom,
+                     mg_data->d4est_geom,
+                     mg_data->d4est_quad,
                      params,
                      NULL);
 
