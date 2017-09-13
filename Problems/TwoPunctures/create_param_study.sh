@@ -33,24 +33,25 @@ deg_quad = $2
 scheme = smooth_pred
 num_of_amr_steps = 15
 max_degree = 7 
-gamma_h = $3
+gamma_h = .25
 gamma_p = 0.1
 gamma_n = 1.
-percentile = $4
+percentile = 5
+amr_level_for_uniform_p = $3
 
 [flux]
 name = sipg
 sipg_penalty_prefactor = 2.0
-sipg_flux_h = $5
+sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO
 sipg_penalty_fcn = maxp_sqr_over_minh
 
 
 [geometry]
 name = cubed_sphere
-R0 = 10
-R1 = 20
-R2 = $6
-compactify_outer_shell = $7
+R0 = $4
+R1 = 500
+R2 = 1000
+compactify_outer_shell = $5
 compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
@@ -68,14 +69,15 @@ JAC_compute_method = numerical
 
 [problem]
 do_not_solve = 0
-deg_vol_quad_inc_inner = $8
-deg_vol_quad_inc_outer = $9
+deg_vol_quad_inc_inner = $6
+deg_vol_quad_inc_outer = $7
+solve_after_level = -2
 
 [d4est_solver_newton]
-imin = 3
-imax = 3
+imin = 1
+imax = 5
 monitor = 1
-rtol = 1e-5
+rtol = 1e-20
 atol = 1e-15
 
 [krylov_petsc]
@@ -91,18 +93,53 @@ ksp_monitor_singular_value = 1
 
 [quadrature]
 name = legendre
+
+[multigrid]
+vcycle_imax = $8;
+vcycle_rtol = 1e-9;
+vcycle_atol = 0.;
+smoother_name = mg_smoother_cheby
+bottom_solver_name = mg_bottom_solver_cheby
+
+[mg_bottom_solver_cg_d4est]
+bottom_iter = 100;
+bottom_rtol = 1e-10;
+bottom_atol = 0.;
+bottom_print_residual_norm = 0;
+
+[mg_smoother_cheby]
+cheby_imax = $9;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eigs = 0;
+
+[mg_bottom_solver_cheby]
+cheby_imax = $9;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eig = 0;
+
+
 EOF
 }
 
-arr1=( 3 ) #initial degree
-arr2=( 1 2 ) #percentile
-arr3=(.25 2.0 6.0) #gammah
-arr4=( 5 ) #penalty
-arr5=( "H_EQ_J_DIV_SJ_MIN_LOBATTO" "H_EQ_FACE_DIAM" "H_EQ_J_DIV_SJ_QUAD") #hrefine til inview
-arr6=( 40 100 1000 ) #domain size
-arr7=( 0 ) #Gauss offset
-arr8=( 4 )
-arr9=( 4 )
+arr1=( 0 ) #initial degree
+arr2=( 1 ) #percentile
+arr3=( 3 4 5 6 7) #gammah
+arr4=( 10 10.392304845413263761164678049 ) #penalty
+arr5=( 0 1) #hrefine til inview
+arr6=( 0 3 ) #domain size
+arr7=( 0 3 ) #Gauss offset
+arr8=( 1 2 )
+arr9=( 15 )
 
 for a in "${arr1[@]}"
 do
