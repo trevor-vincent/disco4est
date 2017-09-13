@@ -1,6 +1,6 @@
 [initial_grid]
 min_quadrants = -1
-min_level = 4
+min_level = 1
 fill_uniform = 1
 deg = 1
 deg_quad = 1
@@ -14,19 +14,18 @@ gamma_p = 0.1
 gamma_n = 1.
 inflation_size = 128
 percentile = 5
-amr_level_for_uniform_p = 16
+amr_level_for_uniform_p = 4
 
 [flux]
 name = sipg
 sipg_penalty_prefactor = 2.0
-sipg_flux_h = H_EQ_J_DIV_SJ_QUAD
+sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO
 sipg_penalty_fcn = maxp_sqr_over_minh
-
 
 [geometry]
 name = cubed_sphere
-R0 = 10
-R1 = 20
+R0 = 20
+R1 = 30
 R2 = 40
 compactify_outer_shell = 0
 compactify_inner_shell = 0
@@ -46,19 +45,19 @@ JAC_compute_method = numerical
 
 [problem]
 do_not_solve = 0
-deg_vol_quad_inc_inner = 4
-deg_vol_quad_inc_outer = 4
+deg_vol_quad_inc_inner = 0
+deg_vol_quad_inc_outer = 0
 
 [d4est_solver_newton]
-imin = 3
-imax = 3
+imin = 1
+imax = 5
 monitor = 1
 rtol = 1e-20
 atol = 1e-15
 
 [krylov_petsc]
 ksp_type = fcg
-ksp_atol = 1e-20
+ksp_atol = 1e-15
 ksp_rtol = 1e-5
 ksp_max_it = 10000
 ksp_view = 1
@@ -69,3 +68,39 @@ ksp_monitor_singular_value = 1
 
 [quadrature]
 name = legendre
+
+
+
+[multigrid]
+vcycle_imax = 1;
+vcycle_rtol = 1e-9;
+vcycle_atol = 0.;
+smoother_name = mg_smoother_cheby
+bottom_solver_name = mg_bottom_solver_cheby
+
+[mg_bottom_solver_cg_d4est]
+bottom_iter = 100;
+bottom_rtol = 1e-10;
+bottom_atol = 0.;
+bottom_print_residual_norm = 0;
+
+[mg_smoother_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eigs = 0;
+
+[mg_bottom_solver_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eig = 0;
+

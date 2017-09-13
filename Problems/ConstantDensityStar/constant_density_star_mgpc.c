@@ -20,6 +20,11 @@
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
 #include <d4est_solver_newton.h>
+#include <multigrid.h>
+#include <krylov_pc_multigrid.h>
+#include <multigrid_logger_residual.h>
+#include <multigrid_element_data_updater.h>
+#include <multigrid_matrix_operator.h>
 #include <krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
@@ -199,8 +204,7 @@ problem_init
   ctx.smooth_pred_params = &smooth_pred_params;
   ctx.flux_data_for_jac = flux_data_for_jac;
   ctx.flux_data_for_res = flux_data_for_res;
-  ctx.use_matrix_operator = 0;
-  
+                           
   d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = constant_density_star_build_residual;
   prob_fcns.apply_lhs = constant_density_star_apply_jac;
@@ -269,7 +273,7 @@ problem_init
        &prob_vecs,
        &ip_norm_data,
        constant_density_star_analytic_solution,
-       &ctx, NULL,NULL);
+       &ctx, NULL, NULL);
 
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
     
@@ -336,7 +340,7 @@ problem_init
        constant_density_star_analytic_solution,
        &ctx,fit,NULL);
 
-
+    P4EST_FREE(stats);
     
     if (level != d4est_amr->num_of_amr_steps){
 
@@ -357,8 +361,6 @@ problem_init
     }
 
 
-    P4EST_FREE(stats);
-    
     prob_vecs.local_nodes = d4est_mesh_update
                   (
                    p4est,
@@ -385,6 +387,71 @@ problem_init
     /* for (int i = 0; i < prob_vecs.local_nodes; i++) */
       /* u_sum += prob_vecs.u[i]; */
     /* printf("u sum = %.25f\n", u_sum); */
+
+   int min_level, max_level;
+
+    multigrid_get_level_range(p4est, &min_level, &max_level);
+    printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
+
+    /* need to do a reduce on min,max_level before supporting multiple proc */
+    /* mpi_assert(proc_size == 1); */
+    int num_of_levels = max_level + 1;
+
+ 
+    multigrid_logger_t* logger = multigrid_logger_residual_init
+                                 (
+                                 );
+    
+    multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init
+                                                (
+                                                 num_of_levels,
+                                                 ghost,
+                                                 ghost_data,
+                                                 geometric_factors,
+                                                 problem_set_degrees_after_amr,
+                                                 NULL
+                                                );
+    
+
+
+
+
+
+    multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, num_of_levels);
+
+    /* prob_vecs.u0 = prob_vecs.u; */
+    
+    /* multigrid_matrix_setup_fofufofvlilj_operator */
+    /*   ( */
+    /*    p4est, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*    prob_vecs.u0, */
+    /*    NULL, */
+    /*    neg_10pi_rho_up1_neg4, */
+    /*    &ctx, */
+    /*    NULL, */
+    /*    NULL, */
+    /*    user_callbacks->user */
+    /*   ); */
+
+    
+    multigrid_data_t* mg_data = multigrid_data_init(p4est,
+                                                    d4est_ops,
+                                                    d4est_geom,
+                                                    d4est_quad,
+                                                    num_of_levels,
+                                                    logger,
+                                                    user_callbacks,
+                                                    updater,
+                                                    input_file
+                                                   );
+
+    krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, constant_density_star_krylov_pc_setup_fcn);
+    ctx.use_matrix_operator = 1;
+    ctx.mg_data = mg_data;
+
     
     if (!init_params.do_not_solve){
     d4est_solver_newton_solve
@@ -398,10 +465,16 @@ problem_init
        d4est_geom,
        d4est_quad,
        input_file,
-       NULL
+       pc
       );
     }
 
+    krylov_pc_multigrid_destroy(pc);
+    multigrid_logger_residual_destroy(logger);
+    multigrid_element_data_updater_destroy(updater, num_of_levels);
+    multigrid_data_destroy(mg_data);
+    multigrid_matrix_operator_destroy(user_callbacks);
+    
     /* u_sum = 0.; */
     /* for (int i = 0; i < prob_vecs.local_nodes; i++) */
     /*   u_sum += prob_vecs.u[i]; */

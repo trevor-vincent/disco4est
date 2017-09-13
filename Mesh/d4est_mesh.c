@@ -584,7 +584,8 @@ d4est_mesh_compute_l2_norm_sqr
  d4est_quadrature_t* d4est_quad,
  double* nodal_vec,
  int local_nodes,
- norm_storage_option_t store_local
+ norm_storage_option_t store_local,
+ int (*skip_element_fcn)(d4est_element_data_t*)
 )
 {
   double* Mvec = P4EST_ALLOC(double, local_nodes);
@@ -600,7 +601,8 @@ d4est_mesh_compute_l2_norm_sqr
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
-
+        int skip_element = (skip_element_fcn != NULL) ? skip_element_fcn(ed) : 0;
+        
         d4est_quadrature_volume_t mesh_object;
         mesh_object.dq = ed->dq;
         mesh_object.tree = ed->tree;
@@ -634,12 +636,47 @@ d4est_mesh_compute_l2_norm_sqr
         if (store_local == STORE_LOCALLY){
           ed->local_estimator = norm2;
         }
-        
-        l2_norm_sqr += norm2;
+
+        if (!skip_element)
+          l2_norm_sqr += norm2;
       }
     }
   P4EST_FREE(Mvec);
   return l2_norm_sqr;
+}
+
+
+double
+d4est_mesh_compute_linf
+(
+ p4est_t* p4est,
+ double* nodal_vec,
+ int (*skip_element_fcn)(d4est_element_data_t*)
+)
+{
+  double linf = 0.;  
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data;
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        int skip_element = (skip_element_fcn != NULL) ? skip_element_fcn(ed) : 0;
+        if (!skip_element){
+          for (int i = 0; i < volume_nodes; i++){
+            double linf_temp = fabs(nodal_vec[ed->nodal_stride + i]);
+            if(linf_temp > linf)
+              linf = linf_temp;
+          }
+        }
+      }
+    }
+  return linf;
 }
 
 

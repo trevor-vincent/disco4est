@@ -125,12 +125,14 @@ SET (
   Solver/d4est_solver_newton.c
   Solver/krylov_petsc.c
   Solver/newton_petsc.c
+  Solver/krylov_pc_multigrid.c
   Solver/multigrid.c
   Solver/multigrid_bottom_solver_cg.c
   Solver/multigrid_bottom_solver_cheby.c
   Solver/multigrid_bottom_solver_krylov_petsc.c
   Solver/multigrid_element_data_updater.c
   Solver/multigrid_logger_residual.c
+  Solver/multigrid_matrix_operator.c
   Solver/multigrid_smoother_cheby.c
   Solver/multigrid_smoother_krylov_petsc.c
   Solver/cg_eigs.c
@@ -374,12 +376,16 @@ add_test(test_d4est_brick_fcns test_d4est_brick_fcns)
 
 add_d4est_problem_2d(stamm_krylov_driver stamm_krylov.c Stamm)
 add_d4est_problem_2d(stamm_multigrid_driver stamm_multigrid.c Stamm)
+add_d4est_problem_2d(stamm_multigrid_pc_driver stamm_multigrid_pc.c Stamm)
 add_d4est_problem_2d(poisson_exp_robin_driver poisson_exp_robin.c PoissonExpRobin)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star.c ConstantDensityStar)
+add_d4est_problem_3d(constant_density_star_mgpc_driver constant_density_star_mgpc.c ConstantDensityStar)
 # add_d4est_problem_3d(constant_density_star_inbin_driver constant_density_star_inbin.c ConstantDensityStar)
 # add_d4est_problem_3d(two_punctures_robin_brick_driver two_punctures_robin_brick.c TwoPunctures)
 # add_d4est_problem_3d(two_punctures_robin_sphere_driver two_punctures_robin_sphere.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_sphere_hp_driver two_punctures_robin_sphere_hp.c TwoPunctures)
+add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_driver two_punctures_robin_sphere_hp_mgpc.c TwoPunctures)
+add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_noinbin_driver two_punctures_robin_sphere_hp_mgpc.c TwoPunctures)
 add_d4est_problem_3d(random_punctures_robin_sphere_hp_driver random_punctures_robin_sphere_hp.c TwoPunctures)
 # add_d4est_problem_3d(two_punctures_driver two_punctures.c TwoPunctures)
 # add_d4est_problem_2d(constant_density_star_driver stamm_krylov.c Stamm)

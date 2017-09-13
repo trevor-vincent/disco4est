@@ -134,12 +134,12 @@ multigrid_bottom_solver_cheby_init
     D4EST_ABORT("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("multigrid_bottom_solver", cheby_data->cheby_imax, -1);
-  D4EST_CHECK_INPUT("multigrid_bottom_solver", cheby_data->cheby_eigs_cg_imax, -1);
-  D4EST_CHECK_INPUT("multigrid_bottom_solver", cheby_data->cheby_eigs_lmax_lmin_ratio, -1);
-  D4EST_CHECK_INPUT("multigrid_bottom_solver", cheby_data->cheby_eigs_max_multiplier, -1);
-  D4EST_CHECK_INPUT("multigrid_bottom_solver", cheby_data->cheby_print_residual_norm, -1);
-  D4EST_CHECK_INPUT("multigrid_bottom_solver", cheby_data->cheby_print_eig, -1);
+  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_imax, -1);
+  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_eigs_cg_imax, -1);
+  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_eigs_lmax_lmin_ratio, -1);
+  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_eigs_max_multiplier, -1);
+  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_residual_norm, -1);
+  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_eig, -1);
   
   if(p4est->mpirank == 0){
     printf("[D4EST_INFO]: Multigrid Bottom Solver Cheby Parameters\n");

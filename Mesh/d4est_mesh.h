@@ -48,7 +48,8 @@ void d4est_mesh_init_field(p4est_t *p4est,double *node_vec,d4est_xyz_fcn_t init_
 int d4est_mesh_update(p4est_t *p4est,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *geometric_factors,d4est_mesh_quadrature_data_init_option_t quad_init_option,d4est_mesh_geometry_data_init_option_t geom_init_option,d4est_mesh_geometry_aliases_init_option_t alias_init_option,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
 void d4est_mesh_geometry_storage_initialize_aliases(p4est_t *p4est,d4est_mesh_geometry_storage_t *geometric_factors,d4est_local_sizes_t local_sizes);
 d4est_local_sizes_t d4est_mesh_init_element_data(p4est_t *p4est,d4est_operators_t *d4est_ops,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
-double d4est_mesh_compute_l2_norm_sqr(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,double *nodal_vec,int local_nodes,norm_storage_option_t store_local);
+double d4est_mesh_compute_linf(p4est_t *p4est,double *nodal_vec,int(*skip_element_fcn)(d4est_element_data_t *));
+double d4est_mesh_compute_l2_norm_sqr(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,double *nodal_vec,int local_nodes,norm_storage_option_t store_local,int(*skip_element_fcn)(d4est_element_data_t *));
 void d4est_mesh_print_element_data_debug(p4est_t *p4est);
 int d4est_mesh_debug_find_node(p4est_t *p4est,int node);
 int d4est_mesh_global_node_to_local_node(p4est_t *p4est,int global_node);

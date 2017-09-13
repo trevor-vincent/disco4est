@@ -3,6 +3,7 @@
 
 #include <pXest.h>
 #include <d4est_elliptic_data.h>
+#include <d4est_elliptic_eqns.h>
 #include <d4est_operators.h>
 #include <d4est_quadrature.h>
 #include <d4est_geometry.h>

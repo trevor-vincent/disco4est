@@ -186,7 +186,7 @@ d4est_solver_newton_solve
 
 
   if (p4est->mpirank == 0 && nr_params.monitor){
-    printf("[D4EST_SOLVER_NEWTON]: ITER %03d PRE-FNRM %.30f POST-FNRM  %.30f\n", itc, fnrmo,  fnrm);
+    printf("[D4EST_SOLVER_NEWTON]: ITER %03d INITIAL FNRM  %.30f\n", itc, fnrm);
   }
   
   while((fnrm > stop_tol || itc < minit) && (itc < maxit)){
@@ -204,10 +204,6 @@ d4est_solver_newton_solve
     /* set initial guess */
     d4est_linalg_fill_vec(vecs_for_linsolve.u, 0., n);
 
-    if (krylov_pc != NULL && krylov_pc->pc_setup != NULL){
-      krylov_pc->pc_setup(krylov_pc);
-    }
-    
     krylov_petsc_solve
       (
        p4est,
@@ -265,7 +261,7 @@ d4est_solver_newton_solve
     fnrm = sqrt(fnrm_global);
 
     if (p4est->mpirank == 0 && nr_params.monitor){
-      printf("[D4EST_SOLVER_NEWTON]: ITER %03d PRE-FNRM %.30f POST-FNRM  %.30f\n" ,itc, fnrmo,  fnrm);
+      printf("[D4EST_SOLVER_NEWTON]: ITER %03d PRE-FNRM %.15e POST-FNRM  %.15e\n" ,itc, fnrmo,  fnrm);
     }
     
   }

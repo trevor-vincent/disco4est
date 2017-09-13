@@ -28,9 +28,6 @@
 typedef struct {
   
   int do_not_solve;
-  int deg_vol_quad_inc_inner;
-  int deg_vol_quad_inc_outer;
-  int amr_level_for_uniform_p;
   
 } two_punctures_init_params_t;
 
@@ -48,18 +45,6 @@ int two_punctures_init_params_handler
     D4EST_ASSERT(pconfig->do_not_solve == -1);
     pconfig->do_not_solve = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"problem",name,"deg_vol_quad_inc_inner")) {
-    D4EST_ASSERT(pconfig->deg_vol_quad_inc_inner == -1);
-    pconfig->deg_vol_quad_inc_inner = atoi(value);
-  }
-  else if (d4est_util_match_couple(section,"problem",name,"deg_vol_quad_inc_outer")) {
-    D4EST_ASSERT(pconfig->deg_vol_quad_inc_outer == -1);
-    pconfig->deg_vol_quad_inc_outer = atoi(value);
-  }
-  else if (d4est_util_match_couple(section,"amr",name,"amr_level_for_uniform_p")) {
-    D4EST_ASSERT(pconfig->amr_level_for_uniform_p == -1);
-    pconfig->amr_level_for_uniform_p = atoi(value);
-  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -76,22 +61,15 @@ two_punctures_init_params_input
 {
   two_punctures_init_params_t input;
   input.do_not_solve = -1;
-  input.deg_vol_quad_inc_inner = -1;
-  input.deg_vol_quad_inc_outer = -1;
-  input.amr_level_for_uniform_p = -1;
 
   if (ini_parse(input_file, two_punctures_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("problem", input.do_not_solve, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc_inner, -1);
-  D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc_outer, -1);
-  D4EST_CHECK_INPUT("amr", input.amr_level_for_uniform_p, -1);
   
   return input;
 }
-
 
 
 static
@@ -144,15 +122,12 @@ amr_set_element_gamma
   d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
   
   gamma_params_t gamma_hpn;
-
   gamma_hpn.gamma_h = params->gamma_h;
   gamma_hpn.gamma_p = params->gamma_p;
   gamma_hpn.gamma_n = params->gamma_n;
 
   return gamma_hpn;
 }
-
-
 
 
 int
@@ -199,16 +174,13 @@ problem_set_degrees_after_amr
  void* user_ctx
 )
 {
-
-  two_punctures_init_params_t* init_params = user_ctx;
-  
   /* outer shell */
   if (elem_data->tree < 6){
-    elem_data->deg_vol_quad = elem_data->deg + init_params->deg_vol_quad_inc_outer;
+    elem_data->deg_vol_quad = elem_data->deg + 4;
   }
   /* inner shell */
   else if(elem_data->tree < 12){
-    elem_data->deg_vol_quad = elem_data->deg + init_params->deg_vol_quad_inc_inner;
+    elem_data->deg_vol_quad = elem_data->deg + 4;
   }
   /* center cube */
   else {
@@ -236,13 +208,13 @@ problem_init
 {
 
   /*  */
-  two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file
-                                                                           );
+two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file
+);
   
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
   
-  d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
+  /* d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file); */
   d4est_poisson_robin_bc_t bc_data_for_jac;
   bc_data_for_jac.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
   bc_data_for_jac.robin_rhs = two_punctures_robin_bc_rhs_fcn;
@@ -263,7 +235,8 @@ problem_init
   ctx.smooth_pred_params = &smooth_pred_params;
   ctx.flux_data_for_jac = flux_data_for_jac;
   ctx.flux_data_for_res = flux_data_for_res;
-  
+                           
+                           
   d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = two_punctures_build_residual;
   prob_fcns.apply_lhs = two_punctures_apply_jac;
@@ -300,8 +273,7 @@ problem_init
      "[D4EST_AMR]:",
      &amr_marker
     );
-  
-  d4est_amr_t* d4est_amr_uniform_p = d4est_amr_init_uniform_p(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps);
+
 
   d4est_mesh_init_field
     (
@@ -314,9 +286,6 @@ problem_init
     );
     
   d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
-
-
-  d4est_output_energy_norm_fit_t* fit = d4est_output_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
     
@@ -407,12 +376,14 @@ problem_init
        *ghost_data,
        &ip_norm_data,
        stats[0]->total + stats[1]->total + stats[2]->total,
-       error,
-       fit,
-       NULL
+       error
       );
 
 
+    for (int i = 0; i < 3; i++){
+      P4EST_FREE(stats[i]);
+    }
+    
     if (level != d4est_amr->num_of_amr_steps){
 
       if (p4est->mpirank == 0)
@@ -424,19 +395,13 @@ problem_init
          ghost,
          ghost_data,
          d4est_ops,
-         /* (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr, */
-         /* d4est_amr, */
-         d4est_amr_uniform_p,
+         d4est_amr,
          &prob_vecs.u,
          stats
         );
       
     }
 
-    for (int i = 0; i < 3; i++){
-      P4EST_FREE(stats[i]);
-    }
-    
 
     prob_vecs.local_nodes = d4est_mesh_update
                   (
@@ -451,7 +416,7 @@ problem_init
                    INITIALIZE_GEOMETRY_DATA,
                    INITIALIZE_GEOMETRY_ALIASES,
                    problem_set_degrees_after_amr,
-                   &init_params
+                   NULL
                   );
 
     
@@ -480,10 +445,8 @@ problem_init
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
-  d4est_amr_destroy(d4est_amr_uniform_p);
   d4est_poisson_flux_destroy(flux_data_for_jac);  
   d4est_poisson_flux_destroy(flux_data_for_res);  
-  d4est_output_destroy_energy_norm_fit(fit);
   P4EST_FREE(error);
   P4EST_FREE(u_prev);
   P4EST_FREE(prob_vecs.u);

@@ -260,7 +260,7 @@ problem_init
        &prob_vecs,
        &ip_norm_data,
        stamm_analytic_solution,
-      &ctx,NULL);
+      &ctx,NULL,NULL);
 
     P4EST_FREE(stats);
     

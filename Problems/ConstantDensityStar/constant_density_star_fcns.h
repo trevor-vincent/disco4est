@@ -2,6 +2,8 @@
 #define CONSTANT_DENSITY_STAR_FCNS_H 
 
 #include <d4est_amr_smooth_pred.h>
+#include <multigrid.h>
+#include <multigrid_matrix_operator.h>
 
 typedef struct {
 
@@ -21,6 +23,9 @@ typedef struct {
 } constant_density_star_params_t;
 
 typedef struct {
+
+  int use_matrix_operator;
+  multigrid_data_t* mg_data;
   constant_density_star_params_t* constant_density_star_params;
   d4est_poisson_flux_data_t* flux_data_for_jac;
   d4est_poisson_flux_data_t* flux_data_for_res;
@@ -193,6 +198,7 @@ constant_density_star_input
   
   return input;
 }
+
 
 static
 double psi_fcn
@@ -415,6 +421,49 @@ constant_density_star_build_residual
 
 
 static
+void constant_density_star_apply_jac_add_nonlinear_term_using_matrix
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ void* user
+)
+{
+  double* M_neg_10pi_rho_up1_neg4_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
+  problem_ctx_t* ctx = user;
+  multigrid_data_t* mg_data = ctx->mg_data;
+  multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
+
+  int matrix_stride = 0;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data;
+
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        d4est_linalg_matvec_plus_vec(1.,&(matrix_op->matrix[matrix_stride]), &prob_vecs->u[ed->nodal_stride], 0., &M_neg_10pi_rho_up1_neg4_of_u0_u_vec[ed->nodal_stride], volume_nodes, volume_nodes);
+        
+        matrix_stride += volume_nodes*volume_nodes;
+        
+      }
+    }
+
+  d4est_linalg_vec_axpy(1.0, M_neg_10pi_rho_up1_neg4_of_u0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  P4EST_FREE(M_neg_10pi_rho_up1_neg4_of_u0_u_vec);
+}
+
+
+static
 void constant_density_star_apply_jac_add_nonlinear_term
 (
  p4est_t* p4est,
@@ -495,6 +544,7 @@ void constant_density_star_apply_jac
 {
   problem_ctx_t* ctx = user;
   d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_jac;
+
   
   d4est_poisson_apply_aij(p4est,
                           ghost,
@@ -505,19 +555,51 @@ void constant_density_star_apply_jac
                           d4est_geom,
                           d4est_quad
                          );
-  
- constant_density_star_apply_jac_add_nonlinear_term
-    (
-     p4est,
-     ghost,
-     ghost_data,
-     prob_vecs,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     user
-    );
-  
+
+  if (ctx->use_matrix_operator == 0)
+    constant_density_star_apply_jac_add_nonlinear_term
+      (
+       p4est,
+       ghost,
+       ghost_data,
+       prob_vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       user
+      );
+  else {
+    
+    multigrid_data_t* mg_data = ctx->mg_data;
+    multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
+
+    if (matrix_op->matrix != matrix_op->matrix_at0){
+    constant_density_star_apply_jac_add_nonlinear_term_using_matrix
+      (
+       p4est,
+       ghost,
+       ghost_data,
+       prob_vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       user
+      );
+    }
+    else {
+    constant_density_star_apply_jac_add_nonlinear_term
+      (
+       p4est,
+       ghost,
+       ghost_data,
+       prob_vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       user
+      );
+    }
+  }
 }
 
 
@@ -536,4 +618,33 @@ constant_density_star_initial_guess
 }
 
 
+static
+void constant_density_star_krylov_pc_setup_fcn
+(
+ krylov_pc_t* krylov_pc
+)
+{
+  multigrid_data_t* mg_data = krylov_pc->pc_data;
+  petsc_ctx_t* ctx = krylov_pc->pc_ctx;
+
+  if (ctx->p4est->mpirank == 0)
+    printf("[KRYLOV_PC_MULTIGRID_SETUP_FCN] Initializing Matrix Operator\n");
+  
+  multigrid_matrix_setup_fofufofvlilj_operator
+      (
+       ctx->p4est,
+       ctx->d4est_ops,
+       ctx->d4est_geom,
+       ctx->d4est_quad,
+       ctx->vecs->u0,
+       NULL,
+       neg_10pi_rho_up1_neg4,
+       ctx->fcns->user,
+       NULL,
+       NULL,
+       mg_data->user_callbacks->user
+      ); 
+}
+
 #endif
+

@@ -20,6 +20,11 @@
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
 #include <d4est_solver_newton.h>
+#include <multigrid.h>
+#include <krylov_pc_multigrid.h>
+#include <multigrid_logger_residual.h>
+#include <multigrid_element_data_updater.h>
+#include <multigrid_matrix_operator.h>
 #include <krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
@@ -33,6 +38,18 @@ typedef struct {
   int amr_level_for_uniform_p;
   
 } two_punctures_init_params_t;
+
+static
+int skip_element_fcn
+(
+ d4est_element_data_t* ed
+)
+{
+  if(ed->tree != 12)
+    return 1;
+  else
+    return 0;
+}
 
 static
 int two_punctures_init_params_handler
@@ -93,7 +110,6 @@ two_punctures_init_params_input
 }
 
 
-
 static
 int
 amr_mark_element
@@ -126,7 +142,7 @@ amr_mark_element
   double eta2_percentile
     = d4est_estimator_stats_get_percentile(stats[elem_bin], params->percentile);
 
-  return (eta2 >= eta2_percentile);
+  return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
 }
 
 static
@@ -412,6 +428,22 @@ problem_init
        NULL
       );
 
+    d4est_output_norms
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       *ghost,
+       *ghost_data,
+       NULL,
+       -1,
+       error,
+       NULL,
+       skip_element_fcn
+      );
+
+    
 
     if (level != d4est_amr->num_of_amr_steps){
 
@@ -424,9 +456,9 @@ problem_init
          ghost,
          ghost_data,
          d4est_ops,
-         /* (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr, */
+         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr,
          /* d4est_amr, */
-         d4est_amr_uniform_p,
+         /* d4est_amr_uniform_p, */
          &prob_vecs.u,
          stats
         );
@@ -460,6 +492,73 @@ problem_init
     error = P4EST_REALLOC(error, double, prob_vecs.local_nodes);
     d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
+
+
+   int min_level, max_level;
+
+    multigrid_get_level_range(p4est, &min_level, &max_level);
+    printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
+
+    /* need to do a reduce on min,max_level before supporting multiple proc */
+    /* mpi_assert(proc_size == 1); */
+    int num_of_levels = max_level + 1;
+
+ 
+    multigrid_logger_t* logger = multigrid_logger_residual_init
+                                 (
+                                 );
+    
+    multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init
+                                                (
+                                                 num_of_levels,
+                                                 ghost,
+                                                 ghost_data,
+                                                 geometric_factors,
+                                                 problem_set_degrees_after_amr,
+                                                 &init_params
+                                                );
+    
+
+
+
+
+
+    multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, num_of_levels);
+
+    /* prob_vecs.u0 = prob_vecs.u; */
+    
+    /* multigrid_matrix_setup_fofufofvlilj_operator */
+    /*   ( */
+    /*    p4est, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*    prob_vecs.u0, */
+    /*    NULL, */
+    /*    neg_10pi_rho_up1_neg4, */
+    /*    &ctx, */
+    /*    NULL, */
+    /*    NULL, */
+    /*    user_callbacks->user */
+    /*   ); */
+
+    
+    multigrid_data_t* mg_data = multigrid_data_init(p4est,
+                                                    d4est_ops,
+                                                    d4est_geom,
+                                                    d4est_quad,
+                                                    num_of_levels,
+                                                    logger,
+                                                    user_callbacks,
+                                                    updater,
+                                                    input_file
+                                                   );
+
+    krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, two_punctures_krylov_pc_setup_fcn);
+    ctx.use_matrix_operator = 1;
+    ctx.mg_data = mg_data;
+
+
     if (!init_params.do_not_solve){
     d4est_solver_newton_solve
       (
@@ -472,9 +571,16 @@ problem_init
        d4est_geom,
        d4est_quad,
        input_file,
-       NULL
+       pc
       );
     }
+
+    krylov_pc_multigrid_destroy(pc);
+    multigrid_logger_residual_destroy(logger);
+    multigrid_element_data_updater_destroy(updater, num_of_levels);
+    multigrid_data_destroy(mg_data);
+    multigrid_matrix_operator_destroy(user_callbacks);
+    
 
   }
 

@@ -409,7 +409,8 @@ d4est_estimator_bi_compute
      d4est_quad,
      vecs->Au,
      vecs->local_nodes,
-     STORE_LOCALLY
+     STORE_LOCALLY,
+     NULL
     );
 
   for (p4est_topidx_t tt = p4est->first_local_tree;

@@ -21,21 +21,21 @@ d4est_output_calculate_analytic_error
  double* error
 )
 {
-    d4est_mesh_init_field
-      (
-       p4est,
-       u_analytic,
-       analytic_solution,
-       d4est_ops,
-       d4est_geom,
-       analytic_solution_ctx
-      );
+  d4est_mesh_init_field
+    (
+     p4est,
+     u_analytic,
+     analytic_solution,
+     d4est_ops,
+     d4est_geom,
+     analytic_solution_ctx
+    );
 
-    /* for (int i = 0; i < prob_vecs->local_nodes; i++) */
-      /* printf("u_analytic[%d] = %.25f\n",i, u_analytic[i]); */
+  /* for (int i = 0; i < prob_vecs->local_nodes; i++) */
+  /* printf("u_analytic[%d] = %.25f\n",i, u_analytic[i]); */
     
-    d4est_linalg_vec_axpyeqz(-1., prob_vecs->u, u_analytic, error, prob_vecs->local_nodes);
-    d4est_linalg_vec_fabs(error, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpyeqz(-1., prob_vecs->u, u_analytic, error, prob_vecs->local_nodes);
+  d4est_linalg_vec_fabs(error, prob_vecs->local_nodes);
 }
 
 d4est_output_energy_norm_fit_t*
@@ -102,7 +102,7 @@ d4est_output_energy_norm_add_entry_and_fit
 void
 d4est_output_destroy_energy_norm_fit
 (
-d4est_output_energy_norm_fit_t* fit
+ d4est_output_energy_norm_fit_t* fit
 )
 {
   P4EST_FREE(fit->log_energy_norm_data);
@@ -123,7 +123,8 @@ d4est_output_norms
  d4est_ip_energy_norm_data_t* energy_norm_data,
  double estimator,
  double* error,
- d4est_output_energy_norm_fit_t* fit
+ d4est_output_energy_norm_fit_t* fit,
+ int (*skip_element_fcn)(d4est_element_data_t*)
 )
 {
   int local_nodes = 0;
@@ -145,80 +146,102 @@ d4est_output_norms
     }
   
   double local_l2_norm_sqr = d4est_mesh_compute_l2_norm_sqr
-                                (
-                                 p4est,
-                                 d4est_ops,
-                                 d4est_geom,
-                                 d4est_quad,
-                                 error,
-                                 local_nodes,
-                                 DO_NOT_STORE_LOCALLY
-                                );
-  
+                             (
+                              p4est,
+                              d4est_ops,
+                              d4est_geom,
+                              d4est_quad,
+                              error,
+                              local_nodes,
+                              DO_NOT_STORE_LOCALLY,
+                              skip_element_fcn
+                             );
+
+  double local_Linf = d4est_mesh_compute_linf
+                      (
+                       p4est,
+                       error,
+                       skip_element_fcn
+                      );
+      
   double local_energy_norm_sqr = -1.;
   if (energy_norm_data != NULL)
     local_energy_norm_sqr = d4est_ip_energy_norm_compute
-                  (
-                   p4est,
-                   error,
-                   energy_norm_data,
-                   ghost,
-                   ghost_data,
-                   d4est_ops,
-                   d4est_geom,
-                   d4est_quad
-                  );
+                            (
+                             p4est,
+                             error,
+                             energy_norm_data,
+                             ghost,
+                             ghost_data,
+                             d4est_ops,
+                             d4est_geom,
+                             d4est_quad
+                            );
 
-    double local_nodes_dbl = (double)local_nodes;
-    double local_quad_nodes_dbl = (double)local_quad_nodes;
-    double local_estimator = estimator;
-    double local_reduce [5];
-    double global_reduce [5];
+  
+  double local_nodes_dbl = (double)local_nodes;
+  double local_quad_nodes_dbl = (double)local_quad_nodes;
+  double local_estimator = estimator;
+  double local_reduce [5];
+  double global_reduce [5];
+  double global_Linf;
     
-    local_reduce[0] = local_l2_norm_sqr;
-    local_reduce[1] = local_nodes_dbl;
-    local_reduce[2] = local_quad_nodes_dbl;
-    local_reduce[3] = local_estimator;
-    local_reduce[4] = local_energy_norm_sqr;
+  local_reduce[0] = local_l2_norm_sqr;
+  local_reduce[1] = local_nodes_dbl;
+  local_reduce[2] = local_quad_nodes_dbl;
+  local_reduce[3] = local_estimator;
+  local_reduce[4] = local_energy_norm_sqr;
     
+  sc_reduce
+    (
+     &local_reduce[0],
+     &global_reduce[0],
+     5,
+     sc_MPI_DOUBLE,
+     sc_MPI_SUM,
+     0,
+     sc_MPI_COMM_WORLD
+    );
+
     sc_reduce
-      (
-       &local_reduce[0],
-       &global_reduce[0],
-       5,
-       sc_MPI_DOUBLE,
-       sc_MPI_SUM,
-       0,
-       sc_MPI_COMM_WORLD
-      );
+    (
+     &local_Linf,
+     &global_Linf,
+     1,
+     sc_MPI_DOUBLE,
+     sc_MPI_MAX,
+     0,
+     sc_MPI_COMM_WORLD
+    );
 
-    double global_l2_norm_sqr = global_reduce[0];
-    double global_nodes_dbl = global_reduce[1];
-    double global_quad_nodes_dbl = global_reduce[2];
-    double global_estimator = global_reduce[3];
-    double global_energy_norm_sqr = global_reduce[4];
+  double global_l2_norm_sqr = global_reduce[0];
+  double global_nodes_dbl = global_reduce[1];
+  double global_quad_nodes_dbl = global_reduce[2];
+  double global_estimator = global_reduce[3];
+  double global_energy_norm_sqr = global_reduce[4];
 
-    int avg_deg = pow((int)(global_nodes_dbl/p4est->global_num_quadrants), 1./(P4EST_DIM)) - 1.f + .5f;
-    int avg_deg_quad = pow((int)(global_quad_nodes_dbl/p4est->global_num_quadrants), 1./(P4EST_DIM)) - 1.f + .5f;
+  int avg_deg = pow((int)(global_nodes_dbl/p4est->global_num_quadrants), 1./(P4EST_DIM)) - 1.f + .5f;
+  int avg_deg_quad = pow((int)(global_quad_nodes_dbl/p4est->global_num_quadrants), 1./(P4EST_DIM)) - 1.f + .5f;
 
-    if(energy_norm_data != NULL && fit != NULL){
-      d4est_output_energy_norm_add_entry_and_fit(p4est,fit, global_energy_norm_sqr, global_nodes_dbl);
-    }
+  if(energy_norm_data != NULL && fit != NULL){
+    d4est_output_energy_norm_add_entry_and_fit(p4est,fit, global_energy_norm_sqr, global_nodes_dbl);
+  }
     
-    if (p4est->mpirank == 0){
-      printf
-        (
-         "[D4EST_OUTPUT]: global_elements %d global_nodes %d avg_deg %d global_quad_nodes %d avg_deg_quad %d global_estimator %.25f global_l2 %.25f global_enorm %.25f\n",
-         (int)p4est->global_num_quadrants,
-         (int)global_nodes_dbl,
-         avg_deg,
-         (int)global_quad_nodes_dbl,
-         avg_deg_quad,
-         (global_estimator < 0) ? -1. : sqrt(global_estimator),
-         (global_l2_norm_sqr < 0) ? -1 : sqrt(global_l2_norm_sqr),
-         (global_energy_norm_sqr < 0) ? -1. :sqrt(global_energy_norm_sqr)
-        );
-    }
+  if (p4est->mpirank == 0){
+    printf
+      (
+       "[D4EST_OUTPUT]: global_elements %d global_nodes %d avg_deg %d global_quad_nodes %d avg_deg_quad %d global_estimator %.25f global_l2 %.25f global_enorm %.25f global_Linf %.25f\n",
+       (int)p4est->global_num_quadrants,
+       (int)global_nodes_dbl,
+       avg_deg,
+       (int)global_quad_nodes_dbl,
+       avg_deg_quad,
+       (global_estimator < 0) ? -1. : sqrt(global_estimator),
+       (global_l2_norm_sqr < 0) ? -1 : sqrt(global_l2_norm_sqr),
+       (global_energy_norm_sqr < 0) ? -1. :sqrt(global_energy_norm_sqr),
+       global_Linf
+      );
+  }
     
 }
 
@@ -237,13 +260,14 @@ d4est_output_norms_using_analytic_solution
  d4est_ip_energy_norm_data_t* energy_norm_data,
  d4est_xyz_fcn_t analytic_solution,
  void* ctx,
- d4est_output_energy_norm_fit_t* fit
+ d4est_output_energy_norm_fit_t* fit,
+ int (*skip_element_fcn)(d4est_element_data_t*)
 )
 {
   double* error = P4EST_ALLOC(double, prob_vecs->local_nodes);
   double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
   d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs, analytic_solution, ctx, u_analytic, error);
-  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, ghost, ghost_data, energy_norm_data, local_estimator, error, fit);
+  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, ghost, ghost_data, energy_norm_data, local_estimator, error, fit, skip_element_fcn);
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
 }
@@ -274,50 +298,50 @@ vtk_dg_field_plotter
             );
 
 
-   /* vtk_ctx = d4est_vtk_write_dg_cell_dataf */
-   /*              ( */
-   /*               vtk_ctx, */
-   /*               1, */
-   /*               1, */
-   /*               1, */
-   /*               0, */
-   /*               1, */
-   /*               0, */
-   /*               0, */
-   /*               vtk_ctx */
-   /*              ); */
+  /* vtk_ctx = d4est_vtk_write_dg_cell_dataf */
+  /*              ( */
+  /*               vtk_ctx, */
+  /*               1, */
+  /*               1, */
+  /*               1, */
+  /*               0, */
+  /*               1, */
+  /*               0, */
+  /*               0, */
+  /*               vtk_ctx */
+  /*              ); */
 
-   if (vecs->eta2 != NULL){
-   vtk_ctx = d4est_vtk_write_dg_cell_dataf
-             (
-              vtk_ctx,
-              1,
-              1,
-              1,
-              0,
-              1,
-              1,
-              0,
-              "eta",
-              vecs->eta2,
-              vtk_ctx
-             );
+  if (vecs->eta2 != NULL){
+    vtk_ctx = d4est_vtk_write_dg_cell_dataf
+              (
+               vtk_ctx,
+               1,
+               1,
+               1,
+               0,
+               1,
+               1,
+               0,
+               "eta",
+               vecs->eta2,
+               vtk_ctx
+              );
 
-   }
-   else {
-     vtk_ctx = d4est_vtk_write_dg_cell_dataf
-               (
-                vtk_ctx,
-                1,
-                1,
-                1,
-                0,
-                1,
-                0,
-                0,
-                vtk_ctx
-               );
-   }
+  }
+  else {
+    vtk_ctx = d4est_vtk_write_dg_cell_dataf
+              (
+               vtk_ctx,
+               1,
+               1,
+               1,
+               0,
+               1,
+               0,
+               0,
+               vtk_ctx
+              );
+  }
 }
 
 void
@@ -336,47 +360,47 @@ d4est_output_vtk
  int save_estimator
 )
 {
-    double* jacobian_lgl = P4EST_ALLOC(double, local_nodes);
-    int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
+  double* jacobian_lgl = P4EST_ALLOC(double, local_nodes);
+  int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
 
-    d4est_mesh_compute_jacobian_on_lgl_grid(p4est, d4est_ops, d4est_geom, jacobian_lgl);
-    d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
+  d4est_mesh_compute_jacobian_on_lgl_grid(p4est, d4est_ops, d4est_geom, jacobian_lgl);
+  d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
 
     
-    double* eta2_array = NULL;
-    if(save_estimator){
-      eta2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
-      d4est_mesh_get_array_of_estimators(p4est, eta2_array);
-    }
+  double* eta2_array = NULL;
+  if(save_estimator){
+    eta2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
+    d4est_mesh_get_array_of_estimators(p4est, eta2_array);
+  }
     
-    d4est_output_vtk_dg_fields_t vtk_nodal_vecs;
-    vtk_nodal_vecs.u = u;
-    vtk_nodal_vecs.u_compare = u_compare;
-    vtk_nodal_vecs.error = error;
-    vtk_nodal_vecs.jacobian = jacobian_lgl;
-    vtk_nodal_vecs.eta2 = eta2_array;
+  d4est_output_vtk_dg_fields_t vtk_nodal_vecs;
+  vtk_nodal_vecs.u = u;
+  vtk_nodal_vecs.u_compare = u_compare;
+  vtk_nodal_vecs.error = error;
+  vtk_nodal_vecs.jacobian = jacobian_lgl;
+  vtk_nodal_vecs.eta2 = eta2_array;
 
 
-    char* save_as;
-    asprintf(&save_as,"%s_level_%d", save_as_prefix, level);
+  char* save_as;
+  asprintf(&save_as,"%s_level_%d", save_as_prefix, level);
     
-    /* vtk output */
-    d4est_vtk_save_geometry_and_dg_fields
-      (
-       save_as,
-       p4est,
-       d4est_ops,
-       deg_array,
-       input_file,
-       "d4est_vtk_geometry",
-       vtk_dg_field_plotter,
-       (void*)&vtk_nodal_vecs
-      );
+  /* vtk output */
+  d4est_vtk_save_geometry_and_dg_fields
+    (
+     save_as,
+     p4est,
+     d4est_ops,
+     deg_array,
+     input_file,
+     "d4est_vtk_geometry",
+     vtk_dg_field_plotter,
+     (void*)&vtk_nodal_vecs
+    );
 
-    free(save_as);
-    P4EST_FREE(jacobian_lgl);
-    P4EST_FREE(deg_array);
-    P4EST_FREE(eta2_array);
+  free(save_as);
+  P4EST_FREE(jacobian_lgl);
+  P4EST_FREE(deg_array);
+  P4EST_FREE(eta2_array);
 
 }
 
@@ -438,37 +462,37 @@ d4est_output_vtk_degree_mesh
  int save_estimator,
  int level
 ){
-    double* deg_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
-    d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_DOUBLE);
+  double* deg_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
+  d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_DOUBLE);
     
-    double* eta2_array = NULL;
-    if(save_estimator){
-      eta2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
-      d4est_mesh_get_array_of_estimators(p4est, eta2_array);
-    }
+  double* eta2_array = NULL;
+  if(save_estimator){
+    eta2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
+    d4est_mesh_get_array_of_estimators(p4est, eta2_array);
+  }
     
-    d4est_output_vtk_cell_fields_t vtk_cell_vecs;
-    vtk_cell_vecs.eta2 = eta2_array;
-    vtk_cell_vecs.deg = deg_array;
+  d4est_output_vtk_cell_fields_t vtk_cell_vecs;
+  vtk_cell_vecs.eta2 = eta2_array;
+  vtk_cell_vecs.deg = deg_array;
     
-    char* save_as;
-    asprintf(&save_as,"%s_level_%d", save_as_prefix, level);
+  char* save_as;
+  asprintf(&save_as,"%s_level_%d", save_as_prefix, level);
     
-    /* vtk output */
-    d4est_vtk_save_geometry_and_cell_fields
-      (
-       save_as,
-       p4est,
-       d4est_ops,
-       input_file,
-       "d4est_vtk_geometry",
-       vtk_cell_field_plotter,
-       (void*)&vtk_cell_vecs
-      );
+  /* vtk output */
+  d4est_vtk_save_geometry_and_cell_fields
+    (
+     save_as,
+     p4est,
+     d4est_ops,
+     input_file,
+     "d4est_vtk_geometry",
+     vtk_cell_field_plotter,
+     (void*)&vtk_cell_vecs
+    );
 
-    free(save_as);
-    P4EST_FREE(deg_array);
-    P4EST_FREE(eta2_array); 
+  free(save_as);
+  P4EST_FREE(deg_array);
+  P4EST_FREE(eta2_array); 
   
 }
 

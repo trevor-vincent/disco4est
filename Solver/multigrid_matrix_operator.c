@@ -1,7 +1,5 @@
 #include <pXest.h>
 #include <d4est_linalg.h>
-#include <grid_functions.h>
-#include <element_data.h>
 #include <d4est_element_data.h>
 #include <multigrid_matrix_operator.h>
 
@@ -16,7 +14,6 @@ multigrid_matrix_operator_restriction_callback
 )
 {
   multigrid_data_t* mg_data = (multigrid_data_t*) info->p4est->user_pointer;
-  multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
   d4est_operators_t* d4est_ops = mg_data->d4est_ops;
   multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
@@ -57,13 +54,14 @@ multigrid_matrix_operator_update_callback
 {
   multigrid_data_t* mg_data = p4est->user_pointer;
   multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
-  int vcycle = mg_data->vcycle_num_finished;
+  /* int vcycle = mg_data->vcycle_num_finished; */
 
   if(mg_data->mg_state == PRE_V){
-    if (vcycle == 0){
-      matrix_op->matrix_nodes_on_level[level] = matrix_op->get_local_matrix_nodes(p4est);
+    if (matrix_op->completed_alloc == 0){
+      matrix_op->matrix_nodes_on_level[level] = d4est_mesh_get_local_matrix_nodes(p4est);
       matrix_op->total_matrix_nodes_on_multigrid = matrix_op->matrix_nodes_on_level[level];
     }
+    matrix_op->matrix = matrix_op->matrix_at0;
     matrix_op->stride_to_fine_matrix_data = 0;
     matrix_op->coarse_matrix_stride = 0;
     matrix_op->fine_matrix_stride = 0;
@@ -77,11 +75,12 @@ multigrid_matrix_operator_update_callback
           mg_data->mg_state == COARSE_PRE_SOLVE
   ){
     matrix_op->matrix = &(matrix_op->matrix_at0)[matrix_op->stride_to_fine_matrix_data];
+    /* possibly not needed */
     vecs->user = matrix_op;
   }
   else if(mg_data->mg_state == DOWNV_POST_BALANCE){
-    if (vcycle == 0){
-      matrix_op->matrix_nodes_on_level[level-1] = matrix_op->get_local_matrix_nodes(p4est);
+    if (matrix_op->completed_alloc == 0){
+      matrix_op->matrix_nodes_on_level[level-1] = d4est_mesh_get_local_matrix_nodes(p4est);
       matrix_op->total_matrix_nodes_on_multigrid += matrix_op->matrix_nodes_on_level[level-1];
       matrix_op->matrix_at0 = P4EST_REALLOC
                               (
@@ -104,7 +103,10 @@ multigrid_matrix_operator_update_callback
   }
   else if(mg_data->mg_state == UPV_PRE_REFINE){
     matrix_op->stride_to_fine_matrix_data -= matrix_op->matrix_nodes_on_level[level+1];
-  }  
+  }
+  else if(mg_data->mg_state == POST_V){
+    matrix_op->completed_alloc = 1;
+  }
   else {
     return;
   }
@@ -114,26 +116,23 @@ multigrid_user_callbacks_t*
 multigrid_matrix_operator_init
 (
  p4est_t* p4est,
- int num_of_levels,
- d4est_operators_t* d4est_ops,
- int(*get_local_matrix_nodes)(p4est_t*),
- void* user
+ int num_of_levels
 )
 {
   multigrid_matrix_op_t* matrix_op = P4EST_ALLOC(multigrid_matrix_op_t, 1);
-  int local_matrix_nodes = get_local_matrix_nodes(p4est);
+
+  int local_matrix_nodes = d4est_mesh_get_local_matrix_nodes(p4est);
   matrix_op->matrix_at0 = P4EST_ALLOC(double, local_matrix_nodes);
   matrix_op->matrix_nodes_on_level = P4EST_ALLOC(int, num_of_levels);
-  matrix_op->get_local_matrix_nodes = get_local_matrix_nodes;
   matrix_op->total_matrix_nodes_on_multigrid = -1;
   matrix_op->stride_to_fine_matrix_data = -1;
-  
+
+  matrix_op->completed_alloc = 0;
   matrix_op->fine_matrix_nodes = -1;
   matrix_op->coarse_matrix_nodes = -1;
   matrix_op->fine_matrix_stride = -1;
   matrix_op->coarse_matrix_stride = -1;
   matrix_op->matrix = matrix_op->matrix_at0;
-  matrix_op->user = user;
 
   multigrid_user_callbacks_t* user_callbacks = P4EST_ALLOC(multigrid_user_callbacks_t, 1);
 
@@ -147,20 +146,19 @@ multigrid_matrix_operator_init
 
 
 void
-multigrid_matrix_setup_fofu_mass_operator
+multigrid_matrix_setup_fofufofvlilj_operator
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  double* u,
  double* v,
- d4est_xyz_fcn_ext_t fofu_fcn,
+ d4est_xyzu_fcn_t fofu_fcn,
  void* fofu_ctx,
- d4est_xyz_fcn_ext_t fofv_fcn,
+ d4est_xyzu_fcn_t fofv_fcn,
  void* fofv_ctx,
- multigrid_matrix_op_t* matrix_op,
- int(*set_deg_quad)(void*, void*),
- void* set_deg_quad_ctx
+ multigrid_matrix_op_t* matrix_op
 )
 {
   int nodal_stride = 0;
@@ -178,21 +176,35 @@ multigrid_matrix_setup_fofu_mass_operator
         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
         int matrix_volume_nodes = volume_nodes*volume_nodes;
 
-        d4est_element_data_form_fofufofvlilj_matrix
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq = ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
+        mesh_object.q[2] = ed->q[2];
+
+        d4est_quadrature_apply_fofufofvlilj
           (
            d4est_ops,
            d4est_geom,
+           d4est_quad,
+           &mesh_object,
+           QUAD_OBJECT_VOLUME,
+           QUAD_INTEGRAND_UNKNOWN,
            (u == NULL) ? NULL : &u[nodal_stride],
            (v == NULL) ? NULL : &v[nodal_stride],
-           ed,
-           set_deg_quad(ed, set_deg_quad_ctx),
-           d4est_geom->geom_quad_type,
-           (P4EST_DIM),
+           NULL,
+           ed->deg,
+           ed->xyz_quad,
+           ed->J_quad,
+           ed->deg_vol_quad,
            &matrix_op->matrix_at0[matrix_nodal_stride],
            fofu_fcn,
            fofu_ctx,
            fofv_fcn,
-           fofv_ctx
+           fofv_ctx,
+           QUAD_COMPUTE_MATRIX
           );
 
         nodal_stride += volume_nodes;

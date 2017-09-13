@@ -409,7 +409,8 @@ problem_init
        &ip_norm_data,
        stats[0]->total + stats[1]->total + stats[2]->total,
        error,
-       fit
+       fit,
+       NULL
       );
 
 

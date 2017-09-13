@@ -212,6 +212,7 @@ problem_init
        NULL,
        poisson_exp_robin_analytic_solution,
        NULL       ,
+       NULL,
        NULL
       );
 
