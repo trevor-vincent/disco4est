@@ -423,7 +423,7 @@ problem_init
          /* d4est_amr, */
          /* d4est_amr_uniform_p, */
          &prob_vecs.u,
-         stats
+         &stats
         );
       
     }

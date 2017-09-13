@@ -1,6 +1,6 @@
 [initial_grid]
 min_quadrants = -1
-min_level = 1
+min_level = 0
 fill_uniform = 1
 deg = 1
 deg_quad = 1
@@ -24,9 +24,9 @@ sipg_penalty_fcn = maxp_sqr_over_minh
 
 [geometry]
 name = cubed_sphere
-R0 = 20
-R1 = 30
-R2 = 40
+R0 = 10
+R1 = 500
+R2 = 1000
 compactify_outer_shell = 0
 compactify_inner_shell = 0
 DX_compute_method = analytic
@@ -47,6 +47,7 @@ JAC_compute_method = numerical
 do_not_solve = 0
 deg_vol_quad_inc_inner = 0
 deg_vol_quad_inc_outer = 0
+solve_after_level = 0
 
 [d4est_solver_newton]
 imin = 1
