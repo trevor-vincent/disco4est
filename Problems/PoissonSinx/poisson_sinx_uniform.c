@@ -24,73 +24,15 @@
 #include <time.h>
 #include "poisson_sinx_fcns.h"
 
-typedef struct {
-
-  int deg;
-  int deg_quad;
-  
-} problem_initial_degree_input_t;
-
-static
-int problem_initial_degree_input_handler
-(
- void* user,
- const char* section,
- const char* name,
- const char* value
-)
-{
-  problem_initial_degree_input_t* pconfig = (problem_initial_degree_input_t*)user;
-  if (d4est_util_match_couple(section,"initial_grid",name,"deg")) {
-    D4EST_ASSERT(pconfig->deg == -1);
-    pconfig->deg = atoi(value);
-  }
-  else if (d4est_util_match_couple(section,"initial_grid",name,"deg_quad")) {
-    D4EST_ASSERT(pconfig->deg_quad == -1);
-    pconfig->deg_quad = atoi(value);
-  }
-  else {
-    return 0;
-  }
-  return 1;
-}
-
-
-static
-problem_initial_degree_input_t
-problem_initial_degree_input
-(
- const char* input_file
-)
-{
-  problem_initial_degree_input_t input;
-  input.deg = -1;
-  input.deg_quad = -1;
-  
-  if (ini_parse(input_file, problem_initial_degree_input_handler, &input) < 0) {
-    D4EST_ABORT("Can't load input file");
-  }
-
-  D4EST_CHECK_INPUT("initial_grid", input.deg, -1);
-  D4EST_CHECK_INPUT("initial_grid", input.deg_quad, -1);
-  printf("[PROBLEM]: deg = %d\n",input.deg);
-  printf("[PROBLEM]: deg_quad = %d\n",input.deg_quad);
-  return input;
-}
-
-
-void
-problem_set_degrees_init
+int
+problem_set_mortar_degree
 (
  d4est_element_data_t* elem_data,
  void* user_ctx
 )
 {
-  problem_initial_degree_input_t* input = user_ctx;
-  elem_data->deg = input->deg;
-  elem_data->deg_quad = input->deg_quad;
+  return elem_data->deg;
 }
-
 
 void
 problem_set_degrees_after_amr
@@ -99,8 +41,9 @@ problem_set_degrees_after_amr
  void* user_ctx
 )
 {
-  elem_data->deg_quad = elem_data->deg;
+  elem_data->deg_vol_quad = elem_data->deg;
 }
+
 
 void
 problem_init
@@ -108,43 +51,53 @@ problem_init
  p4est_t* p4est,
  p4est_ghost_t** ghost,
  d4est_element_data_t** ghost_data,
- d4est_geometry_t* d4est_geom,
  d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* geometric_factors,
+ int initial_nodes,
  const char* input_file,
  sc_MPI_Comm mpicomm
 )
 {
-  D4EST_ASSERT(d4est_geom->geom_type == GEOM_BRICK);
-  problem_initial_degree_input_t input = problem_initial_degree_input(input_file);
 
-  d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
-  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature", "[QUADRATURE]");
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, poisson_sinx_boundary_fcn, NULL);
+  d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
+  bc_data_for_lhs.dirichlet_fcn = zero_fcn;
+
+  d4est_poisson_dirichlet_bc_t bc_data_for_rhs;
+  bc_data_for_rhs.dirichlet_fcn = poisson_sinx_boundary_fcn;
   
+  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs, problem_set_mortar_degree, NULL);
+  
+  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_for_rhs, problem_set_mortar_degree, NULL);
+
+  problem_ctx_t ctx;
+  ctx.flux_data_for_apply_lhs = flux_data_for_apply_lhs;
+  ctx.flux_data_for_build_rhs = flux_data_for_build_rhs;
+                           
   d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = poisson_sinx_build_residual;
   prob_fcns.apply_lhs = poisson_sinx_apply_lhs;
-  prob_fcns.user = flux_data_for_apply_lhs;
+  prob_fcns.user = &ctx;
   
   double* error = NULL;
   double* u_analytic = NULL;
-  int local_nodes = 0;
   
   d4est_elliptic_data_t prob_vecs;
-  prob_vecs.Au = NULL;
-  prob_vecs.u = NULL;
-  prob_vecs.rhs = NULL;
-  prob_vecs.local_nodes = 0;
+  prob_vecs.Au = P4EST_ALLOC(double, initial_nodes);
+  prob_vecs.u = P4EST_ALLOC(double, initial_nodes);
+  prob_vecs.rhs = P4EST_ALLOC(double, initial_nodes);
+  prob_vecs.local_nodes = initial_nodes;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->user;
+  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
+  
   d4est_estimator_bi_penalty_data_t penalty_data;
-  penalty_data.u_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
-  penalty_data.u_dirichlet_penalty_fcn = bi_u_prefactor_conforming_maxp_minh;
-  penalty_data.gradu_penalty_fcn = bi_gradu_prefactor_maxp_minh;
+  penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
+  penalty_data.u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
+  penalty_data.gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
   penalty_data.sipg_flux_h = sipg_params->sipg_flux_h;
-
+  
   d4est_amr_t* d4est_amr =
     d4est_amr_init
     (
@@ -153,56 +106,39 @@ problem_init
      "[D4EST_AMR]:",
      NULL
     );
+
+  D4EST_ASSERT(d4est_amr->scheme->amr_scheme_type == AMR_UNIFORM_H ||
+               d4est_amr->scheme->amr_scheme_type == AMR_UNIFORM_P);
+
+  d4est_mesh_init_field
+    (
+     p4est,
+     prob_vecs.u,
+     poisson_sinx_initial_guess,
+     d4est_ops,
+     d4est_geom,
+     NULL
+    );
+    
+
+  d4est_poisson_build_rhs_with_strong_bc
+    (
+     p4est,
+     *ghost,
+     *ghost_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     &prob_vecs,
+     flux_data_for_build_rhs,
+     prob_vecs.rhs,
+     poisson_sinx_rhs_fcn,
+     &ctx
+    );
+
+
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
-
-    local_nodes = d4est_mesh_update
-                  (
-                   p4est,
-                   *ghost,
-                   *ghost_data,
-                   d4est_ops,
-                   d4est_geom,
-                   d4est_quad,
-                   geometric_factors,
-                   INITIALIZE_QUADRATURE_DATA,
-                   INITIALIZE_GEOMETRY_DATA,
-                   INITIALIZE_GEOMETRY_ALIASES,
-                   (level == 0) ? problem_set_degrees_init : problem_set_degrees_after_amr,
-                   (void*)&input
-                  );
-
-    if (level == 0){
-      prob_vecs.u = P4EST_REALLOC(prob_vecs.u, double, local_nodes);
-      d4est_mesh_init_field
-        (
-         p4est,
-         prob_vecs.u,
-         poisson_sinx_initial_guess,
-         d4est_ops,
-         d4est_geom,
-         NULL
-        );
-    }
-    
-    prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, local_nodes);
-    prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, local_nodes);
-    prob_vecs.local_nodes = local_nodes;
-    
-    d4est_poisson_build_rhs_with_strong_bc
-      (
-       p4est,
-       *ghost,
-       *ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       &prob_vecs,
-       flux_data_for_build_rhs,
-       prob_vecs.rhs,
-       poisson_sinx_rhs_fcn,
-       NULL
-      );
     
     d4est_estimator_bi_compute
       (
@@ -215,35 +151,15 @@ problem_init
        *ghost_data,
        d4est_ops,
        d4est_geom,
-       d4est_quad
+       d4est_quad,
+       DIAM_APPROX_CUBE,
+       problem_set_mortar_degree,
+       NULL
       );
 
-    d4est_estimator_stats_t stats;
-    d4est_estimator_stats_compute(p4est, &stats);
-    d4est_estimator_stats_print(&stats);
-    
-    d4est_solver_cg_params_t params;
-    d4est_solver_cg_input
-      (
-       p4est,
-       input_file,
-       "d4est_solver_cg",
-       "[D4EST_SOLVER_CG]",
-       &params
-      );
-    
-    d4est_solver_cg_solve
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       ghost,
-       ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       &params
-      );
+    d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
+    d4est_estimator_stats_compute(p4est, stats);
+    d4est_estimator_stats_print(stats);
 
     d4est_output_vtk_with_analytic_error
       (
@@ -255,21 +171,47 @@ problem_init
        input_file,
        "uniform_poisson_sinx",
        poisson_sinx_analytic_solution,
-       NULL,
+       &ctx,
+       1,
        level
       );
-    
-    d4est_output_norms_using_analytic_solution
+
+    d4est_output_vtk_degree_mesh
       (
        p4est,
        d4est_ops,
        d4est_geom,
        d4est_quad,
-       &stats,
-       &prob_vecs,
-       poisson_sinx_analytic_solution,
-       NULL);
+       input_file,
+       "uniform_poisson_sinx_degree_mesh",
+       1,
+       level
+      );
 
+
+    d4est_ip_energy_norm_data_t ip_norm_data;
+    ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
+    ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
+    ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
+    /*  */
+    printf("ip_norm_data.penalty_prefactor = %f\n", ip_norm_data.penalty_prefactor);
+    
+    d4est_output_norms_using_analytic_solution
+      (
+      p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       *ghost,
+       *ghost_data,
+       stats->total,
+       &prob_vecs,
+       &ip_norm_data,
+       poisson_sinx_analytic_solution,
+      &ctx,NULL,NULL);
+
+    P4EST_FREE(stats);
+    
     if (level != d4est_amr->num_of_amr_steps){
 
       if (p4est->mpirank == 0)
@@ -283,22 +225,74 @@ problem_init
          d4est_ops,
          d4est_amr,
          &prob_vecs.u,
-         NULL
+         &stats
         );
       
-    }  
+    }
+
+
+    prob_vecs.local_nodes = d4est_mesh_update
+                  (
+                   p4est,
+                   *ghost,
+                   *ghost_data,
+                   d4est_ops,
+                   d4est_geom,
+                   d4est_quad,
+                   geometric_factors,
+                   INITIALIZE_QUADRATURE_DATA,
+                   INITIALIZE_GEOMETRY_DATA,
+                   INITIALIZE_GEOMETRY_ALIASES,
+                   problem_set_degrees_after_amr,
+                   NULL
+                  );
+
     
+    prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
+    prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, prob_vecs.local_nodes);
+    
+    
+    d4est_poisson_build_rhs_with_strong_bc
+      (
+       p4est,
+       *ghost,
+       *ghost_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       &prob_vecs,
+       flux_data_for_build_rhs,
+       prob_vecs.rhs,
+       poisson_sinx_rhs_fcn,
+       &ctx
+      );
+
+    krylov_petsc_params_t krylov_petsc_params;
+    krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
+
+    krylov_petsc_solve
+      (
+       p4est,
+       &prob_vecs,
+       &prob_fcns,
+       ghost,
+       ghost_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       &krylov_petsc_params,
+       NULL
+      );
+
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
-
-
   d4est_amr_destroy(d4est_amr);
-  d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_poisson_flux_destroy(flux_data_for_apply_lhs);  
   d4est_poisson_flux_destroy(flux_data_for_build_rhs);  
-  d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
-
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
+  P4EST_FREE(prob_vecs.u);
+  P4EST_FREE(prob_vecs.Au);
+  P4EST_FREE(prob_vecs.rhs);
 }

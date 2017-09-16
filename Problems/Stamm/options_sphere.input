@@ -1,0 +1,99 @@
+[initial_grid]
+min_quadrants = -1
+min_level = 0
+fill_uniform = 1
+deg = 2
+deg_quad = 2
+
+[problem]
+c2x = 0.
+c2y = 0.
+c2z = 0.
+
+[flux]
+name = sipg
+sipg_penalty_prefactor = 10.0
+sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO
+sipg_penalty_fcn = maxp_sqr_over_minh
+
+[amr]
+scheme = smooth_pred
+num_of_amr_steps = 15
+max_degree = 7 
+gamma_h = 10.0
+gamma_p = 0.1
+gamma_n = 1.
+sigma = .25
+
+[geometry]
+name = cubed_sphere
+R0 = 0.5
+R1 = 0.75
+R2 = 1
+compactify_outer_shell = 0
+compactify_inner_shell = 0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_vtk_geometry]
+name = cubed_sphere
+R0 = 0.5
+R1 = 0.75
+R2 = 1
+compactify_outer_shell = 0
+compactify_inner_shell = 0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_solver_cg]
+iter = 1000
+monitor = 1
+rtol = 1e-20
+atol = 1e-20
+
+[quadrature]
+name = legendre
+
+[krylov_petsc]
+ksp_type = fcg
+ksp_atol = 1e-15
+ksp_rtol = 1e-20
+ksp_max_it = 100000
+ksp_view = 0
+ksp_monitor = 1
+ksp_converged_reason = 1
+ksp_initial_guess_nonzero = 0
+ksp_monitor_singular_value = 0
+
+[multigrid]
+vcycle_imax = 1;
+vcycle_rtol = 1e-9;
+vcycle_atol = 0.;
+smoother_name = mg_smoother_cheby
+bottom_solver_name = mg_bottom_solver_cheby
+
+[mg_bottom_solver_cg_d4est]
+bottom_iter = 100;
+bottom_rtol = 1e-10;
+bottom_atol = 0.;
+bottom_print_residual_norm = 0;
+
+[mg_smoother_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eigs = 0;
+
+[mg_bottom_solver_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eigs = 0;

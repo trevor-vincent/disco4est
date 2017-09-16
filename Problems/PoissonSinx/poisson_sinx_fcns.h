@@ -1,6 +1,16 @@
 #ifndef POISSON_SINX_FCNS_H
 #define POISSON_SINX_FCNS_H 
 
+
+
+typedef struct {
+
+  d4est_poisson_flux_data_t* flux_data_for_apply_lhs;
+  d4est_poisson_flux_data_t* flux_data_for_build_rhs;
+
+} problem_ctx_t;
+
+
 static double
 poisson_sinx_analytic_solution
 (
@@ -75,7 +85,8 @@ poisson_sinx_apply_lhs
  void* user
 )
 {
-  d4est_poisson_flux_data_t* flux_fcn_data = user;
+  problem_ctx_t* ctx = user;
+  d4est_poisson_flux_data_t* flux_fcn_data = ctx->flux_data_for_apply_lhs;
   d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad);
 }
 

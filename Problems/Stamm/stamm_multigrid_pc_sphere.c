@@ -109,19 +109,18 @@ problem_init
 {
   stamm_params_t stamm_params = stamm_params_input(input_file);
   d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
-
-
+  problem_ctx_t ctx;
+  
   d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
   bc_data_for_lhs.dirichlet_fcn = zero_fcn;
 
   d4est_poisson_dirichlet_bc_t bc_data_for_rhs;
   bc_data_for_rhs.dirichlet_fcn = stamm_boundary_fcn_sphere;
+  bc_data_for_rhs.user = &ctx;
   
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs, problem_set_mortar_degree, NULL);
-  
+  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs, problem_set_mortar_degree, NULL); 
   d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_for_rhs, problem_set_mortar_degree, NULL);
 
-  problem_ctx_t ctx;
   ctx.stamm_params = &stamm_params;
   ctx.smooth_pred_params = &smooth_pred_params;
   ctx.flux_data_for_apply_lhs = flux_data_for_apply_lhs;

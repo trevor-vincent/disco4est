@@ -369,7 +369,7 @@ add_d4est_test_3d(test_d4est_brick_fcns test_d4est_brick_fcns.c . test_d4est_bri
 # add_d4est_problem_3d(testcompile1 testcompile.c TestCompile)
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
-# add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
+add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
 
 
 add_test(test_d4est_brick_fcns test_d4est_brick_fcns)
@@ -377,7 +377,7 @@ add_test(test_d4est_brick_fcns test_d4est_brick_fcns)
 add_d4est_problem_2d(stamm_krylov_driver stamm_krylov.c Stamm)
 add_d4est_problem_2d(stamm_multigrid_driver stamm_multigrid.c Stamm)
 add_d4est_problem_2d(stamm_multigrid_pc_driver stamm_multigrid_pc.c Stamm)
-add_d4est_problem_2d(stamm_multigrid_pc_sphere_driver stamm_multigrid_pc_sphere.c Stamm)
+add_d4est_problem_3d(stamm_multigrid_pc_sphere_driver stamm_multigrid_pc_sphere.c Stamm)
 add_d4est_problem_2d(poisson_exp_robin_driver poisson_exp_robin.c PoissonExpRobin)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star.c ConstantDensityStar)
 add_d4est_problem_3d(constant_density_star_mgpc_driver constant_density_star_mgpc.c ConstantDensityStar)

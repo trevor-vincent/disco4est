@@ -128,7 +128,6 @@ double stamm_boundary_fcn
   return 0.;
 }
 
-
 static
 double stamm_boundary_fcn_sphere
 (
