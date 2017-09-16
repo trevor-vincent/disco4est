@@ -37,7 +37,8 @@ gamma_h = $3
 gamma_p = 0.1
 gamma_n = 1.
 percentile = $4
-inflation_size = $5
+inflation_size = 128
+amr_level_for_uniform_p = $5
 
 [flux]
 name = sipg
@@ -51,6 +52,7 @@ R = .0625
 cx = .5
 cy = .5
 cz = .5
+do_not_solve = 0
 
 [geometry]
 name = brick
@@ -74,6 +76,7 @@ Z1 = 1.0
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
+
 [d4est_solver_newton]
 imin = 10
 imax = 10
@@ -95,14 +98,49 @@ ksp_monitor_singular_value = 1
 [quadrature]
 name = legendre
 
+
+[multigrid]
+vcycle_imax = 1;
+vcycle_rtol = 1e-9;
+vcycle_atol = 0.;
+smoother_name = mg_smoother_cheby
+bottom_solver_name = mg_bottom_solver_cheby
+
+[mg_bottom_solver_cg_d4est]
+bottom_iter = 100;
+bottom_rtol = 1e-10;
+bottom_atol = 0.;
+bottom_print_residual_norm = 0;
+
+[mg_smoother_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eigs = 0;
+
+[mg_bottom_solver_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eig = 0;
+
+
 EOF
 }
 
 arr1=( 2 ) #initial degree
 arr2=( 2 ) #percentile
-arr3=(.25 6.0) #gammah
-arr4=(5 10) #penalty
-arr5=(64 128) #hrefine til inview
+arr3=(.25) #gammah
+arr4=(10) #penalty
+arr5=(4 5 6 7 8 9 10) #hrefine til inview
 arr6=(1) #domain size
 arr7=(1) #Gauss offset
 arr8=(1)

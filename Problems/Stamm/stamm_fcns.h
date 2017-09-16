@@ -128,6 +128,26 @@ double stamm_boundary_fcn
   return 0.;
 }
 
+
+static
+double stamm_boundary_fcn_sphere
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+)
+{
+  return stamm_analytic_solution(x,y,
+#if(P4EST_DIM)==3
+                                 z,
+#endif
+                                 user);
+}
+
+
 static
 double stamm_rhs_fcn
 (
