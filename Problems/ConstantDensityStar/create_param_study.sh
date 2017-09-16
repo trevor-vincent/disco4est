@@ -174,7 +174,7 @@ do
 				executable=$2
 				cores=$3
 				hours=$4
-				nodes=$((${cores} / 8))
+				nodes=$5
 				write_options $a $b $c $d $e $f $g $h $i
 				write_submit $rundir $executable $SHORTNAME $cores $hours $nodes
 				ln -s "${executable_path}/${executable}" "${PWD}/${executable}"
