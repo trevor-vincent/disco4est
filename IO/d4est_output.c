@@ -3,6 +3,7 @@
 #include <d4est_vtk.h>
 #include <d4est_util.h>
 #include <d4est_linalg.h>
+#include <d4est_mesh.h>
 #include <d4est_estimator_stats.h>
 #include <d4est_ip_energy_norm.h>
 #include <sc_reduce.h>
@@ -28,6 +29,7 @@ d4est_output_calculate_analytic_error
      analytic_solution,
      d4est_ops,
      d4est_geom,
+     INIT_FIELD_ON_LOBATTO,
      analytic_solution_ctx
     );
 

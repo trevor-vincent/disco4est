@@ -138,9 +138,13 @@ typedef struct {
 } d4est_poisson_robin_bc_t;
 
 
+typedef enum {EVAL_BNDRY_FCN_NOT_SET, EVAL_BNDRY_FCN_ON_QUAD, EVAL_BNDRY_FCN_ON_LOBATTO} dirichlet_bndry_eval_method_t;
+
+
 typedef struct {
 
   d4est_xyz_fcn_t dirichlet_fcn;
+  dirichlet_bndry_eval_method_t eval_method;
   void* user;
 
 } d4est_poisson_dirichlet_bc_t;

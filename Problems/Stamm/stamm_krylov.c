@@ -109,10 +109,12 @@ problem_init
 
   d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
   bc_data_for_lhs.dirichlet_fcn = zero_fcn;
-
+  bc_data_for_lhs.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
+  
   d4est_poisson_dirichlet_bc_t bc_data_for_rhs;
   bc_data_for_rhs.dirichlet_fcn = stamm_boundary_fcn;
-  
+  bc_data_for_rhs.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
+    
   d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs, problem_set_mortar_degree, NULL);
   
   d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_for_rhs, problem_set_mortar_degree, NULL);
@@ -169,6 +171,7 @@ problem_init
      stamm_initial_guess,
      d4est_ops,
      d4est_geom,
+     INIT_FIELD_ON_LOBATTO,
      NULL
     );
     
@@ -185,6 +188,7 @@ problem_init
      flux_data_for_build_rhs,
      prob_vecs.rhs,
      stamm_rhs_fcn,
+     INIT_FIELD_ON_LOBATTO,
      &ctx
     );
 
@@ -316,6 +320,7 @@ problem_init
        flux_data_for_build_rhs,
        prob_vecs.rhs,
        stamm_rhs_fcn,
+       INIT_FIELD_ON_LOBATTO,
        &ctx
       );
 

@@ -24,6 +24,80 @@
 #include <time.h>
 #include "poisson_sinx_fcns.h"
 
+typedef struct {
+  
+  int deg_vol_quad_inc;
+  dirichlet_bndry_eval_method_t eval_method;
+  
+} poisson_sinx_init_params_t;
+
+static
+int skip_element_fcn
+(
+ d4est_element_data_t* ed
+)
+{
+  if(ed->tree != 12)
+    return 1;
+  else
+    return 0;
+}
+
+static
+int poisson_sinx_init_params_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  poisson_sinx_init_params_t* pconfig = (poisson_sinx_init_params_t*)user;
+  if (d4est_util_match_couple(section,"problem",name,"deg_vol_quad_inc")) {
+    D4EST_ASSERT(pconfig->deg_vol_quad_inc == -1);
+    pconfig->deg_vol_quad_inc = atoi(value);
+  }
+ if (d4est_util_match_couple(section,"problem",name,"eval_method")) {
+   if (d4est_util_match(value,"EVAL_BNDRY_FCN_ON_QUAD")){
+     pconfig->eval_method = EVAL_BNDRY_FCN_ON_QUAD;
+   }
+   else if (d4est_util_match(value,"EVAL_BNDRY_FCN_ON_LOBATTO")){
+     pconfig->eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
+   }
+   else {
+     D4EST_ABORT("Not a supported eval method");
+   }
+ }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+
+static
+poisson_sinx_init_params_t
+poisson_sinx_init_params_input
+(
+ const char* input_file
+)
+{
+  poisson_sinx_init_params_t input;
+  input.deg_vol_quad_inc = -1;
+  input.eval_method = EVAL_BNDRY_FCN_NOT_SET;
+
+  if (ini_parse(input_file, poisson_sinx_init_params_handler, &input) < 0) {
+    D4EST_ABORT("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc, -1);
+  D4EST_CHECK_INPUT("problem", input.eval_method, EVAL_BNDRY_FCN_NOT_SET);  
+  
+  return input;
+}
+
+
+
 int
 problem_set_mortar_degree
 (
@@ -31,7 +105,7 @@ problem_set_mortar_degree
  void* user_ctx
 )
 {
-  return elem_data->deg;
+  return elem_data->deg_vol_quad;
 }
 
 void
@@ -41,7 +115,8 @@ problem_set_degrees_after_amr
  void* user_ctx
 )
 {
-  elem_data->deg_vol_quad = elem_data->deg;
+  poisson_sinx_init_params_t* params = user_ctx;
+  elem_data->deg_vol_quad = elem_data->deg + params->deg_vol_quad_inc;
 }
 
 
@@ -61,11 +136,17 @@ problem_init
 )
 {
 
+  poisson_sinx_init_params_t init_params = poisson_sinx_init_params_input(input_file
+                                                                           );
+  dirichlet_bndry_eval_method_t eval_method = init_params.eval_method;
+  
   d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
   bc_data_for_lhs.dirichlet_fcn = zero_fcn;
-
+  bc_data_for_lhs.eval_method = eval_method;
+  
   d4est_poisson_dirichlet_bc_t bc_data_for_rhs;
   bc_data_for_rhs.dirichlet_fcn = poisson_sinx_boundary_fcn;
+  bc_data_for_rhs.eval_method = eval_method;
   
   d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs, problem_set_mortar_degree, NULL);
   
@@ -90,14 +171,7 @@ problem_init
   prob_vecs.local_nodes = initial_nodes;
 
   d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
-  
-  d4est_estimator_bi_penalty_data_t penalty_data;
-  penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
-  penalty_data.u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
-  penalty_data.gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
-  penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
-  penalty_data.sipg_flux_h = sipg_params->sipg_flux_h;
-  
+ 
   d4est_amr_t* d4est_amr =
     d4est_amr_init
     (
@@ -117,6 +191,7 @@ problem_init
      poisson_sinx_initial_guess,
      d4est_ops,
      d4est_geom,
+     INIT_FIELD_ON_LOBATTO,
      NULL
     );
     
@@ -133,33 +208,30 @@ problem_init
      flux_data_for_build_rhs,
      prob_vecs.rhs,
      poisson_sinx_rhs_fcn,
+     (init_params.eval_method == EVAL_BNDRY_FCN_ON_QUAD) ? INIT_FIELD_ON_QUAD : INIT_FIELD_ON_LOBATTO,
      &ctx
     );
 
-
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
+
+    krylov_petsc_params_t krylov_petsc_params;
+    krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
     
-    d4est_estimator_bi_compute
+    krylov_petsc_solve
       (
        p4est,
        &prob_vecs,
        &prob_fcns,
-       penalty_data,
-       zero_fcn,
-       *ghost,
-       *ghost_data,
+       ghost,
+       ghost_data,
        d4est_ops,
        d4est_geom,
        d4est_quad,
-       DIAM_APPROX_CUBE,
-       problem_set_mortar_degree,
+       &krylov_petsc_params,
        NULL
       );
 
-    d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
-    d4est_estimator_stats_compute(p4est, stats);
-    d4est_estimator_stats_print(stats);
 
     d4est_output_vtk_with_analytic_error
       (
@@ -172,7 +244,7 @@ problem_init
        "uniform_poisson_sinx",
        poisson_sinx_analytic_solution,
        &ctx,
-       1,
+       0,
        level
       );
 
@@ -184,7 +256,7 @@ problem_init
        d4est_quad,
        input_file,
        "uniform_poisson_sinx_degree_mesh",
-       1,
+       0,
        level
       );
 
@@ -204,13 +276,12 @@ problem_init
        d4est_quad,
        *ghost,
        *ghost_data,
-       stats->total,
+      -1.,
        &prob_vecs,
        &ip_norm_data,
        poisson_sinx_analytic_solution,
       &ctx,NULL,NULL);
 
-    P4EST_FREE(stats);
     
     if (level != d4est_amr->num_of_amr_steps){
 
@@ -225,7 +296,7 @@ problem_init
          d4est_ops,
          d4est_amr,
          &prob_vecs.u,
-         &stats
+         NULL
         );
       
     }
@@ -244,7 +315,7 @@ problem_init
                    INITIALIZE_GEOMETRY_DATA,
                    INITIALIZE_GEOMETRY_ALIASES,
                    problem_set_degrees_after_amr,
-                   NULL
+                   &init_params
                   );
 
     
@@ -264,25 +335,11 @@ problem_init
        flux_data_for_build_rhs,
        prob_vecs.rhs,
        poisson_sinx_rhs_fcn,
+       (init_params.eval_method == EVAL_BNDRY_FCN_ON_QUAD) ? INIT_FIELD_ON_QUAD : INIT_FIELD_ON_LOBATTO,
        &ctx
       );
 
-    krylov_petsc_params_t krylov_petsc_params;
-    krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
 
-    krylov_petsc_solve
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       ghost,
-       ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       &krylov_petsc_params,
-       NULL
-      );
 
   }
 

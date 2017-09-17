@@ -25,11 +25,12 @@ d4est_poisson_build_rhs_with_strong_bc
  d4est_poisson_flux_data_t* flux_fcn_data_for_build_rhs,
  double* rhs,
  d4est_xyz_fcn_t problem_rhs_fcn,
+ d4est_mesh_init_field_option_t init_option,
  void* ctx
 )
 {
   int local_nodes = prob_vecs->local_nodes;
-  double* f = P4EST_ALLOC(double, local_nodes);
+
   double* u_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
   double* Au_eq_0 = P4EST_ALLOC_ZERO(double, local_nodes);
 
@@ -40,6 +41,19 @@ d4est_poisson_build_rhs_with_strong_bc
 
   d4est_poisson_apply_aij(p4est, ghost, ghost_data, &elliptic_data_for_rhs, flux_fcn_data_for_build_rhs, d4est_ops, d4est_geom, d4est_quad); 
 
+
+  double* f = NULL;
+  if (init_option == INIT_FIELD_ON_LOBATTO){
+    f = P4EST_ALLOC(double, local_nodes);
+  }
+  else if (init_option == INIT_FIELD_ON_QUAD){
+    int local_quad_nodes = d4est_mesh_get_local_quad_nodes(p4est);
+    f = P4EST_ALLOC(double, local_quad_nodes);
+  }
+  else {
+    D4EST_ABORT("Not a support init option");
+  }
+  
   d4est_mesh_init_field
     (
      p4est,
@@ -47,6 +61,7 @@ d4est_poisson_build_rhs_with_strong_bc
      problem_rhs_fcn,
      d4est_ops,
      d4est_geom,
+     init_option,
      ctx
     );
   
@@ -62,31 +77,52 @@ d4est_poisson_build_rhs_with_strong_bc
         d4est_element_data_t* ed = quad->p.user_data;
 
         d4est_quadrature_volume_t mesh_object = {.dq = ed->dq,
-                                              .tree = ed->tree,
-                                              .q[0] = ed->q[0],
-                                              .q[1] = ed->q[1],
+                                                 .tree = ed->tree,
+                                                 .q[0] = ed->q[0],
+                                                 .q[1] = ed->q[1],
 #if (P4EST_DIM)==3                                              
-                                              .q[2] = ed->q[2],
+                                                 .q[2] = ed->q[2],
 #endif
-                                              .element_id = ed->id
-                                             };
-        
-        d4est_quadrature_apply_mass_matrix
-          (
-           d4est_ops,
-           d4est_geom,
-           d4est_quad,
-           &mesh_object,
-           QUAD_OBJECT_VOLUME,
-           QUAD_INTEGRAND_UNKNOWN,
-           &f[ed->nodal_stride],
-           ed->deg,
-           ed->J_quad,
-           ed->deg_vol_quad,
-           &rhs[ed->nodal_stride]
-          );
+                                                 .element_id = ed->id
+                                                };
+
+        if (init_option == INIT_FIELD_ON_LOBATTO){
+          d4est_quadrature_apply_mass_matrix
+            (
+             d4est_ops,
+             d4est_geom,
+             d4est_quad,
+             &mesh_object,
+             QUAD_OBJECT_VOLUME,
+             QUAD_INTEGRAND_UNKNOWN,
+             &f[ed->nodal_stride],
+             ed->deg,
+             ed->J_quad,
+             ed->deg_vol_quad,
+             &rhs[ed->nodal_stride]
+            );
+        }
+        else if (init_option == INIT_FIELD_ON_QUAD){
+          d4est_quadrature_apply_galerkin_integral
+            (
+             d4est_ops,
+             d4est_geom,
+             d4est_quad,
+             &mesh_object,
+             QUAD_OBJECT_VOLUME,
+             QUAD_INTEGRAND_UNKNOWN,
+             &f[ed->quad_stride],
+             ed->deg,
+             ed->J_quad,
+             ed->deg_vol_quad,
+             &rhs[ed->nodal_stride]
+            );
+        }
+        else {
+          D4EST_ABORT("Not a supported init option");
+        }
       }
-    }    
+    }
 
   d4est_linalg_vec_axpy(-1., Au_eq_0, rhs, local_nodes);  
   P4EST_FREE(u_eq_0);

@@ -130,6 +130,7 @@ problem_init
          poisson_exp_robin_initial_guess,
          d4est_ops,
          d4est_geom,
+         INIT_FIELD_ON_LOBATTO,
          NULL
         );
     }
@@ -150,6 +151,7 @@ problem_init
        flux_data_for_build_rhs,
        prob_vecs.rhs,
        poisson_exp_robin_build_rhs_fcn,
+       INIT_FIELD_ON_LOBATTO,
        NULL
       );
     

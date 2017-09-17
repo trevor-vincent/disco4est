@@ -185,10 +185,12 @@ problem_init
    d4est_poisson_dirichlet_bc_t bc_data_for_jac;
   bc_data_for_jac.dirichlet_fcn = zero_fcn;
   bc_data_for_jac.user = &constant_density_star_params;
-
+  bc_data_for_jac.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
+  
   d4est_poisson_dirichlet_bc_t bc_data_for_res;
   bc_data_for_res.dirichlet_fcn = constant_density_star_boundary_fcn;
   bc_data_for_res.user = &constant_density_star_params;
+  bc_data_for_res.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
                          
   d4est_poisson_flux_data_t* flux_data_for_jac =
     d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, problem_set_mortar_degree, NULL);
@@ -247,6 +249,7 @@ problem_init
      constant_density_star_initial_guess,
      d4est_ops,
      d4est_geom,
+     INIT_FIELD_ON_LOBATTO,
      NULL
     );
 

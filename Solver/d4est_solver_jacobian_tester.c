@@ -68,6 +68,7 @@ d4est_solver_jacobian_tester
      (initial_guess != NULL) ? initial_guess : zero_fcn,
      d4est_ops,
      d4est_geom,
+     INIT_FIELD_ON_LOBATTO,
      (initial_guess != NULL) ? initial_guess_ctx : NULL
     );
   

@@ -16,7 +16,6 @@ typedef double
 );
 
 typedef enum { H_EQ_J_DIV_SJ_QUAD, H_EQ_J_DIV_SJ_MIN_LOBATTO, H_EQ_TREE_H, H_EQ_VOLUME_DIV_AREA, H_EQ_FACE_DIAM, H_EQ_NOTSET } h_calc_method_t;
-/* typedef enum { EVAL_BNDRY_FCN_ON_QUAD, EVAL_BNDRY_FCN_ON_LOBATTO, EVAL_BNDRY_FCN_NOT_SET } dirichlet_bndry_eval_method_t; */
 
 typedef struct {
   double sipg_penalty_prefactor;

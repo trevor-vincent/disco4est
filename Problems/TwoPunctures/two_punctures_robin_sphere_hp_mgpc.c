@@ -1,3 +1,4 @@
+
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <d4est_util.h>
@@ -326,6 +327,7 @@ problem_init
      two_punctures_initial_guess,
      d4est_ops,
      d4est_geom,
+     INIT_FIELD_ON_LOBATTO,
      NULL
     );
     

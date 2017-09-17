@@ -209,22 +209,27 @@ d4est_poisson_flux_sipg_dirichlet_aux
     );
   
 
-  
+  double u_m_on_f_m_min_u_at_bndry_quad;  
   for(int i = 0; i < face_nodes_m_quad; i++){
-    double u_m_on_f_m_min_u_at_bndry_quad
-      = u_m_on_f_m_quad[i] - u_at_bndry_lobatto_to_quad[i];
 
-/*     double u_m_on_f_m_min_u_at_bndry_quad */
-/*       = u_m_on_f_m_quad[i] - bc_data->dirichlet_fcn */
-/*                             ( */
-/*                              boundary_data->xyz_on_f_m_quad[0][i], */
-/*                              boundary_data->xyz_on_f_m_quad[1][i], */
-/* #if (P4EST_DIM)==3 */
-/*                              boundary_data->xyz_on_f_m_quad[2][i], */
-/* #endif */
-/*                              bc_params->user */
-/*                             ); */
-    
+    if (bc_data->eval_method == EVAL_BNDRY_FCN_ON_LOBATTO){
+       u_m_on_f_m_min_u_at_bndry_quad = u_m_on_f_m_quad[i] - u_at_bndry_lobatto_to_quad[i];
+    }
+    else if (bc_data->eval_method == EVAL_BNDRY_FCN_ON_QUAD){
+      u_m_on_f_m_min_u_at_bndry_quad
+        = u_m_on_f_m_quad[i] - bc_data->dirichlet_fcn
+                            (
+                             boundary_data->xyz_on_f_m_quad[0][i],
+                             boundary_data->xyz_on_f_m_quad[1][i],
+#if (P4EST_DIM)==3
+                             boundary_data->xyz_on_f_m_quad[2][i],
+#endif
+                             bc_params->user
+                            );
+    }
+    else {
+      D4EST_ABORT("eval method for dirichlet bc should be set\n");
+    }
 
     term1_quad[i] = 0.;
     for (int d = 0; d < (P4EST_DIM); d++){
