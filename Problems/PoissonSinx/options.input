@@ -7,11 +7,12 @@ deg_quad = 6
 
 [problem]
 deg_vol_quad_inc = 5
+eval_method = EVAL_BNDRY_FCN_ON_LOBATTO
 
 [flux]
 name = sipg
 sipg_penalty_prefactor = 2.0
-sipg_flux_h = H_EQ_J_DIV_SJ_QUAD
+sipg_flux_h = H_EQ_VOLUME_DIV_AREA
 sipg_penalty_fcn = maxp_sqr_over_minh
 
 [amr]

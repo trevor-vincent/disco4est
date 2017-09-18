@@ -1,7 +1,9 @@
 #ifndef POISSON_SINX_FCNS_H
 #define POISSON_SINX_FCNS_H 
 
+#include <pXest.h>
 
+#define PI 3.14159265358932384626433832795
 
 typedef struct {
 
@@ -23,9 +25,9 @@ poisson_sinx_analytic_solution
 )
 {
 #if (P4EST_DIM)==3
-  return sin((M_PI)*x)*sin((M_PI)*y)*sin((M_PI)*z);
+  return sin((PI)*x)*sin((PI)*y)*sin((PI)*z);
 #else
-  return sin((M_PI)*x)*sin((M_PI)*y);
+  return sin((PI)*x)*sin((PI)*y);
 #endif
 }
 
@@ -40,7 +42,7 @@ poisson_sinx_rhs_fcn
  void* user
 )
 {
-  return (M_PI)*(M_PI)*(P4EST_DIM)*poisson_sinx_analytic_solution(x,y,z,user);
+  return (PI)*(PI)*(P4EST_DIM)*poisson_sinx_analytic_solution(x,y,z,user);
 }
 
 static double
@@ -54,7 +56,7 @@ poisson_sinx_initial_guess
  void* user
 )
 {
-  return 0.;
+  return 1.;
 }
 
 static double
