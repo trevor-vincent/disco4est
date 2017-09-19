@@ -9,6 +9,7 @@
 #include <d4est_solver_cg.h>
 #include <d4est_amr.h>
 #include <d4est_amr_smooth_pred.h>
+#include <d4est_estimator_residual.h>
 #include <d4est_geometry.h>
 #include <d4est_geometry_brick.h>
 #include <d4est_vtk.h>
@@ -155,32 +156,36 @@ amr_set_element_gamma
 }
 
 
-
-
-int
-in_bin_fcn
+static void
+two_punctures_find_punctures_element_marker
 (
- d4est_element_data_t* elem_data,
- int bin
-)
-{
-  int elem_bin;
+  p4est_iter_volume_info_t* info,
+  void* user_data
+){
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
+  d4est_element_data_t* ed = (d4est_element_data_t*) info->quad->p.user_data;
+  two_punctures_params_t* params = d4est_amr->scheme->amr_scheme_data;
+  
+  double xi [(P4EST_DIM)];
+  double xf [(P4EST_DIM)];
+  
+  d4est_geometry_compute_bounds(ed->xyz, ed->deg, xi, xf);
 
-  /* outer shell */
-  if (elem_data->tree < 6){
-    elem_bin = 0;
+  d4est_amr->refinement_log[ed->id] = ed->deg;
+  for (int i = 0; i < params->num_punctures; i++){
+    if ((params->C_bh[i][0] <= xf[0]) &&
+        (params->C_bh[i][1] <= xf[1]) &&
+        (params->C_bh[i][2] <= xf[2]) &&
+        (params->C_bh[i][0] >= xi[0]) &&
+        (params->C_bh[i][1] >= xi[1]) &&
+        (params->C_bh[i][2] >= xi[2])){
+      d4est_amr->refinement_log[ed->id] = -ed->deg;
+      return;
+    }
   }
-  /* inner shell */
-  else if(elem_data->tree < 12){
-    elem_bin = 1;
-  }
-  /* center cube */
-  else {
-    elem_bin = 2;
-  }
-
-  return (elem_bin == bin);
+    
 }
+
 
 int
 problem_set_mortar_degree
@@ -253,8 +258,11 @@ problem_init
    bc_data_for_res.robin_coeff = two_punctures_robin_coeff_brick_fcn;
   bc_data_for_res.robin_rhs = two_punctures_robin_bc_rhs_fcn;
   
-  d4est_poisson_dirichlet_bc_t bc_data_for_res_bi;
-  bc_data_for_res_bi.dirichlet_fcn = zero_fcn;
+  d4est_poisson_dirichlet_bc_t bc_data_for_bi;
+  bc_data_for_bi.dirichlet_fcn = zero_fcn;
+  bc_data_for_bi.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
+
+  d4est_poisson_flux_data_t* flux_data_for_bi = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_bi, problem_set_mortar_degree, NULL);
   
   d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, BC_ROBIN, &bc_data_for_jac, problem_set_mortar_degree, NULL);
   
@@ -302,8 +310,11 @@ problem_init
      "[D4EST_AMR]:",
      &amr_marker
     );
-  
+
+
   d4est_amr_t* d4est_amr_uniform_p = d4est_amr_init_uniform_p(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps);
+  d4est_amr_t* d4est_amr_custom = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
+                                                   two_punctures_find_punctures_element_marker, &two_punctures_params);
 
   d4est_mesh_init_field
     (
@@ -322,24 +333,20 @@ problem_init
   d4est_output_energy_norm_fit_t* fit = d4est_output_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
-    
-    d4est_estimator_bi_compute
+
+    d4est_estimator_residual_compute
       (
        p4est,
-       &prob_vecs,
-       &prob_fcns,
-       penalty_data,
-       zero_fcn,
        *ghost,
        *ghost_data,
+       &prob_vecs,
+       &prob_fcns,
        d4est_ops,
        d4est_geom,
        d4est_quad,
-       NO_DIAM_APPROX,
-       problem_set_mortar_degree,
-       NULL
+       DIAM_APPROX_CUBE
       );
-
+    
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
     d4est_estimator_stats_compute(p4est, stats);
     d4est_estimator_stats_print(stats);
@@ -405,7 +412,7 @@ problem_init
          ghost,
          ghost_data,
          d4est_ops,
-         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr,
+         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr_custom,
          /* d4est_amr, */
          /* d4est_amr_uniform_p, */
          &prob_vecs.u,
@@ -534,6 +541,7 @@ problem_init
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
   d4est_amr_destroy(d4est_amr_uniform_p);
+  d4est_amr_destroy(d4est_amr_custom);
   d4est_poisson_flux_destroy(flux_data_for_jac);  
   d4est_poisson_flux_destroy(flux_data_for_res);  
   d4est_output_destroy_energy_norm_fit(fit);

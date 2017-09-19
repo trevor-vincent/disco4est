@@ -628,13 +628,15 @@ two_punctures_robin_coeff_brick_fcn
  int mortar_node
 )
 {
+  
   double r2 = x*x + y*y + z*z;
+  
   if (fabs(boundary_data->n_on_f_m_quad[0][mortar_node]) > 0.)
-    return x/r2;
+    return boundary_data->n_on_f_m_quad[0][mortar_node]*x/r2;
   else if (fabs(boundary_data->n_on_f_m_quad[1][mortar_node]) > 0.)
-    return y/r2;
+    return boundary_data->n_on_f_m_quad[1][mortar_node]*y/r2;
   else if (fabs(boundary_data->n_on_f_m_quad[2][mortar_node]) > 0.)
-    return z/r2;
+    return boundary_data->n_on_f_m_quad[2][mortar_node]*z/r2;
   else{
     D4EST_ABORT("Should not occur");
     return NAN;

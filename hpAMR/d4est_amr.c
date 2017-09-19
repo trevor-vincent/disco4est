@@ -523,8 +523,62 @@ d4est_amr_init_random_hp
   d4est_amr_random_init(p4est, NULL, scheme, NULL);
 
   return d4est_amr;
-
 }
+
+
+
+static void
+d4est_amr_custom_destroy(d4est_amr_scheme_t* scheme)
+{
+  P4EST_FREE(scheme);
+}
+
+d4est_amr_t*
+d4est_amr_custom_init
+(
+ p4est_t* p4est,
+ int max_degree,
+ int num_of_amr_steps,
+ void(*d4est_amr_custom_mark_elements)(p4est_iter_volume_info_t*,void*),
+ void* user
+)
+{
+  d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
+  d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
+  
+  d4est_amr->scheme = scheme;
+  d4est_amr->balance_log = NULL;
+  d4est_amr->refinement_log = NULL;
+  d4est_amr->initial_log = NULL;
+  d4est_amr->max_degree = max_degree;
+  d4est_amr->num_of_amr_steps = num_of_amr_steps;
+
+  scheme->amr_scheme_type = AMR_CUSTOM;
+  scheme->pre_refine_callback
+    = NULL;
+  
+  scheme->balance_replace_callback_fcn_ptr
+    = NULL;
+
+  scheme->refine_replace_callback_fcn_ptr
+    = NULL;
+
+  scheme->amr_scheme_data
+    = user;
+
+  scheme->post_balance_callback
+    = NULL;
+
+  scheme->mark_elements
+    = d4est_amr_custom_mark_elements;
+  
+  scheme->destroy
+    = d4est_amr_custom_destroy;
+  
+  return d4est_amr;
+}
+ 
+ 
 
 
 void

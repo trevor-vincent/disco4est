@@ -808,3 +808,213 @@ d4est_mortar_compute_flux_on_local_elements
   p4est->user_pointer = tmpptr;
   return d4est_mortar_compute_flux_user_data.mortar_stride;
 }
+
+
+/* void */
+/* d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY */
+/* ( */
+/*  p4est_topidx_t e0_tree, */
+/*  p4est_qcoord_t e0_q [(P4EST_DIM)], */
+/*  p4est_qcoord_t e0_dq, */
+/*  int num_faces_side, */
+/*  int num_faces_mortar, */
+/*  int* deg_mortar, */
+/*  int face_side, */
+/*  quadrature_type_t quad_type, */
+/*  double* n [(P4EST_DIM)], */
+/*  double* sj, */
+/*  d4est_geometry_t* d4est_geom, */
+/*  d4est_operators_t* d4est_ops, */
+/*  double* xyz_storage [(P4EST_DIM)] */
+/* ) */
+/* { */
+
+/*   double* xyz [(P4EST_DIM)]; */
+/*   if (xyz_storage[0] != NULL){ */
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*       xyz[d] = xyz_storage[d]; */
+/*     } */
+/*   } */
+/*   else { */
+/*     int total_face_mortar_nodes = 0; */
+/*     for (int face_mortar = 0; face_mortar < num_faces_mortar; face_mortar++){ */
+/*       total_face_mortar_nodes += d4est_lgl_get_nodes((P4EST_DIM) - 1, deg_mortar[face_mortar]); */
+/*     } */
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*       xyz[d] = P4EST_ALLOC(double, total_face_mortar_nodes); */
+/*     } */
+/*   } */
+
+/*   /\* Calculate the four "0" corners of */
+/*    * the mortar faces. In the case that */
+/*    * there is only one mortar face, these */
+/*    * will be the four corners of that face */
+/*    *\/ */
+  
+/*   p4est_qcoord_t q0 [(P4EST_HALF)][(P4EST_DIM)]; */
+  
+/*   for (int j = 0; j < (P4EST_HALF); j++){ */
+/*     int c = p4est_face_corners[face_side][j]; */
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*       int cd = d4est_reference_is_child_left_or_right(c, d); */
+/*       q0[j][d] = e0_q[d] + cd*e0_dq; */
+/*     } */
+/*   } */
+
+/*   /\* Calculate the vectors that span the face */
+/*    * there will be one in 2-D and two in 3-d *\/ */
+  
+/*   p4est_qcoord_t dqa [((P4EST_DIM)-1)][(P4EST_DIM)]; */
+  
+/*   for (int d = 0; d < (P4EST_DIM); d++){ */
+/*     for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){ */
+/*       dqa[dir][d] = (q0[(dir+1)][d] - q0[0][d]); */
+/*       if (num_faces_side != num_faces_mortar) */
+/*         dqa[dir][d] /= 2; */
+/*     } */
+/*   } */
+
+/*   if (num_faces_side != num_faces_mortar){ */
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*       for (int c = 0; c < (P4EST_HALF); c++){ */
+/*         q0[c][d] = q0[0][d]; */
+/*         for (int dir = 0; dir < (P4EST_DIM) - 1; dir++){ */
+/*           int cd = d4est_reference_is_child_left_or_right(c, dir); */
+/*           q0[c][d] += cd*dqa[dir][d]; */
+/*         } */
+/*       } */
+/*     } */
+/*   } */
+  
+/*   double* a [((P4EST_DIM)-1)]; */
+/*   /\* double* xyz [(P4EST_DIM)]; *\/ */
+/*   double* dxda [(P4EST_DIM)][((P4EST_DIM)-1)]; */
+/*   double dxyz_drs_i [(P4EST_DIM)][((P4EST_DIM)-1)]; */
+/*   double abc [] = {0.,0.,0.}; */
+/*   double xyz_i [] = {0.,0.,0.}; */
+/*   int face_mortar_nodal_stride = 0; */
+/*   d4est_rst_t rst_points; */
+  
+/*   for (int face_mortar = 0; face_mortar < num_faces_mortar; face_mortar++){ */
+
+
+/*     int face_mortar_nodes = d4est_lgl_get_nodes((P4EST_DIM) - 1, deg_mortar[face_mortar]); */
+/*     /\* compute the LGL nodes in the directions of the face_mortar vectors *\/ */
+/*     double* tmp = P4EST_ALLOC(double,face_mortar_nodes); */
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*       /\* xyz[d] = P4EST_ALLOC(double, face_mortar_nodes); *\/ */
+/*       for (int dir = 0; dir < ((P4EST_DIM)-1); dir++) */
+/*         dxda[d][dir] = P4EST_ALLOC(double, face_mortar_nodes); */
+/*     } */
+     
+/*     rst_points = d4est_operators_get_rst_points(d4est_ops, deg_mortar[face_mortar], (P4EST_DIM)-1, QUAD_LOBATTO); */
+      
+/*     for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){ */
+/*       if (dir == 0) */
+/*         a[dir] = rst_points.r; */
+/*       else */
+/*         a[dir] = rst_points.s; */
+/*     } */
+
+    
+/*     for (int i = 0; i < face_mortar_nodes; i++){ */
+/*       if (xyz[0] != NULL){ */
+/*         for (int d = 0; d < (P4EST_DIM); d++){ */
+/*           /\* get "0" corner of this face_mortar *\/ */
+/*           abc[d] = (double)q0[face_mortar][d]; */
+       
+/*           for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){ */
+/*             /\* add a fraction of the face_mortar vector in direction dir */
+/*            * corresponding to the placement of the LGL node *\/ */
+/*             double da = (a[dir][i] + 1.)/2.; */
+/*             abc[d] += da*((double)dqa[dir][d]); */
+/*             /\* rs[dir] = a[dir][i]; *\/ */
+/*             /\* printf("abc[%d] = %f\n",d, abc[d]); *\/ */
+/*           } */
+        
+/*           abc[d] /= (double)(P4EST_ROOT_LEN); */
+/*         } */
+
+/*         /\* convert vertex coords to physical coords *\/ */
+/*         d4est_geom->X(d4est_geom, e0_tree, (p4est_qcoord_t [(P4EST_DIM)]){0},-1, abc, COORDS_TREE_UNITCUBE , xyz_i); */
+/*         for (int d = 0; d < (P4EST_DIM); d++){ */
+/*           xyz[d][i] = xyz_i[d]; */
+/*         } */
+/*       } */
+
+/*     } */
+
+/*     /\* compute the tangent vectors in direction(s) "dir" *\/ */
+/*       for (int d = 0; d < (P4EST_DIM); d++){ */
+/*         for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){ */
+/*           d4est_operators_apply_dij(d4est_ops, xyz[d], ((P4EST_DIM))-1, deg_mortar[face_mortar], dir, dxda[d][dir]); */
+/*         } */
+/*       } */
+
+/*     if (quad_type == QUAD_GAUSS){ */
+/*       for (int d = 0; d < (P4EST_DIM); d++){ */
+/*         if (xyz[0] != NULL){ */
+/*           d4est_operators_interp_lobatto_to_gauss(d4est_ops, xyz[d], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1); */
+/*           d4est_linalg_copy_1st_to_2nd(tmp, xyz[d], face_mortar_nodes); */
+/*         } */
+/*         for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){ */
+/*           d4est_operators_interp_lobatto_to_gauss(d4est_ops, dxda[d][dir], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1); */
+/*           d4est_linalg_copy_1st_to_2nd(tmp, dxda[d][dir], face_mortar_nodes); */
+/*         } */
+/*       } */
+/*     } */
+    
+/*     /\* get the normal by taking the cross product of the tangent vectors */
+/*      * in 2-d, we take the cross product of the tangent vector and zhat*\/ */
+/*     for (int i = 0; i < face_mortar_nodes; i++){ */
+/*       double vecs [2][3] = {{0.,0.,0.},{0.,0.,1.}}; */
+/*       double n_i [] = {0.,0.,0.}; */
+/*       for (int d = 0; d < (P4EST_DIM); d++) */
+/*         for (int dir = 0; dir < ((P4EST_DIM)-1); dir++) */
+/*           vecs[dir][d] = dxda[d][dir][i]; */
+
+/*       d4est_linalg_cross_prod */
+/*         ( */
+/*          vecs[0][0], */
+/*          vecs[0][1], */
+/*          vecs[0][2], */
+/*          vecs[1][0], */
+/*          vecs[1][1], */
+/*          vecs[1][2], */
+/*          &(n_i[0]), */
+/*          &(n_i[1]), */
+/*          &(n_i[2]) */
+/*         ); */
+
+/*       sj[i + face_mortar_nodal_stride] = 0.; */
+/*       for (int d = 0; d < (P4EST_DIM); d++){ */
+/*         /\* The normals are backwards for these 2(3) face_mortars in 2-d(3-d) *\/ */
+/*         if (face_side == 0 || face_side == 3 || face_side == 4){ */
+/*           n_i[d] *= -1.; */
+/*         } */
+/*         sj[i + face_mortar_nodal_stride] += n_i[d]*n_i[d]; */
+/*       } */
+/*       sj[i + face_mortar_nodal_stride] = sqrt(sj[i + face_mortar_nodal_stride]); */
+/*       if (n[0] != NULL){ */
+/*         for (int d = 0; d < (P4EST_DIM); d++){ */
+/*           n[d][i + face_mortar_nodal_stride] = n_i[d]/sj[i + face_mortar_nodal_stride]; */
+/*         } */
+/*       } */
+/*     } */
+
+/*     face_mortar_nodal_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar[face_mortar]); */
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*       /\* P4EST_FREE(xyz[d]); *\/ */
+/*       for (int dir = 0; dir < ((P4EST_DIM)-1); dir++) */
+/*         P4EST_FREE(dxda[d][dir]); */
+/*     } */
+/*     P4EST_FREE(tmp); */
+/*   } */
+
+/*   if (xyz_storage[0] == NULL){ */
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*       P4EST_FREE(xyz[d]); */
+/*     } */
+/*   } */
+  
+/* } */

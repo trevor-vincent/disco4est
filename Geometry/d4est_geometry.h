@@ -129,7 +129,8 @@ struct d4est_geometry {
 
 /* This file was automatically generated.  Do not edit! */
 double d4est_geometry_compute_diam(double *xyz[(P4EST_DIM)],int deg,diam_compute_option_t option);
-double d4est_geometry_compute_element_volume(d4est_operators_t *d4est_ops,int deg_GL,double *jac_GL);
+double d4est_geometry_compute_bounds(double *xyz[(P4EST_DIM)],int deg,double xi[(P4EST_DIM)],double xf[(P4EST_DIM)]);
+double d4est_geometry_compute_lebesgue_measure(d4est_operators_t *d4est_ops,int deg_GL,double *jac_GL);
 int d4est_geometry_is_face_on_boundary(p4est_t *p4est,p4est_quadrant_t *q,int which_tree,int face);
 int d4est_geometry_does_element_touch_boundary(p4est_t *p4est,p4est_quadrant_t *q,int which_tree);
 void d4est_geometry_get_tree_coords_in_range_0_to_1(p4est_qcoord_t q0[3],p4est_qcoord_t dq,const double coords[3],coords_type_t coords_type,double tcoords[3]);

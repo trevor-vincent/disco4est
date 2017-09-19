@@ -107,6 +107,7 @@ SET (
   Geometry/d4est_geometry.c
   Estimators/d4est_estimator_stats.c
   Estimators/d4est_estimator_bi.c
+  Estimators/d4est_estimator_residual.c
   hpAMR/d4est_amr.c
   hpAMR/d4est_amr_uniform.c
   hpAMR/d4est_amr_random.c
@@ -370,6 +371,7 @@ add_d4est_test_3d(test_d4est_brick_fcns test_d4est_brick_fcns.c . test_d4est_bri
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
 add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
+add_d4est_problem_3d(poisson_rsquared_driver poisson_rsquared.c PoissonRSquared)
 
 
 add_test(test_d4est_brick_fcns test_d4est_brick_fcns)

@@ -8,7 +8,6 @@
 #include <pXest.h>
 #include <d4est_geometry.h>
 #include <d4est_operators.h>
-#include <d4est_element_data.h>
 #include <d4est_linalg.h>
 #include <d4est_kron.h>
 #include <d4est_util.h>
@@ -436,99 +435,82 @@ d4est_geometry_compute_dxyz_drst
  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)]
 )
 {
-  if (d4est_geom->DX_compute_method == GEOM_COMPUTE_NUMERICAL){
-    /* d4est_geometry_compute_dxyz_drst_isoparametric */
-    /*   ( */
-    /*    which_tree, */
-    /*    q0, */
-    /*    dq, */
-    /*    deg, */
-    /*    quad_type, */
-    /*    d4est_geom, */
-    /*    d4est_ops, */
-    /*    dxyz_drst */
-    /*   ); */
-    D4EST_ABORT("[D4EST_ERROR]: we currently do not support numerical/isoparametric mappings\n");
-  }
-  else if (d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC) {
-    d4est_geometry_compute_dxyz_drst_analytic
-      (
-       d4est_ops,
-       d4est_geom,
-       rst_points,
-       which_tree,
-       q0,
-       dq,
-       deg,
-       dxyz_drst
-      );
-  }
-  else {
-    D4EST_ABORT("derivative type must be ISOPARAMETRIC or ANALYTIC");
-  }
+
+  D4EST_ASSERT(d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC);
+  d4est_geometry_compute_dxyz_drst_analytic
+    (
+     d4est_ops,
+     d4est_geom,
+     rst_points,
+     which_tree,
+     q0,
+     dq,
+     deg,
+     dxyz_drst
+    );
 }
 
-/* /\* void *\/ */
-/* /\* d4est_geometry_compute_dxyz_drst_isoparametric *\/ */
-/* /\* ( *\/ */
-/* /\*  p4est_topidx_t which_tree, *\/ */
-/* /\*  p4est_qcoord_t q0 [(P4EST_DIM)], *\/ */
-/* /\*  p4est_qcoord_t dq, *\/ */
-/* /\*  int deg, *\/ */
-/* /\*  quadrature_type_t quad_type, *\/ */
-/* /\*  d4est_geometry_t* d4est_geom, *\/ */
-/* /\*  d4est_operators_t* d4est_ops, *\/ */
-/* /\*  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)] *\/ */
-/* /\* ) *\/ */
-/* /\* { *\/ */
-/* /\*   double* xyz [(P4EST_DIM)]; *\/ */
-/* /\*   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg); *\/ */
-/* /\*   for (int i = 0; i < (P4EST_DIM); i++){ *\/ */
-/* /\*     xyz[i] = P4EST_ALLOC(double, volume_nodes); *\/ */
-/* /\*   } *\/ */
+/* void */
+/* d4est_geometry_compute_dxyz_drst_isoparametric */
+/* ( */
+/*  p4est_topidx_t which_tree, */
+/*  p4est_qcoord_t q0 [(P4EST_DIM)], */
+/*  p4est_qcoord_t dq, */
+/*  int deg, */
+/*  int deg_quad, */
+/*  d4est_quadrature_t* d4est_quad, */
+/*  d4est_geometry_t* d4est_geom, */
+/*  d4est_operators_t* d4est_ops, */
+/*  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)] */
+/* ) */
+/* { */
+/*   double* xyz [(P4EST_DIM)]; */
+/*   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg); */
+/*   for (int i = 0; i < (P4EST_DIM); i++){ */
+/*     xyz[i] = P4EST_ALLOC(double, volume_nodes); */
+/*   } */
 
-/* /\*   double rst [(P4EST_DIM)]; *\/ */
-/* /\*   double xyz_i [(P4EST_DIM)]; *\/ */
-/* /\*   double dxyz_drst_i [(P4EST_DIM)][(P4EST_DIM)]; *\/ */
-/* /\*   double abc [(P4EST_DIM)]; *\/ */
+/*   double rst [(P4EST_DIM)]; */
+/*   double xyz_i [(P4EST_DIM)]; */
+/*   double dxyz_drst_i [(P4EST_DIM)][(P4EST_DIM)]; */
+/*   double abc [(P4EST_DIM)]; */
 
-/* /\*   d4est_rst_t rst_points *\/ */
-/* /\*     = d4est_operators_get_rst_points(d4est_ops, deg, (P4EST_DIM), QUAD_LOBATTO); *\/ */
+/*   d4est_rst_t rst_points */
+/*     = d4est_operators_get_rst_points(d4est_ops, deg, (P4EST_DIM), QUAD_LOBATTO); */
   
-/* /\*   for (int i = 0; i < volume_nodes; i++){ *\/ */
-/* /\*     rst[0] = rst_points.r[i]; *\/ */
-/* /\*     rst[1] = rst_points.s[i]; *\/ */
-/* /\* #if (P4EST_DIM)==3 *\/ */
-/* /\*     rst[2] = rst_points.t[i]; *\/ */
-/* /\* #endif *\/ */
+/*   for (int i = 0; i < volume_nodes; i++){ */
+/*     rst[0] = rst_points.r[i]; */
+/*     rst[1] = rst_points.s[i]; */
+/* #if (P4EST_DIM)==3 */
+/*     rst[2] = rst_points.t[i]; */
+/* #endif */
 
-/* /\*     d4est_geom->X(d4est_geom, which_tree, q0, dq, rst, COORDS_INTEG_RST, xyz_i); *\/ */
+/*     d4est_geom->X(d4est_geom, which_tree, q0, dq, rst, COORDS_INTEG_RST, xyz_i); */
       
-/* /\*     for (int d = 0; d < (P4EST_DIM); d++){ *\/ */
-/* /\*       xyz[d][i] = xyz_i[d]; *\/ */
-/* /\*     } *\/ */
-/* /\*   } *\/ */
+/*     for (int d = 0; d < (P4EST_DIM); d++){ */
+/*       xyz[d][i] = xyz_i[d]; */
+/*     } */
+/*   } */
 
-/* /\*   double* tmp = P4EST_ALLOC(double, volume_nodes); *\/ */
-/* /\*   for (int d = 0; d < (P4EST_DIM); d++){ *\/ */
-/* /\*     for (int d1 = 0; d1 < (P4EST_DIM); d1++){ *\/ */
-/* /\*       d4est_operators_apply_dij(d4est_ops, &xyz[d][0], (P4EST_DIM), deg, d1, &dxyz_drst[d][d1][0]); *\/ */
-/* /\*     } *\/ */
-/* /\*   } *\/ */
+/*   double* tmp = P4EST_ALLOC(double, volume_nodes); */
+/*   for (int d = 0; d < (P4EST_DIM); d++){ */
+/*     for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
+/*       d4est_operators_apply_dij(d4est_ops, &xyz[d][0], (P4EST_DIM), deg, d1, &dxyz_drst[d][d1][0]); */
+/*     } */
+/*   } */
 
-/* /\*   if (quad_type == QUAD_GAUSS){ *\/ */
-/* /\*     for (int d = 0; d < (P4EST_DIM); d++){ *\/ */
-/* /\*       for (int d1 = 0; d1 < (P4EST_DIM); d1++){ *\/ */
-/* /\*         d4est_operators_interp_lobatto_to_gauss(d4est_ops, &dxyz_drst[d][d1][0], deg, deg, tmp, (P4EST_DIM)); *\/ */
-/* /\*         d4est_linalg_copy_1st_to_2nd(tmp, &dxyz_drst[d][d1][0], volume_nodes); *\/ */
-/* /\*       } *\/ */
-/* /\*     } *\/ */
-/* /\*   } *\/ */
-/* /\*   P4EST_FREE(tmp); *\/ */
-/* /\*   for (int i = 0; i < (P4EST_DIM); i++){ *\/ */
-/* /\*     P4EST_FREE(xyz[i]); *\/ */
-/* /\*   } *\/ */
-/* /\* } *\/ */
+/*   for (int d = 0; d < (P4EST_DIM); d++){ */
+/*     for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
+/*       d4est_operators_interp_lobatto_to_gauss(d4est_ops, &dxyz_drst[d][d1][0], deg, deg, tmp, (P4EST_DIM)); */
+/*       d4est_linalg_copy_1st_to_2nd(tmp, &dxyz_drst[d][d1][0], volume_nodes); */
+/*     } */
+/*   } */
+  
+/*   P4EST_FREE(tmp); */
+/*   for (int i = 0; i < (P4EST_DIM); i++){ */
+/*     P4EST_FREE(xyz[i]); */
+/*   } */
+/* } */
 
 void
 d4est_geometry_compute_dxyz_drst_face_analytic
@@ -809,7 +791,6 @@ d4est_geometry_compute_xyz_face_analytic
     }
   }
 }
-
 
 /* /\* void *\/ */
 /* /\* d4est_geometry_compute_dxyz_drst_face_isoparametric *\/ */
@@ -1525,7 +1506,32 @@ d4est_geometry_compute_lebesgue_measure
 /*   return area; */
 /* } */
 
-
+double
+d4est_geometry_compute_bounds
+(
+ double* xyz [(P4EST_DIM)],
+ int deg,
+ double xi [(P4EST_DIM)],
+ double xf [(P4EST_DIM)]
+)
+{
+  for (int d = 0; d < (P4EST_DIM); d++){
+    xi[d] = xyz[d][0];
+    xf[d] = xyz[d][0];
+  }  
+  
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg);
+  for (int i = 0; i < volume_nodes; i++){
+    for (int j = 0; j < volume_nodes; j++){
+      for (int d = 0; d < (P4EST_DIM); d++){
+        if (xyz[d][i] > xf[d])
+          xf[d] = xyz[d][i];
+        if (xyz[d][i] < xi[d])
+          xi[d] = xyz[d][i];
+      }
+    }
+  }
+}
 
 double
 d4est_geometry_compute_diam

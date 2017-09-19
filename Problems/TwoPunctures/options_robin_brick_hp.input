@@ -25,12 +25,12 @@ sipg_penalty_fcn = maxp_sqr_over_minh
 
 [geometry]
 name = brick
-X0 = -1000.0
-X1 = 1000.0
-Y0 = -1000.0
-Y1 = 1000.0
-Z0 = -1000.0
-Z1 = 1000.0
+X0 = -40.0
+X1 = 40.0
+Y0 = -40.0
+Y1 = 40.0
+Z0 = -40.0
+Z1 = 40.0
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
