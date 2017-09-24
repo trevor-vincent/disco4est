@@ -187,6 +187,7 @@ d4est_mesh_init_element_size_parameters
              1,
              1,
              &ed->deg,
+             &ed->deg,
              f,
              xyz_on_f_lobatto,
              NULL,
@@ -877,18 +878,43 @@ d4est_mesh_geometry_storage_initialize_data
            ed->xyz_quad
           );
 
-        d4est_geometry_compute_dxyz_drst
-          (
-           d4est_ops,
-           d4est_geom,
-           rst_points_quad,
-           ed->tree,
-           ed->q,
-           ed->dq,
-           ed->deg_vol_quad,           
-           ed->xyz_rst_quad
-          );
+        
+        if (d4est_geom->DX_compute_method == GEOM_COMPUTE_NUMERICAL){
+            double* tmp = P4EST_ALLOC(double, volume_nodes);
+            for (int d = 0; d < (P4EST_DIM); d++){
+              for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+                d4est_operators_apply_dij(d4est_ops, &ed->xyz[d][0], (P4EST_DIM), ed->deg, d1, tmp);
+                d4est_quadrature_interpolate(d4est_ops, d4est_quad, d4est_geom, &mesh_object, QUAD_OBJECT_VOLUME, QUAD_INTEGRAND_UNKNOWN, tmp, ed->deg, &ed->xyz_rst_quad[d][d1][0], ed->deg_vol_quad);
+                /* double *dxyz_print = &ed->xyz_rst_quad[d][d1][0]; */
+                /* DEBUG_PRINT_ARR_DBL(dxyz_print, volume_nodes_quad); */
+              }
+            }
+            P4EST_FREE(tmp);
+        }
+        else if (d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC){
+          d4est_geometry_compute_dxyz_drst_analytic
+            (
+             d4est_ops,
+             d4est_geom,
+             rst_points_quad,
+             ed->tree,
+             ed->q,
+             ed->dq,
+             ed->deg_vol_quad,           
+             ed->xyz_rst_quad
+            );
+        }
+        else {
+          D4EST_ABORT("Not a supported compute method for DX");
+        }
 
+        /* for (int d = 0; d < (P4EST_DIM); d++){ */
+        /*   for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
+        /*     double *dxyz_print = &ed->xyz_rst_quad[d][d1][0]; */
+        /*     DEBUG_PRINT_ARR_DBL(dxyz_print, volume_nodes_quad); */
+        /*   } */
+        /* } */
+        
     
         d4est_geometry_compute_jacobian
           (
@@ -1322,6 +1348,7 @@ d4est_mesh_surface_integral
              ed->id*(P4EST_FACES) + f,
              1,
              1,
+             &ed->deg,
              &ed->deg_vol_quad,
              f,
              xyz_quad,

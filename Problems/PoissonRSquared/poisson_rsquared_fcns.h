@@ -29,6 +29,7 @@ poisson_rsquared_analytic_solution
 #if (P4EST_DIM)==3
   ret += z*z;
 #endif
+  return ret;
 }
 
 static double

@@ -18,7 +18,11 @@ if(UBUNTU)
     "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/libopenblas.a"
     )
   set(OPENBLAS_INCLUDE_DIR "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/lapack-netlib/LAPACKE/include/")  
-  
+  set(USE_TCMALLOC ON)
+  set(TCMALLOC_DIR "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/")
+  set(TCMALLOC_ROOT "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/")
+  set(TCMALLOC_LIBRARIES "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/lib/libtcmalloc.a")
+  set(TCMALLOC_INCLUDE_DIR "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/include/gperftools/")
 endif()
 
 if(SCINET)
@@ -116,6 +120,7 @@ SET (
   Mesh/d4est_mesh.c
   Mesh/d4est_xyz_functions.c
   Mesh/d4est_mortars.c
+  Mesh/d4est_mortars_aux.c
   # Quadrature/d4est_quadrature_compactified.c
   Quadrature/d4est_quadrature.c
   Quadrature/d4est_quadrature_legendre.c
@@ -182,6 +187,16 @@ if(USE_OPENBLAS)
     ${OPENBLAS_LIBRARIES}
     pthread
     gfortran
+  )
+endif()
+
+
+if(USE_TCMALLOC)
+  SET (
+    LIBS
+    ${LIBS}
+    ${TCMALLOC_LIBRARIES}
+    stdc++
   )
 endif()
 

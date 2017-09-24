@@ -226,7 +226,7 @@ d4est_poisson_apply_aij
      prob_vecs->u,
      prob_vecs->Au
     );
-    
+  
   d4est_poisson_apply_stiffness_matrix
     (
      p4est,

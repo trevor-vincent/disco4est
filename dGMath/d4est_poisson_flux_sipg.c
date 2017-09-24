@@ -28,6 +28,7 @@ d4est_poisson_flux_sipg_calculate_h
 )
 {
   if (sipg_flux_h == H_EQ_J_DIV_SJ_QUAD){
+    D4EST_ABORT("H_EQ_J_DIV_SJ_QUAD is no longer supported");
     int stride = 0;
     for (int f = 0; f < num_faces_mortar; f++){
       for (int k = 0; k < nodes_mortar_quad[f]; k++){

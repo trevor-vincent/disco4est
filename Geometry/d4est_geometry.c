@@ -435,8 +435,6 @@ d4est_geometry_compute_dxyz_drst
  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)]
 )
 {
-
-  D4EST_ASSERT(d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC);
   d4est_geometry_compute_dxyz_drst_analytic
     (
      d4est_ops,
@@ -792,83 +790,82 @@ d4est_geometry_compute_xyz_face_analytic
   }
 }
 
-/* /\* void *\/ */
-/* /\* d4est_geometry_compute_dxyz_drst_face_isoparametric *\/ */
-/* /\* ( *\/ */
-/* /\*  d4est_operators_t* d4est_ops, *\/ */
-/* /\*  d4est_rst_t rst_points, *\/ */
-/* /\*  p4est_qcoord_t q0 [(P4EST_DIM)], *\/ */
-/* /\*  p4est_qcoord_t dq, *\/ */
-/* /\*  int which_tree, *\/ */
-/* /\*  int face, *\/ */
-/* /\*  d4est_geometry_t* d4est_geom, *\/ */
-/* /\*  quadrature_type_t quad_type, *\/ */
-/* /\*  int deg, *\/ */
-/* /\*  double* dxyz_drst_on_face [(P4EST_DIM)][(P4EST_DIM)] *\/ */
-/* /\* ) *\/ */
-/* /\* { *\/ */
-/* /\*   int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1, deg); *\/ */
-/* /\*   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg); *\/ */
+/* void */
+/* d4est_geometry_compute_dxyz_drst_face_isoparametric
+(
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_rst_t rst_points,
+ p4est_qcoord_t q0 [(P4EST_DIM)],
+ p4est_qcoord_t dq,
+ int which_tree,
+ int face,
+ int deg,
+ double* xyz [(P4EST_DIM)]
+)
+{
+  int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1, deg);
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg);
   
-/* /\*   double* dxyz_drst_volume [(P4EST_DIM)][(P4EST_DIM)]; *\/ */
-/* /\*   D4EST_ALLOC_DBYD_MAT(dxyz_drst_volume, volume_nodes); *\/ */
+  double* dxyz_drst_volume [(P4EST_DIM)][(P4EST_DIM)];
+  D4EST_ALLOC_DBYD_MAT(dxyz_drst_volume, volume_nodes);
   
-/* /\*   d4est_geometry_compute_dxyz_drst *\/ */
-/* /\*     ( *\/ */
-/* /\*      which_tree, *\/ */
-/* /\*      rst_points, *\/ */
-/* /\*      q0, *\/ */
-/* /\*      dq, *\/ */
-/* /\*      deg, *\/ */
-/* /\*      d4est_geom, *\/ */
-/* /\*      d4est_ops, *\/ */
-/* /\*      dxyz_drst_volume *\/ */
-/* /\*     ); *\/ */
+  d4est_geometry_compute_dxyz_drst
+    (
+     which_tree,
+     rst_points,
+     q0,
+     dq,
+     deg,
+     d4est_geom,
+     d4est_ops,
+     dxyz_drst_volume
+    );
 
-/* /\*   if (quad_type == QUAD_GAUSS){ *\/ */
+  if (quad_type == QUAD_GAUSS){
 
-/* /\*     double* temp = P4EST_ALLOC(double, face_nodes); *\/ */
-/* /\*     for (int i = 0; i < (P4EST_DIM); i++){ *\/ */
-/* /\*       for (int j = 0; j < (P4EST_DIM); j++){ *\/ */
-/* /\*         d4est_operators_apply_slicer(d4est_ops, *\/ */
-/* /\*                             dxyz_drst_volume[i][j], *\/ */
-/* /\*                             (P4EST_DIM), *\/ */
-/* /\*                             face, *\/ */
-/* /\*                             deg, *\/ */
-/* /\*                             temp); *\/ */
+    double* temp = P4EST_ALLOC(double, face_nodes);
+    for (int i = 0; i < (P4EST_DIM); i++){
+      for (int j = 0; j < (P4EST_DIM); j++){
+        d4est_operators_apply_slicer(d4est_ops,
+                            dxyz_drst_volume[i][j],
+                            (P4EST_DIM),
+                            face,
+                            deg,
+                            temp);
       
-/* /\*         d4est_operators_interp_lobatto_to_gauss *\/ */
-/* /\*           ( *\/ */
-/* /\*            d4est_ops, *\/ */
-/* /\*            temp, *\/ */
-/* /\*            deg, *\/ */
-/* /\*            deg, *\/ */
-/* /\*            dxyz_drst_on_face[i][j], *\/ */
-/* /\*            (P4EST_DIM)-1 *\/ */
-/* /\*           ); *\/ */
-/* /\*       } *\/ */
-/* /\*     } *\/ */
-/* /\*     P4EST_FREE(temp); *\/ */
-/* /\*   } *\/ */
-/* /\*   else if (quad_type == QUAD_LOBATTO){ *\/ */
-/* /\*     for (int i = 0; i < (P4EST_DIM); i++){ *\/ */
-/* /\*       for (int j = 0; j < (P4EST_DIM); j++){ *\/ */
-/* /\*         d4est_operators_apply_slicer(d4est_ops, *\/ */
-/* /\*                             dxyz_drst_volume[i][j], *\/ */
-/* /\*                             (P4EST_DIM), *\/ */
-/* /\*                             face, *\/ */
-/* /\*                             deg, *\/ */
-/* /\*                             dxyz_drst_on_face[i][j]); *\/ */
-/* /\*       } *\/ */
-/* /\*     } *\/ */
-/* /\*   } *\/ */
-/* /\*   else { *\/ */
-/* /\*     D4EST_ABORT("quad type not supported"); *\/ */
-/* /\*   } *\/ */
+        d4est_operators_interp_lobatto_to_gauss
+          (
+           d4est_ops,
+           temp,
+           deg,
+           deg,
+           dxyz_drst_on_face[i][j],
+           (P4EST_DIM)-1
+          );
+      }
+    }
+    P4EST_FREE(temp);
+  }
+  else if (quad_type == QUAD_LOBATTO){
+    for (int i = 0; i < (P4EST_DIM); i++){
+      for (int j = 0; j < (P4EST_DIM); j++){
+        d4est_operators_apply_slicer(d4est_ops,
+                            dxyz_drst_volume[i][j],
+                            (P4EST_DIM),
+                            face,
+                            deg,
+                            dxyz_drst_on_face[i][j]);
+      }
+    }
+  }
+  else {
+    D4EST_ABORT("quad type not supported");
+  }
 
-/* /\*   D4EST_FREE_DBYD_MAT(dxyz_drst_volume); *\/ */
-/* /\* } *\/ */
-
+  D4EST_FREE_DBYD_MAT(dxyz_drst_volume);
+}
+*/
 
 void
 d4est_geometry_compute_jacobian

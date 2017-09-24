@@ -19,6 +19,9 @@
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
 #include <newton_petsc.h>
+#include <multigrid.h>
+#include <krylov_pc.h>
+#include <krylov_pc_multigrid.h>
 #include <krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
@@ -215,9 +218,56 @@ problem_init
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
+   int min_level, max_level;
+
+    multigrid_get_level_range(p4est, &min_level, &max_level);
+    printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
+
+    /* need to do a reduce on min,max_level before supporting multiple proc */
+    /* mpi_assert(proc_size == 1); */
+    int num_of_levels = max_level + 1;
+
+ 
+    multigrid_logger_t* logger = multigrid_logger_residual_init
+                                 (
+                                 );
+
+    multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init
+                                                (
+                                                 num_of_levels,
+                                                 ghost,
+                                                 ghost_data,
+                                                 geometric_factors,
+                                                 problem_set_degrees_after_amr,
+                                                 &init_params
+                                                );
+    
+    
+    multigrid_data_t* mg_data = multigrid_data_init(p4est,
+                                                    d4est_ops,
+                                                    d4est_geom,
+                                                    d4est_quad,
+                                                    num_of_levels,
+                                                    logger,
+                                                    NULL,
+                                                    updater,
+                                                    input_file
+                                                   );
+
+
+    /* multigrid_solve */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    &prob_fcns, */
+    /*    mg_data */
+    /*   ); */
+
+    krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, NULL);
+    
     krylov_petsc_params_t krylov_petsc_params;
     krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
-    
+
     krylov_petsc_solve
       (
        p4est,
@@ -229,9 +279,15 @@ problem_init
        d4est_geom,
        d4est_quad,
        &krylov_petsc_params,
-       NULL
+       pc
       );
 
+
+    krylov_pc_multigrid_destroy(pc);
+    
+    multigrid_logger_residual_destroy(logger);
+    multigrid_element_data_updater_destroy(updater, num_of_levels);
+    multigrid_data_destroy(mg_data);
 
     d4est_output_vtk_with_analytic_error
       (

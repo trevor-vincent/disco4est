@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <sc.h>
 
-#ifndef NDEBUG
-
 #define DEBUG_PRINT_INT(x) printf("%s = %d\n", #x, x)  
 #define DEBUG_PRINT_DBL(x) printf("%s = %.16f\n",#x, x)
 
@@ -115,8 +113,6 @@
   } while(0)
 
 
-#endif
-
 
 
 #define D4EST_NOOP()                                                            \
@@ -185,7 +181,7 @@
     }                                           \
   } while(0)
 
-
+/*  */
 #define D4EST_ALLOC_VEC(a, n1, size) do {       \
     for (int i = 0; i < n1; i++) {              \
       a[i] = P4EST_ALLOC(double, size);         \

@@ -377,7 +377,7 @@ int d4est_amr_input_handler
   else if (d4est_util_match_couple(section,"amr",name,"num_of_amr_steps")) {
     D4EST_ASSERT(pconfig->num_of_amr_steps == -1);
     pconfig->num_of_amr_steps = atoi(value);
-    D4EST_ASSERT(pconfig->num_of_amr_steps > 0);
+    D4EST_ASSERT(pconfig->num_of_amr_steps >= 0);
   }
   else if (d4est_util_match_couple(section,"amr",name,"max_degree")) {
     D4EST_ASSERT(pconfig->max_degree == -1);

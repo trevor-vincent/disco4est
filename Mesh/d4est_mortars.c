@@ -5,18 +5,21 @@
 #include <d4est_geometry.h>
 #include <d4est_quadrature.h>
 #include <d4est_element_data.h>
+#include <d4est_mortars_aux.h>
 
 void
 d4est_mortars_compute_geometric_data_on_mortar_aux
 (
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  p4est_topidx_t e0_tree,
  p4est_qcoord_t e0_q [(P4EST_DIM)], /* qcoord of first element of side */
  p4est_qcoord_t e0_dq, /* qcoord vector spanning first element of side */
  d4est_rst_t* rst_quad_mortar,
  int num_faces_side, 
  int num_faces_mortar,
+ int* deg_mortar_lobatto,
  int* deg_mortar_quad,
  int face,
  double* xyz_on_mortar_quad [(P4EST_DIM)],
@@ -87,6 +90,31 @@ d4est_mortars_compute_geometric_data_on_mortar_aux
          deg_mortar_quad[face_mortar],
          dxyz_drst_on_face_quad
         );
+    }
+    else if (d4est_geom->DX_compute_method == GEOM_COMPUTE_NUMERICAL){
+      d4est_mortars_compute_dxyz_drst_face_isoparametric
+        (
+         d4est_ops,
+         d4est_geom,
+         d4est_quad,
+         q,
+         mortar_dq,
+         e0_tree,
+         face,
+         deg_mortar_lobatto[face_mortar],
+         deg_mortar_quad[face_mortar],
+         dxyz_drst_on_face_quad
+        );
+
+      
+        /* for (int d = 0; d < (P4EST_DIM); d++){ */
+          /* for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
+            /* double *dxyz_print = &dxyz_drst_on_face_quad[d][d1][0]; */
+            /* DEBUG_PRINT_ARR_DBL(dxyz_print, face_mortar_quad_nodes); */
+          /* } */
+        /* } */
+        
+      
     }
     else {
       D4EST_ABORT("[D4EST_ERROR]: compute method type for DX not supported");
@@ -270,6 +298,7 @@ d4est_mortars_compute_geometric_data_on_mortar
  int mortar_side_id,
  int num_faces_side, 
  int num_faces_mortar,
+ int* deg_mortar_lobatto,
  int* deg_mortar_quad,
  int face,
  double* xyz_on_mortar_quad [(P4EST_DIM)],
@@ -304,12 +333,14 @@ d4est_mortars_compute_geometric_data_on_mortar
     (
      d4est_ops,
      d4est_geom,
+     d4est_quad,
      e0_tree,
      e0_q, /* qcoord of first element of side */
      e0_dq, /* qcoord vector spanning first element of side */
      rst_quad_mortar,
      num_faces_side, 
      num_faces_mortar,
+     deg_mortar_lobatto,
      deg_mortar_quad,
      face,
      xyz_on_mortar_quad,
@@ -809,7 +840,6 @@ d4est_mortar_compute_flux_on_local_elements
   return d4est_mortar_compute_flux_user_data.mortar_stride;
 }
 
-
 /* void */
 /* d4est_geometry_compute_geometric_data_on_mortar_TESTINGONLY */
 /* ( */
@@ -846,7 +876,7 @@ d4est_mortar_compute_flux_on_local_elements
 /*   } */
 
 /*   /\* Calculate the four "0" corners of */
-/*    * the mortar faces. In the case that */
+/* /\*    * the mortar faces. In the case that */
 /*    * there is only one mortar face, these */
 /*    * will be the four corners of that face */
 /*    *\/ */
@@ -1018,3 +1048,8 @@ d4est_mortar_compute_flux_on_local_elements
 /*   } */
   
 /* } */
+
+
+
+
+

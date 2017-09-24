@@ -77,6 +77,7 @@ d4est_poisson_flux_boundary
      mortar_side_id_m,
      1,
      1,
+     &e_m->deg,
      &deg_quad,
      f_m,
      xyz_on_f_m_quad,
@@ -304,6 +305,7 @@ d4est_poisson_flux_interface
     }
 
   int deg_mortar_quad_porder [(P4EST_HALF)];
+  int deg_mortar_lobatto_porder [(P4EST_HALF)];
   int nodes_mortar_quad_porder [(P4EST_HALF)];
   
   for(int i = 0; i < faces_mortar; i++){
@@ -312,6 +314,7 @@ d4est_poisson_flux_interface
       inew = d4est_reference_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, i);
     }
     deg_mortar_quad_porder[inew] = deg_mortar_quad[i];
+    deg_mortar_lobatto_porder[inew] = deg_mortar_lobatto[i];
     nodes_mortar_quad_porder[inew] = nodes_mortar_quad[i];
   }
 
@@ -607,7 +610,6 @@ d4est_poisson_flux_interface
     }
   }
 
-  
   d4est_mortars_compute_geometric_data_on_mortar
     (
      d4est_ops,
@@ -620,6 +622,7 @@ d4est_poisson_flux_interface
      mortar_side_id_m,
      faces_m,
      faces_mortar,
+     &deg_mortar_lobatto[0],
      &deg_mortar_quad[0],
      f_m,
      NULL,
@@ -643,20 +646,21 @@ d4est_poisson_flux_interface
      mortar_side_id_p,
      faces_p,
      faces_mortar,
+     &deg_mortar_lobatto_porder[0],
      &deg_mortar_quad_porder[0],
      f_p,
      NULL,
      drst_dxyz_p_on_mortar_quad_porder,
 #ifdef POISSON_FLUX_COMPUTE_PORDER_MORTAR_GEOM
-     sj_on_f_p_mortar_quad_porder,
-     n_on_f_p_mortar_quad_porder,
+     NULL//sj_on_f_p_mortar_quad_porder,
+     NULL//n_on_f_p_mortar_quad_porder,
      NULL,
 #else
      NULL,
      NULL,
      NULL,
 #endif
-     j_div_sj_on_f_p_mortar_quad_porder,
+     NULL,//j_div_sj_on_f_p_mortar_quad_porder,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
 
