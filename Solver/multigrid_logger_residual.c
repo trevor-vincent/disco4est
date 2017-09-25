@@ -23,7 +23,7 @@ multigrid_logger_residual_update
   double old_r2_i_global = mg_data->vcycle_r2_global_last;
   int v = mg_data->vcycle_num_finished;
   
-  if(mg_data->mg_state == START || mg_data->mg_state == POST_RESIDUAL_UPDATE){
+  if((mg_data->mg_state == START || mg_data->mg_state == POST_RESIDUAL_UPDATE) && (p4est->mpirank == 0)){
     printf("[MG_SOLVER]: %d %.30f %f\n", v, sqrt(r2_i_global), sqrt(r2_i_global/old_r2_i_global));
   }  
   else {

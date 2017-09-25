@@ -215,6 +215,18 @@ problem_init
      &ctx
     );
 
+  d4est_output_vtk_degree_mesh
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     input_file,
+     "uniform_poisson_rsquared_degree_mesh",
+     0,
+     -1
+    );
+
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 

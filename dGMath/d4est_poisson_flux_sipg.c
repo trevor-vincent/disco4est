@@ -246,6 +246,18 @@ d4est_poisson_flux_sipg_dirichlet_aux
         term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i]
                             *n_sj_on_f_m_quad[d][i]
                             *2.*u_m_on_f_m_min_u_at_bndry_quad;
+ /*        term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i] */
+/*                             *n_sj_on_f_m_quad[d][i] */
+/*                             *2.*bc_data->dirichlet_fcn */
+/*                             ( */
+/*                              boundary_data->xyz_on_f_m_quad[0][i], */
+/*                              boundary_data->xyz_on_f_m_quad[1][i], */
+/* #if (P4EST_DIM)==3 */
+/*                              boundary_data->xyz_on_f_m_quad[2][i], */
+/* #endif */
+/*                              bc_params->user */
+/*                             ); */
+        
       }
     }
     /* term3_quad[i] = sj_on_f_m_quad[i] */
