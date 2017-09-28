@@ -35,6 +35,18 @@ if(SCINET)
   set(OPENBLAS_INCLUDE_DIR "/scinet/gpc/Libraries/OpenBLAS/singlethreaded/include")  
 endif()
 
+if(GRAHAM)
+  set(USE_OPENBLAS ON)
+  set(OPENBLAS_DIR "/scratch/tvincent/OpenBLAS/")
+  set(OPENBLAS_ROOT "/scratch/tvincent/OpenBLAS/")
+  set(OPENBLAS_LIBRARIES
+    "/scratch/tvincent/OpenBLAS/libopenblas.a"
+    )
+  set(OPENBLAS_INCLUDE_DIR "/scratch/tvincent/OpenBLAS/lapack-netlib/LAPACKE/include/")  
+endif()
+
+
+
 if(CITA)
   set(USE_OPENBLAS ON)
   set(OPENBLAS_DIR "/opt/openblas/0.2.19/")
@@ -386,6 +398,7 @@ add_d4est_test_3d(test_d4est_brick_fcns test_d4est_brick_fcns.c . test_d4est_bri
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
 add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
+add_d4est_problem_3d(poisson_sinx_multigrid_driver poisson_sinx_multigrid.c PoissonSinx)
 add_d4est_problem_3d(poisson_rsquared_driver poisson_rsquared.c PoissonRSquared)
 
 
@@ -397,7 +410,9 @@ add_d4est_problem_2d(stamm_multigrid_pc_driver stamm_multigrid_pc.c Stamm)
 add_d4est_problem_3d(stamm_multigrid_pc_sphere_driver stamm_multigrid_pc_sphere.c Stamm)
 add_d4est_problem_2d(poisson_exp_robin_driver poisson_exp_robin.c PoissonExpRobin)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star.c ConstantDensityStar)
+add_d4est_problem_3d(constant_density_star_newton_petsc_driver constant_density_star_newton_petsc.c ConstantDensityStar)
 add_d4est_problem_3d(constant_density_star_mgpc_driver constant_density_star_mgpc.c ConstantDensityStar)
+
 # add_d4est_problem_3d(constant_density_star_inbin_driver constant_density_star_inbin.c ConstantDensityStar)
 # add_d4est_problem_3d(two_punctures_robin_brick_driver two_punctures_robin_brick.c TwoPunctures)
 # add_d4est_problem_3d(two_punctures_robin_sphere_driver two_punctures_robin_sphere.c TwoPunctures)
@@ -405,6 +420,7 @@ add_d4est_problem_3d(two_punctures_robin_sphere_hp_driver two_punctures_robin_sp
 add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_driver two_punctures_robin_sphere_hp_mgpc.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_noinbin_driver two_punctures_robin_sphere_hp_mgpc.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_brick_hp_mgpc_driver two_punctures_robin_brick_hp_mgpc_noinbin.c TwoPunctures)
+add_d4est_problem_3d(two_punctures_robin_brick_hp_mgpc_newton_petsc_driver two_punctures_robin_brick_hp_mgpc_newton_petsc.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_noinbin_tree12_driver two_punctures_robin_sphere_hp_mgpc_noinbin_tree12.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_tree12_driver two_punctures_robin_sphere_hp_mgpc_tree12.c TwoPunctures)
 add_d4est_problem_3d(random_punctures_robin_sphere_hp_driver random_punctures_robin_sphere_hp.c TwoPunctures)
@@ -458,4 +474,4 @@ add_d4est_problem_3d(random_punctures_robin_sphere_hp_driver random_punctures_ro
 # add_executable(testcompile2 driver.c ./Problems/TestCompile/testcompile.c)
 # target_link_libraries(testcompile2 d4est)
 # set_target_properties(testcompile2 PROPERTIES COMPILE_DEFINITIONS "DIM=2")
-# include("${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/petsc/conf/PETScBuildInternal.cmake"
+# include("${CMAKE_BINARY_DIR}/ThirdParty/petsc/install/lib/petsc/conf/PETScBuildInternal.cmake

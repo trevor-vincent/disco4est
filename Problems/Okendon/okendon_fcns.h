@@ -4,10 +4,18 @@
 typedef struct {
 
   double p;
-  d4est_poisson_flux_data_t* flux_data_for_residual;
-  d4est_poisson_flux_data_t* flux_data_for_jac;
-  
+
 } okendon_params_t;
+
+typedef struct {
+
+  int use_matrix_operator;
+  multigrid_data_t* mg_data;
+  okendon_params_t* okendon_params;
+  d4est_poisson_flux_data_t* flux_data_for_jac;
+  d4est_poisson_flux_data_t* flux_data_for_res;
+  
+} problem_ctx_t;
 
 static
 int okendon_params_handler
@@ -62,8 +70,10 @@ okendon_analytic_solution
  void* user
 )
 {
-  okendon_params_t* input = user;
-  double p = input->p;
+  problem_ctx_t* ctx = user;
+  okendon_params_t* params = ctx->okendon_params;
+  double p = params->p;
+  
 #if (P4EST_DIM)==2
   double M = 1./(pow((2./(1. - p))*((2./(1. - p))), (1./(1.-p))));
   double r2 = x*x + y*y;
@@ -103,8 +113,9 @@ double okendon_residual_nonlinear_fofu_term
  void* user
 )
 {
-  okendon_params_t* input = user;
-  double p = input->p;
+  problem_ctx_t* ctx = user;
+  okendon_params_t* params = ctx->okendon_params;
+  double p = params->p;
   return pow(u*u,.5*p);
 }
 
@@ -119,8 +130,9 @@ double okendon_jacobian_nonlinear_fofu0_term
  void* user
 )
 {
-  okendon_params_t* input = user;
-  double p = input->p;
+  problem_ctx_t* ctx = user;
+  okendon_params_t* params = ctx->okendon_params;
+  double p = params->p;
   return p/pow(u*u,.5*(1.-p));
 }
 
@@ -137,8 +149,8 @@ void okendon_apply_jac
  void* user
 )
 {
-  okendon_params_t* params = user;
-  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_jac;
+  problem_ctx_t* ctx = user;
+  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_jac;
   
   d4est_poisson_apply_aij(p4est,
                           ghost,
@@ -199,110 +211,6 @@ void okendon_apply_jac
 }
 
 
-
-static void
-okendon_build_residual_strongbc
-(
- p4est_t* p4est,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
- d4est_elliptic_data_t* prob_vecs,
- d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad,
- void* user
-)
-{
-  okendon_params_t* params = user;
-
-  double* Abc= P4EST_ALLOC(double, prob_vecs->local_nodes);
-  d4est_poisson_build_rhs_with_strong_bc(p4est, ghost, ghost_data, d4est_ops, d4est_geom, d4est_quad, prob_vecs, params->flux_data_for_residual, Abc, zero_fcn, NULL);
-
-  
-
-  d4est_poisson_apply_aij(p4est,
-                          ghost,
-                          ghost_data,
-                          prob_vecs,
-                          params->flux_data_for_jac,
-                          d4est_ops,
-                          d4est_geom,
-                          d4est_quad
-                         );
-
-
-  for (int i = 0; i < prob_vecs->local_nodes; i++){
-    prob_vecs->Au[i] -= Abc[i];
-  }
-
-  P4EST_FREE(Abc);
-  
-  double* M_fof_vec= P4EST_ALLOC(double, prob_vecs->local_nodes);
-
- 
-  for (p4est_topidx_t tt = p4est->first_local_tree;
-       tt <= p4est->last_local_tree;
-       ++tt)
-    {
-      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-      sc_array_t* tquadrants = &tree->quadrants;
-      int Q = (p4est_locidx_t) tquadrants->elem_count;
-      for (int q = 0; q < Q; ++q) {
-        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        d4est_element_data_t* ed = quad->p.user_data;
-
-
-        d4est_quadrature_volume_t mesh_object;
-        mesh_object.dq = ed->dq;
-        mesh_object.tree = ed->tree;
-        mesh_object.element_id = ed->id;
-        mesh_object.q[0] = ed->q[0];
-        mesh_object.q[1] = ed->q[1];
-        mesh_object.q[2] = ed->q[2];
-
-        d4est_quadrature_apply_fofufofvlj
-          (
-           d4est_ops,
-           d4est_geom,
-           d4est_quad,
-           &mesh_object,
-           QUAD_OBJECT_VOLUME,
-           QUAD_INTEGRAND_UNKNOWN,
-           &prob_vecs->u[ed->nodal_stride],
-           NULL,
-           ed->deg,
-           ed->J_quad,
-           ed->xyz_quad,
-           ed->deg_quad,
-           &M_fof_vec[ed->nodal_stride],
-           okendon_residual_nonlinear_fofu_term,
-           user,
-           NULL,
-           NULL
-          );
-
-        /* double* Mfofvec = &M_fof_vec[ed->nodal_stride]; */
-        /* DEBUG_PRINT_ARR_DBL(Mfofvec, d4est_lgl_get_nodes((P4EST_DIM), ed->deg)); */
-        
-      }
-    }
-
-  /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs->u, prob_vecs->local_nodes); */
-  /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs->Au, prob_vecs->local_nodes); */
-  /* DEBUG_PRINT_ARR_DBL_SUM(M_fof_vec, prob_vecs->local_nodes); */
-
-
-  d4est_linalg_vec_axpy(1.0,
-                  M_fof_vec,
-                  prob_vecs->Au,
-                  prob_vecs->local_nodes);
-
-
-  P4EST_FREE(M_fof_vec);
-}
-
-
-
 static void
 okendon_build_residual_weakbc
 (
@@ -318,7 +226,7 @@ okendon_build_residual_weakbc
 {
   okendon_params_t* params = user;
 
-  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_residual;
+  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_res;
   d4est_poisson_apply_aij(p4est,
                           ghost,
                           ghost_data,

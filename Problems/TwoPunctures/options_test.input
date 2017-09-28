@@ -1,0 +1,71 @@
+[initial_grid]
+min_quadrants = -1
+min_level = 1
+fill_uniform = 1
+deg = 1
+deg_quad = 1
+
+[amr]
+scheme = smooth_pred
+num_of_amr_steps = 15
+max_degree = 7 
+gamma_h = .25
+gamma_p = 0.1
+gamma_n = 1.
+inflation_size = 128
+percentile = 5
+amr_level_for_uniform_p = 1
+
+[flux]
+name = sipg
+sipg_penalty_prefactor = 2.0
+sipg_flux_h = H_EQ_J_DIV_SJ_QUAD
+sipg_penalty_fcn = maxp_sqr_over_minh
+
+
+[geometry]
+name = cubed_sphere
+R0 = 10
+R1 = 20
+R2 = 40
+compactify_outer_shell = 0
+compactify_inner_shell = 0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+
+[d4est_vtk_geometry]
+name = cubed_sphere
+R0 = 1
+R1 = 2
+R2 = 3
+compactify_outer_shell = 0
+compactify_inner_shell = 0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[problem]
+do_not_solve = 0
+deg_vol_quad_inc_inner = 4
+deg_vol_quad_inc_outer = 4
+
+[d4est_solver_newton]
+imin = 1
+imax = 1
+monitor = 1
+rtol = 1e-20
+atol = 1e-15
+
+[krylov_petsc]
+ksp_type = fcg
+ksp_atol = 1e-20
+ksp_rtol = 1e-5
+ksp_max_it = 1
+ksp_view = 1
+ksp_monitor = 1
+ksp_converged_reason = 1
+ksp_initial_guess_nonzero = 0
+ksp_monitor_singular_value = 1
+
+[quadrature]
+name = legendre

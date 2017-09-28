@@ -115,18 +115,19 @@ problem_init
  sc_MPI_Comm mpicomm
 )
 {
-  okendon_params_t okendon_input = okendon_params_init(input_file);
+  okendon_params_t okendon_params = okendon_params_init(input_file);
 
   d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
   d4est_poisson_flux_data_t* flux_data_for_residual = d4est_poisson_flux_new(p4est, input_file, okendon_boundary_fcn, NULL);
 
   d4est_poisson_dirichlet_bc_t bc_data_for_jac;
   bc_data_for_jac.dirichlet_fcn = zero_fcn;
-  bc_data_for_jac.eval_method = eval_method;
+  bc_data_for_jac.user = &okendon_params;
+  bc_data_for_jac.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
   
   d4est_poisson_dirichlet_bc_t bc_data_for_res;
   bc_data_for_res.dirichlet_fcn = okendon_boundary_fcn;
-  bc_data_for_res.eval_method = eval_method;
+  bc_data_for_res.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
   d4est_poisson_flux_data_t* flux_data_for_apply_jac = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, problem_set_mortar_degree, NULL);
   

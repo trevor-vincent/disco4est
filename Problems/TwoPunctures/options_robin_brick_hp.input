@@ -56,6 +56,20 @@ monitor = 1
 rtol = 1e-20
 atol = 1e-15
 
+
+[newton_petsc]
+snes_atol = 1e-15
+snes_rtol = 1e-50
+snes_stol = 1e-1
+snes_max_funcs = 1000000000
+snes_type = newtonls
+snes_max_it = 5
+snes_monitor = 1
+snes_linesearch_order = 3
+snes_linesearch_monitor = 1
+snes_converged_reason = 1
+
+
 [krylov_petsc]
 ksp_type = fcg
 ksp_atol = 1e-15
