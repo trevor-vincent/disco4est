@@ -14,6 +14,54 @@ secant_fcn(double x){
   return 1./cos(x);
 }
 
+static
+int d4est_geometry_cubed_sphere_get_number_of_regions
+(
+ d4est_geometry_t* d4est_geom
+){
+  if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_13TREE){
+    return 2;
+  }
+  else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_13TREE){
+    return 3;
+  }
+  else {
+    D4EST_ABORT("Not supported yet");
+    return NAN;
+  }
+}
+
+static
+int d4est_geometry_cubed_sphere_get_region
+(
+ d4est_geometry_t* d4est_geom,
+ p4est_qcoord_t q [(P4EST_DIM)],
+ p4est_qcoord_t dq,
+ int tree
+){
+  if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_13TREE){
+    if (tree < 6) {   /* inner shell */
+      return 0;
+    }
+    else {           /* center cube */
+      return 1;
+    }  
+  }
+  else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_13TREE){
+    if (tree < 6) {         /* outer shell */
+      return 0;
+    }
+    else if (tree < 12) {   /* inner shell */
+      return 1;
+    }
+    else {                  /* center cube */
+      return 2;
+    }  
+  }
+  else {
+    D4EST_ABORT("Not supported yet");
+  }
+}
 
 static
 int d4est_geometry_cubed_sphere_input_handler
@@ -1906,6 +1954,8 @@ d4est_geometry_cubed_sphere_with_sphere_hole_new
   d4est_geom->DX = d4est_geometry_cubed_sphere_with_sphere_hole_DX; 
   d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
+  d4est_geom->get_region = d4est_geometry_cubed_sphere_get_number_of_regions;
+  d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_region;
   
   if (mpirank == 0){
     printf("%s: NAME = cubed sphere with sphere hole\n", printf_prefix );

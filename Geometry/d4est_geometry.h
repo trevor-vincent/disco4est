@@ -118,9 +118,9 @@ struct d4est_geometry {
   d4est_geometry_SCA_t JAC;
   d4est_geometry_VEC_t X;
   d4est_geometry_MAT_t DX;
-  /* d4est_geometry_MAT_t DRDX; */
-  /* d4est_geometry_MAT_t DRDX_JAC; */
-  /* d4est_geometry_MAT_t JACDRDXDRDX; */
+
+  int(*get_number_of_regions)(d4est_geometry_t*);
+  int(*get_region)(d4est_geometry_t*, p4est_qcoord_t [(P4EST_DIM)], p4est_qcoord_t, int);
   
   d4est_geometry_destroy_t destroy;
   void* user;

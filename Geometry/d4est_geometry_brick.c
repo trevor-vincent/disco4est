@@ -2,6 +2,26 @@
 #include <ini.h>
 
 static
+int d4est_geometry_cubed_sphere_number_of_regions
+(
+ d4est_geometry_t* d4est_geom
+){
+  return 1;
+}
+
+static
+int d4est_geometry_cubed_sphere_get_region
+(
+ d4est_geometry_t* d4est_geom,
+ p4est_qcoord_t q [(P4EST_DIM)],
+ p4est_qcoord_t dq,
+ int tree
+){
+  return 0;
+}
+
+
+static
 int d4est_geometry_brick_input_handler
 (
  void* user,
