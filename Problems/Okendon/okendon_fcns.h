@@ -1,6 +1,14 @@
 #ifndef OKENDON_FCNS_H
 #define OKENDON_FCNS_H 
 
+#include <d4est_util.h>
+#include <d4est_element_data.h>
+#include <d4est_amr_smooth_pred.h>
+#include <d4est_poisson.h>
+#include <d4est_poisson_flux.h>
+#include <multigrid.h>
+#include <multigrid_matrix_operator.h>
+
 typedef struct {
 
   double p;
@@ -137,7 +145,7 @@ double okendon_jacobian_nonlinear_fofu0_term
 }
 
 static
-void okendon_apply_jac
+void okendon_apply_jac_add_nonlinear_term_using_matrix
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -149,20 +157,51 @@ void okendon_apply_jac
  void* user
 )
 {
-  problem_ctx_t* ctx = user;
-  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_jac;
-  
-  d4est_poisson_apply_aij(p4est,
-                          ghost,
-                          ghost_data,
-                          prob_vecs,
-                          flux_data,
-                          d4est_ops,
-                          d4est_geom,
-                          d4est_quad);
-  
   double* M_fofu0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
+  problem_ctx_t* ctx = user;
+  multigrid_data_t* mg_data = ctx->mg_data;
+  multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
+  int matrix_stride = 0;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data;
+
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        d4est_linalg_matvec_plus_vec(1.,&(matrix_op->matrix[matrix_stride]), &prob_vecs->u[ed->nodal_stride], 0., &M_fofu0_u_vec[ed->nodal_stride], volume_nodes, volume_nodes);
+        
+        matrix_stride += volume_nodes*volume_nodes;
+        
+      }
+    }
+
+  d4est_linalg_vec_axpy(1.0, M_fofu0_u_vec, prob_vecs->Au, prob_vecs->local_nodes);
+  P4EST_FREE(M_fofu0_u_vec);
+}
+
+
+
+static
+void okendon_apply_jac_add_nonlinear_term
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ void* user
+)
+{
+  double* M_fofu0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)
@@ -196,13 +235,15 @@ void okendon_apply_jac
            ed->deg,
            ed->xyz_quad,
            ed->J_quad,
-           ed->deg_quad,
+           ed->deg_vol_quad,
            &M_fofu0_u_vec[ed->nodal_stride],
            okendon_jacobian_nonlinear_fofu0_term,
            user,
            NULL,
-           NULL
+           NULL,
+           QUAD_APPLY_MATRIX
           );
+
       }
     }
   
@@ -211,8 +252,8 @@ void okendon_apply_jac
 }
 
 
-static void
-okendon_build_residual_weakbc
+static
+void okendon_apply_jac
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -224,9 +265,83 @@ okendon_build_residual_weakbc
  void* user
 )
 {
-  okendon_params_t* params = user;
+  problem_ctx_t* ctx = user;
+  okendon_params_t* params = ctx->okendon_params;
+  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_jac;
+  d4est_poisson_apply_aij(p4est,
+                          ghost,
+                          ghost_data,
+                          prob_vecs,
+                          flux_data,
+                          d4est_ops,
+                          d4est_geom,
+                          d4est_quad);
+  
 
-  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_res;
+  if (ctx->use_matrix_operator == 0)
+    okendon_apply_jac_add_nonlinear_term
+      (
+       p4est,
+       ghost,
+       ghost_data,
+       prob_vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       user
+      );
+  else {
+    
+    multigrid_data_t* mg_data = ctx->mg_data;
+    multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
+
+    if (matrix_op->matrix != matrix_op->matrix_at0){
+    okendon_apply_jac_add_nonlinear_term_using_matrix
+      (
+       p4est,
+       ghost,
+       ghost_data,
+       prob_vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       user
+      );
+    }
+    else {
+    okendon_apply_jac_add_nonlinear_term
+      (
+       p4est,
+       ghost,
+       ghost_data,
+       prob_vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       user
+      );
+    }
+  }
+}
+
+
+static void
+okendon_build_residual
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ void* user
+)
+{
+  problem_ctx_t* ctx = user;
+  okendon_params_t* params = ctx->okendon_params;
+  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_res;
+  
   d4est_poisson_apply_aij(p4est,
                           ghost,
                           ghost_data,
@@ -272,7 +387,7 @@ okendon_build_residual_weakbc
            ed->deg,
            ed->J_quad,
            ed->xyz_quad,
-           ed->deg_quad,
+           ed->deg_vol_quad,
            &M_fof_vec[ed->nodal_stride],
            okendon_residual_nonlinear_fofu_term,
            user,
@@ -290,7 +405,6 @@ okendon_build_residual_weakbc
   P4EST_FREE(M_fof_vec);
 }
 
-
 double
 okendon_initial_guess
 (
@@ -304,6 +418,35 @@ okendon_initial_guess
 {
   return 1000.;
 }
+
+static
+void okendon_krylov_pc_setup_fcn
+(
+ krylov_pc_t* krylov_pc
+)
+{
+  multigrid_data_t* mg_data = krylov_pc->pc_data;
+  petsc_ctx_t* ctx = krylov_pc->pc_ctx;
+
+  if (ctx->p4est->mpirank == 0)
+    printf("[KRYLOV_PC_MULTIGRID_SETUP_FCN] Initializing Matrix Operator\n");
+  
+  multigrid_matrix_setup_fofufofvlilj_operator
+      (
+       ctx->p4est,
+       ctx->d4est_ops,
+       ctx->d4est_geom,
+       ctx->d4est_quad,
+       ctx->vecs->u0,
+       NULL,
+       okendon_jacobian_nonlinear_fofu0_term,
+       ctx->fcns->user,
+       NULL,
+       NULL,
+       mg_data->user_callbacks->user
+      ); 
+}
+
 
 
 #endif

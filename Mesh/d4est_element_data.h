@@ -22,7 +22,8 @@ typedef struct {
   int sqr_nodal_stride;
   int nodal_stride;
   int quad_stride;
-  
+
+  int region;
   int tree;
   int tree_quadid;
   p4est_qcoord_t q [(P4EST_DIM)];
@@ -49,6 +50,7 @@ typedef struct {
   int deg; /* nodal degree */
   int deg_vol_quad; /* deg for volume quadrature */
 
+  /* different element size parameters */
   double j_div_sj_min [(P4EST_FACES)];
   double diam_face [(P4EST_FACES)];
   double diam_volume;

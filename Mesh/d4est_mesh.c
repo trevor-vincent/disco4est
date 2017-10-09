@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <pXest.h>
 #include <d4est_mesh.h>
 #include <d4est_geometry.h>
@@ -6,8 +7,161 @@
 #include <d4est_mortars.h>
 #include <d4est_quadrature_lobatto.h>
 #include <d4est_util.h>
+#include <ini.h>
 #include <sc_reduce.h>
 #include <d4est_linalg.h>
+
+static
+int d4est_mesh_initial_extents_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_mesh_initial_extents_t* pconfig = (d4est_mesh_initial_extents_t*) user;
+  if (d4est_util_match_couple(section,"initial_mesh",name,"min_quadrants")) {
+    D4EST_ASSERT(pconfig->min_quadrants == -2);
+    pconfig->min_quadrants = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"initial_mesh",name, "min_level")) {
+    D4EST_ASSERT(pconfig->min_level == -2);
+    pconfig->min_level = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"fill_uniform")) {
+    D4EST_ASSERT(pconfig->fill_uniform == -2);
+    pconfig->fill_uniform = atoi(value);
+  }
+  else {
+    for (int i = 0; i < pconfig->number_of_regions; i++){
+      char* deg_name;
+      char* deg_quad_name;
+      asprintf(&deg_name,"region%d_deg", i);
+      asprintf(&deg_quad_name,"region%d_deg_quad_inc", i);
+      int hit = 0;
+      if (d4est_util_match_couple(section,"initial_mesh",name,deg_name)) {
+        D4EST_ASSERT(pconfig->deg[i] == -1);
+        pconfig->deg[i] = atoi(value);
+        hit++;
+      }
+      if (d4est_util_match_couple(section,"initial_mesh",name,deg_quad_name)) {
+        D4EST_ASSERT(pconfig->deg_quad_inc[i] == -1);
+        pconfig->deg_quad_inc[i] = atoi(value);
+        hit++;
+      }
+      free(deg_name);
+      free(deg_quad_name);
+      if (hit)
+        return 1;
+    }
+    return 0;    
+  }
+  return 1;
+}
+
+
+void
+d4est_mesh_set_initial_extents
+(
+ d4est_element_data_t* elem_data,
+ void* user_ctx
+)
+{
+  d4est_mesh_initial_extents_t* input = user_ctx;
+  int region = elem_data->region;
+  elem_data->deg = input->deg[region];
+  elem_data->deg_vol_quad = input->deg_quad_inc[region] +
+                            elem_data->deg;
+  printf("[BEFORE_AMR]: deg, deg_vol_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, input->deg_quad_inc[region], region);
+}
+
+
+void
+d4est_mesh_set_quadratures_after_amr
+(
+ d4est_element_data_t* elem_data,
+ void* user_ctx
+)
+{
+  d4est_mesh_initial_extents_t* input = user_ctx;
+  int region = elem_data->region;
+  elem_data->deg_vol_quad = input->deg_quad_inc[region] +
+                            elem_data->deg;
+
+  printf("[AFTER_AMR]: deg, deg_vol_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, input->deg_quad_inc[region], region);
+               
+}
+
+void
+d4est_mesh_initial_extents_destroy
+(
+ d4est_mesh_initial_extents_t* initial_extents
+){
+  P4EST_FREE(initial_extents->deg);
+  P4EST_FREE(initial_extents->deg_quad_inc);
+  P4EST_FREE(initial_extents);
+}
+
+d4est_mesh_initial_extents_t*
+d4est_mesh_initial_extents_parse
+(
+ const char* input_file,
+ d4est_geometry_t* d4est_geom
+)
+{
+  sc_MPI_Comm mpicomm = sc_MPI_COMM_WORLD;  
+
+  int proc_size;
+  int proc_rank;
+  MPI_Comm_size(mpicomm, &proc_size);
+  MPI_Comm_rank(mpicomm, &proc_rank);
+  
+  d4est_mesh_initial_extents_t* initial_extents = P4EST_ALLOC(d4est_mesh_initial_extents_t, 1);
+  initial_extents->min_quadrants = -2;
+  initial_extents->min_level = -2;
+  initial_extents->fill_uniform = -2;
+  initial_extents->number_of_regions = d4est_geom->get_number_of_regions(d4est_geom);
+  initial_extents->deg = P4EST_ALLOC(int, initial_extents->number_of_regions);
+  initial_extents->deg_quad_inc = P4EST_ALLOC(int, initial_extents->number_of_regions);
+  
+  
+ for (int i = 0; i < initial_extents->number_of_regions; i++){
+    initial_extents->deg[i] = -1;
+    initial_extents->deg_quad_inc[i] = -1;
+  }
+ 
+  if (ini_parse(input_file, d4est_mesh_initial_extents_handler, initial_extents) < 0) {
+    printf("[D4EST_ERROR]: pXest input_file = %s\n", input_file);
+    D4EST_ABORT("[D4EST_ERROR]: Can't load pXest input file");
+  }
+
+  D4EST_CHECK_INPUT("initial_mesh", initial_extents->min_quadrants, -2);
+  D4EST_CHECK_INPUT("initial_mesh", initial_extents->min_level, -2);
+  D4EST_CHECK_INPUT("initial_mesh", initial_extents->fill_uniform, -2);
+
+  for (int i = 0; i < initial_extents->number_of_regions; i++){
+    D4EST_CHECK_INPUT("initial_mesh", initial_extents->deg[i], -1);
+    D4EST_CHECK_INPUT("initial_mesh", initial_extents->deg_quad_inc[i], -1);
+  }
+  
+  if(
+     proc_size != 1
+     &&
+     d4est_util_int_pow_int((P4EST_CHILDREN), initial_extents->min_level) < proc_size
+     &&
+     initial_extents->min_quadrants < proc_size
+  ){
+    if (proc_rank == 0){
+      printf("[D4EST_ERROR]: proc_size = %d\n", proc_size);
+      printf("[D4EST_ERROR]: min_level = %d\n", initial_extents->min_level);
+      D4EST_ABORT("[D4EST_ERROR]: Starting p4est with elements < processes\n");
+    }
+  }
+
+  return initial_extents;
+}
+
 
 d4est_mesh_geometry_storage_t*
 d4est_mesh_geometry_storage_init()
@@ -270,6 +424,36 @@ d4est_mesh_get_array_of_degrees
           ((int*)deg_array)[stride] = ed->deg;
         else if (type == D4EST_DOUBLE)
           ((double*)deg_array)[stride] = (double)ed->deg;
+        else
+          D4EST_ABORT("Not a supported builtin-type");
+        stride++;
+      }
+    }
+}
+
+void
+d4est_mesh_get_array_of_quadrature_degrees
+(
+ p4est_t* p4est,
+ void* deg_array,
+ d4est_builtin_t type
+)
+{
+  int stride = 0;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data;
+        if (type == D4EST_INT)
+          ((int*)deg_array)[stride] = ed->deg_vol_quad;
+        else if (type == D4EST_DOUBLE)
+          ((double*)deg_array)[stride] = (double)ed->deg_vol_quad;
         else
           D4EST_ABORT("Not a supported builtin-type");
         stride++;
@@ -607,9 +791,11 @@ d4est_mesh_compute_l2_norm_sqr
  double* nodal_vec,
  int local_nodes,
  norm_storage_option_t store_local,
- int (*skip_element_fcn)(d4est_element_data_t*)
+ int (*skip_element_fcn)(d4est_element_data_t*),
+ double* l2_array
 )
 {
+  int k = 0;
   double* Mvec = P4EST_ALLOC(double, local_nodes);
   double l2_norm_sqr = 0.;  
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -661,6 +847,11 @@ d4est_mesh_compute_l2_norm_sqr
 
         if (!skip_element)
           l2_norm_sqr += norm2;
+
+        if(l2_array != NULL)
+          l2_array[k] = norm2;
+        
+        k++;
       }
     }
   P4EST_FREE(Mvec);
@@ -708,6 +899,7 @@ d4est_mesh_init_element_data
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
  void(*user_fcn)(d4est_element_data_t*, void*),
  void* user_ctx
 )
@@ -753,12 +945,17 @@ d4est_mesh_init_element_data
         elem_data->nodal_stride = nodal_stride;
         elem_data->quad_stride = quad_stride;
 
+        elem_data->region = d4est_geom->get_region(d4est_geom, elem_data->q, elem_data->dq, elem_data->tree);
+
+        
         /* user_fcn should set degree, 
            or the degree will be assumed to be set */
         if (user_fcn != NULL){
           /* problem_set_degrees_donald_trump(elem_data, user_ctx); */
           user_fcn(elem_data, user_ctx);
         }
+
+        printf("[UPDATE]: deg, deg_quad, region = %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, elem_data->region);
 
         /* printf("elem_data->deg = %d\n", elem_data->deg); */
         /* printf("elem_data->deg_vol_quad = %d\n", elem_data->deg_vol_quad); */
@@ -988,6 +1185,7 @@ d4est_mesh_update
 {
   d4est_local_sizes_t local_sizes = d4est_mesh_init_element_data(p4est,
                                                                  d4est_ops,
+                                                                 d4est_geom,
                                                                  user_fcn,//problem_set_degrees_donald_trump,
                                                                  user_ctx);
   if (quad_init_option == INITIALIZE_QUADRATURE_DATA)

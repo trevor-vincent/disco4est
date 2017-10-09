@@ -99,8 +99,6 @@ poisson_sinx_init_params_input
   return input;
 }
 
-
-
 int
 problem_set_mortar_degree
 (

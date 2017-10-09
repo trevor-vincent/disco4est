@@ -313,15 +313,15 @@ multigrid_smoother_cheby_init
   }
   
   if(p4est->mpirank == 0){
-    printf("[D4EST_INFO]: Multigrid_Smoother_Cheby_D4est Parameters\n");
-    printf("[D4EST_INFO]: Smoother imax = %d\n", cheby_data->cheby_imax);
-    printf("[D4EST_INFO]: Smoother eigs cg max = %d\n", cheby_data->cheby_eigs_cg_imax);
-    printf("[D4EST_INFO]: Smoother eigs lmax_lmin_ratio = %f\n", cheby_data->cheby_eigs_lmax_lmin_ratio);
-    printf("[D4EST_INFO]: Smoother eigs max multiplier = %.25f\n", cheby_data->cheby_eigs_max_multiplier);
-    printf("[D4EST_INFO]: Smoother eigs reuse up vcycle = %d\n", cheby_data->cheby_eigs_reuse_fromdownvcycle);
-    printf("[D4EST_INFO]: Smoother eigs reuse from last vcycle = %d\n", cheby_data->cheby_eigs_reuse_fromlastvcycle);
-    printf("[D4EST_INFO]: Smoother print residual norm = %d\n", cheby_data->cheby_print_residual_norm);
-    printf("[D4EST_INFO]: Smoother print eigs = %d\n", cheby_data->cheby_print_eigs);
+    printf("[D4EST_MG_SMOOTHER]: Multigrid_Smoother_Cheby_D4est Parameters\n");
+    printf("[D4EST_MG_SMOOTHER]: Smoother imax = %d\n", cheby_data->cheby_imax);
+    printf("[D4EST_MG_SMOOTHER]: Smoother eigs cg max = %d\n", cheby_data->cheby_eigs_cg_imax);
+    printf("[D4EST_MG_SMOOTHER]: Smoother eigs lmax_lmin_ratio = %f\n", cheby_data->cheby_eigs_lmax_lmin_ratio);
+    printf("[D4EST_MG_SMOOTHER]: Smoother eigs max multiplier = %.25f\n", cheby_data->cheby_eigs_max_multiplier);
+    printf("[D4EST_MG_SMOOTHER]: Smoother eigs reuse up vcycle = %d\n", cheby_data->cheby_eigs_reuse_fromdownvcycle);
+    printf("[D4EST_MG_SMOOTHER]: Smoother eigs reuse from last vcycle = %d\n", cheby_data->cheby_eigs_reuse_fromlastvcycle);
+    printf("[D4EST_MG_SMOOTHER]: Smoother print residual norm = %d\n", cheby_data->cheby_print_residual_norm);
+    printf("[D4EST_MG_SMOOTHER]: Smoother print eigs = %d\n", cheby_data->cheby_print_eigs);
   }
 
   smoother->user = cheby_data;

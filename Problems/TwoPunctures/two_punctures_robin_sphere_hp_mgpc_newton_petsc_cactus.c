@@ -30,7 +30,7 @@
 #include <newton_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
-#include "two_punctures_fcns.h"
+#include "two_punctures_cactus_fcns.h"
 
 typedef struct {
   
@@ -171,22 +171,29 @@ two_punctures_find_punctures_element_marker
   double xf [(P4EST_DIM)];
   
   d4est_geometry_compute_bounds(ed->xyz, ed->deg, xi, xf);
-
   d4est_amr->refinement_log[ed->id] = ed->deg;
-  for (int i = 0; i < params->num_punctures; i++){
-    if ((params->C_bh[i][0] <= xf[0]) &&
-        (params->C_bh[i][1] <= xf[1]) &&
-        (params->C_bh[i][2] <= xf[2]) &&
-        (params->C_bh[i][0] >= xi[0]) &&
-        (params->C_bh[i][1] >= xi[1]) &&
-        (params->C_bh[i][2] >= xi[2])){
-      d4est_amr->refinement_log[ed->id] = -ed->deg;
-      return;
-    }
-  }
-    
-}
 
+  if ((params->par_b <= xf[0]) &&
+      (0. <= xf[1]) &&
+      (0. <= xf[2]) &&
+      (params->par_b >= xi[0]) &&
+      (0. >= xi[1]) &&
+      (0. >= xi[2])){
+    d4est_amr->refinement_log[ed->id] = -ed->deg;
+    return;
+  }
+
+  if ((-1.0*params->par_b <= xf[0]) &&
+      (0. <= xf[1]) &&
+      (0. <= xf[2]) &&
+      (-1.0*params->par_b >= xi[0]) &&
+      (0. >= xi[1]) &&
+      (0. >= xi[2])){
+    d4est_amr->refinement_log[ed->id] = -ed->deg;
+    return;
+  }
+   
+}
 
 int
 problem_set_mortar_degree
@@ -199,34 +206,6 @@ problem_set_mortar_degree
 }
 
 
-
-void
-problem_set_degrees_after_amr
-(
- d4est_element_data_t* elem_data,
- void* user_ctx
-)
-{
-
-  /* two_punctures_init_params_t* init_params = user_ctx; */
-  
-  /* outer shell */
-  /* if (elem_data->tree < 6){ */
-    /* elem_data->deg_vol_quad = elem_data->deg + init_params->deg_vol_quad_inc_outer; */
-  /* } */
-  /* inner shell */
-  /* else if(elem_data->tree < 12){ */
-    /* elem_data->deg_vol_quad = elem_data->deg + init_params->deg_vol_quad_inc_inner; */
-  /* } */
-  /* center cube */
-  /* else { */
-  elem_data->deg_vol_quad = elem_data->deg;
-  /* } */
-
-}
-
-
-
 void
 problem_init
 (
@@ -237,13 +216,12 @@ problem_init
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_geometry_storage_t* geometric_factors,
- int initial_nodes,
+ d4est_mesh_initial_extents_t* initial_extents,
  const char* input_file,
  sc_MPI_Comm mpicomm
 )
 {
-
-  /*  */
+  int initial_nodes = initial_extents->initial_nodes;
   two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file
                                                                            );
   
@@ -252,11 +230,11 @@ problem_init
   
   d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
   d4est_poisson_robin_bc_t bc_data_for_jac;
-  bc_data_for_jac.robin_coeff = two_punctures_robin_coeff_brick_fcn;
+  bc_data_for_jac.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
   bc_data_for_jac.robin_rhs = two_punctures_robin_bc_rhs_fcn;
 
   d4est_poisson_robin_bc_t bc_data_for_res;
-   bc_data_for_res.robin_coeff = two_punctures_robin_coeff_brick_fcn;
+   bc_data_for_res.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
   bc_data_for_res.robin_rhs = two_punctures_robin_bc_rhs_fcn;
   
   d4est_poisson_dirichlet_bc_t bc_data_for_bi;
@@ -353,16 +331,39 @@ problem_init
     d4est_estimator_stats_print(stats);
 
     d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_prev, error, prob_vecs.local_nodes);
+
+    d4est_elliptic_eqns_build_residual
+      (
+       p4est,
+       *ghost,
+       *ghost_data,
+       &prob_fcns,
+       &prob_vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad
+      );
+
+    d4est_output_vtk_with_no_fields
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       input_file,
+       "two_punctures_no_fields",
+       level
+      );
     
     d4est_output_vtk
       (
        p4est,
        d4est_ops,
        d4est_geom,
+       d4est_quad,
        prob_vecs.u,
        u_prev,
        error,
-       NULL,
+       prob_vecs.Au,
        input_file,
        "two_punctures",
        prob_vecs.local_nodes,
@@ -376,8 +377,10 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       error,
+       prob_vecs.local_nodes,
        input_file,
-       "uniform_two_punctures_degree_mesh",
+       "two_punctures_degree_mesh",
        1,
        level
       );
@@ -438,8 +441,8 @@ problem_init
                    INITIALIZE_QUADRATURE_DATA,
                    INITIALIZE_GEOMETRY_DATA,
                    INITIALIZE_GEOMETRY_ALIASES,
-                   problem_set_degrees_after_amr,
-                   &init_params
+                   d4est_mesh_set_quadratures_after_amr,
+                   initial_extents
                   );
 
     
@@ -470,7 +473,7 @@ problem_init
                                                  ghost,
                                                  ghost_data,
                                                  geometric_factors,
-                                                 problem_set_degrees_after_amr,
+                                                 d4est_mesh_set_quadratures_after_amr,
                                                  &init_params
                                                 );
     

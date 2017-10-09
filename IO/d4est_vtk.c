@@ -2638,10 +2638,11 @@ d4est_vtk_save_geometry_and_dg_fields
     d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
     vtk_ctx = d4est_vtk_write_dg_header(vtk_ctx, d4est_ops);    
 
-    d4est_vtk_user_fcn(
-                       vtk_ctx,
-                       vtk_user
-                      );
+    if (d4est_vtk_user_fcn != NULL)
+      d4est_vtk_user_fcn(
+                         vtk_ctx,
+                         vtk_user
+      );
 
     d4est_vtk_write_footer(vtk_ctx);
 

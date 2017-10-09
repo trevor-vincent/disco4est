@@ -1,5 +1,5 @@
 #ifndef D4EST_ANALYTIC_JACOBIAN_TESTER_H
-#define D4EST_ANAKYTIC_JACOBIAN_TESTER_H 
+#define D4EST_ANALYTIC_JACOBIAN_TESTER_H 
 
 #include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>

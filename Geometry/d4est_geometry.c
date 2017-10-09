@@ -129,6 +129,8 @@ d4est_geometry_new(int mpirank,
   d4est_geometry_t* d4est_geom = P4EST_ALLOC(d4est_geometry_t, 1);
   d4est_geom->DX_compute_method = input.DX_compute_method;
   d4est_geom->JAC_compute_method = input.JAC_compute_method;
+  d4est_geom->get_number_of_regions = NULL;
+  d4est_geom->get_region = NULL;
   
 #if (P4EST_DIM)==3
   if (d4est_util_match(input.name,"cubed_sphere")) {

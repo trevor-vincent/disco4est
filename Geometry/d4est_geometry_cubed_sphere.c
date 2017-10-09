@@ -19,7 +19,7 @@ int d4est_geometry_cubed_sphere_get_number_of_regions
 (
  d4est_geometry_t* d4est_geom
 ){
-  if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_13TREE){
+  if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_7TREE){
     return 2;
   }
   else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_13TREE){
@@ -39,7 +39,7 @@ int d4est_geometry_cubed_sphere_get_region
  p4est_qcoord_t dq,
  int tree
 ){
-  if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_13TREE){
+  if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_7TREE){
     if (tree < 6) {   /* inner shell */
       return 0;
     }
@@ -302,7 +302,7 @@ d4est_connectivity_new_sphere_7tree (void)
      1,  7,  7,  2, 19,  5,
      9,  8,  3,  2, 22,  5,
      6,  0,  3,  6,  6,  5,
-    10, 22,  4, 16, 22,  5,
+    10, 22,  4, 16, 22,  4,
   };
 
   return p4est_connectivity_new_copy (num_vertices, num_trees,
@@ -738,14 +738,75 @@ d4est_geometry_cubed_sphere_7tree_X(
                               double xyz[3]
 )
 {
-  d4est_geometry_cubed_sphere_X(geom,
-                                which_tree + 6,
-                                q0,
-                                dq,
-                                coords,
-                                coords_type,
-                                xyz
-                               );
+  d4est_geometry_cubed_sphere_attr_t* sphere = geom->user;
+
+  double              x, y, R, q;
+  double              abc[3];
+
+  double tcoords [3];
+  d4est_geometry_get_tree_coords_in_range_0_to_1(q0, dq, coords, coords_type, tcoords);
+  
+  /* transform from the reference cube into vertex space */
+  d4est_geometry_octree_to_vertex (geom->p4est_conn, which_tree, tcoords, abc);
+
+  /* assert that input points are in the expected range */
+  if (which_tree < 6) {   /* inner shell */
+    if (sphere->compactify_inner_shell){
+      double m = (2. - 1.)/((1./sphere->R1) - (1./sphere->R0));
+      double t = (1.*sphere->R0 - 2.*sphere->R1)/(sphere->R0 - sphere->R1);
+      R = m/(abc[2] - t);
+    }
+    else {
+      R = sphere->R0*(2. - abc[2]) + sphere->R1*(abc[2] - 1.);
+    }
+    double p = 2. - abc[2];
+    double tanx = tan (abc[0] * M_PI_4);
+    double tany = tan (abc[1] * M_PI_4);
+    x = p * abc[0] + (1. - p) * tanx;
+    y = p * abc[1] + (1. - p) * tany;
+    q = R / sqrt (1. + (1. - p) * (tanx * tanx + tany * tany) + 2. * p);
+  }
+  else {                        /* center cube */
+    xyz[0] = abc[0] * sphere->Clength;
+    xyz[1] = abc[1] * sphere->Clength;
+    xyz[2] = abc[2] * sphere->Clength;
+
+    return;
+  }  
+  switch (which_tree % 6) {
+  case 0:                      /* front */
+    xyz[0] = +q * x;
+    xyz[1] = -q;
+    xyz[2] = +q * y;
+    break;
+  case 1:                      /* top */
+    xyz[0] = +q * x;
+    xyz[1] = +q * y;
+    xyz[2] = +q;
+    break;
+  case 2:                      /* back */
+    xyz[0] = +q * x;
+    xyz[1] = +q;
+    xyz[2] = -q * y;
+    break;
+  case 3:                      /* right */
+    xyz[0] = +q;
+    xyz[1] = -q * x;
+    xyz[2] = -q * y;
+    break;
+  case 4:                      /* bottom */
+    xyz[0] = -q * y;
+    xyz[1] = -q * x;
+    xyz[2] = -q;
+    break;
+  case 5:                      /* left */
+    xyz[0] = -q;
+    xyz[1] = -q * x;
+    xyz[2] = +q * y;
+    break;
+  default:
+    SC_ABORT_NOT_REACHED();
+  }
 }
 
 static void
@@ -1623,7 +1684,7 @@ d4est_geometry_cubed_sphere_inner_shell_input
   sphere_attrs->R2 = -1;
   sphere_attrs->compactify_inner_shell = -1;
   sphere_attrs->compactify_outer_shell = -1;
-
+    
   if (ini_parse(input_file, d4est_geometry_cubed_sphere_input_handler, sphere_attrs) < 0) {
     D4EST_ABORT("Can't load input file");
   }
@@ -1684,7 +1745,7 @@ d4est_geometry_cubed_sphere_7tree_input
   snprintf (sphere_attrs->input_section, sizeof(sphere_attrs->input_section), "%s", input_section);
   sphere_attrs->R0 = -1;
   sphere_attrs->R1 = -1;
-  sphere_attrs->R2 = -1;
+  /* sphere_attrs->R2 = -1; */
   sphere_attrs->compactify_inner_shell = -1;
   sphere_attrs->compactify_outer_shell = -1;
 
@@ -1694,7 +1755,7 @@ d4est_geometry_cubed_sphere_7tree_input
 
   D4EST_CHECK_INPUT(input_section, sphere_attrs->R0, -1);
   D4EST_CHECK_INPUT(input_section, sphere_attrs->R1, -1);
-  D4EST_CHECK_INPUT(input_section, sphere_attrs->R2, -1);
+  /* D4EST_CHECK_INPUT(input_section, sphere_attrs->R2, -1); */
   D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_inner_shell, -1);
   D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_outer_shell, -1);
 
@@ -1763,7 +1824,9 @@ d4est_geometry_cubed_sphere_new
   d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
   d4est_geom->p4est_conn = conn;
-
+  d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
+  d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
+  
   if (mpirank == 0){
     printf("%s: NAME = cubed sphere\n", printf_prefix);
     printf("%s: R0 = %.25f\n", printf_prefix, sphere_attrs->R0);
@@ -1793,9 +1856,11 @@ d4est_geometry_cubed_sphere_7tree_new
   d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
   d4est_geom->p4est_conn = conn;
+  d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
+  d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
 
   if (mpirank == 0){
-    printf("%s: NAME = cubed sphere\n", printf_prefix );
+    printf("%s: NAME = cubed sphere (7 tree)\n", printf_prefix );
     printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
     printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
     printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
@@ -1822,7 +1887,9 @@ d4est_geometry_cubed_sphere_innerouter_shell_new
   d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
   d4est_geom->p4est_conn = conn;
-
+  d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
+  d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
+  
   if (mpirank == 0){
     printf("%s: NAME = cubed sphere innerouter shell\n", printf_prefix );
     printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
@@ -1854,6 +1921,8 @@ d4est_geometry_cubed_sphere_inner_shell_block_new
   d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
   d4est_geom->p4est_conn = conn;
+d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
+  d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
 
   if (mpirank == 0){
     printf("%s: NAME = cubed sphere inner shell block\n", printf_prefix );
@@ -1894,6 +1963,8 @@ d4est_geometry_cubed_sphere_outer_shell_block_new
 {
   d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_outer_shell_input(input_file, input_section);
   d4est_geometry_cubed_sphere_outer_shell_block_new_aux(d4est_geom, sphere_attrs);
+  d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
+  d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
   
   if (mpirank == 0){
     printf("%s: NAME = cubed sphere outer shell block\n", printf_prefix );

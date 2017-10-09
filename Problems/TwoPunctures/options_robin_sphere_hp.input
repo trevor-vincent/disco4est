@@ -1,9 +1,11 @@
-[initial_grid]
+[initial_mesh]
 min_quadrants = -1
-min_level = 0
+min_level = 2
 fill_uniform = 1
-deg = 1
-deg_quad = 1
+region0_deg = 1
+region0_deg_quad_inc = 0
+region1_deg = 1
+region1_deg_quad_inc = 1
 
 [amr]
 scheme = smooth_pred
@@ -23,9 +25,9 @@ sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO
 sipg_penalty_fcn = maxp_sqr_over_minh
 
 [geometry]
-name = cubed_sphere
+name = cubed_sphere_7tree
 R0 = 10
-R1 = 500
+R1 = 40
 R2 = 1000
 compactify_outer_shell = 0
 compactify_inner_shell = 0
@@ -34,7 +36,7 @@ JAC_compute_method = numerical
 
 
 [d4est_vtk_geometry]
-name = cubed_sphere
+name = cubed_sphere_7tree
 R0 = 1
 R1 = 2
 R2 = 3
@@ -56,6 +58,22 @@ monitor = 1
 rtol = 1e-20
 atol = 1e-15
 
+[quadrature]
+name = legendre
+
+[newton_petsc]
+snes_atol = 1e-15
+snes_rtol = 1e-50
+snes_stol = 1e-1
+snes_max_funcs = 1000000000
+snes_type = newtonls
+snes_max_it = 5
+snes_monitor = 1
+snes_linesearch_order = 3
+snes_linesearch_monitor = 1
+snes_converged_reason = 1
+snes_view = 1
+
 [krylov_petsc]
 ksp_type = fcg
 ksp_atol = 1e-15
@@ -66,11 +84,6 @@ ksp_monitor = 1
 ksp_converged_reason = 1
 ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 1
-
-[quadrature]
-name = legendre
-
-
 
 [multigrid]
 vcycle_imax = 1;
@@ -104,4 +117,3 @@ cheby_eigs_reuse_fromdownvcycle = 0;
 cheby_eigs_reuse_fromlastvcycle = 0;
 cheby_print_residual_norm = 0;
 cheby_print_eig = 0;
-

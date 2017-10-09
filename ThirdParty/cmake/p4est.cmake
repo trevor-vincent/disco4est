@@ -88,6 +88,13 @@ include_directories(${P4EST_INCLUDE_DIRS})
 message(STATUS "Use p4est includes: ${P4EST_INCLUDE_DIRS}")
 message(STATUS "Use p4est library: ${P4EST_LIBRARIES}")
 
+set(num_of_build_threads "-j${N}")
+
+if(GRAHAM)
+  set(num_of_build_threads "-j1")
+endif()
+  
+
 macro(p4est_build)  
   foreach(dir ${ZLIB_INCLUDE_DIRS})
     set(zlib_include "${zlib_include} -I${dir}")
@@ -121,7 +128,7 @@ macro(p4est_build)
     # --disable-shared
     # --without-zlib
     --prefix=${P4EST_BUNDLED_PREFIX}
-    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make -j${N}
+    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make ${num_of_build_threads}
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make install
   )
   add_dependencies(p4est p4est_bundled_libs)

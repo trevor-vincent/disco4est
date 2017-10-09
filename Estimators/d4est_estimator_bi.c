@@ -410,6 +410,7 @@ d4est_estimator_bi_compute
      vecs->Au,
      vecs->local_nodes,
      STORE_LOCALLY,
+     NULL,
      NULL
     );
 

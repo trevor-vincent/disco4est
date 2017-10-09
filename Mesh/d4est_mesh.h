@@ -36,6 +36,19 @@ typedef struct {
 
 } d4est_mesh_geometry_storage_t;
 
+typedef struct {
+
+  int min_quadrants;
+  int min_level;
+  int fill_uniform;
+  int initial_nodes;
+
+  int number_of_regions;
+  int* deg;
+  int* deg_quad_inc;
+  
+} d4est_mesh_initial_extents_t;
+
 /* This file was automatically generated.  Do not edit! */
 double d4est_mesh_volume_integral(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,int(*is_it_in_volume)(d4est_element_data_t *,void *),double(*compute_volume_integral)(d4est_element_data_t *,void *),void *user);
 double d4est_mesh_surface_integral(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,int(*is_it_on_surface)(d4est_element_data_t *,int,void *),double(*compute_face_integral)(d4est_element_data_t *,int,double *,double *[(P4EST_DIM)],double *[(P4EST_DIM)],double *[(P4EST_DIM)][(P4EST_DIM)],void *),void *user);
@@ -47,9 +60,9 @@ void d4est_mesh_compute_point_error(double *v1,double *v2,double *error,int loca
 void d4est_mesh_init_field(p4est_t *p4est,double *node_vec,d4est_xyz_fcn_t init_fcn,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_mesh_init_field_option_t option,void *user);
 int d4est_mesh_update(p4est_t *p4est,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *geometric_factors,d4est_mesh_quadrature_data_init_option_t quad_init_option,d4est_mesh_geometry_data_init_option_t geom_init_option,d4est_mesh_geometry_aliases_init_option_t alias_init_option,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
 void d4est_mesh_geometry_storage_initialize_aliases(p4est_t *p4est,d4est_mesh_geometry_storage_t *geometric_factors,d4est_local_sizes_t local_sizes);
-d4est_local_sizes_t d4est_mesh_init_element_data(p4est_t *p4est,d4est_operators_t *d4est_ops,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
+d4est_local_sizes_t d4est_mesh_init_element_data(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
 double d4est_mesh_compute_linf(p4est_t *p4est,double *nodal_vec,int(*skip_element_fcn)(d4est_element_data_t *));
-double d4est_mesh_compute_l2_norm_sqr(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,double *nodal_vec,int local_nodes,norm_storage_option_t store_local,int(*skip_element_fcn)(d4est_element_data_t *));
+double d4est_mesh_compute_l2_norm_sqr(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,double *nodal_vec,int local_nodes,norm_storage_option_t store_local,int(*skip_element_fcn)(d4est_element_data_t *),double *l2_array);
 void d4est_mesh_print_element_data_debug(p4est_t *p4est);
 int d4est_mesh_debug_find_node(p4est_t *p4est,int node);
 int d4est_mesh_global_node_to_local_node(p4est_t *p4est,int global_node);
@@ -59,8 +72,13 @@ int d4est_mesh_get_local_quad_nodes(p4est_t *p4est);
 int d4est_mesh_get_local_matrix_nodes(p4est_t *p4est);
 void d4est_mesh_compute_jacobian_on_lgl_grid(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double *jacobian_lgl);
 void d4est_mesh_get_array_of_estimators(p4est_t *p4est,double *eta2_array);
+void d4est_mesh_get_array_of_quadrature_degrees(p4est_t *p4est,void *deg_array,d4est_builtin_t type);
 void d4est_mesh_get_array_of_degrees(p4est_t *p4est,void *deg_array,d4est_builtin_t type);
 void d4est_mesh_geometry_storage_destroy(d4est_mesh_geometry_storage_t *geometric_factors);
 d4est_mesh_geometry_storage_t *d4est_mesh_geometry_storage_init();
+d4est_mesh_initial_extents_t *d4est_mesh_initial_extents_parse(const char *input_file,d4est_geometry_t *d4est_geom);
+void d4est_mesh_initial_extents_destroy(d4est_mesh_initial_extents_t *initial_extents);
+void d4est_mesh_set_quadratures_after_amr(d4est_element_data_t *elem_data,void *user_ctx);
+void d4est_mesh_set_initial_extents(d4est_element_data_t *elem_data,void *user_ctx);
 
 #endif

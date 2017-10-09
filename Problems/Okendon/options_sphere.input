@@ -1,53 +1,44 @@
-[initial_grid]
+[initial_mesh]
 min_quadrants = -1
 min_level = 2
 fill_uniform = 1
-deg = 1
-deg_quad = 1
+region0_deg = 2
+region0_deg_quad_inc = 0
+region1_deg = 2
+region1_deg_quad_inc = 0
+
+[problem]
+p = .5
 
 [amr]
-scheme = smooth_pred
-num_of_amr_steps = 15
-max_degree = 7 
-gamma_h = .25
-gamma_p = 0.1
-gamma_n = 1.
-inflation_size = 128
-percentile = 5
-amr_level_for_uniform_p = 5
+scheme = uniform_h
+num_of_amr_steps = 1
+max_degree = 7
 
 [flux]
 name = sipg
-sipg_penalty_prefactor = 2.0
-sipg_flux_h = H_EQ_TREE_H
+sipg_penalty_prefactor = 20.0
+sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO
 sipg_penalty_fcn = maxp_sqr_over_minh
 
-
 [geometry]
-name = brick
-X0 = -40.0
-X1 = 40.0
-Y0 = -40.0
-Y1 = 40.0
-Z0 = -40.0
-Z1 = 40.0
+name = cubed_sphere_7tree
+R0 = .5
+R1 = 1
+compactify_outer_shell = 0
+compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
 
 [d4est_vtk_geometry]
-name = brick
-X0 = -1.0
-X1 = 1.0
-Y0 = -1.0
-Y1 = 1.0
-Z0 = -1.0
-Z1 = 1.0
+name = cubed_sphere_7tree
+R0 = .5
+R1 = 1
+compactify_outer_shell = 0
+compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
-
-[problem]
-do_not_solve = 0
 
 [d4est_solver_newton]
 imin = 1
@@ -56,6 +47,8 @@ monitor = 1
 rtol = 1e-20
 atol = 1e-15
 
+[quadrature]
+name = legendre
 
 [newton_petsc]
 snes_atol = 1e-15
@@ -80,11 +73,6 @@ ksp_monitor = 1
 ksp_converged_reason = 1
 ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 1
-
-[quadrature]
-name = legendre
-
-
 
 [multigrid]
 vcycle_imax = 1;
@@ -118,4 +106,3 @@ cheby_eigs_reuse_fromdownvcycle = 0;
 cheby_eigs_reuse_fromlastvcycle = 0;
 cheby_print_residual_norm = 0;
 cheby_print_eig = 0;
-

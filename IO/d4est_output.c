@@ -15,7 +15,8 @@ d4est_output_calculate_analytic_error
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_elliptic_data_t* prob_vecs,
+ double* u,
+ int local_nodes,
  d4est_xyz_fcn_t analytic_solution,
  void* analytic_solution_ctx,
  double* u_analytic,
@@ -36,8 +37,8 @@ d4est_output_calculate_analytic_error
   /* for (int i = 0; i < prob_vecs->local_nodes; i++) */
   /* printf("u_analytic[%d] = %.25f\n",i, u_analytic[i]); */
     
-  d4est_linalg_vec_axpyeqz(-1., prob_vecs->u, u_analytic, error, prob_vecs->local_nodes);
-  d4est_linalg_vec_fabs(error, prob_vecs->local_nodes);
+  d4est_linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
+  d4est_linalg_vec_fabs(error, local_nodes);
 }
 
 d4est_output_energy_norm_fit_t*
@@ -156,7 +157,8 @@ d4est_output_norms
                               error,
                               local_nodes,
                               DO_NOT_STORE_LOCALLY,
-                              skip_element_fcn
+                              skip_element_fcn,
+                              NULL
                              );
 
   double local_Linf = d4est_mesh_compute_linf
@@ -268,7 +270,7 @@ d4est_output_norms_using_analytic_solution
 {
   double* error = P4EST_ALLOC(double, prob_vecs->local_nodes);
   double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
-  d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs, analytic_solution, ctx, u_analytic, error);
+  d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs->u, prob_vecs->local_nodes, analytic_solution, ctx, u_analytic, error);
   d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, ghost, ghost_data, energy_norm_data, local_estimator, error, fit, skip_element_fcn);
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
@@ -283,6 +285,8 @@ vtk_dg_field_plotter
 )
 {
   d4est_output_vtk_dg_fields_t* vecs = user;
+
+  if (vecs->residual == NULL){
   vtk_ctx = d4est_vtk_write_dg_point_dataf
             (
              vtk_ctx,
@@ -298,7 +302,26 @@ vtk_dg_field_plotter
              vecs->jacobian,
              vtk_ctx
             );
-
+  }
+  else {
+  vtk_ctx = d4est_vtk_write_dg_point_dataf
+            (
+             vtk_ctx,
+             5,
+             0,
+             "u",
+             vecs->u,
+             "error",
+             vecs->error,
+             "u_compare",
+             vecs->u_compare,
+             "jacobian",
+             vecs->jacobian,
+             "residual",
+             vecs->residual,
+             vtk_ctx
+            );
+  }
 
   /* vtk_ctx = d4est_vtk_write_dg_cell_dataf */
   /*              ( */
@@ -322,10 +345,12 @@ vtk_dg_field_plotter
                1,
                0,
                1,
-               1,
+               2,
                0,
                "eta",
                vecs->eta2,
+               "l2",
+               vecs->l2,
                vtk_ctx
               );
 
@@ -339,11 +364,46 @@ vtk_dg_field_plotter
                1,
                0,
                1,
+               1,
                0,
-               0,
+               "l2",
+               vecs->l2,
                vtk_ctx
               );
   }
+}
+
+void
+d4est_output_vtk_with_no_fields
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ const char* input_file,
+ const char* save_as_prefix,
+ int level
+){
+  int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
+  d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
+
+  char* save_as;
+  asprintf(&save_as,"%s_level_%d", save_as_prefix, level);
+    
+  /* vtk output */
+  d4est_vtk_save_geometry_and_dg_fields
+    (
+     save_as,
+     p4est,
+     d4est_ops,
+     deg_array,
+     input_file,
+     "d4est_vtk_geometry",
+     NULL,
+     NULL
+    );
+
+  free(save_as);
+  P4EST_FREE(deg_array);
 }
 
 void
@@ -352,9 +412,11 @@ d4est_output_vtk
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
  double* u,
  double* u_compare,
  double* error,
+ double* residual,
  const char* input_file,
  const char* save_as_prefix,
  int local_nodes,
@@ -374,6 +436,18 @@ d4est_output_vtk
     eta2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
     d4est_mesh_get_array_of_estimators(p4est, eta2_array);
   }
+
+  double* l2_array = NULL;
+  l2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
+  d4est_mesh_compute_l2_norm_sqr(p4est,
+                                 d4est_ops,
+                                 d4est_geom,
+                                 d4est_quad,
+                                 error,
+                                 local_nodes,
+                                 DO_NOT_STORE_LOCALLY,
+                                 NULL,
+                                 l2_array);
     
   d4est_output_vtk_dg_fields_t vtk_nodal_vecs;
   vtk_nodal_vecs.u = u;
@@ -381,6 +455,8 @@ d4est_output_vtk
   vtk_nodal_vecs.error = error;
   vtk_nodal_vecs.jacobian = jacobian_lgl;
   vtk_nodal_vecs.eta2 = eta2_array;
+  vtk_nodal_vecs.l2 = l2_array;
+  vtk_nodal_vecs.residual = residual;
 
 
   char* save_as;
@@ -403,6 +479,7 @@ d4est_output_vtk
   P4EST_FREE(jacobian_lgl);
   P4EST_FREE(deg_array);
   P4EST_FREE(eta2_array);
+  P4EST_FREE(l2_array);
 
 }
 
@@ -425,10 +502,14 @@ vtk_cell_field_plotter
                1,
                0,
                1,
-               2,
+               4,
                0,
                "degree_dbl",
                vecs->deg,
+               "degree_quad_dbl",
+               vecs->deg_quad,
+               "l2",
+               vecs->l2,
                "eta",
                vecs->eta2,
                vtk_ctx
@@ -444,13 +525,57 @@ vtk_cell_field_plotter
                1,
                0,
                1,
+               3,
                0,
-               0,
+               "degree_dbl",
+               vecs->deg,
+               "degree_quad_dbl",
+               vecs->deg_quad,
+               "l2",
+               vecs->l2,
                vtk_ctx
               );
   }
 }
 
+void
+d4est_output_vtk_degree_mesh_with_analytic_error
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_xyz_fcn_t analytic_solution,
+ void* ctx,
+ int local_nodes,
+ const char* input_file,
+ const char* save_as_prefix,
+ int save_estimator,
+ int level
+){
+
+  double* error = P4EST_ALLOC(double, prob_vecs->local_nodes);
+  double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
+  d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs->u, prob_vecs->local_nodes, analytic_solution, ctx, u_analytic, error);
+
+  d4est_output_vtk_degree_mesh
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     error,
+     local_nodes,
+     input_file,
+     save_as_prefix,
+     save_estimator,
+     level
+    );
+
+  P4EST_FREE(error);
+  P4EST_FREE(u_analytic);
+}
 
 void
 d4est_output_vtk_degree_mesh
@@ -459,23 +584,42 @@ d4est_output_vtk_degree_mesh
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ double* error,
+ int local_nodes,
  const char* input_file,
  const char* save_as_prefix,
  int save_estimator,
  int level
 ){
   double* deg_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
+  double* deg_quad_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
   d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_DOUBLE);
+  d4est_mesh_get_array_of_quadrature_degrees(p4est, (void*)deg_quad_array, D4EST_DOUBLE);
     
   double* eta2_array = NULL;
   if(save_estimator){
     eta2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
     d4est_mesh_get_array_of_estimators(p4est, eta2_array);
   }
-    
+
+  double* l2_array = NULL;
+  l2_array = P4EST_ALLOC(double, p4est->local_num_quadrants);
+  d4est_mesh_compute_l2_norm_sqr(p4est,
+                                 d4est_ops,
+                                 d4est_geom,
+                                 d4est_quad,
+                                 error,
+                                 local_nodes,
+                                 DO_NOT_STORE_LOCALLY,
+                                 NULL,
+                                 l2_array);
+
+  
   d4est_output_vtk_cell_fields_t vtk_cell_vecs;
   vtk_cell_vecs.eta2 = eta2_array;
+  vtk_cell_vecs.l2 = l2_array;
   vtk_cell_vecs.deg = deg_array;
+  vtk_cell_vecs.deg_quad = deg_quad_array;
     
   char* save_as;
   asprintf(&save_as,"%s_level_%d", save_as_prefix, level);
@@ -494,7 +638,9 @@ d4est_output_vtk_degree_mesh
 
   free(save_as);
   P4EST_FREE(deg_array);
+  P4EST_FREE(deg_quad_array);
   P4EST_FREE(eta2_array); 
+  P4EST_FREE(l2_array); 
   
 }
 
@@ -517,7 +663,7 @@ d4est_output_vtk_with_analytic_error
 {
   double* error = P4EST_ALLOC(double, prob_vecs->local_nodes);
   double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
-  d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs, analytic_solution, ctx, u_analytic, error);
+  d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs->u, prob_vecs->local_nodes, analytic_solution, ctx, u_analytic, error);
 
   /* double error_sum = 0.; */
   /* for (int i = 0; i < prob_vecs->local_nodes; i++) */
@@ -530,9 +676,11 @@ d4est_output_vtk_with_analytic_error
      p4est,
      d4est_ops,
      d4est_geom,
+     d4est_quad,
      prob_vecs->u,
      u_analytic,
      error,
+     NULL,
      input_file,
      save_as_prefix,
      prob_vecs->local_nodes,
@@ -543,14 +691,6 @@ d4est_output_vtk_with_analytic_error
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
 }
-
-
-/* void */
-/* d4est_output_data_under_constraint */
-/* ( */
- 
-/* ){ */
-
 
 
 /* } */

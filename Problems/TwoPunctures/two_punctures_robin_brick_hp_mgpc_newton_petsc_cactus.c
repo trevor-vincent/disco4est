@@ -30,7 +30,7 @@
 #include <newton_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
-#include "two_punctures_fcns.h"
+#include "two_punctures_cactus_fcns.h"
 
 typedef struct {
   
@@ -173,18 +173,27 @@ two_punctures_find_punctures_element_marker
   d4est_geometry_compute_bounds(ed->xyz, ed->deg, xi, xf);
 
   d4est_amr->refinement_log[ed->id] = ed->deg;
-  for (int i = 0; i < params->num_punctures; i++){
-    if ((params->C_bh[i][0] <= xf[0]) &&
-        (params->C_bh[i][1] <= xf[1]) &&
-        (params->C_bh[i][2] <= xf[2]) &&
-        (params->C_bh[i][0] >= xi[0]) &&
-        (params->C_bh[i][1] >= xi[1]) &&
-        (params->C_bh[i][2] >= xi[2])){
-      d4est_amr->refinement_log[ed->id] = -ed->deg;
-      return;
-    }
+
+  if ((params->par_b <= xf[0]) &&
+      (0. <= xf[1]) &&
+      (0. <= xf[2]) &&
+      (params->par_b >= xi[0]) &&
+      (0. >= xi[1]) &&
+      (0. >= xi[2])){
+    d4est_amr->refinement_log[ed->id] = -ed->deg;
+    return;
   }
-    
+
+  if ((-1.0*params->par_b <= xf[0]) &&
+      (0. <= xf[1]) &&
+      (0. <= xf[2]) &&
+      (-1.0*params->par_b >= xi[0]) &&
+      (0. >= xi[1]) &&
+      (0. >= xi[2])){
+    d4est_amr->refinement_log[ed->id] = -ed->deg;
+    return;
+  }
+   
 }
 
 
@@ -353,6 +362,20 @@ problem_init
     d4est_estimator_stats_print(stats);
 
     d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_prev, error, prob_vecs.local_nodes);
+
+    /*  */
+    
+    d4est_elliptic_eqns_build_residual
+      (
+       p4est,
+       *ghost,
+       *ghost_data,
+       &prob_fcns,
+       &prob_vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad
+      );
     
     d4est_output_vtk
       (
@@ -362,7 +385,7 @@ problem_init
        prob_vecs.u,
        u_prev,
        error,
-       NULL,
+       prob_vecs.Au,
        input_file,
        "two_punctures",
        prob_vecs.local_nodes,
