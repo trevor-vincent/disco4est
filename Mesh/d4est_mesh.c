@@ -73,7 +73,7 @@ d4est_mesh_set_initial_extents
   elem_data->deg = input->deg[region];
   elem_data->deg_vol_quad = input->deg_quad_inc[region] +
                             elem_data->deg;
-  printf("[BEFORE_AMR]: deg, deg_vol_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, input->deg_quad_inc[region], region);
+  /* printf("[BEFORE_AMR]: deg, deg_vol_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, input->deg_quad_inc[region], region); */
 }
 
 
@@ -89,7 +89,7 @@ d4est_mesh_set_quadratures_after_amr
   elem_data->deg_vol_quad = input->deg_quad_inc[region] +
                             elem_data->deg;
 
-  printf("[AFTER_AMR]: deg, deg_vol_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, input->deg_quad_inc[region], region);
+  /* printf("[AFTER_AMR]: deg, deg_vol_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, input->deg_quad_inc[region], region); */
                
 }
 
@@ -955,7 +955,7 @@ d4est_mesh_init_element_data
           user_fcn(elem_data, user_ctx);
         }
 
-        printf("[UPDATE]: deg, deg_quad, region = %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, elem_data->region);
+        /* printf("[UPDATE]: deg, deg_quad, region = %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, elem_data->region); */
 
         /* printf("elem_data->deg = %d\n", elem_data->deg); */
         /* printf("elem_data->deg_vol_quad = %d\n", elem_data->deg_vol_quad); */

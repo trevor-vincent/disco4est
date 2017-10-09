@@ -2,7 +2,7 @@
 #include <ini.h>
 
 static
-int d4est_geometry_cubed_sphere_number_of_regions
+int d4est_geometry_brick_get_number_of_regions
 (
  d4est_geometry_t* d4est_geom
 ){
@@ -10,7 +10,7 @@ int d4est_geometry_cubed_sphere_number_of_regions
 }
 
 static
-int d4est_geometry_cubed_sphere_get_region
+int d4est_geometry_brick_get_region
 (
  d4est_geometry_t* d4est_geom,
  p4est_qcoord_t q [(P4EST_DIM)],
@@ -230,6 +230,9 @@ d4est_geometry_brick_new
   d4est_geometry_brick_attr_t* brick_attrs = d4est_geometry_brick_input(input_file, input_section);
 
   d4est_geometry_brick_new_aux(d4est_geom, brick_attrs);
+
+  d4est_geom->get_region = d4est_geometry_brick_get_region;
+  d4est_geom->get_number_of_regions = d4est_geometry_brick_get_number_of_regions;
   
   if (mpirank == 0){
     printf("%s: NAME = brick in %d-D\n", printf_prefix, (P4EST_DIM));

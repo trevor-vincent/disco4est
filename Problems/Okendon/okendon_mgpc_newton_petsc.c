@@ -57,10 +57,11 @@ problem_init
 )
 {
   okendon_params_t okendon_params = okendon_params_init(input_file);
+  int initial_nodes = initial_extents->initial_nodes;
 
+  
   d4est_poisson_dirichlet_bc_t bc_data_for_jac;
   bc_data_for_jac.dirichlet_fcn = zero_fcn;
-  bc_data_for_jac.user = &okendon_params;
   bc_data_for_jac.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
   
   d4est_poisson_dirichlet_bc_t bc_data_for_res;
@@ -75,16 +76,20 @@ problem_init
   ctx.flux_data_for_jac = flux_data_for_jac;
   ctx.flux_data_for_res = flux_data_for_res;
   ctx.okendon_params = &okendon_params;
-    
+
+  bc_data_for_jac.user = &ctx;
+  bc_data_for_res.user = &ctx;
+
+  
   d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = okendon_build_residual;
   prob_fcns.apply_lhs = okendon_apply_jac;
   prob_fcns.user = &ctx;
   
   d4est_elliptic_data_t prob_vecs;
-  prob_vecs.Au = NULL;
-  prob_vecs.u = NULL;
-  prob_vecs.local_nodes = 0;
+  prob_vecs.Au = P4EST_ALLOC(double, initial_nodes);
+  prob_vecs.u = P4EST_ALLOC(double, initial_nodes);
+  prob_vecs.local_nodes = initial_nodes;
 
    d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_jac->flux_data;
   
@@ -104,6 +109,19 @@ problem_init
      "[D4EST_AMR]:",
      NULL
     );
+
+
+  d4est_mesh_init_field
+    (
+     p4est,
+     prob_vecs.u,
+     okendon_initial_guess,
+     d4est_ops,
+     d4est_geom,
+     INIT_FIELD_ON_LOBATTO,
+     NULL
+    );
+  
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
