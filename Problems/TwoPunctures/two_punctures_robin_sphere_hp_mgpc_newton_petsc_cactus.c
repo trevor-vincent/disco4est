@@ -474,14 +474,9 @@ problem_init
                                                  ghost_data,
                                                  geometric_factors,
                                                  d4est_mesh_set_quadratures_after_amr,
-                                                 &initial_extents
+                                                 initial_extents
                                                 );
     
-
-
-
-
-
     multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, num_of_levels);
 
     /* prob_vecs.u0 = prob_vecs.u; */
