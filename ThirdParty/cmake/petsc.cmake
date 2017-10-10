@@ -121,7 +121,7 @@ macro(petsc_build)
     # --enable-shared=0
     --with-shared-libraries=0
     --prefix=${PETSC_BUNDLED_PREFIX}
-    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make MAKE_NP=${N}
+    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make -j1
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make install
     )
     # add_dependencies(petsc petsc_bundled_libs)
