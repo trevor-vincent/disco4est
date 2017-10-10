@@ -474,7 +474,7 @@ problem_init
                                                  ghost_data,
                                                  geometric_factors,
                                                  d4est_mesh_set_quadratures_after_amr,
-                                                 &init_params
+                                                 &initial_extents
                                                 );
     
 
