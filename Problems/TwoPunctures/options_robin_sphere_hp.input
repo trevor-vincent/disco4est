@@ -7,6 +7,9 @@ region0_deg_quad_inc = 0
 region1_deg = 1
 region1_deg_quad_inc = 0
 
+[problem]
+do_not_solve = 0
+
 [amr]
 scheme = smooth_pred
 num_of_amr_steps = 15
@@ -17,6 +20,7 @@ gamma_n = 1.
 inflation_size = 128
 percentile = 5
 amr_level_for_uniform_p = 4
+use_puncture_finder = 1
 
 [flux]
 name = sipg
@@ -34,7 +38,6 @@ compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
-
 [d4est_vtk_geometry]
 name = cubed_sphere_7tree
 R0 = 1
@@ -44,19 +47,6 @@ compactify_outer_shell = 0
 compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
-
-[problem]
-do_not_solve = 0
-deg_vol_quad_inc_inner = 0
-deg_vol_quad_inc_outer = 0
-solve_after_level = 0
-
-[d4est_solver_newton]
-imin = 1
-imax = 5
-monitor = 1
-rtol = 1e-20
-atol = 1e-15
 
 [quadrature]
 name = legendre

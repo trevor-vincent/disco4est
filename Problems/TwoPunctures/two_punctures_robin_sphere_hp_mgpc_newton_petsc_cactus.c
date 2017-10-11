@@ -35,24 +35,11 @@
 typedef struct {
   
   int do_not_solve;
-  /* int deg_vol_quad_inc_inner; */
-  /* int deg_vol_quad_inc_outer; */
+  int use_puncture_finder;
   int amr_level_for_uniform_p;
   
 } two_punctures_init_params_t;
 
-
-/* static */
-/* int skip_element_fcn */
-/* ( */
- /* d4est_element_data_t* ed */
-/* ) */
-/* { */
-  /* if(ed->tree != 12) */
-    /* return 1; */
-  /* else */
-    /* return 0; */
-/* } */
 
 static
 int two_punctures_init_params_handler
@@ -68,14 +55,10 @@ int two_punctures_init_params_handler
     D4EST_ASSERT(pconfig->do_not_solve == -1);
     pconfig->do_not_solve = atoi(value);
   }
-  /* else if (d4est_util_match_couple(section,"problem",name,"deg_vol_quad_inc_inner")) { */
-    /* D4EST_ASSERT(pconfig->deg_vol_quad_inc_inner == -1); */
-    /* pconfig->deg_vol_quad_inc_inner = atoi(value); */
-  /* } */
-  /* else if (d4est_util_match_couple(section,"problem",name,"deg_vol_quad_inc_outer")) { */
-    /* D4EST_ASSERT(pconfig->deg_vol_quad_inc_outer == -1); */
-    /* pconfig->deg_vol_quad_inc_outer = atoi(value); */
-  /* } */
+  else if (d4est_util_match_couple(section,"amr",name,"use_puncture_finder")) {
+    D4EST_ASSERT(pconfig->use_puncture_finder == -1);
+    pconfig->use_puncture_finder = atoi(value);
+  }  
   else if (d4est_util_match_couple(section,"amr",name,"amr_level_for_uniform_p")) {
     D4EST_ASSERT(pconfig->amr_level_for_uniform_p == -1);
     pconfig->amr_level_for_uniform_p = atoi(value);
@@ -99,12 +82,14 @@ two_punctures_init_params_input
   /* input.deg_vol_quad_inc_inner = -1; */
   /* input.deg_vol_quad_inc_outer = -1; */
   input.amr_level_for_uniform_p = -1;
+  input.use_puncture_finder = -1;
 
   if (ini_parse(input_file, two_punctures_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("problem", input.do_not_solve, -1);
+  D4EST_CHECK_INPUT("amr", input.user_puncture_finder, -1);
   /* D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc_inner, -1); */
   /* D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc_outer, -1); */
   D4EST_CHECK_INPUT("amr", input.amr_level_for_uniform_p, -1);
@@ -411,13 +396,18 @@ problem_init
       if (p4est->mpirank == 0)
         printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level+1);
 
+      d4est_amr_t* d4est_amr_normal = d4est_amr;
+      if (init_params.use_puncture_finder){
+        d4est_amr_normal = d4est_amr_custom;
+      }
+      
       d4est_amr_step
         (
          p4est,
          ghost,
          ghost_data,
          d4est_ops,
-         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr_custom,
+         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr_normal,
          /* d4est_amr, */
          /* d4est_amr_uniform_p, */
          &prob_vecs.u,

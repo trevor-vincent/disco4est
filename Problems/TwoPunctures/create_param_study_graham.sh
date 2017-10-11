@@ -21,7 +21,7 @@ function write_options {
     cat <<EOF > options.input
 [initial_mesh]
 min_quadrants = -1
-min_level = $1
+min_level = $1f
 fill_uniform = 1
 region0_deg = $2
 region0_deg_quad_inc = $3
@@ -170,7 +170,7 @@ do
 				nodes=$((${cores} / 8))
 				write_options $a $b $c $d $e $f $g $h $i
 				write_submit $rundir $executable $SHORTNAME $cores $hours $nodes
-				ln -s "${executable_path}/${executable}" "${PWD}/${executable}"
+				cp "${executable_path}/${executable}" "${PWD}/${executable}"
 				cd ..
 				
 				done
