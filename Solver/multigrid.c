@@ -805,15 +805,16 @@ multigrid_vcycle
   }
 
   mg_data->mg_state = POST_V; multigrid_update_components(p4est, toplevel, NULL);
-  
-  for (level = toplevel; level >= bottomlevel; --level){
-    printf("Level %d, Number of elements %d, Number of nodes %d\n",
-           level,
-           elements_on_level_of_multigrid[level],
-           nodes_on_level_of_multigrid[level]
-          );
-  }
 
+  if (p4est->mpirank == 0){
+    for (level = toplevel; level >= bottomlevel; --level){
+      printf("For each processor, we have Level %d, Number of elements %d, Number of nodes %d\n",
+             level,
+             elements_on_level_of_multigrid[level],
+             nodes_on_level_of_multigrid[level]
+            );
+    }
+  }
 
   
   mg_data->vcycle_r2_local_current = d4est_linalg_vec_dot(&rres_at0[stride_to_fine_data],
