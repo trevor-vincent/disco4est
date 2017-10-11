@@ -21,7 +21,7 @@ function write_options {
     cat <<EOF > options.input
 [initial_mesh]
 min_quadrants = -1
-min_level = $1f
+min_level = $1
 fill_uniform = 1
 region0_deg = $2
 region0_deg_quad_inc = $3
@@ -36,8 +36,9 @@ gamma_h = .25
 gamma_p = 0.1
 gamma_n = 1.
 inflation_size = 128
-percentile = $4
-amr_level_for_uniform_p = $5
+percentile = 5
+amr_level_for_uniform_p = $4
+use_puncture_finder = $5
 
 [flux]
 name = sipg
@@ -60,7 +61,7 @@ name = cubed_sphere_7tree
 R0 = .5
 R1 = 1
 compactify_outer_shell = 0
-compactify_inner_shell = 0
+compactify_inner_shell = $9
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
@@ -131,10 +132,10 @@ EOF
 
 arr1=( 2 3 ) #min_level
 arr2=( 1 2 ) #deg
-arr3=( 0 1 2) #deg_quad_inc
-arr4=( 5 ) #penalty
-arr5=( 4 5 6 ) #hrefine til inview
-arr6=( 20.0 ) #domain size
+arr3=( 0 2) #deg_quad_inc
+arr4=( 4 5 6 ) #hrefine til inview
+arr5=( 0 1 ) #penalty
+arr6=( 2.0 20.0 100.0 ) #domain size
 arr7=( 10 12 ) #Gauss offset
 arr8=( 1000 )
 arr9=( 0 1 )
