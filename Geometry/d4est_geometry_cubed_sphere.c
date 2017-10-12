@@ -4,7 +4,7 @@
 #include <p8est_connectivity.h>
 #include <d4est_util.h>
 #include <petscsnes.h>
-#include <arbquad.h>
+/* #include <arbquad.h> */
 
 /* #define P4EST_DIM 3 */
 #include <d4est_geometry_cubed_sphere.h>
