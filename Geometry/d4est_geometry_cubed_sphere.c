@@ -2025,8 +2025,8 @@ d4est_geometry_cubed_sphere_with_sphere_hole_new
   d4est_geom->DX = d4est_geometry_cubed_sphere_with_sphere_hole_DX; 
   d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
-  d4est_geom->get_region = d4est_geometry_cubed_sphere_get_number_of_regions;
-  d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_region;
+  d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
+  d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
   
   if (mpirank == 0){
     printf("%s: NAME = cubed sphere with sphere hole\n", printf_prefix );

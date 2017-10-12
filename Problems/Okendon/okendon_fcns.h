@@ -416,7 +416,7 @@ okendon_initial_guess
  void* user
 )
 {
-  return 0.;
+  return 100.;
 }
 
 static
