@@ -92,10 +92,6 @@ macro(petsc_build)
   if(DOWNLOAD_BLAS)
     set(blas_config_args "--download-openblas=yes --download-openblas-make-options=USE_THREAD=0")
   endif()
-
-  if(GRAHAM)
-    set(make_config_args "--with-make-np=1")
-  endif()
   
   message("******blas_config_args =  ${blas_config_args}")
   ExternalProject_Add(petsc
@@ -115,7 +111,7 @@ macro(petsc_build)
     # --with-fc=gfortran
     --with-x=0
     --with-ssl=0
-    ${make_config_args}
+    --with-make-np=1
     # --with-cc=icc
     # --download-fblaslapack
     # --enable-shared=0

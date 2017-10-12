@@ -35,7 +35,7 @@ if(SCINET)
   set(OPENBLAS_INCLUDE_DIR "/scinet/gpc/Libraries/OpenBLAS/singlethreaded/include")  
 endif()
 
-if(GRAHAM)
+if(GRAHAM OR CEDAR)
   set(USE_OPENBLAS ON)
   set(OPENBLAS_DIR "/scratch/tvincent/OpenBLAS/")
   set(OPENBLAS_ROOT "/scratch/tvincent/OpenBLAS/")
@@ -44,7 +44,6 @@ if(GRAHAM)
     )
   set(OPENBLAS_INCLUDE_DIR "/scratch/tvincent/OpenBLAS/lapack-netlib/LAPACKE/include/")  
 endif()
-
 
 
 if(CITA)
