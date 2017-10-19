@@ -23,6 +23,10 @@ if(UBUNTU)
   set(TCMALLOC_ROOT "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/")
   set(TCMALLOC_LIBRARIES "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/lib/libtcmalloc.a")
   set(TCMALLOC_INCLUDE_DIR "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/include/gperftools/")
+
+  set(USE_HDF5 ON)
+  set(HDF5_LIBRARIES "/home/tvincent/Dropbox/Research/Codes/hdf5-1.10.1/install/lib/libhdf5-static.a")
+  set(HDF5_INCLUDE_DIR "/home/tvincent/Dropbox/Research/Codes/hdf5-1.10.1/install/include/")
 endif()
 
 if(SCINET)
@@ -32,7 +36,10 @@ if(SCINET)
   set(OPENBLAS_LIBRARIES
     "/scinet/gpc/Libraries/OpenBLAS/singlethreaded/lib/libopenblas.a"
     )
-  set(OPENBLAS_INCLUDE_DIR "/scinet/gpc/Libraries/OpenBLAS/singlethreaded/include")  
+  set(OPENBLAS_INCLUDE_DIR "/scinet/gpc/Libraries/OpenBLAS/singlethreaded/include")
+  set(USE_HDF5 ON)
+  set(HDF5_LIBRARIES "/scratch/p/pfeiffer/tvincent/hdf5-1.10.1/install/lib/libhdf5-static.a")
+  set(HDF5_INCLUDE_DIR "/scratch/p/pfeiffer/tvincent/hdf5-1.10.1/install/include/") 
 endif()
 
 if(GRAHAM OR CEDAR)
@@ -58,6 +65,10 @@ endif()
 
 if(USE_OPENBLAS)
   include_directories(${OPENBLAS_INCLUDE_DIR})
+endif()
+
+if(USE_HDF5)
+  include_directories(${HDF5_INCLUDE_DIR})
 endif()
 
 find_package(MPI REQUIRED)
@@ -136,6 +147,8 @@ SET (
   Quadrature/d4est_quadrature.c
   Quadrature/d4est_quadrature_legendre.c
   Quadrature/d4est_quadrature_lobatto.c
+  IO/d4est_h5.c
+  IO/d4est_checkpoint.c
   IO/d4est_vtk.c
   IO/d4est_output.c
   Solver/d4est_solver_cg.c
@@ -201,6 +214,13 @@ if(USE_OPENBLAS)
   )
 endif()
 
+if(USE_HDF5)
+  SET (
+    LIBS
+    ${LIBS}
+    ${HDF5_LIBRARIES}
+    )
+endif()
 
 if(USE_TCMALLOC)
   SET (
@@ -421,7 +441,8 @@ add_d4est_test_3d(test_d4est_brick_fcns test_d4est_brick_fcns.c . test_d4est_bri
 # add_d4est_problem_3d(two_punctures_robin_brick_hp_mgpc_newton_petsc_driver two_punctures_robin_brick_hp_mgpc_newton_petsc.c TwoPunctures)
 # add_d4est_problem_3d(two_punctures_robin_brick_hp_mgpc_newton_petsc_cactus_driver two_punctures_robin_brick_hp_mgpc_newton_petsc_cactus.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_newton_petsc_cactus_driver two_punctures_robin_sphere_hp_mgpc_newton_petsc_cactus.c TwoPunctures)
-add_d4est_problem_3d(okendon_mgpc_newton_petsc_driver okendon_mgpc_newton_petsc.c Okendon)
+add_d4est_problem_3d(multi_puncture_robin_sphere_hp_mgpc_newton_petsc_driver multi_puncture_robin_sphere_hp_mgpc_newton_petsc.c TwoPunctures)
+# add_d4est_problem_3d(okendon_mgpc_newton_petsc_driver okendon_mgpc_newton_petsc.c Okendon)
 # add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_noinbin_tree12_driver two_punctures_robin_sphere_hp_mgpc_noinbin_tree12.c TwoPunctures)
 # add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_tree12_driver two_punctures_robin_sphere_hp_mgpc_tree12.c TwoPunctures)
 # add_d4est_problem_3d(random_punctures_robin_sphere_hp_driver random_punctures_robin_sphere_hp.c TwoPunctures)

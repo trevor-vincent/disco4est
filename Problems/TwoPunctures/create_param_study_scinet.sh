@@ -44,6 +44,9 @@ percentile = 5
 amr_level_for_uniform_p = $4
 use_puncture_finder = $5
 
+[problem]
+do_not_solve = 0
+
 [flux]
 name = sipg
 sipg_penalty_prefactor = $6

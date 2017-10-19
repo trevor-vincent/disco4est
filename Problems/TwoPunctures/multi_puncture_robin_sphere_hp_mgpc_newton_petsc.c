@@ -32,7 +32,7 @@
 #include <d4est_h5.h>
 #include <d4est_checkpoint.h>
 #include <time.h>
-#include "two_punctures_cactus_fcns.h"
+#include "multi_puncture_fcns.h"
 
 void
 save_u_fcn
@@ -55,11 +55,11 @@ typedef struct {
   int use_puncture_finder;
   int amr_level_for_uniform_p;
   
-} two_punctures_init_params_t;
+} multi_puncture_init_params_t;
 
 
 static
-int two_punctures_init_params_handler
+int multi_puncture_init_params_handler
 (
  void* user,
  const char* section,
@@ -67,7 +67,7 @@ int two_punctures_init_params_handler
  const char* value
 )
 {
-  two_punctures_init_params_t* pconfig = (two_punctures_init_params_t*)user;
+  multi_puncture_init_params_t* pconfig = (multi_puncture_init_params_t*)user;
   if (d4est_util_match_couple(section,"problem",name,"do_not_solve")) {
     D4EST_ASSERT(pconfig->do_not_solve == -1);
     pconfig->do_not_solve = atoi(value);
@@ -88,20 +88,20 @@ int two_punctures_init_params_handler
 
 
 static
-two_punctures_init_params_t
-two_punctures_init_params_input
+multi_puncture_init_params_t
+multi_puncture_init_params_input
 (
  const char* input_file
 )
 {
-  two_punctures_init_params_t input;
+  multi_puncture_init_params_t input;
   input.do_not_solve = -1;
   /* input.deg_vol_quad_inc_inner = -1; */
   /* input.deg_vol_quad_inc_outer = -1; */
   input.amr_level_for_uniform_p = -1;
   input.use_puncture_finder = -1;
 
-  if (ini_parse(input_file, two_punctures_init_params_handler, &input) < 0) {
+  if (ini_parse(input_file, multi_puncture_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
@@ -159,7 +159,7 @@ amr_set_element_gamma
 }
 
 static void
-two_punctures_custom_p_uniform_element_marker
+multi_puncture_custom_p_uniform_element_marker
 (
   p4est_iter_volume_info_t* info,
   void* user_data
@@ -178,14 +178,14 @@ two_punctures_custom_p_uniform_element_marker
 
 
 static void
-two_punctures_find_punctures_element_marker
+multi_puncture_find_punctures_element_marker
 (
   p4est_iter_volume_info_t* info,
   void* user_data
 ){
   d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
   d4est_element_data_t* ed = (d4est_element_data_t*) info->quad->p.user_data;
-  two_punctures_params_t* params = d4est_amr->scheme->amr_scheme_data;
+  multi_puncture_params_t* params = d4est_amr->scheme->amr_scheme_data;
   
   double xi [(P4EST_DIM)];
   double xf [(P4EST_DIM)];
@@ -193,26 +193,19 @@ two_punctures_find_punctures_element_marker
   d4est_geometry_compute_bounds(ed->xyz, ed->deg, xi, xf);
   d4est_amr->refinement_log[ed->id] = ed->deg;
 
-  if ((params->par_b <= xf[0]) &&
-      (0. <= xf[1]) &&
-      (0. <= xf[2]) &&
-      (params->par_b >= xi[0]) &&
-      (0. >= xi[1]) &&
-      (0. >= xi[2])){
-    d4est_amr->refinement_log[ed->id] = -ed->deg;
-    return;
-  }
 
-  if ((-1.0*params->par_b <= xf[0]) &&
-      (0. <= xf[1]) &&
-      (0. <= xf[2]) &&
-      (-1.0*params->par_b >= xi[0]) &&
-      (0. >= xi[1]) &&
-      (0. >= xi[2])){
-    d4est_amr->refinement_log[ed->id] = -ed->deg;
-    return;
+  for (int i = 0; i < params->number_of_punctures; i++){
+    if ((params->bh[i].XYZ[0] <= xf[0]) &&
+        (params->bh[i].XYZ[1] <= xf[1]) &&
+        (params->bh[i].XYZ[2] <= xf[2]) &&
+        (params->bh[i].XYZ[0] >= xi[0]) &&
+        (params->bh[i].XYZ[1] >= xi[1]) &&
+        (params->bh[i].XYZ[2] >= xi[2])){
+      d4est_amr->refinement_log[ed->id] = -ed->deg;
+      return;
+    }
   }
-   
+  
 }
 
 int
@@ -241,21 +234,26 @@ problem_init
  sc_MPI_Comm mpicomm
 )
 {
+  /* init_random_puncture_data */
+  /*   ( */
+  /*    p4est, */
+  /*    3 */
+  /*   ); */
+
   int initial_nodes = initial_extents->initial_nodes;
-  two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file
-                                                                           );
+  multi_puncture_init_params_t init_params
+    = multi_puncture_init_params_input(input_file);
   
-  two_punctures_params_t two_punctures_params;
-  init_two_punctures_data(&two_punctures_params);
+  multi_puncture_params_t* multi_puncture_params = multi_puncture_params_init(p4est, input_file);
   
   d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
   d4est_poisson_robin_bc_t bc_data_for_jac;
-  bc_data_for_jac.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
-  bc_data_for_jac.robin_rhs = two_punctures_robin_bc_rhs_fcn;
+  bc_data_for_jac.robin_coeff = multi_puncture_robin_coeff_sphere_fcn;
+  bc_data_for_jac.robin_rhs = multi_puncture_robin_bc_rhs_fcn;
 
   d4est_poisson_robin_bc_t bc_data_for_res;
-   bc_data_for_res.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
-  bc_data_for_res.robin_rhs = two_punctures_robin_bc_rhs_fcn;
+   bc_data_for_res.robin_coeff = multi_puncture_robin_coeff_sphere_fcn;
+  bc_data_for_res.robin_rhs = multi_puncture_robin_bc_rhs_fcn;
   
   d4est_poisson_dirichlet_bc_t bc_data_for_bi;
   bc_data_for_bi.dirichlet_fcn = zero_fcn;
@@ -268,14 +266,14 @@ problem_init
   d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_for_res, problem_set_mortar_degree, NULL);
 
   problem_ctx_t ctx;
-  ctx.two_punctures_params = &two_punctures_params;
+  ctx.multi_puncture_params = multi_puncture_params;
   ctx.smooth_pred_params = &smooth_pred_params;
   ctx.flux_data_for_jac = flux_data_for_jac;
   ctx.flux_data_for_res = flux_data_for_res;
   
   d4est_elliptic_eqns_t prob_fcns;
-  prob_fcns.build_residual = two_punctures_build_residual;
-  prob_fcns.apply_lhs = two_punctures_apply_jac;
+  prob_fcns.build_residual = multi_puncture_build_residual;
+  prob_fcns.apply_lhs = multi_puncture_apply_jac;
   prob_fcns.user = &ctx;
   
   
@@ -309,15 +307,15 @@ problem_init
      "[D4EST_AMR]:",
      &amr_marker
     );
-
+  /*  */
 
   d4est_amr_t* d4est_amr_uniform_p = d4est_amr_init_uniform_p(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps);
   d4est_amr_t* d4est_amr_custom = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
-                                                   two_punctures_find_punctures_element_marker, &two_punctures_params);
+                                                   multi_puncture_find_punctures_element_marker, multi_puncture_params);
 
 
   d4est_amr_t* d4est_amr_custom_uniform_p = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
-                                                   two_punctures_custom_p_uniform_element_marker, NULL);
+                                                   multi_puncture_custom_p_uniform_element_marker, NULL);
   
 
   if (initial_extents->checkpoint_prefix == NULL){
@@ -325,7 +323,7 @@ problem_init
       (
        p4est,
        prob_vecs.u,
-       two_punctures_initial_guess,
+       multi_puncture_initial_guess,
        d4est_ops,
        d4est_geom,
        INIT_FIELD_ON_LOBATTO,
@@ -384,7 +382,7 @@ problem_init
        d4est_ops,
        d4est_geom,
        input_file,
-       "two_punctures_no_fields",
+       "multi_puncture_no_fields",
        level
       );
     
@@ -399,7 +397,7 @@ problem_init
        error,
        prob_vecs.Au,
        input_file,
-       "two_punctures",
+       "multi_puncture",
        prob_vecs.local_nodes,
        level,
        1
@@ -414,7 +412,7 @@ problem_init
        error,
        prob_vecs.local_nodes,
        input_file,
-       "two_punctures_degree_mesh",
+       "multi_puncture_degree_mesh",
        1,
        level
       );
@@ -547,7 +545,7 @@ problem_init
                                                     input_file
                                                    );
 
-    krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, two_punctures_krylov_pc_setup_fcn);
+    krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, multi_puncture_krylov_pc_setup_fcn);
     ctx.use_matrix_operator = 1;
     ctx.mg_data = mg_data;
 
@@ -617,6 +615,7 @@ problem_init
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
+  multi_puncture_params_destroy(multi_puncture_params);
   d4est_amr_destroy(d4est_amr);
   d4est_amr_destroy(d4est_amr_uniform_p);
   d4est_amr_destroy(d4est_amr_custom);

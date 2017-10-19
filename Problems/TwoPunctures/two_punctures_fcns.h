@@ -99,9 +99,6 @@ init_two_punctures_data
   params->S_bh[1][2] = 0.;
 }
 
-
-
-
 static
 void
 init_random_puncture_data

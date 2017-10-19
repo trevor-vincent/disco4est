@@ -33,6 +33,14 @@ int d4est_mesh_initial_extents_handler
     D4EST_ASSERT(pconfig->fill_uniform == -2);
     pconfig->fill_uniform = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"load_from_checkpoint")) {
+    D4EST_ASSERT(pconfig->load_from_checkpoint == 0);
+    pconfig->load_from_checkpoint = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"checkpoint_prefix")) {
+    D4EST_ASSERT(pconfig->checkpoint_prefix == NULL);
+    asprintf(&pconfig->checkpoint_prefix,"%s", value);
+  }
   else {
     for (int i = 0; i < pconfig->number_of_regions; i++){
       char* deg_name;
@@ -70,7 +78,14 @@ d4est_mesh_set_initial_extents
 {
   d4est_mesh_initial_extents_t* input = user_ctx;
   int region = elem_data->region;
-  elem_data->deg = input->deg[region];
+
+  if (input->load_from_checkpoint == 0)
+    elem_data->deg = input->deg[region];
+  else{
+    D4EST_ASSERT(input->checkpoint_deg_array != NULL);
+    elem_data->deg = input->checkpoint_deg_array[elem_data->id];
+  }
+  
   elem_data->deg_vol_quad = input->deg_quad_inc[region] +
                             elem_data->deg;
   /* printf("[BEFORE_AMR]: deg, deg_vol_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, input->deg_quad_inc[region], region); */
@@ -100,6 +115,7 @@ d4est_mesh_initial_extents_destroy
 ){
   P4EST_FREE(initial_extents->deg);
   P4EST_FREE(initial_extents->deg_quad_inc);
+  free(initial_extents->checkpoint_prefix);
   P4EST_FREE(initial_extents);
 }
 
@@ -124,7 +140,8 @@ d4est_mesh_initial_extents_parse
   initial_extents->number_of_regions = d4est_geom->get_number_of_regions(d4est_geom);
   initial_extents->deg = P4EST_ALLOC(int, initial_extents->number_of_regions);
   initial_extents->deg_quad_inc = P4EST_ALLOC(int, initial_extents->number_of_regions);
-  
+  initial_extents->load_from_checkpoint = 0;
+  initial_extents->checkpoint_prefix = NULL;
   
  for (int i = 0; i < initial_extents->number_of_regions; i++){
     initial_extents->deg[i] = -1;
@@ -136,13 +153,24 @@ d4est_mesh_initial_extents_parse
     D4EST_ABORT("[D4EST_ERROR]: Can't load pXest input file");
   }
 
-  D4EST_CHECK_INPUT("initial_mesh", initial_extents->min_quadrants, -2);
-  D4EST_CHECK_INPUT("initial_mesh", initial_extents->min_level, -2);
-  D4EST_CHECK_INPUT("initial_mesh", initial_extents->fill_uniform, -2);
 
   for (int i = 0; i < initial_extents->number_of_regions; i++){
-    D4EST_CHECK_INPUT("initial_mesh", initial_extents->deg[i], -1);
     D4EST_CHECK_INPUT("initial_mesh", initial_extents->deg_quad_inc[i], -1);
+  }
+
+  if (initial_extents->load_from_checkpoint == 0){
+
+    D4EST_CHECK_INPUT("initial_mesh", initial_extents->min_quadrants, -2);
+    D4EST_CHECK_INPUT("initial_mesh", initial_extents->min_level, -2);
+    D4EST_CHECK_INPUT("initial_mesh", initial_extents->fill_uniform, -2);
+    
+    for (int i = 0; i < initial_extents->number_of_regions; i++){
+      D4EST_CHECK_INPUT("initial_mesh", initial_extents->deg[i], -1);
+    }
+    
+  }  
+  else {
+    D4EST_CHECK_INPUT("initial_mesh", initial_extents->checkpoint_prefix, NULL);
   }
   
   if(

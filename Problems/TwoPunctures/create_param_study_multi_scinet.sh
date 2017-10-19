@@ -1,17 +1,21 @@
 #!/bin/bash
 
+
 function write_submit {
     cat <<EOF1 > submit.sh
-#!/bin/bash
-#SBATCH --account=def-pfeiffer
-#SBATCH --ntasks=${4}               # number of MPI processes
-#SBATCH --mem-per-cpu=1024M      # memory; default unit is megabytes
-#SBATCH --time=$5-00:00           # time (DD-HH:MM)
+#PBS -l nodes=${6}:ppn=8
+#PBS -l walltime=$5:00:00
+#PBS -o ${1}/disco4est.stdout
+#PBS -e ${1}/disco4est.stderr
+#PBS -d .
+#PBS -S /bin/bash
+#PBS -N $3
 
-source /home/tvincent/d4est.env
+module purge;
+source /home/p/pfeiffer/tvincent/d4est.env
 cd ${1}
-time mpirun -np $4 ./${2}  2>&1 | tee disco4est.out
 
+time mpirun -np $4 ./${2}  2>&1 | tee disco4est.out
 EOF1
 
 }
@@ -40,14 +44,45 @@ percentile = 5
 amr_level_for_uniform_p = $4
 use_puncture_finder = $5
 
+[problem]
+do_not_solve = 0
+number_of_punctures = 3
+puncture0_M = 0.269115643269342
+puncture0_X = 0.015239564243350
+puncture0_Y = -0.693307138836620
+puncture0_Z = 0.000000000000000
+puncture0_PX = 0.058489108578530
+puncture0_PY = 0.008229897640753
+puncture0_PZ = 0.000000000000000
+puncture0_SX = 0.000000000000000
+puncture0_SY = 0.000000000000000
+puncture0_SZ = -0.013354678737630
+puncture1_M = 0.406384234358315
+puncture1_X = -2.316041324900483
+puncture1_Y = 1.827477408027033
+puncture1_Z = 0.000000000000000
+puncture1_PX = -0.028489062296454
+puncture1_PY = -0.149654960981410
+puncture1_PZ = 0.000000000000000
+puncture1_SX = 0.000000000000000
+puncture1_SY = 0.000000000000000
+puncture1_SZ = -0.133191216519657
+puncture2_M = 0.324500122372343
+puncture2_X = -1.027934858588472
+puncture2_Y = -2.271160404789802
+puncture2_Z = 0.000000000000000
+puncture2_PX = 0.164072286507148
+puncture2_PY = 0.051549165440513
+puncture2_PZ = 0.000000000000000
+puncture2_SX = 0.000000000000000
+puncture2_SY = 0.000000000000000
+puncture2_SZ = -0.170845803046062
+
 [flux]
 name = sipg
 sipg_penalty_prefactor = $6
 sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO
 sipg_penalty_fcn = maxp_sqr_over_minh
-
-[problem]
-do_not_solve = 0
 
 [geometry]
 name = cubed_sphere_7tree

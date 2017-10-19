@@ -46,6 +46,10 @@ typedef struct {
   int number_of_regions;
   int* deg;
   int* deg_quad_inc;
+
+  int load_from_checkpoint;
+  int* checkpoint_deg_array;
+  char* checkpoint_prefix;
   
 } d4est_mesh_initial_extents_t;
 

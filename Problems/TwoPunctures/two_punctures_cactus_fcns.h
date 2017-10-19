@@ -9,8 +9,6 @@
 #include <multigrid.h>
 #include <multigrid_matrix_operator.h>
 
-#define MAX_PUNCTURES 10
- 
 typedef struct {
 
   double TP_epsilon;
