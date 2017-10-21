@@ -494,8 +494,8 @@ problem_init
 
     /* need to do a reduce on min,max_level before supporting multiple proc */
     /* mpi_assert(proc_size == 1); */
-    int num_of_levels = max_level + 1;
-
+    int num_of_levels = (max_level-min_level) + 1;
+    
  
     multigrid_logger_t* logger = multigrid_logger_residual_init
                                  (

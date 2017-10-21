@@ -118,6 +118,7 @@ snes_linesearch_order = 3
 snes_linesearch_monitor = 1
 snes_converged_reason = 1
 snes_view = 1
+snes_ksp_ew = 1
 
 [krylov_petsc]
 ksp_type = fcg

@@ -64,7 +64,12 @@ int newton_petsc_input_handler
     D4EST_ASSERT(pconfig->snes_view == -1);
     pconfig->snes_view = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
-  }    
+  }
+  else if (d4est_util_match_couple(section,"newton_petsc",name,"snes_ksp_ew")) {
+    D4EST_ASSERT(pconfig->snes_ksp_ew == -1);
+    pconfig->snes_ksp_ew = atoi(value);
+    D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -93,6 +98,7 @@ newton_petsc_input
   input->snes_view = -1;
   input->snes_linesearch_monitor = -1;
   input->snes_converged_reason = -1;
+  input->snes_ksp_ew = -1;
 
 
   if (ini_parse(input_file, newton_petsc_input_handler, input) < 0) {
@@ -125,6 +131,7 @@ newton_petsc_input
     printf("%s: snes_stol = %s\n",printf_prefix, input->snes_stol);
     printf("%s: snes_maxit = %s\n",printf_prefix, input->snes_max_it);
     printf("%s: snes_maxfuncs = %s\n",printf_prefix, input->snes_max_funcs);
+    printf("%s: snes_ksp_ew = %d\n",printf_prefix, input->snes_ksp_ew);
     if(d4est_util_match(input->snes_type,"newtonls")){
       printf("%s: snes_linesearch_order = %s\n",printf_prefix, input->snes_max_funcs);
       printf("%s: snes_linesearch_monitor = %d\n",printf_prefix, input->snes_linesearch_monitor);
@@ -278,6 +285,11 @@ newton_petsc_set_options_database_from_params
   else
     PetscOptionsClearValue(NULL,"-snes_converged_reason");
 
+  if (input->snes_ksp_ew == 1)
+    PetscOptionsSetValue(NULL,"-snes_ksp_ew","");
+  else
+    PetscOptionsClearValue(NULL,"-snes_ksp_ew");
+  
   PetscOptionsClearValue(NULL,"-snes_type");
   PetscOptionsSetValue(NULL,"-snes_type",input->snes_type);
   

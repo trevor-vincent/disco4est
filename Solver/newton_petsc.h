@@ -13,6 +13,7 @@ typedef struct {
   int snes_linesearch_monitor;
   int snes_view;
   int snes_converged_reason;
+  int snes_ksp_ew;
   
   char snes_atol [25];
   char snes_type [25];
