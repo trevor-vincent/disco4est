@@ -34,6 +34,19 @@
 #include <time.h>
 #include "two_punctures_cactus_fcns.h"
 
+int
+skip_curved_elements
+(
+ d4est_element_data_t* elem
+)
+{
+  if (elem->tree == 6)
+    return 0;
+  else
+    return 1;
+}
+
+
 void
 save_u_fcn
 (
@@ -434,6 +447,22 @@ problem_init
        NULL
       );
 
+    printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
+    d4est_output_norms
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       *ghost,
+       *ghost_data,
+       &ip_norm_data,
+       stats->total,
+       error,
+       fit,
+       skip_curved_elements
+      );
+    
 
     if (level != d4est_amr->num_of_amr_steps){
 
@@ -560,6 +589,7 @@ problem_init
     /* printf("check = %d\n", check); */
     
     /* P4EST_FREE(u_check); */
+
     
     if (!init_params.do_not_solve){
 

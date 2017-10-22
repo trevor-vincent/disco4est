@@ -5,6 +5,7 @@
 #include <newton_petsc.h>
 #include <krylov_petsc.h>
 #include <petscsnes.h>
+#include <time.h>
 #include <ini.h>
 
 static
@@ -402,9 +403,17 @@ void newton_petsc_solve
   
   MatShellSetOperation(J,MATOP_MULT,(void(*)())newton_petsc_apply_jacobian);
   SNESSetJacobian(snes,J,J,newton_petsc_save_x0,(void*)&petsc_ctx);
-  VecPlaceArray(x, vecs->u);  
+  VecPlaceArray(x, vecs->u);
+
+  clock_t begin = clock();
+
   SNESSolve(snes,NULL,x);
 
+  clock_t end = clock();
+  double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+
+  printf("[NEWTON_PETSC]: Finished in %f seconds\n", time_spent); 
+  
   P4EST_FREE(u0);
   VecResetArray(x);
   VecDestroy(&x);//CHKERRQ(ierr);  
