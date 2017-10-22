@@ -49,7 +49,10 @@ if(GRAHAM OR CEDAR)
   set(OPENBLAS_LIBRARIES
     "/scratch/tvincent/OpenBLAS/libopenblas.a"
     )
-  set(OPENBLAS_INCLUDE_DIR "/scratch/tvincent/OpenBLAS/lapack-netlib/LAPACKE/include/")  
+  set(OPENBLAS_INCLUDE_DIR "/scratch/tvincent/OpenBLAS/lapack-netlib/LAPACKE/include/")
+  set(USE_HDF5 ON)
+  set(HDF5_LIBRARIES "/scratch/tvincent/hdf5-1.10.1/install/lib/libhdf5-static.a")
+  set(HDF5_INCLUDE_DIR "/scratch/tvincent/hdf5-1.10.1/install/include/")
 endif()
 
 
