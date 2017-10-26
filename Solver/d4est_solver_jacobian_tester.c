@@ -25,6 +25,7 @@ d4est_solver_jacobian_tester
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  d4est_elliptic_eqns_t* elliptic_eqns,
  int local_nodes,
  d4est_xyz_fcn_t initial_guess,
@@ -103,7 +104,8 @@ d4est_solver_jacobian_tester
        &elliptic_vecs_jac,
        d4est_ops,
        d4est_geom,
-       d4est_quad
+       d4est_quad,
+       d4est_factors
       );
 
     if (type == JAC_TEST_CENTRAL_DIFFERENCE){
@@ -127,7 +129,8 @@ d4est_solver_jacobian_tester
        &elliptic_vecs_F_u0_m_u,
        d4est_ops,
        d4est_geom,
-       d4est_quad
+       d4est_quad,
+       d4est_factors
       );
 
     d4est_elliptic_eqns_build_residual
@@ -139,7 +142,8 @@ d4est_solver_jacobian_tester
        &elliptic_vecs_F_u0_p_u,
        d4est_ops,
        d4est_geom,
-       d4est_quad
+       d4est_quad,
+       d4est_factors
       );
 
     double* error_vec = P4EST_ALLOC(double, local_nodes);

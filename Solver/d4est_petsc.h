@@ -19,6 +19,7 @@ typedef struct {
   d4est_operators_t* d4est_ops;
   d4est_geometry_t* d4est_geom;
   d4est_quadrature_t* d4est_quad;
+  d4est_mesh_geometry_storage_t* d4est_factors;
   
 } petsc_ctx_t;
 

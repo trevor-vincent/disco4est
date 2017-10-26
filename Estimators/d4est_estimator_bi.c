@@ -384,6 +384,7 @@ d4est_estimator_bi_compute
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  diam_compute_option_t diam_opt,
  int (*get_deg_mortar_quad)(d4est_element_data_t*, void*),
  void* get_deg_mortar_quad_ctx
@@ -398,7 +399,8 @@ d4est_estimator_bi_compute
      vecs,
      d4est_ops,
      d4est_geom,
-     d4est_quad
+     d4est_quad,
+     d4est_factors
     );
   
   d4est_mesh_compute_l2_norm_sqr
@@ -474,6 +476,7 @@ d4est_estimator_bi_compute
      d4est_ops,
      d4est_geom,
      d4est_quad,
+     d4est_factors,
      &flux_fcns,
      EXCHANGE_GHOST_DATA
     );

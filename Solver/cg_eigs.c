@@ -48,6 +48,7 @@ cg_eigs
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  int imax,
  double* eig_max
 )
@@ -113,7 +114,8 @@ cg_eigs
      vecs,
      d4est_ops,
      d4est_geom,
-     d4est_quad
+     d4est_quad,
+     d4est_factors
     );
 
   d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
@@ -164,7 +166,8 @@ cg_eigs
      vecs,
      d4est_ops,
      d4est_geom,
-     d4est_quad
+     d4est_quad,
+     d4est_factors
     );
 
     d_dot_Au = d4est_linalg_vec_dot(d,Au,local_nodes);

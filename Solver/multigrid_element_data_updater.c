@@ -31,6 +31,8 @@ multigrid_element_data_updater_init
   
   updater->geometric_factors[num_of_levels-1] = d4est_mesh_geometry_storage_toplevel;
 
+  updater->current_geometric_factors = updater->geometric_factors[num_of_levels-1];
+  
   if (element_data_init_user_fcn == NULL){
     D4EST_ABORT("You must set the element data init user fcn for the element data updater\n");
   }
@@ -55,6 +57,8 @@ multigrid_element_data_updater_destroy
   for (int level = 0; level < num_of_levels-1; level++){
     d4est_mesh_geometry_storage_destroy(updater->geometric_factors[level]);
   }
+
+  updater->current_geometric_factors = NULL;
   
   P4EST_FREE(updater->geometric_factors);
   P4EST_FREE(updater);
@@ -116,6 +120,8 @@ multigrid_element_data_updater_update
        updater->element_data_init_user_fcn,
        updater->user    
       );
+
+    updater->current_geometric_factors = updater->geometric_factors[level-1];
   }
   else if (mg_data->mg_state == UPV_POST_REFINE){    
     P4EST_FREE(*(updater->ghost_data));
@@ -141,6 +147,8 @@ multigrid_element_data_updater_update
        updater->element_data_init_user_fcn,
        updater->user    
       );
+
+    updater->current_geometric_factors = updater->geometric_factors[level+1];
        
   }
   else {

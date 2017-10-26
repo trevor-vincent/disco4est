@@ -23,6 +23,10 @@ typedef struct {
   int nodal_stride;
   int quad_stride;
 
+  int mortar_quad_scalar_stride [P4EST_FACES];
+  int mortar_quad_vector_stride [P4EST_FACES];
+  int mortar_quad_matrix_stride [P4EST_FACES];
+  
   int region;
   int tree;
   int tree_quadid;

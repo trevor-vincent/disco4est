@@ -110,6 +110,7 @@ d4est_solver_newton_solve
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  const char* input_file,
  krylov_pc_t* krylov_pc
 )
@@ -162,7 +163,8 @@ d4est_solver_newton_solve
      &vecs_for_res_build,
      d4est_ops,
      d4est_geom,
-     d4est_quad
+     d4est_quad,
+     d4est_factors
     );
   
   double fnrm = d4est_linalg_vec_dot(f0,f0,n);
@@ -214,6 +216,7 @@ d4est_solver_newton_solve
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        &petsc_params,
        krylov_pc
       );
@@ -234,7 +237,8 @@ d4est_solver_newton_solve
        &vecs_for_res_build,
        d4est_ops,
        d4est_geom,
-       d4est_quad
+       d4est_quad,
+       d4est_factors
       );
 
     /* flip pointers */

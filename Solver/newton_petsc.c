@@ -217,7 +217,8 @@ PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
      &vecs_for_res_build,
      petsc_ctx->d4est_ops,
      petsc_ctx->d4est_geom,
-     petsc_ctx->d4est_quad
+     petsc_ctx->d4est_quad,
+     petsc_ctx->d4est_factors
     );
   
   VecRestoreArray(f,&ftemp);
@@ -257,7 +258,8 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
      &vecs_for_jac,
      petsc_ctx->d4est_ops,
      petsc_ctx->d4est_geom,
-     petsc_ctx->d4est_quad
+     petsc_ctx->d4est_quad,
+     petsc_ctx->d4est_factors
     );
   
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
@@ -338,6 +340,7 @@ void newton_petsc_solve
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  krylov_petsc_params_t* krylov_options,
  newton_petsc_params_t* newton_options,
  krylov_pc_t* krylov_pc
@@ -364,6 +367,7 @@ void newton_petsc_solve
   petsc_ctx.d4est_ops = d4est_ops;
   petsc_ctx.d4est_geom = d4est_geom;
   petsc_ctx.d4est_quad = d4est_quad;
+  petsc_ctx.d4est_factors = d4est_factors;
   
   SNESSetFunction(snes,r,newton_petsc_get_residual,(void*)&petsc_ctx);//CHKERRQ(ierr);
   SNESGetKSP(snes,&ksp);

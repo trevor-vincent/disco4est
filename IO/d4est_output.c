@@ -121,6 +121,7 @@ d4est_output_norms
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
  d4est_ip_energy_norm_data_t* energy_norm_data,
@@ -179,7 +180,8 @@ d4est_output_norms
                              ghost_data,
                              d4est_ops,
                              d4est_geom,
-                             d4est_quad
+                             d4est_quad,
+                             d4est_factors
                             );
 
   
@@ -257,6 +259,7 @@ d4est_output_norms_using_analytic_solution
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
  double local_estimator,
@@ -271,7 +274,7 @@ d4est_output_norms_using_analytic_solution
   double* error = P4EST_ALLOC(double, prob_vecs->local_nodes);
   double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
   d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs->u, prob_vecs->local_nodes, analytic_solution, ctx, u_analytic, error);
-  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, ghost, ghost_data, energy_norm_data, local_estimator, error, fit, skip_element_fcn);
+  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, d4est_factors, ghost, ghost_data, energy_norm_data, local_estimator, error, fit, skip_element_fcn);
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
 }

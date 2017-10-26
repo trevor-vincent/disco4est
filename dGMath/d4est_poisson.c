@@ -21,6 +21,7 @@ d4est_poisson_build_rhs_with_strong_bc
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  d4est_elliptic_data_t* prob_vecs,
  d4est_poisson_flux_data_t* flux_fcn_data_for_build_rhs,
  double* rhs,
@@ -39,7 +40,7 @@ d4est_poisson_build_rhs_with_strong_bc
   elliptic_data_for_rhs.u = u_eq_0; 
   elliptic_data_for_rhs.Au = Au_eq_0; 
 
-  d4est_poisson_apply_aij(p4est, ghost, ghost_data, &elliptic_data_for_rhs, flux_fcn_data_for_build_rhs, d4est_ops, d4est_geom, d4est_quad); 
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, &elliptic_data_for_rhs, flux_fcn_data_for_build_rhs, d4est_ops, d4est_geom, d4est_quad, d4est_factors); 
 
 
   double* f = NULL;
@@ -189,10 +190,12 @@ d4est_poisson_apply_mortar_matrices
  d4est_poisson_flux_data_t* flux_fcn_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors
 )
 {
   d4est_mortar_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(flux_fcn_data);
+  
   d4est_mortar_compute_flux_on_local_elements
     (
      p4est,
@@ -201,6 +204,7 @@ d4est_poisson_apply_mortar_matrices
      d4est_ops,
      d4est_geom,
      d4est_quad,
+     d4est_factors,
      &flux_fcns,
      EXCHANGE_GHOST_DATA
     );
@@ -216,7 +220,8 @@ d4est_poisson_apply_aij
  d4est_poisson_flux_data_t* flux_fcn_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors
 )
 {
   d4est_poisson_flux_init_element_data
@@ -243,7 +248,8 @@ d4est_poisson_apply_aij
      flux_fcn_data,
      d4est_ops,
      d4est_geom,
-     d4est_quad
+     d4est_quad,
+     d4est_factors
     );
 
 }

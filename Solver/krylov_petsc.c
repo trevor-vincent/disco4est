@@ -251,7 +251,8 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
      &vecs_for_aij,
      petsc_ctx->d4est_ops,
      petsc_ctx->d4est_geom,
-     petsc_ctx->d4est_quad
+     petsc_ctx->d4est_quad,
+     petsc_ctx->d4est_factors
     );
   
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
@@ -270,6 +271,7 @@ krylov_petsc_solve
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  krylov_petsc_params_t* krylov_petsc_params,
  krylov_pc_t* krylov_pc
 )

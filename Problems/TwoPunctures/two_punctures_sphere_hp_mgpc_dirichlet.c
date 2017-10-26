@@ -248,7 +248,7 @@ problem_init
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* geometric_factors,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  d4est_mesh_initial_extents_t* initial_extents,
  const char* input_file,
  sc_MPI_Comm mpicomm
@@ -363,6 +363,7 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        DIAM_APPROX_CUBE,
        problem_set_mortar_degree,
        NULL
@@ -383,7 +384,8 @@ problem_init
        &prob_vecs,
        d4est_ops,
        d4est_geom,
-       d4est_quad
+       d4est_quad,
+       d4est_factors
       );
 
     d4est_output_vtk_with_no_fields
@@ -438,6 +440,7 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        *ghost,
        *ghost_data,
        &ip_norm_data,
@@ -454,6 +457,7 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        *ghost,
        *ghost_data,
        &ip_norm_data,
@@ -500,7 +504,7 @@ problem_init
                    d4est_ops,
                    d4est_geom,
                    d4est_quad,
-                   geometric_factors,
+                   d4est_factors,
                    INITIALIZE_QUADRATURE_DATA,
                    INITIALIZE_GEOMETRY_DATA,
                    INITIALIZE_GEOMETRY_ALIASES,
@@ -535,7 +539,7 @@ problem_init
                                                  num_of_levels,
                                                  ghost,
                                                  ghost_data,
-                                                 geometric_factors,
+                                                 d4est_factors,
                                                  d4est_mesh_set_quadratures_after_amr,
                                                  initial_extents
                                                 );
@@ -609,6 +613,7 @@ problem_init
          d4est_ops,
          d4est_geom,
          d4est_quad,
+         d4est_factors,
          &krylov_params,
          &newton_params,
          pc
@@ -623,7 +628,7 @@ problem_init
        checkpoint_save_as,
        p4est,
        &prob_vecs,
-       geometric_factors,
+       d4est_factors,
        1,
        save_u_fcn,
        NULL

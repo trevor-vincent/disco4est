@@ -109,7 +109,8 @@ multigrid_smoother_cheby_iterate
      vecs,
      mg_data->d4est_ops,
      mg_data->d4est_geom,
-     mg_data->d4est_quad
+     mg_data->d4est_quad,
+     updater->current_geometric_factors
     );
   
     d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
@@ -143,7 +144,8 @@ multigrid_smoother_cheby_iterate
      vecs,
      mg_data->d4est_ops,
      mg_data->d4est_geom,
-     mg_data->d4est_quad
+     mg_data->d4est_quad,
+     updater->current_geometric_factors
     );
   
   d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
@@ -227,6 +229,7 @@ multigrid_smoother_cheby
          mg_data->d4est_ops,
          mg_data->d4est_geom,
          mg_data->d4est_quad,
+         updater->current_geometric_factors,
          cheby->cheby_eigs_cg_imax,
          &cheby->eigs[level]
         );

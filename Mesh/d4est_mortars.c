@@ -628,6 +628,10 @@ void d4est_mortar_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *inf
 
   d4est_quadrature_t* d4est_quad =
     (d4est_quadrature_t *)d4est_mortar_compute_flux_user_data->d4est_quad;
+
+  d4est_mesh_geometry_storage_t* d4est_factors =
+    d4est_mortar_compute_flux_user_data->d4est_factors;
+
   
   d4est_element_data_t *ghost_data = (d4est_element_data_t *)user_data;
   d4est_element_data_t *e_p[(P4EST_HALF)];
@@ -713,6 +717,7 @@ void d4est_mortar_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *inf
              d4est_ops,
              geom,
              d4est_quad,
+             d4est_factors,
              flux_fcn_ptrs->user_ctx
           );
           }
@@ -753,6 +758,7 @@ void d4est_mortar_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *inf
                  d4est_ops,
                  geom,
                  d4est_quad,
+                 d4est_factors,
                  flux_fcn_ptrs->user_ctx
                 );
             }
@@ -770,7 +776,7 @@ void d4est_mortar_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *inf
             if (flux_fcn_ptrs->flux_interface_fcn != NULL){
             flux_fcn_ptrs->flux_interface_fcn(
                                               e_m, 1, side[s_m]->face, mortar_side_id_m, e_p, 1, side[s_p]->face, mortar_side_id_p, e_m_is_ghost,
-                info->orientation, d4est_ops, geom, d4est_quad, flux_fcn_ptrs->user_ctx);
+                                              info->orientation, d4est_ops, geom, d4est_quad, d4est_factors, flux_fcn_ptrs->user_ctx);
             }
           }
         }
@@ -792,7 +798,7 @@ void d4est_mortar_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *inf
 
     if (flux_fcn_ptrs->flux_boundary_fcn != NULL){
       flux_fcn_ptrs->flux_boundary_fcn(e_m[0], side->face, mortar_side_id_m,
-                                       d4est_ops, geom, d4est_quad,
+                                       d4est_ops, geom, d4est_quad, d4est_factors,
                                        flux_fcn_ptrs->user_ctx);
     }
     d4est_mortar_compute_flux_user_data->mortar_stride += 1;
@@ -809,6 +815,7 @@ d4est_mortar_compute_flux_on_local_elements
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  d4est_mortar_fcn_ptrs_t* fcn_ptrs,
  d4est_mortar_exchange_data_option_t option
 )
@@ -821,6 +828,7 @@ d4est_mortar_compute_flux_on_local_elements
   d4est_mortar_compute_flux_user_data.d4est_ops = d4est_ops;
   d4est_mortar_compute_flux_user_data.geom = d4est_geom;
   d4est_mortar_compute_flux_user_data.d4est_quad = d4est_quad;
+  d4est_mortar_compute_flux_user_data.d4est_factors = d4est_factors;
   d4est_mortar_compute_flux_user_data.mortar_stride = 0;
   
   p4est->user_pointer = &d4est_mortar_compute_flux_user_data;

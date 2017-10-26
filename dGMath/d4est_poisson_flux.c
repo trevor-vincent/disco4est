@@ -20,6 +20,7 @@ d4est_poisson_flux_boundary
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  void* params
 )
 {
@@ -234,6 +235,7 @@ d4est_poisson_flux_interface
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  void* params
 )
 {
@@ -258,7 +260,6 @@ d4est_poisson_flux_interface
   d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
 
   /* calculate degs and nodes of each face of (-) side */
-  int max_volume_nodes_m_lobatto = 0;
   int total_side_nodes_m_lobatto = 0;
   int total_side_nodes_m_quad = 0;
   for (int i = 0; i < faces_m; i++){
@@ -664,6 +665,14 @@ d4est_poisson_flux_interface
      COMPUTE_NORMAL_USING_JACOBIAN
     );
 
+  int compare = d4est_util_compare_vecs(sj_on_f_m_mortar_quad, &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]], total_nodes_mortar_quad, 1e-13);
+  /* printf("compare = %d\n", compare); */
+
+  D4EST_ASSERT(compare);
+  /* double* vec1 = &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]]; */
+  /* DEBUG_PRINT_2ARR_DBL(sj_on_f_m_mortar_quad,vec1,total_nodes_mortar_quad); */
+  
+  
   for (int d = 0; d < (P4EST_DIM); d++){
     d4est_linalg_fill_vec
       (

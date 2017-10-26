@@ -281,7 +281,8 @@ d4est_ip_energy_norm_compute
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors
 )
 {
   energy_norm_data->ip_energy_norm_sqr_volume_term = 0.;
@@ -355,6 +356,7 @@ d4est_ip_energy_norm_compute
      d4est_ops,
      d4est_geom,
      d4est_quad,
+     d4est_factors,
      &flux_fcns,
      EXCHANGE_GHOST_DATA
     );

@@ -96,7 +96,8 @@ multigrid_bottom_solver_cg_d4est
      vecs,
      mg_data->d4est_ops,
      mg_data->d4est_geom,
-     mg_data->d4est_quad
+     mg_data->d4est_quad,
+     updater->current_geometric_factors
     );
   
   d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
@@ -137,7 +138,8 @@ multigrid_bottom_solver_cg_d4est
        vecs,
        mg_data->d4est_ops,
        mg_data->d4est_geom,
-       mg_data->d4est_quad
+       mg_data->d4est_quad,
+       mg_data->elem_data_updater->current_geometric_factors
       );
   
     
