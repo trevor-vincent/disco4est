@@ -620,7 +620,7 @@ problem_init
          d4est_factors,
          &krylov_params,
          &newton_params,
-         NULL
+         pc
         );
     }
 

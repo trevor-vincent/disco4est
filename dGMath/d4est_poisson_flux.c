@@ -665,10 +665,32 @@ d4est_poisson_flux_interface
      COMPUTE_NORMAL_USING_JACOBIAN
     );
 
-  int compare = d4est_util_compare_vecs(sj_on_f_m_mortar_quad, &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]], total_nodes_mortar_quad, 1e-13);
-  /* printf("compare = %d\n", compare); */
+  int compare0 = d4est_util_compare_vecs(sj_on_f_m_mortar_quad, &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]], total_nodes_mortar_quad, 1e-15);
+  D4EST_ASSERT(compare0);
 
-  D4EST_ASSERT(compare);
+  for (int d = 0; d < (P4EST_DIM); d++){
+    int compare1 = d4est_util_compare_vecs(n_on_f_m_mortar_quad[d], &d4est_factors->n_m_mortar_quad[e_m[0]->mortar_quad_vector_stride[f_m] + d*total_nodes_mortar_quad], total_nodes_mortar_quad, 1e-15);
+    D4EST_ASSERT(compare1);
+  }
+
+  for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+    for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+      int compare2 = d4est_util_compare_vecs(drst_dxyz_m_on_mortar_quad[d1][d2], &d4est_factors->drst_dxyz_m_mortar_quad[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad], total_nodes_mortar_quad, 1e-15);
+      D4EST_ASSERT(compare2);
+    }
+  }
+
+
+  for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+    for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+      int compare3 = d4est_util_compare_vecs(drst_dxyz_p_on_mortar_quad_porder[d1][d2], &d4est_factors->drst_dxyz_p_mortar_quad_porder[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad], total_nodes_mortar_quad, 1e-15);
+      D4EST_ASSERT(compare3);
+    }
+  }
+  
+
+  
+
   /* double* vec1 = &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]]; */
   /* DEBUG_PRINT_2ARR_DBL(sj_on_f_m_mortar_quad,vec1,total_nodes_mortar_quad); */
   
