@@ -31,27 +31,43 @@ d4est_poisson_flux_boundary
   int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, deg_quad);
   double* u_m_on_f_m = P4EST_ALLOC(double, face_nodes_m_lobatto);
   double* u_m_on_f_m_quad = P4EST_ALLOC(double, face_nodes_m_quad);
-  double* j_div_sj_quad = P4EST_ALLOC(double, face_nodes_m_quad);
+  /* double* j_div_sj_quad = P4EST_ALLOC(double, face_nodes_m_quad); */
   double* dudr_m_on_f_m [(P4EST_DIM)];
   double* dudr_m_on_f_m_quad [(P4EST_DIM)];
   double* dudx_m_on_f_m_quad [(P4EST_DIM)];
   double* u_at_bndry_lobatto = P4EST_ALLOC(double, face_nodes_m_lobatto);
   double* u_at_bndry_lobatto_to_quad = P4EST_ALLOC(double, face_nodes_m_quad);
-  double* sj_on_f_m_quad = P4EST_ALLOC(double, face_nodes_m_quad);
+
   double* n_on_f_m_quad [(P4EST_DIM)];
   double* xyz_on_f_m_quad [(P4EST_DIM)];
-  double* n_sj_on_f_m_quad [(P4EST_DIM)];
+  /* double* n_sj_on_f_m_quad [(P4EST_DIM)]; */
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* xyz_on_f_m_lobatto [(P4EST_DIM)];
+  double* sj_on_f_m_quad = &d4est_factors->sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
+
+   for (int d = 0; d < (P4EST_DIM); d++){
+     n_on_f_m_quad[d] = &d4est_factors->n_m_mortar_quad[e_m->mortar_quad_vector_stride[f_m] + d*face_nodes_m_quad];
+
+     xyz_on_f_m_quad[d] = &d4est_factors->xyz_m_mortar_quad[e_m->boundary_quad_vector_stride[f_m] + d*face_nodes_m_quad];
+     xyz_on_f_m_lobatto[d] = &d4est_factors->xyz_m_mortar_lobatto[e_m->boundary_quad_vector_stride[f_m] + d*face_nodes_m_quad];
+     
+   }
   
-  D4EST_ALLOC_DBYD_MAT(drst_dxyz_quad, face_nodes_m_quad);
-  D4EST_ALLOC_DIM_VEC(xyz_on_f_m_lobatto, face_nodes_m_lobatto);
+   for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+     for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+       drst_dxyz_quad[d1][d2] =  &d4est_factors->drst_dxyz_m_mortar_quad[e_m->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*face_nodes_m_quad];
+     }
+   }
+  
+  
+  /* D4EST_ALLOC_DBYD_MAT(drst_dxyz_quad, face_nodes_m_quad); */
+  /* D4EST_ALLOC_DIM_VEC(xyz_on_f_m_lobatto, face_nodes_m_lobatto); */
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m, face_nodes_m_lobatto);
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m_quad, face_nodes_m_quad);
   D4EST_ALLOC_DIM_VEC(dudx_m_on_f_m_quad,  face_nodes_m_quad);
-  D4EST_ALLOC_DIM_VEC(n_on_f_m_quad, face_nodes_m_quad);
-  D4EST_ALLOC_DIM_VEC(n_sj_on_f_m_quad, face_nodes_m_quad);
-  D4EST_ALLOC_DIM_VEC(xyz_on_f_m_quad, face_nodes_m_quad);
+  /* D4EST_ALLOC_DIM_VEC(n_on_f_m_quad, face_nodes_m_quad); */
+  /* D4EST_ALLOC_DIM_VEC(n_sj_on_f_m_quad, face_nodes_m_quad); */
+  /* D4EST_ALLOC_DIM_VEC(xyz_on_f_m_quad, face_nodes_m_quad); */
 
   d4est_quadrature_mortar_t face_object; /* will not be used anyway */
   face_object.dq = e_m->dq;
@@ -66,29 +82,29 @@ d4est_poisson_flux_boundary
     .q[2] = e_m->q[2];
 #endif
   
-  d4est_mortars_compute_geometric_data_on_mortar
-    (
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     QUAD_INTEGRAND_UNKNOWN,
-     e_m->tree,
-     e_m->q,
-     e_m->dq,
-     mortar_side_id_m,
-     1,
-     1,
-     &e_m->deg,
-     &deg_quad,
-     f_m,
-     xyz_on_f_m_quad,
-     drst_dxyz_quad,
-     sj_on_f_m_quad,
-     n_on_f_m_quad,
-     n_sj_on_f_m_quad,
-     j_div_sj_quad,
-     COMPUTE_NORMAL_USING_JACOBIAN
-    );
+  /* d4est_mortars_compute_geometric_data_on_mortar */
+  /*   ( */
+  /*    d4est_ops, */
+  /*    d4est_geom, */
+  /*    d4est_quad, */
+  /*    QUAD_INTEGRAND_UNKNOWN, */
+  /*    e_m->tree, */
+  /*    e_m->q, */
+  /*    e_m->dq, */
+  /*    mortar_side_id_m, */
+  /*    1, */
+  /*    1, */
+  /*    &e_m->deg, */
+  /*    &deg_quad, */
+  /*    f_m, */
+  /*    xyz_on_f_m_quad, */
+  /*    drst_dxyz_quad, */
+  /*    sj_on_f_m_quad, */
+  /*    n_on_f_m_quad, */
+  /*    n_sj_on_f_m_quad, */
+  /*    j_div_sj_quad, */
+  /*    COMPUTE_NORMAL_USING_JACOBIAN */
+  /*   ); */
    
   for (int d = 0; d < (P4EST_DIM); d++){
     d4est_operators_apply_slicer
@@ -143,16 +159,16 @@ d4est_poisson_flux_boundary
     }
   }
  
-  for (int d = 0; d < (P4EST_DIM); d++){
+  /* for (int d = 0; d < (P4EST_DIM); d++){ */
 
-    d4est_operators_apply_slicer(d4est_ops,
-                                 e_m->xyz[d],
-                                 (P4EST_DIM),
-                                 f_m,
-                                 e_m->deg,
-                                 xyz_on_f_m_lobatto[d]);
+  /*   d4est_operators_apply_slicer(d4est_ops, */
+  /*                                e_m->xyz[d], */
+  /*                                (P4EST_DIM), */
+  /*                                f_m, */
+  /*                                e_m->deg, */
+  /*                                xyz_on_f_m_lobatto[d]); */
 
-  }
+  /* } */
 
 
   d4est_quadrature_interpolate
@@ -180,11 +196,11 @@ d4est_poisson_flux_boundary
   boundary_data.u_m_on_f_m_quad = u_m_on_f_m_quad;
   boundary_data.u_m_on_f_m = u_m_on_f_m;
   boundary_data.sj_on_f_m_quad = sj_on_f_m_quad;
-  boundary_data.j_div_sj_quad = j_div_sj_quad; 
+  /* boundary_data.j_div_sj_quad = j_div_sj_quad;  */
+
   D4EST_COPY_DBYD_MAT(drst_dxyz_quad, boundary_data.drst_dxyz_quad);
   D4EST_COPY_DIM_VEC(dudx_m_on_f_m_quad, boundary_data.dudx_m_on_f_m_quad);
   D4EST_COPY_DIM_VEC(n_on_f_m_quad, boundary_data.n_on_f_m_quad);
-  D4EST_COPY_DIM_VEC(n_sj_on_f_m_quad, boundary_data.n_sj_on_f_m_quad);
   D4EST_COPY_DIM_VEC(xyz_on_f_m_quad, boundary_data.xyz_on_f_m_quad);
   D4EST_COPY_DIM_VEC(xyz_on_f_m_lobatto, boundary_data.xyz_on_f_m_lobatto);
 
@@ -203,24 +219,24 @@ d4est_poisson_flux_boundary
       );
   }
   
-  D4EST_FREE_DIM_VEC(xyz_on_f_m_lobatto);
-  D4EST_FREE_DIM_VEC(xyz_on_f_m_quad);
+  /* D4EST_FREE_DIM_VEC(xyz_on_f_m_lobatto); */
+  /* D4EST_FREE_DIM_VEC(xyz_on_f_m_quad); */
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m);
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m_quad);
   D4EST_FREE_DIM_VEC(dudx_m_on_f_m_quad);
-  D4EST_FREE_DIM_VEC(n_on_f_m_quad);
-  D4EST_FREE_DIM_VEC(n_sj_on_f_m_quad);
-  D4EST_FREE_DBYD_MAT(drst_dxyz_quad);
+  /* D4EST_FREE_DIM_VEC(n_on_f_m_quad); */
+  /* D4EST_FREE_DIM_VEC(n_sj_on_f_m_quad); */
+  /* D4EST_FREE_DBYD_MAT(drst_dxyz_quad); */
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_m_on_f_m_quad);
   P4EST_FREE(u_at_bndry_lobatto);
   P4EST_FREE(u_at_bndry_lobatto_to_quad);
-  P4EST_FREE(sj_on_f_m_quad);
-  P4EST_FREE(j_div_sj_quad);
+  /* P4EST_FREE(sj_on_f_m_quad); */
+  /* P4EST_FREE(j_div_sj_quad); */
 }
 
 static void
-d4est_poisson_flux_interface
+ d4est_poisson_flux_interface
 (
  d4est_element_data_t** e_m,
  int faces_m,
@@ -390,18 +406,32 @@ d4est_poisson_flux_interface
   double* dudx_p_on_f_p_mortar_quad_porder [(P4EST_DIM)];
   double* dudx_m_on_f_m_mortar_quad [(P4EST_DIM)];
   double* dudx_p_on_f_p_mortar_quad [(P4EST_DIM)];
+
   double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* drst_dxyz_p_on_mortar_quad_porder [(P4EST_DIM)][(P4EST_DIM)];
-  double* sj_on_f_m_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
   double* n_on_f_m_mortar_quad [(P4EST_DIM)];
-  double* n_sj_on_f_m_mortar_quad [(P4EST_DIM)];
-  double* j_div_sj_on_f_m_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
-  double* j_div_sj_on_f_p_mortar_quad_porder = P4EST_ALLOC(double, total_nodes_mortar_quad);
-  double* j_div_sj_on_f_p_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
+  double* sj_on_f_m_mortar_quad = &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+
+   for (int d = 0; d < (P4EST_DIM); d++){
+     n_on_f_m_mortar_quad[d] = &d4est_factors->n_m_mortar_quad[e_m[0]->mortar_quad_vector_stride[f_m] + d*total_nodes_mortar_quad];
+   }
+
+  
+   for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+     for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+       drst_dxyz_m_on_mortar_quad[d1][d2] =  &d4est_factors->drst_dxyz_m_mortar_quad[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
+     }
+   }
+
+   for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+     for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+       drst_dxyz_p_on_mortar_quad_porder[d1][d2] =  &d4est_factors->drst_dxyz_p_mortar_quad_porder[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
+     }
+   }
+
+  
   double* tmp = P4EST_ALLOC(double, total_side_nodes_p_quad);
 
-  D4EST_ALLOC_DBYD_MAT(drst_dxyz_m_on_mortar_quad, total_nodes_mortar_quad);
-  D4EST_ALLOC_DBYD_MAT(drst_dxyz_p_on_mortar_quad_porder, total_nodes_mortar_quad);
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_porder, total_side_nodes_p_lobatto);
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_porder, total_nodes_mortar_quad);
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_quad_porder, total_nodes_mortar_quad);
@@ -411,8 +441,6 @@ d4est_poisson_flux_interface
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m_mortar, total_nodes_mortar_quad);
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m_mortar_quad, total_nodes_mortar_quad);
   D4EST_ALLOC_DIM_VEC(dudx_m_on_f_m_mortar_quad, total_nodes_mortar_quad);
-  D4EST_ALLOC_DIM_VEC(n_on_f_m_mortar_quad, total_nodes_mortar_quad);
-  D4EST_ALLOC_DIM_VEC(n_sj_on_f_m_mortar_quad, total_nodes_mortar_quad);
  
   stride = 0;
   for (int i = 0; i < faces_m; i++){
@@ -611,83 +639,59 @@ d4est_poisson_flux_interface
     }
   }
 
-  d4est_mortars_compute_geometric_data_on_mortar
-    (
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     QUAD_INTEGRAND_UNKNOWN,
-     e_m[0]->tree,
-     e_m[0]->q,
-     e_m[0]->dq,
-     mortar_side_id_m,
-     faces_m,
-     faces_mortar,
-     &deg_mortar_lobatto[0],
-     &deg_mortar_quad[0],
-     f_m,
-     NULL,
-     drst_dxyz_m_on_mortar_quad,
-     sj_on_f_m_mortar_quad,
-     n_on_f_m_mortar_quad,
-     n_sj_on_f_m_mortar_quad,
-     j_div_sj_on_f_m_mortar_quad,
-     COMPUTE_NORMAL_USING_JACOBIAN
-    );
+/*   d4est_mortars_compute_geometric_data_on_mortar */
+/*     ( */
+/*      d4est_ops, */
+/*      d4est_geom, */
+/*      d4est_quad, */
+/*      QUAD_INTEGRAND_UNKNOWN, */
+/*      e_m[0]->tree, */
+/*      e_m[0]->q, */
+/*      e_m[0]->dq, */
+/*      mortar_side_id_m, */
+/*      faces_m, */
+/*      faces_mortar, */
+/*      &deg_mortar_lobatto[0], */
+/*      &deg_mortar_quad[0], */
+/*      f_m, */
+/*      NULL, */
+/*      drst_dxyz_m_on_mortar_quad, */
+/*      sj_on_f_m_mortar_quad, */
+/*      n_on_f_m_mortar_quad, */
+/*      n_sj_on_f_m_mortar_quad, */
+/*      j_div_sj_on_f_m_mortar_quad, */
+/*      COMPUTE_NORMAL_USING_JACOBIAN */
+/*     ); */
 
-  d4est_mortars_compute_geometric_data_on_mortar
-    (
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     QUAD_INTEGRAND_UNKNOWN,
-     e_p[0]->tree,
-     e_p[0]->q,
-     e_p[0]->dq,
-     mortar_side_id_p,
-     faces_p,
-     faces_mortar,
-     &deg_mortar_lobatto_porder[0],
-     &deg_mortar_quad_porder[0],
-     f_p,
-     NULL,
-     drst_dxyz_p_on_mortar_quad_porder,
-#ifdef POISSON_FLUX_COMPUTE_PORDER_MORTAR_GEOM
-     NULL//sj_on_f_p_mortar_quad_porder,
-     NULL//n_on_f_p_mortar_quad_porder,
-     NULL,
-#else
-     NULL,
-     NULL,
-     NULL,
-#endif
-     NULL,//j_div_sj_on_f_p_mortar_quad_porder,
-     COMPUTE_NORMAL_USING_JACOBIAN
-    );
-
-  int compare0 = d4est_util_compare_vecs(sj_on_f_m_mortar_quad, &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]], total_nodes_mortar_quad, 1e-15);
-  D4EST_ASSERT(compare0);
-
-  for (int d = 0; d < (P4EST_DIM); d++){
-    int compare1 = d4est_util_compare_vecs(n_on_f_m_mortar_quad[d], &d4est_factors->n_m_mortar_quad[e_m[0]->mortar_quad_vector_stride[f_m] + d*total_nodes_mortar_quad], total_nodes_mortar_quad, 1e-15);
-    D4EST_ASSERT(compare1);
-  }
-
-  for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-    for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-      int compare2 = d4est_util_compare_vecs(drst_dxyz_m_on_mortar_quad[d1][d2], &d4est_factors->drst_dxyz_m_mortar_quad[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad], total_nodes_mortar_quad, 1e-15);
-      D4EST_ASSERT(compare2);
-    }
-  }
-
-
-  for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-    for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-      int compare3 = d4est_util_compare_vecs(drst_dxyz_p_on_mortar_quad_porder[d1][d2], &d4est_factors->drst_dxyz_p_mortar_quad_porder[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad], total_nodes_mortar_quad, 1e-15);
-      D4EST_ASSERT(compare3);
-    }
-  }
-  
+/*   d4est_mortars_compute_geometric_data_on_mortar */
+/*     ( */
+/*      d4est_ops, */
+/*      d4est_geom, */
+/*      d4est_quad, */
+/*      QUAD_INTEGRAND_UNKNOWN, */
+/*      e_p[0]->tree, */
+/*      e_p[0]->q, */
+/*      e_p[0]->dq, */
+/*      mortar_side_id_p, */
+/*      faces_p, */
+/*      faces_mortar, */
+/*      &deg_mortar_lobatto_porder[0], */
+/*      &deg_mortar_quad_porder[0], */
+/*      f_p, */
+/*      NULL, */
+/*      drst_dxyz_p_on_mortar_quad_porder, */
+/* #ifdef POISSON_FLUX_COMPUTE_PORDER_MORTAR_GEOM */
+/*      NULL//sj_on_f_p_mortar_quad_porder, */
+/*      NULL//n_on_f_p_mortar_quad_porder, */
+/*      NULL, */
+/* #else */
+/*      NULL, */
+/*      NULL, */
+/*      NULL, */
+/* #endif */
+/*      NULL,//j_div_sj_on_f_p_mortar_quad_porder, */
+/*      COMPUTE_NORMAL_USING_JACOBIAN */
+/*     ); */  
 
   
 
@@ -748,17 +752,17 @@ d4est_poisson_flux_interface
         );
     }
 
-    d4est_operators_reorient_face_data
-        (
-         d4est_ops,
-         &j_div_sj_on_f_p_mortar_quad_porder[oriented_face_mortar_stride],
-         (P4EST_DIM)-1,
-         deg_mortar_quad[face],
-         orientation,
-         f_m,
-         f_p,
-         &j_div_sj_on_f_p_mortar_quad[face_mortar_stride]
-        );
+    /* d4est_operators_reorient_face_data */
+    /*     ( */
+    /*      d4est_ops, */
+    /*      &j_div_sj_on_f_p_mortar_quad_porder[oriented_face_mortar_stride], */
+    /*      (P4EST_DIM)-1, */
+    /*      deg_mortar_quad[face], */
+    /*      orientation, */
+    /*      f_m, */
+    /*      f_p, */
+    /*      &j_div_sj_on_f_p_mortar_quad[face_mortar_stride] */
+    /*     ); */
     
     
     face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
@@ -788,9 +792,9 @@ d4est_poisson_flux_interface
   interface_data.u_m_on_f_m = u_m_on_f_m;
   interface_data.u_p_on_f_p = u_p_on_f_p;
   interface_data.sj_on_f_m_mortar_quad = sj_on_f_m_mortar_quad;
-  interface_data.j_div_sj_on_f_m_mortar_quad = j_div_sj_on_f_m_mortar_quad;
+  /* interface_data.j_div_sj_on_f_m_mortar_quad = j_div_sj_on_f_m_mortar_quad; */
   interface_data.u_p_on_f_p_mortar_quad = u_p_on_f_p_mortar_quad;
-  interface_data.j_div_sj_on_f_p_mortar_quad = j_div_sj_on_f_p_mortar_quad;
+  /* interface_data.j_div_sj_on_f_p_mortar_quad = j_div_sj_on_f_p_mortar_quad; */
   interface_data.deg_mortar_quad = deg_mortar_quad;
   interface_data.nodes_mortar_quad = nodes_mortar_quad;
   interface_data.deg_mortar_lobatto = deg_mortar_lobatto;
@@ -803,7 +807,7 @@ d4est_poisson_flux_interface
   D4EST_COPY_DIM_VEC(dudx_m_on_f_m_mortar_quad,interface_data.dudx_m_on_f_m_mortar_quad);
   D4EST_COPY_DIM_VEC(dudx_p_on_f_p_mortar_quad,interface_data.dudx_p_on_f_p_mortar_quad);
   D4EST_COPY_DIM_VEC(n_on_f_m_mortar_quad,interface_data.n_on_f_m_mortar_quad);
-  D4EST_COPY_DIM_VEC(n_sj_on_f_m_mortar_quad,interface_data.n_sj_on_f_m_mortar_quad);
+  /* D4EST_COPY_DIM_VEC(n_sj_on_f_m_mortar_quad,interface_data.n_sj_on_f_m_mortar_quad); */
 
   if (d4est_poisson_flux_params->interface_fcn != NULL){
   d4est_poisson_flux_params->interface_fcn
@@ -827,12 +831,12 @@ d4est_poisson_flux_interface
 
   }
 
-  P4EST_FREE(j_div_sj_on_f_m_mortar_quad);
-  P4EST_FREE(j_div_sj_on_f_p_mortar_quad_porder);
-  P4EST_FREE(j_div_sj_on_f_p_mortar_quad);
+  /* P4EST_FREE(j_div_sj_on_f_m_mortar_quad); */
+  /* P4EST_FREE(j_div_sj_on_f_p_mortar_quad_porder); */
+  /* P4EST_FREE(j_div_sj_on_f_p_mortar_quad); */
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_p_on_f_p);
-  P4EST_FREE(sj_on_f_m_mortar_quad);
+  /* P4EST_FREE(sj_on_f_m_mortar_quad); */
   P4EST_FREE(tmp);  
   P4EST_FREE(u_m_on_f_m_mortar);
   P4EST_FREE(u_m_on_f_m_mortar_quad);
@@ -847,10 +851,10 @@ d4est_poisson_flux_interface
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m_mortar);
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m_mortar_quad);
   D4EST_FREE_DIM_VEC(dudx_m_on_f_m_mortar_quad);
-  D4EST_FREE_DIM_VEC(n_on_f_m_mortar_quad);
-  D4EST_FREE_DIM_VEC(n_sj_on_f_m_mortar_quad);
-  D4EST_FREE_DBYD_MAT(drst_dxyz_m_on_mortar_quad);
-  D4EST_FREE_DBYD_MAT(drst_dxyz_p_on_mortar_quad_porder);
+  /* D4EST_FREE_DIM_VEC(n_on_f_m_mortar_quad); */
+  /* D4EST_FREE_DIM_VEC(n_sj_on_f_m_mortar_quad); */
+  /* D4EST_FREE_DBYD_MAT(drst_dxyz_m_on_mortar_quad); */
+  /* D4EST_FREE_DBYD_MAT(drst_dxyz_p_on_mortar_quad_porder); */
 }
 
 static

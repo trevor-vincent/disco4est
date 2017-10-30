@@ -25,7 +25,6 @@ typedef struct {
   double* dudx_m_on_f_m_mortar_quad [(P4EST_DIM)];
   double* dudx_p_on_f_p_mortar_quad [(P4EST_DIM)];
   double* n_on_f_m_mortar_quad [(P4EST_DIM)];
-  double* n_sj_on_f_m_mortar_quad [(P4EST_DIM)];
 
   int* face_nodes_m_lobatto;
   int* face_nodes_p_lobatto;
@@ -54,7 +53,6 @@ typedef struct {
   double* dudx_m_on_f_m_quad [(P4EST_DIM)];
   double* n_on_f_m_quad [(P4EST_DIM)];
   double* xyz_on_f_m_quad [(P4EST_DIM)];
-  double* n_sj_on_f_m_quad [(P4EST_DIM)];
   double* sj_on_f_m_quad;
   double* j_div_sj_quad;
   

@@ -22,6 +22,7 @@ typedef struct {
   int local_nodes;
   int local_sqr_nodes;
   int local_mortar_nodes_quad;
+  int local_boundary_nodes_quad;
   int local_nodes_quad;
   
 } d4est_local_sizes_t;
@@ -39,6 +40,7 @@ typedef struct {
   double* sj_m_mortar_quad;
   double* n_m_mortar_quad;  
   double* xyz_m_mortar_quad;  
+  double* xyz_m_mortar_lobatto;  
 
 } d4est_mesh_geometry_storage_t;
 

@@ -137,10 +137,10 @@ d4est_poisson_flux_sipg_dirichlet_aux
   double* xyz_on_f_m_lobatto [(P4EST_DIM)]; 
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_quad [(P4EST_DIM)];  
-  double* n_sj_on_f_m_quad [(P4EST_DIM)];
+  double* n_on_f_m_quad [(P4EST_DIM)];
   D4EST_COPY_DBYD_MAT(boundary_data->drst_dxyz_quad, drst_dxyz_quad);
   D4EST_COPY_DIM_VEC(boundary_data->dudx_m_on_f_m_quad, dudx_m_on_f_m_quad);
-  D4EST_COPY_DIM_VEC(boundary_data->n_sj_on_f_m_quad, n_sj_on_f_m_quad);
+  D4EST_COPY_DIM_VEC(boundary_data->n_on_f_m_quad, n_on_f_m_quad);
   D4EST_COPY_DIM_VEC(boundary_data->xyz_on_f_m_lobatto, xyz_on_f_m_lobatto);
   
   d4est_poisson_flux_sipg_params_t* ip_flux_params = (d4est_poisson_flux_sipg_params_t*) flux_parameter_data;
@@ -234,7 +234,7 @@ d4est_poisson_flux_sipg_dirichlet_aux
 
     term1_quad[i] = 0.;
     for (int d = 0; d < (P4EST_DIM); d++){
-      term1_quad[i] += -1.*n_sj_on_f_m_quad[d][i]
+      term1_quad[i] += -1.*n_on_f_m_quad[d][i]*sj_on_f_m_quad[i]
                        *(dudx_m_on_f_m_quad[d][i]);
     }
     for (int l = 0; l < (P4EST_DIM); l++){
@@ -244,7 +244,8 @@ d4est_poisson_flux_sipg_dirichlet_aux
                             /* *n_sj_on_f_m_quad[d][i] */
                             /* *2.*u_m_on_f_m_min_u_at_bndry_quad; */
         term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i]
-                            *n_sj_on_f_m_quad[d][i]
+                            *n_on_f_m_quad[d][i]
+                            *sj_on_f_m_quad[i]
                             *2.*u_m_on_f_m_min_u_at_bndry_quad;
  /*        term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i] */
 /*                             *n_sj_on_f_m_quad[d][i] */
@@ -470,15 +471,15 @@ d4est_poisson_flux_sipg_robin_aux
   int face_nodes_m_quad = boundary_data->face_nodes_m_quad;
   double* u_m_on_f_m_quad = boundary_data->u_m_on_f_m_quad;
   double* sj_on_f_m_quad = boundary_data->sj_on_f_m_quad;
-  double* j_div_sj_quad = boundary_data->j_div_sj_quad;
+  /* double* j_div_sj_quad = boundary_data->j_div_sj_quad; */
   double* xyz_on_f_m_lobatto [(P4EST_DIM)]; 
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_quad [(P4EST_DIM)];  
-  double* n_sj_on_f_m_quad [(P4EST_DIM)];
+  double* n_on_f_m_quad [(P4EST_DIM)];
   double* xyz_on_f_m_quad [(P4EST_DIM)];
   D4EST_COPY_DBYD_MAT(boundary_data->drst_dxyz_quad, drst_dxyz_quad);
   D4EST_COPY_DIM_VEC(boundary_data->dudx_m_on_f_m_quad, dudx_m_on_f_m_quad);
-  D4EST_COPY_DIM_VEC(boundary_data->n_sj_on_f_m_quad, n_sj_on_f_m_quad);
+  D4EST_COPY_DIM_VEC(boundary_data->n_on_f_m_quad, n_on_f_m_quad);
   D4EST_COPY_DIM_VEC(boundary_data->xyz_on_f_m_lobatto, xyz_on_f_m_lobatto);
   D4EST_COPY_DIM_VEC(boundary_data->xyz_on_f_m_quad, xyz_on_f_m_quad);
 
@@ -645,12 +646,12 @@ d4est_poisson_flux_sipg_interface_aux
   double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_mortar_quad [(P4EST_DIM)];
   double* dudx_p_on_f_p_mortar_quad [(P4EST_DIM)];
-  double* n_sj_on_f_m_mortar_quad [(P4EST_DIM)];
+  double* n_on_f_m_mortar_quad [(P4EST_DIM)];
 
   D4EST_COPY_DBYD_MAT(mortar_data->drst_dxyz_m_on_mortar_quad, drst_dxyz_m_on_mortar_quad);
   D4EST_COPY_DIM_VEC(mortar_data->dudx_m_on_f_m_mortar_quad, dudx_m_on_f_m_mortar_quad);
   D4EST_COPY_DIM_VEC(mortar_data->dudx_p_on_f_p_mortar_quad, dudx_p_on_f_p_mortar_quad);
-  D4EST_COPY_DIM_VEC(mortar_data->n_sj_on_f_m_mortar_quad, n_sj_on_f_m_mortar_quad);
+  D4EST_COPY_DIM_VEC(mortar_data->n_on_f_m_mortar_quad, n_on_f_m_mortar_quad);
   
   int faces_mortar = mortar_data->faces_mortar;
   int total_side_nodes_m_lobatto = mortar_data->total_side_nodes_m_lobatto;
@@ -740,7 +741,7 @@ d4est_poisson_flux_sipg_interface_aux
 
       term1_mortar_quad[ks] = 0.;
       for (int d = 0; d < (P4EST_DIM); d++){
-        term1_mortar_quad[ks] += -1.*n_sj_on_f_m_mortar_quad[d][ks]
+        term1_mortar_quad[ks] += -1.*n_on_f_m_mortar_quad[d][ks]*sj_on_f_m_mortar_quad[ks]
                                  *.5*(dudx_p_on_f_p_mortar_quad[d][ks] + dudx_m_on_f_m_mortar_quad[d][ks]);
       }
         
@@ -748,7 +749,8 @@ d4est_poisson_flux_sipg_interface_aux
         term2_mortar_quad[l][ks] = 0.;
         for (int d = 0; d < (P4EST_DIM); d++){
           term2_mortar_quad[l][ks] += -.5*drst_dxyz_m_on_mortar_quad[l][d][ks]
-                                      *n_sj_on_f_m_mortar_quad[d][ks]
+                                      *sj_on_f_m_mortar_quad[ks]
+                                      *n_on_f_m_mortar_quad[d][ks]
                                       *(u_m_on_f_m_mortar_quad[ks] - u_p_on_f_p_mortar_quad[ks]);
           
         }
