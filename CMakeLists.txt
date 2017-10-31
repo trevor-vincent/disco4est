@@ -18,7 +18,7 @@ if(UBUNTU)
     "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/libopenblas.a"
     )
   set(OPENBLAS_INCLUDE_DIR "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/lapack-netlib/LAPACKE/include/")  
-  # set(USE_TCMALLOC ON)
+  set(USE_TCMALLOC ON)
   set(TCMALLOC_DIR "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/")
   set(TCMALLOC_ROOT "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/")
   set(TCMALLOC_LIBRARIES "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/lib/libtcmalloc.a")

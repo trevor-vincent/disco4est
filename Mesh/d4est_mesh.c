@@ -204,7 +204,7 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
  void* params
 )
 {
-  int total_mortar_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), e_m->deg_vol_quad);
+  int total_mortar_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM)-1, e_m->deg_vol_quad);
   int scalar_stride = e_m->mortar_quad_scalar_stride[f_m];
   int vector_stride = e_m->mortar_quad_vector_stride[f_m];
   int matrix_stride = e_m->mortar_quad_matrix_stride[f_m];
@@ -1725,12 +1725,12 @@ d4est_mesh_update
       geom_init_option == INITIALIZE_GEOMETRY_DATA /* if this is false, then this will be a waste of time */
      ){
 
-    /* d4est_mesh_init_element_size_parameters */
-    /*   ( */
-    /*    p4est, */
-    /*    d4est_ops, */
-    /*    d4est_geom */
-    /*   );      */
+    d4est_mesh_init_element_size_parameters
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom
+      );
 
   }
   
