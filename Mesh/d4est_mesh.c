@@ -605,11 +605,13 @@ d4est_mesh_geometry_storage_realloc
  d4est_local_sizes_t local_sizes
 )
 {
+  d4est_factors->local_sizes = local_sizes;
 
-  printf("[D4EST_INFO]: Reallocing storage for geometry data\n");
+  if (p4est->mpirank == 0)
+    printf("[D4EST_INFO]: Reallocing storage for geometry data\n");
   int local_nodes = local_sizes.local_nodes;
   int local_nodes_quad = local_sizes.local_nodes_quad;
-    
+
   int vector_nodes = local_nodes*(P4EST_DIM); 
   d4est_factors->xyz = P4EST_REALLOC(d4est_factors->xyz,double,vector_nodes);
   d4est_factors->xyz_quad = P4EST_REALLOC(d4est_factors->xyz_quad, double, (P4EST_DIM)*local_nodes_quad);
@@ -651,6 +653,30 @@ d4est_mesh_geometry_storage_realloc
                                                       local_vector_boundary_nodes_quad);
   
 }
+
+
+void
+d4est_mesh_geometry_storage_printout
+(
+ d4est_mesh_geometry_storage_t* d4est_factors
+)
+{
+  /* int local_nodes = d4est_factors->local_sizes.local_nodes; */
+  /* int local_nodes_quad = d4est_factors->local_sizes.local_nodes_quad; */
+  /* int vector_nodes = local_nodes*(P4EST_DIM);  */
+  /* int matrix_nodes_quad = local_nodes_quad*(P4EST_DIM)*(P4EST_DIM); */
+  int local_matrix_mortar_nodes_quad = d4est_factors->local_sizes.local_mortar_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
+  int local_vector_mortar_nodes_quad = d4est_factors->local_sizes.local_mortar_nodes_quad*(P4EST_DIM);
+  int local_vector_boundary_nodes_quad = d4est_factors->local_sizes.local_boundary_nodes_quad*(P4EST_DIM);
+
+  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->drst_dxyz_p_mortar_quad_porder, local_matrix_mortar_nodes_quad); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->drst_dxyz_m_mortar_quad, local_matrix_mortar_nodes_quad); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->xyz_m_mortar_lobatto, local_vector_boundary_nodes_quad); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->xyz_m_mortar_quad, local_vector_boundary_nodes_quad); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->n_m_mortar_quad, local_vector_mortar_nodes_quad); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->sj_m_mortar_quad, d4est_factors->local_sizes.local_mortar_nodes_quad); */
+}
+
 
 void
 d4est_mesh_geometry_storage_destroy

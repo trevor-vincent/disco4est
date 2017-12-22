@@ -166,40 +166,71 @@ problem_init
   D4EST_ASSERT(d4est_amr->scheme->amr_scheme_type == AMR_UNIFORM_H ||
                d4est_amr->scheme->amr_scheme_type == AMR_UNIFORM_P);
 
-  d4est_mesh_init_field
-    (
-     p4est,
-     prob_vecs.u,
-     poisson_sinx_initial_guess,
-     d4est_ops,
-     d4est_geom,
-     INIT_FIELD_ON_LOBATTO,
-     NULL
-    );
-    
+  /* d4est_mesh_init_field */
+  /*   ( */
+  /*    p4est, */
+  /*    prob_vecs.u, */
+  /*    poisson_sinx_initial_guess, */
+  /*    d4est_ops, */
+  /*    d4est_geom, */
+  /*    INIT_FIELD_ON_LOBATTO, */
+  /*    NULL */
+  /*   ); */
 
-  d4est_poisson_build_rhs_with_strong_bc
-    (
-     p4est,
-     *ghost,
-     *ghost_data,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     d4est_factors,
-     &prob_vecs,
-     flux_data_for_build_rhs,
-     prob_vecs.rhs,
-     poisson_sinx_rhs_fcn,
-     (init_params.eval_method == EVAL_BNDRY_FCN_ON_QUAD) ? INIT_FIELD_ON_QUAD : INIT_FIELD_ON_LOBATTO,
-     &ctx
-    );
+  
+
+  /* d4est_poisson_build_rhs_with_strong_bc */
+  /*   ( */
+  /*    p4est, */
+  /*    *ghost, */
+  /*    *ghost_data, */
+  /*    d4est_ops, */
+  /*    d4est_geom, */
+  /*    d4est_quad, */
+  /*    d4est_factors, */
+  /*    &prob_vecs, */
+  /*    flux_data_for_build_rhs, */
+  /*    prob_vecs.rhs, */
+  /*    poisson_sinx_rhs_fcn, */
+  /*    (init_params.eval_method == EVAL_BNDRY_FCN_ON_QUAD) ? INIT_FIELD_ON_QUAD : INIT_FIELD_ON_LOBATTO, */
+  /*    &ctx */
+  /*   ); */
+
+
+  for (int i = 0; i < prob_vecs.local_nodes; i++){
+    prob_vecs.u[i] = 1.0;
+    prob_vecs.Au[i] = 0.0;
+  }
 
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
+    printf("***********************LEVEL %d***********************\n",level);
+    
 
-    /* DEBUG_PRINT_ARR_DBL(prob_vecs.rhs, prob_vecs.local_nodes); */
+    
+    for (int i = 0; i < prob_vecs.local_nodes; i++){
+      prob_vecs.Au[i] = 0.0;
+    }
+
+
+    d4est_elliptic_eqns_apply_lhs(p4est,
+                                  *ghost,
+                                  *ghost_data,
+                                  &prob_fcns,
+                                  &prob_vecs,
+                                  d4est_ops,
+                                  d4est_geom,
+                                  d4est_quad,
+                                 d4est_factors);
+
+
+    DEBUG_PRINT_2ARR_DBL(prob_vecs.Au, prob_vecs.u,  prob_vecs.local_nodes);
+    
+    for (int i = 0; i < prob_vecs.local_nodes; i++){
+      prob_vecs.u[i] += prob_vecs.Au[i];
+    }
+    
     
     /* d4est_solver_cg_params_t params; */
     /* d4est_solver_cg_input(p4est, input_file, "d4est_cg", "[D4EST_CG]", &params); */
@@ -216,62 +247,62 @@ problem_init
     /*                       &params */
     /*                      ); */
     
-    krylov_petsc_params_t krylov_petsc_params;
-    krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
+    /* krylov_petsc_params_t krylov_petsc_params; */
+    /* krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params); */
     
-    krylov_petsc_solve
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       ghost,
-       ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       &krylov_petsc_params,
-       NULL
-      );
+    /* krylov_petsc_solve */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    &prob_fcns, */
+    /*    ghost, */
+    /*    ghost_data, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*    d4est_factors, */
+    /*    &krylov_petsc_params, */
+    /*    NULL */
+    /*   ); */
 
 
-    d4est_output_vtk_with_analytic_error
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       &prob_vecs,
-       input_file,
-       "uniform_poisson_sinx",
-       poisson_sinx_analytic_solution,
-       &ctx,
-       0,
-       level
-      );
+    /* d4est_output_vtk_with_analytic_error */
+    /*   ( */
+    /*    p4est, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*    &prob_vecs, */
+    /*    input_file, */
+    /*    "uniform_poisson_sinx", */
+    /*    poisson_sinx_analytic_solution, */
+    /*    &ctx, */
+    /*    0, */
+    /*    level */
+    /*   ); */
 
 
-    d4est_ip_energy_norm_data_t ip_norm_data;
-    ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
-    ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
-    ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
-    /*  */
-    printf("ip_norm_data.penalty_prefactor = %f\n", ip_norm_data.penalty_prefactor);
+    /* d4est_ip_energy_norm_data_t ip_norm_data; */
+    /* ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn; */
+    /* ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h; */
+    /* ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor; */
+    /* /\*  *\/ */
+    /* printf("ip_norm_data.penalty_prefactor = %f\n", ip_norm_data.penalty_prefactor); */
     
-    d4est_output_norms_using_analytic_solution
-      (
-      p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-      d4est_factors,
-       *ghost,
-       *ghost_data,
-      -1.,
-       &prob_vecs,
-       &ip_norm_data,
-       poisson_sinx_analytic_solution,
-      &ctx,NULL,NULL);
+    /* d4est_output_norms_using_analytic_solution */
+    /*   ( */
+    /*   p4est, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*   d4est_factors, */
+    /*    *ghost, */
+    /*    *ghost_data, */
+    /*   -1., */
+    /*    &prob_vecs, */
+    /*    &ip_norm_data, */
+    /*    poisson_sinx_analytic_solution, */
+    /*   &ctx,NULL,NULL); */
 
     
     if (level != d4est_amr->num_of_amr_steps){
@@ -314,22 +345,22 @@ problem_init
     prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, prob_vecs.local_nodes);
     
     
-    d4est_poisson_build_rhs_with_strong_bc
-      (
-       p4est,
-       *ghost,
-       *ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       &prob_vecs,
-       flux_data_for_build_rhs,
-       prob_vecs.rhs,
-       poisson_sinx_rhs_fcn,
-       (init_params.eval_method == EVAL_BNDRY_FCN_ON_QUAD) ? INIT_FIELD_ON_QUAD : INIT_FIELD_ON_LOBATTO,
-       &ctx
-      );
+    /* d4est_poisson_build_rhs_with_strong_bc */
+    /*   ( */
+    /*    p4est, */
+    /*    *ghost, */
+    /*    *ghost_data, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*    d4est_factors, */
+    /*    &prob_vecs, */
+    /*    flux_data_for_build_rhs, */
+    /*    prob_vecs.rhs, */
+    /*    poisson_sinx_rhs_fcn, */
+    /*    (init_params.eval_method == EVAL_BNDRY_FCN_ON_QUAD) ? INIT_FIELD_ON_QUAD : INIT_FIELD_ON_LOBATTO, */
+    /*    &ctx */
+    /*   ); */
 
 
 

@@ -119,7 +119,6 @@ d4est_estimator_bi_dirichlet
     for(int i = 0; i < face_nodes_m_quad; i++){
       double u_m_on_f_m_min_u_at_bndry_quad = u_m_on_f_m_quad[i] - u_at_bndry_lobatto_to_quad[i];    
       Je2[i] = n_on_f_m_quad[dim][i]*Je2_prefactor[i]*(u_m_on_f_m_min_u_at_bndry_quad);
-    /* printf("Je2_prefactor = %f\n", Je2_prefactor[i]); */
     }
 
 
@@ -267,7 +266,6 @@ d4est_estimator_bi_interface
                            penalty_data->penalty_prefactor
                           );    
       
-
     }
     stride += nodes_mortar_quad[f];
   }
@@ -432,8 +430,6 @@ d4est_estimator_bi_compute
         /* handle ||R||^2 * h^2/p^2 term */
         double h = d4est_estimator_get_diam(ed, diam_opt);
         *eta2 *= h*h/(deg*deg);
-
-        /* printf("id Nsqre0, h = %d, %f, %f\n", ed->id, *eta2, h); */
 
         d4est_linalg_copy_1st_to_2nd
           (

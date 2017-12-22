@@ -359,6 +359,7 @@ vtk_dg_field_plotter
 
   }
   else {
+    if (vecs->l2 != NULL){
     vtk_ctx = d4est_vtk_write_dg_cell_dataf
               (
                vtk_ctx,
@@ -373,6 +374,23 @@ vtk_dg_field_plotter
                vecs->l2,
                vtk_ctx
               );
+    }
+    else {
+      vtk_ctx = d4est_vtk_write_dg_cell_dataf
+                (
+                 vtk_ctx,
+                 1,
+                 1,
+                 1,
+                 0,
+                 1,
+                 1,
+                 0,
+                 "l2",
+                 vecs->l2,
+                 vtk_ctx
+                );
+    }
   }
 }
 

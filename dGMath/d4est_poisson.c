@@ -13,7 +13,7 @@
 #include <d4est_util.h>
 
 void
-d4est_poisson_build_rhs_with_strong_bc
+ d4est_poisson_build_rhs_with_strong_bc
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -210,6 +210,9 @@ d4est_poisson_apply_mortar_matrices
     );
 }
 
+
+
+
 void
 d4est_poisson_apply_aij
 (
@@ -240,6 +243,9 @@ d4est_poisson_apply_aij
      d4est_quad
     );
 
+  /* printf("after stiffness "); */
+  /* DEBUG_PRINT_ARR_DBL(prob_vecs->Au, prob_vecs->local_nodes); */
+  
   d4est_poisson_apply_mortar_matrices
     (
      p4est,
@@ -252,4 +258,7 @@ d4est_poisson_apply_aij
      d4est_factors
     );
 
+  /* printf("after apply mortar matrices "); */
+  /* DEBUG_PRINT_ARR_DBL(prob_vecs->Au, prob_vecs->local_nodes); */
+  
 }

@@ -389,6 +389,7 @@ constant_density_star_build_residual
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  void* user
 )
 {
@@ -402,10 +403,10 @@ constant_density_star_build_residual
                           flux_data,
                           d4est_ops,
                           d4est_geom,
-                          d4est_quad
+                          d4est_quad,
+                          d4est_factors
                          );
-
-
+  
   constant_density_star_build_residual_add_nonlinear_term
     (
      p4est,
@@ -417,6 +418,7 @@ constant_density_star_build_residual
      d4est_quad,
      user
     );
+
 }
 
 
@@ -538,6 +540,7 @@ void constant_density_star_apply_jac
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
  void* user
 )
 
@@ -553,7 +556,8 @@ void constant_density_star_apply_jac
                           flux_data,
                           d4est_ops,
                           d4est_geom,
-                          d4est_quad
+                          d4est_quad,
+                          d4est_factors
                          );
 
   if (ctx->use_matrix_operator == 0)

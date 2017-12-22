@@ -1,4 +1,4 @@
-#include <pXest.h>
+ #include <pXest.h>
 #include <d4est_util.h>
 #include <ini.h>
 #include <d4est_operators.h>
@@ -247,6 +247,8 @@ d4est_poisson_flux_sipg_dirichlet_aux
                             *n_on_f_m_quad[d][i]
                             *sj_on_f_m_quad[i]
                             *2.*u_m_on_f_m_min_u_at_bndry_quad;
+
+
  /*        term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i] */
 /*                             *n_sj_on_f_m_quad[d][i] */
 /*                             *2.*bc_data->dirichlet_fcn */
@@ -269,6 +271,18 @@ d4est_poisson_flux_sipg_dirichlet_aux
                     *u_m_on_f_m_min_u_at_bndry_quad;
     
   }
+
+  /* for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
+  /*   for (int d2 = 0; d2 < (P4EST_DIM); d2++){ */
+  /*     DEBUG_PRINT_ARR_DBL(drst_dxyz_quad[d1][d2], face_nodes_m_quad); */
+  /*   } */
+  /*   DEBUG_PRINT_ARR_DBL(n_on_f_m_quad[d1], face_nodes_m_quad); */
+  /*   DEBUG_PRINT_ARR_DBL(term2_quad[d1], face_nodes_m_quad); */
+  /*   DEBUG_PRINT_ARR_DBL(dudx_m_on_f_m_quad[d1], face_nodes_m_quad); */
+  /* } */
+  /* DEBUG_PRINT_ARR_DBL(sj_on_f_m_quad, face_nodes_m_quad); */
+  /* DEBUG_PRINT_ARR_DBL(u_at_bndry_lobatto_to_quad, face_nodes_m_quad); */
+  /* DEBUG_PRINT_ARR_DBL(u_m_on_f_m_quad, face_nodes_m_quad); */
   
   d4est_quadrature_apply_galerkin_integral
     (
@@ -345,6 +359,10 @@ d4est_poisson_flux_sipg_dirichlet_aux
                                        );
 
   }
+
+  /* DEBUG_PRINT_ARR_DBL(DT_lifted_VT_w_term2_lobatto[0], d4est_lgl_get_nodes((P4EST_DIM),e_m->deg)); */
+  /* DEBUG_PRINT_ARR_DBL(DT_lifted_VT_w_term2_lobatto[1], d4est_lgl_get_nodes((P4EST_DIM),e_m->deg)); */
+  /* DEBUG_PRINT_ARR_DBL(DT_lifted_VT_w_term2_lobatto[2], d4est_lgl_get_nodes((P4EST_DIM),e_m->deg)); */
         
 
   d4est_operators_apply_lift(
@@ -422,9 +440,12 @@ d4est_poisson_flux_sipg_dirichlet
      u_at_bndry_lobatto,
      u_at_bndry_lobatto_to_quad
     );
-
   
   int volume_nodes_m = d4est_lgl_get_nodes((P4EST_DIM), e_m->deg);
+
+  /* DEBUG_PRINT_ARR_DBL(lifted_VT_w_term3_lobatto, volume_nodes_m); */
+  /* DEBUG_PRINT_ARR_DBL(lifted_VT_w_term1_lobatto, volume_nodes_m); */
+
   for (int i = 0; i < volume_nodes_m; i++){
     for (int d = 0; d < (P4EST_DIM); d++){
       e_m->Au_elem[i] += DT_lifted_VT_w_term2_lobatto[d][i];
@@ -433,6 +454,9 @@ d4est_poisson_flux_sipg_dirichlet
     e_m->Au_elem[i] += lifted_VT_w_term1_lobatto[i];
   }
 
+  /* printf("boundary sipg: "); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(e_m->Au_elem, volume_nodes_m); */
+  
   P4EST_FREE(u_at_bndry_lobatto);
   P4EST_FREE(u_at_bndry_lobatto_to_quad);
   P4EST_FREE(sigma);
@@ -515,6 +539,10 @@ d4est_poisson_flux_sipg_robin_aux
                            i
                           );
 
+    /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_quad[0], face_nodes_m_quad); */
+    /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_quad[1], face_nodes_m_quad); */
+    /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_quad[2], face_nodes_m_quad); */
+    
     /* printf("robin_coeff_quad = %f, robin_rhs_quad = %f\n", robin_coeff_quad, robin_rhs_quad); */
     
     term1_quad[i] = sj_on_f_m_quad[i]
@@ -1005,9 +1033,16 @@ d4est_poisson_flux_sipg_interface
         e_m[f]->Au_elem[i] += lifted_proj_VT_w_term3_mortar_lobatto[i + stride];
         e_m[f]->Au_elem[i] += lifted_proj_VT_w_term1_mortar_lobatto[i + stride];
       }
+
+      /* printf("interface sipg face %d: ", f); */
+      /* DEBUG_PRINT_ARR_DBL_SUM(e_m[f]->Au_elem, volume_nodes_m); */
+      
     }
     stride += volume_nodes_m;
   }
+
+
+  
   
 
   P4EST_FREE(lifted_proj_VT_w_term1_mortar_lobatto);
@@ -1245,6 +1280,8 @@ d4est_poisson_flux_sipg_params_new
   
   d4est_poisson_flux_data->flux_data = d4est_poisson_flux_sipg_params;
   d4est_poisson_flux_data->interface_fcn = d4est_poisson_flux_sipg_interface;
+  /* d4est_poisson_flux_data->interface_fcn = NULL; */
+  /* d4est_poisson_flux_data->boundary_fcn = NULL; */
 
   if (d4est_poisson_flux_data->bc_type == BC_DIRICHLET){
     d4est_poisson_flux_data->boundary_fcn = d4est_poisson_flux_sipg_dirichlet;

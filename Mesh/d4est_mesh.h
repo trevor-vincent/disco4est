@@ -29,6 +29,8 @@ typedef struct {
 
 typedef struct {
 
+  d4est_local_sizes_t local_sizes;
+  
   double* xyz;
   double* xyz_quad;
   double* xyz_rst_quad;
@@ -88,6 +90,7 @@ void d4est_mesh_get_array_of_estimators(p4est_t *p4est,double *eta2_array);
 void d4est_mesh_get_array_of_quadrature_degrees(p4est_t *p4est,void *deg_array,d4est_builtin_t type);
 void d4est_mesh_get_array_of_degrees(p4est_t *p4est,void *deg_array,d4est_builtin_t type);
 void d4est_mesh_geometry_storage_destroy(d4est_mesh_geometry_storage_t *d4est_factors);
+void d4est_mesh_geometry_storage_printout(d4est_mesh_geometry_storage_t *d4est_factors);
 d4est_mesh_geometry_storage_t *d4est_mesh_geometry_storage_init();
 void d4est_mesh_compute_mortar_quadrature_sizes(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *d4est_factors,d4est_local_sizes_t *local_sizes);
 void d4est_mesh_compute_mortar_quadrature_quantities(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *d4est_factors);

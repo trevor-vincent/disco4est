@@ -26,4 +26,5 @@ void d4est_geometry_cubed_sphere_7tree_new(int mpirank,const char *input_file,co
 void d4est_geometry_cubed_sphere_new(int mpirank,const char *input_file,const char *input_section,const char *printf_prefix,d4est_geometry_t *d4est_geom);
 p4est_connectivity_t *d4est_connectivity_new_sphere_7tree(void);
 
+
 #endif

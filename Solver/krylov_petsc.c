@@ -1,6 +1,7 @@
 #include <d4est_util.h>
 #include <pXest.h>
 #include <d4est_linalg.h>
+#include <d4est_mesh.h>
 #include <d4est_elliptic_data.h>
 #include <krylov_petsc.h>
 #include <petscsnes.h>
@@ -241,7 +242,16 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
 
   vecs_for_aij.u = (double*)px;
   vecs_for_aij.Au = py;
- 
+
+
+  /* double residual = 0.; */
+  /* for (int i = 0; i < vecs_for_aij.local_nodes; i++){ */
+    /* double r_temp = vecs_for_aij.Au[i] - vecs_for_aij.rhs[i]; */
+    /* residual += r_temp*r_temp; */
+  /* } */
+  /* printf("residual = %.15f\n", sqrt(residual)); */
+
+  
   d4est_elliptic_eqns_apply_lhs
     (
      petsc_ctx->p4est,
@@ -254,6 +264,22 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
      petsc_ctx->d4est_quad,
      petsc_ctx->d4est_factors
     );
+
+
+  /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_aij.u, vecs_for_aij.local_nodes); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_aij.Au, vecs_for_aij.local_nodes); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_aij.rhs, vecs_for_aij.local_nodes); */
+  d4est_mesh_geometry_storage_printout(petsc_ctx->d4est_factors);
+
+
+  /* residual = 0.; */
+  /* for (int i = 0; i < vecs_for_aij.local_nodes; i++){ */
+    /* double r_temp = vecs_for_aij.Au[i] - vecs_for_aij.rhs[i]; */
+    /* residual += r_temp*r_temp; */
+  /* } */
+  /* printf("residual = %.15f\n", sqrt(residual)); */
+
+  
   
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecRestoreArray( y, &py ); CHKERRQ(ierr);
@@ -294,6 +320,7 @@ krylov_petsc_solve
   petsc_ctx.d4est_ops = d4est_ops;
   petsc_ctx.d4est_geom = d4est_geom;
   petsc_ctx.d4est_quad = d4est_quad;
+  petsc_ctx.d4est_factors = d4est_factors;
 
   int local_nodes = vecs->local_nodes;
   double* u = vecs->u;

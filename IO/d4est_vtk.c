@@ -2588,6 +2588,8 @@ d4est_vtk_write_dg_point_datav (d4est_vtk_context_t * cont,
 }
 
 
+
+
 d4est_vtk_context_t *
 d4est_vtk_write_dg_point_dataf (d4est_vtk_context_t * cont,
                                 int num_point_scalars, int num_point_vectors,
@@ -2608,6 +2610,11 @@ d4est_vtk_write_dg_point_dataf (d4est_vtk_context_t * cont,
 
   return cont;
 }
+
+
+
+
+
 
 
 void
@@ -2687,3 +2694,126 @@ d4est_vtk_save_geometry_and_cell_fields
     P4EST_FREE(deg_array_fake);
 }
 
+
+
+
+
+
+static d4est_vtk_context_t *
+d4est_vtk_write_dg_point_datav_new
+(
+ d4est_vtk_context_t * cont,
+ int num_point_scalars,
+ const char** names,
+ double** values
+)
+{
+#ifdef D4EST_VTK_DEBUG
+  printf("[D4EST_VTK]: Starting d4est_vtk_context_destroy \n");
+#endif
+  const int           num_point_all = num_point_scalars;
+  int                 mpirank;
+  int                 retval;
+  int                 i, all;
+  int                 scalar_strlen, vector_strlen;
+  char                point_scalars[BUFSIZ], point_vectors[BUFSIZ];
+  const char         *name;
+  d4est_vtk_context_t *list_end;
+
+  P4EST_ASSERT (cont != NULL && cont->writing);
+  P4EST_ASSERT (cont->p4est != NULL);
+
+  /* This function needs to do nothing if there is no data. */
+  if (!num_point_scalars) {
+    return cont;
+  }
+  mpirank = cont->p4est->mpirank;
+
+
+  /* Gather point data. */
+  all = 0;
+  scalar_strlen = 0;
+  point_scalars[0] = '\0';
+  point_vectors[0] = '\0';
+  for (i = 0; i < num_point_scalars; ++all, ++i) {
+    name = names[all];
+    retval = snprintf (point_scalars + scalar_strlen, BUFSIZ - scalar_strlen,
+                       "%s%s", i == 0 ? "" : ",", name);
+    SC_CHECK_ABORT (retval > 0,
+                    P4EST_STRING "_vtk: Error collecting point scalars");
+    scalar_strlen += retval;
+  }
+
+  SC_CHECK_ABORT (list_end == cont,
+                  P4EST_STRING "_vtk Error: the end of variable data must be"
+                  " specified by passing, as the last argument, the current "
+                  P4EST_STRING "_vtk_context_t pointer.  See " P4EST_STRING
+                  "_vtk.h for more information.");
+
+  fprintf (cont->vtufile, "      <PointData");
+  fprintf (cont->vtufile, " Scalars=\"%s\"", point_scalars);
+  fprintf (cont->vtufile, " Vectors=\"%s\"", point_vectors);
+  fprintf (cont->vtufile, ">\n");
+
+  if (ferror (cont->vtufile)) {
+    P4EST_LERRORF (P4EST_STRING "_vtk: Error writing %s\n",
+                   cont->vtufilename);
+    d4est_vtk_context_destroy (cont);
+
+    P4EST_FREE (values);
+    P4EST_FREE (names);
+
+    return NULL;
+  }
+
+  /* now we are done counting and checking we write the fields */
+  all = 0;
+  for (i = 0; i < num_point_scalars; ++all, ++i) {
+    cont = d4est_vtk_write_dg_point_scalar (cont, names[all], values[all]);
+    SC_CHECK_ABORT (cont != NULL,
+                    P4EST_STRING "_vtk: Error writing point scalars");
+  }
+
+  fprintf (cont->vtufile, "      </PointData>\n");
+  P4EST_FREE (values);
+
+  if (ferror (cont->vtufile)) {
+    P4EST_LERRORF (P4EST_STRING "_vtk: Error writing %s\n",
+                   cont->vtufilename);
+    d4est_vtk_context_destroy (cont);
+
+    P4EST_FREE (names);
+
+    return NULL;
+  }
+
+
+
+  
+
+  /* Only have the root write to the parallel vtk file */
+  if (mpirank == 0) {
+    fprintf (cont->pvtufile, "    <PPointData>\n");
+
+    all = 0;
+    for (i = 0; i < num_point_scalars; ++all, i++)
+      fprintf (cont->pvtufile, "      "
+               "<PDataArray type=\"%s\" Name=\"%s\" format=\"%s\"/>\n",
+               D4EST_VTK_FLOAT_NAME, names[all], D4EST_VTK_FORMAT_STRING);
+
+    fprintf (cont->pvtufile, "    </PPointData>\n");
+
+    if (ferror (cont->pvtufile)) {
+      P4EST_LERROR (P4EST_STRING "_vtk: Error writing parallel header\n");
+      d4est_vtk_context_destroy (cont);
+
+      P4EST_FREE (names);
+
+      return NULL;
+    }
+  }
+
+  P4EST_FREE (names);
+
+  return cont;
+}

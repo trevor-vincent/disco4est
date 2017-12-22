@@ -356,9 +356,46 @@ d4est_connectivity_new_sphere_innerouter_shell (void)
 }
 
 
+static void
+d4est_geometry_cubed_sphere_inverted_inner_shell_block_X
+(
+ d4est_geometry_t * geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [3],
+ p4est_qcoord_t dq,
+ const double coords[3],
+ coords_type_t coords_type,
+ double xyz[3]
+)
+{
+  d4est_geometry_cubed_sphere_attr_t* sphere = geom->user;
+  D4EST_ASSERT(coords_type == COORDS_INTEG_RST);
 
-static void 
-d4est_geometry_cubed_sphere_inner_shell_block_X(
+  /* transform topog coordinates in [0,1]^3 to cubed sphere vertex space [-1,1]^2 x [1,2]  */
+  double tcoords [3];
+  d4est_geometry_get_tree_coords_in_range_0_to_1(q0, dq, coords, coords_type, tcoords);
+
+  double abc [3];  
+  abc[0] = tcoords[0];
+  abc[1] = tcoords[1];
+  abc[2] = (tcoords[2])*(sphere->R1 - sphere->R0) + sphere->R0;
+
+  double tanx = tan (abc[0] * M_PI_4);
+  double tany = tan (abc[1] * M_PI_4);
+
+  double cmin = 1;
+  double cmax = 0;
+  
+  double a = 1./sqrt(1 + tanx*tanx + tany*tany);
+  double bmin = sphere->R0*(1 + cmin*(a-1));
+  double bmax = sphere->R1*(1 + cmax*(a-1));
+  double q = bmin + (bmax - bmin)*(abc[2] - sphere->R0)/(sphere->R1 - sphere->R0);
+  xyz[0] = +q * tanx;
+  xyz[1] = +q * tany;
+  xyz[2] = +q;
+}
+
+static void d4est_geometry_cubed_sphere_inner_shell_block_X(
                                                 d4est_geometry_t * geom,
                                                 p4est_topidx_t which_tree,
                                                 p4est_qcoord_t q0 [3],

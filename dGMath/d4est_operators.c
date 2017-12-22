@@ -18,6 +18,7 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
   d4est_ops->gauss_nodes_1d_table = P4EST_ALLOC(double*, max_degree);
   d4est_ops->gauss_weights_1d_table = P4EST_ALLOC(double*, max_degree);
   d4est_ops->dij_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->dij_trans_1d_table = P4EST_ALLOC(double*, max_degree);
   d4est_ops->lift_1d_table = P4EST_ALLOC(double*, max_degree);
   d4est_ops->vtk_rst_2d_table = P4EST_ALLOC(double*, max_degree); 
   d4est_ops->vtk_rst_3d_table = P4EST_ALLOC(double*, max_degree); 
@@ -65,6 +66,7 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
     d4est_ops->vtk_rst_2d_table[i] = NULL;
     d4est_ops->invvij_1d_table[i] = NULL;
     d4est_ops->dij_1d_table[i] = NULL;
+    d4est_ops->dij_trans_1d_table[i] = NULL;
     d4est_ops->lift_1d_table[i] = NULL;
     d4est_ops->flip_1d_table[i] = NULL;
 
@@ -98,6 +100,7 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
     P4EST_FREE(d4est_ops->invmij_1d_table[i]);
     P4EST_FREE(d4est_ops->invvij_1d_table[i]);
     P4EST_FREE(d4est_ops->dij_1d_table[i]);
+    P4EST_FREE(d4est_ops->dij_trans_1d_table[i]);
     P4EST_FREE(d4est_ops->lift_1d_table[i]);
     P4EST_FREE(d4est_ops->flip_1d_table[i]);
     P4EST_FREE(d4est_ops->vtk_interp_1d_table[i]);
@@ -117,6 +120,7 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
   P4EST_FREE(d4est_ops->invmij_1d_table);
   P4EST_FREE(d4est_ops->invvij_1d_table);
   P4EST_FREE(d4est_ops->dij_1d_table);
+  P4EST_FREE(d4est_ops->dij_trans_1d_table);
   P4EST_FREE(d4est_ops->lift_1d_table);
   P4EST_FREE(d4est_ops->flip_1d_table);
   P4EST_FREE(d4est_ops->lobatto_rst_3d_table);
@@ -694,6 +698,8 @@ static void d4est_operators_build_dij_1d(d4est_operators_t* d4est_ops, double* d
 }
 
 
+
+
 static double* d4est_operators_fetch_invmij_1d(d4est_operators_t* d4est_ops, int deg){
 
   int size = (deg + 1) * (deg + 1);
@@ -759,36 +765,7 @@ static double* d4est_operators_fetch_dij_1d(d4est_operators_t* d4est_ops, int de
     );     
 }
 
-void d4est_operators_apply_dij_transpose(d4est_operators_t* d4est_ops, double* in, int dim, int deg,
-                      int dir, double* out) {
-  D4EST_ASSERT(dir < dim && dir >= 0 && (dim == 1 || dim == 3 || dim == 2));
-  double* Dr_1d = d4est_operators_fetch_dij_1d(d4est_ops, deg);
 
-  /* bad change this later */
-  double* Dr_1d_transpose = P4EST_ALLOC(double, (deg+1)*(deg+1));
-
-  d4est_linalg_mat_transpose(Dr_1d, Dr_1d_transpose, (deg+1));
-  int nodes = deg + 1;
-  if (dim == 1)
-    d4est_linalg_matvec_plus_vec(1.0, Dr_1d_transpose, in, 0., out, nodes, nodes);
-  else if (dim == 2) {
-
-    if (dir == 0) d4est_kron_IoMATx_SQR(out, Dr_1d_transpose, in, nodes);
-    if (dir == 1) d4est_kron_MAToIx_SQR(out, Dr_1d_transpose, in, nodes);
-    
-  } else if (dim == 3) {
-
-    if (dir == 0) d4est_kron_IoIoMATx_SQR(out, Dr_1d_transpose, in, nodes);
-    if (dir == 1) d4est_kron_IoMAToIx_SQR(out, Dr_1d_transpose, in, nodes);
-    if (dir == 2) d4est_kron_MAToIoIx_SQR(out, Dr_1d_transpose, in, nodes);
-
-  } else {
-    P4EST_FREE(Dr_1d_transpose);
-    D4EST_ABORT("[D4EST_ERROR]: d4est_operators_apply_dij");
-  }
-
-  P4EST_FREE(Dr_1d_transpose);
-}
 
 static void d4est_operators_build_hp_prolong_1d_aux(int degH, int degh, int c,
                                            double* inv_v1d_trans_degH,
@@ -2082,4 +2059,55 @@ double* d4est_operators_fetch_vtk_rst
      d4est_ops->vtk_rst_3d_table,
      d4est_operators_build_vtk_rst
     );
+}
+
+
+static void d4est_operators_build_dij_trans_1d(d4est_operators_t* d4est_ops, double* dij_trans_1d,
+                                int deg) {
+
+  double* Dr_1d = d4est_operators_fetch_dij_1d(d4est_ops, deg);
+  /* double* Dr_1d_transpose = P4EST_ALLOC(double, (deg+1)*(deg+1)); */
+  d4est_linalg_mat_transpose(Dr_1d, dij_trans_1d, (deg+1));
+}
+
+
+static double* d4est_operators_fetch_dij_trans_1d(d4est_operators_t* d4est_ops, int deg) {
+  int size = (deg + 1) * (deg + 1);
+  return d4est_operators_1index_fetch
+    (
+     d4est_ops,
+     d4est_ops->dij_trans_1d_table,
+     deg,
+     size,
+     d4est_operators_build_dij_trans_1d
+    );     
+}
+
+
+
+void d4est_operators_apply_dij_transpose(d4est_operators_t* d4est_ops, double* in, int dim, int deg,
+                      int dir, double* out) {
+  D4EST_ASSERT(dir < dim && dir >= 0 && (dim == 1 || dim == 3 || dim == 2));
+  double* Dr_1d_transpose = d4est_operators_fetch_dij_trans_1d(d4est_ops, deg);
+
+  int nodes = deg + 1;
+  if (dim == 1)
+    d4est_linalg_matvec_plus_vec(1.0, Dr_1d_transpose, in, 0., out, nodes, nodes);
+  else if (dim == 2) {
+
+    if (dir == 0) d4est_kron_IoMATx_SQR(out, Dr_1d_transpose, in, nodes);
+    if (dir == 1) d4est_kron_MAToIx_SQR(out, Dr_1d_transpose, in, nodes);
+    
+  } else if (dim == 3) {
+
+    if (dir == 0) d4est_kron_IoIoMATx_SQR(out, Dr_1d_transpose, in, nodes);
+    if (dir == 1) d4est_kron_IoMAToIx_SQR(out, Dr_1d_transpose, in, nodes);
+    if (dir == 2) d4est_kron_MAToIoIx_SQR(out, Dr_1d_transpose, in, nodes);
+
+  } else {
+    /* P4EST_FREE(Dr_1d_transpose); */
+    D4EST_ABORT("[D4EST_ERROR]: d4est_operators_apply_dij");
+  }
+
+  /* P4EST_FREE(Dr_1d_transpose); */
 }

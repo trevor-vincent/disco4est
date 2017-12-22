@@ -115,8 +115,8 @@ multigrid_element_data_updater_update
        mg_data->d4est_quad,
        updater->geometric_factors[level - 1],
        INITIALIZE_QUADRATURE_DATA,
-       (compute_geometric_factors == 1) ? INITIALIZE_GEOMETRY_DATA : DO_NOT_INITIALIZE_GEOMETRY_DATA,
-       /* INITIALIZE_GEOMETRY_DATA, */
+       /* (compute_geometric_factors == 1) ? INITIALIZE_GEOMETRY_DATA : DO_NOT_INITIALIZE_GEOMETRY_DATA, */
+       INITIALIZE_GEOMETRY_DATA,
        INITIALIZE_GEOMETRY_ALIASES,
        updater->element_data_init_user_fcn,
        updater->user    

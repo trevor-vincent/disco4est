@@ -105,7 +105,10 @@ d4est_poisson_flux_boundary
   /*    j_div_sj_quad, */
   /*    COMPUTE_NORMAL_USING_JACOBIAN */
   /*   ); */
-   
+
+  /* double* u = &e_m->u_elem[0]; */
+  /* DEBUG_PRINT_ARR_DBL(u, d4est_lgl_get_nodes((P4EST_DIM), e_m->deg)); */
+  
   for (int d = 0; d < (P4EST_DIM); d++){
     d4est_operators_apply_slicer
       (
@@ -117,6 +120,9 @@ d4est_poisson_flux_boundary
        dudr_m_on_f_m[d]
       );
 
+
+    /* DEBUG_PRINT_ARR_DBL(e_m->dudr_elem[d], d4est_lgl_get_nodes((P4EST_DIM), e_m->deg)); */
+    
     d4est_quadrature_interpolate
       (
        d4est_ops,
@@ -158,7 +164,12 @@ d4est_poisson_flux_boundary
       }
     }
   }
- 
+
+
+  /* for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
+  /*   DEBUG_PRINT_ARR_DBL(dudr_m_on_f_m_quad[d1], face_nodes_m_quad); */
+  /* } */
+  
   /* for (int d = 0; d < (P4EST_DIM); d++){ */
 
   /*   d4est_operators_apply_slicer(d4est_ops, */
@@ -186,7 +197,7 @@ d4est_poisson_flux_boundary
     );
 
 
-
+  /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_lobatto[0], face_nodes_m_lobatto); */
   
   d4est_poisson_flux_boundary_data_t boundary_data;
   boundary_data.deg_mortar_quad = deg_quad;
@@ -203,6 +214,13 @@ d4est_poisson_flux_boundary
   D4EST_COPY_DIM_VEC(n_on_f_m_quad, boundary_data.n_on_f_m_quad);
   D4EST_COPY_DIM_VEC(xyz_on_f_m_quad, boundary_data.xyz_on_f_m_quad);
   D4EST_COPY_DIM_VEC(xyz_on_f_m_lobatto, boundary_data.xyz_on_f_m_lobatto);
+
+
+  /* for (int d = 0; d < (P4EST_DIM); d++){ */
+    /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_lobatto[d], face_nodes_m_lobatto); */
+  /* } */
+
+  
 
   if (d4est_poisson_flux_params->boundary_fcn != NULL){
     d4est_poisson_flux_params->boundary_fcn
@@ -639,29 +657,29 @@ static void
     }
   }
 
-/*   d4est_mortars_compute_geometric_data_on_mortar */
-/*     ( */
-/*      d4est_ops, */
-/*      d4est_geom, */
-/*      d4est_quad, */
-/*      QUAD_INTEGRAND_UNKNOWN, */
-/*      e_m[0]->tree, */
-/*      e_m[0]->q, */
-/*      e_m[0]->dq, */
-/*      mortar_side_id_m, */
-/*      faces_m, */
-/*      faces_mortar, */
-/*      &deg_mortar_lobatto[0], */
-/*      &deg_mortar_quad[0], */
-/*      f_m, */
-/*      NULL, */
-/*      drst_dxyz_m_on_mortar_quad, */
-/*      sj_on_f_m_mortar_quad, */
-/*      n_on_f_m_mortar_quad, */
-/*      n_sj_on_f_m_mortar_quad, */
-/*      j_div_sj_on_f_m_mortar_quad, */
-/*      COMPUTE_NORMAL_USING_JACOBIAN */
-/*     ); */
+  /* d4est_mortars_compute_geometric_data_on_mortar */
+  /*   ( */
+  /*    d4est_ops, */
+  /*    d4est_geom, */
+  /*    d4est_quad, */
+  /*    QUAD_INTEGRAND_UNKNOWN, */
+  /*    e_m[0]->tree, */
+  /*    e_m[0]->q, */
+  /*    e_m[0]->dq, */
+  /*    mortar_side_id_m, */
+  /*    faces_m, */
+  /*    faces_mortar, */
+  /*    &deg_mortar_lobatto[0], */
+  /*    &deg_mortar_quad[0], */
+  /*    f_m, */
+  /*    NULL, */
+  /*    drst_dxyz_m_on_mortar_quad, */
+  /*    sj_on_f_m_mortar_quad, */
+  /*    n_on_f_m_mortar_quad, */
+  /*    NULL,// n_sj_on_f_m_mortar_quad, */
+  /*    NULL,//j_div_sj_on_f_m_mortar_quad, */
+  /*    COMPUTE_NORMAL_USING_JACOBIAN */
+  /*   ); */
 
 /*   d4est_mortars_compute_geometric_data_on_mortar */
 /*     ( */
@@ -691,7 +709,7 @@ static void
 /* #endif */
 /*      NULL,//j_div_sj_on_f_p_mortar_quad_porder, */
 /*      COMPUTE_NORMAL_USING_JACOBIAN */
-/*     ); */  
+/*     );   */
 
   
 
@@ -752,6 +770,8 @@ static void
         );
     }
 
+
+
     /* d4est_operators_reorient_face_data */
     /*     ( */
     /*      d4est_ops, */
@@ -768,6 +788,10 @@ static void
     face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
   }
 
+  /* DEBUG_PRINT_ARR_DBL_SUM(dudx_p_on_f_p_mortar_quad[0], total_nodes_mortar_quad); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(dudx_p_on_f_p_mortar_quad[1], total_nodes_mortar_quad); */
+  /* DEBUG_PRINT_ARR_DBL_SUM(dudx_p_on_f_p_mortar_quad[2], total_nodes_mortar_quad); */
+  
   /* We interpolated a derivative up to the mortar, but this is a different reference space, so we need
  another dr/dx factor */
   

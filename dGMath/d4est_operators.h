@@ -17,6 +17,7 @@ typedef struct {
 
   double** mij_1d_table;
   double** dij_1d_table;
+  double** dij_trans_1d_table;
   double** invmij_1d_table;
   double** invvij_1d_table;
   double** lift_1d_table;
@@ -108,7 +109,7 @@ double *d4est_operators_1index_2d_3d_fetch(d4est_operators_t *d4est_ops,int deg,
 double *d4est_operators_2index_fetch(d4est_operators_t *d4est_ops,double ***table,int deg1,int deg2,int size,void(*build_fcn)(d4est_operators_t *,double *,int,int));
 double *d4est_operators_1index_fetch(d4est_operators_t *d4est_ops,double **table,int deg,int size,void(*build_fcn)(d4est_operators_t *,double *,int));
 void d4est_ops_destroy(d4est_operators_t *d4est_ops);
-d4est_operators_t *d4est_ops_init(int deg_max);
+d4est_operators_t *d4est_ops_init(int max_degree);
 
 
 #endif

@@ -1,11 +1,11 @@
 ;R = 1/(2*domain_size);
 
-[initial_grid]
+[initial_mesh]
 min_quadrants = -1
 min_level = 1
 fill_uniform = 1
-deg = 2
-deg_quad = 2
+region0_deg = 2
+region0_deg_quad_inc = 0
 
 [amr]
 scheme = smooth_pred
@@ -83,6 +83,7 @@ snes_monitor = 1
 snes_linesearch_order = 3
 snes_linesearch_monitor = 1
 snes_converged_reason = 1
+snes_view = 1
 
 [quadrature]
 name = legendre

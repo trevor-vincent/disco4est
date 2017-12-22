@@ -392,6 +392,9 @@ problem_init
        d4est_factors
       );
 
+    /* DEBUG_PRINT_ARR_DBL(prob_vecs.Au, prob_vecs.local_nodes); */
+    /* D4EST_ABORT(""); */
+    
     d4est_output_vtk_with_no_fields
       (
        p4est,
@@ -620,7 +623,7 @@ problem_init
          d4est_factors,
          &krylov_params,
          &newton_params,
-         pc
+         NULL
         );
     }
 
