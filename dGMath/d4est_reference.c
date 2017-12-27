@@ -124,52 +124,7 @@ int d4est_reference_corner_to_node
   int nodes_2d = nodes_1d*nodes_1d;
   int nodes_3d = nodes_1d*nodes_1d*nodes_1d; 
 
-#if (ORDERING == 1)
   if (dim == 2)  {
-    if (corner == 0)
-      return 0;
-    else if (corner == 1)
-      return nodes_2d - nodes_1d;
-    else if (corner == 2)
-      return nodes_1d - 1;
-    else if (corner == 3)
-      return nodes_2d - 1;
-    else{
-      D4EST_ABORT("[D4EST_ERROR]: corner < 4\n");
-      return -1;
-    }
-  }
-
-  else if (dim == 3){
-    if (corner == 0)
-      return 0;
-    else if (corner == 1)
-      return nodes_3d - nodes_2d;
-    else if (corner == 2)
-      return nodes_2d - nodes_1d;
-    else if (corner == 3)
-      return nodes_3d - nodes_1d;
-    else if (corner == 4)
-        return nodes_1d - 1;
-    else if (corner == 5)
-      return nodes_3d - nodes_2d + nodes_1d - 1;
-    else if (corner == 6)
-      return nodes_2d - 1;
-    else if (corner == 7)
-      return nodes_3d - 1;
-    else{
-      D4EST_ABORT("[D4EST_ERROR]: corner < 8\n");
-      return -1;
-    }
-  }
-
-  else {
-    D4EST_ABORT("[D4EST_ERROR]: DIM == 3 or DIM == 2\n");
-    return -1;
-  }
-#endif
-#if (ORDERING == 3)
-    if (dim == 2)  {
     if (corner == 0)
       return 0;
     else if (corner == 1) 
@@ -183,7 +138,6 @@ int d4est_reference_corner_to_node
       return -1;
     }
   }
-
   else if (dim == 3){
     if (corner == 0)
       return 0;
@@ -206,12 +160,10 @@ int d4est_reference_corner_to_node
       return -1;
     }
   }
-
   else {
-    D4EST_ABORT("[D4EST_ERROR]: DIM == 3 or DIM == 2\n");
-    return -1;
+    D4EST_ABORT("Dim should be 2 or 3");
   }
-#endif
+
 }
 
 double d4est_reference_rtox(double r, double xl, double h) {

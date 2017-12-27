@@ -1,0 +1,51 @@
+[initial_mesh]
+min_quadrants = -1
+min_level = 1
+fill_uniform = 1
+region0_deg = 2
+region0_deg_quad_inc = 0
+
+[geometry]
+name = brick
+X0 = 0.0
+X1 = 1.0
+Y0 = 0.0
+Y1 = 1.0
+Z0 = 0.0
+Z1 = 1.0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_vtk_geometry]
+name = brick
+X0 = 0.0
+X1 = 1.0
+Y0 = 0.0
+Y1 = 1.0
+Z0 = 0.0
+Z1 = 1.0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+; [geometry]
+; name = cubed_sphere
+; R0 = 1
+; R1 = 2
+; R2 = 3
+; compactify_outer_shell = 0
+; compactify_inner_shell = 0
+; DX_compute_method = analytic
+; JAC_compute_method = numerical
+
+; [d4est_vtk_geometry]
+; name = cubed_sphere
+; R0 = 0.5
+; R1 = 0.75
+; R2 = 1
+; compactify_outer_shell = 0
+; compactify_inner_shell = 0
+; DX_compute_method = analytic
+; JAC_compute_method = numerical
+
+[quadrature]
+name = legendre
