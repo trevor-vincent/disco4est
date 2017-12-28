@@ -102,7 +102,6 @@ int main(int argc, char *argv[])
 
   p4est_partition(p4est, 1, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
-
   
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
@@ -233,7 +232,7 @@ int main(int argc, char *argv[])
      (const char*[]){"element_vol", NULL},
      (double**)((const double*[]){element_volume, NULL}),
      D4EST_VTK_DG_GRID,
-     D4EST_VTK_ASCII
+     D4EST_VTK_ZLIB_BINARY
     );
 
      
