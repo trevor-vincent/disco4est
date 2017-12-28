@@ -108,6 +108,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MPI_C_COMPILE_FLAG}")
 SET (
   SRCS_3D_ONLY
   Geometry/d4est_geometry_cubed_sphere.c
+  Geometry/d4est_connectivity_cubed_sphere.c
   )
 
 SET (
@@ -388,7 +389,7 @@ set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppr
 # add_d4est_test_3d(test_d4est_constant_density_star_fcns test_d4est_constant_density_star_fcns.c . test_d4est_constant_density_star_fcns)
 # add_d4est_test_3d(test_d4est_poisson_symmetry test_d4est_poisson_symmetry.c . test_d4est_poisson_symmetry)
 # add_d4est_test_3d(test_d4est_stiffness test_d4est_stiffness.c . test_d4est_stiffness)
-add_d4est_test_3d(test_d4est_brick_fcns test_d4est_brick_fcns.c . test_d4est_brick_fcns)
+add_d4est_test_3d(test_d4est_vtk test_d4est_vtk.c . test_d4est_vtk)
 
 # add_executable(test_d4est_quadrature_compactified Tests/test_d4est_quadrature_compactified.c)
 # target_link_libraries(test_d4est_quadrature_compactified d8est)
@@ -419,7 +420,7 @@ add_d4est_test_3d(test_d4est_brick_fcns test_d4est_brick_fcns.c . test_d4est_bri
 # add_d4est_problem_3d(testcompile1 testcompile.c TestCompile)
 # add_d4est_problem_2d(testcompile2 testcompile.c TestCompile)
 # add_d4est_problem_3d(constantdensitystar_driver constantdensitystar.c ConstantDensityStar)
-add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
+# add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
 # add_d4est_problem_3d(poisson_sinx_test_driver poisson_sinx_test.c PoissonSinx)
 # add_d4est_problem_3d(poisson_sinx_multigrid_driver poisson_sinx_multigrid.c PoissonSinx)
 # add_d4est_problem_3d(poisson_rsquared_driver poisson_rsquared.c PoissonRSquared)
@@ -444,12 +445,12 @@ add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonS
 # add_d4est_problem_3d(two_punctures_robin_brick_hp_mgpc_driver two_punctures_robin_brick_hp_mgpc_noinbin.c TwoPunctures)
 # add_d4est_problem_3d(two_punctures_robin_brick_hp_mgpc_newton_petsc_driver two_punctures_robin_brick_hp_mgpc_newton_petsc.c TwoPunctures)
 # add_d4est_problem_3d(two_punctures_robin_brick_hp_mgpc_newton_petsc_cactus_driver two_punctures_robin_brick_hp_mgpc_newton_petsc_cactus.c TwoPunctures)
-add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_newton_petsc_cactus_driver two_punctures_robin_sphere_hp_mgpc_newton_petsc_cactus.c TwoPunctures)
-add_d4est_problem_3d(two_punctures_sphere_hp_mgpc_dirichlet_driver two_punctures_sphere_hp_mgpc_dirichlet.c TwoPunctures)
+# add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_newton_petsc_cactus_driver two_punctures_robin_sphere_hp_mgpc_newton_petsc_cactus.c TwoPunctures)
+# add_d4est_problem_3d(two_punctures_sphere_hp_mgpc_dirichlet_driver two_punctures_sphere_hp_mgpc_dirichlet.c TwoPunctures)
 
-add_d4est_problem_3d(constant_density_star_mgpc_newton_petsc_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
+# add_d4est_problem_3d(constant_density_star_mgpc_newton_petsc_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
 
-add_d4est_problem_3d(multi_puncture_robin_sphere_hp_mgpc_newton_petsc_driver multi_puncture_robin_sphere_hp_mgpc_newton_petsc.c TwoPunctures)
+# add_d4est_problem_3d(multi_puncture_robin_sphere_hp_mgpc_newton_petsc_driver multi_puncture_robin_sphere_hp_mgpc_newton_petsc.c TwoPunctures)
 # add_d4est_problem_3d(okendon_mgpc_newton_petsc_driver okendon_mgpc_newton_petsc.c Okendon)
 # add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_noinbin_tree12_driver two_punctures_robin_sphere_hp_mgpc_noinbin_tree12.c TwoPunctures)
 # add_d4est_problem_3d(two_punctures_robin_sphere_hp_mgpc_tree12_driver two_punctures_robin_sphere_hp_mgpc_tree12.c TwoPunctures)

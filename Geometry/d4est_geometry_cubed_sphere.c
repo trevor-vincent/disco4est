@@ -8,6 +8,7 @@
 
 /* #define P4EST_DIM 3 */
 #include <d4est_geometry_cubed_sphere.h>
+#include <d4est_connectivity_cubed_sphere.h>
 
 static inline double
 secant_fcn(double x){
@@ -27,7 +28,7 @@ int d4est_geometry_cubed_sphere_get_number_of_regions
   }
   else {
     D4EST_ABORT("Not supported yet");
-    return NAN;
+    return -1;
   }
 }
 
@@ -105,297 +106,11 @@ int d4est_geometry_cubed_sphere_input_handler
 }
 
 
-static p4est_connectivity_t *
-d4est_connectivity_new_sphere_with_cube_hole (void)
-{
-/* *INDENT-OFF* */
-  const p4est_topidx_t num_vertices = 8;
-  const p4est_topidx_t num_trees = 12;
-  const p4est_topidx_t ctt_offset = 0;
-  const p4est_topidx_t ett_offset = 0;
-  const double        vertices[8 * 3] = {
-    -1, -1,  1,
-     1, -1,  1,
-    -1,  1,  1,
-     1,  1,  1,
-    -1, -1,  2,
-     1, -1,  2,
-    -1,  1,  2,
-     1,  1,  2,
-  };
-  const p4est_topidx_t tree_to_vertex[12 * 8] = {
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-  };
-  const p4est_topidx_t tree_to_tree[12 * 6] = {
-     5,  3,  4,  1,  6,  0,
-     5,  3,  0,  2,  7,  1,
-     5,  3,  1,  4,  8,  2,
-     2,  0,  1,  4,  9,  3,
-     2,  0,  3,  5, 10,  4,
-     2,  0,  4,  1, 11,  5,
-    11,  9, 10,  7, 6,  0,
-    11,  9,  6,  8, 7,  1,
-    11,  9,  7, 10, 8,  2,
-     8,  6,  7, 10, 9,  3,
-     8,  6,  9, 11, 10,  4,
-     8,  6, 10,  7, 11,  5,
-  };
-  const int8_t        tree_to_face[12 * 6] = {
-     1,  7,  7,  2,  5,  5,
-     9,  8,  3,  2,  5,  5,
-     6,  0,  3,  6,  5,  5,
-     1,  7,  7,  2,  5,  5,
-     9,  8,  3,  2,  5,  5,
-     6,  0,  3,  6,  5,  5,
-     1,  7,  7,  2,  4,  4,
-     9,  8,  3,  2,  4,  4,
-     6,  0,  3,  6, 4,  4,
-     1,  7,  7,  2, 4,  4,
-     9,  8,  3,  2, 4,  4,
-     6,  0,  3,  6,  4,  4,
-  };
-
-#if (P4EST_DIM)==3
-  return p4est_connectivity_new_copy (num_vertices, num_trees,
-                                      0, 0,
-                                      vertices, tree_to_vertex,
-                                      tree_to_tree, tree_to_face,
-                                      NULL, &ett_offset,
-                                      NULL, NULL,
-                                      NULL, &ctt_offset, NULL, NULL);
-#else
-  return NULL;
-#endif
-}
-
-
-/* NOT DONE */
-static p4est_connectivity_t *
-d4est_connectivity_new_spherical_shell (void)
-{
-/* *INDENT-OFF* */
-/*   const p4est_topidx_t num_vertices = 8; */
-/*   const p4est_topidx_t num_trees = 6; */
-/*   const p4est_topidx_t ctt_offset = 0; */
-/*   const p4est_topidx_t ett_offset = 0; */
-/*   const double        vertices[8 * 3] = { */
-/*     -1, -1,  1, */
-/*      1, -1,  1, */
-/*     -1,  1,  1, */
-/*      1,  1,  1, */
-/*     -1, -1,  2, */
-/*      1, -1,  2, */
-/*     -1,  1,  2, */
-/*      1,  1,  2, */
-/*   }; */
-/*   const p4est_topidx_t tree_to_vertex[6 * 8] = { */
-/*     0,  1,  2,  3,  4,  5,  6,  7, */
-/*     0,  1,  2,  3,  4,  5,  6,  7, */
-/*     0,  1,  2,  3,  4,  5,  6,  7, */
-/*     0,  1,  2,  3,  4,  5,  6,  7, */
-/*     0,  1,  2,  3,  4,  5,  6,  7, */
-/*     0,  1,  2,  3,  4,  5,  6,  7, */
-/*   }; */
-/*   const p4est_topidx_t tree_to_tree[12 * 6] = { */
-/*      5,  3,  4,  1,  6,  0, */
-/*      5,  3,  0,  2,  7,  1, */
-/*      5,  3,  1,  4,  8,  2, */
-/*      2,  0,  1,  4,  9,  3, */
-/*      2,  0,  3,  5, 10,  4, */
-/*      2,  0,  4,  1, 11,  5, */
-/*     11,  9, 10,  7, 6,  0, */
-/*     11,  9,  6,  8, 7,  1, */
-/*     11,  9,  7, 10, 8,  2, */
-/*      8,  6,  7, 10, 9,  3, */
-/*      8,  6,  9, 11, 10,  4, */
-/*      8,  6, 10,  7, 11,  5, */
-/*   }; */
-/*   const int8_t        tree_to_face[12 * 6] = { */
-/*      1,  7,  7,  2,  5,  5, */
-/*      9,  8,  3,  2,  5,  5, */
-/*      6,  0,  3,  6,  5,  5, */
-/*      1,  7,  7,  2,  5,  5, */
-/*      9,  8,  3,  2,  5,  5, */
-/*      6,  0,  3,  6,  5,  5, */
-/*      1,  7,  7,  2,  4,  4, */
-/*      9,  8,  3,  2,  4,  4, */
-/*      6,  0,  3,  6, 4,  4, */
-/*      1,  7,  7,  2, 4,  4, */
-/*      9,  8,  3,  2, 4,  4, */
-/*      6,  0,  3,  6,  4,  4, */
-/*   }; */
-
-/* #if (P4EST_DIM)==3 */
-/*   return p4est_connectivity_new_copy (num_vertices, num_trees, */
-/*                                       0, 0, */
-/*                                       vertices, tree_to_vertex, */
-/*                                       tree_to_tree, tree_to_face, */
-/*                                       NULL, &ett_offset, */
-/*                                       NULL, NULL, */
-/*                                       NULL, &ctt_offset, NULL, NULL); */
-/* #else */
-/*   return NULL; */
-/* #endif */
-}
 
 
 
-p4est_connectivity_t *
-d4est_connectivity_new_sphere_7tree (void)
-{
-/* *INDENT-OFF* */
-  const p4est_topidx_t num_vertices = 16;
-  const p4est_topidx_t num_trees = 7;
-  const p4est_topidx_t ctt_offset = 0;
-  const p4est_topidx_t ett_offset = 0;
-  const double vertices[16 * 3] = {
-    -1, -1,  1,
-     1, -1,  1,
-    -1,  1,  1,
-     1,  1,  1,
-    -1, -1,  2,
-     1, -1,  2,
-    -1,  1,  2,
-     1,  1,  2,
-    -1, -1, -1,
-     1, -1, -1,
-    -1,  1, -1,
-     1,  1, -1,
-    -1, -1,  1,
-     1, -1,  1,
-    -1,  1,  1,
-     1,  1,  1,
-  };
-  const p4est_topidx_t tree_to_vertex[7 * 8] = {
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-    8,  9, 10, 11, 12, 13, 14, 15,
-  };
-  const p4est_topidx_t tree_to_tree[7 * 6] = {    
-     5,  3, 4,  1, 6,  0, //
-     5,  3,  0,  2, 6,  1,
-     5,  3,  1, 4, 6,  2,
-     2,  0,  1, 4, 6,  3,
-     2,  0,  3, 5, 6,  4,
-     2,  0, 4,  1, 6,  5,
-     5,  3,  0,  2, 4,  1,
-  };
-  const int8_t tree_to_face[7 * 6] = {
-     1,  7,  7,  2,  2,  5,
-     9,  8,  3,  2,  5,  5,
-     6,  0,  3,  6, 15,  5,
-     1,  7,  7,  2, 19,  5,
-     9,  8,  3,  2, 22,  5,
-     6,  0,  3,  6,  6,  5,
-    10, 22,  4, 16, 22,  4,
-  };
-
-  return p4est_connectivity_new_copy (num_vertices, num_trees,
-                                      0, 0,
-                                      vertices, tree_to_vertex,
-                                      tree_to_tree, tree_to_face,
-                                      NULL, &ett_offset,
-                                      NULL, NULL,
-                                      NULL, &ctt_offset, NULL, NULL);
-}
-
-
-static p4est_connectivity_t *
-d4est_connectivity_new_sphere_innerouter_shell (void)
-{
-/* *INDENT-OFF* */
-  const p4est_topidx_t num_vertices = 8;
-  const p4est_topidx_t num_trees = 2;
-  const p4est_topidx_t ctt_offset = 0;
-  const p4est_topidx_t ett_offset = 0;
-  const double        vertices[8 * 3] = {
-    -1, -1,  1,
-     1, -1,  1,
-    -1,  1,  1,
-     1,  1,  1,
-    -1, -1,  2,
-     1, -1,  2,
-    -1,  1,  2,
-     1,  1,  2,
-  };
-  const p4est_topidx_t tree_to_vertex[2 * 8] = {
-    0,  1,  2,  3,  4,  5,  6,  7,
-    0,  1,  2,  3,  4,  5,  6,  7,
-  };
-  const p4est_topidx_t tree_to_tree[2 * 6] = {
-     0,  0,  0,  0,  1,  0, //0 CHANGE THESE to 0 and 0, i.e 0 -> 0 and 1 -> 0
-     1,  1,  1,  1, 1,  0, //1
-  };
-  const int8_t        tree_to_face[12 * 6] = {
-     0,  1,  2,  3,  5,  5, //1
-     0,  1,  2,  3,  4,  4, //7
-  };
-
-  return p4est_connectivity_new_copy (num_vertices, num_trees,
-                                      0, 0,
-                                      vertices, tree_to_vertex,
-                                      tree_to_tree, tree_to_face,
-                                      NULL, &ett_offset,
-                                      NULL, NULL,
-                                      NULL, &ctt_offset, NULL, NULL);
-}
-
-
-static void
-d4est_geometry_cubed_sphere_inverted_inner_shell_block_X
-(
- d4est_geometry_t * geom,
- p4est_topidx_t which_tree,
- p4est_qcoord_t q0 [3],
- p4est_qcoord_t dq,
- const double coords[3],
- coords_type_t coords_type,
- double xyz[3]
-)
-{
-  d4est_geometry_cubed_sphere_attr_t* sphere = geom->user;
-  D4EST_ASSERT(coords_type == COORDS_INTEG_RST);
-
-  /* transform topog coordinates in [0,1]^3 to cubed sphere vertex space [-1,1]^2 x [1,2]  */
-  double tcoords [3];
-  d4est_geometry_get_tree_coords_in_range_0_to_1(q0, dq, coords, coords_type, tcoords);
-
-  double abc [3];  
-  abc[0] = tcoords[0];
-  abc[1] = tcoords[1];
-  abc[2] = (tcoords[2])*(sphere->R1 - sphere->R0) + sphere->R0;
-
-  double tanx = tan (abc[0] * M_PI_4);
-  double tany = tan (abc[1] * M_PI_4);
-
-  double cmin = 1;
-  double cmax = 0;
-  
-  double a = 1./sqrt(1 + tanx*tanx + tany*tany);
-  double bmin = sphere->R0*(1 + cmin*(a-1));
-  double bmax = sphere->R1*(1 + cmax*(a-1));
-  double q = bmin + (bmax - bmin)*(abc[2] - sphere->R0)/(sphere->R1 - sphere->R0);
-  xyz[0] = +q * tanx;
-  xyz[1] = +q * tany;
-  xyz[2] = +q;
-}
-
-static void d4est_geometry_cubed_sphere_inner_shell_block_X(
+static
+void d4est_geometry_cubed_sphere_inner_shell_block_X(
                                                 d4est_geometry_t * geom,
                                                 p4est_topidx_t which_tree,
                                                 p4est_qcoord_t q0 [3],
@@ -2022,7 +1737,7 @@ d4est_geometry_cubed_sphere_with_cube_hole_new
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_input(input_file, input_section);
-  p4est_connectivity_t* conn = d4est_connectivity_new_sphere_with_cube_hole();
+  p4est_connectivity_t* conn = d4est_connectivity_new_sphere_with_hole();
   
   d4est_geom->p4est_conn = conn; 
   d4est_geom->user = sphere_attrs;
@@ -2054,7 +1769,7 @@ d4est_geometry_cubed_sphere_with_sphere_hole_new
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_input(input_file, input_section);
-  p4est_connectivity_t* conn = d4est_connectivity_new_sphere_with_cube_hole();
+  p4est_connectivity_t* conn = d4est_connectivity_new_sphere_with_hole();
   
   d4est_geom->p4est_conn = conn; 
   d4est_geom->user = sphere_attrs;
