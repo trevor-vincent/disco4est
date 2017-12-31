@@ -225,16 +225,14 @@ int main(int argc, char *argv[])
      p4est,
      d4est_ops,
      "test_d4est_vtk_options.input",
-     "d4est_vtk_geometry",
-     "test_d4est_vtk",
+     "d4est_vtk",
+     "[D4EST_VTK]",
      (const char*[]){"sinvec", NULL},
      (double**)((const double*[]){sinvec, NULL}),
      (const char*[]){"element_vol", NULL},
-     (double**)((const double*[]){element_volume, NULL}),
-     D4EST_VTK_DG_GRID,
-     D4EST_VTK_ZLIB_BINARY
+     (double**)((const double*[]){element_volume, NULL})
     );
-
+  /*  */
      
   P4EST_FREE(deg_array);
   P4EST_FREE(element_volume);

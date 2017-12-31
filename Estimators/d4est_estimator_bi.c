@@ -462,9 +462,9 @@ d4est_estimator_bi_compute
   flux_data.flux_data = &bi_penalty_data;
   flux_data.get_deg_mortar_quad = get_deg_mortar_quad;
   flux_data.get_deg_mortar_quad_ctx = get_deg_mortar_quad_ctx;
-  d4est_mortar_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(&flux_data);
+  d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(&flux_data);
   
-  d4est_mortar_compute_flux_on_local_elements
+  d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
      ghost,

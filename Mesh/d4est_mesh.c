@@ -443,13 +443,13 @@ d4est_mesh_compute_mortar_quadrature_quantities
 {
 
   /* printf("[D4EST_INFO]: Computing quadrature quantities\n"); */
-  d4est_mortar_fcn_ptrs_t flux_fcns;
+  d4est_mortars_fcn_ptrs_t flux_fcns;
   flux_fcns.flux_interface_fcn = d4est_mesh_compute_mortar_quadrature_quantities_interface_callback;
   /* flux_fcns.flux_interface_fcn = NULL; */
   flux_fcns.flux_boundary_fcn = d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback;
   flux_fcns.user_ctx = (void*)d4est_factors;
   
-  d4est_mortar_compute_flux_on_local_elements
+  d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
      ghost,
@@ -558,12 +558,12 @@ d4est_mesh_compute_mortar_quadrature_sizes
  d4est_local_sizes_t* local_sizes
 ){
 
-  d4est_mortar_fcn_ptrs_t flux_fcns;
+  d4est_mortars_fcn_ptrs_t flux_fcns;
   flux_fcns.flux_interface_fcn = d4est_mesh_compute_mortar_quadrature_sizes_interface_callback;
   flux_fcns.flux_boundary_fcn = d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback;
   flux_fcns.user_ctx = (void*)local_sizes;
   
-  d4est_mortar_compute_flux_on_local_elements
+  d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
      ghost,

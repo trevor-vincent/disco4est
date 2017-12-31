@@ -1,8 +1,11 @@
+#define _GNU_SOURCE
 #include <pXest.h>
 #include <d4est_vtk.h>
 #include <d4est_geometry.h>
 #include <d4est_util.h>
 #include <d4est_mesh.h>
+#include <d4est_util.h>
+#include <ini.h>
 
 #ifdef P4_TO_P8
 #define D4EST_VTK_CELL_TYPE     11      /* VTK_VOXEL */
@@ -22,7 +25,7 @@ static const int    d4est_vtk_write_level = 1;
 static const int    d4est_vtk_write_rank = 1;
 static const int    d4est_vtk_wrap_rank = 0;
 
-/* #define D4EST_VTK_DEBUG */
+#define D4EST_VTK_DEBUG
 
 #define D4EST_VTK_DOUBLES
 #ifndef D4EST_VTK_DOUBLES
@@ -61,6 +64,10 @@ static const int    d4est_vtk_wrap_rank = 0;
  * d4est_vtk_write_footer.
  *
  */
+
+typedef enum {D4EST_VTK_DG_GRID, D4EST_VTK_CORNER_GRID, D4EST_VTK_GRID_NOT_SET} d4est_vtk_grid_type_t;
+typedef enum {D4EST_VTK_ASCII, D4EST_VTK_BINARY, D4EST_VTK_ZLIB_BINARY, D4EST_VTK_OUTPUT_NOT_SET} d4est_vtk_output_type_t;
+
 struct d4est_vtk_context
 {
   /* data passed initially */
@@ -88,6 +95,18 @@ struct d4est_vtk_context
   FILE               *vtufile;     /**< File pointer for the VTU file. */
   FILE               *pvtufile;    /**< Paraview meta file. */
   FILE               *visitfile;   /**< Visit meta file. */
+
+  d4est_vtk_output_type_t output_type;
+  d4est_vtk_grid_type_t grid_type;
+  char* input_section;
+  char* geometry_section;
+  int write_tree;
+  int write_level;
+  int write_rank;
+  int wrap_rank;
+  int write_deg;
+    
+  
 };
 
 
@@ -117,8 +136,133 @@ d4est_vtk_get_format_string(d4est_vtk_output_type_t output_type){
   }
 }
 
+
+static
+int d4est_vtk_input_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_vtk_context_t * pconfig = (d4est_vtk_context_t *)user;
+
+  if (d4est_util_match_couple(section,pconfig->input_section,name,"filename")) {
+    D4EST_ASSERT(pconfig->filename == NULL);
+    asprintf(&pconfig->filename,"%s",value);
+  }
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"write_tree")) {
+    D4EST_ASSERT(pconfig->write_tree == -1);
+    pconfig->write_tree = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"write_rank")) {
+    D4EST_ASSERT(pconfig->write_rank == -1);
+    pconfig->write_rank = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"wrap_rank")) {
+    D4EST_ASSERT(pconfig->wrap_rank == -1);
+    pconfig->wrap_rank = atoi(value);
+  }  
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"write_deg")) {
+    D4EST_ASSERT(pconfig->write_deg == -1);
+    pconfig->write_deg = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"write_level")) {
+    D4EST_ASSERT(pconfig->write_level == -1);
+    pconfig->write_level = atoi(value);
+  }    
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"geometry_section")) {
+    D4EST_ASSERT(pconfig->geometry_section == NULL);
+    asprintf(&pconfig->geometry_section,"%s",value);
+  }
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"output_type")) {
+    if(d4est_util_match(value, "ascii")){
+      pconfig->output_type = D4EST_VTK_ASCII;
+    }
+    else if (d4est_util_match(value, "binary")){
+      pconfig->output_type = D4EST_VTK_BINARY;
+    }
+    else if (d4est_util_match(value, "zlib_binary")){
+      pconfig->output_type = D4EST_VTK_ZLIB_BINARY;
+    }
+    else {
+      printf("[D4EST_ERROR]: You tried to use %s as a output type\n", value);
+      D4EST_ABORT("[D4EST_ERROR]: This output is not supported");
+    }
+  }
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"grid_type")) {
+    if(d4est_util_match(value, "dg")){
+      pconfig->grid_type = D4EST_VTK_DG_GRID;
+    }
+    else if (d4est_util_match(value, "corner")){
+      pconfig->grid_type = D4EST_VTK_CORNER_GRID;
+    }
+    else {
+      printf("[D4EST_ERROR]: You tried to use %s as a grid type\n", value);
+      D4EST_ABORT("[D4EST_ERROR]: This grid is not supported");
+    }
+  }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+static void
+d4est_vtk_input
+(
+ int mpirank,
+ const char* input_file,
+ const char* input_section,
+ const char* printf_prefix,
+ d4est_vtk_context_t* cont
+){
+  
+  cont->filename = NULL;
+  cont->geometry_section = NULL;
+  cont->output_type = D4EST_VTK_OUTPUT_NOT_SET;
+  cont->grid_type = D4EST_VTK_GRID_NOT_SET;
+  cont->write_level = -1;
+  cont->write_rank = -1;
+  cont->write_deg = -1;
+  cont->write_tree = -1;
+  cont->wrap_rank = -1;
+  asprintf(&cont->input_section,"%s",input_section);
+  
+  if (ini_parse(input_file, d4est_vtk_input_handler,cont) < 0) {
+    D4EST_ABORT("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT(input_section, cont->filename, NULL);
+  D4EST_CHECK_INPUT(input_section, cont->geometry_section, NULL);
+  D4EST_CHECK_INPUT(input_section, cont->output_type, D4EST_VTK_OUTPUT_NOT_SET);
+  D4EST_CHECK_INPUT(input_section, cont->grid_type, D4EST_VTK_GRID_NOT_SET);
+  D4EST_CHECK_INPUT(input_section, cont->wrap_rank, -1);
+  D4EST_CHECK_INPUT(input_section, cont->write_rank, -1);
+  D4EST_CHECK_INPUT(input_section, cont->write_tree, -1);
+  D4EST_CHECK_INPUT(input_section, cont->write_level, -1);
+  D4EST_CHECK_INPUT(input_section, cont->write_deg, -1);
+
+  if(mpirank == 0){
+    printf("%s: Saving %s with geometry specified by %s\n", printf_prefix, cont->filename, cont->geometry_section);
+  if (cont->output_type == D4EST_VTK_ASCII)
+    printf("%s: Saving %s in ASCII format\n", printf_prefix, cont->filename);
+  if (cont->output_type == D4EST_VTK_BINARY)
+    printf("%s: Saving %s in BINARY format\n", printf_prefix, cont->filename);
+  if (cont->output_type == D4EST_VTK_ZLIB_BINARY)
+    printf("%s: Saving %s in ZLIB_BINARY format\n", printf_prefix, cont->filename);
+  if (cont->grid_type == D4EST_VTK_DG_GRID)
+    printf("%s: Saving %s in with DG grid\n", printf_prefix, cont->filename);
+  if (cont->grid_type == D4EST_VTK_CORNER_GRID)
+    printf("%s: Saving %s in with CORNER grid\n", printf_prefix, cont->filename);
+  }
+  
+}
+
+
 d4est_vtk_context_t *
-d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* d4est_ops, const char *filename)
+d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* d4est_ops, const char *input_file, const char* input_section, const char* print_prefix)
 {
 #ifdef D4EST_VTK_DEBUG
   printf("[D4EST_VTK]: Starting d4est_vtk_context_new \n");
@@ -127,15 +271,15 @@ d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* d4est_ops, const c
 
   P4EST_ASSERT (p4est != NULL);
   P4EST_ASSERT (filename != NULL);
-
-
+  
   /* Allocate, initialize the vtk context.  Important to zero all fields. */
   cont = P4EST_ALLOC_ZERO (d4est_vtk_context_t, 1);
   cont->d4est_ops = d4est_ops;
   cont->p4est = p4est;
-  cont->filename = P4EST_STRDUP (filename);
-  cont->deg_array = NULL;
+
+  d4est_vtk_input(p4est->mpirank, input_file, input_section, print_prefix, cont);
   
+  cont->deg_array = NULL;
   cont->scale = d4est_vtk_scale;
   cont->continuous = d4est_vtk_continuous;
 
@@ -999,80 +1143,6 @@ d4est_vtk_write_point_scalar (d4est_vtk_context_t * cont,
   return cont;
 }
 
-void
-d4est_vtk_save
-(
- p4est_t* p4est,
- d4est_operators_t* d4est_ops,
- const char* input_file,
- const char* input_section,
- const char* save_as_filename,
- const char ** dg_field_names,
- double ** dg_fields,
- const char ** element_field_names,
- double ** element_fields,
- d4est_vtk_grid_type_t grid_type,
- d4est_vtk_output_type_t output_type
-)
-{
-  d4est_geometry_t* geom_vtk = d4est_geometry_new
-                               (
-                                p4est->mpirank,
-                                input_file,
-                                input_section,
-                                "[D4EST_VTK_GEOMETRY]"
-                               );
-
-  d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, save_as_filename);
-  d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
-  d4est_vtk_context_set_scale(vtk_ctx, .99);
-
-  int* deg_array = NULL;
-  if(grid_type == D4EST_VTK_DG_GRID){
-    deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
-    d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
-  }
-  else if (grid_type == D4EST_VTK_CORNER_GRID){
-    deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
-    for (int i = 0; i < p4est->local_num_quadrants; i++) deg_array[i] = 1;
-  }
-  else {
-    D4EST_ABORT("Not an accepted grid type");
-  }
-
-  int num_dg_fields = 0;
-  int num_element_fields = 0;
-
-  if (dg_field_names != NULL && dg_fields != NULL){
-    for (int i = 0; dg_field_names[i] != NULL; i++){
-      num_dg_fields++;
-    }
-  }
-
-  if (element_field_names != NULL && element_fields != NULL){
-    for (int i = 0; element_field_names[i] != NULL; i++){
-      num_element_fields++;
-    }
-  }
-
-  int write_tree = 1;
-  int write_level = 1;
-  int write_rank = 1;
-  int wrap_rank = 0;
-  int write_deg = 1;
-    
-  d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
-  vtk_ctx = d4est_vtk_write_header(vtk_ctx, d4est_ops, output_type);    
-
-  vtk_ctx = d4est_vtk_write_data(vtk_ctx, num_dg_fields, dg_field_names, dg_fields, grid_type, output_type);
-  vtk_ctx = d4est_vtk_write_element_data(vtk_ctx, write_tree, write_level, write_rank, wrap_rank, write_deg, num_element_fields, element_field_names, element_fields, output_type);
-    
-  d4est_vtk_write_footer(vtk_ctx);
-  d4est_geometry_destroy(geom_vtk);
-  P4EST_FREE(deg_array);
-}
-
-
 
 d4est_vtk_context_t *
 d4est_vtk_write_data
@@ -1536,5 +1606,70 @@ d4est_vtk_write_element_data
   return cont;
 }
 
+void
+d4est_vtk_save
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ const char* input_file,
+ const char* input_section,
+ const char* print_prefix,
+ const char ** dg_field_names,
+ double ** dg_fields,
+ const char ** element_field_names,
+ double ** element_fields
+)
+{
+  d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, input_file, input_section, print_prefix);
+
+  d4est_geometry_t* geom_vtk = d4est_geometry_new
+                               (
+                                p4est->mpirank,
+                                input_file,
+                                vtk_ctx->geometry_section,
+                                "[D4EST_VTK_GEOMETRY]"
+                               );
+  
+  d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
+  d4est_vtk_context_set_scale(vtk_ctx, .99);
+
+  int* deg_array = NULL;
+  if(vtk_ctx->grid_type == D4EST_VTK_DG_GRID){
+    deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
+    d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
+  }
+  else if (vtk_ctx->grid_type == D4EST_VTK_CORNER_GRID){
+    deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
+    for (int i = 0; i < p4est->local_num_quadrants; i++) deg_array[i] = 1;
+  }
+  else {
+    D4EST_ABORT("Not an accepted grid type");
+  }
+
+  int num_dg_fields = 0;
+  int num_element_fields = 0;
+
+  if (dg_field_names != NULL && dg_fields != NULL){
+    for (int i = 0; dg_field_names[i] != NULL; i++){
+      num_dg_fields++;
+    }
+  }
+
+  if (element_field_names != NULL && element_fields != NULL){
+    for (int i = 0; element_field_names[i] != NULL; i++){
+      num_element_fields++;
+    }
+  }
+
+  d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
+  vtk_ctx = d4est_vtk_write_header(vtk_ctx, d4est_ops, vtk_ctx->output_type);    
+
+  vtk_ctx = d4est_vtk_write_data(vtk_ctx, num_dg_fields, dg_field_names, dg_fields, vtk_ctx->grid_type, vtk_ctx->output_type);
+  vtk_ctx = d4est_vtk_write_element_data(vtk_ctx, vtk_ctx->write_tree, vtk_ctx->write_level, vtk_ctx->write_rank, vtk_ctx->wrap_rank, vtk_ctx->write_deg, num_element_fields, element_field_names, element_fields, vtk_ctx->output_type);
+    
+  d4est_vtk_write_footer(vtk_ctx);
+  d4est_geometry_destroy(geom_vtk);
+  P4EST_FREE(deg_array);
+}
 
 

@@ -142,21 +142,21 @@
 /*   curved_dg_params.ip_flux_params = ip_flux_params; */
 /*   curved_dg_params.dg_norm_face_term = 0.; */
   
-/*   d4est_mortar_fcn_ptrs_t flux_fcn_ptrs = curved_dg_norm_fetch_fcns(&curved_dg_params); */
+/*   d4est_mortars_fcn_ptrs_t flux_fcn_ptrs = curved_dg_norm_fetch_fcns(&curved_dg_params); */
 
-/*   d4est_mortar_compute_flux_user_data_t d4est_mortar_compute_flux_user_data; */
-/*   d4est_mortar_compute_flux_user_data.d4est_ops = d4est_ops; */
-/*   d4est_mortar_compute_flux_user_data.geom = d4est_geom; */
-/*   d4est_mortar_compute_flux_user_data.flux_fcn_ptrs = &flux_fcn_ptrs; */
+/*   d4est_mortars_compute_flux_user_data_t d4est_mortars_compute_flux_user_data; */
+/*   d4est_mortars_compute_flux_user_data.d4est_ops = d4est_ops; */
+/*   d4est_mortars_compute_flux_user_data.geom = d4est_geom; */
+/*   d4est_mortars_compute_flux_user_data.flux_fcn_ptrs = &flux_fcn_ptrs; */
   
 /*   void* tmpptr = p4est->user_pointer; */
-/*   p4est->user_pointer = &d4est_mortar_compute_flux_user_data; */
+/*   p4est->user_pointer = &d4est_mortars_compute_flux_user_data; */
   
 /*   p4est_iterate(p4est, */
 /* 		ghost, */
 /* 		ghost_data, */
 /* 		NULL, */
-/* 		d4est_mortar_compute_flux_on_local_elements, */
+/* 		d4est_mortars_compute_flux_on_local_elements, */
 /* #if (P4EST_DIM)==3 */
 /*                 NULL, */
 /* #endif */

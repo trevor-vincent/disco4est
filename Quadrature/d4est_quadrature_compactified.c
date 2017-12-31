@@ -917,12 +917,12 @@ d4est_quadrature_compactified_compute_storage_for_mortar_space
   storage->total_mortar_quad_nodes_2d = 0;
   storage->total_mortar_sides = 0;
   
-  d4est_mortar_fcn_ptrs_t compute_strides_and_sizes;
+  d4est_mortars_fcn_ptrs_t compute_strides_and_sizes;
   compute_strides_and_sizes.flux_interface_fcn = d4est_quadrature_compactified_compute_mortar_strides_and_sizes_interface;
   compute_strides_and_sizes.flux_boundary_fcn = d4est_quadrature_compactified_compute_mortar_strides_and_sizes_boundary;
   compute_strides_and_sizes.user_ctx = NULL;
 
-  d4est_mortar_compute_flux_on_local_elements
+  d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
      ghost,
@@ -948,12 +948,12 @@ d4est_quadrature_compactified_compute_storage_for_mortar_space
   }
   
   
-  d4est_mortar_fcn_ptrs_t compute_storage;
+  d4est_mortars_fcn_ptrs_t compute_storage;
   compute_storage.flux_interface_fcn = d4est_quadrature_compactified_store_data_for_interface;
   compute_storage.flux_boundary_fcn = d4est_quadrature_compactified_store_data_for_boundary;
   compute_storage.user_ctx = NULL;  
 
-  d4est_mortar_compute_flux_on_local_elements
+  d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
      ghost,

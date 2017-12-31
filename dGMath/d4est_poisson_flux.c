@@ -962,13 +962,13 @@ d4est_poisson_flux_init_element_data
 }
 
 
-d4est_mortar_fcn_ptrs_t
+d4est_mortars_fcn_ptrs_t
 d4est_poisson_flux_fetch_fcns
 (
  d4est_poisson_flux_data_t* data
 )
 {
-  d4est_mortar_fcn_ptrs_t flux_fcns;
+  d4est_mortars_fcn_ptrs_t flux_fcns;
   flux_fcns.flux_interface_fcn = d4est_poisson_flux_interface;
   flux_fcns.flux_boundary_fcn = d4est_poisson_flux_boundary;
   flux_fcns.user_ctx = (void*)data;

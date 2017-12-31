@@ -194,9 +194,11 @@ d4est_poisson_apply_mortar_matrices
  d4est_mesh_geometry_storage_t* d4est_factors
 )
 {
-  d4est_mortar_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(flux_fcn_data);
+  d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(flux_fcn_data);
+
+  p4est_ghost_exchange_data(p4est,ghost,ghost_data);
   
-  d4est_mortar_compute_flux_on_local_elements
+  d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
      ghost,
@@ -206,7 +208,7 @@ d4est_poisson_apply_mortar_matrices
      d4est_quad,
      d4est_factors,
      &flux_fcns,
-     EXCHANGE_GHOST_DATA
+     DO_NOT_EXCHANGE_GHOST_DATA /* already done above */
     );
 }
 

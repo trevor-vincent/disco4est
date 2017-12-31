@@ -6,7 +6,7 @@
 #include <d4est_geometry.h>
 #include <d4est_mesh.h>
 #include <d4est_geometry_cubed_sphere.h>
-#include <d4est_mortar_compute_flux.h>
+#include <d4est_mortars_compute_flux.h>
 #include <petscsnes.h>
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
@@ -439,14 +439,14 @@ test_d4est_quadrature_compactified_surface_integrals_interface
   
 }
 
-d4est_mortar_fcn_ptrs_t
+d4est_mortars_fcn_ptrs_t
 test_d4est_quadrature_compactified_surface_integrals_fetch_fcns
 (
  test_d4est_quadrature_compactified_surface_integrals_data_t* data
 )
 {
   
-  d4est_mortar_fcn_ptrs_t curved_test_mortarjacobianterms_fcns;
+  d4est_mortars_fcn_ptrs_t curved_test_mortarjacobianterms_fcns;
   curved_test_mortarjacobianterms_fcns.flux_interface_fcn = test_d4est_quadrature_compactified_surface_integrals_interface;
   curved_test_mortarjacobianterms_fcns.flux_boundary_fcn = test_d4est_quadrature_compactified_surface_integrals_bndry;
   curved_test_mortarjacobianterms_fcns.params = (void*)data;
@@ -550,9 +550,9 @@ int main(int argc, char *argv[])
   test_d4est_quadrature_compactified_surface_integrals_data_t test_data;
   test_data.surface_integral_GL = 0.;
   test_data.surface_integral_comp = 0.;
-  d4est_mortar_fcn_ptrs_t ffp = test_d4est_quadrature_compactified_surface_integrals_fetch_fcns(&test_data);
+  d4est_mortars_fcn_ptrs_t ffp = test_d4est_quadrature_compactified_surface_integrals_fetch_fcns(&test_data);
   
-  d4est_mortar_compute_flux_on_local_elements
+  d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
      ghost,

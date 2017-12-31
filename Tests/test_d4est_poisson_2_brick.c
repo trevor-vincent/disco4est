@@ -876,8 +876,8 @@ test_d4est_poisson_2_brick_on_interfaces
 
   d4est_poisson_flux_init_element_data(p4est, d4est_ops, prob_vecs->u, prob_vecs->Au);
   
-  d4est_mortar_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(d4est_poisson_flux_data);
-  d4est_mortar_compute_flux_on_local_elements
+  d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(d4est_poisson_flux_data);
+  d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
      ghost,

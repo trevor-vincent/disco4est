@@ -1172,9 +1172,9 @@ d4est_geometry_cubed_sphere_DX_aux_rotate
 {
   switch (which_tree % 6) {
   case 0:                      /* front */
-    /* xyz[0] = +q * x; */
-    /* xyz[1] = -q; */
-    /* xyz[2] = +q * y; */
+    /* xyz[0][d] = +q * x; */
+    /* xyz[1][d] = -q; */
+    /* xyz[2][d] = +q * y; */
     for (int d = 0; d < (P4EST_DIM); d++){
       dxyz_drst[0][d] = dxyz_drst_top[0][d];
       dxyz_drst[1][d] = -dxyz_drst_top[2][d];
@@ -1182,9 +1182,9 @@ d4est_geometry_cubed_sphere_DX_aux_rotate
     }
     break;
  case 1:                      /* top */
-   /* xyz[0] = +q * x; */
-   /* xyz[1] = +q * y; */
-   /* xyz[2] = +q; */
+   /* xyz[0][d] = +q * x; */
+   /* xyz[1][d] = +q * y; */
+   /* xyz[2][d] = +q; */
    for (int d = 0; d < (P4EST_DIM); d++){
      dxyz_drst[0][d] = dxyz_drst_top[0][d];
      dxyz_drst[1][d] = dxyz_drst_top[1][d];
@@ -1193,9 +1193,9 @@ d4est_geometry_cubed_sphere_DX_aux_rotate
    }
    break;
  case 2:                      /* back */
-   /* xyz[0] = +q * x; */
-   /* xyz[1] = +q; */
-   /* xyz[2] = -q * y; */
+   /* xyz[0][d] = +q * x; */
+   /* xyz[1][d] = +q; */
+   /* xyz[2][d] = -q * y; */
    for (int d = 0; d < (P4EST_DIM); d++){
      dxyz_drst[0][d] = dxyz_drst_top[0][d];
      dxyz_drst[1][d] = dxyz_drst_top[2][d];
@@ -1203,9 +1203,9 @@ d4est_geometry_cubed_sphere_DX_aux_rotate
    }
    break;
  case 3:                      /* right */
-   /* xyz[0] = +q; */
-   /* xyz[1] = -q * x; */
-   /* xyz[2] = -q * y; */
+   /* xyz[0][d] = +q; */
+   /* xyz[1][d] = -q * x; */
+   /* xyz[2][d] = -q * y; */
    for (int d = 0; d < (P4EST_DIM); d++){
      dxyz_drst[0][d] = dxyz_drst_top[2][d];
      dxyz_drst[1][d] = -dxyz_drst_top[0][d];
@@ -1213,9 +1213,9 @@ d4est_geometry_cubed_sphere_DX_aux_rotate
    }
    break;
  case 4:                      /* bottom */
-   /* xyz[0] = -q * y; */
-   /* xyz[1] = -q * x; */
-   /* xyz[2] = -q; */
+   /* xyz[0][d] = -q * y; */
+   /* xyz[1][d] = -q * x; */
+   /* xyz[2][d] = -q; */
    for (int d = 0; d < (P4EST_DIM); d++){
      dxyz_drst[0][d] = -dxyz_drst_top[1][d];
      dxyz_drst[1][d] = -dxyz_drst_top[0][d];
@@ -1223,9 +1223,9 @@ d4est_geometry_cubed_sphere_DX_aux_rotate
    }
    break;
  case 5:                      /* left */
-   /* xyz[0] = -q; */
-   /* xyz[1] = -q * x; */
-   /* xyz[2] = +q * y; */
+   /* xyz[0][d] = -q; */
+   /* xyz[1][d] = -q * x; */
+   /* xyz[2][d] = +q * y; */
    for (int d = 0; d < (P4EST_DIM); d++){
      dxyz_drst[0][d] = -dxyz_drst_top[2][d];
      dxyz_drst[1][d] = -dxyz_drst_top[0][d];
@@ -1236,6 +1236,85 @@ d4est_geometry_cubed_sphere_DX_aux_rotate
     SC_ABORT_NOT_REACHED();
   }
 }
+
+
+
+static void
+d4est_geometry_cubed_sphere_X_aux_rotate
+(
+ int which_tree,
+ double xyz_top [(P4EST_DIM)],
+ double xyz[(P4EST_DIM)]
+)
+{
+  switch (which_tree % 6) {
+  case 0:                      /* front */
+    /* xyz[0] = +q * x; */
+    /* xyz[1] = -q; */
+    /* xyz[2] = +q * y; */
+    for (int d = 0; d < (P4EST_DIM); d++){
+      xyz[0] = xyz_top[0];
+      xyz[1] = -xyz_top[2];
+      xyz[2] = xyz_top[1];
+    }
+    break;
+ case 1:                      /* top */
+   /* xyz[0] = +q * x; */
+   /* xyz[1] = +q * y; */
+   /* xyz[2] = +q; */
+   for (int d = 0; d < (P4EST_DIM); d++){
+     xyz[0] = xyz_top[0];
+     xyz[1] = xyz_top[1];
+     xyz[2] = xyz_top[2];
+    
+   }
+   break;
+ case 2:                      /* back */
+   /* xyz[0] = +q * x; */
+   /* xyz[1] = +q; */
+   /* xyz[2] = -q * y; */
+   for (int d = 0; d < (P4EST_DIM); d++){
+     xyz[0] = xyz_top[0];
+     xyz[1] = xyz_top[2];
+     xyz[2] = -xyz_top[1];
+   }
+   break;
+ case 3:                      /* right */
+   /* xyz[0] = +q; */
+   /* xyz[1] = -q * x; */
+   /* xyz[2] = -q * y; */
+   for (int d = 0; d < (P4EST_DIM); d++){
+     xyz[0] = xyz_top[2];
+     xyz[1] = -xyz_top[0];
+     xyz[2] = -xyz_top[1];
+   }
+   break;
+ case 4:                      /* bottom */
+   /* xyz[0] = -q * y; */
+   /* xyz[1] = -q * x; */
+   /* xyz[2] = -q; */
+   for (int d = 0; d < (P4EST_DIM); d++){
+     xyz[0] = -xyz_top[1];
+     xyz[1] = -xyz_top[0];
+     xyz[2] = -xyz_top[2];      
+   }
+   break;
+ case 5:                      /* left */
+   /* xyz[0] = -q; */
+   /* xyz[1] = -q * x; */
+   /* xyz[2] = +q * y; */
+   for (int d = 0; d < (P4EST_DIM); d++){
+     xyz[0] = -xyz_top[2];
+     xyz[1] = -xyz_top[0];
+     xyz[2] = xyz_top[1];
+   }
+   break;
+  default:
+    SC_ABORT_NOT_REACHED();
+  }
+}
+
+
 
 
 static void

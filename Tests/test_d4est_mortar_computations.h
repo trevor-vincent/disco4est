@@ -6,7 +6,7 @@ typedef struct {
   double sj_and_n_interface_error;
   double ;
   
-} test_d4est_mortar_computations_data_t;
+} test_d4est_mortars_computations_data_t;
 
 static void
 test_d4est_poisson_flux_boundary_debug
@@ -177,7 +177,7 @@ test_d4est_flux_interface_debug
   D4EST_ALLOC_DIM_VEC(nvol_p_on_f_p_mortar_quad,total_nodes_mortar_quad);
   D4EST_ALLOC_DIM_VEC(nvol_p_on_f_p_mortar_quad_porder,total_nodes_mortar_quad);
 
-  test_d4est_mortar_computations_data_t* data = params;
+  test_d4est_mortars_computations_data_t* data = params;
   
   d4est_mortars_compute_geometric_data_on_mortar
     (
@@ -244,17 +244,17 @@ test_d4est_flux_interface_debug
 }
 
 void
-test_d4est_mortar_computations_sj_and_n_on_interface
+test_d4est_mortars_computations_sj_and_n_on_interface
 (
  double err_tol
 )
 {
   d4est_poisson_flux_data_t* d4est_poisson_flux_data = P4EST_ALLOC(d4est_poisson_flux_data_t,1);
-  test_d4est_mortar_computations_data_t* data = P4EST_ALLOC(test_d4est_mortar_computations_data_t, 1);
+  test_d4est_mortars_computations_data_t* data = P4EST_ALLOC(test_d4est_mortars_computations_data_t, 1);
   data->sj_and_n_interface_error = 0.;
   
   d4est_poisson_flux_data->user = data;
-  d4est_poisson_flux_data->interface_fcn = test_d4est_mortar_computations_interface;
+  d4est_poisson_flux_data->interface_fcn = test_d4est_mortars_computations_interface;
   d4est_poisson_flux_data->boundary_fcn = NULL;
   d4est_poisson_flux_data->boundary_condition = NULL;
   d4est_poisson_flux_data->destroy = NULL;
@@ -279,8 +279,8 @@ test_d4est_mortar_computations_sj_and_n_on_interface
       }
     }
   
-  d4est_mortar_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(d4est_poisson_flux_data);
-  d4est_mortar_compute_flux_on_local_elements
+  d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(d4est_poisson_flux_data);
+  d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
      ghost,
