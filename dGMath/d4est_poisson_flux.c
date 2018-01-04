@@ -954,9 +954,9 @@ d4est_poisson_flux_init_element_data
            volume_nodes_lobatto
           );
 
-        for (int i = 0; i < (P4EST_DIM); i++){
-          d4est_operators_apply_dij(d4est_ops, &(u[ed->nodal_stride]), (P4EST_DIM), ed->deg, i, &ed->dudr_elem[i][0]);
-        }
+        /* for (int i = 0; i < (P4EST_DIM); i++){ */
+        /*   d4est_operators_apply_dij(d4est_ops, &(u[ed->nodal_stride]), (P4EST_DIM), ed->deg, i, &ed->dudr_elem[i][0]); */
+        /* } */
       }
     }     
 }

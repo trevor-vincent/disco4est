@@ -30,16 +30,17 @@ Z1 = 1.0
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
-[d4est_vtk_geometry]
-name = brick
-X0 = 0.0
-X1 = 1.0
-Y0 = 0.0
-Y1 = 1.0
-Z0 = 0.0
-Z1 = 1.0
-DX_compute_method = analytic
-JAC_compute_method = numerical
+[d4est_vtk]
+filename = poisson_sinx_uniform
+geometry_section = geometry
+output_type = binary
+grid_type = dg
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
 
 ; [geometry]
 ; name = cubed_sphere
@@ -65,7 +66,7 @@ JAC_compute_method = numerical
 ksp_type = fcg
 ksp_atol = 1e-18
 ksp_rtol = 1e-20
-ksp_max_it = 0
+ksp_max_it = 10000
 ksp_view = 0
 ksp_monitor = 1
 ksp_converged_reason = 1

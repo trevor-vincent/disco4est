@@ -69,6 +69,7 @@ double d4est_mesh_volume_integral(p4est_t *p4est,d4est_operators_t *d4est_ops,d4
 double d4est_mesh_surface_integral(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,int(*is_it_on_surface)(d4est_element_data_t *,int,void *),double(*compute_face_integral)(d4est_element_data_t *,int,double *,double *[(P4EST_DIM)],double *[(P4EST_DIM)],double *[(P4EST_DIM)][(P4EST_DIM)],void *),void *user);
 double d4est_mesh_compare_two_fields(p4est_t *p4est,double *field1,double *field2,const char *msg,d4est_mesh_boundary_option_t boundary_option,d4est_mesh_print_option_t print_option,double eps);
 int d4est_mesh_get_local_nodes(p4est_t *p4est);
+int d4est_mesh_get_ghost_nodes(p4est_ghost_t *ghost,d4est_element_data_t *ghost_data);
 void d4est_mesh_get_local_nodes_callback(p4est_iter_volume_info_t *info,void *user_data);
 void d4est_mesh_init_field_ext(p4est_t *p4est,double *node_vec,d4est_xyz_fcn_ext_t xyz_fcn,void *user,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom);
 void d4est_mesh_compute_point_error(double *v1,double *v2,double *error,int local_nodes);

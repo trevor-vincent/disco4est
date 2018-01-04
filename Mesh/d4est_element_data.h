@@ -49,7 +49,7 @@ typedef struct {
 
   /* local nodal fields */
   double u_elem[MAX_NODES];   /* storage for MPI transfers */
-  double dudr_elem[(P4EST_DIM)][MAX_NODES];   /* storage for MPI transfers */
+  double* dudr_elem[(P4EST_DIM)];   /* storage for MPI transfers */
   double* Au_elem;  /* alias for Au */
   
   int deg; /* nodal degree */

@@ -182,6 +182,55 @@ d4est_poisson_apply_stiffness_matrix
 }
 
 void
+d4est_poisson_compute_dudr
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ d4est_poisson_flux_data_t* flux_fcn_data,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_geometry_storage_t* d4est_factors,
+ double* dudr [(P4EST_DIM)]
+){
+
+ int stride = 0;
+ for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data;         
+        int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),ed->deg);
+        for (int i = 0; i < (P4EST_DIM); i++){
+          ed->dudr_elem[i] = &dudr[i][stride];
+          d4est_operators_apply_dij(d4est_ops, &ed->u_elem[0], (P4EST_DIM), ed->deg, i, &ed->dudr_elem[i][0]);
+        }
+        stride += volume_nodes_lobatto;
+      }
+    }
+
+
+  for (int gid = 0; gid < ghost->ghosts.elem_count; gid++){
+    d4est_element_data_t* ged = &ghost_data[gid];
+    int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),ged->deg);
+    for (int i = 0; i < (P4EST_DIM); i++){
+      ged->dudr_elem[i] = &dudr[i][stride];
+      d4est_operators_apply_dij(d4est_ops, &ged->u_elem[0], (P4EST_DIM), ged->deg, i, &ged->dudr_elem[i][0]);
+    }
+    stride += volume_nodes_lobatto;
+  }
+
+ 
+}
+
+
+void
 d4est_poisson_apply_mortar_matrices
 (
  p4est_t* p4est,
@@ -196,7 +245,6 @@ d4est_poisson_apply_mortar_matrices
 {
   d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(flux_fcn_data);
 
-  p4est_ghost_exchange_data(p4est,ghost,ghost_data);
   
   d4est_mortars_compute_flux_on_local_elements
     (
@@ -245,9 +293,28 @@ d4est_poisson_apply_aij
      d4est_quad
     );
 
-  /* printf("after stiffness "); */
-  /* DEBUG_PRINT_ARR_DBL(prob_vecs->Au, prob_vecs->local_nodes); */
+
+  p4est_ghost_exchange_data(p4est,ghost,ghost_data);
+
+  int ghost_nodes = d4est_mesh_get_ghost_nodes(ghost, ghost_data);
+  double* dudr [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(dudr,
+                                                  prob_vecs->local_nodes
+                                                  + ghost_nodes
+                                                 );
   
+  d4est_poisson_compute_dudr
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     flux_fcn_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     dudr
+    );
+
   d4est_poisson_apply_mortar_matrices
     (
      p4est,
@@ -260,6 +327,9 @@ d4est_poisson_apply_aij
      d4est_factors
     );
 
+  D4EST_FREE_DIM_VEC(dudr);
+  
+  
   /* printf("after apply mortar matrices "); */
   /* DEBUG_PRINT_ARR_DBL(prob_vecs->Au, prob_vecs->local_nodes); */
   

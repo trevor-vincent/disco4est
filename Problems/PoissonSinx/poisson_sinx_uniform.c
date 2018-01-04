@@ -177,7 +177,6 @@ problem_init
      NULL
     );
     
-
   d4est_poisson_build_rhs_with_strong_bc
     (
      p4est,
@@ -199,23 +198,6 @@ problem_init
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
 
-    /* DEBUG_PRINT_ARR_DBL(prob_vecs.rhs, prob_vecs.local_nodes); */
-    
-    /* d4est_solver_cg_params_t params; */
-    /* d4est_solver_cg_input(p4est, input_file, "d4est_cg", "[D4EST_CG]", &params); */
-
-    /* d4est_solver_cg_solve(p4est, */
-    /*                       &prob_vecs, */
-    /*                       &prob_fcns, */
-    /*                       ghost, */
-    /*                       ghost_data, */
-    /*                       d4est_ops, */
-    /*                       d4est_geom, */
-    /*                       d4est_quad, */
-    /*                       d4est_factors, */
-    /*                       &params */
-    /*                      ); */
-    
     krylov_petsc_params_t krylov_petsc_params;
     krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
     
@@ -234,28 +216,45 @@ problem_init
        NULL
       );
 
+    double* u_analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
+    double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
 
-    d4est_output_vtk_with_analytic_error
+    d4est_mesh_init_field
       (
        p4est,
+       u_analytic,
+       poisson_sinx_analytic_solution,
        d4est_ops,
        d4est_geom,
-       d4est_quad,
-       &prob_vecs,
-       input_file,
-       "uniform_poisson_sinx",
-       poisson_sinx_analytic_solution,
-       &ctx,
-       0,
-       level
+       INIT_FIELD_ON_LOBATTO,
+       NULL
       );
 
 
+    for (int i = 0; i < prob_vecs.local_nodes; i++){
+      error[i] = fabs(prob_vecs.u[i] - u_analytic[i]);
+    }
+    
+    d4est_vtk_save
+      (
+       p4est,
+       d4est_ops,
+       input_file,
+       "d4est_vtk",
+       "[D4EST_VTK]",
+       (const char * []){"u","u_analytic","error", NULL},
+       (double* []){prob_vecs.u, u_analytic, error},
+       (const char * []){NULL},
+       (double* []){NULL}
+      );
+
+    P4EST_FREE(u_analytic);
+    P4EST_FREE(error);
+    
     d4est_ip_energy_norm_data_t ip_norm_data;
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
-    /*  */
     printf("ip_norm_data.penalty_prefactor = %f\n", ip_norm_data.penalty_prefactor);
     
     d4est_output_norms_using_analytic_solution

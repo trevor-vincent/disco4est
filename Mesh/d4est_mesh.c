@@ -1937,6 +1937,19 @@ d4est_mesh_get_local_nodes_callback
                                     elem_data->deg);
 }
 
+int d4est_mesh_get_ghost_nodes
+(
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data
+)
+{
+  int ghost_nodes = 0;
+  for (int gid = 0; gid < ghost->ghosts.elem_count; gid++){
+    ghost_nodes += d4est_lgl_get_nodes((P4EST_DIM),ghost_data[gid].deg);
+  }
+  return ghost_nodes;
+}
+
 int d4est_mesh_get_local_nodes(p4est_t* p4est)
 {
   int local_nodes = 0;
