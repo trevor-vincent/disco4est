@@ -347,11 +347,13 @@ d4est_vtk_context_destroy (d4est_vtk_context_t * context)
   P4EST_ASSERT (context != NULL);
   P4EST_ASSERT (context->p4est != NULL);
 
-  /* since this function is called inside write_header and write_footer,
-   * we cannot assume a consistent state of all member variables */
+  /* since this function is called inside write_header and write_footer, */
+  /* we cannot assume a consistent state of all member variables */
   
   P4EST_ASSERT (context->filename != NULL);
   free(context->filename);
+  free(context->input_section);
+  free(context->geometry_section);
   
   /* deallocate node storage */
   if (context->nodes != NULL) {
