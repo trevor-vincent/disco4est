@@ -109,6 +109,8 @@ SET (
   SRCS_3D_ONLY
   Geometry/d4est_geometry_cubed_sphere.c
   Geometry/d4est_connectivity_cubed_sphere.c
+  Geometry/d4est_geometry_general_wedge.c
+  Geometry/d4est_geometry_hole_in_a_box.c
   )
 
 SET (

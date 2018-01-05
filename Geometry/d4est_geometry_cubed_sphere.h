@@ -24,7 +24,8 @@ void d4est_geometry_cubed_sphere_inner_shell_block_new(int mpirank,const char *i
 void d4est_geometry_cubed_sphere_innerouter_shell_new(int mpirank,const char *input_file,const char *input_section,const char *printf_prefix,d4est_geometry_t *d4est_geom);
 void d4est_geometry_cubed_sphere_7tree_new(int mpirank,const char *input_file,const char *input_section,const char *printf_prefix,d4est_geometry_t *d4est_geom);
 void d4est_geometry_cubed_sphere_new(int mpirank,const char *input_file,const char *input_section,const char *printf_prefix,d4est_geometry_t *d4est_geom);
-p4est_connectivity_t *d4est_connectivity_new_sphere_7tree(void);
+void d4est_geometry_cubed_sphere_X_aux_rotate(int which_tree,double xyz_top[(P4EST_DIM)],double xyz[(P4EST_DIM)]);
+void d4est_geometry_cubed_sphere_DX_aux_rotate(int which_tree,double dxyz_drst_top[(P4EST_DIM)][(P4EST_DIM)],double dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
 
 
 #endif

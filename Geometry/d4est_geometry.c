@@ -15,6 +15,7 @@
 
 #if (P4EST_DIM)==3
 #include <d4est_geometry_cubed_sphere.h>
+#include <d4est_geometry_hole_in_a_box.h>
 #endif
 
 #if (P4EST_DIM)==2
@@ -134,8 +135,12 @@ d4est_geometry_new(int mpirank,
   
 #if (P4EST_DIM)==3
   if (d4est_util_match(input.name,"cubed_sphere")) {
-    d4est_geometry_cubed_sphere_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
     d4est_geom->geom_type = GEOM_CUBED_SPHERE_13TREE;
+    d4est_geometry_cubed_sphere_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
+  }
+  if (d4est_util_match(input.name,"hole_in_a_box")){
+    d4est_geom->geom_type = GEOM_HOLE_IN_A_BOX;
+    d4est_geometry_hole_in_a_box_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
   }
   else if (d4est_util_match(input.name,"cubed_sphere_7tree")) {
     d4est_geometry_cubed_sphere_7tree_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);

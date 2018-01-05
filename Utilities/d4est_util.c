@@ -11,6 +11,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+double
+d4est_util_secant_fcn(double x){
+  return 1./cos(x);
+}
+
+
 int d4est_util_compact(double *array, int size)
 {
   int i;

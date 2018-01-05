@@ -14,10 +14,6 @@ typedef enum {GEOM_COMPUTE_NUMERICAL, GEOM_COMPUTE_ANALYTIC, GEOM_COMPUTE_NOT_SE
 
 typedef enum { DIAM_APPROX, NO_DIAM_APPROX, DIAM_APPROX_CUBE} diam_compute_option_t;
 
-
-
-
-
 //         +----------------------+
 //         |			  |
 //         |			  |	     b
@@ -39,7 +35,6 @@ typedef struct {
 } d4est_geometry_face_info_t;
 
 
-
 typedef enum {GEOM_CUBED_SPHERE_13TREE,
               GEOM_CUBED_SPHERE_7TREE,
               GEOM_CUBED_SPHERE_OUTER_SHELL,
@@ -49,6 +44,7 @@ typedef enum {GEOM_CUBED_SPHERE_13TREE,
               GEOM_CUBED_SPHERE_WITH_SPHERE_HOLE,
               GEOM_DISK_5TREE,
               GEOM_DISK_OUTER_WEDGE,
+              GEOM_HOLE_IN_A_BOX,
               GEOM_BRICK,
               GEOM_NONE} d4est_geometry_type_t;
 
