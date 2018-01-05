@@ -5,6 +5,7 @@
 #include <d4est_xyz_functions.h>
 #include <d4est_operators.h>
 #include <d4est_quadrature.h>
+#include <d4est_field.h>
 
 #define MAX_DEGREE 8
 #if (P4EST_DIM) == 3
@@ -65,6 +66,8 @@ typedef struct {
 } d4est_element_data_t;
 
 /* This file was automatically generated.  Do not edit! */
+int d4est_element_data_get_stride_for_field(d4est_element_data_t *ed,d4est_field_type_t type);
+int d4est_element_data_get_size_of_field(d4est_element_data_t *ed,d4est_field_type_t type);
 void d4est_element_data_print_local_estimator(p4est_t *p4est);
 void d4est_element_data_reorient_f_p_elements_to_f_m_order(d4est_element_data_t **e_p,int face_dim,int f_m,int f_p,int o,int faces_p,d4est_element_data_t *e_p_oriented[(P4EST_HALF)]);
 void d4est_element_data_store_nodal_vec_in_vertex_array(p4est_t *p4est,double *nodal_vec,double *corner_vec);

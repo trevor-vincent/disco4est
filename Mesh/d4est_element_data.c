@@ -3,6 +3,7 @@
 #include <d4est_xyz_functions.h>
 #include <d4est_util.h>
 #include <d4est_linalg.h>
+#include <d4est_field.h>
 #include <sc_reduce.h>
 
 /* typedef struct { */
@@ -479,3 +480,46 @@ d4est_element_data_print_local_estimator
 
 
 
+
+int
+d4est_element_data_get_size_of_field
+(
+ d4est_element_data_t* ed,
+ d4est_field_type_t type
+)
+{
+  D4EST_FIELD_CHECK_TYPE(type);
+  if (type == VOLUME_NODAL){
+    return d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+  }
+  else if (type == VOLUME){
+    return 1;
+  }
+  else if (type == FACE){
+    return (P4EST_FACES);
+  }
+  else {
+    D4EST_ABORT("not a supported type");
+  }
+}
+
+int d4est_element_data_get_stride_for_field
+(
+ d4est_element_data_t* ed,
+ d4est_field_type_t type
+)
+{
+  D4EST_FIELD_CHECK_TYPE(type);
+  if (type == VOLUME_NODAL){
+    return ed->nodal_stride;
+  }
+  else if (type == VOLUME){
+    return ed->id;
+  }
+  else if (type == FACE){
+    return ed->id*(P4EST_FACES);
+  }
+  else {
+    D4EST_ABORT("not a supported type");
+  }
+}

@@ -119,7 +119,6 @@ SET (
 SET (
   SRCS
   Utilities/ini.c
-  # Utilities/arbquad.c
   Utilities/d4est_util.c
   LinearAlgebra/d4est_linalg.c
   EllipticSystem/d4est_elliptic_eqns.c
@@ -147,7 +146,8 @@ SET (
   Mesh/d4est_xyz_functions.c
   Mesh/d4est_mortars.c
   Mesh/d4est_mortars_aux.c
-  # Quadrature/d4est_quadrature_compactified.c
+  Mesh/d4est_ghost_data.c
+  Mesh/d4est_ghost.c
   Quadrature/d4est_quadrature.c
   Quadrature/d4est_quadrature_legendre.c
   Quadrature/d4est_quadrature_lobatto.c
@@ -323,8 +323,6 @@ endfunction()
 ##
 enable_testing()
 set(CTEST_MEMORYCHECK_COMMAND /usr/bin/valgrind)
-# set( MEMORYCHECK_SUPPRESSIONS_FILE "/usr/share/openmpi/openmpi-valgrind.supp" )
-# set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=/usr/share/openmpi/openmpi-valgrind.supp" )
 set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/suppressions.txt" )
 
 add_d4est_test_3d(test_d4est_vtk test_d4est_vtk.c . test_d4est_vtk)

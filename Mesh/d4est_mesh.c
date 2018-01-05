@@ -10,7 +10,7 @@
 #include <ini.h>
 #include <sc_reduce.h>
 #include <d4est_linalg.h>
-
+#include <d4est_ghost_data.h>
 static
 int d4est_mesh_initial_extents_handler
 (
@@ -2143,5 +2143,19 @@ d4est_mesh_volume_integral
       }
     }
   return integral;
+}
+
+
+
+double* d4est_mesh_get_field_on_ghost
+(
+ d4est_element_data_t* ed,
+ int ghost_name_id,
+ d4est_ghost_data_t* dgd
+){
+  D4EST_ASSERT(dgd != NULL);
+  D4EST_ASSERT(ghost_name_id >= 0 && ghost_name_id < dgd->num_vecs);
+  int stride = dgd->receive_strides[ed->id][ghost_name_id];
+  return &dgd->receive_data[stride];
 }
 
