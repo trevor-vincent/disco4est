@@ -330,3 +330,4 @@ set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppr
 add_d4est_test_3d(test_d4est_vtk test_d4est_vtk.c . test_d4est_vtk)
 add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
+add_d4est_problem_3d(two_punctures_driver two_punctures_robin_sphere_hp_mgpc_newton_petsc_cactus.c TwoPunctures)

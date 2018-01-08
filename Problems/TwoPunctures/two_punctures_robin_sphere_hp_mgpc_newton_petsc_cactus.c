@@ -46,21 +46,6 @@ skip_curved_elements
     return 1;
 }
 
-void
-save_u_fcn
-(
- p4est_t* p4est,
- d4est_elliptic_data_t* edata,
- const char* checkpoint_prefix,
- void* user
-)
-{
-  d4est_h5_create_dataset(p4est->mpirank, checkpoint_prefix, "u", H5T_NATIVE_DOUBLE, edata->local_nodes);
-  d4est_h5_write_dataset(p4est->mpirank, checkpoint_prefix, "u", H5T_NATIVE_DOUBLE, edata->u);
-  
-}
-
-
 typedef struct {
   
   int do_not_solve;
@@ -350,9 +335,6 @@ problem_init
   
   d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
-
-  d4est_output_energy_norm_fit_t* fit = d4est_output_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
-  
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
     d4est_estimator_bi_compute
@@ -392,47 +374,17 @@ problem_init
        d4est_factors
       );
 
-    /* DEBUG_PRINT_ARR_DBL(prob_vecs.Au, prob_vecs.local_nodes); */
-    /* D4EST_ABORT(""); */
-    
-    d4est_output_vtk_with_no_fields
+   d4est_vtk_save
       (
        p4est,
        d4est_ops,
-       d4est_geom,
        input_file,
-       "two_punctures_no_fields",
-       level
-      );
-    
-    d4est_output_vtk
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       prob_vecs.u,
-       u_prev,
-       error,
-       prob_vecs.Au,
-       input_file,
-       "two_punctures",
-       prob_vecs.local_nodes,
-       level,
-       1
-      );
-
-    d4est_output_vtk_degree_mesh
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       error,
-       prob_vecs.local_nodes,
-       input_file,
-       "two_punctures_degree_mesh",
-       1,
+       "d4est_vtk",
+       "[D4EST_VTK]",
+       (const char * []){"u","u_prev","error", NULL},
+       (double* []){prob_vecs.u, u_prev, error},
+       (const char * []){NULL},
+       (double* []){NULL},
        level
       );
 
@@ -450,12 +402,13 @@ problem_init
        d4est_factors,
        *ghost,
        *ghost_data,
-       &ip_norm_data,
+       NULL,
        stats->total,
        error,
-       fit,
+       NULL,
        NULL
       );
+    
 
     printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
     d4est_output_norms
@@ -467,10 +420,10 @@ problem_init
        d4est_factors,
        *ghost,
        *ghost_data,
-       &ip_norm_data,
+       NULL,
        stats->total,
        error,
-       fit,
+       NULL,
        skip_curved_elements
       );
 
@@ -623,26 +576,20 @@ problem_init
          d4est_factors,
          &krylov_params,
          &newton_params,
-         NULL
+         pc
         );
     }
 
-    char* checkpoint_save_as;
-    asprintf(&checkpoint_save_as,"checkpoint%d", level);
-    
-    d4est_checkpoint_save_aux
+    d4est_checkpoint_save
       (
-       checkpoint_save_as,
+       level,
+       "checkpoint",
        p4est,
-       &prob_vecs,
        d4est_factors,
-       1,
-       save_u_fcn,
-       NULL
+       (const char * []){"u", NULL},
+       (double* []){prob_vecs.u}
       );
 
-    free(checkpoint_save_as);
-    
 
     krylov_pc_multigrid_destroy(pc);
     multigrid_logger_residual_destroy(logger);
@@ -660,7 +607,6 @@ problem_init
   d4est_amr_destroy(d4est_amr_custom_uniform_p);
   d4est_poisson_flux_destroy(flux_data_for_jac);  
   d4est_poisson_flux_destroy(flux_data_for_res);  
-  d4est_output_destroy_energy_norm_fit(fit);
   P4EST_FREE(error);
   P4EST_FREE(u_prev);
   P4EST_FREE(prob_vecs.u);
