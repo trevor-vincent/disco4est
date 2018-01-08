@@ -16,6 +16,35 @@ d4est_util_secant_fcn(double x){
   return 1./cos(x);
 }
 
+char* d4est_util_add_cwd(const char* dir)
+{
+  char* full_dir;
+  char *cwd_path =(char *)malloc(10000*sizeof(char));
+  getcwd(cwd_path,10000);
+  asprintf(&full_dir, "%s/%s/", cwd_path, dir);
+  free(cwd_path);
+  return full_dir;
+}
+
+void d4est_util_make_directory(const char* dir, int add_cwd_to_dir)
+{
+  char* full_dir = NULL;
+
+  if (add_cwd_to_dir){
+    full_dir = d4est_util_add_cwd(dir);
+  }
+  else {
+    asprintf(&full_dir, "%s", dir);
+  }
+  
+  struct stat st = {0};
+  if (stat(full_dir, &st) == -1) {
+    mkdir(full_dir, 0700);
+  }
+
+  free(full_dir);
+}
+
 
 int d4est_util_compact(double *array, int size)
 {

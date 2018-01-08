@@ -100,6 +100,7 @@ struct d4est_vtk_context
   d4est_vtk_grid_type_t grid_type;
   char* input_section;
   char* geometry_section;
+  char* folder;
   int write_tree;
   int write_level;
   int write_rank;
@@ -352,6 +353,7 @@ d4est_vtk_context_destroy (d4est_vtk_context_t * context)
   
   P4EST_ASSERT (context->filename != NULL);
   free(context->filename);
+  free(context->folder);
   free(context->input_section);
   free(context->geometry_section);
   
@@ -502,7 +504,7 @@ d4est_vtk_write_header (d4est_vtk_context_t * cont,
   }
 
   /* Have each proc write to its own file */
-  snprintf (cont->vtufilename, BUFSIZ, "%s_%04d.vtu", filename, mpirank);
+  snprintf (cont->vtufilename, BUFSIZ, "%s%s_%04d.vtu", cont->folder, filename, mpirank);
   /* Use "w" for writing the initial part of the file.
    * For further parts, use "r+" and fseek so write_compressed succeeds.
    */
@@ -778,7 +780,7 @@ d4est_vtk_write_header (d4est_vtk_context_t * cont,
 
   /* Only have the root write to the parallel vtk file */
   if (mpirank == 0) {
-    snprintf (cont->pvtufilename, BUFSIZ, "%s.pvtu", filename);
+    snprintf (cont->pvtufilename, BUFSIZ, "%s%s.pvtu", cont->folder,filename);
 
     cont->pvtufile = fopen (cont->pvtufilename, "wb");
     if (!cont->pvtufile) {
@@ -829,7 +831,7 @@ d4est_vtk_write_header (d4est_vtk_context_t * cont,
     /* Create a master file for visualization in Visit; this will be used
      * only in d4est_vtk_write_footer().
      */
-    snprintf (cont->visitfilename, BUFSIZ, "%s.visit", filename);
+    snprintf (cont->visitfilename, BUFSIZ, "%s%s.visit", cont->folder,filename);
     cont->visitfile = fopen (cont->visitfilename, "wb");
     if (!cont->visitfile) {
       P4EST_LERRORF ("Could not open %s for output\n", cont->visitfilename);
@@ -1619,28 +1621,37 @@ d4est_vtk_save
  const char ** dg_field_names,
  double ** dg_fields,
  const char ** element_field_names,
- double ** element_fields
+ double ** element_fields,
+ int folder_number
 )
 {
-  d4est_vtk_context_t* vtk_ctx = d4est_vtk_dg_context_new(p4est, d4est_ops, input_file, input_section, print_prefix);
 
+  d4est_vtk_context_t* cont = d4est_vtk_dg_context_new(p4est, d4est_ops, input_file, input_section, print_prefix);
+
+  cont->folder = d4est_util_add_cwd("VTK");
+  d4est_util_make_directory(cont->folder,0);
+  if (folder_number >= 0){
+    asprintf(&cont->folder,"%s%d/", cont->folder, folder_number);
+  }
+  d4est_util_make_directory(cont->folder,0);
+  
   d4est_geometry_t* geom_vtk = d4est_geometry_new
                                (
                                 p4est->mpirank,
                                 input_file,
-                                vtk_ctx->geometry_section,
+                                cont->geometry_section,
                                 "[D4EST_VTK_GEOMETRY]"
                                );
   
-  d4est_vtk_context_set_geom(vtk_ctx, geom_vtk);
-  d4est_vtk_context_set_scale(vtk_ctx, .99);
+  d4est_vtk_context_set_geom(cont, geom_vtk);
+  d4est_vtk_context_set_scale(cont, .99);
 
   int* deg_array = NULL;
-  if(vtk_ctx->grid_type == D4EST_VTK_DG_GRID){
+  if(cont->grid_type == D4EST_VTK_DG_GRID){
     deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
     d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
   }
-  else if (vtk_ctx->grid_type == D4EST_VTK_CORNER_GRID){
+  else if (cont->grid_type == D4EST_VTK_CORNER_GRID){
     deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
     for (int i = 0; i < p4est->local_num_quadrants; i++) deg_array[i] = 1;
   }
@@ -1663,15 +1674,14 @@ d4est_vtk_save
     }
   }
 
-  d4est_vtk_context_set_deg_array(vtk_ctx, deg_array);
-  vtk_ctx = d4est_vtk_write_header(vtk_ctx, d4est_ops, vtk_ctx->output_type);    
+  d4est_vtk_context_set_deg_array(cont, deg_array);
+  cont = d4est_vtk_write_header(cont, d4est_ops, cont->output_type);    
 
-  vtk_ctx = d4est_vtk_write_data(vtk_ctx, num_dg_fields, dg_field_names, dg_fields, vtk_ctx->grid_type, vtk_ctx->output_type);
-  vtk_ctx = d4est_vtk_write_element_data(vtk_ctx, vtk_ctx->write_tree, vtk_ctx->write_level, vtk_ctx->write_rank, vtk_ctx->wrap_rank, vtk_ctx->write_deg, num_element_fields, element_field_names, element_fields, vtk_ctx->output_type);
+  cont = d4est_vtk_write_data(cont, num_dg_fields, dg_field_names, dg_fields, cont->grid_type, cont->output_type);
+  cont = d4est_vtk_write_element_data(cont, cont->write_tree, cont->write_level, cont->write_rank, cont->wrap_rank, cont->write_deg, num_element_fields, element_field_names, element_fields, cont->output_type);
     
-  d4est_vtk_write_footer(vtk_ctx);
+  d4est_vtk_write_footer(cont);
   d4est_geometry_destroy(geom_vtk);
   P4EST_FREE(deg_array);
 }
-
 

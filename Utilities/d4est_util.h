@@ -252,6 +252,8 @@ double d4est_util_max(double a,double b);
 double d4est_util_min(double a,double b);
 int d4est_util_compact_1st_alongwith_2nd(double *array,double *array2,int size);
 int d4est_util_compact(double *array,int size);
+void d4est_util_make_directory(const char *dir,int add_cwd_to_dir);
+char *d4est_util_add_cwd(const char *dir);
 double d4est_util_secant_fcn(double x);
 
 #endif

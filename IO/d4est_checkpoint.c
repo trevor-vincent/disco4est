@@ -4,50 +4,30 @@
 #include <d4est_element_data.h>
 
 
-d4est_checkpoint_options_t*
-d4est_checkpoint_options_init
-(
- const char* input_file
-){
-  d4est_checkpoint_options_t* checkpoint_options = P4EST_ALLOC(d4est_checkpoint_options_t,1);
-
-  checkpoint_options->check_id = 0;
-  checkpoint_options->check_at_walltime_minus = -1;
-  checkpoint_options->check_every_n_amr_steps = -1;
-  checkpoint_options->check_every_n_krylov_steps = -1;
-  checkpoint_options->check_every_n_newton_steps = -1;
-
-  /* d4est_checkpoint_options_parse_input_file(checkpoint_options,input_file);  */
-}
-
 void
 d4est_checkpoint_save
-(){
-
-}
-
-void
-d4est_checkpoint_options_destroy
 (
- d4est_checkpoint_options_t* checkpoint_options
-){
-  P4EST_FREE(checkpoint_options);
-}
-
-void
-d4est_checkpoint_save_aux
-(
+ int checkpoint_number,
  const char* checkpoint_prefix,
  p4est_t* p4est,
- d4est_elliptic_data_t* elliptic_data,
  d4est_mesh_geometry_storage_t* storage,
- int number_of_user_datasets,
- void(*user_fcn)(p4est_t*, d4est_elliptic_data_t*, const char*, void*),
- void* user_ctx
-){
-
+ const char ** dg_field_names,
+ double ** dg_fields
+)
+{
+  char* checkpoint_folder = d4est_util_add_cwd("Checkpoints");
+  d4est_util_make_directory(checkpoint_folder,0);
+  
+  if (checkpoint_number >= 0){
+    asprintf(&checkpoint_folder,"%s%d/", checkpoint_folder, checkpoint_number);
+    d4est_util_make_directory(checkpoint_folder,0);
+  }
+  
+  char* checkpoint_folder_and_prefix = NULL;
+  asprintf(&checkpoint_folder_and_prefix,"%s%s", checkpoint_folder, checkpoint_prefix);
+  
   char* p4est_file_name;
-  asprintf(&p4est_file_name,"%s.p4est", checkpoint_prefix);
+  asprintf(&p4est_file_name,"%s.p4est", checkpoint_folder_and_prefix);
   
   int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
   d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
@@ -56,22 +36,41 @@ d4est_checkpoint_save_aux
              p4est,
              0/* do not save element data */);
 
-  d4est_h5_create_file(p4est->mpirank, checkpoint_prefix);
-  d4est_h5_create_dataset(p4est->mpirank, checkpoint_prefix, "degree", H5T_NATIVE_INT, p4est->local_num_quadrants);
-  d4est_h5_create_dataset(p4est->mpirank, checkpoint_prefix, "x", H5T_NATIVE_DOUBLE, elliptic_data->local_nodes);
-  d4est_h5_create_dataset(p4est->mpirank, checkpoint_prefix, "y", H5T_NATIVE_DOUBLE, elliptic_data->local_nodes); 
-  d4est_h5_write_dataset(p4est->mpirank, checkpoint_prefix, "degree", H5T_NATIVE_INT, deg_array);
-  d4est_h5_write_dataset(p4est->mpirank, checkpoint_prefix, "x", H5T_NATIVE_DOUBLE, &storage->xyz[0]);
-  d4est_h5_write_dataset(p4est->mpirank, checkpoint_prefix, "y", H5T_NATIVE_DOUBLE, &storage->xyz[elliptic_data->local_nodes]);
+
+  int num_dg_nodes = 0;
+  for (int i = 0; i < p4est->local_num_quadrants; i++){
+    num_dg_nodes += d4est_lgl_get_nodes((P4EST_DIM), deg_array[i]);
+  }
+  
+  d4est_h5_create_file(p4est->mpirank, checkpoint_folder_and_prefix);
+  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "degree", H5T_NATIVE_INT, p4est->local_num_quadrants);
+  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "x", H5T_NATIVE_DOUBLE, num_dg_nodes);
+  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "y", H5T_NATIVE_DOUBLE, num_dg_nodes); 
+  d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "degree", H5T_NATIVE_INT, deg_array);
+  d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "x", H5T_NATIVE_DOUBLE, &storage->xyz[0]);
+  d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "y", H5T_NATIVE_DOUBLE, &storage->xyz[num_dg_nodes]);
 #if (P4EST_DIM)==3
-  d4est_h5_create_dataset(p4est->mpirank, checkpoint_prefix, "z", H5T_NATIVE_DOUBLE, elliptic_data->local_nodes);
-  d4est_h5_write_dataset(p4est->mpirank, checkpoint_prefix, "z", H5T_NATIVE_DOUBLE, &storage->xyz[elliptic_data->local_nodes*2]);
+  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "z", H5T_NATIVE_DOUBLE, num_dg_nodes);
+  d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "z", H5T_NATIVE_DOUBLE, &storage->xyz[num_dg_nodes*2]);
 #endif
 
-  user_fcn(p4est, elliptic_data, checkpoint_prefix, user_ctx);
+  int num_dg_fields = 0;
+  if (dg_field_names != NULL && dg_fields != NULL){
+    for (int i = 0; dg_field_names[i] != NULL; i++){
+      num_dg_fields++;
+    }
+  }
 
-  P4EST_FREE(deg_array);
+  
+  for (int i = 0; i < num_dg_fields; i++){
+    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, dg_field_names[i], H5T_NATIVE_DOUBLE, num_dg_nodes);
+    d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, dg_field_names[i], H5T_NATIVE_DOUBLE, dg_fields[i]);  
+  }
+  
+  free(checkpoint_folder);
+  free(checkpoint_folder_and_prefix);
   free(p4est_file_name);
+  P4EST_FREE(deg_array);
 }
 
 
