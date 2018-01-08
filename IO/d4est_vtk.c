@@ -270,9 +270,7 @@ d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* d4est_ops, const c
 #endif
   d4est_vtk_context_t *cont;
 
-  P4EST_ASSERT (p4est != NULL);
-  P4EST_ASSERT (filename != NULL);
-  
+  P4EST_ASSERT (p4est != NULL);  
   /* Allocate, initialize the vtk context.  Important to zero all fields. */
   cont = P4EST_ALLOC_ZERO (d4est_vtk_context_t, 1);
   cont->d4est_ops = d4est_ops;
