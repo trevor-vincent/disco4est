@@ -230,7 +230,8 @@ int main(int argc, char *argv[])
      (const char*[]){"sinvec", NULL},
      (double**)((const double*[]){sinvec, NULL}),
      (const char*[]){"element_vol", NULL},
-     (double**)((const double*[]){element_volume, NULL})
+     (double**)((const double*[]){element_volume, NULL}),
+     -1
     );
   /*  */
      

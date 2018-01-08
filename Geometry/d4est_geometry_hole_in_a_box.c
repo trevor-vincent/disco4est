@@ -100,7 +100,7 @@ d4est_geometry_hole_in_a_box_DX
   d4est_geometry_hole_in_a_box_attr_t* hiab_attrs = d4est_geom->user;
   double dxyz_drst_top[(P4EST_DIM)][(P4EST_DIM)];
 
-  d4est_geometry_general_wedge_noncompactified_DX
+  d4est_geometry_general_wedge_3D_DX
     (
      d4est_geom,
      which_tree,
@@ -141,7 +141,7 @@ d4est_geometry_hole_in_a_box_X
   d4est_geometry_hole_in_a_box_attr_t* hiab_attrs = geom->user;
   double xyz_top[(P4EST_DIM)];
 
-  d4est_geometry_general_wedge_X
+  d4est_geometry_general_wedge_3D_X
     (
      geom,
      which_tree,

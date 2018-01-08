@@ -43,16 +43,17 @@ Z1 = 1.0
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
-[d4est_vtk_geometry]
-name = brick
-X0 = 0.0
-X1 = 1.0
-Y0 = 0.0
-Y1 = 1.0
-Z0 = 0.0
-Z1 = 1.0
-DX_compute_method = analytic
-JAC_compute_method = numerical
+[d4est_vtk]
+filename = constant_density_star
+geometry_section = geometry
+output_type = zlib_binary
+grid_type = dg
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
 
 [d4est_solver_newton]
 imin = 10

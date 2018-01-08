@@ -405,15 +405,6 @@ problem_init
       );
     }
 
-    /* u_sum = 0.; */
-    /* for (int i = 0; i < prob_vecs.local_nodes; i++) */
-    /*   u_sum += prob_vecs.u[i]; */
-    /* printf("u sum = %.25f\n", u_sum); */
-    
-    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, prob_vecs.local_nodes); */
-    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.Au, prob_vecs.local_nodes); */
-
-
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");

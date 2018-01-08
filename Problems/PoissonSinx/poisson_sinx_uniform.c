@@ -245,7 +245,8 @@ problem_init
        (const char * []){"u","u_analytic","error", NULL},
        (double* []){prob_vecs.u, u_analytic, error},
        (const char * []){NULL},
-       (double* []){NULL}
+       (double* []){NULL},
+       level
       );
 
     P4EST_FREE(u_analytic);

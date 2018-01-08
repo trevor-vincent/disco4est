@@ -3,7 +3,7 @@
 #include <d4est_geometry_general_wedge.h>
 
 void
-d4est_geometry_general_wedge_X
+d4est_geometry_general_wedge_3D_X
 (
  d4est_geometry_t * geom,
  p4est_topidx_t which_tree,
@@ -56,7 +56,7 @@ d4est_geometry_general_wedge_X
 
 
 void
-d4est_geometry_general_wedge_noncompactified_DX
+d4est_geometry_general_wedge_3D_DX
 (
  d4est_geometry_t* d4est_geom,
  p4est_topidx_t which_tree,
@@ -129,3 +129,31 @@ d4est_geometry_general_wedge_noncompactified_DX
   dxyz_drst[2][2] = ((cmax - cmin)*(zmin*(-1 + curvature_at_zmin - curvature_at_zmin/sqrt(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2))) + zmax*(1 + curvature_at_zmax*(-1 + 1/sqrt(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2))))))/2.;
 
 }
+
+/* void */
+/* d4est_geometry_general_wedge_2D_X */
+/* ( */
+/*  d4est_geometry_t * geom, */
+/*  p4est_topidx_t which_tree, */
+/*  p4est_qcoord_t q0 [2], */
+/*  p4est_qcoord_t dq, */
+/*  const double coords[2], */
+/*  coords_type_t coords_type, */
+/*  double xyz[2], */
+/*  double curvature_at_xmin, */
+/*  double curvature_at_xmax, */
+/*  double xmin, */
+/*  double xmax */
+/* ){ */
+/*   double xbar, ybar; */
+/*     /\* map x from [0,1] to [emin, emax] *\/ */
+/*   d4est_geometry_5treecylinder_linear_map(xref, 0., 1., emin, emax, &xbar); */
+/*     /\* map y from [0,1] to [-1,1] *\/ */
+/*   d4est_geometry_5treecylinder_linear_map(yref, 0., 1., -1., 1., &ybar); */
+  
+/*   double fmin = (1. - curvature_at_xmin)*xmin + xmin*curvature_at_xmin/sqrt(1. + ybar*ybar); */
+/*   double fmax = (1. - curvature_at_xmax)*xmax + xmax*curvature_at_xmax/sqrt(1. + ybar*ybar); */
+/*   xyz[0] = fmin + (fmax - fmin)*(xbar - xmin)/(xmax - xmin); */
+/*   xyz[1] = xyz[0]*ybar; */
+/* } */
+
