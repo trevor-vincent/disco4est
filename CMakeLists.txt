@@ -328,6 +328,8 @@ set(CTEST_MEMORYCHECK_COMMAND /usr/bin/valgrind)
 set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/suppressions.txt" )
 
 add_d4est_test_3d(test_d4est_vtk test_d4est_vtk.c . test_d4est_vtk)
+add_d4est_test_3d(test_d4est_operators_interpolate test_d4est_operators_interpolate.c . test_d4est_operators_interpolate)
+add_d4est_test_3d(test_d4est_operators test_d4est_operators.c . test_d4est_operators)
 add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
 add_d4est_problem_3d(two_punctures_driver two_punctures_robin_sphere_hp_mgpc_newton_petsc_cactus.c TwoPunctures)

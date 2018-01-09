@@ -12,6 +12,7 @@
 #include <d4est_estimator_residual.h>
 #include <d4est_geometry.h>
 #include <d4est_geometry_brick.h>
+#include <d4est_geometry_cubed_sphere.h>
 #include <d4est_vtk.h>
 #include <d4est_output.h>
 #include <d4est_mesh.h>
@@ -54,6 +55,13 @@ typedef struct {
   
 } two_punctures_init_params_t;
 
+
+static double
+get_tree_coordinate(double R0, double R1, double R){
+  double m = (2. - 1.)/((1./R1) - (1./R0));
+  double t = (1.*R0 - 2.*R1)/(R0 - R1);
+  return t + (m/R) - 1;
+}
 
 static
 int two_punctures_init_params_handler
@@ -580,6 +588,22 @@ problem_init
         );
     }
 
+    double ten_o_s3 = 10./sqrt(3);
+    double u_at_xyz [4];
+    d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.5}, 6, prob_vecs.u,  1);
+     d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){(3+ten_o_s3)/(2*ten_o_s3),.5,.5}, 6, prob_vecs.u, 1);
+
+    if (((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_inner_shell == 1){
+    d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.34539085817353093070042471302328055465280618350802632488039}, 3, prob_vecs.u, 1);
+    d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.91658997510966628585548127553663701263276019871119619289746}, 3, prob_vecs.u, 1);
+    }
+    else {
+    d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.00735152715280184837311522856572770756534949135984510409704}, 3, prob_vecs.u, 1);
+    d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.15553492568716001460897499511345636544704000752044528151370}, 3, prob_vecs.u, 1);
+    }
+ 
+    /* printf("err = %d\n", err); */
+    
     d4est_checkpoint_save
       (
        level,

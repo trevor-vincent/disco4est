@@ -15,6 +15,7 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
   d4est_ops->invvij_1d_table = P4EST_ALLOC(double*, max_degree);
   d4est_ops->lobatto_nodes_1d_table = P4EST_ALLOC(double*, max_degree);
   d4est_ops->lobatto_weights_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->lobatto_baryweights_1d_table = P4EST_ALLOC(double*, max_degree);
   d4est_ops->gauss_nodes_1d_table = P4EST_ALLOC(double*, max_degree);
   d4est_ops->gauss_weights_1d_table = P4EST_ALLOC(double*, max_degree);
   d4est_ops->dij_1d_table = P4EST_ALLOC(double*, max_degree);
@@ -55,6 +56,7 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
     d4est_ops->mij_1d_table[i] = NULL;
     d4est_ops->lobatto_nodes_1d_table[i] = NULL;
     d4est_ops->lobatto_weights_1d_table[i] = NULL;
+    d4est_ops->lobatto_baryweights_1d_table[i] = NULL;
     d4est_ops->gauss_nodes_1d_table[i] = NULL;
     d4est_ops->gauss_weights_1d_table[i] = NULL;
     d4est_ops->invmij_1d_table[i] = NULL;
@@ -95,6 +97,7 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
     P4EST_FREE(d4est_ops->vtk_rst_2d_table[i]);
     P4EST_FREE(d4est_ops->lobatto_nodes_1d_table[i]);
     P4EST_FREE(d4est_ops->lobatto_weights_1d_table[i]);
+    P4EST_FREE(d4est_ops->lobatto_baryweights_1d_table[i]);
     P4EST_FREE(d4est_ops->gauss_nodes_1d_table[i]);
     P4EST_FREE(d4est_ops->gauss_weights_1d_table[i]);
     P4EST_FREE(d4est_ops->invmij_1d_table[i]);
@@ -115,6 +118,7 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
   P4EST_FREE(d4est_ops->vtk_interp_1d_table);
   P4EST_FREE(d4est_ops->lobatto_nodes_1d_table);
   P4EST_FREE(d4est_ops->lobatto_weights_1d_table);
+  P4EST_FREE(d4est_ops->lobatto_baryweights_1d_table);
   P4EST_FREE(d4est_ops->gauss_nodes_1d_table);
   P4EST_FREE(d4est_ops->gauss_weights_1d_table);
   P4EST_FREE(d4est_ops->invmij_1d_table);
@@ -588,6 +592,16 @@ d4est_operators_build_lobatto_weights_1d(d4est_operators_t* d4est_ops, double* l
   P4EST_FREE(lobatto_nodes);
 }
 
+static void
+d4est_operators_build_lobatto_baryweights_1d(d4est_operators_t* d4est_ops, double* lobatto_baryweights, int deg)
+{
+
+  double* weights = d4est_operators_fetch_lobatto_weights_1d(d4est_ops, deg);
+  for (int i = 0; i < deg + 1; i++){
+    lobatto_baryweights[i] = i % 2 == 0 ? sqrt(weights[i])
+                                         : -sqrt(weights[i]);
+  } 
+}
 
 double* d4est_operators_fetch_lobatto_nodes_1d(d4est_operators_t* d4est_ops, int deg) {
   int size = (deg + 1);
@@ -610,6 +624,18 @@ double* d4est_operators_fetch_lobatto_weights_1d(d4est_operators_t* d4est_ops, i
      deg,
      size,
      d4est_operators_build_lobatto_weights_1d
+    );      
+}
+
+double* d4est_operators_fetch_lobatto_baryweights_1d(d4est_operators_t* d4est_ops, int deg) {
+  int size = (deg + 1);
+  return d4est_operators_1index_fetch
+    (
+     d4est_ops,
+     d4est_ops->lobatto_baryweights_1d_table,
+     deg,
+     size,
+     d4est_operators_build_lobatto_baryweights_1d
     );      
 }
 
@@ -2110,4 +2136,160 @@ void d4est_operators_apply_dij_transpose(d4est_operators_t* d4est_ops, double* i
   }
 
   /* P4EST_FREE(Dr_1d_transpose); */
+}
+
+
+
+
+double
+d4est_operators_interpolate(d4est_operators_t* d4est_ops,
+                            double* rst,
+                            double* f,
+                            int dim,
+                            int deg
+                           )
+{
+
+  double* lgl = d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, deg);
+  double* lagrange_at_rst [] = {NULL, NULL, NULL};
+  for (int d = 0; d < dim; d++){
+    lagrange_at_rst[d] = P4EST_ALLOC(double, deg+1);
+    for (int i = 0; i < deg + 1; i++){
+      lagrange_at_rst[d][i] = d4est_lgl_lagrange_1d(rst[d], lgl, i, deg);
+    }
+  }
+
+  double sum = -1;
+  if (dim == 2){
+    sum = d4est_kron_vec1_o_vec2_dot_x_sum
+          (
+           lagrange_at_rst[1],
+           lagrange_at_rst[0],
+           f,
+           deg+1,
+           deg+1
+          );
+
+  }
+  else if (dim == 3){
+    sum =          
+      d4est_kron_vec1_o_vec2_o_vec3_dot_x_sum
+      (
+       lagrange_at_rst[2],
+       lagrange_at_rst[1],
+       lagrange_at_rst[0],
+       f,
+       deg+1,
+       deg+1,
+       deg+1
+      );
+  }
+  else {
+    D4EST_ABORT("Not a supported dimension");
+  }
+  for (int d = 0; d < dim; d++){
+    P4EST_FREE(lagrange_at_rst[d]);
+  }
+    
+  return sum;  
+}
+
+
+
+
+double
+d4est_operators_interpolate_using_bary
+(
+ d4est_operators_t* d4est_ops,
+ double* rst,
+ double* f,
+ int dim,
+ int deg
+)
+{
+  double* lgl = d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, deg);
+  double* bary = d4est_operators_fetch_lobatto_baryweights_1d(d4est_ops, deg);
+  double* bary_vec [] = {NULL, NULL, NULL};
+  int check [] = {-1, -1, -1};
+  
+  for (int i = 0; i < deg+1; i++){
+    for (int d = 0; d < dim; d++){
+      if (fabs(rst[d] - lgl[i]) < DBL_EPSILON){
+        check[d] = i;
+      }
+    }
+  }
+  
+  for (int d = 0; d < dim; d++){
+    bary_vec[d] = P4EST_ALLOC(double, deg+1);
+
+    if (check[d] == -1){
+      for (int i = 0; i < deg + 1; i++){
+        bary_vec[d][i] = bary[i]/(rst[d] - lgl[i]);
+      }
+    }
+    else {
+      for (int i = 0; i < deg + 1; i++){
+        bary_vec[d][i] = (i == check[d]) ? 1 : 0;
+      }
+    }
+  }
+
+  /* double* baryv = bary_vec[0]; */
+  /* printf("deg + 1 = %d\n",deg+1); */
+  /* DEBUG_PRINT_ARR_DBL(baryv, deg+1); */
+  /* DEBUG_PRINT_ARR_DBL(bary, deg+1); */
+  
+  double sum_num = -1;
+  double sum_den = -1;
+  if (dim == 2){
+    sum_num = d4est_kron_vec1_o_vec2_dot_x_sum
+          (
+           bary_vec[1],
+           bary_vec[0],
+           f,
+           deg+1,
+           deg+1
+          );
+
+    sum_den = d4est_kron_vec1_o_vec2_dot_ones_sum
+          (
+           bary_vec[1],
+           bary_vec[0],
+           deg+1,
+           deg+1
+          );   
+  }
+  else if (dim == 3){
+    sum_num =          
+      d4est_kron_vec1_o_vec2_o_vec3_dot_x_sum
+      (
+       bary_vec[2],
+       bary_vec[1],
+       bary_vec[0],
+       f,
+       deg+1,
+       deg+1,
+       deg+1
+      );
+
+    sum_den =          
+      d4est_kron_vec1_o_vec2_o_vec3_dot_ones_sum
+      (
+       bary_vec[2],
+       bary_vec[1],
+       bary_vec[0],
+       deg+1,
+       deg+1,
+       deg+1
+      );
+  }
+  else {
+    D4EST_ABORT("Not a supported dimension");
+  }
+  for (int d = 0; d < dim; d++){
+    P4EST_FREE(bary_vec[d]);
+  }
+    
+  return sum_num/sum_den;  
 }

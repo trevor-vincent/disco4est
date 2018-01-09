@@ -22,6 +22,45 @@ test_d4est_operators_poly_fcn
   return poly;
 }
 
+void
+test_d4est_operators_interpolate
+(
+ d4est_operators_t* d4est_ops,
+ int dim,
+ int deg
+)
+{    
+  int volume_nodes = d4est_lgl_get_nodes((dim), deg);
+
+  double* rst_lobatto [] = {NULL, NULL, NULL};
+  double* rst_gauss [] = {NULL, NULL, NULL};
+  double* poly_lobatto = P4EST_ALLOC(double, volume_nodes);
+ 
+  for (int i = 0; i < dim; i++){
+    rst_lobatto[i] = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, dim, deg, i);
+  }
+  
+  for (int i = 0; i < volume_nodes; i++){
+    double xl = rst_lobatto[0][i];
+    double yl = rst_lobatto[1][i];
+    double zl = (dim == 3) ? rst_lobatto[2][i] : 0.;    
+    poly_lobatto[i] = test_d4est_operators_poly_fcn(xl, yl, zl, dim, deg);
+  }
+
+  double rst_new [3];
+  rst_new[0] = .5;
+  rst_new[1] = 0.1;
+  rst_new[2] = -0.1;
+  double ans = test_d4est_operators_poly_fcn(rst_new[0], rst_new[1], rst_new[2], dim, deg);
+  double ans_check = d4est_operators_interpolate(d4est_ops, &rst_new[0], poly_lobatto, dim, deg);
+
+  printf("ans = %f\n",ans);
+  printf("ans_check = %f\n",ans_check);
+  
+  P4EST_FREE(poly_lobatto);
+  D4EST_ASSERT(fabs(ans -ans_check) < 1e-10);
+}
+
 
 void
 test_d4est_operators_interp_lobatto_to_gauss
@@ -427,12 +466,19 @@ int main(int argc, char *argv[])
   test_d4est_operators_p_projection(d4est_ops);
   test_d4est_operators_lagrange(d4est_ops);
   for (int degH = 1; degH < 20; degH++)
-    for (int degh = degH; degh < 20; degh++)  
+    for (int degh = degH; degh < 20; degh++)
       test_d4est_operators_p_prolong_1d(d4est_ops, degH, degh);
   for (int dim = 2; dim < 4; dim++)
     for (int deg = 1; deg < 20; deg++)
       test_d4est_operators_interp_lobatto_to_gauss(d4est_ops,dim,deg);
-
+  test_d4est_operators_interpolate(d4est_ops,3,5);
+  test_d4est_operators_interpolate(d4est_ops,3,2);
+  test_d4est_operators_interpolate(d4est_ops,3,1);
+  test_d4est_operators_interpolate(d4est_ops,3,3);
+  test_d4est_operators_interpolate(d4est_ops,2,5);
+  test_d4est_operators_interpolate(d4est_ops,2,4);
+  test_d4est_operators_interpolate(d4est_ops,2,2);
+  
   /* printf("mass 2d = \n"); */
   /* test_d4est_operators_mass_nd */
   /*   ( */

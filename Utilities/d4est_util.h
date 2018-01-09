@@ -23,7 +23,6 @@
       printf("%.16f %.16f %.16f %.16f %.16f %.16f %.16f %.16f\n",a, b, c, d, e, f, g, h); \
   } while(0)
 
-
 #define DEBUG_PRINT_ARR_DBL(a, n) do {                \
     printf("%s = \n",#a);                       \
     for (int i = 0; i < n; i++) {               \

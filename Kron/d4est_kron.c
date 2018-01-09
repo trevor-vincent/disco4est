@@ -64,6 +64,49 @@ d4est_kron_vec1_o_vec2_dot_x
   }
 }
 
+double
+d4est_kron_vec1_o_vec2_dot_x_sum
+(
+ double *vec1,
+ double* vec2,
+ double*x,
+ int vec1_size,
+ int vec2_size
+)
+{
+  double sum = 0.;
+  for (int i = 0; i < vec1_size; i++){
+    for (int k = 0; k < vec2_size; k++){
+      int stride = k + i * vec2_size;
+      sum +=
+        vec1[i] * vec2[k] * x[stride];
+    }
+  }
+  return sum;
+}
+
+
+double
+d4est_kron_vec1_o_vec2_dot_ones_sum
+(
+ double *vec1,
+ double* vec2,
+ int vec1_size,
+ int vec2_size
+)
+{
+  double sum = 0.;
+  for (int i = 0; i < vec1_size; i++){
+    for (int k = 0; k < vec2_size; k++){
+      int stride = k + i * vec2_size;
+      sum +=
+        vec1[i] * vec2[k];
+    }
+  }
+  return sum;
+}
+
+
 void
 d4est_kron_vec1_o_vec2_dot_xy
 (
@@ -131,6 +174,57 @@ d4est_kron_vec1_o_vec2_o_vec3_dot_x
     }
   }  
 }
+
+
+double
+d4est_kron_vec1_o_vec2_o_vec3_dot_x_sum
+(
+ double *vec1,
+ double* vec2,
+ double* vec3,
+ double*x,
+ int vec1_size,
+ int vec2_size,
+ int vec3_size
+)
+{
+  double sum = 0;
+  for (int i = 0; i < vec1_size; i++){
+    for (int k = 0; k < vec2_size; k++){   
+      for (int m = 0; m < vec3_size; m++){
+        int stride = (m + (k + i * vec2_size) * vec3_size);
+        sum +=
+          vec1[i] * vec2[k] * vec3[m] * x[stride];
+      }
+    }
+  }
+  return sum;
+}
+
+
+double
+d4est_kron_vec1_o_vec2_o_vec3_dot_ones_sum
+(
+ double *vec1,
+ double* vec2,
+ double* vec3,
+ int vec1_size,
+ int vec2_size,
+ int vec3_size
+)
+{
+  double sum = 0;
+  for (int i = 0; i < vec1_size; i++){
+    for (int k = 0; k < vec2_size; k++){   
+      for (int m = 0; m < vec3_size; m++){
+        sum +=
+          vec1[i] * vec2[k] * vec3[m];
+      }
+    }
+  }
+  return sum;
+}
+
 
 void
 d4est_kron_vec1_o_vec2_o_vec3_dot_xy

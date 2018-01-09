@@ -27,6 +27,26 @@ typedef struct {
   
 } d4est_local_sizes_t;
 
+
+typedef struct {
+
+  /* error flag */
+  int err;
+  
+  /* point data */
+  double f_at_xyz;
+  int nodal_stride;
+  double xyz [3];
+  double rst [3];
+  double abc [3];
+  
+  /* element data */
+  int id;
+  p4est_qcoord_t q [3];
+  p4est_qcoord_t dq;
+
+} d4est_mesh_interpolate_data_t;
+
 typedef struct {
 
   d4est_local_sizes_t local_sizes;
@@ -63,8 +83,8 @@ typedef struct {
   
 } d4est_mesh_initial_extents_t;
 
-
 /* This file was automatically generated.  Do not edit! */
+d4est_mesh_interpolate_data_t d4est_mesh_interpolate_at_tree_coord(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double abc[(P4EST_DIM)],int tree_id,double *f,int print);
 double d4est_mesh_volume_integral(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,int(*is_it_in_volume)(d4est_element_data_t *,void *),double(*compute_volume_integral)(d4est_element_data_t *,void *),void *user);
 double d4est_mesh_surface_integral(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,int(*is_it_on_surface)(d4est_element_data_t *,int,void *),double(*compute_face_integral)(d4est_element_data_t *,int,double *,double *[(P4EST_DIM)],double *[(P4EST_DIM)],double *[(P4EST_DIM)][(P4EST_DIM)],void *),void *user);
 double d4est_mesh_compare_two_fields(p4est_t *p4est,double *field1,double *field2,const char *msg,d4est_mesh_boundary_option_t boundary_option,d4est_mesh_print_option_t print_option,double eps);

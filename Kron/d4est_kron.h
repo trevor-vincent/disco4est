@@ -33,9 +33,13 @@ void d4est_kron_vec_o_vec_dot_wxyz(double *vec,double *w,double *x,double *y,dou
 void d4est_kron_vec_o_vec_dot_xy(double *vec,double *x,double *y,int vec_size,double *vecvec_dot_xy);
 void d4est_kron_vec1_o_vec2_o_vec3_dot_wxyz(double *vec1,double *vec2,double *vec3,double *w,double *x,double *y,double *z,int vec1_size,int vec2_size,int vec3_size,double *vec1vec2vec3_dot_x);
 void d4est_kron_vec1_o_vec2_o_vec3_dot_xy(double *vec1,double *vec2,double *vec3,double *x,double *y,int vec1_size,int vec2_size,int vec3_size,double *vec1vec2vec3_dot_x);
+double d4est_kron_vec1_o_vec2_o_vec3_dot_ones_sum(double *vec1,double *vec2,double *vec3,int vec1_size,int vec2_size,int vec3_size);
+double d4est_kron_vec1_o_vec2_o_vec3_dot_x_sum(double *vec1,double *vec2,double *vec3,double *x,int vec1_size,int vec2_size,int vec3_size);
 void d4est_kron_vec1_o_vec2_o_vec3_dot_x(double *vec1,double *vec2,double *vec3,double *x,int vec1_size,int vec2_size,int vec3_size,double *vec1vec2vec3_dot_x);
 void d4est_kron_vec1_o_vec2_dot_wxyz(double *vec1,double *vec2,double *w,double *x,double *y,double *z,int vec1_size,int vec2_size,double *vec1vec2_dot_x);
 void d4est_kron_vec1_o_vec2_dot_xy(double *vec1,double *vec2,double *x,double *y,int vec1_size,int vec2_size,double *vec1vec2_dot_x);
+double d4est_kron_vec1_o_vec2_dot_ones_sum(double *vec1,double *vec2,int vec1_size,int vec2_size);
+double d4est_kron_vec1_o_vec2_dot_x_sum(double *vec1,double *vec2,double *x,int vec1_size,int vec2_size);
 void d4est_kron_vec1_o_vec2_dot_x(double *vec1,double *vec2,double *x,int vec1_size,int vec2_size,double *vec1vec2_dot_x);
 void d4est_kron_vec_o_vec_dot_x(double *vec,double *x,int vec_size,double *vecvec_dot_x);
 void d4est_kron_AoB(double *A,double *B,double *C,int a_rows,int a_cols,int b_rows,int b_cols);

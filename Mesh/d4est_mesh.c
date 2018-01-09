@@ -2145,17 +2145,87 @@ d4est_mesh_volume_integral
   return integral;
 }
 
-
-
-double* d4est_mesh_get_field_on_ghost
+d4est_mesh_interpolate_data_t
+d4est_mesh_interpolate_at_tree_coord
 (
- d4est_element_data_t* ed,
- int ghost_name_id,
- d4est_ghost_data_t* dgd
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ double abc [(P4EST_DIM)],
+ int tree_id,
+ double* f,
+ int print
 ){
-  D4EST_ASSERT(dgd != NULL);
-  D4EST_ASSERT(ghost_name_id >= 0 && ghost_name_id < dgd->num_vecs);
-  int stride = dgd->receive_strides[ed->id][ghost_name_id];
-  return &dgd->receive_data[stride];
+
+  d4est_mesh_interpolate_data_t data;
+  
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      if (tt == tree_id){
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        int check = 0;
+        for (int d = 0; d < (P4EST_DIM); d++){
+          double amin = ed->q[d];
+          double amax = ed->q[d] + ed->dq;
+          amin /= (double)P4EST_ROOT_LEN;
+          amax /= (double)P4EST_ROOT_LEN;
+          check += (abc[d] <= amax) && (abc[d] >= amin);
+        }
+        if (check == (P4EST_DIM)){
+          double xyz[(P4EST_DIM)];
+          double rst [(P4EST_DIM)];
+
+          d4est_geom->X(d4est_geom, tree_id, ed->q, ed->dq, abc, COORDS_TREE_UNITCUBE, xyz);
+          
+          for (int d = 0; d < (P4EST_DIM); d++){
+            double amin = ed->q[d];
+            double amax = ed->q[d] + ed->dq;
+            amin /= (double)P4EST_ROOT_LEN;
+            amax /= (double)P4EST_ROOT_LEN;
+            rst[d] = 2*(abc[d] - amin)/(amax - amin) - 1;
+            data.rst[d] = rst[d];
+            data.xyz[d] = xyz[d];
+            data.q[d] = ed->q[d];
+            data.abc[d] = abc[d];
+          }
+          
+          data.dq = ed->dq;
+          data.id = ed->id;
+          data.nodal_stride = ed->nodal_stride;
+          data.f_at_xyz = d4est_operators_interpolate(d4est_ops, &rst[0], &f[ed->nodal_stride], (P4EST_DIM), ed->deg);
+
+          if (print){
+            printf("abc, xyz, f = %f, %f, %f, %f,%f,%f, %.15f\n", abc[0], abc[1], (P4EST_DIM)==3 ? abc[2] : 0, xyz[0], xyz[1], (P4EST_DIM)==3 ? xyz[2] : 0, data.f_at_xyz);
+          }
+          data.err = 0;
+          return data;
+        }
+      }
+      }
+    }
+  data.err = 1;
+  return data;
 }
+
+
+
+/* double* d4est_mesh_get_field_on_ghost */
+/* ( */
+/*  d4est_element_data_t* ed, */
+/*  int ghost_name_id, */
+/*  d4est_ghost_data_t* dgd */
+/* ){ */
+/*   D4EST_ASSERT(dgd != NULL); */
+/*   D4EST_ASSERT(ghost_name_id >= 0 && ghost_name_id < dgd->num_vecs); */
+/*   int stride = dgd->receive_strides[ed->id][ghost_name_id]; */
+/*   return &dgd->receive_data[stride]; */
+/* } */
 

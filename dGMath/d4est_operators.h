@@ -11,6 +11,7 @@ typedef struct {
   int max_degree;
   
   double** lobatto_nodes_1d_table;
+  double** lobatto_baryweights_1d_table;
   double** lobatto_weights_1d_table;
   double** gauss_nodes_1d_table;
   double** gauss_weights_1d_table;
@@ -56,8 +57,10 @@ typedef void (*d4est_operators_hp_prolong_fcn_t)(d4est_operators_t *, double *, 
 typedef void (*d4est_operators_p_prolong_fcn_t)(d4est_operators_t *, double *, int, int,
                                        int, double *);
 
-
 /* This file was automatically generated.  Do not edit! */
+double d4est_operators_interpolate_using_bary(d4est_operators_t *d4est_ops,double *rst,double *f,int dim,int deg);
+double d4est_operators_interpolate(d4est_operators_t *d4est_ops,double *rst,double *f,int dim,int deg);
+void d4est_operators_apply_dij_transpose(d4est_operators_t *d4est_ops,double *in,int dim,int deg,int dir,double *out);
 double *d4est_operators_fetch_vtk_rst(d4est_operators_t *d4est_ops,int deg,int dim);
 void d4est_operators_convert_nodal_to_vtk(d4est_operators_t *d4est_ops,double *vec,int dim,int deg,double *vtk_vec);
 void d4est_operators_apply_vtk_interp(d4est_operators_t *d4est_ops,double *in,int dim,int deg,int c,double *out);
@@ -83,11 +86,11 @@ void d4est_operators_build_hp_restrict_1d_aux(int degh,int degH,double *hp_prolo
 double *d4est_operators_fetch_p_prolong_1d(d4est_operators_t *d4est_ops,int degH,int degh);
 void d4est_operators_hp_apply_nd_prolong_transpose_with_ptr(double *uH,int degH,double *uh,int degh,int dim,int c,double *hp_prolong_transpose_matrix_1d);
 void d4est_operators_build_p_prolong_1d(d4est_operators_t *d4est_ops,double *p_prolong_1d,int degH,int degh);
-void d4est_operators_apply_dij_transpose(d4est_operators_t *d4est_ops,double *in,int dim,int deg,int dir,double *out);
 void d4est_operators_apply_invmij(d4est_operators_t *d4est_ops,double *in,int dim,int deg,double *out);
 void d4est_operators_apply_mij(d4est_operators_t *d4est_ops,double *in,int dim,int deg,double *out);
 double *d4est_operators_fetch_mij_1d(d4est_operators_t *d4est_ops,int deg);
 double *d4est_operators_fetch_gauss_weights_1d(d4est_operators_t *d4est_ops,int deg);
+double *d4est_operators_fetch_lobatto_baryweights_1d(d4est_operators_t *d4est_ops,int deg);
 double *d4est_operators_fetch_lobatto_weights_1d(d4est_operators_t *d4est_ops,int deg);
 void d4est_operators_build_mij_1d(d4est_operators_t *d4est_ops,double *mij_1d,int deg);
 void d4est_operators_hp_apply_nd_restrict_with_ptr(double *uH,int degH,double *uh,int degh,int dim,int c,double *hp_restrict_matrix_1d);
@@ -110,6 +113,5 @@ double *d4est_operators_2index_fetch(d4est_operators_t *d4est_ops,double ***tabl
 double *d4est_operators_1index_fetch(d4est_operators_t *d4est_ops,double **table,int deg,int size,void(*build_fcn)(d4est_operators_t *,double *,int));
 void d4est_ops_destroy(d4est_operators_t *d4est_ops);
 d4est_operators_t *d4est_ops_init(int max_degree);
-
 
 #endif
