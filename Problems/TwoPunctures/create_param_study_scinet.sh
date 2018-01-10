@@ -72,6 +72,17 @@ compactify_inner_shell = $9
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
+[d4est_vtk]
+filename = two_punctures
+geometry_section = d4est_vtk_geometry
+output_type = zlib_binary
+grid_type = dg
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
 [quadrature]
 name = legendre
 
