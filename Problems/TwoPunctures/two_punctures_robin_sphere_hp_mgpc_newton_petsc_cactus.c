@@ -343,23 +343,20 @@ problem_init
   
   d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
-  double point0 [100];
-  double point0_diff [100];
-  double point3 [100];
-  double point3_diff [100];
-  double point10 [100];
-  double point10_diff [100];
-  double point100 [100];
-  double point100_diff [100];
-  point0[0] = 0;
-  point0_diff[0] = 0;
-  point3[0] = 0;
-  point3_diff[0] = 0;
-  point10[0] = 0;
-  point10_diff[0] = 0;
-  point100[0] = 0;
-  point100_diff[0] = 0;
-  int points = 1;
+  double point [4][100];
+  double point_diff [4][100];
+  double point_err [4];
+  
+  point[0][0] = 0;
+  point_diff[0][0] = 0;
+  point[1][0] = 0;
+  point_diff[1][0] = 0;
+  point[2][0] = 0;
+  point_diff[2][0] = 0;
+  point[3][0] = 0;
+  point_diff[3][0] = 0;
+
+  int iterations = 1;
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
@@ -400,19 +397,19 @@ problem_init
        d4est_factors
       );
 
-   d4est_vtk_save
-      (
-       p4est,
-       d4est_ops,
-       input_file,
-       "d4est_vtk",
-       "[D4EST_VTK]",
-       (const char * []){"u","u_prev","error", NULL},
-       (double* []){prob_vecs.u, u_prev, error},
-       (const char * []){NULL},
-       (double* []){NULL},
-       level
-      );
+   /* d4est_vtk_save */
+   /*    ( */
+   /*     p4est, */
+   /*     d4est_ops, */
+   /*     input_file, */
+   /*     "d4est_vtk", */
+   /*     "[D4EST_VTK]", */
+   /*     (const char * []){"u","u_prev","error", NULL}, */
+   /*     (double* []){prob_vecs.u, u_prev, error}, */
+   /*     (const char * []){NULL}, */
+   /*     (double* []){NULL}, */
+   /*     level */
+   /*    ); */
 
     d4est_ip_energy_norm_data_t ip_norm_data;
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
@@ -607,53 +604,75 @@ problem_init
     }
 
     double ten_o_s3 = 10./sqrt(3);
-    double u_at_xyz [4];
     d4est_mesh_interpolate_data_t data;
-    
-    data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.5}, 6, prob_vecs.u,  1);
-    point0[points] = data.f_at_xyz;
-    data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){(3+ten_o_s3)/(2*ten_o_s3),.5,.5}, 6, prob_vecs.u, 1);
-    point3[points] = data.f_at_xyz;
-     if (((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_inner_shell == 1){
-     data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.34539085817353093070042471302328055465280618350802632488039}, 3, prob_vecs.u, 1);
-     point10[points] = data.f_at_xyz;
-     data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.91658997510966628585548127553663701263276019871119619289746}, 3, prob_vecs.u, 1);
-     point100[points] = data.f_at_xyz;
-     }
-     else {
-     data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.00735152715280184837311522856572770756534949135984510409704}, 3, prob_vecs.u, 1);
-     point10[points] = data.f_at_xyz;
-     data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.15553492568716001460897499511345636544704000752044528151370}, 3, prob_vecs.u, 1);
-     point100[points] = data.f_at_xyz;
-     }
-     point0_diff[points] = fabs(point0[points] - point0[points-1]);
-     point3_diff[points] = fabs(point3[points] - point3[points-1]);
-     point10_diff[points] = fabs(point10[points] - point10[points-1]);
-     point100_diff[points] = fabs(point100[points] - point100[points-1]);
 
-     double* point0_diff_alias = &point0_diff[0];
-     double* point3_diff_alias = &point3_diff[0];
-     double* point10_diff_alias = &point10_diff[0];
-     double* point100_diff_alias = &point100_diff[0];
+
+
+    
+    /* data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.5}, 6, prob_vecs.u,  1); */
+    /* point[0][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
+    /* point_err[0] = data.err; */
+    
+    /* data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){(3+ten_o_s3)/(2*ten_o_s3),.5,.5}, 6, prob_vecs.u, 1); */
+    /* point[1][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
+    /* point_err[1] = data.err; */
+    
+    /*  if (((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_inner_shell == 1){ */
+    /*  data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.34539085817353093070042471302328055465280618350802632488039}, 3, prob_vecs.u, 1); */
+    /*  point[2][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
+    /*  point_err[2] = data.err; */
      
-     double* point0_alias = &point0[0];
-     double* point3_alias = &point3[0];
-     double* point10_alias = &point10[0];
-     double* point100_alias = &point100[0];
-     DEBUG_PRINT_8ARR_DBL(point0_alias, point3_alias, point10_alias, point100_alias, point0_diff_alias, point3_diff_alias, point10_diff_alias, point100_diff_alias, points+1);
+    /*  data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.91658997510966628585548127553663701263276019871119619289746}, 3, prob_vecs.u, 1); */
+    /*  point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
+    /*  point_err[3] = data.err; */
+    /*  } */
+    /*  else { */
+    /*  data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.00735152715280184837311522856572770756534949135984510409704}, 3, prob_vecs.u, 1); */
+    /*  point[2][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
+    /*  point_err[2] = data.err; */
      
-     points++;
+    /*  data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.15553492568716001460897499511345636544704000752044528151370}, 3, prob_vecs.u, 1); */
+    /*  point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
+    /*  point_err[3] = data.err; */
+    /*  } */
+
+    /*  double* point0 = &point[0][0]; */
+    /*  double* point3 = &point[1][0]; */
+    /*  double* point10 = &point[2][0]; */
+    /*  double* point100 = &point[3][0]; */
+    /*  double* point0_diff = &point_diff[0][0]; */
+    /*  double* point3_diff = &point_diff[1][0]; */
+    /*  double* point10_diff = &point_diff[2][0]; */
+    /*  double* point100_diff = &point_diff[3][0]; */
+     
+    /*  for (int p = 0; p < 4; p++){ */
+    /*    point_diff[p][iterations] = fabs(point[p][iterations] - point[p][iterations-1]); */
+    /*  } */
+    /*  if (point_err[0] == 0){ */
+    /*    DEBUG_PRINT_2ARR_DBL(point0, point0_diff, iterations+1); */
+    /*  } */
+    /*  if (point_err[1] == 0){ */
+    /*    DEBUG_PRINT_2ARR_DBL(point3, point3_diff, iterations+1); */
+    /*  } */
+    /*  if (point_err[2] == 0){ */
+    /*    DEBUG_PRINT_2ARR_DBL(point10, point10_diff, iterations+1); */
+    /*  }      */
+    /*  if (point_err[3] == 0){ */
+    /*    DEBUG_PRINT_2ARR_DBL(point100, point100_diff, iterations+1); */
+    /*  }      */
+     
+    /*  iterations++; */
     /* printf("err = %d\n", err); */
     
-    d4est_checkpoint_save
-      (
-       level,
-       "checkpoint",
-       p4est,
-       d4est_factors,
-       (const char * []){"u", NULL},
-       (double* []){prob_vecs.u}
-      );
+    /* d4est_checkpoint_save */
+      /* ( */
+    /*    level, */
+    /*    "checkpoint", */
+    /*    p4est, */
+    /*    d4est_factors, */
+    /*    (const char * []){"u", NULL}, */
+    /*    (double* []){prob_vecs.u} */
+    /*   ); */
 
 
     krylov_pc_multigrid_destroy(pc);
