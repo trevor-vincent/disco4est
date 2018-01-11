@@ -153,18 +153,15 @@ amr_set_element_gamma
 {
   problem_ctx_t* ctx = user;
   d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
-  
   gamma_params_t gamma_hpn;
-
   gamma_hpn.gamma_h = params->gamma_h;
   gamma_hpn.gamma_p = params->gamma_p;
   gamma_hpn.gamma_n = params->gamma_n;
-
   return gamma_hpn;
 }
 
 static void
-two_punctures_custom_p_uniform_element_marker
+two_punctures_only_p_refine_in_center_cube
 (
   p4est_iter_volume_info_t* info,
   void* user_data
@@ -178,9 +175,60 @@ two_punctures_custom_p_uniform_element_marker
   else {
     d4est_amr->refinement_log[ed->id] = ed->deg;
   }
-  
 }
 
+static void
+two_punctures_p_refine_everywhere
+(
+  p4est_iter_volume_info_t* info,
+  void* user_data
+){
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
+  d4est_element_data_t* ed = (d4est_element_data_t*) info->quad->p.user_data;
+  d4est_amr->refinement_log[ed->id] = ed->deg + 1;
+}
+
+static void
+two_punctures_find_punctures_and_prefine_outside_cube_element_marker
+(
+  p4est_iter_volume_info_t* info,
+  void* user_data
+){
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
+  d4est_element_data_t* ed = (d4est_element_data_t*) info->quad->p.user_data;
+  two_punctures_params_t* params = d4est_amr->scheme->amr_scheme_data;
+  
+  double xi [(P4EST_DIM)];
+  double xf [(P4EST_DIM)];
+  
+  if (ed->tree == 6){
+    d4est_geometry_compute_bounds(ed->xyz, ed->deg, xi, xf);
+    d4est_amr->refinement_log[ed->id] = ed->deg;
+
+    if ((params->par_b <= xf[0]) &&
+        (0. <= xf[1]) &&
+        (0. <= xf[2]) &&
+        (params->par_b >= xi[0]) &&
+        (0. >= xi[1]) &&
+        (0. >= xi[2])){
+      d4est_amr->refinement_log[ed->id] = -ed->deg;
+      return;
+    }
+
+    if ((-1.0*params->par_b <= xf[0]) &&
+        (0. <= xf[1]) &&
+        (0. <= xf[2]) &&
+        (-1.0*params->par_b >= xi[0]) &&
+        (0. >= xi[1]) &&
+        (0. >= xi[2])){
+      d4est_amr->refinement_log[ed->id] = -ed->deg;
+      return;
+    }
+  }
+  else {
+    d4est_amr->refinement_log[ed->id] = ed->deg + 1;
+  }
+}
 
 static void
 two_punctures_find_punctures_element_marker
@@ -217,7 +265,6 @@ two_punctures_find_punctures_element_marker
     d4est_amr->refinement_log[ed->id] = -ed->deg;
     return;
   }
-   
 }
 
 int
@@ -246,6 +293,7 @@ problem_init
  sc_MPI_Comm mpicomm
 )
 {
+  
   int initial_nodes = initial_extents->initial_nodes;
   two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file
                                                                            );
@@ -316,13 +364,23 @@ problem_init
     );
 
 
-  d4est_amr_t* d4est_amr_uniform_p = d4est_amr_init_uniform_p(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps);
-  d4est_amr_t* d4est_amr_custom = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
-                                                   two_punctures_find_punctures_element_marker, &two_punctures_params);
+   
 
 
-  d4est_amr_t* d4est_amr_custom_uniform_p = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
-                                                   two_punctures_custom_p_uniform_element_marker, NULL);
+  d4est_amr_t* d4est_amr_use_puncture_finder = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
+                                                                     two_punctures_find_punctures_element_marker, &two_punctures_params);
+
+
+  d4est_amr_t* d4est_amr_use_puncture_finder_and_prefine_outside_cube = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
+                                                                                              two_punctures_find_punctures_and_prefine_outside_cube_element_marker, &two_punctures_params);
+
+  
+  d4est_amr_t* d4est_amr_p_refine_only_in_center_cube = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
+                                                                              two_punctures_only_p_refine_in_center_cube, NULL);
+
+  d4est_amr_t* d4est_amr_p_refine_everywhere = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
+                                                                     two_punctures_p_refine_everywhere, NULL);
+
   
 
   if (initial_extents->checkpoint_prefix == NULL){
@@ -397,19 +455,19 @@ problem_init
        d4est_factors
       );
 
-   /* d4est_vtk_save */
-   /*    ( */
-   /*     p4est, */
-   /*     d4est_ops, */
-   /*     input_file, */
-   /*     "d4est_vtk", */
-   /*     "[D4EST_VTK]", */
-   /*     (const char * []){"u","u_prev","error", NULL}, */
-   /*     (double* []){prob_vecs.u, u_prev, error}, */
-   /*     (const char * []){NULL}, */
-   /*     (double* []){NULL}, */
-   /*     level */
-   /*    ); */
+   d4est_vtk_save
+      (
+       p4est,
+       d4est_ops,
+       input_file,
+       "d4est_vtk",
+       "[D4EST_VTK]",
+       (const char * []){"u","u_prev","error", NULL},
+       (double* []){prob_vecs.u, u_prev, error},
+       (const char * []){NULL},
+       (double* []){NULL},
+       level
+      );
 
     d4est_ip_energy_norm_data_t ip_norm_data;
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
@@ -451,26 +509,34 @@ problem_init
       );
 
     
-
     if (level != d4est_amr->num_of_amr_steps){
 
       if (p4est->mpirank == 0)
         printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level+1);
 
-      d4est_amr_t* d4est_amr_normal = d4est_amr;
-      if (init_params.use_puncture_finder){
-        d4est_amr_normal = d4est_amr_custom;
+      d4est_amr_t* d4est_amr_normal = NULL;
+      d4est_amr_t* d4est_amr_p_refine = NULL;
+      if (init_params.use_puncture_finder == 1){
+        d4est_amr_normal = d4est_amr_use_puncture_finder;
+        d4est_amr_p_refine = d4est_amr_p_refine_only_in_center_cube;
+      }
+      else if (init_params.use_puncture_finder == 2){
+        d4est_amr_normal = d4est_amr_use_puncture_finder_and_prefine_outside_cube ;
+        d4est_amr_p_refine = d4est_amr_p_refine_everywhere;
+      }
+      else {
+        d4est_amr_normal = d4est_amr;
+        d4est_amr_p_refine = d4est_amr_p_refine_only_in_center_cube;
       }
       
+
       d4est_amr_step
         (
          p4est,
          ghost,
          ghost_data,
          d4est_ops,
-         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_custom_uniform_p : d4est_amr_normal,
-         /* d4est_amr, */
-         /* d4est_amr_uniform_p, */
+         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_p_refine : d4est_amr_normal,
          &prob_vecs.u,
          &stats
         );
@@ -509,8 +575,6 @@ problem_init
     multigrid_get_level_range(p4est, &min_level, &max_level);
     printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
 
-    /* need to do a reduce on min,max_level before supporting multiple proc */
-    /* mpi_assert(proc_size == 1); */
     int num_of_levels = (max_level-min_level) + 1;
 
  
@@ -529,24 +593,6 @@ problem_init
                                                 );
     
     multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, num_of_levels);
-
-    /* prob_vecs.u0 = prob_vecs.u; */
-    
-    /* multigrid_matrix_setup_fofufofvlilj_operator */
-    /*   ( */
-    /*    p4est, */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    d4est_quad, */
-    /*    prob_vecs.u0, */
-    /*    NULL, */
-    /*    neg_10pi_rho_up1_neg4, */
-    /*    &ctx, */
-    /*    NULL, */
-    /*    NULL, */
-    /*    user_callbacks->user */
-    /*   ); */
-
     
     multigrid_data_t* mg_data = multigrid_data_init(p4est,
                                                     d4est_ops,
@@ -563,20 +609,6 @@ problem_init
     ctx.use_matrix_operator = 1;
     ctx.mg_data = mg_data;
 
-    /* double* u_check = P4EST_ALLOC(double, prob_vecs.local_nodes); */
-    /* d4est_h5_create_file(p4est->mpirank, "checkpoint"); */
-    /* d4est_h5_create_dataset(p4est->mpirank, "checkpoint", "u", H5T_NATIVE_DOUBLE, prob_vecs.local_nodes); */
-    /* d4est_h5_write_dataset(p4est->mpirank, "checkpoint", "u", H5T_NATIVE_DOUBLE, prob_vecs.u); */
-    /* d4est_h5_read_dataset(p4est->mpirank, "checkpoint", "u", H5T_NATIVE_DOUBLE, u_check); */
-
-    /* DEBUG_PRINT_ARR_DBL_SUM(u_check, prob_vecs.local_nodes); */
-    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, prob_vecs.local_nodes); */
-
-    /* int check = d4est_util_compare_vecs(u_check, prob_vecs.u, prob_vecs.local_nodes, 1e-14); */
-
-    /* printf("check = %d\n", check); */
-    
-    /* P4EST_FREE(u_check); */
     
     if (!init_params.do_not_solve){
 
@@ -606,73 +638,69 @@ problem_init
     double ten_o_s3 = 10./sqrt(3);
     d4est_mesh_interpolate_data_t data;
 
+    data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.5}, 6, prob_vecs.u,  1);
+    point[0][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+    point_err[0] = data.err;
+    
+    data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){(3+ten_o_s3)/(2*ten_o_s3),.5,.5}, 6, prob_vecs.u, 1);
+    point[1][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+    point_err[1] = data.err;
+    
+     if (((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_inner_shell == 1){
+     data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.34539085817353093070042471302328055465280618350802632488039}, 3, prob_vecs.u, 1);
+     point[2][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+     point_err[2] = data.err;
+     
+     data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.91658997510966628585548127553663701263276019871119619289746}, 3, prob_vecs.u, 1);
+     point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+     point_err[3] = data.err;
+     }
+     else {
+     data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.00735152715280184837311522856572770756534949135984510409704}, 3, prob_vecs.u, 1);
+     point[2][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+     point_err[2] = data.err;
+     
+     data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.15553492568716001460897499511345636544704000752044528151370}, 3, prob_vecs.u, 1);
+     point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+     point_err[3] = data.err;
+     }
 
-
-    
-    /* data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.5}, 6, prob_vecs.u,  1); */
-    /* point[0][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
-    /* point_err[0] = data.err; */
-    
-    /* data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){(3+ten_o_s3)/(2*ten_o_s3),.5,.5}, 6, prob_vecs.u, 1); */
-    /* point[1][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
-    /* point_err[1] = data.err; */
-    
-    /*  if (((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_inner_shell == 1){ */
-    /*  data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.34539085817353093070042471302328055465280618350802632488039}, 3, prob_vecs.u, 1); */
-    /*  point[2][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
-    /*  point_err[2] = data.err; */
+     double* point0 = &point[0][0];
+     double* point3 = &point[1][0];
+     double* point10 = &point[2][0];
+     double* point100 = &point[3][0];
+     double* point0_diff = &point_diff[0][0];
+     double* point3_diff = &point_diff[1][0];
+     double* point10_diff = &point_diff[2][0];
+     double* point100_diff = &point_diff[3][0];
      
-    /*  data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.91658997510966628585548127553663701263276019871119619289746}, 3, prob_vecs.u, 1); */
-    /*  point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
-    /*  point_err[3] = data.err; */
-    /*  } */
-    /*  else { */
-    /*  data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.00735152715280184837311522856572770756534949135984510409704}, 3, prob_vecs.u, 1); */
-    /*  point[2][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
-    /*  point_err[2] = data.err; */
+     for (int p = 0; p < 4; p++){
+       point_diff[p][iterations] = fabs(point[p][iterations] - point[p][iterations-1]);
+     }
+     if (point_err[0] == 0){
+       DEBUG_PRINT_2ARR_DBL(point0, point0_diff, iterations+1);
+     }
+     if (point_err[1] == 0){
+       DEBUG_PRINT_2ARR_DBL(point3, point3_diff, iterations+1);
+     }
+     if (point_err[2] == 0){
+       DEBUG_PRINT_2ARR_DBL(point10, point10_diff, iterations+1);
+     }
+     if (point_err[3] == 0){
+       DEBUG_PRINT_2ARR_DBL(point100, point100_diff, iterations+1);
+     }
      
-    /*  data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.15553492568716001460897499511345636544704000752044528151370}, 3, prob_vecs.u, 1); */
-    /*  point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
-    /*  point_err[3] = data.err; */
-    /*  } */
-
-    /*  double* point0 = &point[0][0]; */
-    /*  double* point3 = &point[1][0]; */
-    /*  double* point10 = &point[2][0]; */
-    /*  double* point100 = &point[3][0]; */
-    /*  double* point0_diff = &point_diff[0][0]; */
-    /*  double* point3_diff = &point_diff[1][0]; */
-    /*  double* point10_diff = &point_diff[2][0]; */
-    /*  double* point100_diff = &point_diff[3][0]; */
-     
-    /*  for (int p = 0; p < 4; p++){ */
-    /*    point_diff[p][iterations] = fabs(point[p][iterations] - point[p][iterations-1]); */
-    /*  } */
-    /*  if (point_err[0] == 0){ */
-    /*    DEBUG_PRINT_2ARR_DBL(point0, point0_diff, iterations+1); */
-    /*  } */
-    /*  if (point_err[1] == 0){ */
-    /*    DEBUG_PRINT_2ARR_DBL(point3, point3_diff, iterations+1); */
-    /*  } */
-    /*  if (point_err[2] == 0){ */
-    /*    DEBUG_PRINT_2ARR_DBL(point10, point10_diff, iterations+1); */
-    /*  }      */
-    /*  if (point_err[3] == 0){ */
-    /*    DEBUG_PRINT_2ARR_DBL(point100, point100_diff, iterations+1); */
-    /*  }      */
-     
-    /*  iterations++; */
-    /* printf("err = %d\n", err); */
+     iterations++;
     
-    /* d4est_checkpoint_save */
-      /* ( */
-    /*    level, */
-    /*    "checkpoint", */
-    /*    p4est, */
-    /*    d4est_factors, */
-    /*    (const char * []){"u", NULL}, */
-    /*    (double* []){prob_vecs.u} */
-    /*   ); */
+    d4est_checkpoint_save
+      (
+       level,
+       "checkpoint",
+       p4est,
+       d4est_factors,
+       (const char * []){"u", NULL},
+       (double* []){prob_vecs.u}
+      );
 
 
     krylov_pc_multigrid_destroy(pc);
@@ -685,10 +713,12 @@ problem_init
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
+  
   d4est_amr_destroy(d4est_amr);
-  d4est_amr_destroy(d4est_amr_uniform_p);
-  d4est_amr_destroy(d4est_amr_custom);
-  d4est_amr_destroy(d4est_amr_custom_uniform_p);
+  d4est_amr_destroy(d4est_amr_use_puncture_finder);
+  d4est_amr_destroy(d4est_amr_p_refine_only_in_center_cube);
+  d4est_amr_destroy(d4est_amr_use_puncture_finder_and_prefine_outside_cube);
+  d4est_amr_destroy(d4est_amr_p_refine_everywhere);
   d4est_poisson_flux_destroy(flux_data_for_jac);  
   d4est_poisson_flux_destroy(flux_data_for_res);  
   P4EST_FREE(error);

@@ -8,6 +8,7 @@
 #include <d4est_estimator_bi.h>
 #include <d4est_poisson_flux.h>
 #include <d4est_mortars.h>
+#include <d4est_poisson.h>
 
 static double
 d4est_estimator_get_diam
@@ -438,14 +439,37 @@ d4est_estimator_bi_compute
            volume_nodes_lobatto
           );
     
-        for (int i = 0; i < (P4EST_DIM); i++){
-          d4est_operators_apply_dij(d4est_ops, &(vecs->u[ed->nodal_stride]), (P4EST_DIM), ed->deg, i, &ed->dudr_elem[i][0]);
-        }
+        /* for (int i = 0; i < (P4EST_DIM); i++){ */
+        /*   d4est_operators_apply_dij(d4est_ops, &(vecs->u[ed->nodal_stride]), (P4EST_DIM), ed->deg, i, &ed->dudr_elem[i][0]); */
+        /* } */
 
         
       }
 
     }
+
+  p4est_ghost_exchange_data(p4est,ghost,ghost_data);
+
+  int ghost_nodes = d4est_mesh_get_ghost_nodes(ghost, ghost_data);
+  double* dudr [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(dudr,
+                                                  vecs->local_nodes
+                                                  + ghost_nodes
+                                                 );
+
+ 
+  d4est_poisson_compute_dudr
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     dudr
+    );
+  
+  
 
   d4est_poisson_flux_data_t flux_data;
   flux_data.interface_fcn = d4est_estimator_bi_interface;
@@ -474,6 +498,8 @@ d4est_estimator_bi_compute
      d4est_quad,
      d4est_factors,
      &flux_fcns,
-     EXCHANGE_GHOST_DATA
+     DO_NOT_EXCHANGE_GHOST_DATA
     );
+
+  D4EST_FREE_DIM_VEC(dudr);
 }
