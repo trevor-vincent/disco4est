@@ -14,6 +14,19 @@
 
 typedef struct {
 
+  int global_nodes;
+  int global_num_quadrants;
+  int avg_deg;
+  int global_quad_nodes;
+  int avg_deg_quad;
+  double global_estimator;
+  double global_l2_norm_sqr;
+  double global_linf;
+  
+} d4est_output_norms_t;
+
+typedef struct {
+
   double* log_energy_norm_data;
   double* dof_data;
   int num_of_data_entries;
@@ -21,43 +34,12 @@ typedef struct {
   
 } d4est_output_energy_norm_fit_t;
 
-typedef struct {
 
-  double* u;
-  double* u_compare;
-  double* error;
-  double* eta2;
-  double* l2;
-  double* jacobian;
-  double* residual;
-
-} d4est_output_vtk_dg_fields_t;
-
-
-typedef struct {
-
-  double* deg;
-  double* deg_quad;
-  double* eta2;
-  double* l2;
-
-} d4est_output_vtk_cell_fields_t;
 /* This file was automatically generated.  Do not edit! */
 void d4est_output_norms_using_analytic_solution(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *d4est_factors,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,double local_estimator,d4est_elliptic_data_t *prob_vecs,d4est_ip_energy_norm_data_t *energy_norm_data,d4est_xyz_fcn_t analytic_solution,void *ctx,d4est_output_energy_norm_fit_t *fit,int(*skip_element_fcn)(d4est_element_data_t *));
-void d4est_output_norms(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *d4est_factors,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_ip_energy_norm_data_t *energy_norm_data,double estimator,double *error,d4est_output_energy_norm_fit_t *fit,int(*skip_element_fcn)(d4est_element_data_t *));
+d4est_output_norms_t d4est_output_norms(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *d4est_factors,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_ip_energy_norm_data_t *energy_norm_data,double estimator,double *error,d4est_output_energy_norm_fit_t *fit,int(*skip_element_fcn)(d4est_element_data_t *));
 void d4est_output_destroy_energy_norm_fit(d4est_output_energy_norm_fit_t *fit);
 void d4est_output_energy_norm_add_entry_and_fit(p4est_t *p4est,d4est_output_energy_norm_fit_t *fit,double global_energy_norm_sqr,double global_dof);
-void d4est_output_energy_norm_fit(p4est_t *p4est,d4est_output_energy_norm_fit_t *fit);
-/* This file was automatically generated.  Do not edit! */
-void d4est_output_norms_using_analytic_solution(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *d4est_factors,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,double local_estimator,d4est_elliptic_data_t *prob_vecs,d4est_ip_energy_norm_data_t *energy_norm_data,d4est_xyz_fcn_t analytic_solution,void *ctx,d4est_output_energy_norm_fit_t *fit,int(*skip_element_fcn)(d4est_element_data_t *));
-void d4est_output_norms_using_analytic_solution(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *d4est_factors,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,double local_estimator,d4est_elliptic_data_t *prob_vecs,d4est_ip_energy_norm_data_t *energy_norm_data,d4est_xyz_fcn_t analytic_solution,void *ctx,d4est_output_energy_norm_fit_t *fit,int(*skip_element_fcn)(d4est_element_data_t *));
-void d4est_output_norms(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *d4est_factors,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_ip_energy_norm_data_t *energy_norm_data,double estimator,double *error,d4est_output_energy_norm_fit_t *fit,int(*skip_element_fcn)(d4est_element_data_t *));
-void d4est_output_norms(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *d4est_factors,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_ip_energy_norm_data_t *energy_norm_data,double estimator,double *error,d4est_output_energy_norm_fit_t *fit,int(*skip_element_fcn)(d4est_element_data_t *));
-void d4est_output_destroy_energy_norm_fit(d4est_output_energy_norm_fit_t *fit);
-void d4est_output_destroy_energy_norm_fit(d4est_output_energy_norm_fit_t *fit);
-void d4est_output_energy_norm_add_entry_and_fit(p4est_t *p4est,d4est_output_energy_norm_fit_t *fit,double global_energy_norm_sqr,double global_dof);
-void d4est_output_energy_norm_add_entry_and_fit(p4est_t *p4est,d4est_output_energy_norm_fit_t *fit,double global_energy_norm_sqr,double global_dof);
-void d4est_output_energy_norm_fit(p4est_t *p4est,d4est_output_energy_norm_fit_t *fit);
 void d4est_output_energy_norm_fit(p4est_t *p4est,d4est_output_energy_norm_fit_t *fit);
 
 #endif

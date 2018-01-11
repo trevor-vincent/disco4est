@@ -404,6 +404,7 @@ problem_init
   double point [4][100];
   double point_diff [4][100];
   double point_err [4];
+  double point_dof [100];
   
   point[0][0] = 0;
   point_diff[0][0] = 0;
@@ -413,6 +414,7 @@ problem_init
   point_diff[2][0] = 0;
   point[3][0] = 0;
   point_diff[3][0] = 0;
+  point_dof[0] = 0;
 
   int iterations = 1;
   
@@ -474,21 +476,21 @@ problem_init
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
     
-    d4est_output_norms
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       *ghost,
-       *ghost_data,
-       NULL,
-       stats->total,
-       error,
-       NULL,
-       NULL
-      );
+    d4est_output_norms_t norms = d4est_output_norms
+                                 (
+                                  p4est,
+                                  d4est_ops,
+                                  d4est_geom,
+                                  d4est_quad,
+                                  d4est_factors,
+                                  *ghost,
+                                  *ghost_data,
+                                  NULL,
+                                  stats->total,
+                                  error,
+                                  NULL,
+                                  NULL
+                                 );
     
 
     printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
@@ -673,21 +675,30 @@ problem_init
      double* point3_diff = &point_diff[1][0];
      double* point10_diff = &point_diff[2][0];
      double* point100_diff = &point_diff[3][0];
-     
+     point_dof[iterations] = norms.global_nodes;
+
+     double* dof = &point_dof[0];
      for (int p = 0; p < 4; p++){
        point_diff[p][iterations] = fabs(point[p][iterations] - point[p][iterations-1]);
      }
      if (point_err[0] == 0){
-       DEBUG_PRINT_2ARR_DBL(point0, point0_diff, iterations+1);
+       printf("From mpi rank %d\n", p4est->mpirank);
+       DEBUG_PRINT_3ARR_DBL(dof, point0, point0_diff, iterations+1);
      }
+     sc_MPI_Barrier(mpicomm);
      if (point_err[1] == 0){
-       DEBUG_PRINT_2ARR_DBL(point3, point3_diff, iterations+1);
+       printf("From mpi rank %d\n", p4est->mpirank);
+       DEBUG_PRINT_3ARR_DBL(dof, point3, point3_diff, iterations+1);
      }
+     sc_MPI_Barrier(mpicomm);
      if (point_err[2] == 0){
-       DEBUG_PRINT_2ARR_DBL(point10, point10_diff, iterations+1);
+       printf("From mpi rank %d\n", p4est->mpirank);
+       DEBUG_PRINT_3ARR_DBL(dof, point10, point10_diff, iterations+1);
      }
+     sc_MPI_Barrier(mpicomm);
      if (point_err[3] == 0){
-       DEBUG_PRINT_2ARR_DBL(point100, point100_diff, iterations+1);
+       printf("From mpi rank %d\n", p4est->mpirank);
+       DEBUG_PRINT_3ARR_DBL(dof, point100, point100_diff, iterations+1);
      }
      
      iterations++;

@@ -98,7 +98,7 @@ d4est_output_destroy_energy_norm_fit
   P4EST_FREE(fit);
 }
 
-void
+d4est_output_norms_t
 d4est_output_norms
 (
  p4est_t* p4est,
@@ -232,6 +232,18 @@ d4est_output_norms
        global_Linf
       );
   }
+
+
+  return (d4est_output_norms_t)
+    {.global_nodes = (int)global_nodes_dbl,
+        .global_num_quadrants = p4est->global_num_quadrants,
+        .avg_deg = avg_deg,
+        .global_quad_nodes = (int)global_quad_nodes_dbl,
+        .avg_deg_quad = avg_deg_quad,
+        .global_estimator = (global_estimator < 0) ? -1. : sqrt(global_estimator),
+        .global_l2_norm_sqr = (global_l2_norm_sqr < 0) ? -1 : sqrt(global_l2_norm_sqr),
+        .global_linf = global_Linf
+        };
     
 }
 
