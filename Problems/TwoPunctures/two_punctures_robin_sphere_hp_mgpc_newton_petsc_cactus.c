@@ -526,6 +526,10 @@ problem_init
         d4est_amr_normal = d4est_amr_use_puncture_finder_and_prefine_outside_cube ;
         d4est_amr_p_refine = d4est_amr_p_refine_everywhere;
       }
+      else if (init_params.use_puncture_finder == 3){
+        d4est_amr_normal = d4est_amr_use_puncture_finder;
+        d4est_amr_p_refine = d4est_amr_p_refine_everywhere;
+      }
       else {
         d4est_amr_normal = d4est_amr;
         d4est_amr_p_refine = d4est_amr_p_refine_only_in_center_cube;
@@ -658,13 +662,7 @@ problem_init
      point_err[3] = data.err;
      }
      else {
-     data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.00735152715280184837311522856572770756534949135984510409704}, 3, prob_vecs.u, 1);
-     point[2][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
-     point_err[2] = data.err;
-     
-     data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,.15553492568716001460897499511345636544704000752044528151370}, 3, prob_vecs.u, 1);
-     point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
-     point_err[3] = data.err;
+       D4EST_ABORT("inner shell must be compactified");
      }
 
      double* point0 = &point[0][0];
@@ -676,31 +674,36 @@ problem_init
      double* point10_diff = &point_diff[2][0];
      double* point100_diff = &point_diff[3][0];
      point_dof[iterations] = norms.global_nodes;
-
      double* dof = &point_dof[0];
-     for (int p = 0; p < 4; p++){
-       point_diff[p][iterations] = fabs(point[p][iterations] - point[p][iterations-1]);
-     }
-     if (point_err[0] == 0){
-       printf("From mpi rank %d\n", p4est->mpirank);
-       DEBUG_PRINT_3ARR_DBL(dof, point0, point0_diff, iterations+1);
-     }
-     sc_MPI_Barrier(mpicomm);
-     if (point_err[1] == 0){
-       printf("From mpi rank %d\n", p4est->mpirank);
-       DEBUG_PRINT_3ARR_DBL(dof, point3, point3_diff, iterations+1);
-     }
-     sc_MPI_Barrier(mpicomm);
-     if (point_err[2] == 0){
-       printf("From mpi rank %d\n", p4est->mpirank);
-       DEBUG_PRINT_3ARR_DBL(dof, point10, point10_diff, iterations+1);
-     }
-     sc_MPI_Barrier(mpicomm);
-     if (point_err[3] == 0){
-       printf("From mpi rank %d\n", p4est->mpirank);
-       DEBUG_PRINT_3ARR_DBL(dof, point100, point100_diff, iterations+1);
-     }
+     double points_global [4];
+     double points_local [4];
+     points_local[0] = point[0][iterations];
+     points_local[1] = point[1][iterations];
+     points_local[2] = point[2][iterations];
+     points_local[3] = point[3][iterations];
+
+     sc_reduce
+       (
+        &points_local,
+        &points_global,
+        4,
+        sc_MPI_DOUBLE,
+        sc_MPI_MAX,
+        0,
+        sc_MPI_COMM_WORLD
+       );
+
      
+     if (p4est->mpirank == 0){
+       for (int p = 0; p < 4; p++){
+         point[p][iterations] = points_global[p];
+         point_diff[p][iterations] = fabs(point[p][iterations] - point[p][iterations-1]);
+       }
+       DEBUG_PRINT_3ARR_DBL(dof, point0, point0_diff, iterations+1);
+       DEBUG_PRINT_3ARR_DBL(dof, point3, point3_diff, iterations+1);
+       DEBUG_PRINT_3ARR_DBL(dof, point10, point10_diff, iterations+1);
+       DEBUG_PRINT_3ARR_DBL(dof, point100, point100_diff, iterations+1);
+     }     
      iterations++;
     
     d4est_checkpoint_save
@@ -719,8 +722,7 @@ problem_init
     multigrid_element_data_updater_destroy(updater, num_of_levels);
     multigrid_data_destroy(mg_data);
     multigrid_matrix_operator_destroy(user_callbacks);
-    
-
+   
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
