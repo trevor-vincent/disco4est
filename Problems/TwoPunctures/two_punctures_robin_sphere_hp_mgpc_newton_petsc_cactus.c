@@ -433,7 +433,7 @@ problem_init
        d4est_geom,
        d4est_quad,
        d4est_factors,
-       DIAM_APPROX_CUBE,
+       NO_DIAM_APPROX,
        problem_set_mortar_degree,
        NULL
       );

@@ -137,7 +137,7 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_quad,
-       DIAM_APPROX_CUBE,
+       NO_DIAM_APPROX,
        problem_set_mortar_degree,
        NULL
       );
@@ -243,8 +243,9 @@ problem_init
    int min_level, max_level;
 
     multigrid_get_level_range(p4est, &min_level, &max_level);
-    printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
-
+    if (p4est->mpirank == 0){
+      printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
+    }
     /* need to do a reduce on min,max_level before supporting multiple proc */
     /* mpi_assert(proc_size == 1); */
     int num_of_levels = max_level + 1;

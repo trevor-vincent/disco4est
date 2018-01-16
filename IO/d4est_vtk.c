@@ -25,7 +25,7 @@ static const int    d4est_vtk_write_level = 1;
 static const int    d4est_vtk_write_rank = 1;
 static const int    d4est_vtk_wrap_rank = 0;
 
-#define D4EST_VTK_DEBUG
+/* #define D4EST_VTK_DEBUG */
 
 #define D4EST_VTK_DOUBLES
 #ifndef D4EST_VTK_DOUBLES
