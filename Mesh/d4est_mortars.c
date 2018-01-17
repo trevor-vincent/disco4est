@@ -629,7 +629,7 @@ void d4est_mortars_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *in
   d4est_quadrature_t* d4est_quad =
     (d4est_quadrature_t *)d4est_mortars_compute_flux_user_data->d4est_quad;
 
-  d4est_mesh_geometry_storage_t* d4est_factors =
+  d4est_mesh_data_t* d4est_factors =
     d4est_mortars_compute_flux_user_data->d4est_factors;
 
   
@@ -815,7 +815,7 @@ d4est_mortars_compute_flux_on_local_elements
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  d4est_mortars_fcn_ptrs_t* fcn_ptrs,
  d4est_mortars_exchange_data_option_t option
 )

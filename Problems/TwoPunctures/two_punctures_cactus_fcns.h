@@ -371,7 +371,7 @@ void two_punctures_apply_jac
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  void* user
 )
 {
@@ -514,7 +514,7 @@ two_punctures_build_residual
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  void* user
 )
 {

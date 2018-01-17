@@ -149,12 +149,12 @@ typedef struct {
 
 
   multigrid_update_callback_fcn_t update;
-  d4est_mesh_geometry_storage_t** geometric_factors;
+  d4est_mesh_data_t** geometric_factors;
   p4est_ghost_t** ghost;
   d4est_element_data_t** ghost_data;
 
   /* alias to currently used geometric factors, points to an element of geometric_factors above */
-  d4est_mesh_geometry_storage_t* current_geometric_factors;
+  d4est_mesh_data_t* current_geometric_factors;
   
   void(*element_data_init_user_fcn)(d4est_element_data_t*,void*);
   void* user;

@@ -200,7 +200,7 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  void* params
 )
 {
@@ -280,7 +280,7 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  void* params
 ){
 
@@ -438,7 +438,7 @@ d4est_mesh_compute_mortar_quadrature_quantities
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors
+ d4est_mesh_data_t* d4est_factors
 )
 {
 
@@ -474,7 +474,7 @@ d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  void* params
 )
 {
@@ -510,7 +510,7 @@ d4est_mesh_compute_mortar_quadrature_sizes_interface_callback
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  void* params
 )
 {
@@ -554,7 +554,7 @@ d4est_mesh_compute_mortar_quadrature_sizes
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  d4est_local_sizes_t* local_sizes
 ){
 
@@ -577,10 +577,10 @@ d4est_mesh_compute_mortar_quadrature_sizes
     );
 }
 
-d4est_mesh_geometry_storage_t*
+d4est_mesh_data_t*
 d4est_mesh_geometry_storage_init()
 {
-  d4est_mesh_geometry_storage_t* d4est_factors = P4EST_ALLOC(d4est_mesh_geometry_storage_t, 1);
+  d4est_mesh_data_t* d4est_factors = P4EST_ALLOC(d4est_mesh_data_t, 1);
   d4est_factors->J_quad = NULL; 
   d4est_factors->xyz = NULL;
   d4est_factors->xyz_quad = NULL;
@@ -601,7 +601,7 @@ static void
 d4est_mesh_geometry_storage_realloc
 (
  p4est_t* p4est,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  d4est_local_sizes_t local_sizes
 )
 {
@@ -658,7 +658,7 @@ d4est_mesh_geometry_storage_realloc
 void
 d4est_mesh_geometry_storage_printout
 (
- d4est_mesh_geometry_storage_t* d4est_factors
+ d4est_mesh_data_t* d4est_factors
 )
 {
   /* int local_nodes = d4est_factors->local_sizes.local_nodes; */
@@ -681,7 +681,7 @@ d4est_mesh_geometry_storage_printout
 void
 d4est_mesh_geometry_storage_destroy
 (
- d4est_mesh_geometry_storage_t* d4est_factors
+ d4est_mesh_data_t* d4est_factors
 )
 {
   if (d4est_factors != NULL){
@@ -1389,7 +1389,7 @@ d4est_mesh_init_element_data
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  void(*user_fcn)(d4est_element_data_t*, void*),
  void* user_ctx
 )
@@ -1505,7 +1505,7 @@ d4est_mesh_geometry_storage_initialize_data
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors
+ d4est_mesh_data_t* d4est_factors
 )
 {
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -1640,7 +1640,7 @@ void
 d4est_mesh_geometry_storage_initialize_aliases
 (
  p4est_t* p4est,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  d4est_local_sizes_t local_sizes
 )
 {
@@ -1678,7 +1678,7 @@ d4est_mesh_update
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  d4est_mesh_quadrature_data_init_option_t quad_init_option,
  d4est_mesh_geometry_data_init_option_t geom_init_option,
  d4est_mesh_geometry_aliases_init_option_t alias_init_option,

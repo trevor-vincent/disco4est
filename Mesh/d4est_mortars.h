@@ -27,7 +27,7 @@ typedef void (*d4est_mortars_interface_fcn_t)
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  void* user_ctx
 );
 
@@ -40,7 +40,7 @@ typedef void (*d4est_mortars_boundary_fcn_t)
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  void* user_ctx
 );
 
@@ -57,7 +57,7 @@ typedef struct {
   d4est_operators_t* d4est_ops;
   d4est_quadrature_t* d4est_quad;
   d4est_mortars_fcn_ptrs_t* flux_fcn_ptrs;
-  d4est_mesh_geometry_storage_t* d4est_factors;
+  d4est_mesh_data_t* d4est_factors;
   d4est_geometry_t* geom;
   int mortar_stride;
 
@@ -65,7 +65,7 @@ typedef struct {
 
 
 /* This file was automatically generated.  Do not edit! */
-int d4est_mortars_compute_flux_on_local_elements(p4est_t *p4est,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_geometry_storage_t *d4est_factors,d4est_mortars_fcn_ptrs_t *fcn_ptrs,d4est_mortars_exchange_data_option_t option);
+int d4est_mortars_compute_flux_on_local_elements(p4est_t *p4est,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mortars_fcn_ptrs_t *fcn_ptrs,d4est_mortars_exchange_data_option_t option);
 void d4est_mortars_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *info,void *user_data);
 void d4est_mortars_project_side_onto_mortar_space(d4est_operators_t *d4est_ops,double *in_side,int faces_side,int *deg_side,double *out_mortar,int faces_mortar,int *deg_mortar);
 void d4est_mortars_project_mass_mortar_onto_side(d4est_operators_t *dgmath,double *in_mortar,int faces_mortar,int *deg_mortar,double *out_side,int faces_side,int *deg_side);

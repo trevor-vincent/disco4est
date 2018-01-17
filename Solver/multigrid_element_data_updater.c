@@ -10,7 +10,7 @@ multigrid_element_data_updater_init
  int num_of_levels,
  p4est_ghost_t** ghost,
  d4est_element_data_t** ghost_data,
- d4est_mesh_geometry_storage_t* d4est_mesh_geometry_storage_toplevel,
+ d4est_mesh_data_t* d4est_mesh_data_toplevel,
  void(*element_data_init_user_fcn)(d4est_element_data_t*,void*),
  void* user
 )
@@ -23,13 +23,13 @@ multigrid_element_data_updater_init
   /* for curved infrastructure*/
   updater->element_data_init_user_fcn = element_data_init_user_fcn;
   updater->user = user;
-  updater->geometric_factors = P4EST_ALLOC(d4est_mesh_geometry_storage_t*, num_of_levels);
+  updater->geometric_factors = P4EST_ALLOC(d4est_mesh_data_t*, num_of_levels);
 
   for (int level = 0; level < num_of_levels-1; level++){
     updater->geometric_factors[level] = NULL;
   }
   
-  updater->geometric_factors[num_of_levels-1] = d4est_mesh_geometry_storage_toplevel;
+  updater->geometric_factors[num_of_levels-1] = d4est_mesh_data_toplevel;
 
   updater->current_geometric_factors = updater->geometric_factors[num_of_levels-1];
   
@@ -37,7 +37,7 @@ multigrid_element_data_updater_init
     D4EST_ABORT("You must set the element data init user fcn for the element data updater\n");
   }
 
-  if (d4est_mesh_geometry_storage_toplevel == NULL){
+  if (d4est_mesh_data_toplevel == NULL){
     D4EST_ABORT("You must set the geometric_factors for the element data updater\n");
   }
   

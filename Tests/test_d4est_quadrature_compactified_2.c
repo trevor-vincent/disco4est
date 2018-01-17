@@ -491,7 +491,7 @@ int main(int argc, char *argv[])
                    );
   
   d4est_operators_t* d4est_ops = d4est_ops_init();
-  d4est_mesh_geometry_storage_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
+  d4est_mesh_data_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t, 1);
   d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE_COMPACTIFIED_C1PC2T_NEG4;
   d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, "", "");

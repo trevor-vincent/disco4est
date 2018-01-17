@@ -10,7 +10,7 @@ d4est_checkpoint_save
  int checkpoint_number,
  const char* checkpoint_prefix,
  p4est_t* p4est,
- d4est_mesh_geometry_storage_t* storage,
+ d4est_mesh_data_t* storage,
  const char ** dg_field_names,
  double ** dg_fields
 )

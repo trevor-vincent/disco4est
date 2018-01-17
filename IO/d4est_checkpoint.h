@@ -19,6 +19,6 @@ typedef struct {
 
 /* This file was automatically generated.  Do not edit! */
 p4est_t *d4est_checkpoint_load_mesh(sc_MPI_Comm mpicomm,const char *checkpoint_prefix,p4est_connectivity_t **connectivity);
-void d4est_checkpoint_save(int checkpoint_number,const char *checkpoint_prefix,p4est_t *p4est,d4est_mesh_geometry_storage_t *storage,const char **dg_field_names,double **dg_fields);
+void d4est_checkpoint_save(int checkpoint_number,const char *checkpoint_prefix,p4est_t *p4est,d4est_mesh_data_t *storage,const char **dg_field_names,double **dg_fields);
 
 #endif

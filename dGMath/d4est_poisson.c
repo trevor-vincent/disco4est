@@ -21,7 +21,7 @@ void
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  d4est_elliptic_data_t* prob_vecs,
  d4est_poisson_flux_data_t* flux_fcn_data_for_build_rhs,
  double* rhs,
@@ -190,7 +190,7 @@ d4est_poisson_compute_dudr
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors,
+ d4est_mesh_data_t* d4est_factors,
  double* dudr [(P4EST_DIM)]
 ){
 
@@ -239,7 +239,7 @@ d4est_poisson_apply_mortar_matrices
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors
+ d4est_mesh_data_t* d4est_factors
 )
 {
   d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(flux_fcn_data);
@@ -273,7 +273,7 @@ d4est_poisson_apply_aij
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_geometry_storage_t* d4est_factors
+ d4est_mesh_data_t* d4est_factors
 )
 {
   d4est_poisson_flux_init_element_data
