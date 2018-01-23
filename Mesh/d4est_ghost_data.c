@@ -40,7 +40,8 @@ d4est_ghost_data_init
 
   d4est_ghost_data->num_ghosts = d4est_ghost->ghost->ghosts.elem_count;
   d4est_ghost_data->num_vecs = num_vecs;
-
+  d4est_ghost_data->transfer_types = D4EST_ALLOC(d4est_field_type_t, num_vecs);
+  
   for (int i = 0; i < num_vecs; i++){
     d4est_ghost_data->transfer_types[i] = field_types[i];
   }
@@ -50,7 +51,7 @@ d4est_ghost_data_init
     d4est_ghost_data->receive_strides[i] = D4EST_ALLOC(int, d4est_ghost_data->num_vecs);
   }
   
-  d4est_ghost_data->transfer_types = D4EST_ALLOC(d4est_field_type_t, num_vecs);
+
   d4est_ghost_data->ghost_data_sizes = D4EST_ALLOC_ZERO(int, p4est->mpisize);
   d4est_ghost_data->receive_size = 0;
 
