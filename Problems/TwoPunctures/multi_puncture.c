@@ -126,6 +126,8 @@ multi_puncture_init_params_input
   return input;
 }
 
+
+
 static
 int
 amr_mark_element
@@ -169,7 +171,7 @@ amr_set_element_gamma
 }
 
 static void
-multi_puncture_custom_p_uniform_element_marker
+multi_puncture_only_p_refine_in_center_cube
 (
   p4est_iter_volume_info_t* info,
   void* user_data
@@ -183,9 +185,52 @@ multi_puncture_custom_p_uniform_element_marker
   else {
     d4est_amr->refinement_log[ed->id] = ed->deg;
   }
-  
 }
 
+static void
+multi_puncture_p_refine_everywhere
+(
+  p4est_iter_volume_info_t* info,
+  void* user_data
+){
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
+  d4est_element_data_t* ed = (d4est_element_data_t*) info->quad->p.user_data;
+  d4est_amr->refinement_log[ed->id] = ed->deg + 1;
+}
+
+static void
+multi_puncture_find_punctures_and_prefine_outside_cube_element_marker
+(
+  p4est_iter_volume_info_t* info,
+  void* user_data
+){
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
+  d4est_element_data_t* ed = (d4est_element_data_t*) info->quad->p.user_data;
+  multi_puncture_params_t* params = d4est_amr->scheme->amr_scheme_data;
+  
+  double xi [(P4EST_DIM)];
+  double xf [(P4EST_DIM)];
+  
+  if (ed->region == 1){
+    d4est_geometry_compute_bounds(ed->xyz, ed->deg, xi, xf);
+    d4est_amr->refinement_log[ed->id] = ed->deg;
+
+    for (int i = 0; i < params->number_of_punctures; i++){
+      if ((params->bh[i].XYZ[0] <= xf[0]) &&
+          (params->bh[i].XYZ[1] <= xf[1]) &&
+          (params->bh[i].XYZ[2] <= xf[2]) &&
+          (params->bh[i].XYZ[0] >= xi[0]) &&
+          (params->bh[i].XYZ[1] >= xi[1]) &&
+          (params->bh[i].XYZ[2] >= xi[2])){
+        d4est_amr->refinement_log[ed->id] = -ed->deg;
+        return;
+      }
+    }  
+  }
+  else {
+    d4est_amr->refinement_log[ed->id] = ed->deg + 1;
+  }
+}
 
 static void
 multi_puncture_find_punctures_element_marker
@@ -203,7 +248,6 @@ multi_puncture_find_punctures_element_marker
   d4est_geometry_compute_bounds(ed->xyz, ed->deg, xi, xf);
   d4est_amr->refinement_log[ed->id] = ed->deg;
 
-
   for (int i = 0; i < params->number_of_punctures; i++){
     if ((params->bh[i].XYZ[0] <= xf[0]) &&
         (params->bh[i].XYZ[1] <= xf[1]) &&
@@ -214,8 +258,7 @@ multi_puncture_find_punctures_element_marker
       d4est_amr->refinement_log[ed->id] = -ed->deg;
       return;
     }
-  }
-  
+  }  
 }
 
 int
@@ -227,7 +270,6 @@ problem_set_mortar_degree
 {
   return elem_data->deg_vol_quad;
 }
-
 
 void
 problem_init
@@ -287,6 +329,7 @@ problem_init
   prob_fcns.user = &ctx;
   
   
+
   d4est_elliptic_data_t prob_vecs;
   prob_vecs.Au = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.u = P4EST_ALLOC(double, initial_nodes);
@@ -317,15 +360,25 @@ problem_init
      "[D4EST_AMR]:",
      &amr_marker
     );
-  /*  */
-
-  d4est_amr_t* d4est_amr_uniform_p = d4est_amr_init_uniform_p(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps);
-  d4est_amr_t* d4est_amr_custom = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
-                                                   multi_puncture_find_punctures_element_marker, multi_puncture_params);
 
 
-  d4est_amr_t* d4est_amr_custom_uniform_p = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
-                                                   multi_puncture_custom_p_uniform_element_marker, NULL);
+   
+
+
+  d4est_amr_t* d4est_amr_use_puncture_finder = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
+                                                                     multi_puncture_find_punctures_element_marker, multi_puncture_params);
+
+
+  d4est_amr_t* d4est_amr_use_puncture_finder_and_prefine_outside_cube = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
+                                                                                              multi_puncture_find_punctures_and_prefine_outside_cube_element_marker, multi_puncture_params);
+
+  
+  d4est_amr_t* d4est_amr_p_refine_only_in_center_cube = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
+                                                                              multi_puncture_only_p_refine_in_center_cube, multi_puncture_params);
+
+  d4est_amr_t* d4est_amr_p_refine_everywhere = d4est_amr_custom_init(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps,
+                                                                     multi_puncture_p_refine_everywhere, multi_puncture_params);
+
   
 
   if (initial_extents->checkpoint_prefix == NULL){
@@ -346,8 +399,22 @@ problem_init
   
   d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
+  double point [4][100];
+  double point_diff [4][100];
+  double point_err [4];
+  double point_dof [100];
+  
+  point[0][0] = 0;
+  point_diff[0][0] = 0;
+  point[1][0] = 0;
+  point_diff[1][0] = 0;
+  point[2][0] = 0;
+  point_diff[2][0] = 0;
+  point[3][0] = 0;
+  point_diff[3][0] = 0;
+  point_dof[0] = 0;
 
-  d4est_output_energy_norm_fit_t* fit = d4est_output_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
+  int iterations = 1;
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
@@ -364,7 +431,7 @@ problem_init
        d4est_geom,
        d4est_quad,
        d4est_factors,
-       DIAM_APPROX_CUBE,
+       NO_DIAM_APPROX,
        problem_set_mortar_degree,
        NULL
       );
@@ -388,44 +455,17 @@ problem_init
        d4est_factors
       );
 
-    d4est_output_vtk_with_no_fields
+   d4est_vtk_save
       (
        p4est,
        d4est_ops,
-       d4est_geom,
        input_file,
-       "multi_puncture_no_fields",
-       level
-      );
-    
-    d4est_output_vtk
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       prob_vecs.u,
-       u_prev,
-       error,
-       prob_vecs.Au,
-       input_file,
-       "multi_puncture",
-       prob_vecs.local_nodes,
-       level,
-       1
-      );
-
-    d4est_output_vtk_degree_mesh
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       error,
-       prob_vecs.local_nodes,
-       input_file,
-       "multi_puncture_degree_mesh",
-       1,
+       "d4est_vtk",
+       "[D4EST_VTK]",
+       (const char * []){"u","u_prev","error", NULL},
+       (double* []){prob_vecs.u, u_prev, error},
+       (const char * []){NULL},
+       (double* []){NULL},
        level
       );
 
@@ -434,21 +474,22 @@ problem_init
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
     
-    d4est_output_norms
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       *ghost,
-       *ghost_data,
-       &ip_norm_data,
-       stats->total,
-       error,
-       fit,
-       NULL
-      );
+    d4est_output_norms_t norms = d4est_output_norms
+                                 (
+                                  p4est,
+                                  d4est_ops,
+                                  d4est_geom,
+                                  d4est_quad,
+                                  d4est_factors,
+                                  *ghost,
+                                  *ghost_data,
+                                  NULL,
+                                  stats->total,
+                                  error,
+                                  NULL,
+                                  NULL
+                                 );
+    
 
     printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
     d4est_output_norms
@@ -460,34 +501,46 @@ problem_init
        d4est_factors,
        *ghost,
        *ghost_data,
-       &ip_norm_data,
+       NULL,
        stats->total,
        error,
-       fit,
+       NULL,
        skip_curved_elements
       );
+
     
-
-
     if (level != d4est_amr->num_of_amr_steps){
 
       if (p4est->mpirank == 0)
         printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level+1);
 
-      d4est_amr_t* d4est_amr_normal = d4est_amr;
-      if (init_params.use_puncture_finder){
-        d4est_amr_normal = d4est_amr_custom;
+      d4est_amr_t* d4est_amr_normal = NULL;
+      d4est_amr_t* d4est_amr_p_refine = NULL;
+      if (init_params.use_puncture_finder == 1){
+        d4est_amr_normal = d4est_amr_use_puncture_finder;
+        d4est_amr_p_refine = d4est_amr_p_refine_only_in_center_cube;
+      }
+      else if (init_params.use_puncture_finder == 2){
+        d4est_amr_normal = d4est_amr_use_puncture_finder_and_prefine_outside_cube ;
+        d4est_amr_p_refine = d4est_amr_p_refine_everywhere;
+      }
+      else if (init_params.use_puncture_finder == 3){
+        d4est_amr_normal = d4est_amr_use_puncture_finder;
+        d4est_amr_p_refine = d4est_amr_p_refine_everywhere;
+      }
+      else {
+        d4est_amr_normal = d4est_amr;
+        d4est_amr_p_refine = d4est_amr_p_refine_only_in_center_cube;
       }
       
+
       d4est_amr_step
         (
          p4est,
          ghost,
          ghost_data,
          d4est_ops,
-         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_custom_uniform_p : d4est_amr_normal,
-         /* d4est_amr, */
-         /* d4est_amr_uniform_p, */
+         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_p_refine : d4est_amr_normal,
          &prob_vecs.u,
          &stats
         );
@@ -526,8 +579,6 @@ problem_init
     multigrid_get_level_range(p4est, &min_level, &max_level);
     printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
 
-    /* need to do a reduce on min,max_level before supporting multiple proc */
-    /* mpi_assert(proc_size == 1); */
     int num_of_levels = (max_level-min_level) + 1;
 
  
@@ -546,24 +597,6 @@ problem_init
                                                 );
     
     multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, num_of_levels);
-
-    /* prob_vecs.u0 = prob_vecs.u; */
-    
-    /* multigrid_matrix_setup_fofufofvlilj_operator */
-    /*   ( */
-    /*    p4est, */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    d4est_quad, */
-    /*    prob_vecs.u0, */
-    /*    NULL, */
-    /*    neg_10pi_rho_up1_neg4, */
-    /*    &ctx, */
-    /*    NULL, */
-    /*    NULL, */
-    /*    user_callbacks->user */
-    /*   ); */
-
     
     multigrid_data_t* mg_data = multigrid_data_init(p4est,
                                                     d4est_ops,
@@ -580,20 +613,6 @@ problem_init
     ctx.use_matrix_operator = 1;
     ctx.mg_data = mg_data;
 
-    /* double* u_check = P4EST_ALLOC(double, prob_vecs.local_nodes); */
-    /* d4est_h5_create_file(p4est->mpirank, "checkpoint"); */
-    /* d4est_h5_create_dataset(p4est->mpirank, "checkpoint", "u", H5T_NATIVE_DOUBLE, prob_vecs.local_nodes); */
-    /* d4est_h5_write_dataset(p4est->mpirank, "checkpoint", "u", H5T_NATIVE_DOUBLE, prob_vecs.u); */
-    /* d4est_h5_read_dataset(p4est->mpirank, "checkpoint", "u", H5T_NATIVE_DOUBLE, u_check); */
-
-    /* DEBUG_PRINT_ARR_DBL_SUM(u_check, prob_vecs.local_nodes); */
-    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, prob_vecs.local_nodes); */
-
-    /* int check = d4est_util_compare_vecs(u_check, prob_vecs.u, prob_vecs.local_nodes, 1e-14); */
-
-    /* printf("check = %d\n", check); */
-    
-    /* P4EST_FREE(u_check); */
     
     if (!init_params.do_not_solve){
 
@@ -620,41 +639,34 @@ problem_init
         );
     }
 
-    char* checkpoint_save_as;
-    asprintf(&checkpoint_save_as,"checkpoint%d", level);
-    
-    d4est_checkpoint_save_aux
+    d4est_checkpoint_save
       (
-       checkpoint_save_as,
+       level,
+       "checkpoint",
        p4est,
-       &prob_vecs,
        d4est_factors,
-       1,
-       save_u_fcn,
-       NULL
+       (const char * []){"u", NULL},
+       (double* []){prob_vecs.u}
       );
 
-    free(checkpoint_save_as);
-    
 
     krylov_pc_multigrid_destroy(pc);
     multigrid_logger_residual_destroy(logger);
     multigrid_element_data_updater_destroy(updater, num_of_levels);
     multigrid_data_destroy(mg_data);
     multigrid_matrix_operator_destroy(user_callbacks);
-    
-
+   
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
-  multi_puncture_params_destroy(multi_puncture_params);
+  
   d4est_amr_destroy(d4est_amr);
-  d4est_amr_destroy(d4est_amr_uniform_p);
-  d4est_amr_destroy(d4est_amr_custom);
-  d4est_amr_destroy(d4est_amr_custom_uniform_p);
+  d4est_amr_destroy(d4est_amr_use_puncture_finder);
+  d4est_amr_destroy(d4est_amr_p_refine_only_in_center_cube);
+  d4est_amr_destroy(d4est_amr_use_puncture_finder_and_prefine_outside_cube);
+  d4est_amr_destroy(d4est_amr_p_refine_everywhere);
   d4est_poisson_flux_destroy(flux_data_for_jac);  
   d4est_poisson_flux_destroy(flux_data_for_res);  
-  d4est_output_destroy_energy_norm_fit(fit);
   P4EST_FREE(error);
   P4EST_FREE(u_prev);
   P4EST_FREE(prob_vecs.u);
