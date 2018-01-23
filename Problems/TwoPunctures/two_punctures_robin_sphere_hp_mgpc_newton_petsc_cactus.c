@@ -492,8 +492,9 @@ problem_init
                                   NULL
                                  );
     
-
-    printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
+    if (p4est->mpirank == 0){
+      printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
+    }
     d4est_output_norms
       (
        p4est,
@@ -579,8 +580,9 @@ problem_init
    int min_level, max_level;
 
     multigrid_get_level_range(p4est, &min_level, &max_level);
-    printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
-
+    if (p4est->mpirank){
+      printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
+    }
     int num_of_levels = (max_level-min_level) + 1;
 
  

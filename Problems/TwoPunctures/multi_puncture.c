@@ -398,23 +398,6 @@ problem_init
   }
   
   d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
-
-  double point [4][100];
-  double point_diff [4][100];
-  double point_err [4];
-  double point_dof [100];
-  
-  point[0][0] = 0;
-  point_diff[0][0] = 0;
-  point[1][0] = 0;
-  point_diff[1][0] = 0;
-  point[2][0] = 0;
-  point_diff[2][0] = 0;
-  point[3][0] = 0;
-  point_diff[3][0] = 0;
-  point_dof[0] = 0;
-
-  int iterations = 1;
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
@@ -491,7 +474,9 @@ problem_init
                                  );
     
 
-    printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
+    if (p4est->mpirank == 0){
+      printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
+    }
     d4est_output_norms
       (
        p4est,
@@ -577,8 +562,9 @@ problem_init
    int min_level, max_level;
 
     multigrid_get_level_range(p4est, &min_level, &max_level);
-    printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
-
+    if (p4est->mpirank){
+      printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
+    }
     int num_of_levels = (max_level-min_level) + 1;
 
  

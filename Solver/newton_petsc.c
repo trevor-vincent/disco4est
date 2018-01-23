@@ -416,8 +416,10 @@ void newton_petsc_solve
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
-  printf("[NEWTON_PETSC]: Finished in %f seconds\n", time_spent); 
-  
+  if (p4est->mpirank == 0){
+    printf("[NEWTON_PETSC]: Finished in %f seconds\n", time_spent); 
+  }
+    
   P4EST_FREE(u0);
   VecResetArray(x);
   VecDestroy(&x);//CHKERRQ(ierr);  
