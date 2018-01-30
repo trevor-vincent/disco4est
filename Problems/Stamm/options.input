@@ -104,7 +104,7 @@ cheby_print_eigs = 0;
 [d4est_vtk]
 filename = stamm
 geometry_section = geometry
-output_type = zlib_binary
+output_type = ascii
 grid_type = corner
 write_tree = 1
 write_level = 1

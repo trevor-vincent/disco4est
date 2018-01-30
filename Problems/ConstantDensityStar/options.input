@@ -46,7 +46,7 @@ JAC_compute_method = numerical
 [d4est_vtk]
 filename = constant_density_star
 geometry_section = geometry
-output_type = zlib_binary
+output_type = ascii
 grid_type = dg
 write_tree = 1
 write_level = 1
