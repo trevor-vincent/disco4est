@@ -473,7 +473,7 @@ d4est_mesh_set_quadratures_after_amr,
          d4est_factors,
          &krylov_params,
          &newton_params,
-         NULL//pc
+         pc//NULL//pc
         );
     }
 

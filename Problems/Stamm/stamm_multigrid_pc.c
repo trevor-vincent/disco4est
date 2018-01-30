@@ -101,12 +101,13 @@ problem_init
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_data_t* geometric_factors,
- int initial_nodes,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_mesh_initial_extents_t* initial_extents,
  const char* input_file,
  sc_MPI_Comm mpicomm
 )
 {
+  int initial_nodes = initial_extents->initial_nodes;
   stamm_params_t stamm_params = stamm_params_input(input_file);
   d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
 
@@ -188,6 +189,7 @@ problem_init
      d4est_ops,
      d4est_geom,
      d4est_quad,
+     d4est_factors,
      &prob_vecs,
      flux_data_for_build_rhs,
      prob_vecs.rhs,
@@ -206,12 +208,13 @@ problem_init
        &prob_vecs,
        &prob_fcns,
        penalty_data,
-       zero_fcn,
+       stamm_boundary_fcn,
        *ghost,
        *ghost_data,
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        DIAM_APPROX_CUBE,
        problem_set_mortar_degree,
        NULL
@@ -221,55 +224,56 @@ problem_init
     d4est_estimator_stats_compute(p4est, stats);
     d4est_estimator_stats_print(stats);
 
-    d4est_output_vtk_with_analytic_error
+    double* u_analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
+    double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
+
+    d4est_mesh_init_field
       (
        p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       &prob_vecs,
-       input_file,
-       "uniform_stamm",
+       u_analytic,
        stamm_analytic_solution,
-       &ctx,
-       1,
-       level
-      );
-
-    d4est_output_vtk_degree_mesh
-      (
-       p4est,
        d4est_ops,
        d4est_geom,
-       d4est_quad,
-       input_file,
-       "uniform_stamm_degree_mesh",
-       1,
-       level
+       INIT_FIELD_ON_LOBATTO,
+       &ctx
       );
 
-
-    d4est_ip_energy_norm_data_t ip_norm_data;
-    ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
-    ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
-    ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
-    /*  */
-    printf("ip_norm_data.penalty_prefactor = %f\n", ip_norm_data.penalty_prefactor);
+    for (int i = 0; i < prob_vecs.local_nodes; i++){
+      error[i] = fabs(prob_vecs.u[i] - u_analytic[i]);
+    }
     
+    /* d4est_vtk_save */
+    /*   ( */
+    /*    p4est, */
+    /*    d4est_ops, */
+    /*    input_file, */
+    /*    "d4est_vtk", */
+    /*    "[D4EST_VTK]", */
+    /*    (const char * []){"u","u_analytic","error", NULL}, */
+    /*    (double* []){prob_vecs.u, u_analytic, error}, */
+    /*    (const char * []){NULL}, */
+    /*    (double* []){NULL}, */
+    /*    level */
+    /*   ); */
+
+    P4EST_FREE(u_analytic);
+    P4EST_FREE(error);
+
     d4est_output_norms_using_analytic_solution
       (
       p4est,
        d4est_ops,
        d4est_geom,
        d4est_quad,
+      d4est_factors,
        *ghost,
        *ghost_data,
-       stats->total,
+      -1.,
        &prob_vecs,
-       &ip_norm_data,
+       NULL,
        stamm_analytic_solution,
       &ctx,NULL,NULL);
-
+    
     P4EST_FREE(stats);
     
     if (level != d4est_amr->num_of_amr_steps){
@@ -299,7 +303,7 @@ problem_init
                    d4est_ops,
                    d4est_geom,
                    d4est_quad,
-                   geometric_factors,
+                   d4est_factors,
                    INITIALIZE_QUADRATURE_DATA,
                    INITIALIZE_GEOMETRY_DATA,
                    INITIALIZE_GEOMETRY_ALIASES,
@@ -320,6 +324,7 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        &prob_vecs,
        flux_data_for_build_rhs,
        prob_vecs.rhs,
@@ -348,7 +353,7 @@ problem_init
                                                  num_of_levels,
                                                  ghost,
                                                  ghost_data,
-                                                 geometric_factors,
+                                                 d4est_factors,
                                                  problem_set_degrees_after_amr,
                                                  NULL
                                                 );
@@ -366,14 +371,6 @@ problem_init
                                                    );
 
 
-    /* multigrid_solve */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs, */
-    /*    &prob_fcns, */
-    /*    mg_data */
-    /*   ); */
-
     krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, NULL);
     
     krylov_petsc_params_t krylov_petsc_params;
@@ -389,6 +386,7 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        &krylov_petsc_params,
        pc
       );

@@ -1,9 +1,10 @@
-[initial_grid]
+[initial_mesh]
 min_quadrants = -1
 min_level = 0
 fill_uniform = 1
-deg = 2
-deg_quad = 2
+region0_deg = 2
+region0_deg_quad_inc = 0
+
 
 [problem]
 c2x = .5
@@ -99,3 +100,14 @@ cheby_eigs_reuse_fromdownvcycle = 0;
 cheby_eigs_reuse_fromlastvcycle = 0;
 cheby_print_residual_norm = 0;
 cheby_print_eigs = 0;
+
+[d4est_vtk]
+filename = stamm
+geometry_section = geometry
+output_type = zlib_binary
+grid_type = corner
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
