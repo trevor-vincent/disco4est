@@ -1,3 +1,5 @@
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/trevor-vincent/d4est/blob/master/LICENSE.md)
+
 # disco4est (d4est)
 
 A scalable hp-adaptive discontinuous Galerkin solver for coupled non-linear elliptic partial differential equations on curved multi-block meshes.
@@ -5,8 +7,6 @@ A scalable hp-adaptive discontinuous Galerkin solver for coupled non-linear elli
 ### Prerequisites
 
 The dependencies are OpenMPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will need at least OpenMPI, OpenBLAS and HDF5. If you do not have zlib, PETSc or p4est, these come bundled, so they will be installed automatically to the local build folder unless you specify otherwise. 
-
-
 
 ### Installing
 
@@ -27,3 +27,5 @@ Note 3): The cmake script searches for the MPI build on your system, so this nev
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+
