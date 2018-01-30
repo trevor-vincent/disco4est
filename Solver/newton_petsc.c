@@ -374,7 +374,7 @@ void newton_petsc_solve
 
   PC pc;
   KSPGetPC(ksp,&pc);
-  if (krylov_pc != NULL) {
+  if (krylov_pc != NULL && krylov_options->ksp_do_not_use_preconditioner == 0) {
     PCSetType(pc,PCSHELL);//CHKERRQ(ierr);
     krylov_pc->pc_ctx = &petsc_ctx;
     PCShellSetApply(pc, krylov_petsc_pc_apply);//CHKERRQ(ierr);
