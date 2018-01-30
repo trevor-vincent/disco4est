@@ -6,74 +6,13 @@ project(d4est)
 
 # Directory where customize cmake files reside
 set(CMAKE_MODULE_PATH
-  ${CMAKE_SOURCE_DIR}/ThirdParty/cmake
+  ${CMAKE_SOURCE_DIR}/Support/cmake
   ${CMAKE_MODULE_PATH}
 )
+include(machines)
 
-if(UBUNTU)
-  set(USE_OPENBLAS ON)
-  set(OPENBLAS_DIR "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/")
-  set(OPENBLAS_ROOT "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/")
-  set(OPENBLAS_LIBRARIES
-    "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/libopenblas.a"
-    )
-  set(OPENBLAS_INCLUDE_DIR "/home/tvincent/Dropbox/Research/Codes/OpenBLAS/lapack-netlib/LAPACKE/include/")  
-  set(USE_TCMALLOC ON)
-  set(TCMALLOC_DIR "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/")
-  set(TCMALLOC_ROOT "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/")
-  set(TCMALLOC_LIBRARIES "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/lib/libtcmalloc.a")
-  set(TCMALLOC_INCLUDE_DIR "/home/tvincent/Dropbox/Research/Codes/gperftools/gperftools_install/include/gperftools/")
-
-  set(USE_HDF5 ON)
-  set(HDF5_LIBRARIES "/home/tvincent/Dropbox/Research/Codes/hdf5-1.10.1/install/lib/libhdf5-static.a")
-  set(HDF5_INCLUDE_DIR "/home/tvincent/Dropbox/Research/Codes/hdf5-1.10.1/install/include/")
-endif()
-
-if(SCINET)
-  set(USE_OPENBLAS ON)
-  set(OPENBLAS_DIR "/scinet/gpc/Libraries/OpenBLAS/singlethreaded/")
-  set(OPENBLAS_ROOT "/scinet/gpc/Libraries/OpenBLAS/singlethreaded/")
-  set(OPENBLAS_LIBRARIES
-    "/scinet/gpc/Libraries/OpenBLAS/singlethreaded/lib/libopenblas.a"
-    )
-  set(OPENBLAS_INCLUDE_DIR "/scinet/gpc/Libraries/OpenBLAS/singlethreaded/include")
-  set(USE_HDF5 ON)
-  set(HDF5_LIBRARIES "/scratch/p/pfeiffer/tvincent/hdf5-1.10.1/install/lib/libhdf5-static.a")
-  set(HDF5_INCLUDE_DIR "/scratch/p/pfeiffer/tvincent/hdf5-1.10.1/install/include/") 
-endif()
-
-if(GRAHAM OR CEDAR)
-  set(USE_OPENBLAS ON)
-  set(OPENBLAS_DIR "/scratch/tvincent/OpenBLAS/")
-  set(OPENBLAS_ROOT "/scratch/tvincent/OpenBLAS/")
-  set(OPENBLAS_LIBRARIES
-    "/scratch/tvincent/OpenBLAS/libopenblas.a"
-    )
-  set(OPENBLAS_INCLUDE_DIR "/scratch/tvincent/OpenBLAS/lapack-netlib/LAPACKE/include/")
-  set(USE_HDF5 ON)
-  set(HDF5_LIBRARIES "/scratch/tvincent/hdf5-1.10.1/install/lib/libhdf5-static.a")
-  set(HDF5_INCLUDE_DIR "/scratch/tvincent/hdf5-1.10.1/install/include/")
-endif()
-
-
-if(CITA)
-  set(USE_OPENBLAS ON)
-  set(OPENBLAS_DIR "/opt/openblas/0.2.19/")
-  set(OPENBLAS_ROOT "/opt/openblas/0.2.19/")
-  set(OPENBLAS_LIBRARIES
-    "/opt/openblas/0.2.19/lib/libopenblas.a"
-    )
-  set(OPENBLAS_INCLUDE_DIR "/opt/openblas/0.2.19/include")
-endif()
-
-if(USE_OPENBLAS)
-  include_directories(${OPENBLAS_INCLUDE_DIR})
-endif()
-
-if(USE_HDF5)
-  include_directories(${HDF5_INCLUDE_DIR})
-endif()
-
+include_directories(${OPENBLAS_INCLUDE_DIR})
+include_directories(${HDF5_INCLUDE_DIR})
 find_package(MPI REQUIRED)
 
 ##
@@ -176,10 +115,6 @@ SET (
   Solver/d4est_solver_test_symmetry.c
   )
 
-
-##
-## D8EST Library
-##
 add_library(d8est ${SRCS} ${SRCS_3D_ONLY})
 add_library(d4est ${SRCS} ${SRCS_2D_ONLY})
 
@@ -187,14 +122,10 @@ add_dependencies(d8est build_bundled_libs)
 add_dependencies(d4est build_bundled_libs)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
 
-
 add_custom_target(p4est_bundled_libs)
 add_custom_target(build_bundled_libs)
 
-
 include(zlib)
-include_directories(${ZLIB_INCLUDE_DIRS})
-
 include(p4est)
 include(petsc)
 
@@ -207,26 +138,13 @@ SET (
   ${PETSC_LIBRARIES}
   m
   dl
-  ${CMAKE_BINARY_DIR}/ThirdParty/zlib/install/lib/libz.a
+  # ${CMAKE_BINARY_DIR}/ThirdParty/zlib/install/lib/libz.a
+  ${ZLIB_LIB}
+  ${OPENBLAS_LIBRARIES}
+  pthread
+  gfortran
+  ${HDF5_LIBRARIES}
   )
-
-if(USE_OPENBLAS)
-  SET (
-    LIBS
-    ${LIBS}
-    ${OPENBLAS_LIBRARIES}
-    pthread
-    gfortran
-  )
-endif()
-
-if(USE_HDF5)
-  SET (
-    LIBS
-    ${LIBS}
-    ${HDF5_LIBRARIES}
-    )
-endif()
 
 if(USE_TCMALLOC)
   SET (
@@ -234,17 +152,6 @@ if(USE_TCMALLOC)
     ${LIBS}
     ${TCMALLOC_LIBRARIES}
     stdc++
-  )
-endif()
-
-if(NOT USE_OPENBLAS AND NOT DOWNLOAD_BLAS)
-  SET (
-    LIBS
-    ${LIBS}
-    ${BLAS_LIBRARIES}
-    ${LAPACK_LIBRARIES}
-    pthread
-    gfortran
   )
 endif()
 

@@ -25,11 +25,6 @@ poly_fcn
 #endif
  void* user
 ){
-/*   double poly = pow(x,2) + pow(y,2); */
-/* #if (P4EST_DIM)==3 */
-/*   poly += pow(z,2); */
-/* #endif */
-  /* return poly; */
   return x;
 }
 
@@ -44,7 +39,7 @@ sinxyz_fcn
  void* user
 )
 {
-  return sin(M_PI*x)*sin(M_PI*y)*sin(M_PI*z);
+  return exp(x*y*z);
 }
 
 
@@ -166,8 +161,11 @@ int main(int argc, char *argv[])
 
 
 
-  d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, 7, 1);
+  p4est_partition(p4est, 1, NULL);
+  p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
 
+  d4est_amr_t* d4est_amr_random = d4est_amr_init_uniform_h(p4est, 7, 1);
+  
   d4est_amr_step
     (
      p4est,
@@ -178,9 +176,6 @@ int main(int argc, char *argv[])
      NULL,
      NULL
     );
-
-  p4est_partition(p4est, 1, NULL);
-  p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
 
   int nodes = d4est_mesh_update
                   (
@@ -260,15 +255,33 @@ int main(int argc, char *argv[])
      NULL
     );
 
-
+  d4est_element_data_copy_from_vec_to_storage(p4est, sinvec);
   d4est_ghost_t* d4est_ghost = d4est_ghost_init(p4est);
   d4est_field_type_t field_type = VOLUME_NODAL;
   d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
                                                                d4est_ghost,
                                                                &field_type,
                                                                1);
+  d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data,sinvec);
+  /* /\*  *\/ */
+  for (int gid = 0; gid < d4est_ghost->ghost->ghosts.elem_count; gid++){
+    d4est_element_data_t* ged = &d4est_ghost->ghost_elements[gid];
 
-  
+    double* ud = d4est_ghost_data_get_field_on_element(ged,0,d4est_ghost_data);
+    double* up = &ged->u_elem[0];
+
+    int size = d4est_element_data_get_size_of_field
+               (
+                ged,
+                d4est_ghost_data->transfer_types[0]
+               );
+    
+    int compare = d4est_util_compare_vecs(ud, up, size, 1e-15);
+    DEBUG_PRINT_2ARR_DBL(ud,up,size);
+    if (!compare){
+      DEBUG_PRINT_2ARR_DBL(ud, up, size);
+    }
+  }
   
   d4est_ghost_destroy(d4est_ghost);
   d4est_ghost_data_destroy(d4est_ghost_data);

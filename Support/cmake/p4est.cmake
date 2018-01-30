@@ -1,10 +1,4 @@
 include(ProcessorCount)
-ProcessorCount(N)
-# if(NOT N EQUAL 0)
-#   set(CTEST_BUILD_FLAGS -j${N})
-#   set(ctest_test_args ${ctest_test_args} PARALLEL_LEVEL ${N})
-# endif()
-
 #
 # Bundled p4est paths.
 #
@@ -22,19 +16,19 @@ macro(p4est_use_bundled)
 endmacro()
 
 macro(p4est_try_system)
-  find_path(P4EST_SC_INCLUDE_DIR sc.h PATH_SUFFIXES include)
+  find_path(P4EST_SC_INCLUDE_DIRS sc.h PATH_SUFFIXES include)
   find_library(P4EST_SC_LIB NAMES sc PATH_SUFFIXES lib)
 
-  find_path(P4EST_P4EST_INCLUDE_DIR p4est.h PATH_SUFFIXES include)
-  find_library(P4EST_P4EST_LIB NAMES p4est PATH_SUFFIXES lib)
+  find_path(P4EST_INCLUDE_DIRS p4est.h PATH_SUFFIXES include)
+  find_library(P4EST_LIB NAMES p4est PATH_SUFFIXES lib)
 
-  if(P4EST_P4EST_INCLUDE_DIRS AND P4EST_P4EST_LIB AND
+  if(P4EST_INCLUDE_DIRS AND P4EST_LIB AND
      P4EST_SC_INCLUDE_DIRS AND P4EST_SC_LIB)
     message (STATUS "-- sc include: ${P4EST_SC_INCLUDE_DIR}, lib: ${P4EST_SC_LIB}")
-    message (STATUS "-- p4est include: ${P4EST_P4EST_INCLUDE_DIR}, lib: ${P4EST_P4EST_LIB}")
+    message (STATUS "-- p4est include: ${P4EST_INCLUDE_DIR}, lib: ${P4EST_LIB}")
     message (STATUS "Found a system-wide p4est.")
-    set(P4EST_INCLUDE_DIRS ${P4EST_P4EST_INCLUDE_DIR} ${P4EST_SC_INCLUDE_DIRS})
-    set(P4EST_LIBRARIES ${P4EST_P4EST_LIB} ${P4EST_SC_LIB})
+    set(P4EST_INCLUDE_DIRS ${P4EST_INCLUDE_DIR} ${P4EST_SC_INCLUDE_DIRS})
+    set(P4EST_LIBRARIES ${P4EST_LIB} ${P4EST_SC_LIB})
   else()
     message (FATAL_ERROR "Not found a system p4est")
     #p4est_use_bundled()
@@ -45,16 +39,15 @@ endmacro()
 # Check if there is a usable p4est at the given prefix path.
 #
 macro (p4est_try_prefix)
-  find_path(P4EST_SC_INCLUDE_DIR sc.h ${P4EST_PREFIX} NO_DEFAULT_PATH)
-  find_library(P4EST_SC_LIB sc ${P4EST_PREFIX} NO_DEFAULT_PATH)
-  find_path(P4EST_P4EST_INCLUDE_DIR p4est.h ${P4EST_PREFIX} NO_DEFAULT_PATH)
-  find_library(P4EST_P4EST_LIB p4est ${P4EST_PREFIX} NO_DEFAULT_PATH)
+  find_path(P4EST_SC_INCLUDE_DIRS sc.h ${P4EST_PREFIX}/include)
+  find_library(P4EST_SC_LIB libsc.a ${P4EST_PREFIX}/lib)
+  find_path(P4EST_INCLUDE_DIRS p4est.h ${P4EST_PREFIX}/include)
+  find_library(P4EST_LIB libp4est.a ${P4EST_PREFIX}/lib)
 
-
-  if(P4EST_P4EST_INCLUDE_DIRS AND P4EST_P4EST_LIB AND
+  if(P4EST_INCLUDE_DIRS AND P4EST_LIB AND
      P4EST_SC_INCLUDE_DIRS AND P4EST_SC_LIB)
-    set(P4EST_INCLUDE_DIRS ${P4EST_P4EST_INCLUDE_DIR} ${P4EST_SC_INCLUDE_DIRS})
-    set(P4EST_LIBRARIES ${P4EST_P4EST_LIB} ${P4EST_SC_LIB})
+    set(P4EST_INCLUDE_DIRS ${P4EST_INCLUDE_DIRS} ${P4EST_SC_INCLUDE_DIRS})
+    set(P4EST_LIBRARIES ${P4EST_LIB} ${P4EST_SC_LIB})
     include_directories(${P4EST_INCLUDE_DIRS})
   else()
     message(FATAL_ERROR "Couldn't find p4est in '${P4EST_PREFIX}'")
@@ -64,8 +57,8 @@ endmacro()
 #
 # p4est options.
 #
-option(ENABLE_BUNDLED_P4EST "Enable building of the bundled p4est" ON)
-option(P4EST_PREFIX "Build with p4est at the given path" "")
+# option(ENABLE_BUNDLED_P4EST "Enable building of the bundled p4est" ON)
+# option(P4EST_PREFIX "Build with p4est at the given path" "")
 
 if(P4EST_PREFIX AND ENABLE_BUNDLED_P4EST)
   message(FATAL_ERROR "Options P4EST_PREFIX and ENABLE_BUNDLED_P4EST "

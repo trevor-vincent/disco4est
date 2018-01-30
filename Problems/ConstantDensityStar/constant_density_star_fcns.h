@@ -155,8 +155,6 @@ constant_density_star_input
 
   
   printf("[CONSTANT_DENSITY_STAR_PARAMS]: R = %.25f\n", R);
-  /* printf("[CONSTANT_DENSITY_STAR_PARAMS]: alpha = %.25f\n", alpha); */
-  /* printf("[CONSTANT_DENSITY_STAR_PARAMS]: beta = %.25f\n", beta); */
   printf("[CONSTANT_DENSITY_STAR_PARAMS]: rho0 = %.25f\n", rho0);
   printf("[CONSTANT_DENSITY_STAR_PARAMS]: C0 = %.25f\n", C0);
   printf("[CONSTANT_DENSITY_STAR_PARAMS]: cx = %.25f\n", cx);
@@ -186,15 +184,8 @@ constant_density_star_input
              (C0*u_alpha(cx,cy,R + cz, &ctx) == 1. + beta/R)
             );
 
-  /* printf("[CONSTANT_DENSITY_STAR_PARAMS]: R = %.25f\n", R); */
   printf("[CONSTANT_DENSITY_STAR_PARAMS]: alpha = %.25f\n", alpha);
   printf("[CONSTANT_DENSITY_STAR_PARAMS]: beta = %.25f\n", beta);
-  /* printf("[CONSTANT_DENSITY_STAR_PARAMS]: rho0 = %.25f\n", rho0); */
-  /* printf("[CONSTANT_DENSITY_STAR_PARAMS]: C0 = %.25f\n", C0); */
-  /* printf("[CONSTANT_DENSITY_STAR_PARAMS]: cx = %.25f\n", cx); */
-  /* printf("[CONSTANT_DENSITY_STAR_PARAMS]: cy = %.25f\n", cy); */
-  /* printf("[CONSTANT_DENSITY_STAR_PARAMS]: cz = %.25f\n", cz); */
-  /* printf("[CONSTANT_DENSITY_STAR_PARAMS]: rho0/rhoc = %.25f\n", input.rho0_div_rhoc); */
   
   return input;
 }
@@ -418,7 +409,6 @@ constant_density_star_build_residual
      d4est_quad,
      user
     );
-
 }
 
 
@@ -543,7 +533,6 @@ void constant_density_star_apply_jac
  d4est_mesh_data_t* d4est_factors,
  void* user
 )
-
 {
   problem_ctx_t* ctx = user;
   d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_jac;

@@ -24,16 +24,27 @@ macro(zlib_try_system)
   endif()
 endmacro()
 
-#
-# zlib options.
-#
-option(ENABLE_BUNDLED_ZLIB "Enable building of the bundled zlib" ON)
+macro (zlib_try_prefix)
+  find_path(ZLIB_INCLUDE_DIRS zlib.h ${ZLIB_PREFIX}/include)
+  find_library(ZLIB_LIB libz.a ${ZLIB_PREFIX}/lib)
 
-if (NOT ENABLE_BUNDLED_ZLIB)
-  zlib_try_system()
+  if(ZLIB_INCLUDE_DIRS AND ZLIB_LIB)
+    set(ZLIB_LIBRARIES ${ZLIB_LIB})
+    include_directories(${ZLIB_INCLUDE_DIRS})
+  else()
+    message(FATAL_ERROR "Couldn't find zlib in '${ZLIB_PREFIX}'")
+  endif()
+endmacro()
+
+if (ZLIB_PREFIX)
+  zlib_try_prefix()
+elseif (NOT ENABLE_BUNDLED_ZLIB)
+  p4est_try_system()
 else()
   zlib_use_bundled()
 endif()
+
+include_directories(${ZLIB_INCLUDE_DIRS})
 
 message(STATUS "Use zlib includes: ${ZLIB_INCLUDE_DIRS}")
 message(STATUS "Use zlib library: ${ZLIB_LIBRARIES}")

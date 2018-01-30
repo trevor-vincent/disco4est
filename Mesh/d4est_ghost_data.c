@@ -3,6 +3,8 @@
 #include <d4est_element_data.h>
 #include <string.h>
 
+#define D4EST_GHOST_DATA_DEBUG
+
 static void
 d4est_ghost_data_compute_ids_and_strides
 (
@@ -36,15 +38,44 @@ d4est_ghost_data_init
  int num_vecs
 )
 {
+#ifdef D4EST_GHOST_DATA_DEBUG
+  printf("Starting d4est_ghost_data_init\n");
+#endif
+
+  
   d4est_ghost_data_t* d4est_ghost_data = D4EST_ALLOC(d4est_ghost_data_t, 1); 
 
   d4est_ghost_data->num_ghosts = d4est_ghost->ghost->ghosts.elem_count;
   d4est_ghost_data->num_vecs = num_vecs;
   d4est_ghost_data->transfer_types = D4EST_ALLOC(d4est_field_type_t, num_vecs);
+  d4est_ghost_data->transfer_strides = D4EST_ALLOC(int, num_vecs);
   
   for (int i = 0; i < num_vecs; i++){
-    d4est_ghost_data->transfer_types[i] = field_types[i];
+    d4est_ghost_data->transfer_types[i] = field_types[i];                                            
   }
+  
+  int stride = 0;
+  for (int tn = 0; tn < num_vecs; tn++){
+    d4est_ghost_data->transfer_strides[tn] = stride;
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt)
+      {
+        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+        sc_array_t* tquadrants = &tree->quadrants;
+        int QQ = (p4est_locidx_t) tquadrants->elem_count;
+        for (int qq = 0; qq < QQ; ++qq) {
+          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+          d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+          stride += d4est_element_data_get_size_of_field
+                 (
+                  ed,
+                  d4est_ghost_data->transfer_types[tn]
+                 );
+        }
+      }
+  }
+
 
   d4est_ghost_data->receive_strides = D4EST_ALLOC(int*, d4est_ghost_data->num_ghosts);
   for (int i = 0; i < d4est_ghost_data->num_ghosts; i++){
@@ -85,6 +116,7 @@ d4est_ghost_data_destroy
  d4est_ghost_data_t* d4est_ghost_data
 ){
   D4EST_FREE(d4est_ghost_data->transfer_types);
+  D4EST_FREE(d4est_ghost_data->transfer_strides);
   D4EST_FREE(d4est_ghost_data->ghost_data_sizes);
   
   for (int i = 0; i < d4est_ghost_data->num_ghosts; i++){
@@ -102,15 +134,21 @@ d4est_ghost_data_destroy
 
 
 
+
+
 void
 d4est_ghost_data_exchange
 (
  p4est_t * p4est,
  d4est_ghost_t* d4est_ghost,
  d4est_ghost_data_t* d4est_ghost_data,
- double** transfer_vecs
+ double* transfer_vecs
 )
 {
+#ifdef D4EST_GHOST_DATA_DEBUG
+  printf("Starting d4est_ghost_data_exchange\n");
+#endif
+  
   const int           num_procs = p4est->mpisize;
   int                 mpiret;
   int                 q;
@@ -182,11 +220,15 @@ d4est_ghost_data_exchange
                           d4est_ghost->mirror_elements[mirr],
                           d4est_ghost_data->transfer_types[tn]
                          );
-          
-          double* field = transfer_vecs[tn];
+
+
+          double* field = &transfer_vecs[d4est_ghost_data->transfer_strides[tn]];
           D4EST_ASSERT(field != NULL);
           
           int stride = d4est_element_data_get_stride_for_field(d4est_ghost->mirror_elements[mirr], d4est_ghost_data->transfer_types[tn]);
+
+          /* printf("transfer stride, num_vecs, stride, mem_size, d4est_ghost->mirror_elements[mirr]->deg = %d,%d,%d,%d,%d\n",d4est_ghost_data->transfer_strides[tn], d4est_ghost_data->num_vecs, stride, mem_size,d4est_ghost->mirror_elements[mirr]->deg); */
+          
           memcpy (mem, &field[stride], mem_size);
           mem += mem_size;
 
@@ -204,7 +246,7 @@ d4est_ghost_data_exchange
   /* wait and clean up */
   mpiret = sc_MPI_Waitall (requests.elem_count, (sc_MPI_Request *)
                            requests.array, sc_MPI_STATUSES_IGNORE);
-  SC_CHECK_MPI (mpiret);
+  /* SC_CHECK_MPI (mpiret); */
   sc_array_reset (&requests);
   for (zz = 0; zz < sbuffers.elem_count; ++zz) {
     sbuf = (char **) sc_array_index (&sbuffers, zz);
@@ -212,4 +254,17 @@ d4est_ghost_data_exchange
   }
   sc_array_reset (&sbuffers);
   
+}
+
+
+double* d4est_ghost_data_get_field_on_element
+(
+ d4est_element_data_t* ed,
+ int ghost_name_id,
+ d4est_ghost_data_t* dgd
+){
+  D4EST_ASSERT(dgd != NULL);
+  D4EST_ASSERT(ghost_name_id >= 0 && ghost_name_id < dgd->num_vecs);
+  int stride = dgd->receive_strides[ed->id][ghost_name_id];
+  return &dgd->receive_data[stride];
 }
