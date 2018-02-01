@@ -242,37 +242,43 @@ problem_init
       error[i] = fabs(prob_vecs.u[i] - u_analytic[i]);
     }
     
-    /* d4est_vtk_save */
-    /*   ( */
-    /*    p4est, */
-    /*    d4est_ops, */
-    /*    input_file, */
-    /*    "d4est_vtk", */
-    /*    "[D4EST_VTK]", */
-    /*    (const char * []){"u","u_analytic","error", NULL}, */
-    /*    (double* []){prob_vecs.u, u_analytic, error}, */
-    /*    (const char * []){NULL}, */
-    /*    (double* []){NULL}, */
-    /*    level */
-    /*   ); */
+    d4est_vtk_save
+      (
+       p4est,
+       d4est_ops,
+       input_file,
+       "d4est_vtk",
+       "[D4EST_VTK]",
+       (const char * []){"u","u_analytic","error", NULL},
+       (double* []){prob_vecs.u, u_analytic, error},
+       (const char * []){NULL},
+       (double* []){NULL},
+       level
+      );
 
     P4EST_FREE(u_analytic);
     P4EST_FREE(error);
 
+
+    d4est_ip_energy_norm_data_t ip_norm_data;
+    ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
+    ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
+    ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
+
     d4est_output_norms_using_analytic_solution
       (
-      p4est,
+       p4est,
        d4est_ops,
        d4est_geom,
        d4est_quad,
-      d4est_factors,
+       d4est_factors,
        *ghost,
        *ghost_data,
-      -1.,
+       stats->total,
        &prob_vecs,
-       NULL,
+       &ip_norm_data,
        stamm_analytic_solution,
-      &ctx,NULL,NULL);
+       &ctx,NULL,NULL);
     
     P4EST_FREE(stats);
     

@@ -10,6 +10,7 @@
 #include <d4est_gradient.h>
 #include <d4est_poisson_flux.h>
 #include <d4est_mortars.h>
+#include <d4est_poisson.h>
 
 static void
 d4est_ip_energy_norm_boundary
@@ -288,7 +289,9 @@ d4est_ip_energy_norm_compute
   energy_norm_data->ip_energy_norm_sqr_volume_term = 0.;
   energy_norm_data->ip_energy_norm_sqr_interface_term = 0.;
   energy_norm_data->ip_energy_norm_sqr_boundary_term = 0.;
+
   
+  int nodes = 0;
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)
@@ -301,7 +304,8 @@ d4est_ip_energy_norm_compute
         d4est_element_data_t* ed = quad->p.user_data; 
         int deg = ed->deg;
         int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg);
- 
+        nodes += volume_nodes_lobatto;
+        
         d4est_linalg_copy_1st_to_2nd
           (
            &(u[ed->nodal_stride]),
@@ -337,6 +341,29 @@ d4est_ip_energy_norm_compute
       }
 
     }
+
+
+  p4est_ghost_exchange_data(p4est,ghost,ghost_data);
+
+  int ghost_nodes = d4est_mesh_get_ghost_nodes(ghost, ghost_data);
+  double* dudr [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(dudr,
+                                                  nodes
+                                                  + ghost_nodes
+                                                 );
+
+
+  d4est_poisson_compute_dudr
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     dudr
+    );
+  
   
   d4est_poisson_flux_data_t flux_data;
   flux_data.interface_fcn = d4est_ip_energy_norm_interface;
@@ -358,7 +385,7 @@ d4est_ip_energy_norm_compute
      d4est_quad,
      d4est_factors,
      &flux_fcns,
-     EXCHANGE_GHOST_DATA
+     DO_NOT_EXCHANGE_GHOST_DATA
     );
 
 
@@ -367,4 +394,7 @@ d4est_ip_energy_norm_compute
   ip_energy_norm_sqr += energy_norm_data->ip_energy_norm_sqr_boundary_term;
   ip_energy_norm_sqr += energy_norm_data->ip_energy_norm_sqr_interface_term;
   return ip_energy_norm_sqr;
+
+  D4EST_FREE_DIM_VEC(dudr);
+  
 }

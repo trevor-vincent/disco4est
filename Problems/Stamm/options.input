@@ -99,7 +99,7 @@ cheby_eigs_max_multiplier = 1.;
 cheby_eigs_reuse_fromdownvcycle = 0;
 cheby_eigs_reuse_fromlastvcycle = 0;
 cheby_print_residual_norm = 0;
-cheby_print_eigs = 0;
+cheby_print_eig = 0;
 
 [d4est_vtk]
 filename = stamm

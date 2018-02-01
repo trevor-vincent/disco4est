@@ -167,7 +167,6 @@ d4est_output_norms
                              d4est_quad,
                              d4est_factors
                             );
-
   
   double local_nodes_dbl = (double)local_nodes;
   double local_quad_nodes_dbl = (double)local_quad_nodes;

@@ -341,6 +341,13 @@ problem_init
     P4EST_FREE(u_analytic);
     P4EST_FREE(error);
 
+
+    d4est_ip_energy_norm_data_t ip_norm_data;
+    ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
+    ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
+    ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
+
+    
     d4est_output_norms_using_analytic_solution
       (
       p4est,
@@ -350,15 +357,15 @@ problem_init
       d4est_factors,
        *ghost,
        *ghost_data,
-      -1.,
+      stats->total,
        &prob_vecs,
-       NULL,
+       &ip_norm_data,
        constant_density_star_analytic_solution,
       &ctx,NULL,NULL);
     
 
     P4EST_FREE(stats);
-    
+
     if (level != d4est_amr->num_of_amr_steps){
 
       if (p4est->mpirank == 0)
