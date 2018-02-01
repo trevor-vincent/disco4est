@@ -24,9 +24,9 @@ macro(zlib_try_system)
   endif()
 endmacro()
 
-macro (zlib_try_prefix)
-  find_path(ZLIB_INCLUDE_DIRS zlib.h ${ZLIB_PREFIX}/include)
-  find_library(ZLIB_LIB libz.a ${ZLIB_PREFIX}/lib)
+macro(zlib_try_prefix)
+  find_path(ZLIB_INCLUDE_DIRS zlib.h ${ZLIB_PREFIX}/include NO_DEFAULT_PATH)
+  find_library(ZLIB_LIB libz.a ${ZLIB_PREFIX}/lib NO_DEFAULT_PATH)
 
   if(ZLIB_INCLUDE_DIRS AND ZLIB_LIB)
     set(ZLIB_LIBRARIES ${ZLIB_LIB})
