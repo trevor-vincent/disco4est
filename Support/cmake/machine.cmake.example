@@ -1,0 +1,26 @@
+# Build type: Debug or Release
+set(CMAKE_BUILD_TYPE "Debug")
+
+# OpenBLAS
+set(OPENBLAS_DIR "/usr/local/opt/openblas")
+set(OPENBLAS_ROOT "/usr/local/opt/openblas")
+set(OPENBLAS_LIBRARIES "/usr/local/opt/openblas/lib/libopenblas.a")
+set(OPENBLAS_INCLUDE_DIR "/usr/local/opt/openblas/include")
+
+# gperftools
+set(USE_TCMALLOC ON)
+set(TCMALLOC_DIR "/usr/local/opt/gperftools")
+set(TCMALLOC_ROOT "/usr/local/opt/gperftools")
+set(TCMALLOC_LIBRARIES "/usr/local/opt/gperftools/lib/libtcmalloc.a")
+set(TCMALLOC_INCLUDE_DIR "/usr/local/opt/gperftools/include/gperftools")
+
+# HDF5 & SZIP
+set(HDF5_LIBRARIES
+  "/usr/local/opt/hdf5/lib/libhdf5.a"
+  "/usr/local/opt/szip/lib/libsz.a")
+set(HDF5_INCLUDE_DIR "/usr/local/opt/hdf5/include")
+
+# Optional: If not set, these libraries will be built from the included submodules (see README.md)
+set(PETSC_PREFIX "/usr/local/opt/petsc")
+set(P4EST_PREFIX "/usr/local/opt/p4est")
+set(ZLIB_PREFIX "/usr/local/opt/zlib")

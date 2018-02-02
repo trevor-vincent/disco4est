@@ -9,7 +9,7 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_SOURCE_DIR}/Support/cmake
   ${CMAKE_MODULE_PATH}
 )
-include(machines)
+include(machine)
 
 include_directories(${OPENBLAS_INCLUDE_DIR})
 include_directories(${HDF5_INCLUDE_DIR})
