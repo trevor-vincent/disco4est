@@ -6,10 +6,11 @@
 #include <d4est_checkpoint.h>
 #include <d4est_element_data.h>
 #include <petscsnes.h>
+#include <d4est_output.h>
 
 
 int main(int argc, char *argv[])
-{  
+{
   sc_MPI_Comm mpicomm;
   PetscInitialize(&argc,&argv,(char*)0,NULL);
   mpicomm = PETSC_COMM_WORLD;
@@ -41,6 +42,8 @@ int main(int argc, char *argv[])
   if (proc_rank == 0)
     printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] : "options.input");
  
+  if (proc_rank == 0)
+    d4est_output_create_files();
  
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                     (argc == 2) ? argv[1] : "options.input",
@@ -97,7 +100,7 @@ int main(int argc, char *argv[])
   if (proc_rank == 0 && initial_grid_input->load_from_checkpoint == 0){
     printf("[D4EST_INFO]: min_quadrants = %d\n", initial_grid_input->min_quadrants);
     printf("[D4EST_INFO]: min_level = %d\n", initial_grid_input->min_level);
-    printf("[D4EST_INFO]: fill_uniform = %d\n", initial_grid_input->fill_uniform);    
+    printf("[D4EST_INFO]: fill_uniform = %d\n", initial_grid_input->fill_uniform);
   }
   
   sc_MPI_Barrier(mpicomm);
@@ -105,7 +108,7 @@ int main(int argc, char *argv[])
   sc_MPI_Barrier(mpicomm);
   
   /* start just-in-time dg-math */
-  d4est_operators_t* d4est_ops = d4est_ops_init(20);  
+  d4est_operators_t* d4est_ops = d4est_ops_init(20);
   d4est_mesh_data_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature", "[QUADRATURE]");
   

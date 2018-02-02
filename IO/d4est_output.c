@@ -8,6 +8,18 @@
 #include <d4est_ip_energy_norm.h>
 #include <sc_reduce.h>
 
+void
+d4est_output_create_files
+(
+){
+  FILE *norms_file;
+  norms_file = fopen("norms.log", "w");
+  // TODO: handle file creation error
+  fprintf(norms_file, "global_elements global_nodes avg_deg global_quad_nodes avg_deg_quad global_estimator global_l2 global_enorm global_Linf\n");
+  fclose(norms_file);
+}
+
+
 static void
 d4est_output_calculate_analytic_error
 (
@@ -192,7 +204,7 @@ d4est_output_norms
      sc_MPI_COMM_WORLD
     );
 
-    sc_reduce
+  sc_reduce
     (
      &local_Linf,
      &global_Linf,
@@ -230,6 +242,22 @@ d4est_output_norms
        (global_energy_norm_sqr < 0) ? -1. :sqrt(global_energy_norm_sqr),
        global_Linf
       );
+    
+    FILE *norms_file;
+    norms_file = fopen("norms.log", "a");
+    // TODO: handle file open error
+    fprintf(norms_file, "%d %d %d %d %d %.25f %.25f %.25f %.25f\n",
+      (int)p4est->global_num_quadrants,
+      (int)global_nodes_dbl,
+      avg_deg,
+      (int)global_quad_nodes_dbl,
+      avg_deg_quad,
+      (global_estimator < 0) ? -1. : sqrt(global_estimator),
+      (global_l2_norm_sqr < 0) ? -1 : sqrt(global_l2_norm_sqr),
+      (global_energy_norm_sqr < 0) ? -1. :sqrt(global_energy_norm_sqr),
+      global_Linf
+    );
+    fclose(norms_file);
   }
 
 

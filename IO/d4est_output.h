@@ -1,5 +1,5 @@
 #ifndef D4EST_OUTPUT_H
-#define D4EST_OUTPUT_H 
+#define D4EST_OUTPUT_H
 
 #include <pXest.h>
 #include <d4est_elliptic_data.h>
@@ -41,5 +41,6 @@ d4est_output_norms_t d4est_output_norms(p4est_t *p4est,d4est_operators_t *d4est_
 void d4est_output_destroy_energy_norm_fit(d4est_output_energy_norm_fit_t *fit);
 void d4est_output_energy_norm_add_entry_and_fit(p4est_t *p4est,d4est_output_energy_norm_fit_t *fit,double global_energy_norm_sqr,double global_dof);
 void d4est_output_energy_norm_fit(p4est_t *p4est,d4est_output_energy_norm_fit_t *fit);
+void d4est_output_create_files();
 
 #endif
