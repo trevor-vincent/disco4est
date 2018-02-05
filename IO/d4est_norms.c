@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-#include <d4est_output.h>
+#include <d4est_norms.h>
 #include <d4est_vtk.h>
 #include <d4est_util.h>
 #include <d4est_linalg.h>
@@ -7,21 +7,19 @@
 #include <d4est_estimator_stats.h>
 #include <d4est_ip_energy_norm.h>
 #include <sc_reduce.h>
+#include <zlog.h>
 
 void
-d4est_output_create_files
+d4est_norms_create_files
 (
 ){
-  FILE *norms_file;
-  norms_file = fopen("norms.log", "w");
-  // TODO: handle file creation error
-  fprintf(norms_file, "global_elements global_nodes avg_deg global_quad_nodes avg_deg_quad global_estimator global_l2 global_enorm global_Linf\n");
-  fclose(norms_file);
+  zlog_category_t *c_norms = zlog_get_category("norms");
+  zlog_info(c_norms, "global_elements global_nodes avg_deg global_quad_nodes avg_deg_quad global_estimator global_l2 global_enorm global_Linf");
 }
 
 
 static void
-d4est_output_calculate_analytic_error
+d4est_norms_calculate_analytic_error
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -54,10 +52,10 @@ d4est_output_calculate_analytic_error
 }
 
 void
-d4est_output_energy_norm_fit
+d4est_norms_energy_norm_fit
 (
  p4est_t* p4est,
- d4est_output_energy_norm_fit_t* fit
+ d4est_norms_energy_norm_fit_t* fit
 )
 {
   double slope;
@@ -77,10 +75,10 @@ d4est_output_energy_norm_fit
 }
 
 void
-d4est_output_energy_norm_add_entry_and_fit
+d4est_norms_energy_norm_add_entry_and_fit
 (
  p4est_t* p4est,
- d4est_output_energy_norm_fit_t* fit,
+ d4est_norms_energy_norm_fit_t* fit,
  double global_energy_norm_sqr,
  double global_dof
 ){
@@ -94,15 +92,15 @@ d4est_output_energy_norm_add_entry_and_fit
         printf("[D4EST_OUTPUT_FIT](1): ||err|| = C1*exp(C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
         printf("[D4EST_OUTPUT_FIT](1): ||err|| = %.15f\n",sqrt(global_energy_norm_sqr));
       }
-      d4est_output_energy_norm_fit(p4est,fit);
+      d4est_norms_energy_norm_fit(p4est,fit);
     }
   }
 }
 
 void
-d4est_output_destroy_energy_norm_fit
+d4est_norms_destroy_energy_norm_fit
 (
- d4est_output_energy_norm_fit_t* fit
+ d4est_norms_energy_norm_fit_t* fit
 )
 {
   P4EST_FREE(fit->log_energy_norm_data);
@@ -110,8 +108,8 @@ d4est_output_destroy_energy_norm_fit
   P4EST_FREE(fit);
 }
 
-d4est_output_norms_t
-d4est_output_norms
+d4est_norms_norms_t
+d4est_norms_norms
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -123,7 +121,7 @@ d4est_output_norms
  d4est_ip_energy_norm_data_t* energy_norm_data,
  double estimator,
  double* error,
- d4est_output_energy_norm_fit_t* fit,
+ d4est_norms_energy_norm_fit_t* fit,
  int (*skip_element_fcn)(d4est_element_data_t*)
 )
 {
@@ -225,28 +223,12 @@ d4est_output_norms
   int avg_deg_quad = pow((int)(global_quad_nodes_dbl/p4est->global_num_quadrants), 1./(P4EST_DIM)) - 1.f + .5f;
 
   if(energy_norm_data != NULL && fit != NULL){
-    d4est_output_energy_norm_add_entry_and_fit(p4est,fit, global_energy_norm_sqr, global_nodes_dbl);
+    d4est_norms_energy_norm_add_entry_and_fit(p4est,fit, global_energy_norm_sqr, global_nodes_dbl);
   }
     
   if (p4est->mpirank == 0){
-    printf
-      (
-       "[D4EST_OUTPUT]: global_elements %d global_nodes %d avg_deg %d global_quad_nodes %d avg_deg_quad %d global_estimator %.25f global_l2 %.25f global_enorm %.25f global_Linf %.25f\n",
-       (int)p4est->global_num_quadrants,
-       (int)global_nodes_dbl,
-       avg_deg,
-       (int)global_quad_nodes_dbl,
-       avg_deg_quad,
-       (global_estimator < 0) ? -1. : sqrt(global_estimator),
-       (global_l2_norm_sqr < 0) ? -1 : sqrt(global_l2_norm_sqr),
-       (global_energy_norm_sqr < 0) ? -1. :sqrt(global_energy_norm_sqr),
-       global_Linf
-      );
-    
-    FILE *norms_file;
-    norms_file = fopen("norms.log", "a");
-    // TODO: handle file open error
-    fprintf(norms_file, "%d %d %d %d %d %.25f %.25f %.25f %.25f\n",
+    zlog_category_t *c_norms = zlog_get_category("norms");
+    zlog_info(c_norms, "%d %d %d %d %d %.25f %.25f %.25f %.25f",
       (int)p4est->global_num_quadrants,
       (int)global_nodes_dbl,
       avg_deg,
@@ -257,11 +239,10 @@ d4est_output_norms
       (global_energy_norm_sqr < 0) ? -1. :sqrt(global_energy_norm_sqr),
       global_Linf
     );
-    fclose(norms_file);
   }
 
 
-  return (d4est_output_norms_t)
+  return (d4est_norms_norms_t)
     {.global_nodes = (int)global_nodes_dbl,
         .global_num_quadrants = p4est->global_num_quadrants,
         .avg_deg = avg_deg,
@@ -278,7 +259,7 @@ d4est_output_norms
 
 
 void
-d4est_output_norms_using_analytic_solution
+d4est_norms_norms_using_analytic_solution
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -292,14 +273,14 @@ d4est_output_norms_using_analytic_solution
  d4est_ip_energy_norm_data_t* energy_norm_data,
  d4est_xyz_fcn_t analytic_solution,
  void* ctx,
- d4est_output_energy_norm_fit_t* fit,
+ d4est_norms_energy_norm_fit_t* fit,
  int (*skip_element_fcn)(d4est_element_data_t*)
 )
 {
   double* error = P4EST_ALLOC(double, prob_vecs->local_nodes);
   double* u_analytic = P4EST_ALLOC(double, prob_vecs->local_nodes);
-  d4est_output_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs->u, prob_vecs->local_nodes, analytic_solution, ctx, u_analytic, error);
-  d4est_output_norms(p4est, d4est_ops, d4est_geom, d4est_quad, d4est_factors, ghost, ghost_data, energy_norm_data, local_estimator, error, fit, skip_element_fcn);
+  d4est_norms_calculate_analytic_error(p4est, d4est_ops, d4est_geom, d4est_quad, prob_vecs->u, prob_vecs->local_nodes, analytic_solution, ctx, u_analytic, error);
+  d4est_norms_norms(p4est, d4est_ops, d4est_geom, d4est_quad, d4est_factors, ghost, ghost_data, energy_norm_data, local_estimator, error, fit, skip_element_fcn);
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
 }

@@ -13,7 +13,7 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_brick.h>
 #include <d4est_vtk.h>
-#include <d4est_output.h>
+#include <d4est_norms.h>
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
@@ -331,7 +331,7 @@ problem_init
   d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
 
-  d4est_output_energy_norm_fit_t* fit = d4est_output_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
+  d4est_norms_energy_norm_fit_t* fit = d4est_norms_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
@@ -387,7 +387,7 @@ problem_init
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
     
-    d4est_output_norms
+    d4est_norms_norms
       (
        p4est,
        d4est_ops,
@@ -554,7 +554,7 @@ problem_init
   d4est_amr_destroy(d4est_amr_custom);
   d4est_poisson_flux_destroy(flux_data_for_jac);  
   d4est_poisson_flux_destroy(flux_data_for_res);  
-  d4est_output_destroy_energy_norm_fit(fit);
+  d4est_norms_destroy_energy_norm_fit(fit);
   P4EST_FREE(error);
   P4EST_FREE(u_prev);
   P4EST_FREE(prob_vecs.u);

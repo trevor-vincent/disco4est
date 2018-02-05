@@ -9,6 +9,3 @@
 
 # Local configuration
 Support/cmake/machine.cmake
-
-# Build
-build/

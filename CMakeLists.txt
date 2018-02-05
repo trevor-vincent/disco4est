@@ -95,7 +95,7 @@ SET (
   IO/d4est_h5.c
   IO/d4est_checkpoint.c
   IO/d4est_vtk.c
-  IO/d4est_output.c
+  IO/d4est_norms.c
   Solver/d4est_solver_cg.c
   Solver/d4est_solver_newton.c
   Solver/krylov_petsc.c
@@ -128,6 +128,7 @@ add_custom_target(build_bundled_libs)
 include(zlib)
 include(p4est)
 include(petsc)
+include(zlog)
 
 subdirs(ThirdParty)
 
@@ -139,11 +140,12 @@ SET (
   m
   dl
   # ${CMAKE_BINARY_DIR}/ThirdParty/zlib/install/lib/libz.a
-  ${ZLIB_LIB}
+  ${ZLIB_LIBRARIES}
   ${OPENBLAS_LIBRARIES}
   pthread
   gfortran
   ${HDF5_LIBRARIES}
+  ${ZLOG_LIBRARIES}
   )
 
 if(USE_TCMALLOC)
@@ -180,7 +182,12 @@ function(add_d4est_problem_3d exec src parent_dir)
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/*.input
-    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/)  
+    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/)
+  add_custom_command(
+    TARGET ${exec} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_SOURCE_DIR}/IO/logging.conf
+    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/logging.conf)
 endfunction()
 
 
@@ -196,7 +203,7 @@ function(add_d4est_problem_2d exec src parent_dir)
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/*.input
-    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/)  
+    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/)
 endfunction()
 
 
@@ -210,7 +217,7 @@ function(add_d4est_test_3d exec src parent_dir test_name)
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
-    ${CMAKE_CURRENT_BINARY_DIR}/)   
+    ${CMAKE_CURRENT_BINARY_DIR}/)
 endfunction()
 
 
@@ -224,7 +231,7 @@ function(add_d4est_test_2d exec src parent_dir test_name)
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
-    ${CMAKE_CURRENT_BINARY_DIR}/)   
+    ${CMAKE_CURRENT_BINARY_DIR}/)
 endfunction()
 
 ##

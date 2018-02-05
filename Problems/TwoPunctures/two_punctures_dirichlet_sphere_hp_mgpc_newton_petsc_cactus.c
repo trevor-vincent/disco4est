@@ -14,7 +14,7 @@
 #include <d4est_geometry_brick.h>
 #include <d4est_geometry_cubed_sphere.h>
 #include <d4est_vtk.h>
-#include <d4est_output.h>
+#include <d4est_norms.h>
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
@@ -476,7 +476,7 @@ problem_init
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
     
-    d4est_output_norms_t norms = d4est_output_norms
+    d4est_norms_norms_t norms = d4est_norms_norms
                                  (
                                   p4est,
                                   d4est_ops,
@@ -494,7 +494,7 @@ problem_init
     
 
     printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
-    d4est_output_norms
+    d4est_norms_norms
       (
        p4est,
        d4est_ops,

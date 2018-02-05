@@ -12,7 +12,7 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_cubed_sphere.h>
 #include <d4est_vtk.h>
-#include <d4est_output.h>
+#include <d4est_norms.h>
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
@@ -241,7 +241,7 @@ problem_init
        level
       );
     
-    d4est_output_norms_using_analytic_solution
+    d4est_norms_norms_using_analytic_solution
       (
        p4est,
        d4est_ops,
@@ -267,14 +267,14 @@ problem_init
          &prob_vecs.u,
          NULL
         );
-    }      
+    }
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
 
   d4est_amr_destroy(d4est_amr);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
-  d4est_poisson_flux_destroy(flux_data_for_jac);  
-  d4est_poisson_flux_destroy(flux_data_for_residual);  
+  d4est_poisson_flux_destroy(flux_data_for_jac);
+  d4est_poisson_flux_destroy(flux_data_for_residual);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
 }

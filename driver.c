@@ -6,7 +6,7 @@
 #include <d4est_checkpoint.h>
 #include <d4est_element_data.h>
 #include <petscsnes.h>
-#include <d4est_output.h>
+#include <zlog.h>
 
 
 int main(int argc, char *argv[])
@@ -20,31 +20,35 @@ int main(int argc, char *argv[])
   MPI_Comm_size(mpicomm, &proc_size);
   MPI_Comm_rank(mpicomm, &proc_rank);
   
+  if (proc_rank == 0) {
+    if (zlog_init("logging.conf") != 0) {
+      printf("Initializing logging failed.\n");
+    }
+  }
+  zlog_category_t *c_default = zlog_get_category("d4est");
+  
 #ifndef NDEBUG
   if(proc_rank == 0)
-    printf("[D4EST_INFO]: DEBUG MODE ON\n");
+    zlog_info(c_default, "DEBUG MODE ON");
   p4est_init(NULL, SC_LP_ERROR);
   /* p4est_init(NULL, SC_LP_ALWAYS); */
 #else
   if(proc_rank == 0)
-    printf("[D4EST_INFO]: DEBUG MODE OFF\n");
+    zlog_info(c_default, "DEBUG MODE OFF");
   p4est_init(NULL, SC_LP_ERROR);
 #endif
   
 #if (P4EST_DIM)==3
   if(proc_rank == 0)
-    printf("[D4EST_INFO]: DIM = 3\n");
+    zlog_info(c_default, "DIM = 3");
 #else
   if(proc_rank == 0)
-    printf("[D4EST_INFO]: DIM = 2\n");
+    zlog_info(c_default, "DIM = 2");
 #endif
 
   if (proc_rank == 0)
-    printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] : "options.input");
- 
-  if (proc_rank == 0)
-    d4est_output_create_files();
- 
+    zlog_info(c_default, "options file = %s", (argc == 2) ? argv[1] : "options.input");
+  
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                     (argc == 2) ? argv[1] : "options.input",
                                                     "geometry",
@@ -95,16 +99,16 @@ int main(int argc, char *argv[])
    
 
   if (proc_rank == 0){
-    printf("[D4EST_INFO]: mpisize = %d\n", proc_size);
+    zlog_info(c_default, "mpisize = %d", proc_size);
   }
   if (proc_rank == 0 && initial_grid_input->load_from_checkpoint == 0){
-    printf("[D4EST_INFO]: min_quadrants = %d\n", initial_grid_input->min_quadrants);
-    printf("[D4EST_INFO]: min_level = %d\n", initial_grid_input->min_level);
-    printf("[D4EST_INFO]: fill_uniform = %d\n", initial_grid_input->fill_uniform);
+    zlog_info(c_default, "min_quadrants = %d", initial_grid_input->min_quadrants);
+    zlog_info(c_default, "min_level = %d", initial_grid_input->min_level);
+    zlog_info(c_default, "fill_uniform = %d", initial_grid_input->fill_uniform);
   }
   
   sc_MPI_Barrier(mpicomm);
-  printf("[D4EST_INFO]: elements on proc %d = %d\n", proc_rank, p4est->local_num_quadrants);
+  zlog_info(c_default, "elements on proc %d = %d", proc_rank, p4est->local_num_quadrants);
   sc_MPI_Barrier(mpicomm);
   
   /* start just-in-time dg-math */
@@ -162,5 +166,9 @@ int main(int argc, char *argv[])
   d4est_geometry_destroy(d4est_geom);
   PetscFinalize();
   /* sc_finalize (); */
+  
+  if (proc_rank == 0)
+    zlog_fini();
+  
   return 0;
 }

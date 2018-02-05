@@ -10,7 +10,7 @@
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
 #include <d4est_util.h>
-#include <d4est_output.h>
+#include <d4est_norms.h>
 #include <limits.h>
 
 #define D4EST_REAL_EPS 100*1e-15
