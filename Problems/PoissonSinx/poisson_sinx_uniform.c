@@ -22,6 +22,7 @@
 #include <krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
+#include <zlog.h>
 #include "poisson_sinx_fcns.h"
 
 typedef struct {
@@ -115,6 +116,7 @@ problem_init
  sc_MPI_Comm mpicomm
 )
 {
+  zlog_category_t *c_default = zlog_get_category("problem");
 
   int initial_nodes = initial_extents->initial_nodes;
   
@@ -153,13 +155,12 @@ problem_init
   prob_vecs.local_nodes = initial_nodes;
 
   d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
- 
+
   d4est_amr_t* d4est_amr =
     d4est_amr_init
     (
      p4est,
      input_file,
-     "[D4EST_AMR]:",
      NULL
     );
 
@@ -196,7 +197,6 @@ problem_init
 
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
-
 
     krylov_petsc_params_t krylov_petsc_params;
     krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
@@ -241,7 +241,6 @@ problem_init
        d4est_ops,
        input_file,
        "d4est_vtk",
-       "[D4EST_VTK]",
        (const char * []){"u","u_analytic","error", NULL},
        (double* []){prob_vecs.u, u_analytic, error},
        (const char * []){NULL},
@@ -249,9 +248,18 @@ problem_init
        level
       );
 
+    d4est_norms_save(
+      input_file,
+      (const char * []){"u", NULL},
+      (double * []){prob_vecs.u},
+      (double * []){u_analytic},
+      NULL,
+      NULL
+    );
+
     P4EST_FREE(u_analytic);
     P4EST_FREE(error);
-    
+        
     d4est_norms_norms_using_analytic_solution
       (
       p4est,
@@ -271,7 +279,7 @@ problem_init
     if (level != d4est_amr->num_of_amr_steps){
 
       if (p4est->mpirank == 0)
-        printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level+1);
+        zlog_info(c_default, "Performing AMR refinement level %d...", level + 1);
 
       d4est_amr_step
         (
@@ -284,6 +292,8 @@ problem_init
          NULL
         );
       
+      if (p4est->mpirank == 0)
+        zlog_info(c_default, "AMR refinement level %d complete.", level + 1);
     }
 
 
@@ -329,7 +339,7 @@ problem_init
 
   }
 
-  printf("[D4EST_INFO]: Starting garbage collection...\n");
+  zlog_info(c_default, "Starting garbage collection...");
   d4est_amr_destroy(d4est_amr);
   d4est_poisson_flux_destroy(flux_data_for_apply_lhs);
   d4est_poisson_flux_destroy(flux_data_for_build_rhs);

@@ -62,7 +62,7 @@ problem_build_p4est
  sc_MPI_Comm mpicomm,
  p4est_connectivity_t* conn,
  p4est_locidx_t min_quadrants,
- int min_level, 
+ int min_level,
  int fill_uniform
 )
 {
@@ -122,7 +122,6 @@ int main(int argc, char *argv[])
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
                                           "test_d4est_amr.input",
-                                          "[TEST_D4EST_AMR]:",
                                           NULL
   );
 

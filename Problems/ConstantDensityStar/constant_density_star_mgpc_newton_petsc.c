@@ -236,7 +236,6 @@ problem_init
     (
      p4est,
      input_file,
-     "[D4EST_AMR]:",
      &amr_marker
     );
 
@@ -330,7 +329,6 @@ problem_init
        d4est_ops,
        input_file,
        "d4est_vtk",
-       "[D4EST_VTK]",
        (const char * []){"u","u_analytic","error", NULL},
        (double* []){prob_vecs.u, u_analytic, error},
        (const char * []){NULL},

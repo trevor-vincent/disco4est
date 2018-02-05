@@ -6,6 +6,7 @@
 #include <d4est_mesh.h>
 #include <d4est_util.h>
 #include <ini.h>
+#include <zlog.h>
 
 #ifdef P4_TO_P8
 #define D4EST_VTK_CELL_TYPE     11      /* VTK_VOXEL */
@@ -147,6 +148,8 @@ int d4est_vtk_input_handler
  const char* value
 )
 {
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+
   d4est_vtk_context_t * pconfig = (d4est_vtk_context_t *)user;
 
   if (d4est_util_match_couple(section,pconfig->input_section,name,"filename")) {
@@ -164,7 +167,7 @@ int d4est_vtk_input_handler
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"wrap_rank")) {
     D4EST_ASSERT(pconfig->wrap_rank == -1);
     pconfig->wrap_rank = atoi(value);
-  }  
+  }
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"write_deg")) {
     D4EST_ASSERT(pconfig->write_deg == -1);
     pconfig->write_deg = atoi(value);
@@ -172,7 +175,7 @@ int d4est_vtk_input_handler
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"write_level")) {
     D4EST_ASSERT(pconfig->write_level == -1);
     pconfig->write_level = atoi(value);
-  }    
+  }
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"geometry_section")) {
     D4EST_ASSERT(pconfig->geometry_section == NULL);
     asprintf(&pconfig->geometry_section,"%s",value);
@@ -188,8 +191,8 @@ int d4est_vtk_input_handler
       pconfig->output_type = D4EST_VTK_ZLIB_BINARY;
     }
     else {
-      printf("[D4EST_ERROR]: You tried to use %s as a output type\n", value);
-      D4EST_ABORT("[D4EST_ERROR]: This output is not supported");
+      zlog_error(c_default, "You tried to use %s as an output type.", value);
+      D4EST_ABORT("This output is not supported.");
     }
   }
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"grid_type")) {
@@ -200,8 +203,8 @@ int d4est_vtk_input_handler
       pconfig->grid_type = D4EST_VTK_CORNER_GRID;
     }
     else {
-      printf("[D4EST_ERROR]: You tried to use %s as a grid type\n", value);
-      D4EST_ABORT("[D4EST_ERROR]: This grid is not supported");
+      zlog_error(c_default, "You tried to use %s as a grid type.", value);
+      D4EST_ABORT("This grid is not supported.");
     }
   }
   else {
@@ -216,9 +219,9 @@ d4est_vtk_input
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
  d4est_vtk_context_t* cont
 ){
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
   
   cont->filename = NULL;
   cont->geometry_section = NULL;
@@ -246,37 +249,45 @@ d4est_vtk_input
   D4EST_CHECK_INPUT(input_section, cont->write_deg, -1);
 
   if(mpirank == 0){
-    printf("%s: Saving %s with geometry specified by %s\n", printf_prefix, cont->filename, cont->geometry_section);
+    zlog_info(c_default, "Saving %s with geometry specified by %s", cont->filename, cont->geometry_section);
   if (cont->output_type == D4EST_VTK_ASCII)
-    printf("%s: Saving %s in ASCII format\n", printf_prefix, cont->filename);
+    zlog_info(c_default, "Saving %s in ASCII format", cont->filename);
   if (cont->output_type == D4EST_VTK_BINARY)
-    printf("%s: Saving %s in BINARY format\n", printf_prefix, cont->filename);
+    zlog_info(c_default, "Saving %s in BINARY format", cont->filename);
   if (cont->output_type == D4EST_VTK_ZLIB_BINARY)
-    printf("%s: Saving %s in ZLIB_BINARY format\n", printf_prefix, cont->filename);
+    zlog_info(c_default, "Saving %s in ZLIB_BINARY format", cont->filename);
   if (cont->grid_type == D4EST_VTK_DG_GRID)
-    printf("%s: Saving %s in with DG grid\n", printf_prefix, cont->filename);
+    zlog_info(c_default, "Saving %s in with DG grid", cont->filename);
   if (cont->grid_type == D4EST_VTK_CORNER_GRID)
-    printf("%s: Saving %s in with CORNER grid\n", printf_prefix, cont->filename);
+    zlog_info(c_default, "Saving %s in with CORNER grid", cont->filename);
   }
   
 }
 
 
 d4est_vtk_context_t *
-d4est_vtk_dg_context_new (p4est_t * p4est, d4est_operators_t* d4est_ops, const char *input_file, const char* input_section, const char* print_prefix)
+d4est_vtk_dg_context_new
+(
+  p4est_t *p4est,
+  d4est_operators_t *d4est_ops,
+  const char *input_file,
+  const char *input_section
+)
 {
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+
 #ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_context_new \n");
+  zlog_info(c_default, "Starting d4est_vtk_context_new");
 #endif
   d4est_vtk_context_t *cont;
 
-  P4EST_ASSERT (p4est != NULL);  
+  P4EST_ASSERT (p4est != NULL);
   /* Allocate, initialize the vtk context.  Important to zero all fields. */
   cont = P4EST_ALLOC_ZERO (d4est_vtk_context_t, 1);
   cont->d4est_ops = d4est_ops;
   cont->p4est = p4est;
 
-  d4est_vtk_input(p4est->mpirank, input_file, input_section, print_prefix, cont);
+  d4est_vtk_input(p4est->mpirank, input_file, input_section, cont);
   
   cont->deg_array = NULL;
   cont->scale = d4est_vtk_scale;
@@ -291,7 +302,8 @@ d4est_vtk_context_set_geom (d4est_vtk_context_t * cont,
                             d4est_geometry_t * geom)
 {
 #ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_context_set_geom \n");
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+  zlog_info(c_default, "Starting d4est_vtk_context_set_geom");
 #endif
   P4EST_ASSERT (cont != NULL);
   P4EST_ASSERT (!cont->writing);
@@ -304,7 +316,8 @@ d4est_vtk_context_set_deg_array (d4est_vtk_context_t * cont,
                                  int* deg_array)
 {
 #ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_context_set_geom \n");
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+  zlog_info(c_default, "Starting d4est_vtk_context_set_geom");
 #endif
   P4EST_ASSERT (cont != NULL);
   P4EST_ASSERT (!cont->writing);
@@ -316,7 +329,8 @@ void
 d4est_vtk_context_set_scale (d4est_vtk_context_t * cont, double scale)
 {
 #ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_context_set_scale \n");
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+  zlog_info(c_default, "Starting d4est_vtk_context_set_scale");
 #endif
   P4EST_ASSERT (cont != NULL);
   P4EST_ASSERT (!cont->writing);
@@ -329,7 +343,8 @@ void
 d4est_vtk_context_set_continuous (d4est_vtk_context_t * cont, int continuous)
 {
 #ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_context_set_continuous \n");
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+  zlog_info(c_default, "Starting d4est_vtk_context_set_continuous");
 #endif
   P4EST_ASSERT (cont != NULL);
   P4EST_ASSERT (!cont->writing);
@@ -341,7 +356,8 @@ void
 d4est_vtk_context_destroy (d4est_vtk_context_t * context)
 {
 #ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_context_destroy \n");
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+  zlog_info(c_default, "Starting d4est_vtk_context_destroy");
 #endif
   P4EST_ASSERT (context != NULL);
   P4EST_ASSERT (context->p4est != NULL);
@@ -402,7 +418,8 @@ d4est_vtk_write_header (d4est_vtk_context_t * cont,
                            d4est_vtk_output_type_t output_type)
 {
 #ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_write_header \n");
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+  zlog_info(c_default, "Starting d4est_vtk_write_header");
 #endif
   const double        intsize = 1.0 / P4EST_ROOT_LEN;
   int                 mpirank;
@@ -498,7 +515,7 @@ d4est_vtk_write_header (d4est_vtk_context_t * cont,
     indeps = NULL;
   }
   else {
-    D4EST_ABORT("[D4EST_ERROR]: We do not support scale = 1. yet");
+    D4EST_ABORT("We do not support scale = 1. yet");
   }
 
   /* Have each proc write to its own file */
@@ -941,7 +958,8 @@ int
 d4est_vtk_write_footer (d4est_vtk_context_t * cont)
 {
 #ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_write_footer \n");
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+  zlog_info(c_default, "Starting d4est_vtk_write_footer");
 #endif
   int                 p;
   int                 procRank = cont->p4est->mpirank;
@@ -1042,7 +1060,7 @@ d4est_vtk_convert_nodal_to_vtk(
       vtk_stride += num_points_in_element;
       nodal_stride += num_nodes_in_element;
     }
-  }  
+  }
 
   return vtk_array;
 }
@@ -1058,7 +1076,8 @@ d4est_vtk_write_point_scalar (d4est_vtk_context_t * cont,
                              )
 {
 #ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_write_point_scalar \n");
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+  zlog_info(c_default, "Starting d4est_vtk_write_point_scalar \n");
 #endif
   p4est_locidx_t      il, ddl;
   int                 use_nodes;
@@ -1158,7 +1177,8 @@ d4est_vtk_write_data
 )
 {
 #ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_context_destroy \n");
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+  zlog_info(c_default, "Starting d4est_vtk_context_destroy");
 #endif
   const int           num_point_all = num_point_scalars;
   int                 mpirank;
@@ -1252,7 +1272,7 @@ d4est_vtk_write_element_data
  int write_level,
  int write_rank,
  int wrap_rank,
- int write_deg,   
+ int write_deg,
  int num_element_fields,
  const char ** names,
  double ** values,
@@ -1260,7 +1280,8 @@ d4est_vtk_write_element_data
 )
 {
 #ifdef D4EST_VTK_DEBUG
-  printf("[D4EST_VTK]: Starting d4est_vtk_write_cell_datav \n");
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+  zlog_info(c_default, "Starting d4est_vtk_write_cell_datav");
 #endif
   /* This function needs to do nothing if there is no data. */
   if (!
@@ -1615,7 +1636,6 @@ d4est_vtk_save
  d4est_operators_t* d4est_ops,
  const char* input_file,
  const char* input_section,
- const char* print_prefix,
  const char ** dg_field_names,
  double ** dg_fields,
  const char ** element_field_names,
@@ -1623,8 +1643,9 @@ d4est_vtk_save
  int folder_number
 )
 {
+  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
 
-  d4est_vtk_context_t* cont = d4est_vtk_dg_context_new(p4est, d4est_ops, input_file, input_section, print_prefix);
+  d4est_vtk_context_t* cont = d4est_vtk_dg_context_new(p4est, d4est_ops, input_file, input_section);
 
   cont->folder = d4est_util_add_cwd("VTK");
   d4est_util_make_directory(cont->folder,0);
@@ -1633,12 +1654,13 @@ d4est_vtk_save
   }
   d4est_util_make_directory(cont->folder,0);
   
+  zlog_category_t *c_vtk_geom = zlog_get_category("d4est_vtk_geometry");
   d4est_geometry_t* geom_vtk = d4est_geometry_new
                                (
                                 p4est->mpirank,
                                 input_file,
                                 cont->geometry_section,
-                                "[D4EST_VTK_GEOMETRY]"
+                                c_vtk_geom
                                );
   
   d4est_vtk_context_set_geom(cont, geom_vtk);
@@ -1673,7 +1695,7 @@ d4est_vtk_save
   }
 
   d4est_vtk_context_set_deg_array(cont, deg_array);
-  cont = d4est_vtk_write_header(cont, d4est_ops, cont->output_type);    
+  cont = d4est_vtk_write_header(cont, d4est_ops, cont->output_type);
 
   cont = d4est_vtk_write_data(cont, num_dg_fields, dg_field_names, dg_fields, cont->grid_type, cont->output_type);
   cont = d4est_vtk_write_element_data(cont, cont->write_tree, cont->write_level, cont->write_rank, cont->wrap_rank, cont->write_deg, num_element_fields, element_field_names, element_fields, cont->output_type);

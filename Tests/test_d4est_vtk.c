@@ -9,6 +9,7 @@
 #include <d4est_checkpoint.h>
 #include <d4est_element_data.h>
 #include <petscsnes.h>
+#include <zlog.h>
 
 
 static double
@@ -27,7 +28,7 @@ init_sinxyz
 
 
 int main(int argc, char *argv[])
-{  
+{
   sc_MPI_Comm mpicomm;
   PetscInitialize(&argc,&argv,(char*)0,NULL);
   mpicomm = PETSC_COMM_WORLD;
@@ -60,10 +61,11 @@ int main(int argc, char *argv[])
     printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] :      "test_d4est_vtk_options.input");
  
  
+  zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                     (argc == 2) ? argv[1] :      "test_d4est_vtk_options.input",
                                                     "geometry",
-                                                    "[D4EST_GEOMETRY]");
+                                                    c_geom);
 
   d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      "test_d4est_vtk_options.input", d4est_geom);
 
@@ -114,7 +116,7 @@ int main(int argc, char *argv[])
   if (proc_rank == 0 && initial_grid_input->load_from_checkpoint == 0){
     printf("[D4EST_INFO]: min_quadrants = %d\n", initial_grid_input->min_quadrants);
     printf("[D4EST_INFO]: min_level = %d\n", initial_grid_input->min_level);
-    printf("[D4EST_INFO]: fill_uniform = %d\n", initial_grid_input->fill_uniform);    
+    printf("[D4EST_INFO]: fill_uniform = %d\n", initial_grid_input->fill_uniform);
   }
   
   sc_MPI_Barrier(mpicomm);
@@ -122,7 +124,7 @@ int main(int argc, char *argv[])
   sc_MPI_Barrier(mpicomm);
   
   /* start just-in-time dg-math */
-  d4est_operators_t* d4est_ops = d4est_ops_init(20);  
+  d4est_operators_t* d4est_ops = d4est_ops_init(20);
   d4est_mesh_data_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] :      "test_d4est_vtk_options.input", "quadrature", "[QUADRATURE]");
   
@@ -226,7 +228,6 @@ int main(int argc, char *argv[])
      d4est_ops,
      "test_d4est_vtk_options.input",
      "d4est_vtk",
-     "[D4EST_VTK]",
      (const char*[]){"sinvec", NULL},
      (double**)((const double*[]){sinvec, NULL}),
      (const char*[]){"element_vol", NULL},
@@ -238,7 +239,7 @@ int main(int argc, char *argv[])
   P4EST_FREE(deg_array);
   P4EST_FREE(element_volume);
   P4EST_FREE(sinvec);
-  d4est_amr_destroy(d4est_amr_random);  
+  d4est_amr_destroy(d4est_amr_random);
   
 
   d4est_mesh_initial_extents_destroy(initial_grid_input);

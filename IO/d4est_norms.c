@@ -10,7 +10,7 @@
 #include <zlog.h>
 
 void
-d4est_norms_create_files
+d4est_norms_write_header
 (
 ){
   zlog_category_t *c_norms = zlog_get_category("norms");
@@ -255,8 +255,43 @@ d4est_norms_norms
     
 }
 
-
-
+void
+d4est_norms_save
+(
+  const char* options_file,
+  const char** u_name,
+  double** u,
+  double** u_compare,
+  d4est_xyz_fcn_t** analytical_solutions,
+  void* analytical_solution_ctx
+)
+{
+  zlog_category_t *c_default = zlog_get_category("d4est_norms");
+  zlog_debug(c_default, "Saving norms...");
+  
+  // First draft using only u_compare
+  int j = -1;
+  while (u_name[++j] != NULL) {
+    int number_of_nodes = sizeof(*u[j]) / sizeof(u[j][0]);
+    double L_2_sq = 0;
+    double L_infty = 0;
+    for (int i = 0; i < number_of_nodes; i++){
+      double error_i = fabs(u[j][i] - u_compare[j][i]);
+      L_2_sq += pow(error_i, 2);
+      if (error_i > L_infty)
+        L_infty = error_i;
+    }
+    double L_2 = sqrt(L_2_sq);
+    double energy_norm_estimator = -1;
+    
+    char *norms_output_category;
+    asprintf(&norms_output_category, "norms_%s", u_name[j]);
+    zlog_category_t *c_norms_output = zlog_get_category(norms_output_category);
+    zlog_info(c_norms_output, "%d %.25f %.25f %.25f", number_of_nodes, L_2, L_infty, energy_norm_estimator);
+  }
+  
+  zlog_debug(c_default, "Completed saving norms.");
+}
 
 void
 d4est_norms_norms_using_analytic_solution

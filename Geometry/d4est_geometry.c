@@ -11,6 +11,7 @@
 #include <d4est_linalg.h>
 #include <d4est_kron.h>
 #include <d4est_util.h>
+#include <zlog.h>
 
 
 #if (P4EST_DIM)==3
@@ -43,6 +44,8 @@ int d4est_geometry_input_handler
  const char* value
 )
 {
+  zlog_category_t *c_default = zlog_get_category("d4est_geometry"); // TODO: get from function argument
+
   d4est_geometry_input_t* pconfig = (d4est_geometry_input_t*)user;
 
   if (d4est_util_match_couple(section,pconfig->input_section,name,"name")) {
@@ -57,10 +60,10 @@ int d4est_geometry_input_handler
       pconfig->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
     }
     else {
-      printf("[D4EST_ERROR]: You tried to use %s as a mapping type\n", value);
-      D4EST_ABORT("[D4EST_ERROR]: This mapping is not supported");
+      zlog_error(c_default, "You tried to use %s as a mapping type.", value);
+      D4EST_ABORT("This mapping is not supported.");
     }
-  } 
+  }
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"JAC_compute_method")) {
     if(d4est_util_match(value, "numerical")){
       pconfig->JAC_compute_method = GEOM_COMPUTE_NUMERICAL;
@@ -69,8 +72,8 @@ int d4est_geometry_input_handler
       pconfig->JAC_compute_method = GEOM_COMPUTE_ANALYTIC;
     }
     else {
-      printf("[D4EST_ERROR]: You tried to use %s as a mapping type\n", value);
-      D4EST_ABORT("[D4EST_ERROR]: This mapping is not supported");
+      zlog_error(c_default, "You tried to use %s as a mapping type.", value);
+      D4EST_ABORT("This mapping is not supported.");
     }
   }
   else {
@@ -86,10 +89,9 @@ d4est_geometry_input
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix
+ zlog_category_t *c_default
 )
 {
-  
   d4est_geometry_input_t input;
   input.input_section = input_section;
   input.name = NULL;
@@ -105,15 +107,15 @@ d4est_geometry_input
   D4EST_CHECK_INPUT(input_section, input.JAC_compute_method, GEOM_COMPUTE_NOT_SET);
 
   if(mpirank == 0){
-  printf("%s: Loading %s geometry\n", printf_prefix, input.name);
+    zlog_info(c_default, "Loading %s geometry", input.name);
   if (input.DX_compute_method == GEOM_COMPUTE_NUMERICAL)
-    printf("%s: Dx computation method = %s\n", printf_prefix, "numerical");
+    zlog_info(c_default, "Dx computation method = %s", "numerical");
   if (input.DX_compute_method == GEOM_COMPUTE_ANALYTIC)
-    printf("%s: Dx computation method = %s\n", printf_prefix, "analytic");
+    zlog_info(c_default, "Dx computation method = %s", "analytic");
   if (input.JAC_compute_method == GEOM_COMPUTE_NUMERICAL)
-    printf("%s: JAC computation method = %s\n", printf_prefix, "numerical");
+    zlog_info(c_default, "JAC computation method = %s", "numerical");
   if (input.JAC_compute_method == GEOM_COMPUTE_ANALYTIC)
-    printf("%s: JAC computation method = %s\n", printf_prefix, "analytic");
+    zlog_info(c_default, "JAC computation method = %s", "analytic");
   }
   return input;
 }
@@ -123,10 +125,10 @@ d4est_geometry_t*
 d4est_geometry_new(int mpirank,
                    const char* input_file,
                    const char* input_section,
-                   const char* printf_prefix)
+                   zlog_category_t *c_default
+)
 {
-
-  d4est_geometry_input_t input = d4est_geometry_input(mpirank, input_file, input_section, printf_prefix);
+  d4est_geometry_input_t input = d4est_geometry_input(mpirank, input_file, input_section, c_default);
   d4est_geometry_t* d4est_geom = P4EST_ALLOC(d4est_geometry_t, 1);
   d4est_geom->DX_compute_method = input.DX_compute_method;
   d4est_geom->JAC_compute_method = input.JAC_compute_method;
@@ -136,35 +138,34 @@ d4est_geometry_new(int mpirank,
 #if (P4EST_DIM)==3
   if (d4est_util_match(input.name,"cubed_sphere")) {
     d4est_geom->geom_type = GEOM_CUBED_SPHERE_13TREE;
-    d4est_geometry_cubed_sphere_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
+    d4est_geometry_cubed_sphere_new(mpirank, input_file, input_section, c_default, d4est_geom);
   }
-  if (d4est_util_match(input.name,"hole_in_a_box")){
+  else if (d4est_util_match(input.name,"hole_in_a_box")){
     d4est_geom->geom_type = GEOM_HOLE_IN_A_BOX;
-    d4est_geometry_hole_in_a_box_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
+    d4est_geometry_hole_in_a_box_new(mpirank, input_file, input_section, c_default, d4est_geom);
   }
   else if (d4est_util_match(input.name,"cubed_sphere_7tree")) {
-    d4est_geometry_cubed_sphere_7tree_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
+    d4est_geometry_cubed_sphere_7tree_new(mpirank, input_file, input_section, c_default, d4est_geom);
     d4est_geom->geom_type = GEOM_CUBED_SPHERE_7TREE;
   }
   else if (d4est_util_match(input.name,"cubed_sphere_with_cube_hole")) {
-    d4est_geometry_cubed_sphere_with_cube_hole_new(mpirank, input_file, input_section, printf_prefix,  d4est_geom);
+    d4est_geometry_cubed_sphere_with_cube_hole_new(mpirank, input_file, input_section, c_default,  d4est_geom);
     d4est_geom->geom_type = GEOM_CUBED_SPHERE_WITH_CUBE_HOLE;
   }
   else if (d4est_util_match(input.name,"cubed_sphere_with_sphere_hole")) {
-    d4est_geometry_cubed_sphere_with_sphere_hole_new(mpirank, input_file, input_section, printf_prefix,  d4est_geom);
+    d4est_geometry_cubed_sphere_with_sphere_hole_new(mpirank, input_file, input_section, c_default,  d4est_geom);
     d4est_geom->geom_type = GEOM_CUBED_SPHERE_WITH_SPHERE_HOLE;
   }
-  
   else if (d4est_util_match(input.name,"cubed_sphere_innerouter_shell")) {
-    d4est_geometry_cubed_sphere_innerouter_shell_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
+    d4est_geometry_cubed_sphere_innerouter_shell_new(mpirank, input_file, input_section, c_default, d4est_geom);
     d4est_geom->geom_type = GEOM_CUBED_SPHERE_INNEROUTER_SHELL;
   }
   else if (d4est_util_match(input.name,"cubed_sphere_outer_shell_block")){
-    d4est_geometry_cubed_sphere_outer_shell_block_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
+    d4est_geometry_cubed_sphere_outer_shell_block_new(mpirank, input_file, input_section, c_default, d4est_geom);
     d4est_geom->geom_type = GEOM_CUBED_SPHERE_OUTER_SHELL;
   }
   else if (d4est_util_match(input.name,"cubed_sphere_inner_shell_block")){
-    d4est_geometry_cubed_sphere_inner_shell_block_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
+    d4est_geometry_cubed_sphere_inner_shell_block_new(mpirank, input_file, input_section, c_default, d4est_geom);
     d4est_geom->geom_type = GEOM_CUBED_SPHERE_INNER_SHELL;
   }
   else if (d4est_util_match(input.name,"none")){
@@ -173,34 +174,33 @@ d4est_geometry_new(int mpirank,
 #endif
 #if (P4EST_DIM)==2
   if (d4est_util_match(input.name,"disk")) {
-    d4est_geometry_5treedisk_new(mpirank, input_file, input_section, printf_prefix,  d4est_geom);
+    d4est_geometry_5treedisk_new(mpirank, input_file, input_section, c_default,  d4est_geom);
     d4est_geom->geom_type = GEOM_DISK_5TREE;
   }
   else if (d4est_util_match(input.name,"disk_outer_wedge")){
-    d4est_geometry_disk_outer_wedge_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
+    d4est_geometry_disk_outer_wedge_new(mpirank, input_file, input_section, c_default, d4est_geom);
     d4est_geom->geom_type = GEOM_DISK_OUTER_WEDGE;
   }
   else if (d4est_util_match(input.name,"none")){}
 #endif
   else if (d4est_util_match(input.name,"brick")){
-    d4est_geometry_brick_new(mpirank, input_file, input_section, printf_prefix, d4est_geom);
+    d4est_geometry_brick_new(mpirank, input_file, input_section, c_default, d4est_geom);
     d4est_geom->geom_type = GEOM_BRICK;
   }
   else {
-    printf("[D4EST_ERROR]: You tried to use %s geometry\n", input.name);
-    D4EST_ABORT("[D4EST_ERROR]: this geometry is currently not supported");
+    zlog_error(c_default, "You tried to use %s geometry.", input.name);
+    D4EST_ABORT("This geometry is currently not supported.");
   }
 
-  
-  
+
   free(input.name);
 
   if(d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC && d4est_geom->DX == NULL){
-    D4EST_ABORT("[D4EST_ERROR]: This geometry does not support analytic derivatives");
+    D4EST_ABORT("This geometry does not support analytic derivatives");
   }
 
   if(d4est_geom->JAC_compute_method == GEOM_COMPUTE_ANALYTIC && d4est_geom->JAC == NULL){
-    D4EST_ABORT("[D4EST_ERROR]: This geometry does not support analytic jacobians");
+    D4EST_ABORT("This geometry does not support analytic jacobians");
   }
   
   return d4est_geom;
@@ -1316,7 +1316,7 @@ d4est_geometry_get_tree_coords_in_range_0_to_1
 #endif
   }
   else {
-    D4EST_ABORT("[D4EST_ERROR]: You either did not set a coords type or used an unsupported coords type");
+    D4EST_ABORT("You either did not set a coords type or used an unsupported coords type");
   }
 }
 
@@ -1522,7 +1522,7 @@ d4est_geometry_compute_bounds
   for (int d = 0; d < (P4EST_DIM); d++){
     xi[d] = xyz[d][0];
     xf[d] = xyz[d][0];
-  }  
+  }
   
   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg);
   for (int i = 0; i < volume_nodes; i++){
@@ -1580,7 +1580,7 @@ d4est_geometry_compute_diam
           diam_temp += diam_dx*diam_dx;
         }
         /* printf("diam_temp = %f\n",diam_temp);        */
-        diam_temp = sqrt(diam_temp);      
+        diam_temp = sqrt(diam_temp);
         diam = (diam_temp > diam) ? diam_temp : diam;
       }
     }

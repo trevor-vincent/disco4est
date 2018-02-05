@@ -4,6 +4,7 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_disk.h>
 #include <p4est_connectivity.h>
+#include <zlog.h>
 
 
 static double
@@ -193,7 +194,7 @@ d4est_geometry_disk_outer_wedge_DX(d4est_geometry_t* d4est_geom,
   
 }
   
-static void 
+static void
 d4est_geometry_disk_outer_wedge_X(d4est_geometry_t * geom,
                       p4est_topidx_t which_tree,
                       p4est_qcoord_t q0 [2],
@@ -223,13 +224,13 @@ d4est_geometry_disk_outer_wedge_X(d4est_geometry_t * geom,
   else {
     R = disk->R1*(2. - abc[1]) + disk->R2*(abc[1] - 1.);
   }
-  double q = R / sqrt (x * x + 1.);  
+  double q = R / sqrt (x * x + 1.);
   xyz[0] = +q * x;
   xyz[1] = q;
   xyz[2] = 0;
 }
 
-static void 
+static void
 d4est_geometry_5treedisk_X(d4est_geometry_t * geom,
                       p4est_topidx_t which_tree,
                       p4est_qcoord_t q0 [2],
@@ -301,7 +302,7 @@ d4est_geometry_5treedisk_new
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
+ zlog_category_t *c_default,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -317,9 +318,9 @@ d4est_geometry_5treedisk_new
   d4est_geom->JAC = NULL;
   
   if (mpirank == 0){
-    printf("%s: NAME = 5treedisk\n", printf_prefix );
-    printf("%s: R0 = %.25f\n", printf_prefix,  input->R0);
-    printf("%s: R1 = %.25f\n", printf_prefix,  input->R1);
+    zlog_info(c_default, "NAME = 5treedisk");
+    zlog_info(c_default, "R0 = %.25f", input->R0);
+    zlog_info(c_default, "R1 = %.25f", input->R1);
   }
 }
 
@@ -368,11 +369,11 @@ d4est_geometry_disk_outer_wedge_sj_analytic
       *sj = sqrt((pow(amax - amin,2)*pow(M_PI,2)*pow(R1,2)*pow(R2,2))/(16.*pow(R2*(-4 + bmax + bmin + bmax*s - bmin*s) - R1*(-2 + bmax + bmin + bmax*s - bmin*s),2)));
     }
     else {
-      D4EST_ABORT("[D4EST_ERROR]: This is not a face");
+      D4EST_ABORT("This is not a face");
     }
   }
   else {
-    D4EST_ABORT("[D4EST_ERROR]: Code is not written yet");
+    D4EST_ABORT("Code is not written yet");
   }
 }
 
@@ -469,11 +470,11 @@ d4est_geometry_disk_outer_wedge_sj_div_jac_analytic
   *sj_div_jac = sqrt(pow(R2*(-4 + bmax + bmin + bmax*s - bmin*s) - R1*(-2 + bmax + bmin + bmax*s - bmin*s),4)/(4.*pow(bmax - bmin,2)*pow(R1,2)*pow(R1 - R2,2)*pow(R2,2)));
     }
     else {
-      D4EST_ABORT("[D4EST_ERROR]: This is not a face");
+      D4EST_ABORT("This is not a face");
     }
   }
   else {
-    D4EST_ABORT("[D4EST_ERROR]: Code is not written yet");
+    D4EST_ABORT("Code is not written yet");
   }
 }
 
@@ -499,7 +500,7 @@ d4est_geometry_disk_outer_wedge_new
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
+ zlog_category_t *c_default,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -510,9 +511,9 @@ d4est_geometry_disk_outer_wedge_new
 
 
   if (mpirank == 0){
-    printf("%s: NAME = disk_outer_wedge\n", printf_prefix );
-    printf("%s: R1 = %.25f\n", printf_prefix,  input->R1);
-    printf("%s: R2 = %.25f\n", printf_prefix,  input->R2);
-    printf("%s: compactify outer wedge = %d\n", printf_prefix,  input->compactify_outer_wedge);
+    zlog_info(c_default, "NAME = disk_outer_wedge");
+    zlog_info(c_default, "R1 = %.25f", input->R1);
+    zlog_info(c_default, "R2 = %.25f", input->R2);
+    zlog_info(c_default, "compactify outer wedge = %d", input->compactify_outer_wedge);
   }
 }

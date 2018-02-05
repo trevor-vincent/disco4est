@@ -174,6 +174,7 @@ function(add_d4est_problem_3d exec src parent_dir)
   add_executable(${exec} driver.c ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/${src})
   target_link_libraries(${exec} d8est)
   set_target_properties(${exec} PROPERTIES COMPILE_DEFINITIONS "DIM=3")
+  target_compile_definitions(${exec} PRIVATE D4EST_PROBLEM_NAME="${parent_dir}")
   set_target_properties(${exec}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${parent_dir}"

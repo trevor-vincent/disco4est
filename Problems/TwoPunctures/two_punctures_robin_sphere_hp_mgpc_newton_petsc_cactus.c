@@ -80,7 +80,7 @@ int two_punctures_init_params_handler
   else if (d4est_util_match_couple(section,"amr",name,"use_puncture_finder")) {
     D4EST_ASSERT(pconfig->use_puncture_finder == -1);
     pconfig->use_puncture_finder = atoi(value);
-  }  
+  }
   else if (d4est_util_match_couple(section,"amr",name,"amr_level_for_uniform_p")) {
     D4EST_ASSERT(pconfig->amr_level_for_uniform_p == -1);
     pconfig->amr_level_for_uniform_p = atoi(value);
@@ -359,7 +359,6 @@ problem_init
     (
      p4est,
      input_file,
-     "[D4EST_AMR]:",
      &amr_marker
     );
 
@@ -463,7 +462,6 @@ problem_init
        d4est_ops,
        input_file,
        "d4est_vtk",
-       "[D4EST_VTK]",
        (const char * []){"u","u_prev","error", NULL},
        (double* []){prob_vecs.u, u_prev, error},
        (const char * []){NULL},
@@ -705,7 +703,7 @@ problem_init
        DEBUG_PRINT_3ARR_DBL(dof, point3, point3_diff, iterations+1);
        DEBUG_PRINT_3ARR_DBL(dof, point10, point10_diff, iterations+1);
        DEBUG_PRINT_3ARR_DBL(dof, point100, point100_diff, iterations+1);
-     }     
+     }
      iterations++;
     
     d4est_checkpoint_save
@@ -734,8 +732,8 @@ problem_init
   d4est_amr_destroy(d4est_amr_p_refine_only_in_center_cube);
   d4est_amr_destroy(d4est_amr_use_puncture_finder_and_prefine_outside_cube);
   d4est_amr_destroy(d4est_amr_p_refine_everywhere);
-  d4est_poisson_flux_destroy(flux_data_for_jac);  
-  d4est_poisson_flux_destroy(flux_data_for_res);  
+  d4est_poisson_flux_destroy(flux_data_for_jac);
+  d4est_poisson_flux_destroy(flux_data_for_res);
   P4EST_FREE(error);
   P4EST_FREE(u_prev);
   P4EST_FREE(prob_vecs.u);

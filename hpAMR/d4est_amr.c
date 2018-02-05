@@ -9,6 +9,7 @@
 #include <d4est_amr_uniform.h>
 #include <d4est_amr_random.h>
 #include <ini.h>
+#include <zlog.h>
 
 
 static int
@@ -24,7 +25,7 @@ d4est_amr_refine_callback
   
   int* refinement_log = d4est_amr->refinement_log;
   int* initial_log = d4est_amr->initial_log;
-  initial_log[elem_data->id] = elem_data->deg; 
+  initial_log[elem_data->id] = elem_data->deg;
   
   /* h-refine */
   if (refinement_log[elem_data->id] < 0){
@@ -130,7 +131,7 @@ d4est_amr_balance_elements
      NULL,
      d4est_amr_balance_replace_callback
     );
-} 
+}
 
 static void
 d4est_amr_refine_elements
@@ -179,8 +180,8 @@ d4est_amr_mark_elements
                 d4est_amr->scheme->mark_elements,
 		NULL,
 #if P4EST_DIM==3
-                NULL,       
-#endif                
+                NULL,
+#endif
 		NULL);
 }
 
@@ -234,10 +235,11 @@ d4est_amr_interpolate_field_on_element
   }
 
   else {
-    printf("interp_code = %d\n", interp_code);
-    printf("indeg = %d\n", in_deg);
-    printf("out_deg[0] = %d\n", out_deg[0]);
-    D4EST_ABORT("[D4EST_ERROR]: hp amr code should be >= deg or -deg, coarsening is currently not supported in amr\n");
+    zlog_category_t *c_default = zlog_get_category("d4est_amr");
+    zlog_info(c_default, "interp_code = %d", interp_code);
+    zlog_info(c_default, "indeg = %d", in_deg);
+    zlog_info(c_default, "out_deg[0] = %d", out_deg[0]);
+    D4EST_ABORT("hp amr code should be >= deg or -deg, coarsening is currently not supported in amr");
   }
   
   D4EST_FREE(out_deg);
@@ -341,37 +343,39 @@ int d4est_amr_input_handler
  const char* value
 )
 {
+  zlog_category_t *c_default = zlog_get_category("d4est_amr");
+
   d4est_amr_t* pconfig = (d4est_amr_t*)user;
 
   if (d4est_util_match_couple(section,"amr",name,"scheme")) {
     if(d4est_util_match(value, "smooth_pred")){
       pconfig->scheme->amr_scheme_type = AMR_SMOOTH_PRED;
       if(pconfig->mpirank == 0)
-        printf("[D4EST_AMR]: loading scheme = %s\n", "smooth_pred");
+        zlog_info(c_default, "loading scheme = %s", "smooth_pred");
     }
     else if (d4est_util_match(value, "uniform_h")){
       pconfig->scheme->amr_scheme_type = AMR_UNIFORM_H;
       if(pconfig->mpirank == 0)
-        printf("[D4EST_AMR]: loading scheme = %s\n", "uniform_h");
+        zlog_info(c_default, "loading scheme = %s", "uniform_h");
     }
     else if (d4est_util_match(value, "uniform_p")){
       pconfig->scheme->amr_scheme_type = AMR_UNIFORM_P;
       if(pconfig->mpirank == 0)
-        printf("[D4EST_AMR]: loading scheme = %s\n", "uniform_p");
+        zlog_info(c_default, "loading scheme = %s", "uniform_p");
     }
     else if (d4est_util_match(value, "random_h")){
       pconfig->scheme->amr_scheme_type = AMR_RANDOM_H;
       if(pconfig->mpirank == 0)
-        printf("[D4EST_AMR]: loading scheme = %s\n", "random_h");
+        zlog_info(c_default, "loading scheme = %s", "random_h");
     }
     else if (d4est_util_match(value, "random_hp")){
       pconfig->scheme->amr_scheme_type = AMR_RANDOM_HP;
       if(pconfig->mpirank == 0)
-        printf("[D4EST_AMR]: loading scheme = %s\n", "random_hp");
-    }    
+        zlog_info(c_default, "loading scheme = %s", "random_hp");
+    }
     else {
-      printf("[D4EST_ERROR]: You tried to use %s as a mapping type\n", value);
-      D4EST_ABORT("[D4EST_ERROR]: This mapping is not supported");
+      zlog_error(c_default, "You tried to use %s as a mapping type.", value);
+      D4EST_ABORT("This mapping is not supported.");
     }
   }
   else if (d4est_util_match_couple(section,"amr",name,"num_of_amr_steps")) {
@@ -383,7 +387,7 @@ int d4est_amr_input_handler
     D4EST_ASSERT(pconfig->max_degree == -1);
     pconfig->max_degree = atoi(value);
     D4EST_ASSERT(atoi(value) > 0);
-  } 
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -397,12 +401,14 @@ d4est_amr_input
  d4est_amr_t* d4est_amr
 )
 {
+  zlog_category_t *c_default = zlog_get_category("d4est_amr");
+
   d4est_amr->max_degree = -1;
   d4est_amr->num_of_amr_steps = -1;
   d4est_amr->scheme->amr_scheme_type = AMR_NOT_SET;
 
   if (ini_parse(input_file, d4est_amr_input_handler, d4est_amr) < 0) {
-    D4EST_ABORT("[D4EST_ERROR]: Can't load input file in d4est_amr_input");
+    D4EST_ABORT("Can't load input file in d4est_amr_input.");
   }
 
   D4EST_CHECK_INPUT("amr", d4est_amr->scheme->amr_scheme_type, AMR_NOT_SET);
@@ -410,8 +416,8 @@ d4est_amr_input
   D4EST_CHECK_INPUT("amr", d4est_amr->num_of_amr_steps, -1);
 
   if(d4est_amr->mpirank == 0){
-    printf("[D4EST_AMR]: num_of_amr_steps = %d\n",  d4est_amr->num_of_amr_steps);
-    printf("[D4EST_AMR]: max_degree = %d\n",  d4est_amr->max_degree);
+    zlog_info(c_default, "num_of_amr_steps = %d",  d4est_amr->num_of_amr_steps);
+    zlog_info(c_default, "max_degree = %d",  d4est_amr->max_degree);
   }
 }
 
@@ -420,7 +426,6 @@ d4est_amr_init
 (
  p4est_t* p4est,
  const char* input_file,
- const char* printf_prefix,
  void* scheme_data
 )
 {
@@ -447,7 +452,7 @@ d4est_amr_init
     d4est_amr_random_init(p4est, input_file, scheme, scheme_data);
   }
   else {
-    D4EST_ABORT("[D4EST_ERROR]: this amr scheme is currently not supported");
+    D4EST_ABORT("This amr scheme is currently not supported.");
   }
 
   return d4est_amr;
@@ -593,6 +598,8 @@ d4est_amr_step
  d4est_estimator_stats_t** stats
 )
 {
+  zlog_category_t *c_default = zlog_get_category("d4est_amr");
+
   d4est_amr->d4est_estimator_stats = stats;
 
   void* backup = p4est->user_pointer;
@@ -602,17 +609,17 @@ d4est_amr_step
     d4est_amr->scheme->pre_refine_callback(p4est, d4est_amr->scheme->amr_scheme_data);
   }
   if (p4est->mpirank == 0)
-    printf("[D4EST_AMR]: Starting to mark elements\n");
+    zlog_info(c_default, "Starting to mark elements");
 
   d4est_amr_mark_elements(p4est);
 
   if (p4est->mpirank == 0)
-    printf("[D4EST_AMR]: Starting to refine elements\n");
+    zlog_info(c_default, "Starting to refine elements");
 
   d4est_amr_refine_elements(p4est);
 
   if (p4est->mpirank == 0)
-    printf("[D4EST_AMR]: Starting to balance elements\n");
+    zlog_info(c_default, "Starting to balance elements");
 
   d4est_amr_balance_elements(p4est);
 
@@ -635,12 +642,12 @@ d4est_amr_step
   p4est_ghost_destroy(*ghost);
   P4EST_FREE(*ghost_data);
   *ghost = NULL;
-  *ghost_data = NULL; 
+  *ghost_data = NULL;
   *ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE);
   *ghost_data = P4EST_ALLOC(d4est_element_data_t, (*ghost)->ghosts.elem_count);
 }
 
-void 
+void
 d4est_amr_destroy
 (
  d4est_amr_t* d4est_amr
@@ -650,5 +657,5 @@ d4est_amr_destroy
   D4EST_FREE(d4est_amr->refinement_log);
   D4EST_FREE(d4est_amr->initial_log);
   d4est_amr->scheme->destroy(d4est_amr->scheme);
-  D4EST_FREE(d4est_amr);    
+  D4EST_FREE(d4est_amr);
 }

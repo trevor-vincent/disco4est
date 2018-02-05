@@ -187,7 +187,6 @@ problem_init
     (
      p4est,
      input_file,
-     "[D4EST_AMR]:",
      &amr_marker
     );
 

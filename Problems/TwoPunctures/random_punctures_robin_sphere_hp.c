@@ -296,7 +296,6 @@ problem_init
     (
      p4est,
      input_file,
-     "[D4EST_AMR]:",
      &amr_marker
     );
 
@@ -480,8 +479,8 @@ problem_init
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
-  d4est_amr_destroy(d4est_amr_uniform_p); d4est_poisson_flux_destroy(flux_data_for_jac);  
-  d4est_poisson_flux_destroy(flux_data_for_res);  
+  d4est_amr_destroy(d4est_amr_uniform_p); d4est_poisson_flux_destroy(flux_data_for_jac);
+  d4est_poisson_flux_destroy(flux_data_for_res);
   d4est_norms_destroy_energy_norm_fit(fit);
   P4EST_FREE(error);
   P4EST_FREE(u_prev);

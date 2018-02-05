@@ -6,8 +6,8 @@
 #include <d4est_checkpoint.h>
 #include <d4est_element_data.h>
 #include <petscsnes.h>
+#include <d4est_norms.h>
 #include <zlog.h>
-
 
 int main(int argc, char *argv[])
 {
@@ -20,13 +20,21 @@ int main(int argc, char *argv[])
   MPI_Comm_size(mpicomm, &proc_size);
   MPI_Comm_rank(mpicomm, &proc_rank);
   
+  
+  // Initialize logging
   if (proc_rank == 0) {
     if (zlog_init("logging.conf") != 0) {
       printf("Initializing logging failed.\n");
     }
   }
   zlog_category_t *c_default = zlog_get_category("d4est");
+
+  zlog_info(c_default, "------");
   
+#ifdef D4EST_PROBLEM_NAME
+  zlog_info(c_default, "# Running d4est problem %s", D4EST_PROBLEM_NAME);
+#endif
+
 #ifndef NDEBUG
   if(proc_rank == 0)
     zlog_info(c_default, "DEBUG MODE ON");
@@ -48,16 +56,26 @@ int main(int argc, char *argv[])
 
   if (proc_rank == 0)
     zlog_info(c_default, "options file = %s", (argc == 2) ? argv[1] : "options.input");
+
+  if (proc_rank == 0)
+    zlog_info(c_default, "mpisize = %d", proc_size);
+
+  zlog_info(c_default, "------");
   
+  zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                     (argc == 2) ? argv[1] : "options.input",
                                                     "geometry",
-                                                    "[D4EST_GEOMETRY]");
+                                                    c_geom);
 
   d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] : "options.input", d4est_geom);
 
   p4est_t* p4est;
   if (initial_grid_input->load_from_checkpoint == 0){
+    
+    if (proc_rank == 0)
+      d4est_norms_write_header();
+    
     p4est = p4est_new_ext
     (
      mpicomm,
@@ -98,9 +116,6 @@ int main(int argc, char *argv[])
                                                    ghost->ghosts.elem_count);
    
 
-  if (proc_rank == 0){
-    zlog_info(c_default, "mpisize = %d", proc_size);
-  }
   if (proc_rank == 0 && initial_grid_input->load_from_checkpoint == 0){
     zlog_info(c_default, "min_quadrants = %d", initial_grid_input->min_quadrants);
     zlog_info(c_default, "min_level = %d", initial_grid_input->min_level);
