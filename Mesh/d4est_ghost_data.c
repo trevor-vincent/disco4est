@@ -53,7 +53,9 @@ d4est_ghost_data_init
   for (int i = 0; i < num_vecs; i++){
     d4est_ghost_data->transfer_types[i] = field_types[i];                                            
   }
-  
+
+
+  printf("STUCK HERE -1\n");  
   int stride = 0;
   for (int tn = 0; tn < num_vecs; tn++){
     d4est_ghost_data->transfer_strides[tn] = stride;
@@ -76,16 +78,16 @@ d4est_ghost_data_init
       }
   }
 
-
+  printf("STUCK HERE\n");
   d4est_ghost_data->receive_strides = D4EST_ALLOC(int*, d4est_ghost_data->num_ghosts);
   for (int i = 0; i < d4est_ghost_data->num_ghosts; i++){
     d4est_ghost_data->receive_strides[i] = D4EST_ALLOC(int, d4est_ghost_data->num_vecs);
   }
   
-
+  printf("STUCK HERE 1\n");
   d4est_ghost_data->ghost_data_sizes = D4EST_ALLOC_ZERO(int, p4est->mpisize);
   d4est_ghost_data->receive_size = 0;
-
+  printf("STUCK HERE 2\n");
   for (int tn = 0; tn < num_vecs; tn++){
     for (int gid = 0; gid < d4est_ghost->ghost->ghosts.elem_count; gid++){
       d4est_element_data_t* ghost_elem_data = &d4est_ghost->ghost_elements[gid];
@@ -99,14 +101,14 @@ d4est_ghost_data_init
       d4est_ghost_data->receive_size += size;
     }
   }
-
+  printf("STUCK HERE 3\n");
   d4est_ghost_data->receive_data = D4EST_ALLOC(double, d4est_ghost_data->receive_size);
   d4est_ghost_data_compute_ids_and_strides
     (
      d4est_ghost,
      d4est_ghost_data
     );
-  
+  printf("STUCK HERE 4\n");  
   return d4est_ghost_data;
 }
 
@@ -227,7 +229,9 @@ d4est_ghost_data_exchange
           
           int stride = d4est_element_data_get_stride_for_field(d4est_ghost->mirror_elements[mirr], d4est_ghost_data->transfer_types[tn]);
 
-          /* printf("transfer stride, num_vecs, stride, mem_size, d4est_ghost->mirror_elements[mirr]->deg = %d,%d,%d,%d,%d\n",d4est_ghost_data->transfer_strides[tn], d4est_ghost_data->num_vecs, stride, mem_size,d4est_ghost->mirror_elements[mirr]->deg); */
+          printf("transfer stride, num_vecs, stride, mem_size, d4est_ghost->mirror_elements[mirr]->deg = %d,%d,%d,%d,%d\n",d4est_ghost_data->transfer_strides[tn], d4est_ghost_data->num_vecs, stride, mem_size,d4est_ghost->mirror_elements[mirr]->deg);
+          double* elem_field = & field[stride];
+          PARALLEL_DEBUG_PRINT_ARR_DBL(elem_field, mem_size, p4est->mpirank);
           
           memcpy (mem, &field[stride], mem_size);
           mem += mem_size;

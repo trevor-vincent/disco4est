@@ -2194,8 +2194,18 @@ d4est_operators_interpolate(d4est_operators_t* d4est_ops,
   return sum;  
 }
 
+int
+d4est_operators_which_face
+(
+ d4est_operators_t* d4est_ops,
+ int node_id,
+ int deg,
+ int dim
+)
+{
+  
 
-
+}
 
 double
 d4est_operators_interpolate_using_bary

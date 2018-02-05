@@ -30,19 +30,26 @@
     }                                           \
   } while(0)
 
-#define DEBUG_PRINT_ARR_DBL_SUM(a, n) do {                \
-    double sum = 0.;                                  \
-    for (int i = 0; i < n; i++) {                     \
-      sum += a[i];                                    \
-    }                                                 \
-    printf("%s sum = %.25f\n",#a, sum);                   \
+#define PARALLEL_DEBUG_PRINT_ARR_DBL(a, n, proc) do {   \
+    printf("proc #proc: %s = \n",#a);                   \
+    for (int i = 0; i < n; i++) {                       \
+      printf("%.16f\n",a[i]);                           \
+    }                                                   \
+  } while(0)
+
+#define DEBUG_PRINT_ARR_DBL_SUM(a, n) do {      \
+    double sum = 0.;                            \
+    for (int i = 0; i < n; i++) {               \
+      sum += a[i];                              \
+    }                                           \
+    printf("%s sum = %.25f\n",#a, sum);         \
   } while(0)
 
 
-#define DEBUG_PRINT_ARR_INT(a, n) do {                \
+#define DEBUG_PRINT_ARR_INT(a, n) do {          \
     printf("%s = \n",#a);                       \
     for (int i = 0; i < n; i++) {               \
-      printf("%d\n",a[i]);                   \
+      printf("%d\n",a[i]);                      \
     }                                           \
   } while(0)
 
@@ -56,7 +63,7 @@
     }                                           \
   } while(0)
 
-#define DEBUG_PRINT_MAT_INT(a, m, n) do {             \
+#define DEBUG_PRINT_MAT_INT(a, m, n) do {       \
     printf("%s = ",#a);                         \
     for (int i = 0; i < m; i++) {               \
       printf("\n");                             \
@@ -66,21 +73,21 @@
     printf("\n");                               \
   } while(0)
 
-#define DEBUG_PRINT_2ARR_DBL(a, b, n) do {            \
+#define DEBUG_PRINT_2ARR_DBL(a, b, n) do {      \
     printf("%s, %s = \n",#a, #b);               \
     for (int i = 0; i < n; i++) {               \
       printf("%.25f %.25f\n",a[i], b[i]);       \
     }                                           \
   } while(0)
 
-#define DEBUG_PRINT_3ARR_DBL(a, b, c, n) do {                 \
+#define DEBUG_PRINT_3ARR_DBL(a, b, c, n) do {           \
     printf("%s, %s, %s = \n",#a, #b, #c);               \
     for (int i = 0; i < n; i++) {                       \
       printf("%.16f %.16f %.16f\n",a[i], b[i], c[i]);   \
     }                                                   \
   } while(0)
 
-#define DEBUG_PRINT_4ARR_DBL(a, b, c, d, n) do {                              \
+#define DEBUG_PRINT_4ARR_DBL(a, b, c, d, n) do {                        \
     printf("%s, %s, %s, %s= \n",#a, #b, #c, #d);                        \
     for (int i = 0; i < n; i++) {                                       \
       printf("%.16f %.16f %.16f %.16f\n",a[i], b[i], c[i], d[i]);       \
@@ -88,23 +95,21 @@
   } while(0)
 
 
-#define DEBUG_PRINT_6ARR_DBL(a, b, c, d, e, f, n) do {                        \
-    printf("%s, %s, %s, %s %s %s = \n",#a, #b, #c, #d, #e, #f);                \
+#define DEBUG_PRINT_6ARR_DBL(a, b, c, d, e, f, n) do {                  \
+    printf("%s, %s, %s, %s %s %s = \n",#a, #b, #c, #d, #e, #f);         \
     for (int i = 0; i < n; i++) {                                       \
       printf("%.16f %.16f %.16f %.16f %.16f %.16f\n",a[i], b[i], c[i], d[i], e[i], f[i]); \
     }                                                                   \
   } while(0)
 
-#define DEBUG_PRINT_8ARR_DBL(a, b, c, d, e, f, g, h, n) do {             \
-    printf("%s, %s, %s, %s %s %s %s %s= \n",#a, #b, #c, #d, #e, #f, #g, #h);    \
+#define DEBUG_PRINT_8ARR_DBL(a, b, c, d, e, f, g, h, n) do {            \
+    printf("%s, %s, %s, %s %s %s %s %s= \n",#a, #b, #c, #d, #e, #f, #g, #h); \
     for (int i = 0; i < n; i++) {                                       \
       printf("%.16f %.16f %.16f %.16f %.16f %.16f %.16f %.16f\n",a[i], b[i], c[i], d[i], e[i], f[i], g[i], h[i]); \
     }                                                                   \
   } while(0)
 
-
-
-#define DEBUG_PRINT_9ARR_DBL(a, b, c, d, e, f, g, h, j, n) do {          \
+#define DEBUG_PRINT_9ARR_DBL(a, b, c, d, e, f, g, h, j, n) do {         \
     printf("%s, %s, %s, %s %s %s %s %s %s= \n",#a, #b, #c, #d, #e, #f, #g, #h, #j); \
     for (int i = 0; i < n; i++) {                                       \
       printf("%.16f %.16f %.16f %.16f %.16f %.16f %.16f %.16f %.16f\n",a[i], b[i], c[i], d[i], e[i], f[i], g[i], h[i], j[i]); \

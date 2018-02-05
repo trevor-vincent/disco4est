@@ -3,24 +3,6 @@
 /.dir-locals.el
 /Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns_new.c
 /Geometry/#d4est_geometry.c#
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-# Noise
-.DS_Store
-
-# Local configuration
-Support/cmake/machine.cmake
-
-# Build
-build/
-=======
 /Mesh/d4est_mesh_geom_factors.c
 /Geometry/#d4est_geometry_cylinder.c#
 /Geometry/.#d4est_geometry_cylinder.c
->>>>>>> Stashed changes
-=======
-/Mesh/d4est_mesh_geom_factors.c
-/Geometry/#d4est_geometry_cylinder.c#
-/Geometry/.#d4est_geometry_cylinder.c
->>>>>>> Stashed changes
