@@ -238,7 +238,7 @@ add_d4est_test_3d(test_d4est_vtk test_d4est_vtk.c . test_d4est_vtk)
 add_d4est_test_3d(test_d4est_operators test_d4est_operators.c . test_d4est_operators)
 add_d4est_test_3d(test_d4est_kron test_d4est_kron.c . test_d4est_kron)
 add_d4est_test_3d(test_d4est_linalg test_d4est_linalg.c . test_d4est_linalg)
-# add_d4est_test_3d(test_d4est_ghost_data test_d4est_ghost_data.c . test_d4est_ghost_data)
+add_d4est_test_2d(test_d4est_ghost_data test_d4est_ghost_data.c . test_d4est_ghost_data)
 # add_d4est_test_3d(test_d4est_operators_interpolate test_d4est_operators_interpolate.c . test_d4est_operators_interpolate)
 
 add_d4est_problem_2d(stamm_driver stamm_multigrid_pc.c Stamm)

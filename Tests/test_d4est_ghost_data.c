@@ -13,8 +13,6 @@
 #include <d4est_ghost.h>
 #include <petscsnes.h>
 
-
-
 static double
 poly_fcn
 (
@@ -39,9 +37,12 @@ sinxyz_fcn
  void* user
 )
 {
+#if (P4EST_DIM)==3
   return exp(x*y*z);
+#else
+  return exp(x*y);
+#endif
 }
-
 
 int main(int argc, char *argv[])
 {  
@@ -159,8 +160,6 @@ int main(int argc, char *argv[])
                                 (void*)initial_grid_input
                                );
 
-
-
   p4est_partition(p4est, 1, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
 
@@ -224,8 +223,6 @@ int main(int argc, char *argv[])
 
   int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
   d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
-    
-
   
   d4est_vtk_save
     (
@@ -262,8 +259,8 @@ int main(int argc, char *argv[])
                                                                d4est_ghost,
                                                                &field_type,
                                                                1);
+  
   d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data,sinvec);
-  /* /\*  *\/ */
   for (int gid = 0; gid < d4est_ghost->ghost->ghosts.elem_count; gid++){
     d4est_element_data_t* ged = &d4est_ghost->ghost_elements[gid];
 
@@ -285,14 +282,11 @@ int main(int argc, char *argv[])
   
   d4est_ghost_destroy(d4est_ghost);
   d4est_ghost_data_destroy(d4est_ghost_data);
-  
-
   P4EST_FREE(poly);
   P4EST_FREE(deg_array);
   P4EST_FREE(element_volume);
   P4EST_FREE(sinvec);
   d4est_amr_destroy(d4est_amr_random);  
-  
 
   d4est_mesh_initial_extents_destroy(initial_grid_input);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
@@ -305,13 +299,9 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
   
-  
   d4est_ops_destroy(d4est_ops);
-  
-  /* free pXest */
   p4est_destroy(p4est);
   d4est_geometry_destroy(d4est_geom);
   PetscFinalize();
-  /* sc_finalize (); */
   return 0;
 }
