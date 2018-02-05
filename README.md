@@ -41,7 +41,7 @@ The dependencies are OpenMPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will ne
   mpirun -np 4 path/to/build/ConstantDensityStar/constant_density_star_driver
   ```
 
-  For the example to complete in O(10s) you may want to consult the `options.input` file to set `amr.num_of_amr_steps=1`.
+  For the example to complete in O(10s) you may want to consult the `options.input` file to set `amr.num_of_amr_steps=1`. To turn off the preconditioner, set `krylov_petsc.do_not_use_preconditioner=1`
 
 ## License
 
