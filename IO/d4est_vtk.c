@@ -1644,6 +1644,8 @@ d4est_vtk_save
 )
 {
   zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+  if (p4est->mpirank == 0)
+    zlog_info(c_default, "Saving mesh data to VTK file...");
 
   d4est_vtk_context_t* cont = d4est_vtk_dg_context_new(p4est, d4est_ops, input_file, input_section);
 
@@ -1703,5 +1705,8 @@ d4est_vtk_save
   d4est_vtk_write_footer(cont);
   d4est_geometry_destroy(geom_vtk);
   P4EST_FREE(deg_array);
+  
+  if (p4est->mpirank == 0)
+    zlog_info(c_default, "VTK file saved.");
 }
 

@@ -10,16 +10,40 @@
 #include <zlog.h>
 
 void
-d4est_norms_write_header
+d4est_norms_write_header // TODO: remove with d4est_norms_norms_using_analytic_solution, superseded by d4est_norms_write_headers
 (
 ){
   zlog_category_t *c_norms = zlog_get_category("norms");
   zlog_info(c_norms, "global_elements global_nodes avg_deg global_quad_nodes avg_deg_quad global_estimator global_l2 global_enorm global_Linf");
 }
 
+/*
+  Writes column headers to norm data output files.
+  
+  Call from one process only to avoid duplicate lines.
+  
+  - options_file: (Not implemented yet)
+  - field_names: Null terminated list of names for the fields on the computational grid. The norms are written in a separate file for each field.
+*/
+void
+d4est_norms_write_headers
+(
+  const char* options_file,
+  const char** field_names
+){
+  int i_field = -1;
+  while (field_names[++i_field] != NULL) {
+    char *norms_output_category;
+    asprintf(&norms_output_category, "norms_%s", field_names[i_field]);
+    zlog_category_t *c_norms_output = zlog_get_category(norms_output_category);
+    free(norms_output_category);
+    zlog_info(c_norms_output, "num_quadrants num_nodes L_2 L_infty");
+  }
+}
+
 
 static void
-d4est_norms_calculate_analytic_error
+d4est_norms_calculate_analytic_error // TODO: remove with d4est_norms_norms_using_analytic_solution
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -236,7 +260,7 @@ d4est_norms_norms
       avg_deg_quad,
       (global_estimator < 0) ? -1. : sqrt(global_estimator),
       (global_l2_norm_sqr < 0) ? -1 : sqrt(global_l2_norm_sqr),
-      (global_energy_norm_sqr < 0) ? -1. :sqrt(global_energy_norm_sqr),
+      (global_energy_norm_sqr < 0) ? -1. : sqrt(global_energy_norm_sqr),
       global_Linf
     );
   }
@@ -255,46 +279,153 @@ d4est_norms_norms
     
 }
 
+/*
+  Computes norms over the computational grid and outputs them to files.
+  
+  - options_file: (Not implemented yet)
+  - field_names: Null terminated list of names for the fields on the computational grid.
+
+  Either provide `field_values_compare` or an `analytical_solution` for each field.
+*/
 void
 d4est_norms_save
 (
-  const char* options_file,
-  const char** u_name,
-  double** u,
-  double** u_compare,
-  d4est_xyz_fcn_t** analytical_solutions,
-  void* analytical_solution_ctx
+  const char *options_file,
+  p4est_t *p4est,
+  const char** field_names,
+  double **field_values,
+  double **field_values_compare,
+  d4est_xyz_fcn_t *analytical_solutions,
+  void *analytical_solution_ctx
 )
 {
   zlog_category_t *c_default = zlog_get_category("d4est_norms");
-  zlog_debug(c_default, "Saving norms...");
+  if (p4est->mpirank == 0)
+    zlog_debug(c_default, "Computing norms...");
+
+  // Get the number of fields to compute norms for
+  int num_fields = -1;
+  while (field_names[++num_fields] != NULL)
+    continue;
+
+  // Set up storage for reduce operation
+  int local_reduce_sum_int[1];
+  int global_reduce_sum_int[1];
+  double local_reduce_sum_double[num_fields];
+  double global_reduce_sum_double[num_fields];
+  double local_reduce_max[num_fields];
+  double global_reduce_max[num_fields];
+
+  // Get number of nodes on local process
+  int num_nodes_local = d4est_mesh_get_local_nodes(p4est);
+  local_reduce_sum_int[0] = num_nodes_local;
   
-  // First draft using only u_compare
-  int j = -1;
-  while (u_name[++j] != NULL) {
-    int number_of_nodes = sizeof(*u[j]) / sizeof(u[j][0]);
-    double L_2_sq = 0;
-    double L_infty = 0;
-    for (int i = 0; i < number_of_nodes; i++){
-      double error_i = fabs(u[j][i] - u_compare[j][i]);
-      L_2_sq += pow(error_i, 2);
-      if (error_i > L_infty)
-        L_infty = error_i;
-    }
-    double L_2 = sqrt(L_2_sq);
-    double energy_norm_estimator = -1;
+  double *field_values_analytical = NULL; // Holds computed values when iterating through the fields, if no compare values were provided.
+  double *field_values_compare_i = NULL; // Points to the compare values, either computed and stored in field_values_analytical, or provided by the function argument.
+  d4est_xyz_fcn_t analytical_solution_i = NULL; // Points to the provided function when iterating through the fields, if one is available,
+
+  // Collect local measure of norms
+  for (int i_field = 0; i_field < num_fields; i_field++){
     
-    char *norms_output_category;
-    asprintf(&norms_output_category, "norms_%s", u_name[j]);
-    zlog_category_t *c_norms_output = zlog_get_category(norms_output_category);
-    zlog_info(c_norms_output, "%d %.25f %.25f %.25f", number_of_nodes, L_2, L_infty, energy_norm_estimator);
+    // Use compare values if available
+    field_values_compare_i = field_values_compare[i_field];
+    analytical_solution_i = analytical_solutions[i_field];
+    // Else, compute compare values from analytic function
+    if (field_values_compare_i == NULL && analytical_solution_i != NULL) {
+      if (field_values_analytical == NULL) {
+        field_values_analytical = P4EST_ALLOC(double, num_nodes_local);
+      }
+      d4est_mesh_init_field(
+        p4est,
+        field_values_analytical,
+        analytical_solution_i,
+        NULL,
+        NULL,
+        INIT_FIELD_ON_LOBATTO,
+        analytical_solution_ctx
+      );
+      field_values_compare_i = field_values_analytical;
+    } else if (analytical_solution_i == NULL) {
+      zlog_error(c_default, "Could not compute norms for %s since neither compare values nor an analytic solution is available.", field_names[i_field]);
+      local_reduce_sum_double[i_field] = -1;
+      local_reduce_max[i_field] = -1;
+      continue;
+    }
+
+    double L_2_sq_local = 0;
+    double L_infty_local = 0;
+    // TODO: Use linalg:
+    // d4est_linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
+    // d4est_linalg_vec_fabs(error, local_nodes);
+    for (int i = 0; i < num_nodes_local; i++){
+      double error_i = fabs(field_values[i_field][i] - field_values_compare_i[i]);
+      L_2_sq_local += pow(error_i, 2);
+      if (error_i > L_infty_local)
+        L_infty_local = error_i;
+    }
+    
+    local_reduce_sum_double[i_field] = L_2_sq_local;
+    local_reduce_max[i_field] = L_infty_local;
   }
+  P4EST_FREE(field_values_analytical);
   
-  zlog_debug(c_default, "Completed saving norms.");
+  // Reduce over all processes
+  sc_reduce
+    (
+     &local_reduce_sum_int[0],
+     &global_reduce_sum_int[0],
+     1,
+     sc_MPI_INT,
+     sc_MPI_SUM,
+     0,
+     sc_MPI_COMM_WORLD
+    );
+  sc_reduce
+    (
+     &local_reduce_sum_double[0],
+     &global_reduce_sum_double[0],
+     num_fields,
+     sc_MPI_DOUBLE,
+     sc_MPI_SUM,
+     0,
+     sc_MPI_COMM_WORLD
+    );
+  sc_reduce
+    (
+     &local_reduce_max[0],
+     &global_reduce_max[0],
+     num_fields,
+     sc_MPI_DOUBLE,
+     sc_MPI_MAX,
+     0,
+     sc_MPI_COMM_WORLD
+    );
+
+  if (p4est->mpirank == 0) {
+    int num_nodes = global_reduce_sum_int[0];
+    for (int i_field = 0; i_field < num_fields; i_field++){
+      double L_2 = sqrt(global_reduce_sum_double[i_field] / num_nodes);
+      double L_infty = global_reduce_max[i_field];
+
+      // Write output
+      char *norms_output_category;
+      asprintf(&norms_output_category, "norms_%s", field_names[i_field]);
+      zlog_category_t *c_norms_output = zlog_get_category(norms_output_category);
+      free(norms_output_category);
+      // num_quadrants num_nodes L_2 L_infty energy_norm_estimator energy_norm
+      zlog_info(c_norms_output, "%d %d %.25f %.25f",
+        (int)p4est->global_num_quadrants,
+        num_nodes,
+        L_2,
+        L_infty
+      );
+    }
+    zlog_debug(c_default, "Completed computing norms.");
+  }
 }
 
 void
-d4est_norms_norms_using_analytic_solution
+d4est_norms_norms_using_analytic_solution // TODO: remove when energy norm computation is implemented in d4est_norms_save
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,

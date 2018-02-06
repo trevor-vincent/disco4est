@@ -22,46 +22,37 @@ int main(int argc, char *argv[])
   
   
   // Initialize logging
-  if (proc_rank == 0) {
-    if (zlog_init("logging.conf") != 0) {
-      printf("Initializing logging failed.\n");
-    }
-  }
+  if (zlog_init("logging.conf") != 0)
+    printf("Initializing logging failed.\n");
   zlog_category_t *c_default = zlog_get_category("d4est");
-
-  zlog_info(c_default, "------");
+  
+  if (proc_rank == 0) {
+    zlog_info(c_default, "------");
   
 #ifdef D4EST_PROBLEM_NAME
-  zlog_info(c_default, "# Running d4est problem %s", D4EST_PROBLEM_NAME);
+    zlog_info(c_default, "# Running problem %s", D4EST_PROBLEM_NAME);
 #endif
 
 #ifndef NDEBUG
-  if(proc_rank == 0)
     zlog_info(c_default, "DEBUG MODE ON");
-  p4est_init(NULL, SC_LP_ERROR);
-  /* p4est_init(NULL, SC_LP_ALWAYS); */
 #else
-  if(proc_rank == 0)
     zlog_info(c_default, "DEBUG MODE OFF");
-  p4est_init(NULL, SC_LP_ERROR);
 #endif
   
 #if (P4EST_DIM)==3
-  if(proc_rank == 0)
     zlog_info(c_default, "DIM = 3");
 #else
-  if(proc_rank == 0)
     zlog_info(c_default, "DIM = 2");
 #endif
 
-  if (proc_rank == 0)
     zlog_info(c_default, "options file = %s", (argc == 2) ? argv[1] : "options.input");
-
-  if (proc_rank == 0)
     zlog_info(c_default, "mpisize = %d", proc_size);
+    zlog_info(c_default, "------");
+  }
 
-  zlog_info(c_default, "------");
-  
+  p4est_init(NULL, SC_LP_ERROR);
+  /* p4est_init(NULL, SC_LP_ALWAYS); */
+
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                     (argc == 2) ? argv[1] : "options.input",
@@ -181,9 +172,15 @@ int main(int argc, char *argv[])
   d4est_geometry_destroy(d4est_geom);
   PetscFinalize();
   /* sc_finalize (); */
-  
-  if (proc_rank == 0)
-    zlog_fini();
+
+  if (proc_rank == 0) {
+    zlog_info(c_default, "Completed garbage collection.");
+    #ifdef D4EST_PROBLEM_NAME
+      zlog_info(c_default, "Completed problem %s.", D4EST_PROBLEM_NAME);
+    #endif
+  }
+
+  zlog_fini();
   
   return 0;
 }

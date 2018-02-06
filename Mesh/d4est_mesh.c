@@ -63,7 +63,7 @@ int d4est_mesh_initial_extents_handler
       if (hit)
         return 1;
     }
-    return 0;    
+    return 0;
   }
   return 1;
 }
@@ -126,7 +126,7 @@ d4est_mesh_initial_extents_parse
  d4est_geometry_t* d4est_geom
 )
 {
-  sc_MPI_Comm mpicomm = sc_MPI_COMM_WORLD;  
+  sc_MPI_Comm mpicomm = sc_MPI_COMM_WORLD;
 
   int proc_size;
   int proc_rank;
@@ -168,7 +168,7 @@ d4est_mesh_initial_extents_parse
       D4EST_CHECK_INPUT("initial_mesh", initial_extents->deg[i], -1);
     }
     
-  }  
+  }
   else {
     D4EST_CHECK_INPUT("initial_mesh", initial_extents->checkpoint_prefix, NULL);
   }
@@ -330,7 +330,7 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
     
     total_side_nodes_p_lobatto += face_nodes_p_lobatto[i];
     total_side_nodes_p_quad += face_nodes_p_quad[i];
-  }    
+  }
 
   /* calculate degs and nodes of the mortar faces */
   int total_mortar_nodes_quad = 0;
@@ -341,9 +341,9 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
       deg_mortar_quad[i+j] = d4est_util_max_int(deg_m_quad[i],
                                           deg_p_quad[j]);
       deg_mortar_lobatto[i+j] = d4est_util_max_int( e_m[i]->deg,
-                                              e_p_oriented[j]->deg );      
-      mortar_nodes_quad[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
-      mortar_nodes_lobatto[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
+                                              e_p_oriented[j]->deg );
+      mortar_nodes_quad[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );
+      mortar_nodes_lobatto[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );
       total_mortar_nodes_quad += mortar_nodes_quad[i+j];
       total_mortar_nodes_lobatto += mortar_nodes_lobatto[i+j];
 
@@ -526,8 +526,8 @@ d4est_mesh_compute_mortar_quadrature_sizes_interface_callback
                             (
                              e_m[i]->deg_vol_quad,
                              e_p_oriented[j]->deg_vol_quad
-                            ); 
-      total_mortar_nodes_quad += d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad );     
+                            );
+      total_mortar_nodes_quad += d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad );
     }
 
   e_m[0]->mortar_quad_scalar_stride[f_m] = sizes->local_mortar_nodes_quad;
@@ -581,7 +581,7 @@ d4est_mesh_data_t*
 d4est_mesh_geometry_storage_init()
 {
   d4est_mesh_data_t* d4est_factors = P4EST_ALLOC(d4est_mesh_data_t, 1);
-  d4est_factors->J_quad = NULL; 
+  d4est_factors->J_quad = NULL;
   d4est_factors->xyz = NULL;
   d4est_factors->xyz_quad = NULL;
   d4est_factors->xyz_rst_quad = NULL;
@@ -612,13 +612,13 @@ d4est_mesh_geometry_storage_realloc
   int local_nodes = local_sizes.local_nodes;
   int local_nodes_quad = local_sizes.local_nodes_quad;
 
-  int vector_nodes = local_nodes*(P4EST_DIM); 
+  int vector_nodes = local_nodes*(P4EST_DIM);
   d4est_factors->xyz = P4EST_REALLOC(d4est_factors->xyz,double,vector_nodes);
   d4est_factors->xyz_quad = P4EST_REALLOC(d4est_factors->xyz_quad, double, (P4EST_DIM)*local_nodes_quad);
 
   int matrix_nodes_quad = local_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
   d4est_factors->J_quad = P4EST_REALLOC(d4est_factors->J_quad,double,local_nodes_quad);
-  d4est_factors->xyz_rst_quad = P4EST_REALLOC(d4est_factors->xyz_rst_quad,double,matrix_nodes_quad);  
+  d4est_factors->xyz_rst_quad = P4EST_REALLOC(d4est_factors->xyz_rst_quad,double,matrix_nodes_quad);
   d4est_factors->rst_xyz_quad = P4EST_REALLOC(d4est_factors->rst_xyz_quad,double,matrix_nodes_quad);
 
   int local_matrix_mortar_nodes_quad = local_sizes.local_mortar_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
@@ -711,7 +711,7 @@ d4est_mesh_init_element_size_parameters
   d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t,1);
   d4est_quadrature_lobatto_new(d4est_quad, NULL, NULL);
 
-  for (p4est_topidx_t tt = p4est->first_local_tree; 
+  for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree; tt++)
     {
       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
@@ -781,7 +781,7 @@ d4est_mesh_init_element_size_parameters
            ed->tree,
            ed->q,
            ed->dq,
-           ed->deg,           
+           ed->deg,
            dxyz_drst_lobatto
           );
 
@@ -870,7 +870,7 @@ d4est_mesh_init_element_size_parameters
 
           ed->j_div_sj_min[f] = d4est_util_min_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto);
  
-        } 
+        }
      
         P4EST_FREE(ones);
 
@@ -1002,7 +1002,7 @@ d4est_mesh_compute_jacobian_on_lgl_grid
                                                  .tree = elem_data->tree,
                                                  .q[0] = elem_data->q[0],
                                                  .q[1] = elem_data->q[1],
-#if (P4EST_DIM)==3                                              
+#if (P4EST_DIM)==3
                                                  .q[2] = elem_data->q[2],
 #endif
                                                  .element_id = elem_data->id
@@ -1042,9 +1042,9 @@ d4est_mesh_compute_jacobian_on_lgl_grid
            elem_data->tree,
            elem_data->q,
            elem_data->dq,
-           elem_data->deg,           
+           elem_data->deg,
            xyz_rst
-          );      
+          );
 
 
         d4est_geometry_compute_jacobian
@@ -1138,7 +1138,7 @@ d4est_mesh_print_number_of_elements_per_tree
       for (int i = 0; i < num_trees; i++){
         printf(" Tree %d: Number of Elements = %d\n", i, elements_per_tree_global[i]);
       }
-    }    
+    }
   
   P4EST_FREE(elements_per_tree_local);
   P4EST_FREE(elements_per_tree_global);
@@ -1164,7 +1164,7 @@ d4est_mesh_get_element_data
         if (ed->id == local_element_id)
           return ed;
       }
-    }  
+    }
   return NULL;
 }
 
@@ -1249,7 +1249,7 @@ d4est_mesh_print_element_data_debug
         int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), ed->deg );
        
 #ifndef NDEBUG
-#if (P4EST_DIM)==2 
+#if (P4EST_DIM)==2
         printf("q = %d, %d, dq = %d\n", ed->q[0], ed->q[1], ed->dq);
         DEBUG_PRINT_2ARR_DBL(ed->xyz[0], ed->xyz[1], volume_nodes);
         /* DEBUG_PRINT_3ARR_DBL(ed->xyz[0], ed->xyz[1], volume_nodes); */
@@ -1259,12 +1259,12 @@ d4est_mesh_print_element_data_debug
 #else
         D4EST_ABORT("DIM = 2 or 3");
 #endif
-#endif        
+#endif
 /* #else */
         /* D4EST_ABORT("DEBUG flag must be set"); */
 /* #endif */
       }
-    }  
+    }
 }
 
 double
@@ -1283,7 +1283,7 @@ d4est_mesh_compute_l2_norm_sqr
 {
   int k = 0;
   double* Mvec = P4EST_ALLOC(double, local_nodes);
-  double l2_norm_sqr = 0.;  
+  double l2_norm_sqr = 0.;
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)
@@ -1353,7 +1353,7 @@ d4est_mesh_compute_linf
  int (*skip_element_fcn)(d4est_element_data_t*)
 )
 {
-  double linf = 0.;  
+  double linf = 0.;
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)
@@ -1405,7 +1405,7 @@ d4est_mesh_init_element_data
   int sqr_mortar_stride = 0;
   int nodal_stride = 0;
   int quad_stride = 0;
-  int id_stride = 0;  
+  int id_stride = 0;
   
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
@@ -1422,9 +1422,9 @@ d4est_mesh_init_element_data
         elem_data->dq = P4EST_QUADRANT_LEN(quad->level);
         elem_data->q[0] = quad->x;
         elem_data->q[1] = quad->y;
-#if (P4EST_DIM)==3  
+#if (P4EST_DIM)==3
         elem_data->q[2] = quad->z;
-#endif        
+#endif
 
 
         
@@ -1437,7 +1437,7 @@ d4est_mesh_init_element_data
         elem_data->region = d4est_geom->get_region(d4est_geom, elem_data->q, elem_data->dq, elem_data->tree);
 
         
-        /* user_fcn should set degree, 
+        /* user_fcn should set degree,
            or the degree will be assumed to be set */
         if (user_fcn != NULL){
           /* problem_set_degrees_donald_trump(elem_data, user_ctx); */
@@ -1457,7 +1457,7 @@ d4est_mesh_init_element_data
                    elem_data->deg_vol_quad > 0
                    &&
                    elem_data->deg < MAX_DEGREE
-                  );        
+                  );
         
         int nodes = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg);
         int nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg_vol_quad);
@@ -1600,7 +1600,7 @@ d4est_mesh_geometry_storage_initialize_data
              ed->tree,
              ed->q,
              ed->dq,
-             ed->deg_vol_quad,           
+             ed->deg_vol_quad,
              ed->xyz_rst_quad
             );
         }
@@ -1655,7 +1655,7 @@ d4est_mesh_geometry_storage_initialize_aliases
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
         d4est_element_data_t* elem_data = (d4est_element_data_t*)(quad->p.user_data);
 
-        elem_data->J_quad = &d4est_factors->J_quad[elem_data->quad_stride];  
+        elem_data->J_quad = &d4est_factors->J_quad[elem_data->quad_stride];
         for (int i = 0; i < (P4EST_DIM); i++){
           elem_data->xyz[i] = &d4est_factors->xyz[i*local_sizes.local_nodes + elem_data->nodal_stride];
           elem_data->xyz_quad[i] = &d4est_factors->xyz_quad[i*local_sizes.local_nodes_quad + elem_data->quad_stride];
@@ -1760,7 +1760,7 @@ d4est_mesh_update
 
   }
   
-  return local_sizes.local_nodes; 
+  return local_sizes.local_nodes;
 }
 
 void
@@ -1769,8 +1769,8 @@ d4est_mesh_init_field
  p4est_t* p4est,
  double* node_vec,
  d4est_xyz_fcn_t init_fcn,
- d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom,
+ d4est_operators_t* d4est_ops, // TODO: unused, remove?
+ d4est_geometry_t* d4est_geom, // TODO: unused, remove?
  d4est_mesh_init_field_option_t option,
  void* user
 )
@@ -1784,7 +1784,7 @@ d4est_mesh_init_field
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        d4est_element_data_t* ed = quad->p.user_data;        
+        d4est_element_data_t* ed = quad->p.user_data;
 
         if (option == INIT_FIELD_ON_LOBATTO){
           int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
@@ -1860,7 +1860,7 @@ d4est_mesh_init_field_ext
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        d4est_element_data_t* ed = quad->p.user_data;        
+        d4est_element_data_t* ed = quad->p.user_data;
         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
 
 
@@ -1960,8 +1960,8 @@ int d4est_mesh_get_local_nodes(p4est_t* p4est)
                 d4est_mesh_get_local_nodes_callback,
                 NULL,
 #if (P4EST_DIM)==3
-                NULL,       
-#endif                
+                NULL,
+#endif
                 NULL);
   
   return local_nodes;
@@ -2020,7 +2020,7 @@ d4est_mesh_compare_two_fields
                         );
                 }
             }
-        }        
+        }
       }
     }
 
