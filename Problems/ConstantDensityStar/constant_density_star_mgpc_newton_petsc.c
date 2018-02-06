@@ -265,26 +265,43 @@ problem_init
   /*   ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h; */
   /*   ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor; */
 
+  // Norm function contexts
+  
+  d4est_norms_L2_ctx_t L2_norm_ctx;
+  L2_norm_ctx.d4est_ops = d4est_ops;
+  L2_norm_ctx.d4est_geom = d4est_geom;
+  L2_norm_ctx.d4est_quad = d4est_quad;
+  L2_norm_ctx.skip_element_fcn = NULL;
+
+  d4est_norms_Linfty_ctx_t Linfty_norm_ctx;
+  Linfty_norm_ctx.skip_element_fcn = NULL;
+
+  d4est_norms_energy_ctx_t energy_norm_ctx;
+  energy_norm_ctx.ghost = *ghost;
+  energy_norm_ctx.ghost_data = *ghost_data;
+  energy_norm_ctx.d4est_ops = d4est_ops;
+  energy_norm_ctx.d4est_geom = d4est_geom;
+  energy_norm_ctx.d4est_quad = d4est_quad;
+  energy_norm_ctx.d4est_factors = d4est_factors;
+  // These are set later
+  energy_norm_ctx.energy_norm_data = NULL;
+  energy_norm_ctx.energy_estimator_sq_local = -1.;
+  energy_norm_ctx.fit = NULL;
+
+
+  // TODO: Why call this here?
   d4est_xyz_fcn_t analytical_solutions[1] = { constant_density_star_analytic_solution };
   d4est_norms_save(
-     p4est,
-     *ghost,
-     *ghost_data,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     d4est_factors,
-     input_file,
-     (const char * []){"u", NULL},
-     (double * []){prob_vecs.u},
-     (double * []){NULL},
-     analytical_solutions,
-     &ctx,
-     NULL,
-     NULL,
-     -1,
-     NULL
-   );
+    p4est,
+    (const char * []){ "u", NULL },
+    (double * []){ prob_vecs.u },
+    (double * []){ NULL },
+    analytical_solutions,
+    &ctx,
+    (d4est_norms_fcn_t[]){ d4est_norms_fcn_L2, d4est_norms_fcn_Linfty, -1 },
+    (void * []){ &L2_norm_ctx, &Linfty_norm_ctx }
+  );
+
 
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
     
@@ -346,31 +363,27 @@ problem_init
     P4EST_FREE(error);
 
 
+    // Compute and save norms
+
     d4est_ip_energy_norm_data_t ip_norm_data;
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
 
-    
+    energy_norm_ctx.energy_norm_data = &ip_norm_data;
+    energy_norm_ctx.energy_estimator_sq_local = stats->total;
+    energy_norm_ctx.fit = NULL;
+
     d4est_norms_save(
-       p4est,
-       *ghost,
-       *ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       input_file,
-       (const char * []){"u", NULL},
-       (double * []){prob_vecs.u},
-       (double * []){NULL},
-       analytical_solutions,
-       &ctx,
-       NULL,
-       &ip_norm_data,
-       stats->total,
-       NULL
-     );    
+      p4est,
+      (const char * []){ "u", NULL },
+      (double * []){ prob_vecs.u },
+      (double * []){ NULL },
+      analytical_solutions,
+      &ctx,
+      (d4est_norms_fcn_t[]){ d4est_norms_fcn_L2, d4est_norms_fcn_Linfty, d4est_norms_fcn_energy, -1 },
+      (void * []){ &L2_norm_ctx, &Linfty_norm_ctx, &energy_norm_ctx }
+    );
 
     P4EST_FREE(stats);
 

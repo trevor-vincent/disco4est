@@ -155,6 +155,19 @@ problem_init
   prob_vecs.local_nodes = initial_nodes;
 
   d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
+  
+  
+  // Norm function contexts
+  
+  d4est_norms_L2_ctx_t L2_norm_ctx;
+  L2_norm_ctx.d4est_ops = d4est_ops;
+  L2_norm_ctx.d4est_geom = d4est_geom;
+  L2_norm_ctx.d4est_quad = d4est_quad;
+  L2_norm_ctx.skip_element_fcn = NULL;
+
+  d4est_norms_Linfty_ctx_t Linfty_norm_ctx;
+  Linfty_norm_ctx.skip_element_fcn = NULL;
+  
 
   d4est_amr_t* d4est_amr =
     d4est_amr_init
@@ -261,26 +274,16 @@ problem_init
 
 
     // Compute and save norms
-    
     d4est_xyz_fcn_t analytical_solutions[1] = { poisson_sinx_analytic_solution };
     d4est_norms_save(
       p4est,
-      *ghost,
-      *ghost_data,
-      d4est_ops,
-      d4est_geom,
-      d4est_quad,
-      d4est_factors,
-      input_file,
-      (const char * []){"u", NULL},
-      (double * []){prob_vecs.u},
-      (double * []){NULL},
+      (const char * []){ "u", NULL },
+      (double * []){ prob_vecs.u },
+      (double * []){ NULL },
       analytical_solutions,
       &ctx,
-      NULL,
-      NULL,
-      -1,
-      NULL
+      (d4est_norms_fcn_t[]){ d4est_norms_fcn_L2, d4est_norms_fcn_Linfty, -1 },
+      (void * []){ &L2_norm_ctx, &Linfty_norm_ctx }
     );
 
 

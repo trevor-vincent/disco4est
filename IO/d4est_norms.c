@@ -291,22 +291,13 @@ void
 d4est_norms_save
 (
   p4est_t *p4est,
-  p4est_ghost_t* ghost,
-  d4est_element_data_t* ghost_data,
-  d4est_operators_t* d4est_ops,
-  d4est_geometry_t* d4est_geom,
-  d4est_quadrature_t* d4est_quad,
-  d4est_mesh_data_t* d4est_factors,
-  const char *options_file,
   const char** field_names,
   double **field_values,
   double **field_values_compare,
   d4est_xyz_fcn_t *analytical_solutions,
   void *analytical_solution_ctx,
-  int (*skip_element_fcn)(d4est_element_data_t*),
-  d4est_ip_energy_norm_data_t* energy_norm_data,
-  double energy_estimator_sq_local,
-  d4est_norms_energy_norm_fit_t* fit
+  d4est_norms_fcn_t *norm_fcns,
+  void **norm_fcn_ctxs
 )
 {
   zlog_category_t *c_default = zlog_get_category("d4est_norms");
@@ -395,44 +386,67 @@ d4est_norms_save
     //     L_infty_local = error_i;
     // }
 
-    // Compute L_2 norm square
-    double L_2_sq_local = d4est_mesh_compute_l2_norm_sqr(
-      p4est,
-      d4est_ops,
-      d4est_geom,
-      d4est_quad,
-      field_value_errors,
-      num_nodes_local,
-      DO_NOT_STORE_LOCALLY,
-      skip_element_fcn,
-      NULL
-    );
-
-    // Compute L_infty norm
-    double L_infty_local = d4est_mesh_compute_linf(
-      p4est,
-      field_value_errors,
-      skip_element_fcn
-    );
-
-    // Compute energy norm square
+    int i_norm_fcns = -1;
+    double L_2_sq_local = -1.;
+    double L_infty_local = -1.;
     double energy_norm_sq_local = -1.;
-    if (energy_norm_data != NULL)
-      energy_norm_sq_local = d4est_ip_energy_norm_compute(
-        p4est,
-        field_value_errors,
-        energy_norm_data,
-        ghost,
-        ghost_data,
-        d4est_ops,
-        d4est_geom,
-        d4est_quad,
-        d4est_factors
-      );
+    d4est_norms_energy_ctx_t *energy_norm_ctx = NULL; // Need this for later
+    while (norm_fcns[++i_norm_fcns] != -1) {
+
+      if (norm_fcn_ctxs[i_norm_fcns] == NULL) {
+        zlog_error(c_default, "Attempted to compute a norm, but context to function is not provided.");
+        continue;
+      }
+
+      if (norm_fcns[i_norm_fcns] == d4est_norms_fcn_L2) {
+        
+        // Compute L_2 norm square
+        d4est_norms_L2_ctx_t *norm_fcn_ctx = norm_fcn_ctxs[i_norm_fcns];
+        L_2_sq_local = d4est_mesh_compute_l2_norm_sqr(
+          p4est,
+          norm_fcn_ctx->d4est_ops,
+          norm_fcn_ctx->d4est_geom,
+          norm_fcn_ctx->d4est_quad,
+          field_value_errors,
+          num_nodes_local,
+          DO_NOT_STORE_LOCALLY,
+          norm_fcn_ctx->skip_element_fcn,
+          NULL
+        );
+        
+      } else if (norm_fcns[i_norm_fcns] == d4est_norms_fcn_Linfty) {
+        
+        // Compute L_infty norm
+        d4est_norms_Linfty_ctx_t *norm_fcn_ctx = norm_fcn_ctxs[i_norm_fcns];
+        L_infty_local = d4est_mesh_compute_linf(
+          p4est,
+          field_value_errors,
+          norm_fcn_ctx->skip_element_fcn
+        );
+             
+      } else if (norm_fcns[i_norm_fcns] == d4est_norms_fcn_energy) {
+
+        // Compute energy norm square
+        d4est_norms_energy_ctx_t *norm_fcn_ctx = norm_fcn_ctxs[i_norm_fcns];
+        energy_norm_ctx = norm_fcn_ctx;
+        energy_norm_sq_local = d4est_ip_energy_norm_compute(
+          p4est,
+          field_value_errors,
+          norm_fcn_ctx->energy_norm_data,
+          norm_fcn_ctx->ghost,
+          norm_fcn_ctx->ghost_data,
+          norm_fcn_ctx->d4est_ops,
+          norm_fcn_ctx->d4est_geom,
+          norm_fcn_ctx->d4est_quad,
+          norm_fcn_ctx->d4est_factors
+        );
+
+      }
+    }
 
     // Store norms for reduce operation
     local_reduce_sum_double[i_field * num_reduce_quantities_sum_double] = L_2_sq_local;
-    local_reduce_sum_double[i_field * num_reduce_quantities_sum_double + 1] = energy_estimator_sq_local;
+    local_reduce_sum_double[i_field * num_reduce_quantities_sum_double + 1] = (energy_norm_ctx != NULL) ? energy_norm_ctx->energy_estimator_sq_local : -1.;
     local_reduce_sum_double[i_field * num_reduce_quantities_sum_double + 2] = energy_norm_sq_local;
     local_reduce_max[i_field] = L_infty_local;
 
@@ -491,10 +505,22 @@ d4est_norms_save
       double energy_estimator = (energy_estimator_sq < 0) ? -1. : sqrt(energy_estimator_sq);
       
       double energy_norm_sq = global_reduce_sum_double[i_field * num_reduce_quantities_sum_double + 2];
-      if(energy_norm_data != NULL && fit != NULL) {
-        d4est_norms_energy_norm_add_entry_and_fit(p4est, fit, energy_norm_sq, num_nodes);
-      }
       double energy_norm = (energy_norm_sq < 0) ? -1. : sqrt(energy_norm_sq);
+      // Also perform energy norm fit
+      int i_norm_fcns = -1;
+      while (norm_fcns[++i_norm_fcns] != -1) {
+        if (norm_fcns[i_norm_fcns] == d4est_norms_fcn_energy) {
+          d4est_norms_energy_ctx_t *energy_norm_ctx = NULL;
+          if (energy_norm_ctx != NULL && energy_norm_ctx->fit != NULL) {
+            d4est_norms_energy_norm_add_entry_and_fit(
+              p4est,
+              energy_norm_ctx->fit,
+              energy_norm_sq,
+              num_nodes
+            );
+          }
+        }
+      }
 
       // Write output
       char *norms_output_category;
