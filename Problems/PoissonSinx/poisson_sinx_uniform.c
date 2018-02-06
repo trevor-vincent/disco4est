@@ -262,32 +262,26 @@ problem_init
 
     // Compute and save norms
     
-    d4est_xyz_fcn_t analytical_solutions[2] = { poisson_sinx_analytic_solution };
+    d4est_xyz_fcn_t analytical_solutions[1] = { poisson_sinx_analytic_solution };
     d4est_norms_save(
-      input_file,
       p4est,
+      *ghost,
+      *ghost_data,
+      d4est_ops,
+      d4est_geom,
+      d4est_quad,
+      d4est_factors,
+      input_file,
       (const char * []){"u", NULL},
       (double * []){prob_vecs.u},
       (double * []){NULL},
       analytical_solutions,
-      &ctx
+      &ctx,
+      NULL,
+      NULL,
+      -1,
+      NULL
     );
-
-    // Keeping this for comparison for now
-    d4est_norms_norms_using_analytic_solution
-      (
-      p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-      d4est_factors,
-       *ghost,
-       *ghost_data,
-      -1.,
-       &prob_vecs,
-       NULL,
-       poisson_sinx_analytic_solution,
-      &ctx,NULL,NULL);
 
 
     // Perform the next AMR step

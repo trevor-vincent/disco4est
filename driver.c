@@ -64,9 +64,6 @@ int main(int argc, char *argv[])
   p4est_t* p4est;
   if (initial_grid_input->load_from_checkpoint == 0){
     
-    if (proc_rank == 0)
-      d4est_norms_write_header();
-    
     p4est = p4est_new_ext
     (
      mpicomm,

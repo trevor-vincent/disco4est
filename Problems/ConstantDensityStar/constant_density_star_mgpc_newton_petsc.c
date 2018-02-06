@@ -265,20 +265,26 @@ problem_init
   /*   ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h; */
   /*   ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor; */
 
-    d4est_norms_norms_using_analytic_solution
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       *ghost,
-       *ghost_data,
-       -1.,
-       &prob_vecs,
-       NULL,
-       constant_density_star_analytic_solution,
-       &ctx, NULL, NULL);
+  d4est_xyz_fcn_t analytical_solutions[1] = { constant_density_star_analytic_solution };
+  d4est_norms_save(
+     p4est,
+     *ghost,
+     *ghost_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     input_file,
+     (const char * []){"u", NULL},
+     (double * []){prob_vecs.u},
+     (double * []){NULL},
+     analytical_solutions,
+     &ctx,
+     NULL,
+     NULL,
+     -1,
+     NULL
+   );
 
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
     
@@ -346,21 +352,25 @@ problem_init
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
 
     
-    d4est_norms_norms_using_analytic_solution
-      (
-      p4est,
+    d4est_norms_save(
+       p4est,
+       *ghost,
+       *ghost_data,
        d4est_ops,
        d4est_geom,
        d4est_quad,
-      d4est_factors,
-       *ghost,
-       *ghost_data,
-      stats->total,
-       &prob_vecs,
+       d4est_factors,
+       input_file,
+       (const char * []){"u", NULL},
+       (double * []){prob_vecs.u},
+       (double * []){NULL},
+       analytical_solutions,
+       &ctx,
+       NULL,
        &ip_norm_data,
-       constant_density_star_analytic_solution,
-      &ctx,NULL,NULL);
-    
+       stats->total,
+       NULL
+     );    
 
     P4EST_FREE(stats);
 

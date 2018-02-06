@@ -290,13 +290,23 @@ d4est_norms_norms
 void
 d4est_norms_save
 (
-  const char *options_file,
   p4est_t *p4est,
+  p4est_ghost_t* ghost,
+  d4est_element_data_t* ghost_data,
+  d4est_operators_t* d4est_ops,
+  d4est_geometry_t* d4est_geom,
+  d4est_quadrature_t* d4est_quad,
+  d4est_mesh_data_t* d4est_factors,
+  const char *options_file,
   const char** field_names,
   double **field_values,
   double **field_values_compare,
   d4est_xyz_fcn_t *analytical_solutions,
-  void *analytical_solution_ctx
+  void *analytical_solution_ctx,
+  int (*skip_element_fcn)(d4est_element_data_t*),
+  d4est_ip_energy_norm_data_t* energy_norm_data,
+  double energy_estimator_sq_local,
+  d4est_norms_energy_norm_fit_t* fit
 )
 {
   zlog_category_t *c_default = zlog_get_category("d4est_norms");
@@ -309,20 +319,41 @@ d4est_norms_save
     continue;
 
   // Set up storage for reduce operation
-  int local_reduce_sum_int[1];
-  int global_reduce_sum_int[1];
-  double local_reduce_sum_double[num_fields];
-  double global_reduce_sum_double[num_fields];
+  int local_reduce_sum_int[2];
+  int global_reduce_sum_int[2];
+  int num_reduce_quantities_sum_double = 3;
+  double local_reduce_sum_double[num_fields * num_reduce_quantities_sum_double];
+  double global_reduce_sum_double[num_fields * num_reduce_quantities_sum_double];
   double local_reduce_max[num_fields];
   double global_reduce_max[num_fields];
 
   // Get number of nodes on local process
   int num_nodes_local = d4est_mesh_get_local_nodes(p4est);
   local_reduce_sum_int[0] = num_nodes_local;
+  local_reduce_sum_int[1] = d4est_mesh_get_local_quad_nodes(p4est);
+  // int local_nodes = 0;
+  // int local_quad_nodes = 0;
+  //
+  // for (p4est_topidx_t tt = p4est->first_local_tree;
+  //      tt <= p4est->last_local_tree;
+  //      ++tt)
+  //   {
+  //     p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+  //     sc_array_t* tquadrants = &tree->quadrants;
+  //     int Q = (p4est_locidx_t) tquadrants->elem_count;
+  //     for (int q = 0; q < Q; ++q) {
+  //       p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+  //       d4est_element_data_t* ed = quad->p.user_data;
+  //       local_nodes += d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+  //       local_quad_nodes += d4est_lgl_get_nodes((P4EST_DIM), ed->deg_vol_quad);
+  //     }
+  //   }
+
   
-  double *field_values_analytical = NULL; // Holds computed values when iterating through the fields, if no compare values were provided.
+  d4est_xyz_fcn_t analytical_solution_i = NULL; // Points to the provided function when iterating through the fields, if one is available.
+  double *field_values_analytical = NULL; // Holds computed analytical values when iterating through the fields, if no compare values were provided.
   double *field_values_compare_i = NULL; // Points to the compare values, either computed and stored in field_values_analytical, or provided by the function argument.
-  d4est_xyz_fcn_t analytical_solution_i = NULL; // Points to the provided function when iterating through the fields, if one is available,
+  double *field_value_errors = P4EST_ALLOC(double, num_nodes_local); // Holds the computed errors between values and compare values when iterating through the fields.
 
   // Collect local measure of norms
   for (int i_field = 0; i_field < num_fields; i_field++){
@@ -352,29 +383,69 @@ d4est_norms_save
       continue;
     }
 
-    double L_2_sq_local = 0;
-    double L_infty_local = 0;
-    // TODO: Use linalg:
-    // d4est_linalg_vec_axpyeqz(-1., u, u_analytic, error, local_nodes);
-    // d4est_linalg_vec_fabs(error, local_nodes);
-    for (int i = 0; i < num_nodes_local; i++){
-      double error_i = fabs(field_values[i_field][i] - field_values_compare_i[i]);
-      L_2_sq_local += pow(error_i, 2);
-      if (error_i > L_infty_local)
-        L_infty_local = error_i;
-    }
-    
-    local_reduce_sum_double[i_field] = L_2_sq_local;
+    // Compute errors
+    d4est_linalg_vec_axpyeqz(-1., field_values[i_field], field_values_compare_i, field_value_errors, num_nodes_local);
+    d4est_linalg_vec_fabs(field_value_errors, num_nodes_local);
+    // double L_2_sq_local = 0;
+    // double L_infty_local = 0;
+    // for (int i = 0; i < num_nodes_local; i++){
+    //   double error_i = fabs(field_values[i_field][i] - field_values_compare_i[i]);
+    //   L_2_sq_local += pow(error_i, 2) / num_nodes; // TODO: this yields slightly different results than d4est_mesh_compute_l2_norm_sqr (used below)
+    //   if (error_i > L_infty_local)
+    //     L_infty_local = error_i;
+    // }
+
+    // Compute L_2 norm square
+    double L_2_sq_local = d4est_mesh_compute_l2_norm_sqr(
+      p4est,
+      d4est_ops,
+      d4est_geom,
+      d4est_quad,
+      field_value_errors,
+      num_nodes_local,
+      DO_NOT_STORE_LOCALLY,
+      skip_element_fcn,
+      NULL
+    );
+
+    // Compute L_infty norm
+    double L_infty_local = d4est_mesh_compute_linf(
+      p4est,
+      field_value_errors,
+      skip_element_fcn
+    );
+
+    // Compute energy norm square
+    double energy_norm_sq_local = -1.;
+    if (energy_norm_data != NULL)
+      energy_norm_sq_local = d4est_ip_energy_norm_compute(
+        p4est,
+        field_value_errors,
+        energy_norm_data,
+        ghost,
+        ghost_data,
+        d4est_ops,
+        d4est_geom,
+        d4est_quad,
+        d4est_factors
+      );
+
+    // Store norms for reduce operation
+    local_reduce_sum_double[i_field * num_reduce_quantities_sum_double] = L_2_sq_local;
+    local_reduce_sum_double[i_field * num_reduce_quantities_sum_double + 1] = energy_estimator_sq_local;
+    local_reduce_sum_double[i_field * num_reduce_quantities_sum_double + 2] = energy_norm_sq_local;
     local_reduce_max[i_field] = L_infty_local;
+
   }
   P4EST_FREE(field_values_analytical);
+  P4EST_FREE(field_value_errors);
   
-  // Reduce over all processes
+  // Reduce over all parallel processes
   sc_reduce
     (
      &local_reduce_sum_int[0],
      &global_reduce_sum_int[0],
-     1,
+     2,
      sc_MPI_INT,
      sc_MPI_SUM,
      0,
@@ -384,7 +455,7 @@ d4est_norms_save
     (
      &local_reduce_sum_double[0],
      &global_reduce_sum_double[0],
-     num_fields,
+     num_fields * num_reduce_quantities_sum_double,
      sc_MPI_DOUBLE,
      sc_MPI_SUM,
      0,
@@ -401,23 +472,45 @@ d4est_norms_save
      sc_MPI_COMM_WORLD
     );
 
+  // Retrieve reduced quantities and write to output file
   if (p4est->mpirank == 0) {
     int num_nodes = global_reduce_sum_int[0];
+    int num_quad_nodes = global_reduce_sum_int[1];
+    
+    // Compute average degree
+    int avg_deg = pow(num_nodes / p4est->global_num_quadrants, 1. / (P4EST_DIM)) - 1.f + .5f;
+    int avg_deg_quad = pow(num_quad_nodes / p4est->global_num_quadrants, 1. / (P4EST_DIM)) - 1.f + .5f;
+
     for (int i_field = 0; i_field < num_fields; i_field++){
-      double L_2 = sqrt(global_reduce_sum_double[i_field] / num_nodes);
+      
+      double L_2 = sqrt(global_reduce_sum_double[i_field * num_reduce_quantities_sum_double]);
+
       double L_infty = global_reduce_max[i_field];
+
+      double energy_estimator_sq = global_reduce_sum_double[i_field * num_reduce_quantities_sum_double + 1];
+      double energy_estimator = (energy_estimator_sq < 0) ? -1. : sqrt(energy_estimator_sq);
+      
+      double energy_norm_sq = global_reduce_sum_double[i_field * num_reduce_quantities_sum_double + 2];
+      if(energy_norm_data != NULL && fit != NULL) {
+        d4est_norms_energy_norm_add_entry_and_fit(p4est, fit, energy_norm_sq, num_nodes);
+      }
+      double energy_norm = (energy_norm_sq < 0) ? -1. : sqrt(energy_norm_sq);
 
       // Write output
       char *norms_output_category;
       asprintf(&norms_output_category, "norms_%s", field_names[i_field]);
       zlog_category_t *c_norms_output = zlog_get_category(norms_output_category);
       free(norms_output_category);
-      // num_quadrants num_nodes L_2 L_infty energy_norm_estimator energy_norm
-      zlog_info(c_norms_output, "%d %d %.25f %.25f",
+      zlog_info(c_norms_output, "%d %d %d %d %d %.25f %.25f %.25f %.25f",
         (int)p4est->global_num_quadrants,
         num_nodes,
+        avg_deg,
+        num_quad_nodes,
+        avg_deg_quad,
         L_2,
-        L_infty
+        L_infty,
+        energy_estimator,
+        energy_norm
       );
     }
     zlog_debug(c_default, "Completed computing norms.");

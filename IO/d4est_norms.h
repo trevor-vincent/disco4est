@@ -43,6 +43,6 @@ void d4est_norms_energy_norm_add_entry_and_fit(p4est_t *p4est,d4est_norms_energy
 void d4est_norms_energy_norm_fit(p4est_t *p4est,d4est_norms_energy_norm_fit_t *fit);
 void d4est_norms_write_header();
 void d4est_norms_write_headers(const char* options_file,const char** field_names);
-void d4est_norms_save(const char* options_file,p4est_t *p4est,const char** field_names,double** field_values,double** field_values_compare,d4est_xyz_fcn_t *analytical_solution,void* analytical_solution_ctx);
+void d4est_norms_save(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,const char* options_file,const char** field_names,double** field_values,double** field_values_compare,d4est_xyz_fcn_t *analytical_solution,void* analytical_solution_ctx,int (*skip_element_fcn)(d4est_element_data_t*),d4est_ip_energy_norm_data_t* energy_norm_data,double energy_estimator_sq_local,d4est_norms_energy_norm_fit_t* fit);
 
 #endif
