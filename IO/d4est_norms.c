@@ -93,8 +93,9 @@ d4est_norms_energy_norm_fit
      fit->stride
     );
 
-  if (p4est->mpirank == 0){
-    printf("[D4EST_OUTPUT_FIT](2): C1 = %f, C2 = %.15f\n", intercept, slope);
+  if (p4est->mpirank == 0) {
+    zlog_category_t *c_default = zlog_get_category("d4est_norms_energy_fit");
+    zlog_info(c_default, "(2): C1 = %f, C2 = %.15f", intercept, slope);
   }
 }
 
@@ -113,8 +114,9 @@ d4est_norms_energy_norm_add_entry_and_fit
 
     if (fit->stride >= 2){
       if (p4est->mpirank == 0){
-        printf("[D4EST_OUTPUT_FIT](1): ||err|| = C1*exp(C2*DOF^(1/%d))\n",2*(P4EST_DIM)-1);
-        printf("[D4EST_OUTPUT_FIT](1): ||err|| = %.15f\n",sqrt(global_energy_norm_sqr));
+        zlog_category_t *c_default = zlog_get_category("d4est_norms_energy_fit");
+        zlog_info(c_default, "(1): ||err|| = C1*exp(C2*DOF^(1/%d))", 2*(P4EST_DIM)-1);
+        zlog_info(c_default, "(1): ||err|| = %.15f", sqrt(global_energy_norm_sqr));
       }
       d4est_norms_energy_norm_fit(p4est,fit);
     }
@@ -133,7 +135,7 @@ d4est_norms_destroy_energy_norm_fit
 }
 
 d4est_norms_norms_t
-d4est_norms_norms
+d4est_norms_norms // TODO: Remove, superseded by `d4est_norms_save`
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,

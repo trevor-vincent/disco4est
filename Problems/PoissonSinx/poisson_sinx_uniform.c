@@ -274,13 +274,12 @@ problem_init
 
 
     // Compute and save norms
-    d4est_xyz_fcn_t analytical_solutions[1] = { poisson_sinx_analytic_solution };
     d4est_norms_save(
       p4est,
       (const char * []){ "u", NULL },
       (double * []){ prob_vecs.u },
       (double * []){ NULL },
-      analytical_solutions,
+      (d4est_xyz_fcn_t[]){ poisson_sinx_analytic_solution },
       &ctx,
       (d4est_norms_fcn_t[]){ d4est_norms_fcn_L2, d4est_norms_fcn_Linfty, -1 },
       (void * []){ &L2_norm_ctx, &Linfty_norm_ctx }

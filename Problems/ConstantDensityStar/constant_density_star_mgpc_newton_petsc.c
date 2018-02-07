@@ -290,13 +290,12 @@ problem_init
 
 
   // TODO: Why call this here?
-  d4est_xyz_fcn_t analytical_solutions[1] = { constant_density_star_analytic_solution };
   d4est_norms_save(
     p4est,
     (const char * []){ "u", NULL },
     (double * []){ prob_vecs.u },
     (double * []){ NULL },
-    analytical_solutions,
+    (d4est_xyz_fcn_t []){ constant_density_star_analytic_solution },
     &ctx,
     (d4est_norms_fcn_t[]){ d4est_norms_fcn_L2, d4est_norms_fcn_Linfty, -1 },
     (void * []){ &L2_norm_ctx, &Linfty_norm_ctx }
@@ -373,13 +372,15 @@ problem_init
     energy_norm_ctx.energy_norm_data = &ip_norm_data;
     energy_norm_ctx.energy_estimator_sq_local = stats->total;
     energy_norm_ctx.fit = NULL;
+    energy_norm_ctx.ghost = *ghost;
+    energy_norm_ctx.ghost_data = *ghost_data;
 
     d4est_norms_save(
       p4est,
       (const char * []){ "u", NULL },
       (double * []){ prob_vecs.u },
       (double * []){ NULL },
-      analytical_solutions,
+      (d4est_xyz_fcn_t []){ constant_density_star_analytic_solution },
       &ctx,
       (d4est_norms_fcn_t[]){ d4est_norms_fcn_L2, d4est_norms_fcn_Linfty, d4est_norms_fcn_energy, -1 },
       (void * []){ &L2_norm_ctx, &Linfty_norm_ctx, &energy_norm_ctx }
