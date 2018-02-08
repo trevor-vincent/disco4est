@@ -1346,7 +1346,7 @@ d4est_mesh_compute_l2_norm_sqr
 
 
 double
-d4est_mesh_compute_linf
+d4est_mesh_compute_linf // TODO: remove
 (
  p4est_t* p4est,
  double* nodal_vec,

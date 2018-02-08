@@ -105,19 +105,19 @@ int main(int argc, char *argv[])
    
 
   if (proc_rank == 0 && initial_grid_input->load_from_checkpoint == 0){
-    zlog_info(c_default, "min_quadrants = %d", initial_grid_input->min_quadrants);
-    zlog_info(c_default, "min_level = %d", initial_grid_input->min_level);
-    zlog_info(c_default, "fill_uniform = %d", initial_grid_input->fill_uniform);
+    zlog_debug(c_default, "min_quadrants = %d", initial_grid_input->min_quadrants);
+    zlog_debug(c_default, "min_level = %d", initial_grid_input->min_level);
+    zlog_debug(c_default, "fill_uniform = %d", initial_grid_input->fill_uniform);
   }
   
   sc_MPI_Barrier(mpicomm);
-  zlog_info(c_default, "elements on proc %d = %d", proc_rank, p4est->local_num_quadrants);
+  zlog_debug(c_default, "elements on proc %d = %d", proc_rank, p4est->local_num_quadrants);
   sc_MPI_Barrier(mpicomm);
   
   /* start just-in-time dg-math */
   d4est_operators_t* d4est_ops = d4est_ops_init(20);
   d4est_mesh_data_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
-  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature", "[QUADRATURE]");
+  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature");
   
   initial_grid_input->initial_nodes = d4est_mesh_update
                                (

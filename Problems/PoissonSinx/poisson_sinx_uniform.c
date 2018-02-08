@@ -160,14 +160,11 @@ problem_init
   // Norm function contexts
   
   d4est_norms_L2_ctx_t L2_norm_ctx;
+  L2_norm_ctx.p4est = p4est;
   L2_norm_ctx.d4est_ops = d4est_ops;
   L2_norm_ctx.d4est_geom = d4est_geom;
   L2_norm_ctx.d4est_quad = d4est_quad;
-  L2_norm_ctx.skip_element_fcn = NULL;
 
-  d4est_norms_Linfty_ctx_t Linfty_norm_ctx;
-  Linfty_norm_ctx.skip_element_fcn = NULL;
-  
 
   d4est_amr_t* d4est_amr =
     d4est_amr_init
@@ -210,11 +207,11 @@ problem_init
 
   if (p4est->mpirank == 0)
     d4est_norms_write_headers(
-      input_file,
-      (const char * []){"u", NULL}
+      (const char * []){"u", NULL},
+      (const char * []){"L_2", "L_infty", NULL}
     );
 
-  for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
+  for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; level++){
 
     krylov_petsc_params_t krylov_petsc_params;
     krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
@@ -271,8 +268,7 @@ problem_init
 
     P4EST_FREE(u_analytic);
     P4EST_FREE(error);
-
-
+    
     // Compute and save norms
     d4est_norms_save(
       p4est,
@@ -280,9 +276,10 @@ problem_init
       (double * []){ prob_vecs.u },
       (double * []){ NULL },
       (d4est_xyz_fcn_t[]){ poisson_sinx_analytic_solution },
-      &ctx,
-      (d4est_norms_fcn_t[]){ d4est_norms_fcn_L2, d4est_norms_fcn_Linfty, -1 },
-      (void * []){ &L2_norm_ctx, &Linfty_norm_ctx }
+      (void * []) { &ctx },
+      (const char * []){"L_2", "L_infty", NULL},
+      (d4est_norm_fcn_t[]){ &d4est_norms_L2, &d4est_norms_Linfty },
+      (void * []){ &L2_norm_ctx, NULL }
     );
 
 

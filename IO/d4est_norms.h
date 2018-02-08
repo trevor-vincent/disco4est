@@ -21,29 +21,19 @@ typedef struct {
   
 } d4est_norms_energy_norm_fit_t;
 
-typedef enum {
-  d4est_norms_fcn_L2,
-  d4est_norms_fcn_Linfty,
-  d4est_norms_fcn_energy
-} d4est_norms_fcn_t;
 
 typedef struct {
 
+  p4est_t *p4est;
   d4est_operators_t* d4est_ops;
   d4est_geometry_t* d4est_geom;
   d4est_quadrature_t* d4est_quad;
-  int (*skip_element_fcn)(d4est_element_data_t*);
   
 } d4est_norms_L2_ctx_t;
 
 typedef struct {
 
-  int (*skip_element_fcn)(d4est_element_data_t*);
-
-} d4est_norms_Linfty_ctx_t;
-
-typedef struct {
-
+  p4est_t *p4est;
   p4est_ghost_t* ghost;
   d4est_element_data_t* ghost_data;
   d4est_operators_t* d4est_ops;
@@ -56,6 +46,16 @@ typedef struct {
   d4est_norms_energy_norm_fit_t* fit;
 
 } d4est_norms_energy_ctx_t;
+
+
+typedef double
+(*d4est_norm_fcn_t)
+(
+  double *field_value_errors,
+  int num_nodes_local,
+  void *ctx
+);
+
 
 typedef struct {
 
@@ -72,13 +72,18 @@ typedef struct {
 
 
 /* This file was automatically generated.  Do not edit! */
+double d4est_norms_L2(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
+double d4est_norms_Linfty(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
+double d4est_norms_energy(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
+double d4est_norms_energy_estimator(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
+
 void d4est_norms_norms_using_analytic_solution(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,double local_estimator,d4est_elliptic_data_t *prob_vecs,d4est_ip_energy_norm_data_t *energy_norm_data,d4est_xyz_fcn_t analytic_solution,void *ctx,d4est_norms_energy_norm_fit_t *fit,int(*skip_element_fcn)(d4est_element_data_t *));
 d4est_norms_norms_t d4est_norms_norms(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_ip_energy_norm_data_t *energy_norm_data,double estimator,double *error,d4est_norms_energy_norm_fit_t *fit,int(*skip_element_fcn)(d4est_element_data_t *));
 void d4est_norms_destroy_energy_norm_fit(d4est_norms_energy_norm_fit_t *fit);
 void d4est_norms_energy_norm_add_entry_and_fit(p4est_t *p4est,d4est_norms_energy_norm_fit_t *fit,double global_energy_norm_sqr,double global_dof);
 void d4est_norms_energy_norm_fit(p4est_t *p4est,d4est_norms_energy_norm_fit_t *fit);
 void d4est_norms_write_header();
-void d4est_norms_write_headers(const char* options_file,const char** field_names);
-void d4est_norms_save(p4est_t *p4est,const char** field_names,double** field_values,double** field_values_compare,d4est_xyz_fcn_t *analytical_solution,void* analytical_solution_ctx,d4est_norms_fcn_t *norm_fcns,void **norm_fcn_ctxs);
+void d4est_norms_write_headers(const char** field_names,const char** norm_names);
+void d4est_norms_save(p4est_t *p4est,const char** field_names,double** field_values,double** field_values_compare,d4est_xyz_fcn_t *analytical_solution,void** analytical_solution_ctxs,const char** norm_names,d4est_norm_fcn_t *norm_fcns,void **norm_fcn_ctxs);
 
 #endif

@@ -318,9 +318,9 @@ d4est_geometry_5treedisk_new
   d4est_geom->JAC = NULL;
   
   if (mpirank == 0){
-    zlog_info(c_default, "NAME = 5treedisk");
-    zlog_info(c_default, "R0 = %.25f", input->R0);
-    zlog_info(c_default, "R1 = %.25f", input->R1);
+    zlog_debug(c_default, "NAME = 5treedisk");
+    zlog_debug(c_default, "R0 = %.25f", input->R0);
+    zlog_debug(c_default, "R1 = %.25f", input->R1);
   }
 }
 
@@ -511,9 +511,9 @@ d4est_geometry_disk_outer_wedge_new
 
 
   if (mpirank == 0){
-    zlog_info(c_default, "NAME = disk_outer_wedge");
-    zlog_info(c_default, "R1 = %.25f", input->R1);
-    zlog_info(c_default, "R2 = %.25f", input->R2);
-    zlog_info(c_default, "compactify outer wedge = %d", input->compactify_outer_wedge);
+    zlog_debug(c_default, "NAME = disk_outer_wedge");
+    zlog_debug(c_default, "R1 = %.25f", input->R1);
+    zlog_debug(c_default, "R2 = %.25f", input->R2);
+    zlog_debug(c_default, "compactify outer wedge = %d", input->compactify_outer_wedge);
   }
 }

@@ -236,14 +236,14 @@ d4est_geometry_brick_new
   d4est_geom->get_number_of_regions = d4est_geometry_brick_get_number_of_regions;
   
   if (mpirank == 0){
-    zlog_info(c_default, "NAME = brick in %d-D", (P4EST_DIM));
-    zlog_info(c_default, "X0 = %.25f", brick_attrs->X0);
-    zlog_info(c_default, "X1 = %.25f", brick_attrs->X1);
-    zlog_info(c_default, "YO = %.25f", brick_attrs->Y0);
-    zlog_info(c_default, "Y1 = %.25f", brick_attrs->Y1);
+    zlog_debug(c_default, "NAME = brick in %d-D", (P4EST_DIM));
+    zlog_debug(c_default, "X0 = %.25f", brick_attrs->X0);
+    zlog_debug(c_default, "X1 = %.25f", brick_attrs->X1);
+    zlog_debug(c_default, "YO = %.25f", brick_attrs->Y0);
+    zlog_debug(c_default, "Y1 = %.25f", brick_attrs->Y1);
 #if (P4EST_DIM)==3
-    zlog_info(c_default, "Z0 = %.25f", brick_attrs->Z0);
-    zlog_info(c_default, "Z1 = %.25f", brick_attrs->Z1);
+    zlog_debug(c_default, "Z0 = %.25f", brick_attrs->Z0);
+    zlog_debug(c_default, "Z1 = %.25f", brick_attrs->Z1);
 #endif
   }
 }

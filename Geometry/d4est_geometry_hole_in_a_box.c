@@ -205,10 +205,10 @@ d4est_geometry_hole_in_a_box_new
   d4est_geom->get_region = d4est_geometry_hole_in_a_box_get_region;
   
   if (mpirank == 0){
-    zlog_info(c_default, "NAME = hole in a box\n" );
-    zlog_info(c_default, "inner radius = %.25f\n", hiab_attrs->inner_radius);
-    zlog_info(c_default, "box length = %.25f\n", hiab_attrs->box_length);
-    zlog_info(c_default, "zmin = %.25f\n", hiab_attrs->zmin);
-    zlog_info(c_default, "zmax = %.25f\n", hiab_attrs->zmax);
+    zlog_debug(c_default, "NAME = hole in a box\n" );
+    zlog_debug(c_default, "inner radius = %.25f\n", hiab_attrs->inner_radius);
+    zlog_debug(c_default, "box length = %.25f\n", hiab_attrs->box_length);
+    zlog_debug(c_default, "zmin = %.25f\n", hiab_attrs->zmin);
+    zlog_debug(c_default, "zmax = %.25f\n", hiab_attrs->zmax);
   }
 }

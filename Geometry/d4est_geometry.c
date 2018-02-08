@@ -109,13 +109,13 @@ d4est_geometry_input
   if(mpirank == 0){
     zlog_info(c_default, "Loading %s geometry", input.name);
   if (input.DX_compute_method == GEOM_COMPUTE_NUMERICAL)
-    zlog_info(c_default, "Dx computation method = %s", "numerical");
+    zlog_debug(c_default, "Dx computation method = %s", "numerical");
   if (input.DX_compute_method == GEOM_COMPUTE_ANALYTIC)
-    zlog_info(c_default, "Dx computation method = %s", "analytic");
+    zlog_debug(c_default, "Dx computation method = %s", "analytic");
   if (input.JAC_compute_method == GEOM_COMPUTE_NUMERICAL)
-    zlog_info(c_default, "JAC computation method = %s", "numerical");
+    zlog_debug(c_default, "JAC computation method = %s", "numerical");
   if (input.JAC_compute_method == GEOM_COMPUTE_ANALYTIC)
-    zlog_info(c_default, "JAC computation method = %s", "analytic");
+    zlog_debug(c_default, "JAC computation method = %s", "analytic");
   }
   return input;
 }

@@ -1649,12 +1649,12 @@ d4est_geometry_cubed_sphere_new
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
   
   if (mpirank == 0){
-    zlog_info(c_default, "NAME = cubed sphere");
-    zlog_info(c_default, "R0 = %.25f", sphere_attrs->R0);
-    zlog_info(c_default, "R1 = %.25f", sphere_attrs->R1);
-    zlog_info(c_default, "R2 = %.25f", sphere_attrs->R2);
-    zlog_info(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
-    zlog_info(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "R2 = %.25f", sphere_attrs->R2);
+    zlog_debug(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1681,10 +1681,10 @@ d4est_geometry_cubed_sphere_7tree_new
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
 
   if (mpirank == 0){
-    zlog_info(c_default, "NAME = cubed sphere (7 tree)");
-    zlog_info(c_default, "R0 = %.25f", sphere_attrs->R0);
-    zlog_info(c_default, "R1 = %.25f", sphere_attrs->R1);
-    zlog_info(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere (7 tree)");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1712,12 +1712,12 @@ d4est_geometry_cubed_sphere_innerouter_shell_new
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
   
   if (mpirank == 0){
-    zlog_info(c_default, "NAME = cubed sphere innerouter shell");
-    zlog_info(c_default, "R0 = %.25f", sphere_attrs->R0);
-    zlog_info(c_default, "R1 = %.25f", sphere_attrs->R1);
-    zlog_info(c_default, "R2 = %.25f", sphere_attrs->R2);
-    zlog_info(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
-    zlog_info(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere innerouter shell");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "R2 = %.25f", sphere_attrs->R2);
+    zlog_debug(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1746,10 +1746,10 @@ d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_re
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
 
   if (mpirank == 0){
-    zlog_info(c_default, "NAME = cubed sphere inner shell block");
-    zlog_info(c_default, "R0 = %.25f", sphere_attrs->R0);
-    zlog_info(c_default, "R1 = %.25f", sphere_attrs->R1);
-    zlog_info(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere inner shell block");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1788,10 +1788,10 @@ d4est_geometry_cubed_sphere_outer_shell_block_new
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
   
   if (mpirank == 0){
-    zlog_info(c_default, "NAME = cubed sphere outer shell block");
-    zlog_info(c_default, "R0 = %.25f", sphere_attrs->R0);
-    zlog_info(c_default, "R1 = %.25f", sphere_attrs->R1);
-    zlog_info(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
+    zlog_debug(c_default, "NAME = cubed sphere outer shell block");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
   }
 }
 
@@ -1817,12 +1817,12 @@ which_tree == 12 will never occur */
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   
   if (mpirank == 0){
-    zlog_info(c_default, "NAME = cubed sphere with cube hole");
-    zlog_info(c_default, "R0 = %.25f", sphere_attrs->R0);
-    zlog_info(c_default, "R1 = %.25f", sphere_attrs->R1);
-    zlog_info(c_default, "R2 = %.25f", sphere_attrs->R2);
-    zlog_info(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
-    zlog_info(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere with cube hole");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "R2 = %.25f", sphere_attrs->R2);
+    zlog_debug(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1850,11 +1850,11 @@ d4est_geometry_cubed_sphere_with_sphere_hole_new
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
   
   if (mpirank == 0){
-    zlog_info(c_default, "NAME = cubed sphere with sphere hole");
-    zlog_info(c_default, "R0 = %.25f", sphere_attrs->R0);
-    zlog_info(c_default, "R1 = %.25f", sphere_attrs->R1);
-    zlog_info(c_default, "R2 = %.25f", sphere_attrs->R2);
-    zlog_info(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
-    zlog_info(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere with sphere hole");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "R2 = %.25f", sphere_attrs->R2);
+    zlog_debug(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
