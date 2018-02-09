@@ -1,9 +1,10 @@
 #ifndef D4EST_GEOMETRY_H
-#define D4EST_GEOMETRY_H 
+#define D4EST_GEOMETRY_H
 
 #include <p8est_connectivity.h>
 #include <pXest.h>
 #include <d4est_operators.h>
+#include <zlog.h>
 
 
 /** This object encapsulates a custom geometry transformation. */
@@ -58,7 +59,7 @@ typedef enum {GEOM_CUBED_SPHERE_13TREE,
 * coords used by p4est, which represent points in the tree in the cube [0, P4EST_ROOT_LEN]^DIM
 * where P4EST_ROOT_LEN is some big integer. These coords are stored as integers.
 * The second is COORDS_TREE_UNITCUBE which are stored as dbls in the range [0,1]^DIM
-* 
+*
 */
 
 typedef enum {COORDS_INTEG_RST, COORDS_P4EST_INT, COORDS_TREE_UNITCUBE} coords_type_t;
@@ -142,7 +143,7 @@ void d4est_geometry_compute_dxyz_drst_analytic(d4est_operators_t *d4est_ops,d4es
 void d4est_geometry_quadtree_to_vertex(p4est_connectivity_t *connectivity,p4est_topidx_t which_tree,const double abc[3],double xyz[3]);
 void d4est_geometry_octree_to_vertex(p8est_connectivity_t *connectivity,p4est_topidx_t which_tree,const double abc[3],double xyz[3]);
 void d4est_geometry_destroy(d4est_geometry_t *d4est_geom);
-d4est_geometry_t *d4est_geometry_new(int mpirank,const char *input_file,const char *input_section,const char *printf_prefix);
+d4est_geometry_t *d4est_geometry_new(int mpirank,const char *input_file,const char *input_section,zlog_category_t *c_default);
 
 #endif
 

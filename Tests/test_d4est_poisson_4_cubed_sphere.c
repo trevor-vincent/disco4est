@@ -14,6 +14,8 @@
 #include <d4est_poisson_flux.h>
 #include <d4est_util.h>
 #include <limits.h>
+#include <zlog.h>
+
 
 #define D4EST_REAL_EPS 100*1e-15
 #define TEST_DEG_INIT 2
@@ -102,7 +104,7 @@ problem_build_p4est
  sc_MPI_Comm mpicomm,
  p4est_connectivity_t* conn,
  p4est_locidx_t min_quadrants,
- int min_level, 
+ int min_level,
  int fill_uniform
 )
 {
@@ -368,10 +370,10 @@ test_d4est_poisson_2_brick_interface_old_style
   double* lifted_proj_M_integrand_quad_lobatto = P4EST_ALLOC(double, total_volume_nodes_m_lobatto);
 
   printf("\nMORTAR DATA\n");
-  printf("faces_m = %d\n", faces_m); 
-  printf("f_m = %d\n", f_m); 
-  printf("faces_p = %d\n", faces_p); 
-  printf("f_p = %d\n", f_p); 
+  printf("faces_m = %d\n", faces_m);
+  printf("f_m = %d\n", f_m);
+  printf("faces_p = %d\n", faces_p);
+  printf("f_p = %d\n", f_p);
     
 
   int stride_lobatto = 0;
@@ -430,7 +432,7 @@ test_d4est_poisson_2_brick_interface_old_style
     P4EST_FREE(lifted_proj_M_integrand_quad_lobatto);
     P4EST_FREE(proj_integrand_lobatto);
     P4EST_FREE(M_proj_integrand_lobatto);
-    P4EST_FREE(lifted_M_proj_integrand_lobatto);   
+    P4EST_FREE(lifted_M_proj_integrand_lobatto);
     P4EST_FREE(integrand_quad);
     P4EST_FREE(M_integrand_quad_lobatto);
     P4EST_FREE(M_integrand_lobatto);
@@ -612,7 +614,7 @@ test_d4est_poisson_2_brick_on_interfaces
   data->boundary_term_1_err = 0.;
   data->interface_term_1_err = 0.;
 
-  d4est_poisson_flux_sipg_params_t* d4est_poisson_flux_sipg_params = P4EST_ALLOC(d4est_poisson_flux_sipg_params_t, 1); 
+  d4est_poisson_flux_sipg_params_t* d4est_poisson_flux_sipg_params = P4EST_ALLOC(d4est_poisson_flux_sipg_params_t, 1);
   d4est_poisson_flux_sipg_params_input(p4est, "flux", "test_d4est_poisson_2_brick.input", d4est_poisson_flux_sipg_params);
 
   data->sipg_params = d4est_poisson_flux_sipg_params;
@@ -666,10 +668,11 @@ int main(int argc, char *argv[])
   /*  */
   const char* input_file = "test_d4est_poisson_4_cubed_sphere.input";
   
+  zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                      input_file,
                                                     "geometry",
-                                                    "[D4EST_GEOMETRY]");
+                                                    c_geom);
 
   
   p4est_t* p4est = problem_build_p4est
@@ -698,7 +701,6 @@ int main(int argc, char *argv[])
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
                                           input_file,
-                                          "[TEST_D4EST_POISSON_2_BRICK]:",
                                           NULL
   );
 
@@ -801,8 +803,8 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
-  d4est_poisson_flux_destroy(flux_data);  
-  d4est_poisson_flux_destroy(flux_data_with_bc);  
+  d4est_poisson_flux_destroy(flux_data);
+  d4est_poisson_flux_destroy(flux_data_with_bc);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);

@@ -5,6 +5,8 @@
 #include <d4est_util.h>
 #include <d4est_geometry_cubed_sphere.h>
 #include <d4est_connectivity_cubed_sphere.h>
+#include <zlog.h>
+
 
 static
 int d4est_geometry_cubed_sphere_get_number_of_regions
@@ -37,7 +39,7 @@ int d4est_geometry_cubed_sphere_get_region
     }
     else {           /* center cube */
       return 1;
-    }  
+    }
   }
   else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_13TREE){
     if (tree < 6) {         /* outer shell */
@@ -48,7 +50,7 @@ int d4est_geometry_cubed_sphere_get_region
     }
     else {                  /* center cube */
       return 2;
-    }  
+    }
   }
   else {
     D4EST_ABORT("Not supported yet");
@@ -215,7 +217,7 @@ void d4est_geometry_cubed_sphere_inner_shell_block_X(
   
 /* } */
 
-static void 
+static void
 d4est_geometry_cubed_sphere_outer_shell_block_X_aux(
                                                     int compactify_outer_shell,
                                                     double R1,
@@ -247,7 +249,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_X_aux(
   else {
     R = R1*(2. - abc[2]) + R2*(abc[2] - 1.);
   }
-  double q = R / sqrt (x * x + y * y + 1.);  
+  double q = R / sqrt (x * x + y * y + 1.);
   xyz[0] = +q * x;
   xyz[1] = +q * y;
   xyz[2] = +q;
@@ -255,7 +257,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_X_aux(
 }
 
 
-static void 
+static void
 d4est_geometry_cubed_sphere_outer_shell_block_X(
                                                 d4est_geometry_t * d4est_geom,
                                                 p4est_topidx_t which_tree,
@@ -329,7 +331,7 @@ d4est_geometry_cubed_sphere_X(
     tany = tan (abc[1] * M_PI_4);
     x = p * abc[0] + (1. - p) * tanx;
     y = p * abc[1] + (1. - p) * tany;
-    R = sphere->R0*(2. - abc[2]) + sphere->R1*(abc[2] - 1.);    
+    R = sphere->R0*(2. - abc[2]) + sphere->R1*(abc[2] - 1.);
     q = R / sqrt (1. + (1. - p) * (tanx * tanx + tany * tany) + 2. * p);
   }
   else {                        /* center cube */
@@ -338,7 +340,7 @@ d4est_geometry_cubed_sphere_X(
     xyz[2] = abc[2] * sphere->Clength;
 
     return;
-  }  
+  }
   switch (which_tree % 6) {
   case 0:                      /* front */
     xyz[0] = +q * x;
@@ -431,7 +433,7 @@ d4est_geometry_cubed_sphere_with_sphere_hole_X(
     xyz[2] = abc[2] * sphere->Clength;
 
     return;
-  }  
+  }
   switch (which_tree % 6) {
   case 0:                      /* front */
     xyz[0] = +q * x;
@@ -512,7 +514,7 @@ d4est_geometry_cubed_sphere_7tree_X(
     xyz[2] = abc[2] * sphere->Clength;
 
     return;
-  }  
+  }
   switch (which_tree % 6) {
   case 0:                      /* front */
     xyz[0] = +q * x;
@@ -588,7 +590,7 @@ d4est_geometry_cubed_sphere_inner_shell_block_DX(d4est_geometry_t* d4est_geom,
   bmin = 2.*bmin - 1.;
   bmax = 2.*bmax - 1.;
   cmin = cmin + 1.;
-  cmax = cmax + 1.;  
+  cmax = cmax + 1.;
 
   /* FROM MATHEMATICA */
   
@@ -1035,7 +1037,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_DX_aux(int compactify_outer_shell,
   bmin = 2.*bmin - 1.;
   bmax = 2.*bmax - 1.;
   cmin = cmin + 1.;
-  cmax = cmax + 1.;  
+  cmax = cmax + 1.;
   
   if(compactify_outer_shell){
     dxyz_drst[0][0] = ((amax - amin)*M_PI*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(4.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
@@ -1058,7 +1060,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_DX_aux(int compactify_outer_shell,
     dxyz_drst[2][0] = ((amax - amin)*M_PI*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
     dxyz_drst[2][1] = ((bmax - bmin)*M_PI*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
     dxyz_drst[2][2] = -((cmax - cmin)*(R1 - R2))/(2.*sqrt(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
-  } 
+  }
 }
 
 
@@ -1207,7 +1209,7 @@ d4est_geometry_cubed_sphere_DX_aux_rotate
    for (int d = 0; d < (P4EST_DIM); d++){
      dxyz_drst[0][d] = -dxyz_drst_top[1][d];
      dxyz_drst[1][d] = -dxyz_drst_top[0][d];
-     dxyz_drst[2][d] = -dxyz_drst_top[2][d];      
+     dxyz_drst[2][d] = -dxyz_drst_top[2][d];
    }
    break;
  case 5:                      /* left */
@@ -1284,7 +1286,7 @@ d4est_geometry_cubed_sphere_X_aux_rotate
    for (int d = 0; d < (P4EST_DIM); d++){
      xyz[0] = -xyz_top[1];
      xyz[1] = -xyz_top[0];
-     xyz[2] = -xyz_top[2];      
+     xyz[2] = -xyz_top[2];
    }
    break;
  case 5:                      /* left */
@@ -1366,9 +1368,9 @@ d4est_geometry_cubed_sphere_DX(d4est_geometry_t* d4est_geom,
     cmin = 2.*Clength*cmin - Clength;
     cmax = 2.*Clength*cmax - Clength;
 
-    /* x = (amax-amin)*(r+1)/2 + amin */    
-    /* y = (bmax-bmin)*(s+1)/2 + bmin */    
-    /* z = (cmax-cmin)*(t+1)/2 + cmin */    
+    /* x = (amax-amin)*(r+1)/2 + amin */
+    /* y = (bmax-bmin)*(s+1)/2 + bmin */
+    /* z = (cmax-cmin)*(t+1)/2 + cmin */
     dxyz_drst[0][0] = .5*(amax - amin);
     dxyz_drst[1][1] = .5*(bmax - bmin);
     dxyz_drst[2][2] = .5*(cmax - cmin);
@@ -1630,7 +1632,7 @@ d4est_geometry_cubed_sphere_new
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
+ zlog_category_t *c_default,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -1641,18 +1643,18 @@ d4est_geometry_cubed_sphere_new
   d4est_geom->X = d4est_geometry_cubed_sphere_X;
   d4est_geom->DX = d4est_geometry_cubed_sphere_DX;
   d4est_geom->JAC = NULL;
-  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
+  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   d4est_geom->p4est_conn = conn;
   d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
   
   if (mpirank == 0){
-    printf("%s: NAME = cubed sphere\n", printf_prefix);
-    printf("%s: R0 = %.25f\n", printf_prefix, sphere_attrs->R0);
-    printf("%s: R1 = %.25f\n", printf_prefix, sphere_attrs->R1);
-    printf("%s: R2 = %.25f\n", printf_prefix, sphere_attrs->R2);
-    printf("%s: compactify_outer_shell = %d\n", printf_prefix, sphere_attrs->compactify_outer_shell);
-    printf("%s: compactify_inner_shell = %d\n", printf_prefix, sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "R2 = %.25f", sphere_attrs->R2);
+    zlog_debug(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1662,7 +1664,7 @@ d4est_geometry_cubed_sphere_7tree_new
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
+ zlog_category_t *c_default,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -1673,16 +1675,16 @@ d4est_geometry_cubed_sphere_7tree_new
   d4est_geom->X = d4est_geometry_cubed_sphere_7tree_X;
   d4est_geom->DX = d4est_geometry_cubed_sphere_7tree_DX;
   d4est_geom->JAC = NULL;
-  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
+  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   d4est_geom->p4est_conn = conn;
   d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
 
   if (mpirank == 0){
-    printf("%s: NAME = cubed sphere (7 tree)\n", printf_prefix );
-    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
-    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
-    printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere (7 tree)");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1693,7 +1695,7 @@ d4est_geometry_cubed_sphere_innerouter_shell_new
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
+ zlog_category_t *c_default,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -1704,18 +1706,18 @@ d4est_geometry_cubed_sphere_innerouter_shell_new
   d4est_geom->X = d4est_geometry_cubed_sphere_innerouter_shell_X;
   d4est_geom->DX = d4est_geometry_cubed_sphere_innerouter_shell_DX;
   d4est_geom->JAC = NULL;
-  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
+  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   d4est_geom->p4est_conn = conn;
   d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
   
   if (mpirank == 0){
-    printf("%s: NAME = cubed sphere innerouter shell\n", printf_prefix );
-    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
-    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
-    printf("%s: R2 = %.25f\n", printf_prefix , sphere_attrs->R2);
-    printf("%s: compactify_outer_shell = %d\n", printf_prefix , sphere_attrs->compactify_outer_shell);
-    printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere innerouter shell");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "R2 = %.25f", sphere_attrs->R2);
+    zlog_debug(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1725,7 +1727,7 @@ d4est_geometry_cubed_sphere_inner_shell_block_new
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
+ zlog_category_t *c_default,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -1738,16 +1740,16 @@ d4est_geometry_cubed_sphere_inner_shell_block_new
   d4est_geom->DX = d4est_geometry_cubed_sphere_inner_shell_block_DX;
   /* else */
   d4est_geom->JAC = NULL;
-  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
+  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   d4est_geom->p4est_conn = conn;
 d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
 
   if (mpirank == 0){
-    printf("%s: NAME = cubed sphere inner shell block\n", printf_prefix );
-    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
-    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
-    printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere inner shell block");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1763,7 +1765,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_new_aux
   
   d4est_geom->user = sphere_attrs;
   d4est_geom->X = d4est_geometry_cubed_sphere_outer_shell_block_X;
-  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy; 
+  d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   d4est_geom->p4est_conn = conn;
   d4est_geom->DX = d4est_geometry_cubed_sphere_outer_shell_block_DX;
   d4est_geom->JAC = d4est_geometry_cubed_sphere_outer_shell_block_jac;
@@ -1776,7 +1778,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_new
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
+ zlog_category_t *c_default,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -1786,10 +1788,10 @@ d4est_geometry_cubed_sphere_outer_shell_block_new
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
   
   if (mpirank == 0){
-    printf("%s: NAME = cubed sphere outer shell block\n", printf_prefix );
-    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
-    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
-    printf("%s: compactify_outer_shell = %d\n", printf_prefix , sphere_attrs->compactify_outer_shell);
+    zlog_debug(c_default, "NAME = cubed sphere outer shell block");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
   }
 }
 
@@ -1799,14 +1801,14 @@ d4est_geometry_cubed_sphere_with_cube_hole_new
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
+ zlog_category_t *c_default,
  d4est_geometry_t* d4est_geom
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_input(input_file, input_section);
   p4est_connectivity_t* conn = d4est_connectivity_new_sphere_with_hole();
   
-  d4est_geom->p4est_conn = conn; 
+  d4est_geom->p4est_conn = conn;
   d4est_geom->user = sphere_attrs;
   d4est_geom->X = d4est_geometry_cubed_sphere_X; /* same as cubed sphere, because
 which_tree == 12 will never occur */
@@ -1815,12 +1817,12 @@ which_tree == 12 will never occur */
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   
   if (mpirank == 0){
-    printf("%s: NAME = cubed sphere with cube hole\n", printf_prefix );
-    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
-    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
-    printf("%s: R2 = %.25f\n", printf_prefix , sphere_attrs->R2);
-    printf("%s: compactify_outer_shell = %d\n", printf_prefix , sphere_attrs->compactify_outer_shell);
-    printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere with cube hole");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "R2 = %.25f", sphere_attrs->R2);
+    zlog_debug(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
 
@@ -1831,28 +1833,28 @@ d4est_geometry_cubed_sphere_with_sphere_hole_new
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
+ zlog_category_t *c_default,
  d4est_geometry_t* d4est_geom
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere_attrs = d4est_geometry_cubed_sphere_input(input_file, input_section);
   p4est_connectivity_t* conn = d4est_connectivity_new_sphere_with_hole();
   
-  d4est_geom->p4est_conn = conn; 
+  d4est_geom->p4est_conn = conn;
   d4est_geom->user = sphere_attrs;
   d4est_geom->X = d4est_geometry_cubed_sphere_with_sphere_hole_X;
-  d4est_geom->DX = d4est_geometry_cubed_sphere_with_sphere_hole_DX; 
+  d4est_geom->DX = d4est_geometry_cubed_sphere_with_sphere_hole_DX;
   d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
   d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
   
   if (mpirank == 0){
-    printf("%s: NAME = cubed sphere with sphere hole\n", printf_prefix );
-    printf("%s: R0 = %.25f\n", printf_prefix , sphere_attrs->R0);
-    printf("%s: R1 = %.25f\n", printf_prefix , sphere_attrs->R1);
-    printf("%s: R2 = %.25f\n", printf_prefix , sphere_attrs->R2);
-    printf("%s: compactify_outer_shell = %d\n", printf_prefix , sphere_attrs->compactify_outer_shell);
-    printf("%s: compactify_inner_shell = %d\n", printf_prefix , sphere_attrs->compactify_inner_shell);
+    zlog_debug(c_default, "NAME = cubed sphere with sphere hole");
+    zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
+    zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "R2 = %.25f", sphere_attrs->R2);
+    zlog_debug(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
+    zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }

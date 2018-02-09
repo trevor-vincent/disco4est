@@ -6,10 +6,11 @@
 #include <d4est_checkpoint.h>
 #include <d4est_element_data.h>
 #include <petscsnes.h>
-
+#include <d4est_norms.h>
+#include <zlog.h>
 
 int main(int argc, char *argv[])
-{  
+{
   sc_MPI_Comm mpicomm;
   PetscInitialize(&argc,&argv,(char*)0,NULL);
   mpicomm = PETSC_COMM_WORLD;
@@ -19,38 +20,50 @@ int main(int argc, char *argv[])
   MPI_Comm_size(mpicomm, &proc_size);
   MPI_Comm_rank(mpicomm, &proc_rank);
   
+  
+  // Initialize logging
+  if (zlog_init("logging.conf") != 0)
+    printf("Initializing logging failed.\n");
+  zlog_category_t *c_default = zlog_get_category("d4est");
+  
+  if (proc_rank == 0) {
+    zlog_info(c_default, "------");
+  
+#ifdef D4EST_PROBLEM_NAME
+    zlog_info(c_default, "# Running problem %s", D4EST_PROBLEM_NAME);
+#endif
+
 #ifndef NDEBUG
-  if(proc_rank == 0)
-    printf("[D4EST_INFO]: DEBUG MODE ON\n");
-  p4est_init(NULL, SC_LP_ERROR);
-  /* p4est_init(NULL, SC_LP_ALWAYS); */
+    zlog_info(c_default, "DEBUG MODE ON");
 #else
-  if(proc_rank == 0)
-    printf("[D4EST_INFO]: DEBUG MODE OFF\n");
-  p4est_init(NULL, SC_LP_ERROR);
+    zlog_info(c_default, "DEBUG MODE OFF");
 #endif
   
 #if (P4EST_DIM)==3
-  if(proc_rank == 0)
-    printf("[D4EST_INFO]: DIM = 3\n");
+    zlog_info(c_default, "DIM = 3");
 #else
-  if(proc_rank == 0)
-    printf("[D4EST_INFO]: DIM = 2\n");
+    zlog_info(c_default, "DIM = 2");
 #endif
 
-  if (proc_rank == 0)
-    printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] : "options.input");
- 
- 
+    zlog_info(c_default, "options file = %s", (argc == 2) ? argv[1] : "options.input");
+    zlog_info(c_default, "mpisize = %d", proc_size);
+    zlog_info(c_default, "------");
+  }
+
+  p4est_init(NULL, SC_LP_ERROR);
+  /* p4est_init(NULL, SC_LP_ALWAYS); */
+
+  zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                     (argc == 2) ? argv[1] : "options.input",
                                                     "geometry",
-                                                    "[D4EST_GEOMETRY]");
+                                                    c_geom);
 
   d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] : "options.input", d4est_geom);
 
   p4est_t* p4est;
   if (initial_grid_input->load_from_checkpoint == 0){
+    
     p4est = p4est_new_ext
     (
      mpicomm,
@@ -91,23 +104,20 @@ int main(int argc, char *argv[])
                                                    ghost->ghosts.elem_count);
    
 
-  if (proc_rank == 0){
-    printf("[D4EST_INFO]: mpisize = %d\n", proc_size);
-  }
   if (proc_rank == 0 && initial_grid_input->load_from_checkpoint == 0){
-    printf("[D4EST_INFO]: min_quadrants = %d\n", initial_grid_input->min_quadrants);
-    printf("[D4EST_INFO]: min_level = %d\n", initial_grid_input->min_level);
-    printf("[D4EST_INFO]: fill_uniform = %d\n", initial_grid_input->fill_uniform);    
+    zlog_debug(c_default, "min_quadrants = %d", initial_grid_input->min_quadrants);
+    zlog_debug(c_default, "min_level = %d", initial_grid_input->min_level);
+    zlog_debug(c_default, "fill_uniform = %d", initial_grid_input->fill_uniform);
   }
   
   sc_MPI_Barrier(mpicomm);
-  printf("[D4EST_INFO]: elements on proc %d = %d\n", proc_rank, p4est->local_num_quadrants);
+  zlog_debug(c_default, "elements on proc %d = %d", proc_rank, p4est->local_num_quadrants);
   sc_MPI_Barrier(mpicomm);
   
   /* start just-in-time dg-math */
-  d4est_operators_t* d4est_ops = d4est_ops_init(20);  
+  d4est_operators_t* d4est_ops = d4est_ops_init(20);
   d4est_mesh_data_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
-  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature", "[QUADRATURE]");
+  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature");
   
   initial_grid_input->initial_nodes = d4est_mesh_update
                                (
@@ -159,5 +169,15 @@ int main(int argc, char *argv[])
   d4est_geometry_destroy(d4est_geom);
   PetscFinalize();
   /* sc_finalize (); */
+
+  if (proc_rank == 0) {
+    zlog_info(c_default, "Completed garbage collection.");
+    #ifdef D4EST_PROBLEM_NAME
+      zlog_info(c_default, "Completed problem %s.", D4EST_PROBLEM_NAME);
+    #endif
+  }
+
+  zlog_fini();
+  
   return 0;
 }

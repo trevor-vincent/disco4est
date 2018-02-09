@@ -1,5 +1,5 @@
 #ifndef D4EST_AMR_H
-#define D4EST_AMR_H 
+#define D4EST_AMR_H
 
 #include <pXest.h>
 #include <d4est_operators.h>
@@ -17,12 +17,12 @@ typedef enum {AMR_NOT_SET,
  * @file   amr.c
  * @author Trevor Vincent <tvincent@cita.utoronto.ca>
  * @date   Mon Nov  2 01:08:28 2015
- * 
+ *
  * @brief  Here are the rules for the refinement_log
  * array :
  *
  * This is the interface for running hp-amr loops.
- * 
+ *
  * Suppose the element currently has degree p, then:
  *
  * if refinement_log[i] = p' with p' < 0
@@ -39,12 +39,12 @@ typedef enum {AMR_NOT_SET,
 typedef struct d4est_amr_scheme d4est_amr_scheme_t;
 
 struct d4est_amr_scheme {
-  d4est_amr_scheme_type_t amr_scheme_type; 
+  d4est_amr_scheme_type_t amr_scheme_type;
 
   void (*post_balance_callback) (p4est_t*, void*);
   void (*pre_refine_callback) (p4est_t*, void*);
   p4est_replace_t refine_replace_callback_fcn_ptr;
-  p4est_replace_t balance_replace_callback_fcn_ptr;  
+  p4est_replace_t balance_replace_callback_fcn_ptr;
   p4est_iter_volume_t mark_elements;
   void (*destroy)(d4est_amr_scheme_t*);
   void* amr_scheme_data;
@@ -65,7 +65,7 @@ typedef struct {
   int* balance_log;
 
   d4est_amr_scheme_t* scheme;
-  d4est_operators_t* d4est_ops;  
+  d4est_operators_t* d4est_ops;
   d4est_estimator_stats_t** d4est_estimator_stats;
   
 } d4est_amr_t;
@@ -76,7 +76,7 @@ d4est_amr_t *d4est_amr_custom_init(p4est_t *p4est,int max_degree,int num_of_amr_
 d4est_amr_t *d4est_amr_init_random_hp(p4est_t *p4est,int max_degree,int num_of_amr_steps);
 d4est_amr_t *d4est_amr_init_uniform_p(p4est_t *p4est,int max_degree,int num_of_amr_steps);
 d4est_amr_t *d4est_amr_init_uniform_h(p4est_t *p4est,int max_degree,int num_of_amr_steps);
-d4est_amr_t *d4est_amr_init(p4est_t *p4est,const char *input_file,const char *printf_prefix,void *scheme_data);
+d4est_amr_t *d4est_amr_init(p4est_t *p4est,const char *input_file,void *scheme_data);
 void d4est_amr_input(const char *input_file,d4est_amr_t *d4est_amr);
  
 #endif

@@ -10,3 +10,6 @@
 	path = ThirdParty/zlib
 	url = https://github.com/madler/zlib
 	ignore = dirty
+[submodule "ThirdParty/zlog"]
+	path = ThirdParty/zlog
+	url = https://github.com/HardySimpson/zlog

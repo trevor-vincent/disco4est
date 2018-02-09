@@ -12,7 +12,7 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_cubed_sphere.h>
 #include <d4est_vtk.h>
-#include <d4est_output.h>
+#include <d4est_norms.h>
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
@@ -239,7 +239,6 @@ problem_init
     (
      p4est,
      input_file,
-     "[D4EST_AMR]:",
      &amr_marker
     );
 
@@ -256,14 +255,14 @@ problem_init
      NULL
     );
 
-  d4est_output_energy_norm_fit_t* fit = d4est_output_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
+  d4est_norms_fcn_energy_fit_t* fit = d4est_norms_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
   
     d4est_ip_energy_norm_data_t ip_norm_data;
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
 
-    d4est_output_norms_using_analytic_solution
+    d4est_norms_norms_using_analytic_solution
       (
        p4est,
        d4est_ops,
@@ -328,7 +327,7 @@ problem_init
        level
       );
     
-    d4est_output_norms_using_analytic_solution
+    d4est_norms_norms_using_analytic_solution
       (
        p4est,
        d4est_ops,
@@ -491,9 +490,9 @@ problem_init
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
   d4est_amr_destroy(d4est_amr_uniform_p);
-  d4est_poisson_flux_destroy(flux_data_for_jac);  
-  d4est_poisson_flux_destroy(flux_data_for_res);  
-  d4est_output_destroy_energy_norm_fit(fit);
+  d4est_poisson_flux_destroy(flux_data_for_jac);
+  d4est_poisson_flux_destroy(flux_data_for_res);
+  d4est_norms_destroy_energy_norm_fit(fit);
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
   P4EST_FREE(prob_vecs.u);

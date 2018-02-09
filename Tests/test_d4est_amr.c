@@ -10,8 +10,9 @@
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
 #include <d4est_util.h>
-#include <d4est_output.h>
+#include <d4est_norms.h>
 #include <limits.h>
+#include <zlog.h>
 
 #define D4EST_REAL_EPS 100*1e-15
 #define TEST_DEG_INIT 2
@@ -63,7 +64,7 @@ problem_build_p4est
  sc_MPI_Comm mpicomm,
  p4est_connectivity_t* conn,
  p4est_locidx_t min_quadrants,
- int min_level, 
+ int min_level,
  int fill_uniform
 )
 {
@@ -93,9 +94,10 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(mpicomm, &proc_rank);
   p4est_init(NULL, SC_LP_ERROR);
 
+  zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,                                                    "test_d4est_amr.input",
                                                     "geometry",
-                                                    "[D4EST_GEOMETRY]");
+                                                    c_geom);
 
       
   p4est_t* p4est = problem_build_p4est
@@ -120,7 +122,6 @@ int main(int argc, char *argv[])
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
                                           "test_d4est_amr.input",
-                                          "[TEST_D4EST_AMR]:",
                                           NULL
   );
 
@@ -182,7 +183,7 @@ int main(int argc, char *argv[])
                                       DISCARD_NOTHING,
                                       PRINT_ON_ERROR,
                                       D4EST_REAL_EPS
-                                     );        
+                                     );
         
         /* DEBUG_PRINT_2ARR_DBL(poly_vec, poly_vec_compare, local_nodes); */
         d4est_util_find_biggest_error(poly_vec, poly_vec_compare, local_nodes, &biggest_poly_err, &biggest_poly_id);

@@ -2,6 +2,7 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_general_wedge.h>
 
+
 void
 d4est_geometry_general_wedge_3D_X
 (
@@ -19,7 +20,7 @@ d4est_geometry_general_wedge_3D_X
  int compactified,
  d4est_wedge_part_t which_part
 )
-{  
+{
   if (compactified == 1){
     D4EST_ABORT("Compactification not supported yet");
   }
@@ -51,7 +52,7 @@ d4est_geometry_general_wedge_3D_X
 
   xyz[0] = +q * x;
   xyz[1] = +q * y;
-  xyz[2] = +q; 
+  xyz[2] = +q;
 }
 
 
@@ -71,7 +72,7 @@ d4est_geometry_general_wedge_3D_DX
  int compactified,
  d4est_wedge_part_t which_part
 )
-{  
+{
   if (compactified == 1){
     D4EST_ABORT("Compactification not supported yet");
   }

@@ -11,4 +11,4 @@
 Support/cmake/machine.cmake
 
 # Build
-build/
+/build

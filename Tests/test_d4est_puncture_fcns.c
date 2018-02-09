@@ -16,6 +16,7 @@
 #include <d4est_util.h>
 #include <limits.h>
 #include <ini.h>
+#include <zlog.h>
 #include "../Problems/TwoPunctures/two_punctures_fcns.h"
 
 #define D4EST_REAL_EPS 100*1e-15
@@ -126,7 +127,7 @@ problem_build_p4est
  sc_MPI_Comm mpicomm,
  p4est_connectivity_t* conn,
  p4est_locidx_t min_quadrants,
- int min_level, 
+ int min_level,
  int fill_uniform
 )
 {
@@ -160,10 +161,11 @@ int main(int argc, char *argv[])
   
   const char* input_file = "test_d4est_puncture_fcns.input";
   /*  */
+  zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                     input_file,
                                                     "geometry",
-                                                    "[D4EST_GEOMETRY]");
+                                                    c_geom);
 
 
 
@@ -186,9 +188,9 @@ int main(int argc, char *argv[])
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
   test_d4est_puncture_fcns_t deg_data;
-  deg_data.deg = atoi(argv[1]);  
-  double eps = atof(argv[2]);  
-  int num_vecs_to_try = atoi(argv[3]);  
+  deg_data.deg = atoi(argv[1]);
+  double eps = atof(argv[2]);
+  int num_vecs_to_try = atoi(argv[3]);
   D4EST_ASSERT(argc == 4);
   
   two_punctures_params_t two_punctures_params;
@@ -218,7 +220,6 @@ int main(int argc, char *argv[])
     = d4est_amr_init(
                      p4est,
                      input_file,
-                     "[TEST_D4EST_TWOPUNCTURES_FCNS]:",
                      NULL
     );
 
@@ -261,7 +262,7 @@ int main(int argc, char *argv[])
         elliptic_eqns.user = &ctx;
 
         double* poly_vec = P4EST_ALLOC(double, local_nodes);
-        d4est_mesh_init_field(p4est, poly_vec, poly_vec_fcn, d4est_ops, d4est_geom, d4est_geom);      
+        d4est_mesh_init_field(p4est, poly_vec, poly_vec_fcn, d4est_ops, d4est_geom, d4est_geom);
         double* Apoly_vec = P4EST_ALLOC(double, local_nodes);
 
         d4est_elliptic_data_t elliptic_data;
@@ -358,8 +359,8 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
-  d4est_poisson_flux_destroy(flux_data_for_jac);  
-  d4est_poisson_flux_destroy(flux_data_for_res);  
+  d4est_poisson_flux_destroy(flux_data_for_jac);
+  d4est_poisson_flux_destroy(flux_data_for_res);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);

@@ -44,8 +44,7 @@ d4est_quadrature_input
 (
  int mpirank,
  const char* input_file,
- const char* input_section,
- const char* printf_prefix
+ const char* input_section
 )
 {
   
@@ -57,9 +56,10 @@ d4est_quadrature_input
     D4EST_ABORT("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT(input_section, input.name, NULL); 
-  if (mpirank == 0){
-    printf("%s: Loading %s quadrature\n", printf_prefix, input.name);
+  D4EST_CHECK_INPUT(input_section, input.name, NULL);
+  if (mpirank == 0) {
+    zlog_category_t *c_default = zlog_get_category("d4est_quadrature");
+    zlog_info(c_default, "Loading %s quadrature", input.name);
   }
   return input;
 }
@@ -72,12 +72,11 @@ d4est_quadrature_new
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  const char* input_file,
- const char* input_section,
- const char* printf_prefix
+ const char* input_section
 )
 {
   
-  d4est_quadrature_input_t input = d4est_quadrature_input(p4est->mpirank,input_file, input_section, printf_prefix);
+  d4est_quadrature_input_t input = d4est_quadrature_input(p4est->mpirank,input_file, input_section);
   d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t, 1);
 
   if (d4est_util_match(input.name,"legendre")) {
@@ -107,8 +106,9 @@ d4est_quadrature_new
   else if (d4est_util_match(input.name,"none")){
   }
   else {
-    printf("[D4EST_ERROR]: You tried to use %s quadrature\n", input.name);
-    D4EST_ABORT("[D4EST_ERROR]: this quadrature is currently not supported");
+    zlog_category_t *c_default = zlog_get_category("d4est_quadrature");
+    zlog_error(c_default, "You tried to use %s quadrature", input.name);
+    D4EST_ABORT("This quadrature is currently not supported");
   }
 
   free(input.name);
@@ -204,11 +204,11 @@ void d4est_quadrature_apply_galerkin_integral
     d4est_linalg_matvec_plus_vec(1.0, interp_lobatto_to_quad_trans[0], w_j_in_quad, 0., out, nodes_lobatto, nodes_quad);
   }
   
-  else {    
+  else {
     P4EST_FREE(w_j_in_quad);
     P4EST_FREE(in_quad);
-    D4EST_ABORT("ERROR: Apply mass matrix ref space, wrong dimension.");
-  }  
+    D4EST_ABORT("Apply mass matrix ref space, wrong dimension.");
+  }
   P4EST_FREE(w_j_in_quad);
 }
 

@@ -12,8 +12,10 @@
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux.h>
 #include <d4est_util.h>
-#include <d4est_output.h>
+#include <d4est_norms.h>
 #include <limits.h>
+#include <zlog.h>
+
 
 #define D4EST_REAL_EPS 100*1e-15
 #if (P4EST_DIM)==2
@@ -111,7 +113,7 @@ problem_build_p4est
  sc_MPI_Comm mpicomm,
  p4est_connectivity_t* conn,
  p4est_locidx_t min_quadrants,
- int min_level, 
+ int min_level,
  int fill_uniform
 )
 {
@@ -147,11 +149,12 @@ int main(int argc, char *argv[])
   const char* input_file = "test_d4est_poisson_consistency_curved_2d.input";
 #endif
   
+  zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                      input_file,
                                                     "geometry",
-                                                    "[D4EST_GEOMETRY]");
-  /*  */  
+                                                    c_geom);
+  /*  */
   p4est_t* p4est = problem_build_p4est
                    (
                     mpicomm,
@@ -177,7 +180,6 @@ int main(int argc, char *argv[])
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
                                           input_file,
-                                          "[TEST_D4EST_POISSON_CONSISTENCY_CURVED]:",
                                           NULL
   );
 
@@ -394,8 +396,8 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
-  d4est_poisson_flux_destroy(flux_data_with_homog_bc);  
-  d4est_poisson_flux_destroy(flux_data_with_bc);  
+  d4est_poisson_flux_destroy(flux_data_with_homog_bc);
+  d4est_poisson_flux_destroy(flux_data_with_bc);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);

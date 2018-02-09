@@ -12,7 +12,7 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_cubed_sphere.h>
 #include <d4est_vtk.h>
-#include <d4est_output.h>
+#include <d4est_norms.h>
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
@@ -22,6 +22,7 @@
 #include <krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
+#include <zlog.h>
 #include "poisson_sinx_fcns.h"
 
 typedef struct {
@@ -84,7 +85,7 @@ poisson_sinx_init_params_input
     D4EST_ABORT("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("problem", input.eval_method, EVAL_BNDRY_FCN_NOT_SET);  
+  D4EST_CHECK_INPUT("problem", input.eval_method, EVAL_BNDRY_FCN_NOT_SET);
   
   return input;
 }
@@ -115,6 +116,7 @@ problem_init
  sc_MPI_Comm mpicomm
 )
 {
+  zlog_category_t *c_default = zlog_get_category("problem");
 
   int initial_nodes = initial_extents->initial_nodes;
   
@@ -153,13 +155,22 @@ problem_init
   prob_vecs.local_nodes = initial_nodes;
 
   d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
- 
+  
+  
+  // Norm function contexts
+  
+  d4est_norms_fcn_L2_ctx_t L2_norm_ctx;
+  L2_norm_ctx.p4est = p4est;
+  L2_norm_ctx.d4est_ops = d4est_ops;
+  L2_norm_ctx.d4est_geom = d4est_geom;
+  L2_norm_ctx.d4est_quad = d4est_quad;
+
+
   d4est_amr_t* d4est_amr =
     d4est_amr_init
     (
      p4est,
      input_file,
-     "[D4EST_AMR]:",
      NULL
     );
 
@@ -194,9 +205,13 @@ problem_init
      &ctx
     );
 
-  
-  for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
+  if (p4est->mpirank == 0)
+    d4est_norms_write_headers(
+      (const char * []){"u", NULL},
+      (const char * []){"L_2", "L_infty", NULL}
+    );
 
+  for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; level++){
 
     krylov_petsc_params_t krylov_petsc_params;
     krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
@@ -216,62 +231,64 @@ problem_init
        NULL
       );
 
-    double* u_analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
-    double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
 
+    // Compute and save mesh data to a VTK file
+    
+    // Compute analytical field values
+    double* u_analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
     d4est_mesh_init_field
       (
        p4est,
        u_analytic,
        poisson_sinx_analytic_solution,
-       d4est_ops,
-       d4est_geom,
+       d4est_ops, // unnecessary?
+       d4est_geom, // unnecessary?
        INIT_FIELD_ON_LOBATTO,
        NULL
       );
 
-
+    // Compute errors between numerical and analytical field values
+    double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
     for (int i = 0; i < prob_vecs.local_nodes; i++){
       error[i] = fabs(prob_vecs.u[i] - u_analytic[i]);
     }
-    
-    d4est_vtk_save
-      (
-       p4est,
-       d4est_ops,
-       input_file,
-       "d4est_vtk",
-       "[D4EST_VTK]",
-       (const char * []){"u","u_analytic","error", NULL},
-       (double* []){prob_vecs.u, u_analytic, error},
-       (const char * []){NULL},
-       (double* []){NULL},
-       level
-      );
 
-    P4EST_FREE(u_analytic);
+    // Save to VTK file
+    d4est_vtk_save(
+      p4est,
+      d4est_ops,
+      input_file,
+      "d4est_vtk",
+      (const char * []){"u","u_analytic","error", NULL},
+      (double* []){prob_vecs.u, u_analytic, error},
+      (const char * []){NULL},
+      (double* []){NULL},
+      level
+    );
+
     P4EST_FREE(error);
     
-    d4est_output_norms_using_analytic_solution
-      (
+    // Compute and save norms
+    d4est_norms_save(
       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-      d4est_factors,
-       *ghost,
-       *ghost_data,
-      -1.,
-       &prob_vecs,
-       NULL,
-       poisson_sinx_analytic_solution,
-      &ctx,NULL,NULL);
+      (const char * []){ "u", NULL },
+      (double * []){ prob_vecs.u },
+      (double * []){ u_analytic },
+      (d4est_xyz_fcn_t[]){ poisson_sinx_analytic_solution },
+      (void * []) { &ctx },
+      (const char * []){"L_2", "L_infty", NULL},
+      (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty },
+      (void * []){ &L2_norm_ctx, NULL }
+    );
+    P4EST_FREE(u_analytic);
 
-    
+
+    // Perform the next AMR step
+  
     if (level != d4est_amr->num_of_amr_steps){
 
       if (p4est->mpirank == 0)
-        printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level+1);
+        zlog_info(c_default, "Performing AMR refinement level %d of %d...", level + 1, d4est_amr->num_of_amr_steps);
 
       d4est_amr_step
         (
@@ -284,6 +301,8 @@ problem_init
          NULL
         );
       
+      if (p4est->mpirank == 0)
+        zlog_info(c_default, "AMR refinement level %d of %d complete.", level + 1, d4est_amr->num_of_amr_steps);
     }
 
 
@@ -324,15 +343,14 @@ problem_init
        (init_params.eval_method == EVAL_BNDRY_FCN_ON_QUAD) ? INIT_FIELD_ON_QUAD : INIT_FIELD_ON_LOBATTO,
        &ctx
       );
-
-
-
   }
 
-  printf("[D4EST_INFO]: Starting garbage collection...\n");
+  if (p4est->mpirank == 0)
+    zlog_info(c_default, "Finishing up. Starting garbage collection...");
+    
   d4est_amr_destroy(d4est_amr);
-  d4est_poisson_flux_destroy(flux_data_for_apply_lhs);  
-  d4est_poisson_flux_destroy(flux_data_for_build_rhs);  
+  d4est_poisson_flux_destroy(flux_data_for_apply_lhs);
+  d4est_poisson_flux_destroy(flux_data_for_build_rhs);
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
   P4EST_FREE(prob_vecs.u);

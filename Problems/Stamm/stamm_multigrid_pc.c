@@ -12,7 +12,7 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_cubed_sphere.h>
 #include <d4est_vtk.h>
-#include <d4est_output.h>
+#include <d4est_norms.h>
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
@@ -163,7 +163,6 @@ problem_init
     (
      p4est,
      input_file,
-     "[D4EST_AMR]:",
      &amr_marker
     );
 
@@ -199,7 +198,34 @@ problem_init
     );
 
 
-  
+    // Norm function contexts
+    
+    d4est_norms_fcn_L2_ctx_t L2_norm_ctx;
+    L2_norm_ctx.p4est = p4est;
+    L2_norm_ctx.d4est_ops = d4est_ops;
+    L2_norm_ctx.d4est_geom = d4est_geom;
+    L2_norm_ctx.d4est_quad = d4est_quad;
+    
+    d4est_norms_fcn_energy_ctx_t energy_norm_ctx;
+    energy_norm_ctx.p4est = p4est;
+    energy_norm_ctx.d4est_ops = d4est_ops;
+    energy_norm_ctx.d4est_geom = d4est_geom;
+    energy_norm_ctx.d4est_quad = d4est_quad;
+    energy_norm_ctx.d4est_factors = d4est_factors;
+    energy_norm_ctx.fit = NULL;
+    // These are updated later
+    energy_norm_ctx.ghost = *ghost;
+    energy_norm_ctx.ghost_data = *ghost_data;
+    energy_norm_ctx.energy_norm_data = NULL;
+    energy_norm_ctx.energy_estimator_sq_local = -1.;
+
+    if (p4est->mpirank == 0)
+      d4est_norms_write_headers(
+        (const char * []){"u", NULL},
+        (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL}
+      );
+
+
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
     
     d4est_estimator_bi_compute
@@ -248,7 +274,6 @@ problem_init
        d4est_ops,
        input_file,
        "d4est_vtk",
-       "[D4EST_VTK]",
        (const char * []){"u","u_analytic","error", NULL},
        (double* []){prob_vecs.u, u_analytic, error},
        (const char * []){NULL},
@@ -265,21 +290,23 @@ problem_init
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
 
-    d4est_output_norms_using_analytic_solution
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       *ghost,
-       *ghost_data,
-       stats->total,
-       &prob_vecs,
-       &ip_norm_data,
-       stamm_analytic_solution,
-       &ctx,NULL,NULL);
-    
+    energy_norm_ctx.energy_norm_data = &ip_norm_data;
+    energy_norm_ctx.energy_estimator_sq_local = stats->total;
+    energy_norm_ctx.ghost = *ghost;
+    energy_norm_ctx.ghost_data = *ghost_data;
+
+    d4est_norms_save(
+      p4est,
+      (const char * []){ "u", NULL },
+      (double * []){ prob_vecs.u },
+      (double * []){ NULL },
+      (d4est_xyz_fcn_t []){ stamm_analytic_solution },
+      (void * []){ &ctx },
+      (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
+      (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy, &d4est_norms_fcn_energy_estimator },
+      (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx }
+    );
+        
     P4EST_FREE(stats);
     
     if (level != d4est_amr->num_of_amr_steps){
@@ -409,8 +436,8 @@ problem_init
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
   d4est_amr_destroy(d4est_amr_uniform);
-  d4est_poisson_flux_destroy(flux_data_for_apply_lhs);  
-  d4est_poisson_flux_destroy(flux_data_for_build_rhs);  
+  d4est_poisson_flux_destroy(flux_data_for_apply_lhs);
+  d4est_poisson_flux_destroy(flux_data_for_build_rhs);
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
   P4EST_FREE(prob_vecs.u);

@@ -15,10 +15,12 @@ The dependencies are OpenMPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will ne
 > ```
 >
 > Just remember that the OS X system `gcc` is just a `clang` wrapper, so make sure to set the `CC` and `CXX` environment variables to e.g. `gcc-7` and `g++-7`, with `gcc` (along with its bundled `gfortran`) installed through Homebrew. Also make sure your MPI installation wraps the same `gcc`, e.g. through `brew install mpich --cc=gcc-7`.
+>
+> Note that due to a bug in the `syslog` headers in OS X 10.13 (High Sierra) you should provide the flag `mmacosx-version-min`, such as in `export CC="gcc-7 -mmacosx-version-min=10.12"` to compile `zlog`.
 
 ## Installation
 
-1) git clone --recursive https://github.com/trevor-vincent/d4est && cd d4est
+1) `git clone --recursive https://github.com/trevor-vincent/d4est && cd d4est`
 
 2) Duplicate `Support/machine.cmake.example` to `Support/machine.cmake` and edit the paths to the dependencies.
   - If you have already installed p4est, zlib and petsc, also give their respective paths.

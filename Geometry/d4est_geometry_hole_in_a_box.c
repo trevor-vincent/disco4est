@@ -6,6 +6,8 @@
 #include <d4est_geometry_hole_in_a_box.h>
 #include <d4est_connectivity_cubed_sphere.h>
 #include <ini.h>
+#include <zlog.h>
+
 
 typedef struct {
 
@@ -93,7 +95,7 @@ d4est_geometry_hole_in_a_box_DX
  p4est_topidx_t which_tree,
  p4est_qcoord_t q0 [(P4EST_DIM)],
  p4est_qcoord_t dq,
- const double rst[(P4EST_DIM)], 
+ const double rst[(P4EST_DIM)],
  double dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]
 )
 {
@@ -183,7 +185,7 @@ d4est_geometry_hole_in_a_box_new
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
+ zlog_category_t *c_default,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -193,20 +195,20 @@ d4est_geometry_hole_in_a_box_new
   hiab_attrs->zmin = hiab_attrs->inner_radius/sqrt(3);
   hiab_attrs->zmax = hiab_attrs->box_length/2;
   
-  d4est_geom->p4est_conn = conn; 
+  d4est_geom->p4est_conn = conn;
   d4est_geom->user = hiab_attrs;
   d4est_geom->X = d4est_geometry_hole_in_a_box_X;
-  d4est_geom->DX = d4est_geometry_hole_in_a_box_DX; 
+  d4est_geom->DX = d4est_geometry_hole_in_a_box_DX;
   d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_hole_in_a_box_destroy;
   d4est_geom->get_number_of_regions = d4est_geometry_hole_in_a_box_get_number_of_regions;
   d4est_geom->get_region = d4est_geometry_hole_in_a_box_get_region;
   
   if (mpirank == 0){
-    printf("%s: NAME = hole in a box\n", printf_prefix );
-    printf("%s: inner radius = %.25f\n", printf_prefix , hiab_attrs->inner_radius);
-    printf("%s: box length = %.25f\n", printf_prefix , hiab_attrs->box_length);
-    printf("%s: zmin = %.25f\n", printf_prefix , hiab_attrs->zmin);
-    printf("%s: zmax = %.25f\n", printf_prefix , hiab_attrs->zmax);
+    zlog_debug(c_default, "NAME = hole in a box\n" );
+    zlog_debug(c_default, "inner radius = %.25f\n", hiab_attrs->inner_radius);
+    zlog_debug(c_default, "box length = %.25f\n", hiab_attrs->box_length);
+    zlog_debug(c_default, "zmin = %.25f\n", hiab_attrs->zmin);
+    zlog_debug(c_default, "zmax = %.25f\n", hiab_attrs->zmax);
   }
 }

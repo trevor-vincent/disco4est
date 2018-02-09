@@ -13,6 +13,8 @@
 #include <d4est_poisson_flux.h>
 #include <d4est_util.h>
 #include <limits.h>
+#include <zlog.h>
+
 
 #define NUM_OF_TRIALS 5
 #define D4EST_REAL_EPS 100*1e-15
@@ -118,7 +120,7 @@ problem_build_p4est
  sc_MPI_Comm mpicomm,
  p4est_connectivity_t* conn,
  p4est_locidx_t min_quadrants,
- int min_level, 
+ int min_level,
  int fill_uniform
 )
 {
@@ -148,11 +150,12 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(mpicomm, &proc_rank);
   p4est_init(NULL, SC_LP_ERROR);
 
-  const char* input_file = "test_d4est_stiffness.input";  
+  const char* input_file = "test_d4est_stiffness.input";
+  zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                      input_file,
                                                     "geometry",
-                                                    "[D4EST_GEOMETRY]");
+                                                    c_geom);
 
   p4est_t* p4est = problem_build_p4est
                    (
@@ -186,7 +189,6 @@ int main(int argc, char *argv[])
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
                                           input_file,
-                                          "[TEST_D4EST_STIFFNESS]:",
                                           NULL
   );
 
@@ -250,7 +252,7 @@ int main(int argc, char *argv[])
          d4est_ops,
          elliptic_data.u,
          elliptic_data.Au
-        );   
+        );
       
       d4est_poisson_apply_stiffness_matrix
         (
@@ -279,7 +281,7 @@ int main(int argc, char *argv[])
          d4est_ops,
          d4est_geom,
          d4est_quad
-        );      
+        );
 
       mortar_last_node[j] = Apoly_vec[local_nodes-1];
       if(j == 0){
@@ -388,7 +390,7 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
-  d4est_poisson_flux_destroy(flux_data_with_bc);  
+  d4est_poisson_flux_destroy(flux_data_with_bc);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);

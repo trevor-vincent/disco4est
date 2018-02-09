@@ -1,5 +1,6 @@
 #include <d4est_geometry_brick.h>
 #include <ini.h>
+#include <zlog.h>
 
 static
 int d4est_geometry_brick_get_number_of_regions
@@ -208,10 +209,10 @@ d4est_geometry_brick_new_aux
   D4EST_ABORT("DIM must be 2 or 3\n");
 #endif
     
-  d4est_geom->p4est_conn = conn; 
+  d4est_geom->p4est_conn = conn;
   d4est_geom->user = brick_attrs;
-  d4est_geom->X = d4est_geometry_brick_X; 
-  d4est_geom->DX = d4est_geometry_brick_DX; 
+  d4est_geom->X = d4est_geometry_brick_X;
+  d4est_geom->DX = d4est_geometry_brick_DX;
   d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_brick_destroy;
 }
@@ -223,7 +224,7 @@ d4est_geometry_brick_new
  int mpirank,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
+ zlog_category_t *c_default,
  d4est_geometry_t* d4est_geom
 )
 {
@@ -235,14 +236,14 @@ d4est_geometry_brick_new
   d4est_geom->get_number_of_regions = d4est_geometry_brick_get_number_of_regions;
   
   if (mpirank == 0){
-    printf("%s: NAME = brick in %d-D\n", printf_prefix, (P4EST_DIM));
-    printf("%s: X0 = %.25f\n", printf_prefix , brick_attrs->X0);
-    printf("%s: X1 = %.25f\n", printf_prefix , brick_attrs->X1);
-    printf("%s: YO = %.25f\n", printf_prefix , brick_attrs->Y0);
-    printf("%s: Y1 = %.25f\n", printf_prefix , brick_attrs->Y1);
+    zlog_debug(c_default, "NAME = brick in %d-D", (P4EST_DIM));
+    zlog_debug(c_default, "X0 = %.25f", brick_attrs->X0);
+    zlog_debug(c_default, "X1 = %.25f", brick_attrs->X1);
+    zlog_debug(c_default, "YO = %.25f", brick_attrs->Y0);
+    zlog_debug(c_default, "Y1 = %.25f", brick_attrs->Y1);
 #if (P4EST_DIM)==3
-    printf("%s: Z0 = %.25f\n", printf_prefix , brick_attrs->Z0);
-    printf("%s: Z1 = %.25f\n", printf_prefix , brick_attrs->Z1);
+    zlog_debug(c_default, "Z0 = %.25f", brick_attrs->Z0);
+    zlog_debug(c_default, "Z1 = %.25f", brick_attrs->Z1);
 #endif
   }
 }

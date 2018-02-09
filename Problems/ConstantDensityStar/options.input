@@ -9,7 +9,7 @@ region0_deg_quad_inc = 0
 
 [amr]
 scheme = smooth_pred
-num_of_amr_steps = 15
+num_of_amr_steps = 2
 max_degree = 7 
 gamma_h = .25
 gamma_p = 0.1

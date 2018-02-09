@@ -12,7 +12,7 @@
 #include <d4est_geometry.h>
 #include <d4est_geometry_cubed_sphere.h>
 #include <d4est_vtk.h>
-#include <d4est_output.h>
+#include <d4est_norms.h>
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
@@ -106,7 +106,6 @@ problem_init
     (
      p4est,
      input_file,
-     "[D4EST_AMR]:",
      NULL
     );
 
@@ -183,7 +182,7 @@ problem_init
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
     
-    d4est_output_norms_using_analytic_solution
+    d4est_norms_norms_using_analytic_solution
       (
        p4est,
        d4est_ops,
@@ -337,7 +336,7 @@ problem_init
 
   d4est_amr_destroy(d4est_amr);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
-  d4est_poisson_flux_destroy(flux_data_for_jac);  
-  d4est_poisson_flux_destroy(flux_data_for_res);  
+  d4est_poisson_flux_destroy(flux_data_for_jac);
+  d4est_poisson_flux_destroy(flux_data_for_res);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
 }
