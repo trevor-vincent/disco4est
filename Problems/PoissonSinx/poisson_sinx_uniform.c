@@ -266,7 +266,6 @@ problem_init
       level
     );
 
-    P4EST_FREE(u_analytic);
     P4EST_FREE(error);
     
     // Compute and save norms
@@ -274,13 +273,14 @@ problem_init
       p4est,
       (const char * []){ "u", NULL },
       (double * []){ prob_vecs.u },
-      (double * []){ NULL },
+      (double * []){ u_analytic },
       (d4est_xyz_fcn_t[]){ poisson_sinx_analytic_solution },
       (void * []) { &ctx },
       (const char * []){"L_2", "L_infty", NULL},
       (d4est_norm_fcn_t[]){ &d4est_norms_L2, &d4est_norms_Linfty },
       (void * []){ &L2_norm_ctx, NULL }
     );
+    P4EST_FREE(u_analytic);
 
 
     // Perform the next AMR step

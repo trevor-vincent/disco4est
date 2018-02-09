@@ -398,6 +398,36 @@ problem_init
     d4est_h5_read_dataset(p4est->mpirank,initial_extents->checkpoint_prefix,"u",H5T_NATIVE_DOUBLE, prob_vecs.u);
   }
   
+  
+  // Norm function contexts
+  
+  d4est_norms_L2_ctx_t L2_norm_ctx;
+  L2_norm_ctx.p4est = p4est;
+  L2_norm_ctx.d4est_ops = d4est_ops;
+  L2_norm_ctx.d4est_geom = d4est_geom;
+  L2_norm_ctx.d4est_quad = d4est_quad;
+  
+  d4est_norms_energy_ctx_t energy_norm_ctx;
+  energy_norm_ctx.p4est = p4est;
+  energy_norm_ctx.d4est_ops = d4est_ops;
+  energy_norm_ctx.d4est_geom = d4est_geom;
+  energy_norm_ctx.d4est_quad = d4est_quad;
+  energy_norm_ctx.d4est_factors = d4est_factors;
+  energy_norm_ctx.fit = NULL;
+  // These are updated later
+  energy_norm_ctx.ghost = *ghost;
+  energy_norm_ctx.ghost_data = *ghost_data;
+  energy_norm_ctx.energy_norm_data = NULL;
+  energy_norm_ctx.energy_estimator_sq_local = -1.;
+
+  if (p4est->mpirank == 0)
+    d4est_norms_write_headers(
+      (const char * []){"u", NULL},
+      (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL}
+    );
+
+
+  
   d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
   double point [4][100];
@@ -474,39 +504,39 @@ problem_init
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
     
-    d4est_norms_norms_t norms = d4est_norms_norms
-                                 (
-                                  p4est,
-                                  d4est_ops,
-                                  d4est_geom,
-                                  d4est_quad,
-                                  d4est_factors,
-                                  *ghost,
-                                  *ghost_data,
-                                  NULL,
-                                  stats->total,
-                                  error,
-                                  NULL,
-                                  NULL
-                                 );
-    
+    energy_norm_ctx.energy_norm_data = &ip_norm_data;
+    energy_norm_ctx.energy_estimator_sq_local = stats->total;
+    energy_norm_ctx.ghost = *ghost;
+    energy_norm_ctx.ghost_data = *ghost_data;
 
-    printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
-    d4est_norms_norms
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       *ghost,
-       *ghost_data,
-       NULL,
-       stats->total,
-       error,
-       NULL,
-       skip_curved_elements
-      );
+    d4est_norms_save(
+      p4est,
+      (const char * []){ "u", NULL },
+      (double * []){ prob_vecs.u },
+      (double * []){ u_prev },
+      (d4est_xyz_fcn_t []){ NULL },
+      (void * []){ NULL },
+      (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
+      (d4est_norm_fcn_t[]){ &d4est_norms_L2, &d4est_norms_Linfty, &d4est_norms_energy, &d4est_norms_energy_estimator },
+      (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx }
+    );
+
+    // printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
+    // d4est_norms_norms
+    //   (
+    //    p4est,
+    //    d4est_ops,
+    //    d4est_geom,
+    //    d4est_quad,
+    //    d4est_factors,
+    //    *ghost,
+    //    *ghost_data,
+    //    NULL,
+    //    stats->total,
+    //    error,
+    //    NULL,
+    //    skip_curved_elements
+    //   );
 
     
     if (level != d4est_amr->num_of_amr_steps){
@@ -671,7 +701,17 @@ problem_init
      double* point3_diff = &point_diff[1][0];
      double* point10_diff = &point_diff[2][0];
      double* point100_diff = &point_diff[3][0];
-     point_dof[iterations] = norms.global_nodes;
+     int global_nodes;
+     sc_reduce(
+       &prob_vecs.local_nodes,
+       &global_nodes,
+       1,
+       sc_MPI_INT,
+       sc_MPI_SUM,
+       0,
+       sc_MPI_COMM_WORLD
+     );
+     point_dof[iterations] = global_nodes;
      double* dof = &point_dof[0];
      double points_global [4];
      double points_local [4];

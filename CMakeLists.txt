@@ -205,6 +205,11 @@ function(add_d4est_problem_2d exec src parent_dir)
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/*.input
     ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/)
+  add_custom_command(
+    TARGET ${exec} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_SOURCE_DIR}/IO/logging.conf
+    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/logging.conf)
 endfunction()
 
 
@@ -219,6 +224,11 @@ function(add_d4est_test_3d exec src parent_dir test_name)
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
     ${CMAKE_CURRENT_BINARY_DIR}/)
+  add_custom_command(
+    TARGET ${exec} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_SOURCE_DIR}/IO/logging.conf
+    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/logging.conf)
 endfunction()
 
 
@@ -233,6 +243,11 @@ function(add_d4est_test_2d exec src parent_dir test_name)
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
     ${CMAKE_CURRENT_BINARY_DIR}/)
+  add_custom_command(
+    TARGET ${exec} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_SOURCE_DIR}/IO/logging.conf
+    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/logging.conf)
 endfunction()
 
 ##
