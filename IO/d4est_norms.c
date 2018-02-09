@@ -10,15 +10,21 @@
 #include <zlog.h>
 
 
+/*
+  Computes the L_2 norm.
+  
+  - TODO: Add definition
+  - TODO: Merge with `d4est_mesh_compute_l2_norm_sqr`
+*/
 double
-d4est_norms_L2
+d4est_norms_fcn_L2
 (
   double *field_value_errors,
   int num_nodes_local,
   void *norm_fcn_ctx
 )
 {
-  d4est_norms_L2_ctx_t *ctx = norm_fcn_ctx;
+  d4est_norms_fcn_L2_ctx_t *ctx = norm_fcn_ctx;
   
   double norm_sq_local = d4est_mesh_compute_l2_norm_sqr(
     ctx->p4est,
@@ -48,8 +54,13 @@ d4est_norms_L2
 }
 
 
+/*
+  Computes the L_infty norm defined by:
+  
+  L_infty(\vec{x}) = sup_i(x_i)
+*/
 double
-d4est_norms_Linfty
+d4est_norms_fcn_Linfty
 (
   double *field_value_errors,
   int num_nodes_local,
@@ -79,10 +90,10 @@ d4est_norms_Linfty
 
 
 void
-d4est_norms_energy_norm_fit
+d4est_norms_fcn_energy_fit
 (
  p4est_t* p4est,
- d4est_norms_energy_norm_fit_t* fit
+ d4est_norms_fcn_energy_fit_t* fit
 )
 {
   double slope;
@@ -97,16 +108,16 @@ d4est_norms_energy_norm_fit
     );
 
   if (p4est->mpirank == 0) {
-    zlog_category_t *c_default = zlog_get_category("d4est_norms_energy_fit");
+    zlog_category_t *c_default = zlog_get_category("d4est_norms_fcn_energy_fit");
     zlog_info(c_default, "(2): C1 = %f, C2 = %.15f", intercept, slope);
   }
 }
 
 void
-d4est_norms_energy_norm_add_entry_and_fit
+d4est_norms_fcn_energy_add_entry_and_fit
 (
  p4est_t* p4est,
- d4est_norms_energy_norm_fit_t* fit,
+ d4est_norms_fcn_energy_fit_t* fit,
  double global_energy_norm_sqr,
  double global_dof
 ){
@@ -117,19 +128,19 @@ d4est_norms_energy_norm_add_entry_and_fit
 
     if (fit->stride >= 2){
       if (p4est->mpirank == 0){
-        zlog_category_t *c_default = zlog_get_category("d4est_norms_energy_fit");
+        zlog_category_t *c_default = zlog_get_category("d4est_norms_fcn_energy_fit");
         zlog_info(c_default, "(1): ||err|| = C1*exp(C2*DOF^(1/%d))", 2*(P4EST_DIM)-1);
         zlog_info(c_default, "(1): ||err|| = %.15f", sqrt(global_energy_norm_sqr));
       }
-      d4est_norms_energy_norm_fit(p4est,fit);
+      d4est_norms_fcn_energy_fit(p4est,fit);
     }
   }
 }
 
 void
-d4est_norms_destroy_energy_norm_fit
+d4est_norms_fcn_energy_destroy_fit
 (
- d4est_norms_energy_norm_fit_t* fit
+ d4est_norms_fcn_energy_fit_t* fit
 )
 {
   P4EST_FREE(fit->log_energy_norm_data);
@@ -137,15 +148,21 @@ d4est_norms_destroy_energy_norm_fit
   P4EST_FREE(fit);
 }
 
+
+/*
+  Computes the energy norm for elliptic PDEs.
+  
+  - TODO: Add definition
+*/
 double
-d4est_norms_energy
+d4est_norms_fcn_energy
 (
   double *field_value_errors,
   int num_nodes_local,
   void *norm_fcn_ctx
 )
 {
-  d4est_norms_energy_ctx_t *ctx = norm_fcn_ctx;
+  d4est_norms_fcn_energy_ctx_t *ctx = norm_fcn_ctx;
   
   double norm_sq_local = d4est_ip_energy_norm_compute(
     ctx->p4est,
@@ -187,7 +204,7 @@ d4est_norms_energy
   
   // Perform energy norm fit
   if (ctx->fit != NULL && ctx->p4est->mpirank == 0) {
-    d4est_norms_energy_norm_add_entry_and_fit(
+    d4est_norms_fcn_energy_add_entry_and_fit(
       ctx->p4est,
       ctx->fit,
       norm_sq,
@@ -198,15 +215,18 @@ d4est_norms_energy
   return sqrt(norm_sq);
 }
 
+/*
+  Extracts the energy estimator from the context to save alongside norms.
+*/
 double
-d4est_norms_energy_estimator
+d4est_norms_fcn_energy_estimator
 (
   double *field_value_errors,
   int num_nodes_local,
   void *norm_fcn_ctx
 )
 {
-  d4est_norms_energy_ctx_t *ctx = norm_fcn_ctx;
+  d4est_norms_fcn_energy_ctx_t *ctx = norm_fcn_ctx;
   double norm_sq_local = ctx->energy_estimator_sq_local;
 
   // Reduce over all parallel processes
@@ -228,10 +248,10 @@ d4est_norms_energy_estimator
 /*
   Writes column headers to norm data output files.
   
-  Call from one process only to avoid duplicate lines.
+  > Note: Call from one process only to avoid duplicate lines.
   
-  - options_file: (Not implemented yet)
   - field_names: Null terminated list of names for the fields on the computational grid. The norms are written in a separate file for each field.
+  - norm_names: Null terminated list of names for the norms to be computed for each field. These are the column headers association to each norm.
 */
 void
 d4est_norms_write_headers
@@ -261,10 +281,9 @@ d4est_norms_write_headers
 /*
   Computes norms over the computational grid and outputs them to files.
   
-  - options_file: (Not implemented yet)
-  - field_names: Null terminated list of names for the fields on the computational grid.
-
-  Either provide `field_values_compare` or an `analytical_solution` for each field.
+  - field_names: Null terminated list of names for the fields on the computational grid. The norms are written in a separate file for each field. Either provide `field_values_compare` or an `analytical_solution` for each field.
+  - norm_names: Null terminated list of names for the norms to be computed for each field. These should correspond to the `norm_names` passed to an initial call to `d4est_norms_write_headers`.
+  - norm_fcns: A function pointer for each norm declared in `norm_names`. These functions are responsible for actually computing the norms. You can provide custom functions, or use the implementations supplied in the `d4est_norms_fcn` namespace.
 */
 void
 d4est_norms_save

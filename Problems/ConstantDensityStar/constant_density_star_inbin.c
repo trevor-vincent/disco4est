@@ -203,7 +203,7 @@ problem_init
     );
     
   
-  d4est_norms_energy_norm_fit_t* fit = d4est_norms_new_energy_norm_fit(d4est_amr->num_of_amr_steps);
+  d4est_norms_fcn_energy_fit_t* fit = d4est_norms_new_energy_norm_fit(d4est_amr->num_of_amr_steps);
 
     d4est_ip_energy_norm_data_t ip_norm_data;
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;

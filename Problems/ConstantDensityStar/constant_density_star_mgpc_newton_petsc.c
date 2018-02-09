@@ -260,7 +260,7 @@ problem_init
   }
 
   
-  /* d4est_norms_energy_norm_fit_t* fit = d4est_norms_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1); */
+  /* d4est_norms_fcn_energy_fit_t* fit = d4est_norms_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1); */
   
   /*   d4est_ip_energy_norm_data_t ip_norm_data; */
   /*   ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn; */
@@ -269,13 +269,13 @@ problem_init
 
   // Norm function contexts
   
-  d4est_norms_L2_ctx_t L2_norm_ctx;
+  d4est_norms_fcn_L2_ctx_t L2_norm_ctx;
   L2_norm_ctx.p4est = p4est;
   L2_norm_ctx.d4est_ops = d4est_ops;
   L2_norm_ctx.d4est_geom = d4est_geom;
   L2_norm_ctx.d4est_quad = d4est_quad;
   
-  d4est_norms_energy_ctx_t energy_norm_ctx;
+  d4est_norms_fcn_energy_ctx_t energy_norm_ctx;
   energy_norm_ctx.p4est = p4est;
   energy_norm_ctx.d4est_ops = d4est_ops;
   energy_norm_ctx.d4est_geom = d4est_geom;
@@ -379,7 +379,7 @@ problem_init
       (d4est_xyz_fcn_t []){ constant_density_star_analytic_solution },
       (void * []){ &ctx },
       (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
-      (d4est_norm_fcn_t[]){ &d4est_norms_L2, &d4est_norms_Linfty, &d4est_norms_energy, &d4est_norms_energy_estimator },
+      (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy, &d4est_norms_fcn_energy_estimator },
       (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx }
     );
 

@@ -19,7 +19,7 @@ typedef struct {
   int num_of_data_entries;
   int stride;
   
-} d4est_norms_energy_norm_fit_t;
+} d4est_norms_fcn_energy_fit_t;
 
 
 typedef struct {
@@ -29,7 +29,7 @@ typedef struct {
   d4est_geometry_t* d4est_geom;
   d4est_quadrature_t* d4est_quad;
   
-} d4est_norms_L2_ctx_t;
+} d4est_norms_fcn_L2_ctx_t;
 
 typedef struct {
 
@@ -43,9 +43,9 @@ typedef struct {
 
   d4est_ip_energy_norm_data_t* energy_norm_data;
   double energy_estimator_sq_local;
-  d4est_norms_energy_norm_fit_t* fit;
+  d4est_norms_fcn_energy_fit_t* fit;
 
-} d4est_norms_energy_ctx_t;
+} d4est_norms_fcn_energy_ctx_t;
 
 
 typedef double
@@ -57,16 +57,16 @@ typedef double
 );
 
 
-double d4est_norms_L2(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
+double d4est_norms_fcn_L2(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
 
-double d4est_norms_Linfty(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
+double d4est_norms_fcn_Linfty(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
 
-double d4est_norms_energy(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
-void d4est_norms_destroy_energy_norm_fit(d4est_norms_energy_norm_fit_t *fit);
-void d4est_norms_energy_norm_add_entry_and_fit(p4est_t *p4est,d4est_norms_energy_norm_fit_t *fit,double global_energy_norm_sqr,double global_dof);
-void d4est_norms_energy_norm_fit(p4est_t *p4est,d4est_norms_energy_norm_fit_t *fit);
+double d4est_norms_fcn_energy(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
+void d4est_norms_fcn_energy_destroy_fit(d4est_norms_fcn_energy_fit_t *fit);
+void d4est_norms_fcn_energy_add_entry_and_fit(p4est_t *p4est,d4est_norms_fcn_energy_fit_t *fit,double global_energy_norm_sqr,double global_dof);
+void d4est_norms_fcn_energy_fit(p4est_t *p4est,d4est_norms_fcn_energy_fit_t *fit);
 
-double d4est_norms_energy_estimator(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
+double d4est_norms_fcn_energy_estimator(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
 
 void d4est_norms_write_headers(const char** field_names,const char** norm_names);
 void d4est_norms_save(p4est_t *p4est,const char** field_names,double** field_values,double** field_values_compare,d4est_xyz_fcn_t *analytical_solution,void** analytical_solution_ctxs,const char** norm_names,d4est_norm_fcn_t *norm_fcns,void **norm_fcn_ctxs);

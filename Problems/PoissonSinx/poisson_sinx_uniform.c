@@ -159,7 +159,7 @@ problem_init
   
   // Norm function contexts
   
-  d4est_norms_L2_ctx_t L2_norm_ctx;
+  d4est_norms_fcn_L2_ctx_t L2_norm_ctx;
   L2_norm_ctx.p4est = p4est;
   L2_norm_ctx.d4est_ops = d4est_ops;
   L2_norm_ctx.d4est_geom = d4est_geom;
@@ -277,7 +277,7 @@ problem_init
       (d4est_xyz_fcn_t[]){ poisson_sinx_analytic_solution },
       (void * []) { &ctx },
       (const char * []){"L_2", "L_infty", NULL},
-      (d4est_norm_fcn_t[]){ &d4est_norms_L2, &d4est_norms_Linfty },
+      (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty },
       (void * []){ &L2_norm_ctx, NULL }
     );
     P4EST_FREE(u_analytic);

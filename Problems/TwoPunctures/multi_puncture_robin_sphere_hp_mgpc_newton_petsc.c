@@ -346,7 +346,7 @@ problem_init
   d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
 
-  d4est_norms_energy_norm_fit_t* fit = d4est_norms_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
+  d4est_norms_fcn_energy_fit_t* fit = d4est_norms_new_energy_norm_fit(d4est_amr->num_of_amr_steps + 1);
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 

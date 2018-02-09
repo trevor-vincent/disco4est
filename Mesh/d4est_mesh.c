@@ -1345,41 +1345,6 @@ d4est_mesh_compute_l2_norm_sqr
 }
 
 
-double
-d4est_mesh_compute_linf // TODO: remove
-(
- p4est_t* p4est,
- double* nodal_vec,
- int (*skip_element_fcn)(d4est_element_data_t*)
-)
-{
-  double linf = 0.;
-  for (p4est_topidx_t tt = p4est->first_local_tree;
-       tt <= p4est->last_local_tree;
-       ++tt)
-    {
-      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-      sc_array_t* tquadrants = &tree->quadrants;
-      int Q = (p4est_locidx_t) tquadrants->elem_count;
-      for (int q = 0; q < Q; ++q) {
-        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        d4est_element_data_t* ed = quad->p.user_data;
-        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
-        int skip_element = (skip_element_fcn != NULL) ? skip_element_fcn(ed) : 0;
-        if (!skip_element){
-          for (int i = 0; i < volume_nodes; i++){
-            double linf_temp = fabs(nodal_vec[ed->nodal_stride + i]);
-            if(linf_temp > linf)
-              linf = linf_temp;
-          }
-        }
-      }
-    }
-  return linf;
-}
-
-
-
 d4est_local_sizes_t
 d4est_mesh_init_element_data
 (
