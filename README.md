@@ -48,3 +48,6 @@ The dependencies are OpenMPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will ne
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+</a><br />The logo is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/3.0/">Creative Commons  License</a>.
+
+The disco-ball in the logo is a modified version of a design by Daouna Jeong from the Noun Project and the tree in the logo is a modified version of a design created by Musket from the Noun Project.
