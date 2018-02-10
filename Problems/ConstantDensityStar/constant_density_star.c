@@ -380,14 +380,6 @@ problem_init
     
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
 
-    /* DEBUG_PRINT_ARR_DBL(prob_vecs.u, prob_vecs.local_nodes); */
-    /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs.u, prob_vecs.local_nodes); */
-
-    /* double u_sum = 0.; */
-    /* for (int i = 0; i < prob_vecs.local_nodes; i++) */
-      /* u_sum += prob_vecs.u[i]; */
-    /* printf("u sum = %.25f\n", u_sum); */
-    
     if (!init_params.do_not_solve){
     d4est_solver_newton_solve
       (
