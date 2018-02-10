@@ -1,8 +1,6 @@
 *~
 /Makefile
 /.dir-locals.el
-/Flux/curved_Gauss_primal_sipg_kronbichler_flux_fcns_new.c
-/Geometry/#d4est_geometry.c#
 
 # Noise
 .DS_Store

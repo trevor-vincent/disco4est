@@ -13,11 +13,14 @@
 [submodule "ThirdParty/zlog"]
 	path = ThirdParty/zlog
 	url = https://github.com/HardySimpson/zlog
+	ignore = dirty
 [submodule "ThirdParty/OpenBLAS"]
 	path = ThirdParty/OpenBLAS
 	url = https://github.com/xianyi/OpenBLAS
 	branch = master
+	ignore = dirty		
 [submodule "ThirdParty/hdf5"]
 	path = ThirdParty/hdf5
 	url = https://github.com/live-clones/hdf5.git
 	branch = master
+	ignore = dirty
