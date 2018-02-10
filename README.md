@@ -45,7 +45,7 @@ The dependencies are OpenMPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will ne
 
   For the example to complete in O(10s) you may want to consult the `options.input` file to set `amr.num_of_amr_steps=1`.
 
-## License
+## Licenses
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 </a><br />The logo is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/3.0/">Creative Commons  License</a>.
