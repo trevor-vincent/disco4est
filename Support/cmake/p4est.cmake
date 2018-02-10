@@ -123,7 +123,8 @@ macro(p4est_build)
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make ${num_of_build_threads}
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make install
   )
-  add_dependencies(p4est p4est_bundled_libs)
+  add_dependencies(p4est zlib)
+  add_dependencies(p4est openblas)
   add_dependencies(build_bundled_libs p4est)
 endmacro()
 

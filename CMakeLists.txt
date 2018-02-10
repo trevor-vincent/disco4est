@@ -121,10 +121,9 @@ add_library(d4est ${SRCS} ${SRCS_2D_ONLY})
 add_dependencies(d8est build_bundled_libs)
 add_dependencies(d4est build_bundled_libs)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
-
-add_custom_target(p4est_bundled_libs)
 add_custom_target(build_bundled_libs)
 
+include(openblas)
 include(zlib)
 include(p4est)
 include(petsc)

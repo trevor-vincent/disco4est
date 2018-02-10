@@ -81,7 +81,8 @@ macro(petsc_build)
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make -j1
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make install
     )
-add_dependencies(build_bundled_libs petsc)
+  add_dependencies(petsc openblas)
+  add_dependencies(build_bundled_libs petsc)
 
 endmacro()
 if (ENABLE_BUNDLED_PETSC)

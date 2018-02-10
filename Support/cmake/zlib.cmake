@@ -59,7 +59,7 @@ macro(zlib_build)
   )
   set_target_properties(zlib PROPERTIES EXCLUDE_FROM_ALL ON)
   add_dependencies(build_bundled_libs zlib)
-  add_dependencies(p4est_bundled_libs zlib)
+
 endmacro()
 
 
