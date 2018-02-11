@@ -128,6 +128,7 @@ include(zlib)
 include(p4est)
 include(petsc)
 include(zlog)
+include(hdf5)
 
 subdirs(ThirdParty)
 

@@ -44,12 +44,12 @@ message(STATUS "Use openblas library: ${OPENBLAS_LIBRARIES}")
 
 macro(openblas_build)
   ExternalProject_Add(openblas
-    CMAKE_CXX_FLAGS "-Wunused-but-set-variable -Wunused-variable -Wincompatible-pointer-types"
     PREFIX              ${CMAKE_BINARY_DIR}/ThirdParty/OpenBLAS
     SOURCE_DIR          ${CMAKE_SOURCE_DIR}/ThirdParty/OpenBLAS
     CONFIGURE_COMMAND   ""
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/OpenBLAS && make PREFIX=${OPENBLAS_BUNDLED_PREFIX}
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/OpenBLAS && make PREFIX=${OPENBLAS_BUNDLED_PREFIX} install
+    CMAKE_ARGS -DCMAKE_CXX_FLAGS="-Wunused-but-set-variable -Wunused-variable -Wincompatible-pointer-types -Wformat-nonliteral -Wstrict-overflow -Wconversion -Wunused-but-set-variable"
     )
     add_dependencies(build_bundled_libs openblas)
 endmacro()
