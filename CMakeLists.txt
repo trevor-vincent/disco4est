@@ -1,4 +1,15 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
+function(message)
+  list(GET ARGV 0 MessageType)
+  if(MessageType STREQUAL FATAL_ERROR OR
+     MessageType STREQUAL SEND_ERROR OR
+     MessageType STREQUAL WARNING OR
+     MessageType STREQUAL AUTHOR_WARNING)
+    list(REMOVE_AT ARGV 0)
+    _message(${MessageType} "${ARGV}")
+  endif()
+endfunction()
+
 
 include(ExternalProject)
 
@@ -11,8 +22,6 @@ set(CMAKE_MODULE_PATH
 )
 include(machine)
 
-include_directories(${OPENBLAS_INCLUDE_DIR})
-include_directories(${HDF5_INCLUDE_DIR})
 find_package(MPI REQUIRED)
 
 ##

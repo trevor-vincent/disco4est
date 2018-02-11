@@ -49,7 +49,9 @@ macro(openblas_build)
     CONFIGURE_COMMAND   ""
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/OpenBLAS && make PREFIX=${OPENBLAS_BUNDLED_PREFIX}
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/OpenBLAS && make PREFIX=${OPENBLAS_BUNDLED_PREFIX} install
-    CMAKE_ARGS -DCMAKE_CXX_FLAGS="-Wunused-but-set-variable -Wunused-variable -Wincompatible-pointer-types -Wformat-nonliteral -Wstrict-overflow -Wconversion -Wunused-but-set-variable"
+    CMAKE_ARGS
+    -DCMAKE_CXX_FLAGS:STRING=-Wunused-but-set-variable -Wunused-variable -Wincompatible-pointer-types -Wformat-nonliteral -Wstrict-overflow -Wconversion -Wunused-but-set-variable -Wunsafe-loop-optimizations -Wunused-parameter -Wlarger-than= -Wdiscarded-qualifiers -Wfloat-equal -Wmaybe-uninitialized -Wcomment
+    -DCMAKE_C_FLAGS:STRING=-Wunused-but-set-variable -Wunused-variable -Wincompatible-pointer-types -Wformat-nonliteral -Wstrict-overflow -Wconversion -Wunused-but-set-variable -Wunsafe-loop-optimizations -Wunused-parameter -Wlarger-than= -Wdiscarded-qualifiers -Wfloat-equal -Wmaybe-uninitialized -Wcomment
     )
     add_dependencies(build_bundled_libs openblas)
 endmacro()

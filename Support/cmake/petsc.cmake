@@ -77,9 +77,10 @@ macro(petsc_build)
     --with-ssl=0
     --with-make-np=1
     --with-shared-libraries=0
+    --with-silent-rules=1
     --prefix=${PETSC_BUNDLED_PREFIX}
-    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make -j1
-    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make install
+    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make -j1 --silent V=0
+    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make install --silent
     )
   add_dependencies(petsc openblas)
   add_dependencies(build_bundled_libs petsc)

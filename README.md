@@ -1,4 +1,5 @@
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/trevor-vincent/d4est/blob/master/LICENSE.md)
+[![Build Status](https://travis-ci.org/trevor-vincent/d4est.svg?branch=master)](https://travis-ci.org/trevor-vincent/d4est)
 <p align="center">
 <img src="http://cita.utoronto.ca/~tvincent/logo.png" width="250">
 </p>
@@ -6,7 +7,7 @@ disco4est (d4est) is a scalable hp-adaptive discontinuous Galerkin solver for co
 
 ## Prerequisites
 
-The dependencies are OpenMPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will need at least OpenMPI, OpenBLAS and HDF5. If you do not have zlib, PETSc or p4est, these come bundled, so they will be installed automatically to the local build folder unless you specify otherwise.
+The dependencies are MPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will need at least MPI. If you do not have zlib, PETSc p4est, HDF5 or OpenBLAS, then these come bundled, so they will be installed automatically to the local build folder unless you specify otherwise.
 
 > On Mac OS X, you may simply install most dependencies through Homebrew:
 >
@@ -22,10 +23,10 @@ The dependencies are OpenMPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will ne
 
 1) `git clone --recursive https://github.com/trevor-vincent/d4est && cd d4est`
 
-2) Duplicate `Support/machine.cmake.example` to `Support/machine.cmake` and edit the paths to the dependencies.
+2) Duplicate `Support/machine.cmake.prefix.example` or `Support/machine.cmake.bundled.example` to `Support/machine.cmake` and edit the paths to the dependencies.
   - If you have already installed p4est, zlib and petsc, also give their respective paths.
   - Adjust the `CMAKE_BUILD_TYPE` variable to `Release` for (much faster) production builds.
-  - If you choose to use the bundled PETSc, p4est and zlib, then these will be located in the build directory and will be compiled only once, unless you change cmake commandline options or delete the build directory.
+  - If you choose to use the bundled libraries, then these will be located in the build directory and will be compiled only once, unless you change cmake commandline options or delete the build directory.
   - The cmake script searches for the MPI build on your system, so this never needs to be specified. The cmake script does not search for any of the other dependencies (this is a TODO).
 
 3) Compile:

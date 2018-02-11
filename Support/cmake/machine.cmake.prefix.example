@@ -2,10 +2,10 @@
 set(CMAKE_BUILD_TYPE "Debug")
 
 # OpenBLAS
-set(OPENBLAS_DIR "/usr/local/opt/openblas")
-set(OPENBLAS_ROOT "/usr/local/opt/openblas")
-set(OPENBLAS_LIBRARIES "/usr/local/opt/openblas/lib/libopenblas.a")
-set(OPENBLAS_INCLUDE_DIR "/usr/local/opt/openblas/include")
+#set(OPENBLAS_DIR "/usr/local/opt/openblas")
+#set(OPENBLAS_ROOT "/usr/local/opt/openblas")
+#set(OPENBLAS_LIBRARIES "/usr/local/opt/openblas/lib/libopenblas.a")
+#set(OPENBLAS_INCLUDE_DIR "/usr/local/opt/openblas/include")
 
 # gperftools
 set(USE_TCMALLOC ON)
@@ -15,10 +15,10 @@ set(TCMALLOC_LIBRARIES "/usr/local/opt/gperftools/lib/libtcmalloc.a")
 set(TCMALLOC_INCLUDE_DIR "/usr/local/opt/gperftools/include/gperftools")
 
 # HDF5 & SZIP
-set(HDF5_LIBRARIES
-  "/usr/local/opt/hdf5/lib/libhdf5.a"
-  "/usr/local/opt/szip/lib/libsz.a")
-set(HDF5_INCLUDE_DIR "/usr/local/opt/hdf5/include")
+#set(HDF5_LIBRARIES
+#  "/usr/local/opt/hdf5/lib/libhdf5.a"
+#  "/usr/local/opt/szip/lib/libsz.a")
+# set(HDF5_INCLUDE_DIR "/usr/local/opt/hdf5/include")
 
 # Optional: If not set, these libraries will be built from the included submodules (see README.md)
 set(PETSC_PREFIX "/usr/local/opt/petsc")
@@ -26,3 +26,5 @@ set(P4EST_PREFIX "/usr/local/opt/p4est")
 set(ZLIB_PREFIX "/usr/local/opt/zlib")
 #set(ENABLE_BUNDLED_ZLOG ON)
 set(ZLOG_PREFIX "/usr/local/opt/zlog")
+set(OPENBLAS_PREFIX "/usr/local/opt/openblas")
+set(HDF5_PREFIX "/usr/local/opt/hdf5")

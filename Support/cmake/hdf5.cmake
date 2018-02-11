@@ -14,7 +14,7 @@ macro(hdf5_use_bundled)
 endmacro()
 
 macro(hdf5_try_system)
-  find_package(BLAS REQUIRED)
+  find_package(HDF5 REQUIRED)
   message(STATUS "Found a system-wide hdf5.")
 endmacro()
 

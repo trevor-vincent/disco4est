@@ -120,8 +120,8 @@ macro(p4est_build)
     # --disable-shared
     # --without-zlib
     --prefix=${P4EST_BUNDLED_PREFIX}
-    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make ${num_of_build_threads}
-    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make install
+    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make --silent V=0 ${num_of_build_threads}
+    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make install --silent V=0
   )
   add_dependencies(p4est zlib)
   add_dependencies(p4est openblas)

@@ -1,0 +1,19 @@
+language: cpp
+sudo: required
+
+matrix:
+  fast_finish: true
+  include:
+  - os: linux
+    compiler: gcc
+    dist: trusty
+    env: BUILD_TYPE=Debug BUILD_CODE=true
+
+script:
+    cd $HOME
+    && sudo apt-get install -y mpich
+    && ln -s ${TRAVIS_BUILD_DIR}/Support/cmake/machine.cmake.bundled.example ${TRAVIS_BUILD_DIR}/Support/cmake/machine.cmake
+    && mkdir build_${TRAVIS_OS_NAME}_${BUILD_TYPE}
+    && cd ./build_${TRAVIS_OS_NAME}_${BUILD_TYPE}
+    && cmake ${TRAVIS_BUILD_DIR} -DCMAKE_C_FLAGS=-std=c99
+    && make -j1
