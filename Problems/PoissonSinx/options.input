@@ -34,7 +34,7 @@ JAC_compute_method = numerical
 [d4est_vtk]
 filename = poisson_sinx_uniform
 geometry_section = geometry
-output_type = binary
+output_type = ascii
 grid_type = dg
 write_tree = 1
 write_level = 1
