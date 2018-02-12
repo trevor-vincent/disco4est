@@ -2,7 +2,7 @@
 #include <krylov_petsc.h>
 #include <d4est_linalg.h>
 
-static void 
+static void
 multigrid_smoother_krylov_petsc
 (
  p4est_t* p4est,
@@ -64,6 +64,10 @@ multigrid_smoother_krylov_petsc_init
  const char* input_file
 )
 {
+  zlog_category_t *c_default = zlog_get_category("solver_multigrid_smoother");
+  if (p4est->mpirank == 0)
+    zlog_info(c_default, "Initializing multigrid smoother solver...");
+
   multigrid_smoother_t* smoother = P4EST_ALLOC(multigrid_smoother_t, 1);
   krylov_petsc_params_t* params = P4EST_ALLOC(krylov_petsc_params_t, 1);
 
@@ -72,13 +76,15 @@ multigrid_smoother_krylov_petsc_init
      p4est,
      input_file,
      "mg_smoother_krylov_petsc",
-     "[MG_SMOOTHER_KRYLOV_PETSC]",
      params
     );
   
   smoother->user = params;
   smoother->smooth = multigrid_smoother_krylov_petsc;
   smoother->update = NULL;
+
+  if (p4est->mpirank == 0)
+    zlog_info(c_default, "Initialization of multigrid smoother solver complete.");
 
   return smoother;
 }

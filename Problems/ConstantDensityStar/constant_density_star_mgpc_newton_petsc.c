@@ -494,7 +494,7 @@ problem_init
       newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_params);
 
       krylov_petsc_params_t krylov_params;
-      krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_params);
+      krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_params);
       
       if (p4est->mpirank == 0)
         zlog_info(c_default, "Performing Newton PETSc solve...");

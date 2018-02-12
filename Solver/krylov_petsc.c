@@ -35,12 +35,12 @@ int krylov_petsc_input_handler
     D4EST_ASSERT(pconfig->ksp_view == -1);
     pconfig->ksp_view = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
-  }  
+  }
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_monitor")) {
     D4EST_ASSERT(pconfig->ksp_monitor == -1);
     pconfig->ksp_monitor = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
-  } 
+  }
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_converged_reason")) {
     D4EST_ASSERT(pconfig->ksp_converged_reason == -1);
     pconfig->ksp_converged_reason = atoi(value);
@@ -49,12 +49,12 @@ int krylov_petsc_input_handler
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_monitor_singular_value")) {
     pconfig->ksp_monitor_singular_value = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
-  }      
+  }
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_initial_guess_nonzero")) {
     D4EST_ASSERT(pconfig->ksp_initial_guess_nonzero == -1);
     pconfig->ksp_initial_guess_nonzero = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
-  }  
+  }
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_type")) {
     D4EST_ASSERT(pconfig->ksp_type[0] == '*');
     snprintf (pconfig->ksp_type, sizeof(pconfig->ksp_type), "%s", value);
@@ -76,7 +76,7 @@ int krylov_petsc_input_handler
     D4EST_ASSERT(pconfig->ksp_do_not_use_preconditioner == 0);
     pconfig->ksp_do_not_use_preconditioner = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
-  }  
+  }
   
   else {
     return 0;  /* unknown section/name, error */
@@ -145,7 +145,6 @@ krylov_petsc_input
  p4est_t* p4est,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
  krylov_petsc_params_t* input
 )
 {
@@ -185,19 +184,20 @@ krylov_petsc_input
   }
     
   if(p4est->mpirank == 0){
-    printf("%s: ksp_type = %s\n",printf_prefix, input->ksp_type);
-    printf("%s: ksp_view = %d\n",printf_prefix, input->ksp_view);
-    printf("%s: ksp_monitor = %d\n",printf_prefix, input->ksp_monitor);
-    printf("%s: ksp_atol = %s\n",printf_prefix, input->ksp_atol);
-    printf("%s: ksp_rtol = %s\n",printf_prefix, input->ksp_rtol);
-    printf("%s: ksp_maxit = %s\n",printf_prefix, input->ksp_max_it);
-    printf("%s: ksp_converged_reason = %d\n",printf_prefix, input->ksp_converged_reason);
-    printf("%s: ksp_initial_guess_nonzero = %d\n",printf_prefix, input->ksp_initial_guess_nonzero);
-    printf("%s: ksp_do_not_use_preconditioner = %d\n",printf_prefix, input->ksp_do_not_use_preconditioner);
+    zlog_category_t *c_default = zlog_get_category("krylov_petsc");
+    zlog_debug(c_default, "ksp_type = %s", input->ksp_type);
+    zlog_debug(c_default, "ksp_view = %d", input->ksp_view);
+    zlog_debug(c_default, "ksp_monitor = %d", input->ksp_monitor);
+    zlog_debug(c_default, "ksp_atol = %s", input->ksp_atol);
+    zlog_debug(c_default, "ksp_rtol = %s", input->ksp_rtol);
+    zlog_debug(c_default, "ksp_maxit = %s", input->ksp_max_it);
+    zlog_debug(c_default, "ksp_converged_reason = %d", input->ksp_converged_reason);
+    zlog_debug(c_default, "ksp_initial_guess_nonzero = %d", input->ksp_initial_guess_nonzero);
+    zlog_debug(c_default, "ksp_do_not_use_preconditioner = %d", input->ksp_do_not_use_preconditioner);
     if(d4est_util_match(input->ksp_type,"chebyshev")){
-      printf("%s: ksp_chebyshev_esteig_steps = %s\n",printf_prefix, input->ksp_chebyshev_esteig_steps);
-      printf("%s: ksp_chebyshev_esteig = %s\n",printf_prefix, input->ksp_chebyshev_esteig);
-      printf("%s: ksp_chebyshev_esteig_random = %d\n",printf_prefix, input->ksp_chebyshev_esteig_random);
+      zlog_debug(c_default, "ksp_chebyshev_esteig_steps = %s", input->ksp_chebyshev_esteig_steps);
+      zlog_debug(c_default, "ksp_chebyshev_esteig = %s", input->ksp_chebyshev_esteig);
+      zlog_debug(c_default, "ksp_chebyshev_esteig_random = %d", input->ksp_chebyshev_esteig_random);
     }
   }
 
@@ -215,7 +215,7 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   double* py;
 
   /* PetscFunctionBegin; */
-  ierr = MatShellGetContext( A, &ctx ); CHKERRQ(ierr);  
+  ierr = MatShellGetContext( A, &ctx ); CHKERRQ(ierr);
   petsc_ctx = (petsc_ctx_t *)ctx;
   ierr = VecGetArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecGetArray( y, &py ); CHKERRQ(ierr);
@@ -280,7 +280,7 @@ krylov_petsc_solve
  d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  p4est_ghost_t** ghost,
- d4est_element_data_t** ghost_data, 
+ d4est_element_data_t** ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -289,6 +289,10 @@ krylov_petsc_solve
  krylov_pc_t* krylov_pc
 )
 {
+  zlog_category_t *c_default = zlog_get_category("krylov_petsc");
+  if (p4est->mpirank == 0)
+    zlog_info(c_default, "Performing Krylov PETSc solve...");
+
   krylov_petsc_set_options_database_from_params(krylov_petsc_params);
 
   krylov_info_t info;
@@ -317,7 +321,7 @@ krylov_petsc_solve
   /* DEBUG_PRINT_ARR_DBL_SUM(u, local_nodes); */
   /* DEBUG_PRINT_ARR_DBL_SUM(rhs, local_nodes); */
   
-  KSPCreate(PETSC_COMM_WORLD,&ksp);  
+  KSPCreate(PETSC_COMM_WORLD,&ksp);
   VecCreate(PETSC_COMM_WORLD,&x);//CHKERRQ(ierr);
   VecSetSizes(x, local_nodes, PETSC_DECIDE);//CHKERRQ(ierr);
   VecSetFromOptions(x);//CHKERRQ(ierr);
@@ -352,7 +356,7 @@ krylov_petsc_solve
      PETSC_DETERMINE,
      (void*)&petsc_ctx,
      &A
-    ); 
+    );
   MatShellSetOperation(A,MATOP_MULT,(void(*)())krylov_petsc_apply_aij);
 
   /* Set Amat and Pmat, where Pmat is the matrix the Preconditioner needs */
@@ -371,6 +375,9 @@ krylov_petsc_solve
   VecDestroy(&x);
   VecDestroy(&b);
   KSPDestroy(&ksp);
+  
+  if (p4est->mpirank == 0)
+    zlog_info(c_default, "Krylov PETSc solve complete.");
 
   return info;
 }

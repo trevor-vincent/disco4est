@@ -407,7 +407,7 @@ problem_init
     krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, NULL);
     
     krylov_petsc_params_t krylov_petsc_params;
-    krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
+    krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_petsc_params);
 
     krylov_petsc_solve
       (

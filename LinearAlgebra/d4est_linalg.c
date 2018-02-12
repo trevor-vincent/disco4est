@@ -52,9 +52,9 @@ d4est_linalg_leftinverse(double *A, double* inv_A, int A_rows, int A_cols)
 }
 
 
-/** 
+/**
  C = A*B
- * 
+ *
  * @param A matrix of dimension m by l
  * @param B matrix of dimension l by n
  * @param C matrix of dimension m by n
@@ -121,13 +121,13 @@ d4est_linalg_mat_transpose (double *A, double *Atrans, int N)
       Atrans[i * N + j] = A[j * N + i];
 }
 
-/** 
- * 
- * 
- * @param A 
- * @param A_transpose 
- * @param A_rows 
- * @param A_cols 
+/**
+ *
+ *
+ * @param A
+ * @param A_transpose
+ * @param A_rows
+ * @param A_cols
  */
 void
 d4est_linalg_mat_transpose_nonsqr (double *A, double *A_transpose, int A_rows,
@@ -139,12 +139,12 @@ d4est_linalg_mat_transpose_nonsqr (double *A, double *A_transpose, int A_rows,
       A_transpose[j * A_rows + i] = A[i * A_cols + j];
 }
 
-/** 
+/**
  * Only for debugging purposes, or small matrices.
  * This should not be called many times.
- * 
- * @param A 
- * @param column 
+ *
+ * @param A
+ * @param column
  * @param N rows
  * @param M columns
  */
@@ -187,7 +187,7 @@ d4est_linalg_vec_normalize(double*x, int N)
 {
   double xdotx = d4est_linalg_vec_dot(x,x,N);
   double norm = sqrt(xdotx);
-  d4est_linalg_vec_scale(norm, x, N); 
+  d4est_linalg_vec_scale(norm, x, N);
 }
 
 void d4est_linalg_vec_gen_random(double* vec, int N, long int seed, double a, double b){
@@ -242,14 +242,14 @@ d4est_linalg_fill_vec (double *v, double val, int N)
     v[i] = val;
 }
 
-/** 
- * This routine will work irrespective of the 
+/**
+ * This routine will work irrespective of the
  * data order (COL or ROW major) b.c the matrix is
  * symmetric
- * 
+ *
  * @param A an NxN matrix
- * @param eig_vals vector of eigen values 
- * @param N 
+ * @param eig_vals vector of eigen values
+ * @param N
  */
 void
 d4est_linalg_sym_eigvals (double *A, double *eig_vals, int N)
@@ -287,6 +287,13 @@ d4est_linalg_vec_fabs(double* x, int N)
 }
 
 void
+d4est_linalg_vec_fabsdiff(double* x, double* y, double* result, int N)
+{
+  d4est_linalg_vec_axpyeqz(-1., x, y, result, N);
+  d4est_linalg_vec_fabs(result, N);
+}
+
+void
 d4est_linalg_component_mult
 (
  double* x,
@@ -320,11 +327,11 @@ d4est_linalg_component_div
 }
 
 
-/** 
+/**
  * return v1 \cross v2
- * 
+ *
  * @param v1
- * @param v2 
+ * @param v2
  */
 void
 d4est_linalg_cross_prod
@@ -372,7 +379,7 @@ d4est_linalg_vec1_trans_mat_vec2
 {
 
   double *mat_vec2 = (double *) malloc (sizeof (double) * N);
-  d4est_linalg_matvec_plus_vec(1., mat, vec2, 0., mat_vec2, N, N);                      
+  d4est_linalg_matvec_plus_vec(1., mat, vec2, 0., mat_vec2, N, N);
   double dot = d4est_linalg_vec_dot(vec1, mat_vec2, N);
   free(mat_vec2);
   return dot;
