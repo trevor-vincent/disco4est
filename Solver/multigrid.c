@@ -41,7 +41,7 @@ multigrid_get_level_range
         min = (level < min) ? level : min;
         max = (level > max) ? level : max;
       }
-    }  
+    }
 
 
   int local_reduce [2];
@@ -95,7 +95,7 @@ multigrid_update_components
     if (mg_data->bottom_solver->update != NULL){
       mg_data->bottom_solver->update(p4est, level, data);
     }
-  }   
+  }
 
   if (mg_data->smoother != NULL){
     if (mg_data->smoother->update != NULL){
@@ -410,7 +410,7 @@ multigrid_vcycle
   /**********************************************************/
   /******************* BEGIN GOING DOWN V *******************/
   /**********************************************************/
-  /**********************************************************/  
+  /**********************************************************/
   /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
 
   #ifdef DEBUG_INFO
@@ -420,7 +420,7 @@ multigrid_vcycle
   printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[toplevel]);
   printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[toplevel]);
   printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[toplevel]);
-#endif    
+#endif
   mg_data->mg_state = PRE_V; multigrid_update_components(p4est, toplevel, NULL);
 
   
@@ -434,14 +434,14 @@ multigrid_vcycle
     /**********************************************************/
     /******************* PRE SMOOTH ***************************/
     /**********************************************************/
-    /**********************************************************/  
+    /**********************************************************/
     
     /* set initial guess for error */
     d4est_linalg_fill_vec(&err_at0[stride_to_fine_data], 0., nodes_on_level_of_multigrid[level]);//mg_data->fine_nodes);
 
     if (level == toplevel){
       vecs_for_smooth.Au = vecs->Au;
-      vecs_for_smooth.u = vecs->u; 
+      vecs_for_smooth.u = vecs->u;
       vecs_for_smooth.rhs = vecs->rhs;
       vecs_for_smooth.local_nodes = vecs->local_nodes;
     }
@@ -456,7 +456,7 @@ multigrid_vcycle
     /**********************************************************/
     /******************* BEGIN SMOOTH *************************/
     /**********************************************************/
-    /**********************************************************/  
+    /**********************************************************/
 
 #ifdef DEBUG_INFO
     printf("Level = %d\n", level);
@@ -484,21 +484,21 @@ multigrid_vcycle
     printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
     printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
     printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
-#endif    
+#endif
     mg_data->mg_state = DOWNV_POST_SMOOTH; multigrid_update_components(p4est, level, &vecs_for_smooth);
     
     /**********************************************************/
     /**********************************************************/
     /********************* END SMOOTH *************************/
     /**********************************************************/
-    /**********************************************************/  
+    /**********************************************************/
 
 
     /**********************************************************/
     /**********************************************************/
     /******************* BEGIN COARSEN ************************/
     /**********************************************************/
-    /**********************************************************/  
+    /**********************************************************/
 #ifdef DEBUG_INFO
     printf("Level = %d\n", level);
     printf("State = %s\n", "DOWNV_PRE_COARSEN");
@@ -533,7 +533,7 @@ multigrid_vcycle
     /**********************************************************/
     /******************* END COARSEN **************************/
     /**********************************************************/
-    /**********************************************************/  
+    /**********************************************************/
     
     /* p4est has changed, so update the element data, this does not change the stride */
     /* element_data_init(p4est, -1); */
@@ -552,8 +552,8 @@ multigrid_vcycle
     /**********************************************************/
     /******************* BEGIN BALANCE ************************/
     /**********************************************************/
-    /**********************************************************/  
-    mg_data->mg_state = DOWNV_PRE_BALANCE; multigrid_update_components(p4est, level, NULL);   
+    /**********************************************************/
+    mg_data->mg_state = DOWNV_PRE_BALANCE; multigrid_update_components(p4est, level, NULL);
     
     /* does not change the stride */
     p4est_balance_ext (p4est, P4EST_CONNECT_FACE, NULL, multigrid_store_balance_changes);
@@ -563,7 +563,7 @@ multigrid_vcycle
     /**********************************************************/
     /******************* END BALANCE **************************/
     /**********************************************************/
-    /**********************************************************/  
+    /**********************************************************/
     
     /* element_data_init(p4est, -1); */
 
@@ -626,10 +626,10 @@ multigrid_vcycle
     printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
     printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
     printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
-    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);    
+    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
 #endif
     
-    mg_data->mg_state = DOWNV_POST_RESTRICTION; multigrid_update_components(p4est, level, NULL);   
+    mg_data->mg_state = DOWNV_POST_RESTRICTION; multigrid_update_components(p4est, level, NULL);
 
     d4est_linalg_copy_1st_to_2nd
       (
@@ -665,7 +665,7 @@ multigrid_vcycle
   vecs_for_bottom_solve.local_nodes = nodes_on_level_of_multigrid[bottomlevel];
 
 
-  mg_data->mg_state = COARSE_PRE_SOLVE; multigrid_update_components(p4est, level, &vecs_for_bottom_solve);   
+  mg_data->mg_state = COARSE_PRE_SOLVE; multigrid_update_components(p4est, level, &vecs_for_bottom_solve);
   
   mg_data->bottom_solver->solve
     (
@@ -676,7 +676,7 @@ multigrid_vcycle
      &rres_at0[stride_to_fine_data]//[mg_data->fine_nodes]),
     );
 
-  mg_data->mg_state = COARSE_POST_SOLVE; multigrid_update_components(p4est, level, &vecs_for_bottom_solve);   
+  mg_data->mg_state = COARSE_POST_SOLVE; multigrid_update_components(p4est, level, &vecs_for_bottom_solve);
 
   /* d4est_util_print_matrix(&rres_at0[stride_to_fine_data],mg_data->coarse_nodes,1,"rres coarse solve= ", 0); */
   
@@ -722,7 +722,7 @@ multigrid_vcycle
     /**********************************************************/
 
     
-    mg_data->mg_state = UPV_PRE_REFINE; multigrid_update_components(p4est, level, NULL);   
+    mg_data->mg_state = UPV_PRE_REFINE; multigrid_update_components(p4est, level, NULL);
     
     /* increments the stride */
     p4est_refine_ext(p4est,
@@ -734,7 +734,7 @@ multigrid_vcycle
                     );
 
 
-    mg_data->mg_state = UPV_POST_REFINE; multigrid_update_components(p4est, level, NULL);   
+    mg_data->mg_state = UPV_POST_REFINE; multigrid_update_components(p4est, level, NULL);
 
 
     /**********************************************************/
@@ -781,7 +781,7 @@ multigrid_vcycle
     /**********************************************************/
     
 
-    mg_data->mg_state = UPV_PRE_SMOOTH; multigrid_update_components(p4est, level, &vecs_for_smooth);   
+    mg_data->mg_state = UPV_PRE_SMOOTH; multigrid_update_components(p4est, level, &vecs_for_smooth);
     
     mg_data->smoother->smooth
       (
@@ -792,7 +792,7 @@ multigrid_vcycle
        fine_level
       );
 
-    mg_data->mg_state = UPV_POST_SMOOTH; multigrid_update_components(p4est, level, &vecs_for_smooth);   
+    mg_data->mg_state = UPV_POST_SMOOTH; multigrid_update_components(p4est, level, &vecs_for_smooth);
 
 
     /**********************************************************/
@@ -854,7 +854,7 @@ multigrid_compute_residual
   /* d4est_geometry_t* d4est_geom = mg_data->d4est_geom; */
   
   if (mg_data->mg_state == START){
-    double* Au; 
+    double* Au;
     double* rhs;
     int local_nodes = vecs->local_nodes;
     Au = vecs->Au;
@@ -876,7 +876,7 @@ multigrid_compute_residual
 
     
     d4est_linalg_vec_axpyeqz(-1., Au, rhs, r, local_nodes);
-    double r2_0_local = d4est_linalg_vec_dot(r,r,local_nodes);  
+    double r2_0_local = d4est_linalg_vec_dot(r,r,local_nodes);
     P4EST_FREE(r);
   
     double r2_0_global = -1;
@@ -888,7 +888,7 @@ multigrid_compute_residual
        sc_MPI_DOUBLE,
        sc_MPI_SUM,
        sc_MPI_COMM_WORLD
-      );  
+      );
   
     return r2_0_global;
   }
@@ -942,7 +942,7 @@ multigrid_solve
   multigrid_update_components(p4est, -1, NULL);
   /**
    * START VCYCLING
-   * 
+   *
    */
   while
     (

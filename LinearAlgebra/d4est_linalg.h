@@ -9,6 +9,7 @@ void d4est_linalg_cross_prod(double ax,double ay,double az,double bx,double by,d
 void d4est_linalg_component_div(double *x,double *y,double *xdivy,int N);
 void d4est_linalg_component_mult(double *x,double *y,double *xy,int N);
 void d4est_linalg_vec_fabs(double *x,int N);
+void d4est_linalg_vec_fabsdiff(double* x, double* y, double* result, int N);
 void d4est_linalg_sym_eigvecs(double *A,double *eig_vals,int N);
 void d4est_linalg_sym_eigvals(double *A,double *eig_vals,int N);
 void d4est_linalg_fill_vec(double *v,double val,int N);

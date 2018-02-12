@@ -2,7 +2,7 @@
 #include <krylov_petsc.h>
 
 
-static void 
+static void
 multigrid_bottom_solver_krylov_petsc
 (
  p4est_t* p4est,
@@ -48,6 +48,10 @@ multigrid_bottom_solver_krylov_petsc_init
  const char* input_file
 )
 {
+  zlog_category_t *c_default = zlog_get_category("solver_multigrid_bottom");
+  if (p4est->mpirank == 0)
+    zlog_info(c_default, "Initializing multigrid bottom solver...");
+
   multigrid_bottom_solver_t* bottom_solver = P4EST_ALLOC(multigrid_bottom_solver_t, 1);
   krylov_petsc_params_t* params = P4EST_ALLOC(krylov_petsc_params_t, 1);
 
@@ -56,13 +60,15 @@ multigrid_bottom_solver_krylov_petsc_init
      p4est,
      input_file,
      "mg_bottom_solver_krylov_petsc",
-     "[MG_BOTTOM_SOLVER_KRYLOV_PETSC]",
      params
     );
   
   bottom_solver->user = params;
   bottom_solver->solve = multigrid_bottom_solver_krylov_petsc;
   bottom_solver->update = NULL;
+
+  if (p4est->mpirank == 0)
+    zlog_info(c_default, "Initialization of multigrid bottom solver complete.");
 
   return bottom_solver;
 }

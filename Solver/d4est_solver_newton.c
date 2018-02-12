@@ -6,6 +6,7 @@
 #include <krylov_pc.h>
 #include <krylov_petsc.h>
 #include <sc_reduce.h>
+#include <zlog.h>
 
 
 static
@@ -42,7 +43,7 @@ int d4est_solver_newton_input_handler
   else {
     return 0;  /* unknown section/name, error */
   }
-  return 1;  
+  return 1;
 }
 
 
@@ -73,31 +74,32 @@ d4est_solver_newton_input
 
    
   if(p4est->mpirank == 0){
-    printf("[D4EST_SOLVER_NEWTON]: atol = %f\n", input.atol);
-    printf("[D4EST_SOLVER_NEWTON]: rtol = %f\n", input.rtol);
-    printf("[D4EST_SOLVER_NEWTON]: imin = %d\n", input.imin);
-    printf("[D4EST_SOLVER_NEWTON]: imax = %d", input.imax);
-    printf("[D4EST_SOLVER_NEWTON]: monitor = %d\n", input.monitor);
+    zlog_category_t *c_default = zlog_get_category("solver_newton");
+    zlog_debug(c_default, "atol = %f", input.atol);
+    zlog_debug(c_default, "rtol = %f", input.rtol);
+    zlog_debug(c_default, "imin = %d", input.imin);
+    zlog_debug(c_default, "imax = %d", input.imax);
+    zlog_debug(c_default, "monitor = %d", input.monitor);
   }
   
   return input;
 }
 
 
-/** 
- * Make sure Jacobian has zeroed boundary conditions and build residual has normal 
+/**
+ * Make sure Jacobian has zeroed boundary conditions and build residual has normal
  * boundary condtions
- * 
- * @param p4est 
- * @param vecs 
- * @param fcns 
- * @param params 
- * @param ghost 
- * @param ghost_data 
- * @param d4est_ops 
- * @param krylov_solve 
- * 
- * @return 
+ *
+ * @param p4est
+ * @param vecs
+ * @param fcns
+ * @param params
+ * @param ghost
+ * @param ghost_data
+ * @param d4est_ops
+ * @param krylov_solve
+ *
+ * @return
  */
 int
 d4est_solver_newton_solve
@@ -106,7 +108,7 @@ d4est_solver_newton_solve
  d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  p4est_ghost_t** ghost,
- d4est_element_data_t** ghost_data, 
+ d4est_element_data_t** ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -115,13 +117,15 @@ d4est_solver_newton_solve
  krylov_pc_t* krylov_pc
 )
 {
+  zlog_category_t *c_default = zlog_get_category("solver_newton");
+  if(p4est->mpirank == 0)
+    zlog_info(c_default, "Performing Newton solve...");
 
   krylov_petsc_params_t petsc_params;
   krylov_petsc_input(p4est,
                      input_file,
                      "krylov_petsc",
-                     "[KRYLOV_PETSC_FOR_D4EST_SOLVER_NEWTON]",
-                     &petsc_params);      
+                     &petsc_params);
   
   int ierr = 0;
   int local_nodes = vecs->local_nodes;
@@ -176,7 +180,7 @@ d4est_solver_newton_solve
      &fnrm_global,
      1,
      sc_MPI_DOUBLE,
-     sc_MPI_SUM, 
+     sc_MPI_SUM,
      sc_MPI_COMM_WORLD
     );
 
@@ -188,7 +192,7 @@ d4est_solver_newton_solve
 
 
   if (p4est->mpirank == 0 && nr_params.monitor){
-    printf("[D4EST_SOLVER_NEWTON]: ITER %03d INITIAL FNRM  %.30f\n", itc, fnrm);
+    zlog_debug(c_default, "ITER %03d INITIAL FNRM  %.30f", itc, fnrm);
   }
   
   while((fnrm > stop_tol || itc < minit) && (itc < maxit)){
@@ -265,7 +269,7 @@ d4est_solver_newton_solve
     fnrm = sqrt(fnrm_global);
 
     if (p4est->mpirank == 0 && nr_params.monitor){
-      printf("[D4EST_SOLVER_NEWTON]: ITER %03d PRE-FNRM %.15e POST-FNRM  %.15e\n" ,itc, fnrmo,  fnrm);
+      zlog_debug(c_default, "ITER %03d PRE-FNRM %.15e POST-FNRM  %.15e" ,itc, fnrmo,  fnrm);
     }
     
   }
@@ -286,6 +290,9 @@ d4est_solver_newton_solve
   P4EST_FREE(step);
   P4EST_FREE(f0);
   P4EST_FREE(ft);
+
+  if (p4est->mpirank == 0)
+    zlog_info(c_default, "Newton solve complete.");
 
   return ierr;
 }
