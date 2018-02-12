@@ -27,7 +27,7 @@ The dependencies are MPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will need a
   - If you have already installed p4est, zlib and petsc, also give their respective paths.
   - Adjust the `CMAKE_BUILD_TYPE` variable to `Release` for (much faster) production builds.
   - If you choose to use the bundled libraries, then these will be located in the build directory and will be compiled only once, unless you change cmake commandline options or delete the build directory.
-  - The cmake script searches for the MPI build on your system, so this never needs to be specified. The cmake script does not search for any of the other dependencies (this is a TODO).
+  - The cmake script searches for the MPI build on your system, so this never needs to be specified.
 
 3) Compile:
 
