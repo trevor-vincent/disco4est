@@ -23,11 +23,11 @@ The dependencies are MPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will need a
 
 1) `git clone --recursive https://github.com/trevor-vincent/d4est && cd d4est`
 
-2) Duplicate `Support/machine.cmake.prefix.example` or `Support/machine.cmake.bundled.example` to `Support/machine.cmake` and edit the paths to the dependencies.
-  - If you have already installed p4est, zlib and petsc, also give their respective paths.
+2) Duplicate one of the `Support/cmake/machine.cmake.*.example` build configuration files to `Support/cmake/machine.cmake` and modify it to fit the local machine.
   - Adjust the `CMAKE_BUILD_TYPE` variable to `Release` for (much faster) production builds.
   - If you choose to use the bundled libraries, then these will be located in the build directory and will be compiled only once, unless you change cmake commandline options or delete the build directory.
   - The cmake script searches for the MPI build on your system, so this never needs to be specified.
+  - There is a preconfigured example file for the _Minerva_ cluster. On Minerva, also `source` `Support/Scripts/build.env.minerva.example` to configure the build environment, or duplicate and modify the file first.
 
 3) Compile:
 
@@ -45,6 +45,8 @@ The dependencies are MPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will need a
   ```
 
   For the example to complete in O(10s) you may want to consult the `options.input` file to set `amr.num_of_amr_steps=1`.
+  
+  On a cluster, refer to the `Support/Scripts/submit.*.*.example` files for guidance.
 
 
 ## Options documentation
