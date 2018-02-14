@@ -20,7 +20,7 @@ endmacro()
 
 macro(hdf5_try_prefix)
   find_path(HDF5_INCLUDE_DIRS hdf5.h ${HDF5_PREFIX}/include NO_DEFAULT_PATH)
-  find_library(HDF5_LIB libhdf5.a ${HDF5_PREFIX}/lib NO_DEFAULT_PATH)
+  find_library(HDF5_LIB libhdf5-static.a ${HDF5_PREFIX}/lib NO_DEFAULT_PATH)
 
   if(HDF5_INCLUDE_DIRS AND HDF5_LIB)
     set(HDF5_LIBRARIES ${HDF5_LIB})
