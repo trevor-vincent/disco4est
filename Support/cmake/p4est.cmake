@@ -124,7 +124,9 @@ macro(p4est_build)
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make install --silent V=0
   )
   add_dependencies(p4est zlib)
-  add_dependencies(p4est openblas)
+  if(ENABLE_BUNDLED_OPENBLAS)
+    add_dependencies(p4est openblas)
+  endif()
   add_dependencies(build_bundled_libs p4est)
 endmacro()
 

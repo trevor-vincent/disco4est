@@ -1,0 +1,11 @@
+#!/bin/bash -
+#SBATCH -J test_d4est           # Job Name
+#SBATCH -o test_d4est.stdout    # Output file name
+#SBATCH -e test_d4est.stderr    # Error file name
+#SBATCH -n 4                    # Number of cores
+#SBATCH --ntasks-per-node 16    # DO NOT TOUCH: number of MPI ranks per node
+#SBATCH -p devel                # Queue name
+#SBATCH -t 2:0:00               # Max run time
+#SBATCH --no-requeue
+source path/to/Support/Scripts/submit.env
+mpirun -n 4 path/to/problem_executable

@@ -7,6 +7,8 @@
 #include <petscsnes.h>
 #include <krylov_pc.h>
 #include <ini.h>
+#include <time.h>
+
 
 static
 int krylov_petsc_input_handler
@@ -290,8 +292,11 @@ krylov_petsc_solve
 )
 {
   zlog_category_t *c_default = zlog_get_category("krylov_petsc");
-  if (p4est->mpirank == 0)
+  clock_t start;
+  if (p4est->mpirank == 0) {
     zlog_info(c_default, "Performing Krylov PETSc solve...");
+    start = clock();
+  }
 
   krylov_petsc_set_options_database_from_params(krylov_petsc_params);
 
@@ -376,8 +381,10 @@ krylov_petsc_solve
   VecDestroy(&b);
   KSPDestroy(&ksp);
   
-  if (p4est->mpirank == 0)
-    zlog_info(c_default, "Krylov PETSc solve complete.");
+  if (p4est->mpirank == 0) {
+    double duration_seconds = ((double)(clock() - start)) / CLOCKS_PER_SEC;
+    zlog_info(c_default, "Krylov PETSc solve complete in %.2f seconds (%d iterations). Residual norm: %.2e", duration_seconds, info.iterations, info.residual_norm);
+  }
 
   return info;
 }

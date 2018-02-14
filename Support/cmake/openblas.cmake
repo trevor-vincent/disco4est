@@ -19,7 +19,7 @@ macro(openblas_try_system)
 endmacro()
 
 macro(openblas_try_prefix)
-  find_path(OPENBLAS_INCLUDE_DIRS openblas.h ${OPENBLAS_PREFIX}/include NO_DEFAULT_PATH)
+  find_path(OPENBLAS_INCLUDE_DIRS NAMES openblas.h cblas.h PATHS ${OPENBLAS_PREFIX}/include NO_DEFAULT_PATH)
   find_library(OPENBLAS_LIB libopenblas.a ${OPENBLAS_PREFIX}/lib NO_DEFAULT_PATH)
 
   if(OPENBLAS_INCLUDE_DIRS AND OPENBLAS_LIB)

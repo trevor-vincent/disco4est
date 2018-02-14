@@ -15,6 +15,9 @@
 #include <multigrid_bottom_solver_cg.h>
 #include <multigrid_bottom_solver_cheby.h>
 #include <multigrid_bottom_solver_krylov_petsc.h>
+#include <zlog.h>
+#include <time.h>
+
 
 void
 multigrid_get_level_range
@@ -109,7 +112,7 @@ multigrid_update_components
     }
   }
   else {
-    D4EST_ABORT("You should set elem_data_updater in multigrid\n");
+    D4EST_ABORT("You should set elem_data_updater in multigrid");
   }
   
 }
@@ -167,8 +170,9 @@ multigrid_set_smoother(p4est_t* p4est, const char* input_file, multigrid_data_t*
                         );
   }
   else {
-    printf("[D4EST_ERROR]: You chose the %s smoother\n", mg_data->smoother_name);
-    D4EST_ABORT("[D4EST_ERROR]: This smoother is not supported");
+    zlog_category_t *c_default = zlog_get_category("d4est_multigrid");
+    zlog_error(c_default, "You chose the %s smoother.", mg_data->smoother_name);
+    D4EST_ABORT("This smoother is not supported.");
   }
 }
 
@@ -183,8 +187,9 @@ multigrid_destroy_smoother(multigrid_data_t* mg_data){
     multigrid_smoother_cheby_destroy(mg_data->smoother);
   }
   else {
-    printf("[D4EST_ERROR]: You chose the %s smoother\n", mg_data->smoother_name);
-    D4EST_ABORT("[D4EST_ERROR]: This smoother is not supported");
+    zlog_category_t *c_default = zlog_get_category("d4est_multigrid");
+    zlog_error(c_default, "You chose the %s smoother.", mg_data->smoother_name);
+    D4EST_ABORT("This smoother is not supported.");
   }
 }
 
@@ -214,8 +219,9 @@ multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file, multigrid_da
                                                );
   }
   else {
-    printf("[D4EST_ERROR]: You chose the %s bottom_solver\n", mg_data->bottom_solver_name);
-    D4EST_ABORT("[D4EST_ERROR]: This bottom_solver is not supported");
+    zlog_category_t *c_default = zlog_get_category("d4est_multigrid");
+    zlog_error(c_default, "You chose the %s bottom_solver.", mg_data->bottom_solver_name);
+    D4EST_ABORT("This bottom_solver is not supported.");
   }
 }
 
@@ -242,8 +248,9 @@ multigrid_destroy_bottom_solver(multigrid_data_t* mg_data){
       );
   }
   else {
-    printf("[D4EST_ERROR]: You chose the %s bottom_solver\n", mg_data->bottom_solver_name);
-    D4EST_ABORT("[D4EST_ERROR]: This bottom_solver is not supported");
+    zlog_category_t *c_default = zlog_get_category("d4est_multigrid");
+    zlog_error(c_default, "You chose the %s bottom_solver.", mg_data->bottom_solver_name);
+    D4EST_ABORT("This bottom_solver is not supported.");
   }
 }
 
@@ -297,12 +304,13 @@ multigrid_data_init
   multigrid_set_bottom_solver(p4est, input_file, mg_data);
   
   if(p4est->mpirank == 0){
-    printf("[MG_SOLVER]: Multigrid Parameters\n");
-    printf("[MG_SOLVER]: vcycle imax = %d\n", mg_data->vcycle_imax);
-    printf("[MG_SOLVER]: vcycle rtol = %.25f\n", mg_data->vcycle_rtol);
-    printf("[MG_SOLVER]: vcycle atol = %.25f\n", mg_data->vcycle_atol);
-    printf("[MG_SOLVER]: smoother = %s\n", mg_data->smoother_name);
-    printf("[MG_SOLVER]: bottom solver = %s\n", mg_data->bottom_solver_name);
+    zlog_category_t *c_default = zlog_get_category("d4est_multigrid");
+    zlog_debug(c_default, "Multigrid Parameters");
+    zlog_debug(c_default, "vcycle imax = %d", mg_data->vcycle_imax);
+    zlog_debug(c_default, "vcycle rtol = %.25f", mg_data->vcycle_rtol);
+    zlog_debug(c_default, "vcycle atol = %.25f", mg_data->vcycle_atol);
+    zlog_debug(c_default, "smoother = %s", mg_data->smoother_name);
+    zlog_debug(c_default, "bottom solver = %s", mg_data->bottom_solver_name);
   }
 
   mg_data->logger = logger;
@@ -330,6 +338,8 @@ multigrid_vcycle
  d4est_elliptic_eqns_t* fcns
 )
 {
+  zlog_category_t *c_default = zlog_get_category("d4est_multigrid");
+
   multigrid_data_t* mg_data = p4est->user_pointer;
   int level;
 
@@ -413,13 +423,13 @@ multigrid_vcycle
   /**********************************************************/
   /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
 
-  #ifdef DEBUG_INFO
-  printf("Level = %d\n", toplevel);
-  printf("State = %s\n", "PRE_V");
-  printf("elements_on_level = %d\n", elements_on_level_of_multigrid[toplevel]);
-  printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[toplevel]);
-  printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[toplevel]);
-  printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[toplevel]);
+#ifdef DEBUG_INFO
+  zlog_debug(c_default, "Level = %d", toplevel);
+  zlog_debug(c_default, "State = %s", "PRE_V");
+  zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[toplevel]);
+  zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[toplevel]);
+  zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[toplevel]);
+  zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[toplevel]);
 #endif
   mg_data->mg_state = PRE_V; multigrid_update_components(p4est, toplevel, NULL);
 
@@ -459,12 +469,12 @@ multigrid_vcycle
     /**********************************************************/
 
 #ifdef DEBUG_INFO
-    printf("Level = %d\n", level);
-    printf("State = %s\n", "DOWNV_PRE_SMOOTH");
-    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
-    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
-    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
-    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "Level = %d", level);
+    zlog_debug(c_default, "State = %s", "DOWNV_PRE_SMOOTH");
+    zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
 #endif
     mg_data->mg_state = DOWNV_PRE_SMOOTH; multigrid_update_components(p4est, level, &vecs_for_smooth);
     
@@ -478,12 +488,12 @@ multigrid_vcycle
       );
     
 #ifdef DEBUG_INFO
-    printf("Level = %d\n", level);
-    printf("State = %s\n", "DOWNV_POST_SMOOTH");
-    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
-    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
-    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
-    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "Level = %d", level);
+    zlog_debug(c_default, "State = %s", "DOWNV_POST_SMOOTH");
+    zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
 #endif
     mg_data->mg_state = DOWNV_POST_SMOOTH; multigrid_update_components(p4est, level, &vecs_for_smooth);
     
@@ -500,12 +510,12 @@ multigrid_vcycle
     /**********************************************************/
     /**********************************************************/
 #ifdef DEBUG_INFO
-    printf("Level = %d\n", level);
-    printf("State = %s\n", "DOWNV_PRE_COARSEN");
-    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
-    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
-    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
-    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "Level = %d", level);
+    zlog_debug(c_default, "State = %s", "DOWNV_PRE_COARSEN");
+    zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
 #endif
     mg_data->mg_state = DOWNV_PRE_COARSEN; multigrid_update_components(p4est, level, NULL);
     
@@ -519,12 +529,12 @@ multigrid_vcycle
                       );
 
 #ifdef DEBUG_INFO
-    printf("Level = %d\n", level);
-    printf("State = %s\n", "DOWNV_POST_COARSEN");
-    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
-    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
-    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
-    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "Level = %d", level);
+    zlog_debug(c_default, "State = %s", "DOWNV_POST_COARSEN");
+    zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
 #endif
     
     mg_data->mg_state = DOWNV_POST_COARSEN; multigrid_update_components(p4est, level, NULL);
@@ -596,12 +606,12 @@ multigrid_vcycle
     mg_data->intergrid_ptr = &rres_at0[stride_to_fine_data];//&(mg_data->rres)[0];
 
 #ifdef DEBUG_INFO
-    printf("Level = %d\n", level);
-    printf("State = %s\n", "DOWNV_PRE_RESTRICTION");
-    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
-    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
-    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
-    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "Level = %d", level);
+    zlog_debug(c_default, "State = %s", "DOWNV_PRE_RESTRICTION");
+    zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
 #endif
     
     mg_data->mg_state = DOWNV_PRE_RESTRICTION; multigrid_update_components(p4est, level, NULL);
@@ -621,12 +631,12 @@ multigrid_vcycle
     );
 
 #ifdef DEBUG_INFO
-    printf("Level = %d\n", level);
-    printf("State = %s\n", "DOWNV_POST_RESTRICTION");
-    printf("elements_on_level = %d\n", elements_on_level_of_multigrid[level]);
-    printf("elements_on_surrogate_level = %d\n", elements_on_level_of_surrogate_multigrid[level]);
-    printf("nodes_on_level = %d\n", nodes_on_level_of_multigrid[level]);
-    printf("nodes_on_surrogate_level = %d\n", nodes_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "Level = %d", level);
+    zlog_debug(c_default, "State = %s", "DOWNV_POST_RESTRICTION");
+    zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
+    zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
 #endif
     
     mg_data->mg_state = DOWNV_POST_RESTRICTION; multigrid_update_components(p4est, level, NULL);
@@ -808,7 +818,7 @@ multigrid_vcycle
 
   if (p4est->mpirank == 0){
     for (level = toplevel; level >= bottomlevel; --level){
-      printf("For each processor, we have Level %d, Number of elements %d, Number of nodes %d\n",
+      zlog_debug(c_default, "For each processor, we have Level %d, Number of elements %d, Number of nodes %d",
              level,
              elements_on_level_of_multigrid[level],
              nodes_on_level_of_multigrid[level]
@@ -917,6 +927,13 @@ multigrid_solve
  multigrid_data_t* mg_data
 )
 {
+  zlog_category_t *c_default = zlog_get_category("d4est_multigrid");
+  clock_t start;
+  if (p4est->mpirank == 0) {
+    start = clock();
+    zlog_info(c_default, "Performing multigrid solve...");
+  }
+  
   void* tmp_ptr = p4est->user_pointer;
   p4est->user_pointer = mg_data;
   /*
@@ -978,4 +995,9 @@ multigrid_solve
   multigrid_update_components(p4est, -1, NULL);
   
   p4est->user_pointer = tmp_ptr;
+  
+  if (p4est->mpirank == 0) {
+    double duration_seconds = ((double)(clock() - start)) / CLOCKS_PER_SEC;
+    zlog_info(c_default, "Multigrid solve completed in %.10f seconds.", duration_seconds);
+  }
 }
