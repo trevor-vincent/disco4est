@@ -1081,9 +1081,9 @@ d4est_vtk_write_point_scalar (d4est_vtk_context_t * cont,
 #endif
   p4est_locidx_t      il, ddl;
   int                 use_nodes;
-#ifdef P4EST_ENABLE_DEBUG
-  int                 Ncorners;
-#endif
+// #ifdef P4EST_ENABLE_DEBUG
+//   int                 Ncorners;
+// #endif
   int                 Npoints;
   int                 retval;
   D4EST_VTK_FLOAT_TYPE *float_data;
@@ -1113,7 +1113,7 @@ d4est_vtk_write_point_scalar (d4est_vtk_context_t * cont,
   if (output_type == D4EST_VTK_ASCII){
   for (il = 0; il < Npoints; ++il) {
     ddl = use_nodes ? ntc[il] : il;
-    P4EST_ASSERT (0 <= ddl && ddl < Ncorners);
+    // P4EST_ASSERT (0 <= ddl && ddl < Ncorners);
 
     fprintf (cont->vtufile,
 #ifdef D4EST_VTK_DOUBLES
@@ -1128,7 +1128,7 @@ d4est_vtk_write_point_scalar (d4est_vtk_context_t * cont,
   float_data = P4EST_ALLOC (D4EST_VTK_FLOAT_TYPE, Npoints);
   for (il = 0; il < Npoints; ++il) {
     ddl = use_nodes ? ntc[il] : il;
-    P4EST_ASSERT (0 <= ddl && ddl < Ncorners);
+    // P4EST_ASSERT (0 <= ddl && ddl < Ncorners);
     float_data[il] =
       (D4EST_VTK_FLOAT_TYPE) vtk_array[il];
   }
