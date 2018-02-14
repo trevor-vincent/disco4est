@@ -46,6 +46,26 @@ The dependencies are MPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will need a
 
   For the example to complete in O(10s) you may want to consult the `options.input` file to set `amr.num_of_amr_steps=1`.
 
+
+## Options documentation
+
+Configuration options are loaded from an `options.input` file residing in the same directory as the problem executable by default, or from the file supplied as the first positional command line argument.
+
+- `[problem]`: Problem-specific options.
+- `[initial_mesh]`
+  - `min_quadrants`
+  - `min_level`: Number of initial mesh refinements.
+  - `fill_uniform`
+  - `regionX_deg`: Initial polynomial degree in region X.
+  - `region0_deg_quad_inc`
+- `[amr]`
+  - `scheme` can be one of the following AMR refinement schemes:
+    - `uniform_h`: Divides each element into 4 sub-elements in 2 dimensions, or into 8 sub-elements in 3 dimension.
+    - `uniform_p`: Increases the polynomial order on each element by 1.
+  - `num_of_amr_steps`
+  - `max_degree`
+
+
 ## Licenses
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
