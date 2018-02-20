@@ -76,11 +76,11 @@ void cg_solve(p4est_t* p4est, d4est_elliptic_data_t* vecs, d4est_elliptic_eqns_t
 
 
   
-  d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
+  d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
 
   /* r = f - Au ; Au is stored in r so r = rhs - r */
   d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
-  d4est_linalg_copy_1st_to_2nd(r, d, local_nodes);
+  d4est_util_copy_1st_to_2nd(r, d, local_nodes);
   delta_new = d4est_linalg_vec_dot(r, r, local_nodes);
 
   double delta_new_global;
@@ -179,11 +179,11 @@ void curved_cg_solve(
 
   /* DEBUG_PRINT_2ARR_DBL(vecs->u, vecs->Au, vecs->local_nodes); */
   
-  d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
+  d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
 
   /* r = f - Au ; Au is stored in r so r = rhs - r */
   d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
-  d4est_linalg_copy_1st_to_2nd(r, d, local_nodes);
+  d4est_util_copy_1st_to_2nd(r, d, local_nodes);
   delta_new = d4est_linalg_vec_dot(r, r, local_nodes);
 
   double delta_new_global;

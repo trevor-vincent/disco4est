@@ -306,7 +306,7 @@ d4est_ip_energy_norm_compute
         int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg);
         nodes += volume_nodes_lobatto;
         
-        d4est_linalg_copy_1st_to_2nd
+        d4est_util_copy_1st_to_2nd
           (
            &(u[ed->nodal_stride]),
            &(ed->u_elem)[0],

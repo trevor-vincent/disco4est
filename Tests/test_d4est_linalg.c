@@ -257,7 +257,7 @@ void test_d4est_linalg_sym_eigvecs()
 
   double A_copy [10][10];
 
-  d4est_linalg_copy_1st_to_2nd(&A[0][0], &A_copy[0][0], 10*10);
+  d4est_util_copy_1st_to_2nd(&A[0][0], &A_copy[0][0], 10*10);
 
   double eig_vals [10];
 

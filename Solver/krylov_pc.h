@@ -43,7 +43,7 @@ struct krylov_pc {
   /* Start INTERNAL Parameters */
   /* DO NOT SET THESE */
   
-  petsc_ctx_t* pc_ctx;
+  krylov_ctx_t* pc_ctx;
 
   /* End INTERNAL Parameters */
   

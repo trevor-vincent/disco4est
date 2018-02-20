@@ -169,7 +169,7 @@ PetscErrorCode newton_petsc_save_x0
 {
 
   PetscErrorCode ierr;
-  petsc_ctx_t* petsc_ctx = (petsc_ctx_t*) ctx;
+  krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
   d4est_elliptic_data_t* vecs = petsc_ctx->vecs;
   const double* px0;
   ierr = VecGetArrayRead( x0, &px0 ); CHKERRQ(ierr);
@@ -194,7 +194,7 @@ static
 PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
 
   const double* xx;
-  petsc_ctx_t* petsc_ctx = (petsc_ctx_t*) ctx;
+  krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
 
   double* ftemp;
 
@@ -232,13 +232,13 @@ PetscErrorCode newton_petsc_apply_jacobian( Mat jac, Vec x, Vec y )
   void           *ctx;
   PetscErrorCode ierr;
 
-  petsc_ctx_t* petsc_ctx;
+  krylov_ctx_t* petsc_ctx;
   const double* px;
   double* py;
 
   /* PetscFunctionBegin; */
   ierr = MatShellGetContext( jac, &ctx ); CHKERRQ(ierr);  
-  petsc_ctx = (petsc_ctx_t *)ctx;
+  petsc_ctx = (krylov_ctx_t *)ctx;
   ierr = VecGetArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecGetArray( y, &py ); CHKERRQ(ierr);
 
@@ -358,7 +358,7 @@ void newton_petsc_solve
   VecSetFromOptions(x);//CHKERRQ(ierr);
   VecDuplicate(x,&r);//CHKERRQ(ierr);
   
-  petsc_ctx_t petsc_ctx;
+  krylov_ctx_t petsc_ctx;
   petsc_ctx.p4est = p4est;
   petsc_ctx.vecs = vecs;
   petsc_ctx.fcns = fcns;

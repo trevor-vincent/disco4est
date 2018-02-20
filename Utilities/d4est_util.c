@@ -617,7 +617,11 @@ d4est_util_max_dbl_array(double* arr, int N){
   return max;
 }
 
-
+void
+d4est_util_copy_1st_to_2nd (double *v1, double *v2, int N)
+{
+  memcpy (v2, v1, N * sizeof (double));
+}
 
 void d4est_util_gen_rand_vec(double* vec, int N, int seed, double a, double b){
   int i;

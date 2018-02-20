@@ -965,7 +965,7 @@ void d4est_operators_apply_p_prolong(d4est_operators_t* d4est_ops, double* in, i
 
   /* if degrees are the same, p_prolong matrix should be the identity */
   if (degh == degH) {
-    d4est_linalg_copy_1st_to_2nd(in, out, d4est_lgl_get_nodes(dim, degh));
+    d4est_util_copy_1st_to_2nd(in, out, d4est_lgl_get_nodes(dim, degh));
     return;
   }
 
@@ -1063,7 +1063,7 @@ void d4est_operators_apply_p_restrict(d4est_operators_t* d4est_ops, double* in, 
 
   /* restrict matrix should be the identity if degrees are the same */
   if (degh == degH) {
-    d4est_linalg_copy_1st_to_2nd(in, out, d4est_lgl_get_nodes(dim, degh));
+    d4est_util_copy_1st_to_2nd(in, out, d4est_lgl_get_nodes(dim, degh));
     return;
   }
 
@@ -1578,7 +1578,7 @@ void d4est_operators_apply_p_prolong_transpose(d4est_operators_t* d4est_ops, dou
 
   /* prolong matrix is identity if degrees are the same */
   if (degh == degH) {
-    d4est_linalg_copy_1st_to_2nd(in, out, d4est_lgl_get_nodes(dim, degh));
+    d4est_util_copy_1st_to_2nd(in, out, d4est_lgl_get_nodes(dim, degh));
     return;
   }
 
@@ -1781,7 +1781,7 @@ void d4est_operators_apply_p_restrict_interp(d4est_operators_t* d4est_ops, doubl
 
   /* restrict matrix should be the identity if degrees are the same */
   if (degh == degH) {
-    d4est_linalg_copy_1st_to_2nd(in, out, d4est_lgl_get_nodes(dim, degh));
+    d4est_util_copy_1st_to_2nd(in, out, d4est_lgl_get_nodes(dim, degh));
     return;
   }
 
@@ -1873,7 +1873,7 @@ void d4est_operators_reorient_face_data
          out
         );
     else
-      d4est_linalg_copy_1st_to_2nd(in, out, nodes);
+      d4est_util_copy_1st_to_2nd(in, out, nodes);
     return;
   }
   double* tmp0 = P4EST_ALLOC(double, nodes);
@@ -1928,7 +1928,7 @@ void d4est_operators_reorient_face_data
     d4est_linalg_mat_transpose(tmp1, out, deg+1);
   }
   else {
-    d4est_linalg_copy_1st_to_2nd(tmp1, out, nodes);
+    d4est_util_copy_1st_to_2nd(tmp1, out, nodes);
   }
 
   if (tmp0 != in)

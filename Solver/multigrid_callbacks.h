@@ -165,7 +165,7 @@ multigrid_apply_restriction
     }
     
     int nodes = d4est_lgl_get_nodes( (P4EST_DIM) , deg );
-    d4est_linalg_copy_1st_to_2nd(x_children,
+    d4est_util_copy_1st_to_2nd(x_children,
                            x_parent,
                            nodes
                           );
@@ -288,7 +288,7 @@ multigrid_refine_and_apply_prolongation
     int deg = coarse_grid_refinement[(*stride)].degh[*temp_stride];
     int nodes = d4est_lgl_get_nodes( (P4EST_DIM) , deg );
     
-    d4est_linalg_copy_1st_to_2nd(x_parent,
+    d4est_util_copy_1st_to_2nd(x_parent,
                            x_children,
                            nodes
                           );    

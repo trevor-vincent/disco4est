@@ -100,12 +100,12 @@ multigrid_bottom_solver_cg_d4est
      updater->current_geometric_factors
     );
   
-  d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
+  d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
   
   /* r = f - Au ; Au is stored in r so r = rhs - r */
   d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
 
-  d4est_linalg_copy_1st_to_2nd(r, d, local_nodes);
+  d4est_util_copy_1st_to_2nd(r, d, local_nodes);
  
   delta_new = d4est_linalg_vec_dot(r,r,local_nodes);
   /* delta_new = (element_data_compute_l2_norm(p4est, r)); */

@@ -84,9 +84,11 @@ void d4est_solver_cg_solve
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- d4est_solver_cg_params_t* params
+ void* cg_params,
+ krylov_pc_t* krylov_pc
 )
 { 
+  d4est_solver_cg_params_t* params = cg_params;
   int local_nodes;
   double delta_new, delta_0, delta_old, beta, alpha;
 
@@ -126,11 +128,11 @@ void d4est_solver_cg_solve
   
   /* DEBUG_PRINT_2ARR_DBL(vecs->u, vecs->Au, vecs->local_nodes); */
   
-  d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
+  d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
 
   /* r = f - Au ; Au is stored in r so r = rhs - r */
   d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
-  d4est_linalg_copy_1st_to_2nd(r, d, local_nodes);
+  d4est_util_copy_1st_to_2nd(r, d, local_nodes);
   delta_new = d4est_linalg_vec_dot(r, r, local_nodes);
 
   double delta_new_global;

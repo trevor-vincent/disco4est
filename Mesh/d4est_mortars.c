@@ -993,11 +993,11 @@ d4est_mortars_compute_flux_on_local_elements
 /*       for (int d = 0; d < (P4EST_DIM); d++){ */
 /*         if (xyz[0] != NULL){ */
 /*           d4est_operators_interp_lobatto_to_gauss(d4est_ops, xyz[d], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1); */
-/*           d4est_linalg_copy_1st_to_2nd(tmp, xyz[d], face_mortar_nodes); */
+/*           d4est_util_copy_1st_to_2nd(tmp, xyz[d], face_mortar_nodes); */
 /*         } */
 /*         for (int dir = 0; dir < ((P4EST_DIM)-1); dir++){ */
 /*           d4est_operators_interp_lobatto_to_gauss(d4est_ops, dxda[d][dir], deg_mortar[face_mortar], deg_mortar[face_mortar], tmp, (P4EST_DIM)-1); */
-/*           d4est_linalg_copy_1st_to_2nd(tmp, dxda[d][dir], face_mortar_nodes); */
+/*           d4est_util_copy_1st_to_2nd(tmp, dxda[d][dir], face_mortar_nodes); */
 /*         } */
 /*       } */
 /*     } */

@@ -7,6 +7,7 @@
 #include <d4est_elliptic_eqns.h>
 #include <d4est_estimator_bi.h>
 #include <d4est_solver_cg.h>
+#include <d4est_solver_fcg.h>
 #include <d4est_amr.h>
 #include <d4est_amr_smooth_pred.h>
 #include <d4est_geometry.h>
@@ -29,70 +30,6 @@
 #include <zlog.h>
 #include "poisson_sinx_fcns.h"
 
-typedef struct {
-  
-  dirichlet_bndry_eval_method_t eval_method;
-
-  int use_multigrid;
-  int deg_vol_quad_inc;
-  
-} poisson_sinx_init_params_t;
-
-
-static
-int poisson_sinx_init_params_handler
-(
- void* user,
- const char* section,
- const char* name,
- const char* value
-)
-{
-  poisson_sinx_init_params_t* pconfig = (poisson_sinx_init_params_t*)user;
-  if (d4est_util_match_couple(section,"problem",name,"eval_method")) {
-    if (d4est_util_match(value,"EVAL_BNDRY_FCN_ON_QUAD")){
-      pconfig->eval_method = EVAL_BNDRY_FCN_ON_QUAD;
-    }
-    else if (d4est_util_match(value,"EVAL_BNDRY_FCN_ON_LOBATTO")){
-      pconfig->eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
-    }
-    else {
-      D4EST_ABORT("Not a supported eval method");
-    }
-  } else if (d4est_util_match_couple(section,"problem",name,"deg_vol_quad_inc")) {
-    D4EST_ASSERT(pconfig->deg_vol_quad_inc == -1);
-    pconfig->deg_vol_quad_inc = atoi(value);
-  } else if (d4est_util_match(section,"multigrid")) {
-    pconfig->use_multigrid = 1;
-  } else {
-    return 0;  /* unknown section/name, error */
-  }
-  return 1;
-}
-
-
-static
-poisson_sinx_init_params_t
-poisson_sinx_init_params_input
-(
- const char* input_file
-)
-{
-  poisson_sinx_init_params_t input;
-  input.eval_method = EVAL_BNDRY_FCN_NOT_SET;
-  input.deg_vol_quad_inc = -1;
-  input.use_multigrid = 0;
-
-  if (ini_parse(input_file, poisson_sinx_init_params_handler, &input) < 0) {
-    D4EST_ABORT("Can't load input file");
-  }
-
-  D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc, -1);
-  D4EST_CHECK_INPUT("problem", input.eval_method, EVAL_BNDRY_FCN_NOT_SET);
-  
-  return input;
-}
-
 
 int
 problem_set_mortar_degree
@@ -103,19 +40,6 @@ problem_set_mortar_degree
 {
   return elem_data->deg_vol_quad;
 }
-
-
-void
-problem_set_degrees_after_amr
-(
- d4est_element_data_t* elem_data,
- void* user_ctx
-)
-{
-  poisson_sinx_init_params_t* params = user_ctx;
-  elem_data->deg_vol_quad = elem_data->deg + params->deg_vol_quad_inc;
-}
-
 
 void
 problem_init
@@ -136,12 +60,7 @@ problem_init
 
   int initial_nodes = initial_extents->initial_nodes;
   
-  // Parse problem parameters
-  poisson_sinx_init_params_t init_params = poisson_sinx_init_params_input(input_file);
-  dirichlet_bndry_eval_method_t eval_method = init_params.eval_method;
-  if (init_params.use_multigrid == 0 && p4est->mpirank == 0)
-    zlog_info(c_default, "Multigrid is disabled. Add a `[multigrid]` section to the input file to enable.");
-
+  dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
   
   // Setup boundary conditions
   d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
@@ -225,7 +144,7 @@ problem_init
     flux_data_for_build_rhs,
     prob_vecs.rhs,
     poisson_sinx_rhs_fcn,
-    (init_params.eval_method == EVAL_BNDRY_FCN_ON_QUAD) ? INIT_FIELD_ON_QUAD : INIT_FIELD_ON_LOBATTO,
+    INIT_FIELD_ON_LOBATTO,
     &ctx
   );
 
@@ -234,69 +153,86 @@ problem_init
 
     // Setup multigrid
     krylov_pc_t* pc = NULL;
-    if (init_params.use_multigrid == 1) {
-      int multigrid_min_level, multigrid_max_level;
-      multigrid_get_level_range(p4est, &multigrid_min_level, &multigrid_max_level);
-      zlog_debug(c_default, "Multigrid [min_level, max_level] = [%d,%d]", multigrid_min_level, multigrid_max_level);
+
+    int multigrid_min_level, multigrid_max_level;
+    multigrid_get_level_range(p4est, &multigrid_min_level, &multigrid_max_level);
+    zlog_debug(c_default, "Multigrid [min_level, max_level] = [%d,%d]", multigrid_min_level, multigrid_max_level);
       
-      /* need to do a reduce on min,max_level before supporting multiple proc */
-      /* mpi_assert(proc_size == 1); */
-      int num_of_levels = multigrid_max_level + 1;
+    /* need to do a reduce on min,max_level before supporting multiple proc */
+    /* mpi_assert(proc_size == 1); */
+    int num_of_levels = multigrid_max_level + 1;
       
-      multigrid_logger_t* logger = multigrid_logger_residual_init();
+    multigrid_logger_t* logger = multigrid_logger_residual_init();
       
-      multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init(
-        num_of_levels,
-        ghost,
-        ghost_data,
-        d4est_factors,
-        problem_set_degrees_after_amr,
-        &init_params
-      );
+    multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init(
+                                                                                    num_of_levels,
+                                                                                    ghost,
+                                                                                    ghost_data,
+                                                                                    d4est_factors,
+                                                                                    d4est_mesh_set_quadratures_after_amr,
+                                                                                    initial_extents
+    );
       
-      multigrid_data_t* mg_data = multigrid_data_init(
-        p4est,
-        d4est_ops,
-        d4est_geom,
-        d4est_quad,
-        num_of_levels,
-        logger,
-        NULL,
-        updater,
-        input_file
-      );
+    multigrid_data_t* mg_data = multigrid_data_init(
+                                                    p4est,
+                                                    d4est_ops,
+                                                    d4est_geom,
+                                                    d4est_quad,
+                                                    num_of_levels,
+                                                    logger,
+                                                    NULL,
+                                                    updater,
+                                                    input_file
+    );
       
-      /* multigrid_solve */
-      /*   ( */
-      /*    p4est, */
-      /*    &prob_vecs, */
-      /*    &prob_fcns, */
-      /*    mg_data */
-      /*   ); */
+    /* multigrid_solve */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    &prob_fcns, */
+    /*    mg_data */
+    /*   ); */
       
-      pc = krylov_pc_multigrid_create(mg_data, NULL);
-    }
+    pc = krylov_pc_multigrid_create(mg_data, NULL);
 
 
     // Krylov PETSc solve
     
-    krylov_petsc_params_t krylov_petsc_params;
-    krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_petsc_params);
+    /* krylov_petsc_params_t krylov_petsc_params; */
+    /* krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_petsc_params); */
     
-    krylov_petsc_solve(
-      p4est,
-      &prob_vecs,
-      &prob_fcns,
-      ghost,
-      ghost_data,
-      d4est_ops,
-      d4est_geom,
-      d4est_quad,
-      d4est_factors,
-      &krylov_petsc_params,
-      pc
-    );
+    /* krylov_petsc_solve( */
+    /*   p4est, */
+    /*   &prob_vecs, */
+    /*   &prob_fcns, */
+    /*   ghost, */
+    /*   ghost_data, */
+    /*   d4est_ops, */
+    /*   d4est_geom, */
+    /*   d4est_quad, */
+    /*   d4est_factors, */
+    /*   &krylov_petsc_params, */
+    /*   pc */
+    /* ); */
 
+
+    d4est_solver_fcg_params_t fcg_params;
+    d4est_solver_fcg_input(p4est, input_file, "d4est_solver_fcg", "[D4EST_SOLVER_FCG]", &fcg_params);
+    
+    d4est_solver_fcg_solve
+      (
+       p4est,
+       &prob_vecs,
+       &prob_fcns,
+       ghost,
+       ghost_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       &fcg_params,
+       pc
+      );
 
     // Compute and save mesh data to a VTK file
     
@@ -399,7 +335,7 @@ problem_init
       flux_data_for_build_rhs,
       prob_vecs.rhs,
       poisson_sinx_rhs_fcn,
-      (init_params.eval_method == EVAL_BNDRY_FCN_ON_QUAD) ? INIT_FIELD_ON_QUAD : INIT_FIELD_ON_LOBATTO,
+      INIT_FIELD_ON_LOBATTO,
       &ctx
     );
   }

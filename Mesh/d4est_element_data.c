@@ -191,7 +191,7 @@ d4est_element_data_copy_from_vec_to_storage_callback
   int deg = d4est_element_data->deg;
   int volume_nodes = d4est_lgl_get_nodes(dim,deg);
   
-  d4est_linalg_copy_1st_to_2nd
+  d4est_util_copy_1st_to_2nd
     (
      &u[*stride],
      &(d4est_element_data->u_elem)[0],
@@ -246,7 +246,7 @@ d4est_element_data_copy_from_storage_to_vec_callback
   int deg = d4est_element_data->deg;
   int volume_nodes = d4est_lgl_get_nodes(dim,deg);
   
-  d4est_linalg_copy_1st_to_2nd
+  d4est_util_copy_1st_to_2nd
     (
      &(d4est_element_data->u_elem)[0],
      &u[*stride],

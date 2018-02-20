@@ -560,7 +560,7 @@ d4est_quadrature_compactified_compute_rst_face
 
   P4EST_FREE(eye);
 #else
-  d4est_linalg_copy_1st_to_2nd(abscissas, rst_face[0], nodes_quad_1d);
+  d4est_util_copy_1st_to_2nd(abscissas, rst_face[0], nodes_quad_1d);
 #endif
 }       
 

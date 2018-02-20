@@ -53,7 +53,7 @@ multigrid_smoother_krylov_petsc
 
 
   
-  d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
+  d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
   d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
 }
 

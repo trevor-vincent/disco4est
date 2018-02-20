@@ -7,7 +7,7 @@
 #include <krylov_petsc.h>
 #include <sc_reduce.h>
 #include <zlog.h>
-
+#include <d4est_solver_krylov.h>
 
 static
 int d4est_solver_newton_input_handler
@@ -113,7 +113,9 @@ d4est_solver_newton_solve
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- const char* input_file,
+ d4est_solver_newton_params_t* nr_params,
+ d4est_solver_krylov_fcn_t krylov_fcn,
+ void* krylov_fcn_params,
  krylov_pc_t* krylov_pc
 )
 {
@@ -121,18 +123,11 @@ d4est_solver_newton_solve
   if(p4est->mpirank == 0)
     zlog_info(c_default, "Performing Newton solve...");
 
-  krylov_petsc_params_t petsc_params;
-  krylov_petsc_input(p4est,
-                     input_file,
-                     "krylov_petsc",
-                     &petsc_params);
-  
   int ierr = 0;
   int local_nodes = vecs->local_nodes;
   int n = local_nodes;
   d4est_elliptic_data_t vecs_for_linsolve;
   d4est_elliptic_data_t vecs_for_res_build;
-
 
   double* xt = P4EST_ALLOC(double, local_nodes);
   double* ft = P4EST_ALLOC(double, local_nodes);
@@ -144,14 +139,11 @@ d4est_solver_newton_solve
   double* x = vecs->u;
   d4est_elliptic_data_copy_ptrs(vecs, &vecs_for_linsolve);
   d4est_elliptic_data_copy_ptrs(vecs, &vecs_for_res_build);
-  
-  /******** external parameters ********/
-  d4est_solver_newton_params_t nr_params = d4est_solver_newton_input(p4est,input_file);
-  
-  double atol = nr_params.atol;
-  double rtol = nr_params.rtol;
-  int maxit = nr_params.imax;
-  int minit = nr_params.imin;
+    
+  double atol = nr_params->atol;
+  double rtol = nr_params->rtol;
+  int maxit = nr_params->imax;
+  int minit = nr_params->imin;
   
   vecs_for_res_build.rhs = vecs->rhs;
   vecs_for_res_build.Au = f0;
@@ -191,7 +183,7 @@ d4est_solver_newton_solve
   int itc = 0;
 
 
-  if (p4est->mpirank == 0 && nr_params.monitor){
+  if (p4est->mpirank == 0 && nr_params->monitor){
     zlog_debug(c_default, "ITER %03d INITIAL FNRM  %.30f", itc, fnrm);
   }
   
@@ -210,7 +202,7 @@ d4est_solver_newton_solve
     /* set initial guess */
     d4est_linalg_fill_vec(vecs_for_linsolve.u, 0., n);
 
-    krylov_petsc_solve
+    krylov_fcn
       (
        p4est,
        &vecs_for_linsolve,
@@ -221,7 +213,7 @@ d4est_solver_newton_solve
        d4est_geom,
        d4est_quad,
        d4est_factors,
-       &petsc_params,
+       krylov_fcn_params,
        krylov_pc
       );
 
@@ -268,7 +260,7 @@ d4est_solver_newton_solve
 
     fnrm = sqrt(fnrm_global);
 
-    if (p4est->mpirank == 0 && nr_params.monitor){
+    if (p4est->mpirank == 0 && nr_params->monitor){
       zlog_debug(c_default, "ITER %03d PRE-FNRM %.15e POST-FNRM  %.15e" ,itc, fnrmo,  fnrm);
     }
     
@@ -279,7 +271,7 @@ d4est_solver_newton_solve
   }
 
   if(vecs->u != x){
-    d4est_linalg_copy_1st_to_2nd(x, vecs->u, vecs->local_nodes);
+    d4est_util_copy_1st_to_2nd(x, vecs->u, vecs->local_nodes);
     P4EST_FREE(x);
   }
   else {

@@ -11,6 +11,6 @@ typedef struct {
   d4est_operators_t* d4est_ops;
   d4est_geometry_t* d4est_geom;
   
-} petsc_ctx_t;
+} krylov_ctx_t;
 
 #endif

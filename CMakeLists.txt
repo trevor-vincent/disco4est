@@ -106,6 +106,7 @@ SET (
   IO/d4est_vtk.c
   IO/d4est_norms.c
   Solver/d4est_solver_cg.c
+  Solver/d4est_solver_fcg.c
   Solver/d4est_solver_newton.c
   Solver/krylov_petsc.c
   Solver/newton_petsc.c

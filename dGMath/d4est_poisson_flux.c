@@ -947,7 +947,7 @@ d4est_poisson_flux_init_element_data
 
         ed->Au_elem = &(Au[ed->nodal_stride]);
   
-        d4est_linalg_copy_1st_to_2nd
+        d4est_util_copy_1st_to_2nd
           (
            &(u[ed->nodal_stride]),
            &(ed->u_elem)[0],

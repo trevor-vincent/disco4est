@@ -113,7 +113,7 @@ multigrid_smoother_cheby_iterate
      updater->current_geometric_factors
     );
   
-    d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
+    d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
     d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
 
     if(print_residual_norm && p4est->mpirank == 0){
@@ -148,7 +148,7 @@ multigrid_smoother_cheby_iterate
      updater->current_geometric_factors
     );
   
-  d4est_linalg_copy_1st_to_2nd(Au, r, local_nodes);
+  d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
   d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
 
   P4EST_FREE(p);

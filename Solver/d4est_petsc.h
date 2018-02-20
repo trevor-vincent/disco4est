@@ -21,6 +21,6 @@ typedef struct {
   d4est_quadrature_t* d4est_quad;
   d4est_mesh_data_t* d4est_factors;
   
-} petsc_ctx_t;
+} krylov_ctx_t;
 
 #endif

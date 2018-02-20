@@ -22,7 +22,6 @@ void d4est_linalg_vec_scale(double alpha,double *x,int N);
 void d4est_linalg_set_column_opt(double *A,double *column,int col,int N,int M);
 void d4est_linalg_set_column(double *A,double *column,int col,int N,int M);
 void d4est_linalg_mat_transpose(double *A,double *Atrans,int N);
-void d4est_linalg_copy_1st_to_2nd(double *v1,double *v2,int N);
 void d4est_linalg_matvec_plus_vec(double alpha,double *A,double *v,double beta,double *b,int m,int n);
 void d4est_linalg_mat_multiply(double *A,double *B,double *C,int m,int l,int n);
 void d4est_linalg_mat_transpose_nonsqr(double *A,double *A_transpose,int A_rows,int A_cols);

@@ -432,7 +432,7 @@ d4est_estimator_bi_compute
         double h = d4est_estimator_get_diam(ed, diam_opt);
         *eta2 *= h*h/(deg*deg);
 
-        d4est_linalg_copy_1st_to_2nd
+        d4est_util_copy_1st_to_2nd
           (
            &(vecs->u[ed->nodal_stride]),
            &(ed->u_elem)[0],

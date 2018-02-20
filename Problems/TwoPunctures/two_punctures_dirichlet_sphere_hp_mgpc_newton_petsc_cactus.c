@@ -428,7 +428,7 @@ problem_init
 
 
   
-  d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
+  d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
   double point [4][100];
   double point_diff [4][100];
@@ -600,7 +600,7 @@ problem_init
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
     u_prev = P4EST_REALLOC(u_prev, double, prob_vecs.local_nodes);
     error = P4EST_REALLOC(error, double, prob_vecs.local_nodes);
-    d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
+    d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
 
 

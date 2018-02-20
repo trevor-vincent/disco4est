@@ -31,7 +31,7 @@ krylov_pc_multigrid_apply(krylov_pc_t* kpc, double* xp, double* yp)
 {
   //  krylov_pc_multigrid_data_t* kpcmgdata = kpc->pc_data;
   multigrid_data_t* mg_data = kpc->pc_data;//kpcmgdata->mg_data;
-  petsc_ctx_t* kct = kpc->pc_ctx;
+  krylov_ctx_t* kct = kpc->pc_ctx;
   int local_nodes = kct->vecs->local_nodes;
   
   d4est_linalg_fill_vec(yp, 0., local_nodes);

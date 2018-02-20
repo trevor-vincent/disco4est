@@ -641,7 +641,7 @@ multigrid_vcycle
     
     mg_data->mg_state = DOWNV_POST_RESTRICTION; multigrid_update_components(p4est, level, NULL);
 
-    d4est_linalg_copy_1st_to_2nd
+    d4est_util_copy_1st_to_2nd
       (
        &(rres_at0)[stride_to_fine_data + mg_data->fine_nodes],
        &(res_at0)[stride_to_fine_data + mg_data->fine_nodes],
@@ -718,7 +718,7 @@ multigrid_vcycle
     mg_data->temp_stride = 0;
 
     
-    d4est_linalg_copy_1st_to_2nd(&err_at0[stride_to_fine_data + mg_data->fine_nodes],//&(mg_data->err)[mg_data->fine_nodes],
+    d4est_util_copy_1st_to_2nd(&err_at0[stride_to_fine_data + mg_data->fine_nodes],//&(mg_data->err)[mg_data->fine_nodes],
                            &rres_at0[stride_to_fine_data + mg_data->fine_nodes],//&(mg_data->rres)[mg_data->fine_nodes],
                            nodes_on_level_of_multigrid[coarse_level]);
 

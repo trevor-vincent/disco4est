@@ -96,23 +96,6 @@ d4est_linalg_matvec_plus_vec (double alpha, double *A, double *v, double beta,
 }
 
 void
-d4est_linalg_copy_1st_to_2nd (double *v1, double *v2, int N)
-{
-  memcpy (v2, v1, N * sizeof (double));
-}
-
-/*
-void d4est_linalg_mat_transpose(double* A, double* Atrans, int N, int M)
-{
-  for(int n = 0; n<N*M; n++){
-    int i = n/N;
-    int j = n%N;
-    Atrans[n] = A[M*j + i];
-  }
-}
-*/
-
-void
 d4est_linalg_mat_transpose (double *A, double *Atrans, int N)
 {
   int                 i, j;
@@ -215,7 +198,7 @@ d4est_linalg_vec_axpy (double alpha, double *x, double *y, int N)
 void
 d4est_linalg_vec_axpyeqz (double alpha, double *x, double *y, double *z, int N)
 {
-  d4est_linalg_copy_1st_to_2nd (y, z, N);
+  d4est_util_copy_1st_to_2nd (y, z, N);
   d4est_linalg_vec_axpy (alpha, x, z, N);
 }
 

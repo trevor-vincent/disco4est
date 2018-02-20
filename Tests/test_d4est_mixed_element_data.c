@@ -570,7 +570,7 @@ test_d4est_mixed_element_data_DG_norm_sqr_init_vecs_callback
 
   test_d4est_mixed_element_data->u_elem = &(nodal_vec[test_d4est_mixed_element_data->stride]);
 
-  d4est_linalg_copy_1st_to_2nd(
+  d4est_util_copy_1st_to_2nd(
   test_d4est_mixed_element_data->u_elem,
     &(test_d4est_mixed_element_data->u_storage)[0],
     dgmath_get_nodes(dim, deg)
@@ -832,7 +832,7 @@ test_d4est_mixed_element_data_copy_from_vec_to_storage_callback
   int deg = test_d4est_mixed_element_data->deg;
   int volume_nodes = dgmath_get_nodes(dim,deg);
   
-  d4est_linalg_copy_1st_to_2nd
+  d4est_util_copy_1st_to_2nd
     (
      &u[*stride],
      &(test_d4est_mixed_element_data->u_storage)[0],
@@ -881,7 +881,7 @@ test_d4est_mixed_element_data_copy_from_storage_to_vec_callback
   int deg = test_d4est_mixed_element_data->deg;
   int volume_nodes = dgmath_get_nodes(dim,deg);
   
-  d4est_linalg_copy_1st_to_2nd
+  d4est_util_copy_1st_to_2nd
     (
      &(test_d4est_mixed_element_data->u_storage)[0],
      &u[*stride],

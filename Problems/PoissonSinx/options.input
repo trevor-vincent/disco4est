@@ -5,10 +5,6 @@ fill_uniform = 1
 region0_deg = 1
 region0_deg_quad_inc = 0
 
-[problem]
-eval_method = EVAL_BNDRY_FCN_ON_LOBATTO
-deg_vol_quad_inc = 0
-
 [flux]
 name = sipg
 sipg_penalty_prefactor = 2.0
@@ -73,12 +69,12 @@ ksp_converged_reason = 1
 ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 0
 
-; [multigrid]
-; vcycle_imax = 1;
-; vcycle_rtol = 1e-9;
-; vcycle_atol = 0.;
-; smoother_name = mg_smoother_cheby
-; bottom_solver_name = mg_bottom_solver_cg_d4est
+[multigrid]
+vcycle_imax = 1;
+vcycle_rtol = 1e-9;
+vcycle_atol = 0.;
+smoother_name = mg_smoother_cheby
+bottom_solver_name = mg_bottom_solver_cg_d4est
 
 [mg_bottom_solver_cg_d4est]
 bottom_iter = 100;
@@ -105,6 +101,14 @@ cheby_eigs_reuse_fromdownvcycle = 0;
 cheby_eigs_reuse_fromlastvcycle = 0;
 cheby_print_residual_norm = 0;
 cheby_print_eig = 0;
+
+[d4est_solver_fcg]
+iter = 1000
+atol = 1e-15
+rtol = 1e-15
+vi = 20
+monitor = 1
+precond_flag = 0
 
 [quadrature]
 name = legendre

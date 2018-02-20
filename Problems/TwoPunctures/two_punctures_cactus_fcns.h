@@ -635,7 +635,7 @@ void two_punctures_krylov_pc_setup_fcn
 )
 {
   multigrid_data_t* mg_data = krylov_pc->pc_data;
-  petsc_ctx_t* ctx = krylov_pc->pc_ctx;
+  krylov_ctx_t* ctx = krylov_pc->pc_ctx;
 
   if (ctx->p4est->mpirank == 0)
     printf("[KRYLOV_PC_MULTIGRID_SETUP_FCN] Initializing Matrix Operator\n");

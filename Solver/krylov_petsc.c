@@ -212,13 +212,13 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   void           *ctx;
   PetscErrorCode ierr;
 
-  petsc_ctx_t* petsc_ctx;
+  krylov_ctx_t* petsc_ctx;
   const double* px;
   double* py;
 
   /* PetscFunctionBegin; */
   ierr = MatShellGetContext( A, &ctx ); CHKERRQ(ierr);
-  petsc_ctx = (petsc_ctx_t *)ctx;
+  petsc_ctx = (krylov_ctx_t *)ctx;
   ierr = VecGetArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecGetArray( y, &py ); CHKERRQ(ierr);
 
@@ -307,7 +307,7 @@ krylov_petsc_solve
   /* double* u_temp; */
   /* double* rhs_temp; */
 
-  petsc_ctx_t petsc_ctx;
+  krylov_ctx_t petsc_ctx;
   petsc_ctx.p4est = p4est;
   petsc_ctx.vecs = vecs;
   petsc_ctx.fcns = fcns;

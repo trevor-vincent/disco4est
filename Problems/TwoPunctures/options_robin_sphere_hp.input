@@ -48,6 +48,27 @@ compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
+[d4est_solver_newton]
+atol = 1e-15
+rtol = 1e-15
+imax = 1000000
+imin = 1
+monitor = 1
+
+[d4est_solver_fcg]
+atol = 1e-15
+rtol = 1e-15
+iter = 1000000
+monitor = 1
+vi = 5
+precond_flag = 0
+
+
+[d4est_solver_cg]
+atol = 1e-15
+rtol = 1e-15
+iter = 1000000000
+monitor = 1
 
 [d4est_vtk]
 filename = two_punctures

@@ -22,6 +22,7 @@
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
 #include <d4est_solver_newton.h>
+#include <d4est_solver_fcg.h>
 #include <multigrid.h>
 #include <krylov_pc_multigrid.h>
 #include <multigrid_logger_residual.h>
@@ -398,7 +399,7 @@ problem_init
     d4est_h5_read_dataset(p4est->mpirank,initial_extents->checkpoint_prefix,"u",H5T_NATIVE_DOUBLE, prob_vecs.u);
   }
   
-  d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
+  d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
   double point [4][100];
   double point_diff [4][100];
@@ -521,28 +522,7 @@ problem_init
       (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx }
     );
 
-
-    // TODO: reimplement?
-    // if (p4est->mpirank == 0){
-    //   printf("[D4EST_OUTPUT]: Norms in cubic region only\n");
-    // }
-    // d4est_norms_norms
-    //   (
-    //    p4est,
-    //    d4est_ops,
-    //    d4est_geom,
-    //    d4est_quad,
-    //    d4est_factors,
-    //    *ghost,
-    //    *ghost_data,
-    //    NULL,
-    //    stats->total,
-    //    error,
-    //    NULL,
-    //    skip_curved_elements
-    //   );
-
-    
+   
     if (level != d4est_amr->num_of_amr_steps){
 
       if (p4est->mpirank == 0)
@@ -604,7 +584,7 @@ problem_init
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
     u_prev = P4EST_REALLOC(u_prev, double, prob_vecs.local_nodes);
     error = P4EST_REALLOC(error, double, prob_vecs.local_nodes);
-    d4est_linalg_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
+    d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
 
 
@@ -651,13 +631,36 @@ problem_init
     
     if (!init_params.do_not_solve){
 
-      newton_petsc_params_t newton_params;
-      newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_params);
+      /* newton_petsc_params_t newton_params; */
+      /* newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_params); */
 
-      krylov_petsc_params_t krylov_params;
-      krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_params);
+      /* krylov_petsc_params_t krylov_params; */
+      /* krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_params); */
       
-      newton_petsc_solve
+      /* newton_petsc_solve */
+      /*   ( */
+      /*    p4est, */
+      /*    &prob_vecs, */
+      /*    &prob_fcns, */
+      /*    ghost, */
+      /*    ghost_data, */
+      /*    d4est_ops, */
+      /*    d4est_geom, */
+      /*    d4est_quad, */
+      /*    d4est_factors, */
+      /*    &krylov_params, */
+      /*    &newton_params, */
+      /*    pc */
+      /*   ); */
+
+      d4est_solver_newton_params_t newton_params = d4est_solver_newton_input(p4est, input_file);
+      /* d4est_solver_fcg_params_t fcg_params; */
+      /* d4est_solver_fcg_input(p4est, input_file, "d4est_solver_fcg", "", &fcg_params); */
+
+      d4est_solver_cg_params_t cg_params;
+      d4est_solver_cg_input(p4est, input_file, "d4est_solver_cg", "", &cg_params);
+
+      d4est_solver_newton_solve
         (
          p4est,
          &prob_vecs,
@@ -668,10 +671,14 @@ problem_init
          d4est_geom,
          d4est_quad,
          d4est_factors,
-         &krylov_params,
          &newton_params,
+         d4est_solver_cg_solve,
+         /* d4est_solver_fcg_solve, */
+         &cg_params,
+         /* &fcg_params, */
          pc
         );
+      
     }
 
     double ten_o_s3 = 10./sqrt(3);
