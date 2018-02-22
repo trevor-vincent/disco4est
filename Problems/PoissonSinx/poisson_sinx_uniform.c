@@ -216,10 +216,10 @@ problem_init
     /* ); */
 
 
-    d4est_solver_fcg_params_t fcg_params;
-    d4est_solver_fcg_input(p4est, input_file, "d4est_solver_fcg", "[D4EST_SOLVER_FCG]", &fcg_params);
+    d4est_solver_cg_params_t fcg_params;
+    d4est_solver_cg_input(p4est, input_file, "d4est_solver_cg", "[D4EST_SOLVER_CG]", &fcg_params);
     
-    d4est_solver_fcg_solve
+    d4est_solver_cg_solve
       (
        p4est,
        &prob_vecs,
