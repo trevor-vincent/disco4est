@@ -17,3 +17,4 @@ script:
     && cd ./build_${TRAVIS_OS_NAME}_${BUILD_TYPE}
     && cmake ${TRAVIS_BUILD_DIR} -DCMAKE_C_FLAGS=-std=c99
     && make -j1
+    && ctest -V
