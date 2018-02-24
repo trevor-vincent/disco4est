@@ -277,16 +277,16 @@ function(add_d4est_bash_regression_test exec parent_dir test_name)
     # ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
     # "${CMAKE_BINARY_DIR}/Tests/${parent_dir}")
 
-    find_program (BASH_PROGRAM bash)
+    # find_program (BASH_PROGRAM bash)
 
-    if (BASH_PROGRAM)
-      add_custom_command(
-	TARGET d4est POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy
-	${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.sh
-	"${CMAKE_BINARY_DIR}/Tests/${parent_dir}")  
-      add_test (mytest ${BASH_PROGRAM} ${CMAKE_BINARY_DIR}/Tests/${parent_dir}/${exec})
-    endif (BASH_PROGRAM)
+    # if (BASH_PROGRAM)
+    add_custom_command(
+      TARGET d4est POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy
+      ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.sh
+      "${CMAKE_BINARY_DIR}/Tests/${parent_dir}")  
+    add_test (mytest bash ${CMAKE_BINARY_DIR}/Tests/${parent_dir}/${exec})
+    # endif (BASH_PROGRAM)
     
 
   # add_custom_command(
