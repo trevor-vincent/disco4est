@@ -29,7 +29,7 @@
 
 typedef struct {
   
-  int deg_vol_quad_inc;
+  int deg_quad_inc;
   dirichlet_bndry_eval_method_t eval_method;
   
 } poisson_rsquared_init_params_t;
@@ -56,9 +56,9 @@ int poisson_rsquared_init_params_handler
 )
 {
   poisson_rsquared_init_params_t* pconfig = (poisson_rsquared_init_params_t*)user;
-  if (d4est_util_match_couple(section,"problem",name,"deg_vol_quad_inc")) {
-    D4EST_ASSERT(pconfig->deg_vol_quad_inc == -1);
-    pconfig->deg_vol_quad_inc = atoi(value);
+  if (d4est_util_match_couple(section,"problem",name,"deg_quad_inc")) {
+    D4EST_ASSERT(pconfig->deg_quad_inc == -1);
+    pconfig->deg_quad_inc = atoi(value);
   }
  if (d4est_util_match_couple(section,"problem",name,"eval_method")) {
    if (d4est_util_match(value,"EVAL_BNDRY_FCN_ON_QUAD")){
@@ -86,14 +86,14 @@ poisson_rsquared_init_params_input
 )
 {
   poisson_rsquared_init_params_t input;
-  input.deg_vol_quad_inc = -1;
+  input.deg_quad_inc = -1;
   input.eval_method = EVAL_BNDRY_FCN_NOT_SET;
 
   if (ini_parse(input_file, poisson_rsquared_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc, -1);
+  D4EST_CHECK_INPUT("problem", input.deg_quad_inc, -1);
   D4EST_CHECK_INPUT("problem", input.eval_method, EVAL_BNDRY_FCN_NOT_SET);
   
   return input;
@@ -108,7 +108,7 @@ problem_set_mortar_degree
  void* user_ctx
 )
 {
-  return elem_data->deg_vol_quad;
+  return elem_data->deg_quad;
 }
 
 void
@@ -119,7 +119,7 @@ problem_set_degrees_after_amr
 )
 {
   poisson_rsquared_init_params_t* params = user_ctx;
-  elem_data->deg_vol_quad = elem_data->deg + params->deg_vol_quad_inc;
+  elem_data->deg_quad = elem_data->deg + params->deg_quad_inc;
 }
 
 

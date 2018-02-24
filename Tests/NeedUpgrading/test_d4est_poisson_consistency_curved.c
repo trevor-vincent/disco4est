@@ -33,7 +33,7 @@ problem_set_degrees_init
 {
   /* d4est_element_data_t* elem_data = elem_data_tmp; */
   elem_data->deg = 2;
-  elem_data->deg_vol_quad = TEST_DEG_INIT;
+  elem_data->deg_quad = TEST_DEG_INIT;
 }
 
 

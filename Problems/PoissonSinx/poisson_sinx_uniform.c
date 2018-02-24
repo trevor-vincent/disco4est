@@ -38,7 +38,7 @@ problem_set_mortar_degree
  void* user_ctx
 )
 {
-  return elem_data->deg_vol_quad;
+  return elem_data->deg_quad;
 }
 
 void
@@ -71,9 +71,9 @@ problem_init
   bc_data_for_rhs.dirichlet_fcn = poisson_sinx_boundary_fcn;
   bc_data_for_rhs.eval_method = eval_method;
   
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs, problem_set_mortar_degree, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs);
   
-  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_rhs, problem_set_mortar_degree, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_rhs);
 
   problem_ctx_t ctx;
   ctx.flux_data_for_apply_lhs = flux_data_for_apply_lhs;

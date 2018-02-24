@@ -38,7 +38,7 @@ problem_set_degrees_init
   /* d4est_element_data_t* elem_data = elem_data_tmp; */
   test_d4est_stiffness_t* data = user_ctx;
   elem_data->deg = data->deg;
-  elem_data->deg_vol_quad = data->deg_volume_quad;
+  elem_data->deg_quad = data->deg_volume_quad;
 }
 
 static int
@@ -110,7 +110,7 @@ problem_set_degrees_amr
 {
   test_d4est_stiffness_t* data = user_ctx;
   elem_data->deg = data->deg;
-  elem_data->deg_vol_quad = data->deg_volume_quad;
+  elem_data->deg_quad = data->deg_volume_quad;
 }
 
 
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
       else{
         mortar_last_node_error[j] = fabs(mortar_last_node[j] - mortar_last_node[j-1]);
       }
-      /* printf("elem %d deg %d deg_vol_quad %d deg_mortar_quad %d stiff_last %.15f mortar_last = %.15f stifferr %.15f morterr %.15f\n", p4est->local_num_quadrants, deg_data.deg, deg_data.deg_volume_quad, deg_data.deg_mortar_quad, stiff_last_node[i],  mortar_last_node[j], stiff_last_node_error[i], mortar_last_node_error[j]); */
+      /* printf("elem %d deg %d deg_quad %d deg_mortar_quad %d stiff_last %.15f mortar_last = %.15f stifferr %.15f morterr %.15f\n", p4est->local_num_quadrants, deg_data.deg, deg_data.deg_volume_quad, deg_data.deg_mortar_quad, stiff_last_node[i],  mortar_last_node[j], stiff_last_node_error[i], mortar_last_node_error[j]); */
 
 
       /* int local_nodes = local_nodes; */
@@ -336,7 +336,7 @@ int main(int argc, char *argv[])
                &f[ed->nodal_stride],
                ed->deg,
                ed->J_quad,
-               ed->deg_vol_quad,
+               ed->deg_quad,
                &Apoly_vec_compare[ed->nodal_stride]
               );
           }

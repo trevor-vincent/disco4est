@@ -32,7 +32,7 @@ problem_set_degrees_after_amr
  void* user_ctx
 )
 {
-  elem_data->deg_vol_quad = elem_data->deg;
+  elem_data->deg_quad = elem_data->deg;
 }
 
 int
@@ -42,7 +42,7 @@ problem_set_mortar_degree
  void* user_ctx
 )
 {
-  return elem_data->deg_vol_quad;
+  return elem_data->deg_quad;
 }
 
 void

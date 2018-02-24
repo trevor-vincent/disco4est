@@ -69,8 +69,8 @@ JAC_compute_method = numerical
 
 [problem]
 do_not_solve = 0
-deg_vol_quad_inc_inner = $6
-deg_vol_quad_inc_outer = $7
+deg_quad_inc_inner = $6
+deg_quad_inc_outer = $7
 solve_after_level = -2
 
 [d4est_solver_newton]

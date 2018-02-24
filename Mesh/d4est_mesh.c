@@ -86,9 +86,9 @@ d4est_mesh_set_initial_extents
     elem_data->deg = input->checkpoint_deg_array[elem_data->id];
   }
   
-  elem_data->deg_vol_quad = input->deg_quad_inc[region] +
+  elem_data->deg_quad = input->deg_quad_inc[region] +
                             elem_data->deg;
-  /* printf("[BEFORE_AMR]: deg, deg_vol_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, input->deg_quad_inc[region], region); */
+  /* printf("[BEFORE_AMR]: deg, deg_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_quad, input->deg_quad_inc[region], region); */
 }
 
 
@@ -101,10 +101,10 @@ d4est_mesh_set_quadratures_after_amr
 {
   d4est_mesh_initial_extents_t* input = user_ctx;
   int region = elem_data->region;
-  elem_data->deg_vol_quad = input->deg_quad_inc[region] +
+  elem_data->deg_quad = input->deg_quad_inc[region] +
                             elem_data->deg;
 
-  /* printf("[AFTER_AMR]: deg, deg_vol_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, input->deg_quad_inc[region], region); */
+  /* printf("[AFTER_AMR]: deg, deg_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_quad, input->deg_quad_inc[region], region); */
                
 }
 
@@ -204,7 +204,7 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
  void* params
 )
 {
-  int total_mortar_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM)-1, e_m->deg_vol_quad);
+  int total_mortar_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM)-1, e_m->deg_quad);
   int scalar_stride = e_m->mortar_quad_scalar_stride[f_m];
   int vector_stride = e_m->mortar_quad_vector_stride[f_m];
   int matrix_stride = e_m->mortar_quad_matrix_stride[f_m];
@@ -252,7 +252,7 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
      1,
      1,
      &e_m->deg,
-     &e_m->deg_vol_quad,
+     &e_m->deg_quad,
      f_m,
      xyz_m_mortar_quad,
      drst_dxyz_m_mortar_quad,
@@ -308,7 +308,7 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
   int total_side_nodes_m_quad = 0;
   for (int i = 0; i < faces_m; i++){
     deg_m_lobatto[i] = e_m[i]->deg;
-    deg_m_quad[i] = e_m[i]->deg_vol_quad;
+    deg_m_quad[i] = e_m[i]->deg_quad;
     
     face_nodes_m_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
     face_nodes_m_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_m_quad[i]);
@@ -322,7 +322,7 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
   int total_side_nodes_p_quad = 0;
   for (int i = 0; i < faces_p; i++){
     deg_p_lobatto[i] = e_p_oriented[i]->deg;
-    deg_p_quad[i] = e_p_oriented[i]->deg_vol_quad;
+    deg_p_quad[i] = e_p_oriented[i]->deg_quad;
     deg_p_lobatto_porder[i] = e_p[i]->deg;
 
     face_nodes_p_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
@@ -487,11 +487,11 @@ d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback
   
   sizes->local_mortar_nodes_quad += d4est_lgl_get_nodes(
                                                         (P4EST_DIM)-1,
-                                                        e_m->deg_vol_quad);
+                                                        e_m->deg_quad);
 
   sizes->local_boundary_nodes_quad += d4est_lgl_get_nodes(
                                                         (P4EST_DIM)-1,
-                                                        e_m->deg_vol_quad);
+                                                        e_m->deg_quad);
 }
 
 static void
@@ -524,8 +524,8 @@ d4est_mesh_compute_mortar_quadrature_sizes_interface_callback
     for (int j = 0; j < faces_p; j++){
       int deg_mortar_quad = d4est_util_max_int
                             (
-                             e_m[i]->deg_vol_quad,
-                             e_p_oriented[j]->deg_vol_quad
+                             e_m[i]->deg_quad,
+                             e_p_oriented[j]->deg_quad
                             );
       total_mortar_nodes_quad += d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad );
     }
@@ -937,9 +937,9 @@ d4est_mesh_get_array_of_quadrature_degrees
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
         if (type == D4EST_INT)
-          ((int*)deg_array)[stride] = ed->deg_vol_quad;
+          ((int*)deg_array)[stride] = ed->deg_quad;
         else if (type == D4EST_DOUBLE)
-          ((double*)deg_array)[stride] = (double)ed->deg_vol_quad;
+          ((double*)deg_array)[stride] = (double)ed->deg_quad;
         else
           D4EST_ABORT("Not a supported builtin-type");
         stride++;
@@ -1095,7 +1095,7 @@ int d4est_mesh_get_local_quad_nodes(p4est_t* p4est){
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_vol_quad);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
         local_quad_nodes += volume_nodes;
       }
     }
@@ -1242,7 +1242,7 @@ d4est_mesh_print_element_data_debug
         d4est_element_data_t* ed = quad->p.user_data;
 
         printf("** Element %d **\n", ed->id);
-        printf("deg, deg_vol_quad = %d, %d\n", ed->deg, ed->deg_vol_quad);
+        printf("deg, deg_quad = %d, %d\n", ed->deg, ed->deg_quad);
         printf("tree, tree_quadid = %d, %d\n", ed->tree, ed->tree_quadid);
 
         
@@ -1318,7 +1318,7 @@ d4est_mesh_compute_l2_norm_sqr
            &nodal_vec[ed->nodal_stride],
            ed->deg,
            ed->J_quad,
-           ed->deg_vol_quad,
+           ed->deg_quad,
            &Mvec[ed->nodal_stride]
           );
       
@@ -1409,27 +1409,27 @@ d4est_mesh_init_element_data
           user_fcn(elem_data, user_ctx);
         }
 
-        /* printf("[UPDATE]: deg, deg_quad, region = %d, %d, %d\n", elem_data->deg, elem_data->deg_vol_quad, elem_data->region); */
+        /* printf("[UPDATE]: deg, deg_quad, region = %d, %d, %d\n", elem_data->deg, elem_data->deg_quad, elem_data->region); */
 
         /* printf("elem_data->deg = %d\n", elem_data->deg); */
-        /* printf("elem_data->deg_vol_quad = %d\n", elem_data->deg_vol_quad); */
+        /* printf("elem_data->deg_quad = %d\n", elem_data->deg_quad); */
         
         /* elem_data->deg = 2; */
-        /* elem_data->deg_vol_quad = 2; */
+        /* elem_data->deg_quad = 2; */
 
         D4EST_ASSERT(elem_data->deg > 0
                    &&
-                   elem_data->deg_vol_quad > 0
+                   elem_data->deg_quad > 0
                    &&
                    elem_data->deg < MAX_DEGREE
                   );
         
         int nodes = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg);
-        int nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg_vol_quad);
+        int nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg_quad);
         int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1, elem_data->deg);
         local_nodes += nodes;
         local_sqr_nodes += nodes*nodes;
-        local_nodes_quad += d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg_vol_quad);
+        local_nodes_quad += d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg_quad);
         
         sqr_nodal_stride += nodes*nodes;
         sqr_mortar_stride += face_nodes*face_nodes*(P4EST_FACES);
@@ -1504,7 +1504,7 @@ d4est_mesh_geometry_storage_initialize_data
                            &mesh_object,
                            QUAD_OBJECT_VOLUME,
                            QUAD_INTEGRAND_UNKNOWN,
-                           ed->deg_vol_quad
+                           ed->deg_quad
                           );
 
 
@@ -1516,7 +1516,7 @@ d4est_mesh_geometry_storage_initialize_data
         rst_points_lobatto.t = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, &mesh_object, QUAD_OBJECT_VOLUME, QUAD_INTEGRAND_UNKNOWN, ed->deg, 2);
 #endif
               
-        int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_vol_quad);
+        int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
 
         d4est_geometry_compute_xyz
@@ -1537,7 +1537,7 @@ d4est_mesh_geometry_storage_initialize_data
            d4est_geom,
            rst_points_quad,
            tt,
-           ed->deg_vol_quad,
+           ed->deg_quad,
            ed->q,
            ed->dq,
            ed->xyz_quad
@@ -1549,7 +1549,7 @@ d4est_mesh_geometry_storage_initialize_data
             for (int d = 0; d < (P4EST_DIM); d++){
               for (int d1 = 0; d1 < (P4EST_DIM); d1++){
                 d4est_operators_apply_dij(d4est_ops, &ed->xyz[d][0], (P4EST_DIM), ed->deg, d1, tmp);
-                d4est_quadrature_interpolate(d4est_ops, d4est_quad, d4est_geom, &mesh_object, QUAD_OBJECT_VOLUME, QUAD_INTEGRAND_UNKNOWN, tmp, ed->deg, &ed->xyz_rst_quad[d][d1][0], ed->deg_vol_quad);
+                d4est_quadrature_interpolate(d4est_ops, d4est_quad, d4est_geom, &mesh_object, QUAD_OBJECT_VOLUME, QUAD_INTEGRAND_UNKNOWN, tmp, ed->deg, &ed->xyz_rst_quad[d][d1][0], ed->deg_quad);
                 /* double *dxyz_print = &ed->xyz_rst_quad[d][d1][0]; */
                 /* DEBUG_PRINT_ARR_DBL(dxyz_print, volume_nodes_quad); */
               }
@@ -1565,7 +1565,7 @@ d4est_mesh_geometry_storage_initialize_data
              ed->tree,
              ed->q,
              ed->dq,
-             ed->deg_vol_quad,
+             ed->deg_quad,
              ed->xyz_rst_quad
             );
         }
@@ -1764,7 +1764,7 @@ d4est_mesh_init_field
           }
         }
         else if (option == INIT_FIELD_ON_QUAD){
-          int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_vol_quad);
+          int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
           for (int i = 0; i < volume_nodes_quad; i++){
             node_vec[ed->quad_stride + i] = init_fcn(ed->xyz_quad[0][i],
                                                       ed->xyz_quad[1][i],
@@ -2022,7 +2022,7 @@ d4est_mesh_surface_integral
       for (int qq = 0; qq < QQ; ++qq) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
         d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
-        int face_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM)-1, ed->deg_vol_quad);
+        int face_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM)-1, ed->deg_quad);
 
 
         double* normal_quad [(P4EST_DIM)];
@@ -2051,7 +2051,7 @@ d4est_mesh_surface_integral
              1,
              1,
              &ed->deg,
-             &ed->deg_vol_quad,
+             &ed->deg_quad,
              f,
              xyz_quad,
              drst_dxyz_quad,

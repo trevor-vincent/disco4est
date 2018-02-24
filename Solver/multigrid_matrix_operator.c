@@ -198,7 +198,7 @@ multigrid_matrix_setup_fofufofvlilj_operator
            ed->deg,
            ed->xyz_quad,
            ed->J_quad,
-           ed->deg_vol_quad,
+           ed->deg_quad,
            &matrix_op->matrix_at0[matrix_nodal_stride],
            fofu_fcn,
            fofu_ctx,

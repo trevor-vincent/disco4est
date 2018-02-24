@@ -6,7 +6,7 @@ deg = 1
 deg_quad = 6
 
 [problem]
-deg_vol_quad_inc = 5
+deg_quad_inc = 5
 eval_method = EVAL_BNDRY_FCN_ON_LOBATTO
 
 [flux]

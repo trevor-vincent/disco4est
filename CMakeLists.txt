@@ -223,42 +223,79 @@ function(add_d4est_problem_2d exec src parent_dir)
 endfunction()
 
 
-function(add_d4est_test_3d exec src parent_dir test_name)
+function(add_d4est_unit_test_3d exec src parent_dir test_name)
   add_executable(${exec} ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/${src})
   target_link_libraries(${exec} d8est)
-  add_test(${test_name} ${exec})
+  add_test(${test_name} ${CMAKE_BINARY_DIR}/Tests/${parent_dir}/${exec})
   target_compile_definitions(${exec} PRIVATE DIM=3)
-
+  set_target_properties(${exec}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/${parent_dir}"
+    )
+  
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
-    ${CMAKE_CURRENT_BINARY_DIR}/)
+    "${CMAKE_BINARY_DIR}/Tests/${parent_dir}")
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/IO/logging.conf
-    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/logging.conf)
+    ${CMAKE_CURRENT_BINARY_DIR}/Tests/${parent_dir}/logging.conf)
 endfunction()
 
 
-function(add_d4est_test_2d exec src parent_dir test_name)
+function(add_d4est_unit_test_2d exec src parent_dir test_name)
   add_executable(${exec} ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/${src})
   target_link_libraries(${exec} d4est)
-  add_test(${test_name} ${exec})
+  add_test(${test_name} ${CMAKE_BINARY_DIR}/Tests/${parent_dir}/${exec})
   target_compile_definitions(${exec} PRIVATE DIM=2)
-
+  set_target_properties(${exec}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/${parent_dir}"
+    )  
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
-    ${CMAKE_CURRENT_BINARY_DIR}/)
+    "${CMAKE_BINARY_DIR}/Tests/${parent_dir}")
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/IO/logging.conf
-    ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/logging.conf)
+    ${CMAKE_CURRENT_BINARY_DIR}/Tests/${parent_dir}/logging.conf)
 endfunction()
+
+
+
+function(add_d4est_bash_regression_test exec parent_dir test_name)
+  # add_test(${test_name} "source ${CMAKE_BINARY_DIR}/Tests/${parent_dir}/${exec}")
+  # add_custom_command(
+    # TARGET d4est POST_BUILD
+    # COMMAND ${CMAKE_COMMAND} -E copy
+    # ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
+    # "${CMAKE_BINARY_DIR}/Tests/${parent_dir}")
+
+    find_program (BASH_PROGRAM bash)
+
+    if (BASH_PROGRAM)
+      add_custom_command(
+	TARGET d4est POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy
+	${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.sh
+	"${CMAKE_BINARY_DIR}/Tests/${parent_dir}")  
+      add_test (mytest ${BASH_PROGRAM} ${CMAKE_BINARY_DIR}/Tests/${parent_dir}/${exec})
+    endif (BASH_PROGRAM)
+    
+
+  # add_custom_command(
+    # TARGET d4est POST_BUILD
+    # COMMAND ${CMAKE_COMMAND} -E copy
+    # ${CMAKE_SOURCE_DIR}/IO/logging.conf
+    # ${CMAKE_CURRENT_BINARY_DIR}/Tests/${parent_dir}/logging.conf)
+endfunction()
+
 
 ##
 ## Tests
@@ -267,12 +304,13 @@ enable_testing()
 set(CTEST_MEMORYCHECK_COMMAND /usr/bin/valgrind)
 set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/suppressions.txt" )
 
-add_d4est_test_3d(test_d4est_vtk test_d4est_vtk.c . test_d4est_vtk)
-add_d4est_test_3d(test_d4est_operators test_d4est_operators.c . test_d4est_operators)
-add_d4est_test_3d(test_d4est_kron test_d4est_kron.c . test_d4est_kron)
-add_d4est_test_3d(test_d4est_linalg test_d4est_linalg.c . test_d4est_linalg)
-# add_d4est_test_3d(test_d4est_ghost_data test_d4est_ghost_data.c . test_d4est_ghost_data)
-# add_d4est_test_3d(test_d4est_operators_interpolate test_d4est_operators_interpolate.c . test_d4est_operators_interpolate)
+add_d4est_unit_test_3d(test_d4est_vtk test_d4est_vtk.c Unit test_d4est_vtk)
+add_d4est_unit_test_3d(test_d4est_operators test_d4est_operators.c Unit test_d4est_operators)
+add_d4est_unit_test_3d(test_d4est_kron test_d4est_kron.c Unit test_d4est_kron)
+add_d4est_unit_test_3d(test_d4est_linalg test_d4est_linalg.c Unit test_d4est_linalg)
+add_d4est_bash_regression_test(d4est_test_stamm.sh Regression d4est_test_stamm)
+# add_d4est_unit_test_3d(test_d4est_ghost_data test_d4est_ghost_data.c . test_d4est_ghost_data)
+# add_d4est_unit_test_3d(test_d4est_operators_interpolate test_d4est_operators_interpolate.c . test_d4est_operators_interpolate)
 
 add_d4est_problem_2d(stamm_driver stamm_multigrid_pc.c Stamm)
 add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)

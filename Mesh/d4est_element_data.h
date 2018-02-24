@@ -50,11 +50,11 @@ typedef struct {
 
   /* local nodal fields */
   double u_elem[MAX_NODES];   /* storage for MPI transfers */
-  double* dudr_elem[(P4EST_DIM)];   /* storage for MPI transfers */
+  double* dudr_elem[(P4EST_DIM)];   /* alias for dudr */
   double* Au_elem;  /* alias for Au */
   
   int deg; /* nodal degree */
-  int deg_vol_quad; /* deg for volume quadrature */
+  int deg_quad; /* deg for volume quadrature */
 
   /* different element size parameters */
   double j_div_sj_min [(P4EST_FACES)];

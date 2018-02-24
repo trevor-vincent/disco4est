@@ -96,7 +96,7 @@ problem_set_mortar_degree
  void* user_ctx
 )
 {
-  return elem_data->deg_vol_quad;
+  return elem_data->deg_quad;
 }
 
 

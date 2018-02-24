@@ -35,8 +35,8 @@
 typedef struct {
   
   int do_not_solve;
-  /* int deg_vol_quad_inc_inner; */
-  /* int deg_vol_quad_inc_outer; */
+  /* int deg_quad_inc_inner; */
+  /* int deg_quad_inc_outer; */
   int amr_level_for_uniform_p;
   
 } two_punctures_init_params_t;
@@ -68,13 +68,13 @@ int two_punctures_init_params_handler
     D4EST_ASSERT(pconfig->do_not_solve == -1);
     pconfig->do_not_solve = atoi(value);
   }
-  /* else if (d4est_util_match_couple(section,"problem",name,"deg_vol_quad_inc_inner")) { */
-    /* D4EST_ASSERT(pconfig->deg_vol_quad_inc_inner == -1); */
-    /* pconfig->deg_vol_quad_inc_inner = atoi(value); */
+  /* else if (d4est_util_match_couple(section,"problem",name,"deg_quad_inc_inner")) { */
+    /* D4EST_ASSERT(pconfig->deg_quad_inc_inner == -1); */
+    /* pconfig->deg_quad_inc_inner = atoi(value); */
   /* } */
-  /* else if (d4est_util_match_couple(section,"problem",name,"deg_vol_quad_inc_outer")) { */
-    /* D4EST_ASSERT(pconfig->deg_vol_quad_inc_outer == -1); */
-    /* pconfig->deg_vol_quad_inc_outer = atoi(value); */
+  /* else if (d4est_util_match_couple(section,"problem",name,"deg_quad_inc_outer")) { */
+    /* D4EST_ASSERT(pconfig->deg_quad_inc_outer == -1); */
+    /* pconfig->deg_quad_inc_outer = atoi(value); */
   /* } */
   else if (d4est_util_match_couple(section,"amr",name,"amr_level_for_uniform_p")) {
     D4EST_ASSERT(pconfig->amr_level_for_uniform_p == -1);
@@ -96,8 +96,8 @@ two_punctures_init_params_input
 {
   two_punctures_init_params_t input;
   input.do_not_solve = -1;
-  /* input.deg_vol_quad_inc_inner = -1; */
-  /* input.deg_vol_quad_inc_outer = -1; */
+  /* input.deg_quad_inc_inner = -1; */
+  /* input.deg_quad_inc_outer = -1; */
   input.amr_level_for_uniform_p = -1;
 
   if (ini_parse(input_file, two_punctures_init_params_handler, &input) < 0) {
@@ -105,8 +105,8 @@ two_punctures_init_params_input
   }
 
   D4EST_CHECK_INPUT("problem", input.do_not_solve, -1);
-  /* D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc_inner, -1); */
-  /* D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc_outer, -1); */
+  /* D4EST_CHECK_INPUT("problem", input.deg_quad_inc_inner, -1); */
+  /* D4EST_CHECK_INPUT("problem", input.deg_quad_inc_outer, -1); */
   D4EST_CHECK_INPUT("amr", input.amr_level_for_uniform_p, -1);
   
   return input;
@@ -204,7 +204,7 @@ problem_set_mortar_degree
  void* user_ctx
 )
 {
-  return elem_data->deg_vol_quad;
+  return elem_data->deg_quad;
 }
 
 
@@ -221,15 +221,15 @@ problem_set_degrees_after_amr
   
   /* outer shell */
   /* if (elem_data->tree < 6){ */
-    /* elem_data->deg_vol_quad = elem_data->deg + init_params->deg_vol_quad_inc_outer; */
+    /* elem_data->deg_quad = elem_data->deg + init_params->deg_quad_inc_outer; */
   /* } */
   /* inner shell */
   /* else if(elem_data->tree < 12){ */
-    /* elem_data->deg_vol_quad = elem_data->deg + init_params->deg_vol_quad_inc_inner; */
+    /* elem_data->deg_quad = elem_data->deg + init_params->deg_quad_inc_inner; */
   /* } */
   /* center cube */
   /* else { */
-  elem_data->deg_vol_quad = elem_data->deg;
+  elem_data->deg_quad = elem_data->deg;
   /* } */
 
 }

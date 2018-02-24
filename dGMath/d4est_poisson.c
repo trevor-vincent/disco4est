@@ -99,7 +99,7 @@ void
              &f[ed->nodal_stride],
              ed->deg,
              ed->J_quad,
-             ed->deg_vol_quad,
+             ed->deg_quad,
              &rhs[ed->nodal_stride]
             );
         }
@@ -115,7 +115,7 @@ void
              &f[ed->quad_stride],
              ed->deg,
              ed->J_quad,
-             ed->deg_vol_quad,
+             ed->deg_quad,
              &rhs[ed->nodal_stride]
             );
         }
@@ -173,7 +173,7 @@ d4est_poisson_apply_stiffness_matrix
            ed->deg,
            ed->J_quad,
            ed->rst_xyz_quad,
-           ed->deg_vol_quad,
+           ed->deg_quad,
            ed->Au_elem
           );
       }

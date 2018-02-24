@@ -115,9 +115,9 @@ problem_set_degrees_amr
   test_d4est_puncture_fcns_t* data = user_ctx;
   elem_data->deg = data->deg;
   if (elem_data->tree != 12)
-    elem_data->deg_vol_quad = data->deg_volume_quad;
+    elem_data->deg_quad = data->deg_volume_quad;
   else
-    elem_data->deg_vol_quad = data->deg;
+    elem_data->deg_quad = data->deg;
 }
 
 

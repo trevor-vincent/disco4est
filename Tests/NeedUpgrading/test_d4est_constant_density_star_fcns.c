@@ -39,7 +39,7 @@ typedef struct {
 /* { */
 /*   test_d4est_constant_density_star_fcns_t* data = user_ctx; */
 /*   elem_data->deg = data->deg; */
-/*   elem_data->deg_vol_quad = data->deg_volume_quad; */
+/*   elem_data->deg_quad = data->deg_volume_quad; */
 /* } */
 
 static int
@@ -125,7 +125,7 @@ problem_set_degrees_amr
 {
   test_d4est_constant_density_star_fcns_t* data = user_ctx;
   elem_data->deg = data->deg;
-  elem_data->deg_vol_quad = data->deg_volume_quad;
+  elem_data->deg_quad = data->deg_volume_quad;
 }
 
 

@@ -87,7 +87,7 @@ problem_set_degrees_after_amr
  void* user_ctx
 )
 {
-  elem_data->deg_vol_quad = elem_data->deg;
+  elem_data->deg_quad = elem_data->deg;
 }
 
 

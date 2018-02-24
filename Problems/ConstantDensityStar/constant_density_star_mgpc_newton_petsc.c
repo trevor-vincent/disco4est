@@ -160,7 +160,7 @@ problem_set_degrees_after_amr
  void* user_ctx
 )
 {
-  elem_data->deg_vol_quad = elem_data->deg + 3;
+  elem_data->deg_quad = elem_data->deg + 3;
 }
 
 
@@ -198,8 +198,8 @@ problem_init
   bc_data_for_res.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
                                           
   d4est_poisson_flux_data_t* flux_data_for_jac =
-    d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, problem_set_mortar_degree, NULL);
-  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_res, problem_set_mortar_degree, NULL);
+    d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac);
+  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_res);
 
   problem_ctx_t ctx;
   ctx.constant_density_star_params = &constant_density_star_params;
@@ -219,7 +219,8 @@ problem_init
   prob_vecs.local_nodes = initial_nodes;
 
   d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_jac->flux_data;
-  
+
+ 
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
   penalty_data.u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;

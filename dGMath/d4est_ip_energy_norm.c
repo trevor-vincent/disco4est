@@ -269,7 +269,7 @@ d4est_ip_energy_norm_get_deg_mortar_quad
  void* user_ctx
 )
 {
-  return elem_data->deg_vol_quad;
+  return elem_data->deg_quad;
 }
 
 double
@@ -333,7 +333,7 @@ d4est_ip_energy_norm_compute
                                                             QUAD_INTEGRAND_UNKNOWN,
                                                             &(u[ed->nodal_stride]),
                                                             ed->deg,
-                                                            ed->deg_vol_quad,
+                                                            ed->deg_quad,
                                                             ed->rst_xyz_quad,
                                                             ed->J_quad
                                                            );

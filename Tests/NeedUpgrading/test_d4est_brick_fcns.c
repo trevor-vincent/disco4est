@@ -25,7 +25,7 @@ problem_set_degrees_init
 )
 {
   elem_data->deg = 2;
-  elem_data->deg_vol_quad = 2;
+  elem_data->deg_quad = 2;
 }
 
 static void
@@ -36,7 +36,7 @@ problem_set_degrees_amr
 )
 {
   elem_data->deg = 2;
-  elem_data->deg_vol_quad = 2;
+  elem_data->deg_quad = 2;
 }
 
 

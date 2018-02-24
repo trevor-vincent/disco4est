@@ -102,8 +102,8 @@ two_punctures_init_params_input
 {
   two_punctures_init_params_t input;
   input.do_not_solve = -1;
-  /* input.deg_vol_quad_inc_inner = -1; */
-  /* input.deg_vol_quad_inc_outer = -1; */
+  /* input.deg_quad_inc_inner = -1; */
+  /* input.deg_quad_inc_outer = -1; */
   input.amr_level_for_uniform_p = -1;
   input.use_puncture_finder = -1;
 
@@ -113,8 +113,8 @@ two_punctures_init_params_input
 
   D4EST_CHECK_INPUT("problem", input.do_not_solve, -1);
   D4EST_CHECK_INPUT("amr", input.use_puncture_finder, -1);
-  /* D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc_inner, -1); */
-  /* D4EST_CHECK_INPUT("problem", input.deg_vol_quad_inc_outer, -1); */
+  /* D4EST_CHECK_INPUT("problem", input.deg_quad_inc_inner, -1); */
+  /* D4EST_CHECK_INPUT("problem", input.deg_quad_inc_outer, -1); */
   D4EST_CHECK_INPUT("amr", input.amr_level_for_uniform_p, -1);
   
   return input;
@@ -275,7 +275,7 @@ problem_set_mortar_degree
  void* user_ctx
 )
 {
-  return elem_data->deg_vol_quad;
+  return elem_data->deg_quad;
 }
 
 
@@ -315,11 +315,11 @@ problem_init
   bc_data_for_bi.dirichlet_fcn = zero_fcn;
   bc_data_for_bi.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
-  d4est_poisson_flux_data_t* flux_data_for_bi = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_bi, problem_set_mortar_degree, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_bi = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_bi);
   
-  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, BC_ROBIN, &bc_data_for_jac, problem_set_mortar_degree, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, BC_ROBIN, &bc_data_for_jac);
   
-  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_for_res, problem_set_mortar_degree, NULL);
+  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_for_res);
 
   problem_ctx_t ctx;
   ctx.two_punctures_params = &two_punctures_params;

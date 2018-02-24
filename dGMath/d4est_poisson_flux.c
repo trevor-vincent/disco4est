@@ -11,6 +11,15 @@
 #include <d4est_elliptic_data.h>
 #include <d4est_quadrature_lobatto.h>
 
+static int
+d4est_poisson_get_degree_mortar_quad
+(
+ d4est_element_data_t* ed,
+ void* user
+){
+  return ed->deg_quad;
+}
+
 static void
 d4est_poisson_flux_boundary
 (
@@ -953,10 +962,6 @@ d4est_poisson_flux_init_element_data
            &(ed->u_elem)[0],
            volume_nodes_lobatto
           );
-
-        /* for (int i = 0; i < (P4EST_DIM); i++){ */
-        /*   d4est_operators_apply_dij(d4est_ops, &(u[ed->nodal_stride]), (P4EST_DIM), ed->deg, i, &ed->dudr_elem[i][0]); */
-        /* } */
       }
     }     
 }
@@ -982,18 +987,20 @@ d4est_poisson_flux_new
  p4est_t* p4est,
  const char* input_file,
  d4est_poisson_bc_t bc_type,
- void* bc_data,
- int (*get_deg_mortar_quad)(d4est_element_data_t*, void*),
- void* get_deg_mortar_quad_ctx
+ void* bc_data
 )
 {
   d4est_poisson_flux_data_t* data = P4EST_ALLOC(d4est_poisson_flux_data_t, 1);
   d4est_poisson_flux_input(input_file, data);
 
-  data->get_deg_mortar_quad = get_deg_mortar_quad;
-  data->get_deg_mortar_quad_ctx = get_deg_mortar_quad_ctx;
   data->bc_type = bc_type;
   data->bc_data = bc_data;
+
+  /* internal, can be deprecated eventually when this feature is determined useless */
+  /* only useful when you want the quadrature points on the mortar to be a different size than
+     the quadrature points in the volume */
+  data->get_deg_mortar_quad = d4est_poisson_get_degree_mortar_quad;
+  data->get_deg_mortar_quad_ctx = NULL;
   
   if (data->flux_type == FLUX_SIPG) {
     d4est_poisson_flux_sipg_params_new(p4est, "[SIPG_FLUX]", input_file, data);
