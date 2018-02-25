@@ -156,5 +156,6 @@ void d4est_poisson_flux_destroy(d4est_poisson_flux_data_t *data);
 d4est_poisson_flux_data_t *d4est_poisson_flux_new(p4est_t *p4est,const char *input_file,d4est_poisson_bc_t bc_type,void *bc_data);
 d4est_mortars_fcn_ptrs_t d4est_poisson_flux_fetch_fcns(d4est_poisson_flux_data_t *data);
 void d4est_poisson_flux_init_element_data(p4est_t *p4est,d4est_operators_t *d4est_ops,double *u,double *Au);
+int d4est_poisson_get_degree_mortar_quad(d4est_element_data_t *ed,void *user);
 
 #endif

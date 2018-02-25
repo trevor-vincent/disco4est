@@ -463,9 +463,7 @@ problem_init
        d4est_geom,
        d4est_quad,
        d4est_factors,
-       NO_DIAM_APPROX,
-       problem_set_mortar_degree,
-       NULL
+       NO_DIAM_APPROX
       );
     
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);

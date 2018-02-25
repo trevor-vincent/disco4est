@@ -11,7 +11,7 @@
 #include <d4est_elliptic_data.h>
 #include <d4est_quadrature_lobatto.h>
 
-static int
+int
 d4est_poisson_get_degree_mortar_quad
 (
  d4est_element_data_t* ed,

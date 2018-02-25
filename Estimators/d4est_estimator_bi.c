@@ -384,9 +384,7 @@ d4est_estimator_bi_compute
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- diam_compute_option_t diam_opt,
- int (*get_deg_mortar_quad)(d4est_element_data_t*, void*),
- void* get_deg_mortar_quad_ctx
+ diam_compute_option_t diam_opt
 )
 {
   d4est_elliptic_eqns_build_residual
@@ -438,14 +436,8 @@ d4est_estimator_bi_compute
            &(ed->u_elem)[0],
            volume_nodes_lobatto
           );
-    
-        /* for (int i = 0; i < (P4EST_DIM); i++){ */
-        /*   d4est_operators_apply_dij(d4est_ops, &(vecs->u[ed->nodal_stride]), (P4EST_DIM), ed->deg, i, &ed->dudr_elem[i][0]); */
-        /* } */
-
-        
+       
       }
-
     }
 
   p4est_ghost_exchange_data(p4est,ghost,ghost_data);
@@ -470,12 +462,12 @@ d4est_estimator_bi_compute
     );
   
   
-
   d4est_poisson_flux_data_t flux_data;
   flux_data.interface_fcn = d4est_estimator_bi_interface;
   flux_data.boundary_fcn = d4est_estimator_bi_dirichlet;
-
-
+  flux_data.get_deg_mortar_quad = d4est_poisson_get_degree_mortar_quad;
+  flux_data.get_deg_mortar_quad_ctx = NULL;
+  
   d4est_poisson_dirichlet_bc_t bc_data;
   bc_data.dirichlet_fcn = u_bndry_fcn;
   bc_data.user = NULL;
@@ -484,8 +476,6 @@ d4est_estimator_bi_compute
   flux_data.bc_data = &bc_data;
   
   flux_data.flux_data = &bi_penalty_data;
-  flux_data.get_deg_mortar_quad = get_deg_mortar_quad;
-  flux_data.get_deg_mortar_quad_ctx = get_deg_mortar_quad_ctx;
   d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(&flux_data);
   
   d4est_mortars_compute_flux_on_local_elements

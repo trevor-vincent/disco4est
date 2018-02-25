@@ -226,45 +226,46 @@ endfunction()
 function(add_d4est_unit_test_3d exec src parent_dir test_name)
   add_executable(${exec} ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/${src})
   target_link_libraries(${exec} d8est)
-  add_test(${test_name} ${CMAKE_BINARY_DIR}/Tests/${parent_dir}/${exec})
+  add_test(NAME ${test_name} COMMAND ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
   target_compile_definitions(${exec} PRIVATE DIM=3)
   set_target_properties(${exec}
     PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/${parent_dir}"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/"
     )
   
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
-    "${CMAKE_BINARY_DIR}/Tests/${parent_dir}")
+    "${CMAKE_BINARY_DIR}/Tests/")
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/IO/logging.conf
-    ${CMAKE_CURRENT_BINARY_DIR}/Tests/${parent_dir}/logging.conf)
+    ${CMAKE_CURRENT_BINARY_DIR}/Tests/logging.conf)
 endfunction()
 
 
 function(add_d4est_unit_test_2d exec src parent_dir test_name)
   add_executable(${exec} ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/${src})
   target_link_libraries(${exec} d4est)
-  add_test(${test_name} ${CMAKE_BINARY_DIR}/Tests/${parent_dir}/${exec})
-  target_compile_definitions(${exec} PRIVATE DIM=2)
+  add_test(NAME ${test_name} COMMAND ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
+  target_compile_definitions(${exec} PRIVATE DIM=3)
   set_target_properties(${exec}
     PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/${parent_dir}"
-    )  
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/"
+    )
+  
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
-    "${CMAKE_BINARY_DIR}/Tests/${parent_dir}")
+    "${CMAKE_BINARY_DIR}/Tests/")
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/IO/logging.conf
-    ${CMAKE_CURRENT_BINARY_DIR}/Tests/${parent_dir}/logging.conf)
+    ${CMAKE_CURRENT_BINARY_DIR}/Tests/logging.conf)
 endfunction()
 
 
@@ -284,8 +285,10 @@ function(add_d4est_bash_regression_test exec parent_dir test_name)
       TARGET d4est POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy
       ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.sh
-      "${CMAKE_BINARY_DIR}/Tests/${parent_dir}")  
-    add_test (mytest bash ${CMAKE_BINARY_DIR}/Tests/${parent_dir}/${exec})
+      "${CMAKE_BINARY_DIR}/Tests/")
+
+    add_test(NAME ${test_name} COMMAND bash ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
+    
     # endif (BASH_PROGRAM)
     
 
