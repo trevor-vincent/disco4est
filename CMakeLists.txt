@@ -312,6 +312,7 @@ add_d4est_unit_test_3d(test_d4est_operators test_d4est_operators.c Unit test_d4e
 add_d4est_unit_test_3d(test_d4est_kron test_d4est_kron.c Unit test_d4est_kron)
 add_d4est_unit_test_3d(test_d4est_linalg test_d4est_linalg.c Unit test_d4est_linalg)
 add_d4est_bash_regression_test(d4est_test_stamm.sh Regression d4est_test_stamm)
+add_d4est_bash_regression_test(d4est_test_cds.sh Regression d4est_test_constant_density_star)
 # add_d4est_unit_test_3d(test_d4est_ghost_data test_d4est_ghost_data.c . test_d4est_ghost_data)
 # add_d4est_unit_test_3d(test_d4est_operators_interpolate test_d4est_operators_interpolate.c . test_d4est_operators_interpolate)
 

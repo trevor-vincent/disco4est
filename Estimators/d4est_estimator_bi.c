@@ -121,8 +121,6 @@ d4est_estimator_bi_dirichlet
       double u_m_on_f_m_min_u_at_bndry_quad = u_m_on_f_m_quad[i] - u_at_bndry_lobatto_to_quad[i];    
       Je2[i] = n_on_f_m_quad[dim][i]*Je2_prefactor[i]*(u_m_on_f_m_min_u_at_bndry_quad);
     }
-
-
     
     double Je2MJe2 = d4est_quadrature_innerproduct
                      (
