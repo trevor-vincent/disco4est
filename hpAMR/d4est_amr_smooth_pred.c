@@ -126,7 +126,6 @@ d4est_amr_smooth_pred_mark_elements
     smooth_pred_data->marker.set_element_gamma_fcn
     (
      info->p4est,
-     eta2,
      stats,
      elem_data,
      smooth_pred_data->marker.user
@@ -192,7 +191,7 @@ d4est_amr_smooth_pred_balance_replace_callback (
   int degH = parent_data->deg;
 
   gamma_params_t gamma_hpn
-    = smooth_pred_data->marker.set_element_gamma_fcn(p4est,parent_data->local_estimator, stats, parent_data, smooth_pred_data->marker.user);
+    = smooth_pred_data->marker.set_element_gamma_fcn(p4est, stats, parent_data, smooth_pred_data->marker.user);
   
   for (i = 0; i < (P4EST_CHILDREN); i++)
     degh[i] = degH;

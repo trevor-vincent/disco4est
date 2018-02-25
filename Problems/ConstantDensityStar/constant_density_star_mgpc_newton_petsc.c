@@ -123,7 +123,6 @@ gamma_params_t
 amr_set_element_gamma
 (
  p4est_t* p4est,
- double eta2,
  d4est_estimator_stats_t** stats,
  d4est_element_data_t* elem_data,
  void* user
