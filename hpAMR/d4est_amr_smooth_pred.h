@@ -53,7 +53,7 @@ typedef struct {
 typedef struct {
   
   d4est_amr_smooth_pred_marker_t marker;
-  double* test_predictors;
+  double* predictor;
   
 } d4est_amr_smooth_pred_data_t;
 

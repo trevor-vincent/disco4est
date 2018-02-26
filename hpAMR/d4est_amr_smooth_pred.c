@@ -48,7 +48,7 @@ d4est_amr_smooth_pred_pre_refine_callback
   d4est_amr_t* d4est_amr = (d4est_amr_t*) user;
   d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
   
-  if (smooth_pred_data->test_predictors == NULL){
+  if (smooth_pred_data->predictor == NULL){
     /* smooth_pred_data->predictors = P4EST_REALLOC */
     /*                                ( */
     /*                                 smooth_pred_data->predictors, */
@@ -57,13 +57,13 @@ d4est_amr_smooth_pred_pre_refine_callback
     /*                                ); */
     /* d4est_linalg_fill_vec(smooth_pred_data->predictors, 0., p4est->local_num_quadrants); */
 
-    smooth_pred_data->test_predictors = P4EST_REALLOC
+    smooth_pred_data->predictor = P4EST_REALLOC
                                    (
-                                    smooth_pred_data->test_predictors,
+                                    smooth_pred_data->predictor,
                                     double,
                                     p4est->local_num_quadrants
                                    );
-    d4est_linalg_fill_vec(smooth_pred_data->test_predictors, 0., p4est->local_num_quadrants);
+    d4est_linalg_fill_vec(smooth_pred_data->predictor, 0., p4est->local_num_quadrants);
     
   }
 
@@ -169,7 +169,7 @@ d4est_amr_smooth_pred_post_balance_callback
      p4est,
      d4est_amr,
      smooth_pred_data,
-     &smooth_pred_data->test_predictors
+     &smooth_pred_data->predictor
     );
   
   
@@ -187,8 +187,8 @@ d4est_amr_smooth_pred_post_balance_callback
   /*       d4est_element_data_t* ed = quad->p.user_data; */
   /*       smooth_pred_data->predictors[pred_stride] = ed->local_predictor; */
 
-  /*       /\* D4EST_ASSERT( fabs(ed->local_predictor - smooth_pred_data->test_predictors[pred_stride]) < 1e-15); *\/ */
-  /*       /\* printf("local_predictor = %.15f, test_predictors = %.15f\n", ed->local_predictor, smooth_pred_data->test_predictors[pred_stride]); *\/ */
+  /*       /\* D4EST_ASSERT( fabs(ed->local_predictor - smooth_pred_data->predictor[pred_stride]) < 1e-15); *\/ */
+  /*       /\* printf("local_predictor = %.15f, predictor = %.15f\n", ed->local_predictor, smooth_pred_data->predictor[pred_stride]); *\/ */
         
   /*       pred_stride++; */
   /*     } */
@@ -210,8 +210,8 @@ d4est_amr_smooth_pred_mark_elements
   double eta2 = d4est_amr->d4est_estimator[elem_data->id];
   /* double eta2_pred = elem_data->local_predictor; */
 
-  /* D4EST_ASSERT(fabs(eta2_pred - smooth_pred_data->test_predictors[elem_data->id]) < 1e-15); */
-  double eta2_pred = smooth_pred_data->test_predictors[elem_data->id];//elem_data->local_predictor;
+  /* D4EST_ASSERT(fabs(eta2_pred - smooth_pred_data->predictor[elem_data->id]) < 1e-15); */
+  double eta2_pred = smooth_pred_data->predictor[elem_data->id];//elem_data->local_predictor;
 
   gamma_params_t gamma_hpn =
     smooth_pred_data->marker.set_element_gamma_fcn
@@ -253,7 +253,7 @@ d4est_amr_smooth_pred_mark_elements
   
   /* elem_data->local_predictor = eta2_pred; */
   /* elem_data->local_predictor = eta2_pred; */
-  smooth_pred_data->test_predictors[elem_data->id] = eta2_pred;
+  smooth_pred_data->predictor[elem_data->id] = eta2_pred;
 }
 
 /* static void */
@@ -322,7 +322,7 @@ d4est_amr_smooth_pred_destroy(d4est_amr_scheme_t* scheme){
   d4est_amr_smooth_pred_data_t* smooth_pred_data =
     (d4est_amr_smooth_pred_data_t*)scheme->amr_scheme_data;  
   /* P4EST_FREE(smooth_pred_data->predictors); */
-  P4EST_FREE(smooth_pred_data->test_predictors);
+  P4EST_FREE(smooth_pred_data->predictor);
   P4EST_FREE(smooth_pred_data);
   P4EST_FREE(scheme);
 }
@@ -410,7 +410,7 @@ d4est_amr_smooth_pred_init
   smooth_pred_data = P4EST_ALLOC(d4est_amr_smooth_pred_data_t, 1);
   smooth_pred_data->marker = *((d4est_amr_smooth_pred_marker_t*)marker);
   /* smooth_pred_data->predictors = NULL; */
-  smooth_pred_data->test_predictors = NULL;
+  smooth_pred_data->predictor = NULL;
 
   scheme->pre_refine_callback
     = d4est_amr_smooth_pred_pre_refine_callback;
