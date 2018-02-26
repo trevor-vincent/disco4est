@@ -52,7 +52,6 @@ gamma_params_t
 amr_set_element_gamma
 (
  p4est_t* p4est,
- double eta2,
  d4est_estimator_stats_t** stats,
  d4est_element_data_t* elem_data,
  void* user
@@ -228,7 +227,7 @@ problem_init
 
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
     
-    d4est_estimator_bi_compute
+    double* estimator = d4est_estimator_bi_compute
       (
        p4est,
        &prob_vecs,
@@ -245,9 +244,11 @@ problem_init
       );
 
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
-    d4est_estimator_stats_compute(p4est, stats);
+    d4est_estimator_stats_compute(p4est, estimator, stats);
     d4est_estimator_stats_print(stats);
 
+
+    
     double* u_analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
     double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
 
@@ -320,6 +321,7 @@ problem_init
          d4est_ops,
          (level > 1) ? d4est_amr : d4est_amr_uniform,
          &prob_vecs.u,
+         estimator,
          &stats
         );
       
@@ -429,6 +431,8 @@ problem_init
     multigrid_element_data_updater_destroy(updater, num_of_levels);
     multigrid_data_destroy(mg_data);
 
+
+    P4EST_FREE(estimator);
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");

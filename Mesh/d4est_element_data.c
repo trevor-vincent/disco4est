@@ -441,42 +441,42 @@ d4est_element_data_reorient_f_p_elements_to_f_m_order
   }
 }
 
-/**
-* WILL BE DEPRECATED EVENTUALLY
-* 
-*/
-static void
-d4est_element_data_print_local_estimator_callback
-(
- p4est_iter_volume_info_t* info,
- void* user_data
-)
-{
-  p4est_quadrant_t* q = info->quad;
-  d4est_element_data_t* elem_data = (d4est_element_data_t*) q->p.user_data;
-  printf("Quad %d: Local estimator %.20f, p = %d\n", elem_data->id, elem_data->local_estimator, elem_data->deg);
-}
+/* /\** */
+/* * WILL BE DEPRECATED EVENTUALLY */
+/* *  */
+/* *\/ */
+/* static void */
+/* d4est_element_data_print_local_estimator_callback */
+/* ( */
+/*  p4est_iter_volume_info_t* info, */
+/*  void* user_data */
+/* ) */
+/* { */
+/*   p4est_quadrant_t* q = info->quad; */
+/*   d4est_element_data_t* elem_data = (d4est_element_data_t*) q->p.user_data; */
+/*   printf("Quad %d: Local estimator %.20f, p = %d\n", elem_data->id, elem_data->local_estimator, elem_data->deg); */
+/* } */
 
-/**
-* WILL BE DEPRECATED EVENTUALLY
-* 
-*/
-void
-d4est_element_data_print_local_estimator
-(
- p4est_t* p4est
-)
-{
-  p4est_iterate(p4est,
-		NULL,
-		NULL,
-		d4est_element_data_print_local_estimator_callback,
-		NULL,
-#if (P4EST_DIM)==3
-                NULL,       
-#endif                
-		NULL);
-}
+/* /\** */
+/* * WILL BE DEPRECATED EVENTUALLY */
+/* *  */
+/* *\/ */
+/* void */
+/* d4est_element_data_print_local_estimator */
+/* ( */
+/*  p4est_t* p4est */
+/* ) */
+/* { */
+/*   p4est_iterate(p4est, */
+/* 		NULL, */
+/* 		NULL, */
+/* 		d4est_element_data_print_local_estimator_callback, */
+/* 		NULL, */
+/* #if (P4EST_DIM)==3 */
+/*                 NULL,        */
+/* #endif                 */
+/* 		NULL); */
+/* } */
 
 
 

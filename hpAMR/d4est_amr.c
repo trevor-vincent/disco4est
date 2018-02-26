@@ -595,13 +595,15 @@ d4est_amr_step
  d4est_operators_t* d4est_ops,
  d4est_amr_t* d4est_amr,
  double** field,
+ double* d4est_estimator,
  d4est_estimator_stats_t** stats
 )
 {
   zlog_category_t *c_default = zlog_get_category("d4est_amr");
 
   d4est_amr->d4est_estimator_stats = stats;
-
+  d4est_amr->d4est_estimator = d4est_estimator;
+  
   void* backup = p4est->user_pointer;
   p4est->user_pointer = d4est_amr;
     

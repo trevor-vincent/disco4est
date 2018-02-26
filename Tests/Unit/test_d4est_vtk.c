@@ -156,6 +156,7 @@ int main(int argc, char *argv[])
      d4est_ops,
      d4est_amr_random,
      NULL,
+     NULL,
      NULL
     );
 

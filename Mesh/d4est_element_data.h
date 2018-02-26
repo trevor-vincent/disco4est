@@ -45,7 +45,7 @@ typedef struct {
   double* rst_xyz_quad[(P4EST_DIM)][(P4EST_DIM)]; /* inverse mapping derivatives */
 
   /* estimator variables */
-  double local_estimator;
+  /* double local_estimator; */
   double local_predictor;
 
   /* local nodal fields */

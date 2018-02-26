@@ -12,6 +12,7 @@
 void d4est_estimator_stats_compute
 (
  p4est_t* p4est,
+ double* estimator,
  d4est_estimator_stats_t* stats
 )
 {
@@ -28,8 +29,11 @@ void d4est_estimator_stats_compute
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q, ++k) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        eta2[k] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
+        /* eta2[k] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator); */
+        /* printf("k = %d, ed->id = %d, eta2[k] = %.15f, estimator[k] = %.15f\n", k, ((d4est_element_data_t*)(quad->p.user_data))->id,eta2[k], estimator[k]); */
+        eta2[k] = estimator[k];
         total_eta2 += eta2[k];
+        /* total_eta2 += estimator[k]; */
       }
     }
 
@@ -39,6 +43,7 @@ void d4est_estimator_stats_compute
     (
      stats,
      eta2,
+     /* estimator, */
      p4est->local_num_quadrants,
      total_eta2
     );
@@ -50,6 +55,7 @@ double
 d4est_estimator_stats_compute_per_bin
 (
  p4est_t* p4est,
+ double* estimator,
  d4est_estimator_stats_t** stats,
  int num_bins,
  int(*in_bin)(d4est_element_data_t*,int)
@@ -61,7 +67,8 @@ d4est_estimator_stats_compute_per_bin
   for (int b = 0; b < num_bins; b++){
     double total_eta2_per_bin = 0.;
     int bsize = 0;
-    
+
+    int k = 0;
     for (p4est_topidx_t tt = p4est->first_local_tree;
          tt <= p4est->last_local_tree;
          ++tt)
@@ -73,11 +80,12 @@ d4est_estimator_stats_compute_per_bin
         for (int q = 0; q < Q; ++q) {
           p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
           if(in_bin((d4est_element_data_t*)(quad->p.user_data),b)){
-            eta2[bsize] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
+            eta2[bsize] = estimator[k];//(((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
             total_eta2_per_bin += eta2[bsize];
             local_eta2 += eta2[bsize];
             bsize++;
           }
+          k++;
         }
 
         stats[b]->tree = -1;
@@ -97,11 +105,17 @@ d4est_estimator_stats_compute_per_bin
   return local_eta2;
 }
 
-double d4est_estimator_stats_compute_per_tree(p4est_t* p4est, d4est_estimator_stats_t** stats){
-
+double d4est_estimator_stats_compute_per_tree
+(
+ p4est_t* p4est,
+ double* estimator,
+ d4est_estimator_stats_t** stats
+)
+{
   double* eta2 = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
   double local_eta2 = 0.;
-  
+
+  int k = 0;
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)
@@ -112,9 +126,11 @@ double d4est_estimator_stats_compute_per_tree(p4est_t* p4est, d4est_estimator_st
       double total_eta2_per_tree = 0.;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        eta2[q] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
+        /* eta2[q] = (((d4est_element_data_t*)(quad->p.user_data))->local_estimator); */
+        eta2[q] = estimator[k];
         total_eta2_per_tree += eta2[q];
         local_eta2 += eta2[q];
+        k++;
       }
 
       stats[tt]->tree = tt;
@@ -267,4 +283,3 @@ void d4est_estimator_stats_print(d4est_estimator_stats_t* stats){
   printf("p15 = %.25f\n", stats->p15);
   printf("p20 = %.25f\n", stats->p20);
 }
-

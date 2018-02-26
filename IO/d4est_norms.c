@@ -33,7 +33,7 @@ d4est_norms_fcn_L2
     ctx->d4est_quad,
     field_value_errors,
     num_nodes_local,
-    DO_NOT_STORE_LOCALLY,
+    /* DO_NOT_STORE_LOCALLY, */
     NULL,
     NULL
   );

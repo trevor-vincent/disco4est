@@ -948,29 +948,29 @@ d4est_mesh_get_array_of_quadrature_degrees
 }
 
 
-void
-d4est_mesh_get_array_of_estimators
-(
- p4est_t* p4est,
- double* eta2_array
-)
-{
-  int stride = 0;
-  for (p4est_topidx_t tt = p4est->first_local_tree;
-       tt <= p4est->last_local_tree;
-       ++tt)
-    {
-      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-      sc_array_t* tquadrants = &tree->quadrants;
-      int Q = (p4est_locidx_t) tquadrants->elem_count;
-      for (int q = 0; q < Q; ++q) {
-        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        d4est_element_data_t* ed = quad->p.user_data;
-        eta2_array[stride] = ed->local_estimator;
-        stride++;
-      }
-    }
-}
+/* void */
+/* d4est_mesh_get_array_of_estimators */
+/* ( */
+/*  p4est_t* p4est, */
+/*  double* eta2_array */
+/* ) */
+/* { */
+/*   int stride = 0; */
+/*   for (p4est_topidx_t tt = p4est->first_local_tree; */
+/*        tt <= p4est->last_local_tree; */
+/*        ++tt) */
+/*     { */
+/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
+/*       sc_array_t* tquadrants = &tree->quadrants; */
+/*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
+/*       for (int q = 0; q < Q; ++q) { */
+/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
+/*         d4est_element_data_t* ed = quad->p.user_data; */
+/*         eta2_array[stride] = ed->local_estimator; */
+/*         stride++; */
+/*       } */
+/*     } */
+/* } */
 
 void
 d4est_mesh_compute_jacobian_on_lgl_grid
@@ -1276,7 +1276,6 @@ d4est_mesh_compute_l2_norm_sqr
  d4est_quadrature_t* d4est_quad,
  double* nodal_vec,
  int local_nodes,
- norm_storage_option_t store_local,
  int (*skip_element_fcn)(d4est_element_data_t*),
  double* l2_array
 )
@@ -1327,10 +1326,6 @@ d4est_mesh_compute_l2_norm_sqr
                                  &Mvec[ed->nodal_stride],
                                  volume_nodes);
         
-        if (store_local == STORE_LOCALLY){
-          ed->local_estimator = norm2;
-        }
-
         if (!skip_element)
           l2_norm_sqr += norm2;
 
@@ -2179,5 +2174,6 @@ d4est_mesh_interpolate_at_tree_coord
   data.err = 1;
   return data;
 }
+
 
 

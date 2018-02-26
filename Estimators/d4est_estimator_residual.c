@@ -37,7 +37,7 @@ d4est_estimator_residual_compute
      d4est_quad,
      vecs->Au,
      vecs->local_nodes,
-     STORE_LOCALLY,
+     /* STORE_LOCALLY, */
      NULL,
      NULL
     );

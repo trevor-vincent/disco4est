@@ -119,7 +119,7 @@ d4est_amr_smooth_pred_mark_elements
   d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
   d4est_estimator_stats_t** stats = d4est_amr->d4est_estimator_stats;
   
-  double eta2 = elem_data->local_estimator;
+  double eta2 = d4est_amr->d4est_estimator[elem_data->id];
   double eta2_pred = elem_data->local_predictor;
 
   gamma_params_t gamma_hpn =
@@ -143,11 +143,6 @@ d4est_amr_smooth_pred_mark_elements
 
   int max_degree = d4est_amr->max_degree;
 
-  /* printf("\n **ELEMENT %d\n", elem_data->id); */
-  /* printf("local_predictor = %.15f\n", elem_data->local_predictor); */
-  /* printf("eta2 = %.15f\n", elem_data->local_estimator); */
-  /* printf("max_degree = %d\n", max_degree); */
-  
   if (is_marked){
     if (eta2 <= elem_data->local_predictor && elem_data->deg < max_degree){
       /* printf("ELEMENT %d P-REFINED\n", elem_data->id); */

@@ -303,7 +303,7 @@ problem_init
     
     // Extract mesh data
 
-    d4est_estimator_bi_compute(
+    double* estimator = d4est_estimator_bi_compute(
       p4est,
       &prob_vecs,
       &prob_fcns,
@@ -319,9 +319,11 @@ problem_init
     );
     
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
-    d4est_estimator_stats_compute(p4est, stats);
+    d4est_estimator_stats_compute(p4est, estimator, stats);
     d4est_estimator_stats_print(stats);
 
+
+    
     // Compute analytical field values on mesh
     double* u_analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
     d4est_mesh_init_field(
@@ -401,6 +403,7 @@ problem_init
          d4est_ops,
          (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr,
          &prob_vecs.u,
+         estimator,
          &stats
         );
       
@@ -534,6 +537,7 @@ problem_init
     multigrid_data_destroy(mg_data);
     multigrid_matrix_operator_destroy(user_callbacks);
 
+    P4EST_FREE(estimator);
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
