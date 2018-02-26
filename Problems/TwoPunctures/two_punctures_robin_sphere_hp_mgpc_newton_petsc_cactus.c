@@ -128,7 +128,7 @@ amr_mark_element
 (
  p4est_t* p4est,
  double eta2,
- d4est_estimator_stats_t** stats,
+ d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
  void* user
 )
@@ -137,7 +137,7 @@ amr_mark_element
   d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
 
   double eta2_percentile
-    = d4est_estimator_stats_get_percentile(*stats,params->percentile);
+    = d4est_estimator_stats_get_percentile(stats,params->percentile);
   return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4) && (elem_data->tree == 6);
 }
 
@@ -146,7 +146,7 @@ gamma_params_t
 amr_set_element_gamma
 (
  p4est_t* p4est,
- d4est_estimator_stats_t** stats,
+ d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
  void* user
 )
@@ -362,7 +362,7 @@ problem_init
      &amr_marker
     );
 
-
+  d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
    
 
 
@@ -494,8 +494,8 @@ problem_init
        "d4est_vtk",
        (const char * []){"u","u_prev","error", NULL},
        (double* []){prob_vecs.u, u_prev, error},
-       (const char * []){NULL},
-       (double* []){NULL},
+       (const char * []){"estimator",NULL},
+       (double* []){estimator},
        level
       );
 
@@ -556,7 +556,7 @@ problem_init
          (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_p_refine : d4est_amr_normal,
          &prob_vecs.u,
          estimator,
-         &stats
+         stats
         );
       
     }

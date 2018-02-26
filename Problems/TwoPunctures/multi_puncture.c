@@ -450,10 +450,7 @@ problem_init
     d4est_estimator_stats_compute(p4est, estimator, stats);
     d4est_estimator_stats_print(stats);
 
-
-    
     d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_prev, error, prob_vecs.local_nodes);
-
     d4est_elliptic_eqns_build_residual
       (
        p4est,

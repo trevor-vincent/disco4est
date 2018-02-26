@@ -34,7 +34,7 @@ amr_mark_element
 (
  p4est_t* p4est,
  double eta2,
- d4est_estimator_stats_t** stats,
+ d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
  void* user
 )
@@ -42,7 +42,7 @@ amr_mark_element
   problem_ctx_t* ctx = user;
   d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
   
-  double eta2_avg = stats[0]->mean;
+  double eta2_avg = stats->mean;
   printf("eta2_avg, eta2, params->sigma = %.25f,%.25f,%.25f\n",eta2_avg,eta2,params->sigma);
   return (eta2 >= params->sigma*eta2_avg);
 }
@@ -52,7 +52,7 @@ gamma_params_t
 amr_set_element_gamma
 (
  p4est_t* p4est,
- d4est_estimator_stats_t** stats,
+ d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
  void* user
 )
@@ -322,7 +322,7 @@ problem_init
          (level > 1) ? d4est_amr : d4est_amr_uniform,
          &prob_vecs.u,
          estimator,
-         &stats
+         stats
         );
       
     }

@@ -56,7 +56,7 @@ d4est_estimator_stats_compute_per_bin
 (
  p4est_t* p4est,
  double* estimator,
- d4est_estimator_stats_t** stats,
+ d4est_estimator_stats_t* stats,
  int num_bins,
  int(*in_bin)(d4est_element_data_t*,int)
 )
@@ -80,19 +80,19 @@ d4est_estimator_stats_compute_per_bin
         for (int q = 0; q < Q; ++q) {
           p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
           if(in_bin((d4est_element_data_t*)(quad->p.user_data),b)){
-            eta2[bsize] = estimator[k];//(((d4est_element_data_t*)(quad->p.user_data))->local_estimator);
+            eta2[bsize] = estimator[k];
             total_eta2_per_bin += eta2[bsize];
             local_eta2 += eta2[bsize];
             bsize++;
-          }
+          }    
           k++;
         }
 
-        stats[b]->tree = -1;
-        stats[b]->mpirank = p4est->mpirank;
+        stats[b].tree = -1;
+        stats[b].mpirank = p4est->mpirank;
         d4est_estimator_stats_compute_aux
           (
-           stats[b],
+           &stats[b],
            eta2,
            bsize,
            total_eta2_per_bin
@@ -203,7 +203,7 @@ d4est_estimator_stats_compute_aux
 void
 d4est_estimator_stats_compute_max_percentiles_across_proc
 (
- d4est_estimator_stats_t** stats,
+ d4est_estimator_stats_t* stats,
  int num_bins
 ){
   D4EST_ASSERT(num_bins < MAX_BINS);
@@ -211,11 +211,11 @@ d4est_estimator_stats_compute_max_percentiles_across_proc
   double global_percentile_maxes [MAX_BINS*5];
 
   for (int i = 0; i < num_bins; i++){
-    local_percentiles[i*5 + 0] = stats[i]->p5;
-    local_percentiles[i*5 + 1] = stats[i]->p10;
-    local_percentiles[i*5 + 2] = stats[i]->p15;
-    local_percentiles[i*5 + 3] = stats[i]->p20;
-    local_percentiles[i*5 + 4] = stats[i]->p25;
+    local_percentiles[i*5 + 0] = stats[i].p5;
+    local_percentiles[i*5 + 1] = stats[i].p10;
+    local_percentiles[i*5 + 2] = stats[i].p15;
+    local_percentiles[i*5 + 3] = stats[i].p20;
+    local_percentiles[i*5 + 4] = stats[i].p25;
   }
     
   sc_allreduce
@@ -228,39 +228,37 @@ d4est_estimator_stats_compute_max_percentiles_across_proc
      sc_MPI_COMM_WORLD
     );
 
-
   for (int i = 0; i < num_bins; i++){
-    stats[i]->p5 = global_percentile_maxes[i*5 + 0];
-    stats[i]->p10 = global_percentile_maxes[i*5 + 1];
-    stats[i]->p15 = global_percentile_maxes[i*5 + 2];
-    stats[i]->p20 = global_percentile_maxes[i*5 + 3];
-    stats[i]->p25 = global_percentile_maxes[i*5 + 4];
+    stats[i].p5 = global_percentile_maxes[i*5 + 0];
+    stats[i].p10 = global_percentile_maxes[i*5 + 1];
+    stats[i].p15 = global_percentile_maxes[i*5 + 2];
+    stats[i].p20 = global_percentile_maxes[i*5 + 3];
+    stats[i].p25 = global_percentile_maxes[i*5 + 4];
   }
   
 }
-
 
 double
 d4est_estimator_stats_get_percentile
 (
  d4est_estimator_stats_t* stats,
  int percentile
-){
-
-    if (percentile == 5)
-      return stats->p5;
-    else if (percentile == 10)
-      return stats->p10;
-    else if (percentile == 15)
-      return stats->p15;
-    else if (percentile == 20)
-      return stats->p20;
-    else if (percentile == 25)
-      return stats->p25;
-    else{
-      D4EST_ABORT("[D4EST_ERROR]: Not a supported percentile");
-      return -1;
-    }
+)
+{
+  if (percentile == 5)
+    return stats->p5;
+  else if (percentile == 10)
+    return stats->p10;
+  else if (percentile == 15)
+    return stats->p15;
+  else if (percentile == 20)
+    return stats->p20;
+  else if (percentile == 25)
+    return stats->p25;
+  else{
+    D4EST_ABORT("[D4EST_ERROR]: Not a supported percentile");
+    return -1;
+  }
 }
 
 

@@ -421,9 +421,6 @@ d4est_estimator_bi_compute
      estimator
     );
 
-  DEBUG_PRINT_ARR_DBL(vecs->Au, vecs->local_nodes);
-  
-  
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)

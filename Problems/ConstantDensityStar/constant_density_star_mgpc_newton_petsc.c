@@ -94,7 +94,7 @@ amr_mark_element
 (
  p4est_t* p4est,
  double eta2,
- d4est_estimator_stats_t** stats,
+ d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
  void* user
 )
@@ -107,13 +107,13 @@ amr_mark_element
   if (p4est->local_num_quadrants*p4est->mpisize < params->inflation_size){
 
     double eta2_percentile
-      = d4est_estimator_stats_get_percentile(*stats,25);
+      = d4est_estimator_stats_get_percentile(stats,25);
     /* printf("Inflation with 25 percentile, eta2_percentile = %.15f\n", eta2_percentile); */
     return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
   }
   else{
     double eta2_percentile
-      = d4est_estimator_stats_get_percentile(*stats,params->percentile);
+      = d4est_estimator_stats_get_percentile(stats,params->percentile);
     return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
   }
 }
@@ -123,7 +123,7 @@ gamma_params_t
 amr_set_element_gamma
 (
  p4est_t* p4est,
- d4est_estimator_stats_t** stats,
+ d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
  void* user
 )
@@ -404,7 +404,7 @@ problem_init
          (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr,
          &prob_vecs.u,
          estimator,
-         &stats
+         stats
         );
       
       if (p4est->mpirank == 0)
