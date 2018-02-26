@@ -583,9 +583,6 @@ d4est_amr_custom_init
   return d4est_amr;
 }
  
- 
-
-
 void
 d4est_amr_step
 (
@@ -608,7 +605,7 @@ d4est_amr_step
   p4est->user_pointer = d4est_amr;
     
   if(d4est_amr->scheme->pre_refine_callback != NULL){
-    d4est_amr->scheme->pre_refine_callback(p4est, d4est_amr->scheme->amr_scheme_data);
+    d4est_amr->scheme->pre_refine_callback(p4est, d4est_amr);
   }
   if (p4est->mpirank == 0)
     zlog_info(c_default, "Starting to mark elements");
@@ -626,7 +623,7 @@ d4est_amr_step
   d4est_amr_balance_elements(p4est);
 
   if(d4est_amr->scheme->post_balance_callback != NULL){
-    d4est_amr->scheme->post_balance_callback(p4est, d4est_amr->scheme->amr_scheme_data);
+    d4est_amr->scheme->post_balance_callback(p4est, d4est_amr);
   }
 
   if(field != NULL)

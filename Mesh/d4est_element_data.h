@@ -46,7 +46,7 @@ typedef struct {
 
   /* estimator variables */
   /* double local_estimator; */
-  double local_predictor;
+  /* double local_predictor; */
 
   /* local nodal fields */
   double u_elem[MAX_NODES];   /* storage for MPI transfers */
