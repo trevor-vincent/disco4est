@@ -37,7 +37,7 @@
 
 static
 int in_bin(d4est_element_data_t* ed, int bin){
-  if (bin == ed->region){
+  if (bin == ed->tree){
     return 1;
   }
   else {
@@ -193,9 +193,9 @@ amr_mark_element
   d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
 
   double eta2_percentile
-    = d4est_estimator_stats_get_percentile(&stats[elem_data->region],params->percentile);
+    = d4est_estimator_stats_get_percentile(&stats[elem_data->tree],params->percentile);
   
-  return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4) && (elem_data->tree == 6);
+  return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
 }
 
 static
@@ -388,10 +388,15 @@ problem_init
 
     
     
-    d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,2);
-    d4est_estimator_stats_compute_per_bin(p4est, estimator, stats, 2, in_bin);
+    d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,7);
+    d4est_estimator_stats_compute_per_bin(p4est, estimator, stats, 7, in_bin);
     d4est_estimator_stats_print(&stats[0]);
     d4est_estimator_stats_print(&stats[1]);
+    d4est_estimator_stats_print(&stats[2]);
+    d4est_estimator_stats_print(&stats[3]);
+    d4est_estimator_stats_print(&stats[4]);
+    d4est_estimator_stats_print(&stats[5]);
+    d4est_estimator_stats_print(&stats[6]);
 
     d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_prev, error, prob_vecs.local_nodes);
 
@@ -429,9 +434,14 @@ problem_init
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
+
+
+    double total_est = 0.;
+    for (int t = 0; t < 7; t++)
+      total_est += stats[t].total;
     
     energy_norm_ctx.energy_norm_data = &ip_norm_data;
-    energy_norm_ctx.energy_estimator_sq_local = stats->total;
+    energy_norm_ctx.energy_estimator_sq_local = total_est;
     energy_norm_ctx.ghost = *ghost;
     energy_norm_ctx.ghost_data = *ghost_data;
 
