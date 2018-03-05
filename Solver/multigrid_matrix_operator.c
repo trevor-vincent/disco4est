@@ -152,6 +152,7 @@ multigrid_matrix_setup_fofufofvlilj_operator
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
  double* u,
  double* v,
  d4est_xyzu_fcn_t fofu_fcn,
@@ -184,6 +185,11 @@ multigrid_matrix_setup_fofufofvlilj_operator
         mesh_object.q[1] = ed->q[1];
         mesh_object.q[2] = ed->q[2];
 
+        
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
+                                                                      ed);
+
+        
         d4est_quadrature_apply_fofufofvlilj
           (
            d4est_ops,
@@ -197,7 +203,7 @@ multigrid_matrix_setup_fofufofvlilj_operator
            NULL,
            ed->deg,
            ed->xyz_quad,
-           ed->J_quad,
+           J_quad,
            ed->deg_quad,
            &matrix_op->matrix_at0[matrix_nodal_stride],
            fofu_fcn,

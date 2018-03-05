@@ -45,12 +45,12 @@ init_random_puncture_data
   double rand_Sz [MAX_PUNCTURES];
   double rand_M [MAX_PUNCTURES];
 
-  d4est_util_gen_rand_vec(&rand_x[0], num_punctures, 1532413243, -3., 3.);
-  d4est_util_gen_rand_vec(&rand_y[0], num_punctures, 1532413243, -3., 3.);
-  d4est_util_gen_rand_vec(&rand_Px[0], num_punctures, 13232413243, -.2, .2);
-  d4est_util_gen_rand_vec(&rand_Py[0], num_punctures, 14432413243, -.2, .2);
-  d4est_util_gen_rand_vec(&rand_Sz[0], num_punctures, 14432413243, -.2, .2);
-  d4est_util_gen_rand_vec(&rand_M[0], num_punctures, 14432413243, 0., 1.);
+  d4est_util_gen_rand_vec(&rand_x[0], num_punctures, 12413243, -3., 3.);
+  d4est_util_gen_rand_vec(&rand_y[0], num_punctures, 113243, -3., 3.);
+  d4est_util_gen_rand_vec(&rand_Px[0], num_punctures, 2413243, -.2, .2);
+  d4est_util_gen_rand_vec(&rand_Py[0], num_punctures, 132413243, -.2, .2);
+  d4est_util_gen_rand_vec(&rand_Sz[0], num_punctures, 1243, -.2, .2);
+  d4est_util_gen_rand_vec(&rand_M[0], num_punctures, 14, 0., 1.);
 
   double total_M = 0.;
   for (int i = 0; i < num_punctures; i++){
@@ -474,6 +474,7 @@ void multi_puncture_apply_jac_add_nonlinear_term
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
  void* user
 )
 {
@@ -496,6 +497,10 @@ void multi_puncture_apply_jac_add_nonlinear_term
         mesh_object.q[0] = ed->q[0];
         mesh_object.q[1] = ed->q[1];
         mesh_object.q[2] = ed->q[2];
+
+
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,ed);
+
         
         d4est_quadrature_apply_fofufofvlilj
           (
@@ -510,7 +515,7 @@ void multi_puncture_apply_jac_add_nonlinear_term
            NULL,
            ed->deg,
            ed->xyz_quad,
-           ed->J_quad,
+           J_quad,
            ed->deg_quad,
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
            multi_puncture_plus_7o8_K2_psi_neg8,
@@ -568,6 +573,7 @@ void multi_puncture_apply_jac
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        user
       );
   else {
@@ -598,6 +604,7 @@ void multi_puncture_apply_jac
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        user
       );
     }
@@ -614,6 +621,7 @@ multi_puncture_build_residual_add_nonlinear_term
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
  void* user
 )
 {
@@ -639,6 +647,9 @@ multi_puncture_build_residual_add_nonlinear_term
         mesh_object.q[1] = ed->q[1];
         mesh_object.q[2] = ed->q[2];
 
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,ed);
+
+        
         d4est_quadrature_apply_fofufofvlj
           (
            d4est_ops,
@@ -650,7 +661,7 @@ multi_puncture_build_residual_add_nonlinear_term
            &prob_vecs->u[ed->nodal_stride],
            NULL,
            ed->deg,
-           ed->J_quad,
+           J_quad,
            ed->xyz_quad,
            ed->deg_quad,
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
@@ -710,6 +721,7 @@ multi_puncture_build_residual
      d4est_ops,
      d4est_geom,
      d4est_quad,
+     d4est_factors,
      user
     );
 }
@@ -814,6 +826,7 @@ void multi_puncture_krylov_pc_setup_fcn
        ctx->d4est_ops,
        ctx->d4est_geom,
        ctx->d4est_quad,
+       ctx->d4est_factors,
        ctx->vecs->u0,
        NULL,
        multi_puncture_plus_7o8_K2_psi_neg8,

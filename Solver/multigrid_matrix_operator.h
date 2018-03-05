@@ -28,8 +28,7 @@ struct multigrid_matrix_op_t{
 
 /* This file was automatically generated.  Do not edit! */
 void multigrid_matrix_operator_destroy(multigrid_user_callbacks_t *user_callbacks);
-void multigrid_matrix_setup_fofufofvlilj_operator(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,double *u,double *v,d4est_xyzu_fcn_t fofu_fcn,void *fofu_ctx,d4est_xyzu_fcn_t fofv_fcn,void *fofv_ctx,multigrid_matrix_op_t *matrix_op);
+void multigrid_matrix_setup_fofufofvlilj_operator(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,double *u,double *v,d4est_xyzu_fcn_t fofu_fcn,void *fofu_ctx,d4est_xyzu_fcn_t fofv_fcn,void *fofv_ctx,multigrid_matrix_op_t *matrix_op);
 multigrid_user_callbacks_t *multigrid_matrix_operator_init(p4est_t *p4est,int num_of_levels);
-
 
 #endif

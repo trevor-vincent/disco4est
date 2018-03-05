@@ -87,6 +87,13 @@ void
                                                  .element_id = ed->id
                                                 };
 
+
+
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
+                                                                      ed);
+
+
+        
         if (init_option == INIT_FIELD_ON_LOBATTO){
           d4est_quadrature_apply_mass_matrix
             (
@@ -98,7 +105,7 @@ void
              QUAD_INTEGRAND_UNKNOWN,
              &f[ed->nodal_stride],
              ed->deg,
-             ed->J_quad,
+             J_quad,
              ed->deg_quad,
              &rhs[ed->nodal_stride]
             );
@@ -114,7 +121,7 @@ void
              QUAD_INTEGRAND_UNKNOWN,
              &f[ed->quad_stride],
              ed->deg,
-             ed->J_quad,
+             J_quad,
              ed->deg_quad,
              &rhs[ed->nodal_stride]
             );
@@ -137,7 +144,8 @@ d4est_poisson_apply_stiffness_matrix
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors
 )
 {
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -161,6 +169,12 @@ d4est_poisson_apply_stiffness_matrix
                                               .element_id = ed->id
                                              };
 
+
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
+                                                                      ed);
+
+
+        
         d4est_quadrature_apply_stiffness_matrix
           (
            d4est_ops,
@@ -171,7 +185,7 @@ d4est_poisson_apply_stiffness_matrix
            QUAD_INTEGRAND_UNKNOWN,
            &ed->u_elem[0],
            ed->deg,
-           ed->J_quad,
+           J_quad,
            ed->rst_xyz_quad,
            ed->deg_quad,
            ed->Au_elem
@@ -289,7 +303,8 @@ d4est_poisson_apply_aij
      p4est,
      d4est_ops,
      d4est_geom,
-     d4est_quad
+     d4est_quad,
+     d4est_factors
     );
 
 

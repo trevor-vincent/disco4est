@@ -315,6 +315,7 @@ constant_density_star_build_residual_add_nonlinear_term
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
  void* user
 )
 {
@@ -339,6 +340,11 @@ constant_density_star_build_residual_add_nonlinear_term
         mesh_object.q[1] = ed->q[1];
         mesh_object.q[2] = ed->q[2];
 
+    
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
+                                                                      ed);
+
+        
         d4est_quadrature_apply_fofufofvlj
           (
            d4est_ops,
@@ -350,7 +356,7 @@ constant_density_star_build_residual_add_nonlinear_term
            &prob_vecs->u[ed->nodal_stride],
            NULL,
            ed->deg,
-           ed->J_quad,
+           J_quad,
            ed->xyz_quad,
            ed->deg_quad,
            &M_neg_2pi_rho_up1_neg5_vec[ed->nodal_stride],
@@ -407,6 +413,7 @@ constant_density_star_build_residual
      d4est_ops,
      d4est_geom,
      d4est_quad,
+     d4est_factors,
      user
     );
 }
@@ -465,6 +472,7 @@ void constant_density_star_apply_jac_add_nonlinear_term
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
  void* user
 )
 {
@@ -490,6 +498,11 @@ void constant_density_star_apply_jac_add_nonlinear_term
         mesh_object.q[1] = ed->q[1];
         mesh_object.q[2] = ed->q[2];
 
+    
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
+                                                                      ed);
+
+        
         d4est_quadrature_apply_fofufofvlilj
           (
            d4est_ops,
@@ -503,7 +516,7 @@ void constant_density_star_apply_jac_add_nonlinear_term
            NULL,
            ed->deg,
            ed->xyz_quad,
-           ed->J_quad,
+           J_quad,
            ed->deg_quad,
            &M_neg_10pi_rho_up1_neg4_of_u0_u_vec[ed->nodal_stride],
            neg_10pi_rho_up1_neg4,
@@ -559,6 +572,7 @@ void constant_density_star_apply_jac
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        user
       );
   else {
@@ -589,6 +603,7 @@ void constant_density_star_apply_jac
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        user
       );
     }
@@ -629,6 +644,7 @@ void constant_density_star_krylov_pc_setup_fcn
        ctx->d4est_ops,
        ctx->d4est_geom,
        ctx->d4est_quad,
+       ctx->d4est_factors,
        ctx->vecs->u0,
        NULL,
        neg_10pi_rho_up1_neg4,

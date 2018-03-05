@@ -307,6 +307,7 @@ void two_punctures_apply_jac_add_nonlinear_term
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
  void* user
 )
 {
@@ -329,6 +330,10 @@ void two_punctures_apply_jac_add_nonlinear_term
         mesh_object.q[0] = ed->q[0];
         mesh_object.q[1] = ed->q[1];
         mesh_object.q[2] = ed->q[2];
+    
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
+                                                                      ed);
+                               
         
         d4est_quadrature_apply_fofufofvlilj
           (
@@ -343,7 +348,7 @@ void two_punctures_apply_jac_add_nonlinear_term
            NULL,
            ed->deg,
            ed->xyz_quad,
-           ed->J_quad,
+           J_quad,
            ed->deg_quad,
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
            two_punctures_plus_7o8_K2_psi_neg8,
@@ -400,6 +405,7 @@ void two_punctures_apply_jac
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        user
       );
   else {
@@ -430,6 +436,7 @@ void two_punctures_apply_jac
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        user
       );
     }
@@ -446,6 +453,7 @@ two_punctures_build_residual_add_nonlinear_term
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
  void* user
 )
 {
@@ -471,6 +479,11 @@ two_punctures_build_residual_add_nonlinear_term
         mesh_object.q[1] = ed->q[1];
         mesh_object.q[2] = ed->q[2];
 
+    
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
+                                                                      ed);
+
+        
         d4est_quadrature_apply_fofufofvlj
           (
            d4est_ops,
@@ -482,7 +495,7 @@ two_punctures_build_residual_add_nonlinear_term
            &prob_vecs->u[ed->nodal_stride],
            NULL,
            ed->deg,
-           ed->J_quad,
+           J_quad,
            ed->xyz_quad,
            ed->deg_quad,
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
@@ -542,6 +555,7 @@ two_punctures_build_residual
      d4est_ops,
      d4est_geom,
      d4est_quad,
+     d4est_factors,
      user
     );
 }
@@ -646,6 +660,7 @@ void two_punctures_krylov_pc_setup_fcn
        ctx->d4est_ops,
        ctx->d4est_geom,
        ctx->d4est_quad,
+       ctx->d4est_factors,
        ctx->vecs->u0,
        NULL,
        two_punctures_plus_7o8_K2_psi_neg8,

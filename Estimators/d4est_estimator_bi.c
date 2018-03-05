@@ -414,6 +414,7 @@ d4est_estimator_bi_compute
      d4est_ops,
      d4est_geom,
      d4est_quad,
+     d4est_factors,
      vecs->Au,
      vecs->local_nodes,
      /* STORE_LOCALLY, */

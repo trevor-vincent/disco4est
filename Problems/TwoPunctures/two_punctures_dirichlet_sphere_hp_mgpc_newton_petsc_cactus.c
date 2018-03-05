@@ -571,7 +571,7 @@ problem_init
          (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_p_refine : d4est_amr_normal,
          &prob_vecs.u,
          estimator,
-         &stats
+         stats
         );
       
     }

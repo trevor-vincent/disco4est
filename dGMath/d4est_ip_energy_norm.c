@@ -322,6 +322,10 @@ d4est_ip_energy_norm_compute
 #endif
                                               .element_id = ed->id
                                              };
+
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
+                                                                      ed);
+
         
         energy_norm_data->ip_energy_norm_sqr_volume_term += d4est_gradient_l2_norm
                                                            (
@@ -335,7 +339,7 @@ d4est_ip_energy_norm_compute
                                                             ed->deg,
                                                             ed->deg_quad,
                                                             ed->rst_xyz_quad,
-                                                            ed->J_quad
+                                                            J_quad
                                                            );
     
       }

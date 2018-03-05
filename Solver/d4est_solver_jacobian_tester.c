@@ -157,7 +157,7 @@ d4est_solver_jacobian_tester
     }
 
     d4est_linalg_vec_axpyeqz(-1., J_u_from_res, J_u, error_vec, local_nodes);
-    double l2_err = d4est_mesh_compute_l2_norm_sqr(p4est, d4est_ops, d4est_geom, d4est_quad, error_vec, local_nodes, NULL, NULL);
+    double l2_err = d4est_mesh_compute_l2_norm_sqr(p4est, d4est_ops, d4est_geom, d4est_quad, d4est_factors, error_vec, local_nodes, NULL, NULL);
     l2_err_avg += l2_err;
     max_err_avg += max_err;
 

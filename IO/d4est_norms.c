@@ -31,6 +31,7 @@ d4est_norms_fcn_L2
     ctx->d4est_ops,
     ctx->d4est_geom,
     ctx->d4est_quad,
+    ctx->d4est_factors,
     field_value_errors,
     num_nodes_local,
     /* DO_NOT_STORE_LOCALLY, */

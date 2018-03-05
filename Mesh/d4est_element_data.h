@@ -39,7 +39,7 @@ typedef struct {
   double* xyz [(P4EST_DIM)]; 
 
   /* geometric factors for volume quadrature */
-  double* J_quad; /* Jacobian */
+  /* double* J_quad; /\* Jacobian *\/ */
   double* xyz_quad [(P4EST_DIM)]; /* points on quadrature grid */
   double* xyz_rst_quad[(P4EST_DIM)][(P4EST_DIM)]; /* mapping derivatives */
   double* rst_xyz_quad[(P4EST_DIM)][(P4EST_DIM)]; /* inverse mapping derivatives */

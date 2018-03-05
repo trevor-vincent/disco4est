@@ -1274,6 +1274,7 @@ d4est_mesh_compute_l2_norm_sqr
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
  double* nodal_vec,
  int local_nodes,
  int (*skip_element_fcn)(d4est_element_data_t*),
@@ -1306,6 +1307,11 @@ d4est_mesh_compute_l2_norm_sqr
         mesh_object.q[2] = ed->q[2];
 #endif
 
+
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
+                                                                      ed);
+
+        
         d4est_quadrature_apply_mass_matrix
           (
            d4est_ops,
@@ -1316,7 +1322,7 @@ d4est_mesh_compute_l2_norm_sqr
            QUAD_INTEGRAND_UNKNOWN,
            &nodal_vec[ed->nodal_stride],
            ed->deg,
-           ed->J_quad,
+           J_quad,
            ed->deg_quad,
            &Mvec[ed->nodal_stride]
           );
@@ -1576,17 +1582,20 @@ d4est_mesh_geometry_storage_initialize_data
         /* } */
         
     
+        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
+                                                                      ed);
+
         d4est_geometry_compute_jacobian
           (
            ed->xyz_rst_quad,
-           ed->J_quad,
+           J_quad,
            volume_nodes_quad
           );
 
         d4est_geometry_compute_drst_dxyz
           (
            ed->xyz_rst_quad,
-           ed->J_quad,
+           J_quad,
            ed->rst_xyz_quad,
            volume_nodes_quad
           );
@@ -1615,7 +1624,7 @@ d4est_mesh_geometry_storage_initialize_aliases
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
         d4est_element_data_t* elem_data = (d4est_element_data_t*)(quad->p.user_data);
 
-        elem_data->J_quad = &d4est_factors->J_quad[elem_data->quad_stride];
+        /* elem_data->J_quad = &d4est_factors->J_quad[elem_data->quad_stride]; */
         for (int i = 0; i < (P4EST_DIM); i++){
           elem_data->xyz[i] = &d4est_factors->xyz[i*local_sizes.local_nodes + elem_data->nodal_stride];
           elem_data->xyz_quad[i] = &d4est_factors->xyz_quad[i*local_sizes.local_nodes_quad + elem_data->quad_stride];
@@ -1628,6 +1637,18 @@ d4est_mesh_geometry_storage_initialize_aliases
       }
     }
 }
+
+
+double*
+d4est_mesh_get_jacobian_on_quadrature_points
+(
+ d4est_mesh_data_t* d4est_factors,
+ d4est_element_data_t* ed
+)
+{
+  return &d4est_factors->J_quad[ed->quad_stride];
+}
+
 
 int
 d4est_mesh_update
