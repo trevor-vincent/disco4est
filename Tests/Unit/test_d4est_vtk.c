@@ -204,6 +204,7 @@ int main(int argc, char *argv[])
      init_sinxyz,
      d4est_ops,
      d4est_geom,
+     geometric_factors,
      INIT_FIELD_ON_LOBATTO,
      NULL
     );

@@ -62,6 +62,7 @@ void
      problem_rhs_fcn,
      d4est_ops,
      d4est_geom,
+     d4est_factors,
      init_option,
      ctx
     );

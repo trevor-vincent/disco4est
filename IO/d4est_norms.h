@@ -59,18 +59,15 @@ typedef double
 );
 
 
-double d4est_norms_fcn_L2(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
-
-double d4est_norms_fcn_Linfty(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
-
-double d4est_norms_fcn_energy(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
+/* This file was automatically generated.  Do not edit! */
+void d4est_norms_save(p4est_t *p4est,d4est_mesh_data_t *d4est_factors,const char **field_names,double **field_values,double **field_values_compare,d4est_xyz_fcn_t *analytical_solutions,void **analytical_solution_ctxs,const char **norm_names,d4est_norm_fcn_t *norm_fcns,void **norm_fcn_ctxs);
+void d4est_norms_write_headers(const char **field_names,const char **norm_names);
+double d4est_norms_fcn_energy_estimator(double *field_value_errors,int num_nodes_local,void *norm_fcn_ctx);
+double d4est_norms_fcn_energy(double *field_value_errors,int num_nodes_local,void *norm_fcn_ctx);
 void d4est_norms_fcn_energy_destroy_fit(d4est_norms_fcn_energy_fit_t *fit);
 void d4est_norms_fcn_energy_add_entry_and_fit(p4est_t *p4est,d4est_norms_fcn_energy_fit_t *fit,double global_energy_norm_sqr,double global_dof);
 void d4est_norms_fcn_energy_fit(p4est_t *p4est,d4est_norms_fcn_energy_fit_t *fit);
-
-double d4est_norms_fcn_energy_estimator(double *field_value_errors, int num_nodes_local, void *norm_fcn_ctx);
-
-void d4est_norms_write_headers(const char** field_names,const char** norm_names);
-void d4est_norms_save(p4est_t *p4est,const char** field_names,double** field_values,double** field_values_compare,d4est_xyz_fcn_t *analytical_solution,void** analytical_solution_ctxs,const char** norm_names,d4est_norm_fcn_t *norm_fcns,void **norm_fcn_ctxs);
+double d4est_norms_fcn_Linfty(double *field_value_errors,int num_nodes_local,void *norm_fcn_ctx);
+double d4est_norms_fcn_L2(double *field_value_errors,int num_nodes_local,void *norm_fcn_ctx);
 
 #endif

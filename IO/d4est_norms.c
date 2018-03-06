@@ -290,6 +290,7 @@ void
 d4est_norms_save
 (
   p4est_t *p4est,
+  d4est_mesh_data_t* d4est_factors,
   const char** field_names,
   double **field_values,
   double **field_values_compare,
@@ -354,6 +355,7 @@ d4est_norms_save
         analytical_solution_i,
         NULL,
         NULL,
+        d4est_factors,
         INIT_FIELD_ON_LOBATTO,
         analytical_solution_ctxs[i_fields]
       );

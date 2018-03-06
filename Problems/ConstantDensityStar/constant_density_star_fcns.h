@@ -344,6 +344,13 @@ constant_density_star_build_residual_add_nonlinear_term
         double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
                                                                       ed);
 
+
+          d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                                 (
+                                                  d4est_factors,
+                                                  ed
+                                                 );
+
         
         d4est_quadrature_apply_fofufofvlj
           (
@@ -357,7 +364,7 @@ constant_density_star_build_residual_add_nonlinear_term
            NULL,
            ed->deg,
            J_quad,
-           ed->xyz_quad,
+           md_on_e.xyz_quad,
            ed->deg_quad,
            &M_neg_2pi_rho_up1_neg5_vec[ed->nodal_stride],
            neg_2pi_rho_up1_neg5,
@@ -502,6 +509,13 @@ void constant_density_star_apply_jac_add_nonlinear_term
         double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
                                                                       ed);
 
+
+          d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                                 (
+                                                  d4est_factors,
+                                                  ed
+                                                 );
+
         
         d4est_quadrature_apply_fofufofvlilj
           (
@@ -515,7 +529,7 @@ void constant_density_star_apply_jac_add_nonlinear_term
            &prob_vecs->u0[ed->nodal_stride],
            NULL,
            ed->deg,
-           ed->xyz_quad,
+           md_on_e.xyz_quad,
            J_quad,
            ed->deg_quad,
            &M_neg_10pi_rho_up1_neg4_of_u0_u_vec[ed->nodal_stride],

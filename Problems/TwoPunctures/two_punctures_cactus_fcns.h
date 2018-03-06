@@ -334,6 +334,11 @@ void two_punctures_apply_jac_add_nonlinear_term
         double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
                                                                       ed);
                                
+          d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                                 (
+                                                  d4est_factors,
+                                                  ed
+                                                 );
         
         d4est_quadrature_apply_fofufofvlilj
           (
@@ -347,7 +352,7 @@ void two_punctures_apply_jac_add_nonlinear_term
            &prob_vecs->u0[ed->nodal_stride],
            NULL,
            ed->deg,
-           ed->xyz_quad,
+           md_on_e.xyz_quad,
            J_quad,
            ed->deg_quad,
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
@@ -483,6 +488,13 @@ two_punctures_build_residual_add_nonlinear_term
         double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
                                                                       ed);
 
+          d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                                 (
+                                                  d4est_factors,
+                                                  ed
+                                                 );
+
+        
         
         d4est_quadrature_apply_fofufofvlj
           (
@@ -496,7 +508,7 @@ two_punctures_build_residual_add_nonlinear_term
            NULL,
            ed->deg,
            J_quad,
-           ed->xyz_quad,
+           md_on_e.xyz_quad,
            ed->deg_quad,
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
            two_punctures_neg_1o8_K2_psi_neg7,

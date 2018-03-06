@@ -45,6 +45,17 @@ typedef struct {
 } d4est_mesh_interpolate_data_t;
 
 typedef struct {
+  
+  double* J_quad;
+  double* xyz_quad [(P4EST_DIM)];
+  double* xyz_rst_quad [(P4EST_DIM)][(P4EST_DIM)];
+  double* rst_xyz_quad [(P4EST_DIM)][(P4EST_DIM)];
+  double* xyz [(P4EST_DIM)];
+  
+} d4est_mesh_data_on_element_t;
+
+
+typedef struct {
 
   d4est_mesh_local_sizes_t local_sizes;
   
@@ -90,9 +101,10 @@ int d4est_mesh_get_ghost_nodes(p4est_ghost_t *ghost,d4est_element_data_t *ghost_
 void d4est_mesh_get_local_nodes_callback(p4est_iter_volume_info_t *info,void *user_data);
 void d4est_mesh_init_field_ext(p4est_t *p4est,double *node_vec,d4est_xyz_fcn_ext_t xyz_fcn,void *user,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom);
 void d4est_mesh_compute_point_error(double *v1,double *v2,double *error,int local_nodes);
-void d4est_mesh_init_field(p4est_t *p4est,double *node_vec,d4est_xyz_fcn_t init_fcn,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_mesh_init_field_option_t option,void *user);
+void d4est_mesh_init_field(p4est_t *p4est,double *node_vec,d4est_xyz_fcn_t init_fcn,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_mesh_data_t *d4est_factors,d4est_mesh_init_field_option_t option,void *user);
 int d4est_mesh_update(p4est_t *p4est,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mesh_quadrature_data_init_option_t quad_init_option,d4est_mesh_geometry_data_init_option_t geom_init_option,d4est_mesh_geometry_aliases_init_option_t alias_init_option,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
 void d4est_mesh_geometry_storage_initialize_aliases(p4est_t *p4est,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t local_sizes);
+d4est_mesh_data_on_element_t d4est_mesh_data_on_element(d4est_mesh_data_t *d4est_factors,d4est_element_data_t *ed);
 d4est_mesh_local_sizes_t d4est_mesh_init_element_data(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
 double *d4est_mesh_get_jacobian_on_quadrature_points(d4est_mesh_data_t *d4est_factors,d4est_element_data_t *ed);
 double d4est_mesh_compute_l2_norm_sqr(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,double *nodal_vec,int local_nodes,int(*skip_element_fcn)(d4est_element_data_t *),double *l2_array);

@@ -128,6 +128,7 @@ problem_init
     poisson_sinx_initial_guess,
     d4est_ops,
     d4est_geom,
+    d4est_factors,
     INIT_FIELD_ON_LOBATTO,
     NULL
   );
@@ -244,6 +245,7 @@ problem_init
       poisson_sinx_analytic_solution,
       d4est_ops, // unnecessary?
       d4est_geom, // unnecessary?
+      d4est_factors,
       INIT_FIELD_ON_LOBATTO,
       NULL
     );
@@ -268,6 +270,7 @@ problem_init
     // Compute and save norms
     d4est_norms_save(
       p4est,
+      d4est_factors,
       (const char * []){ "u", NULL },
       (double * []){ prob_vecs.u },
       (double * []){ u_analytic }, // Using precomputed analytic field values

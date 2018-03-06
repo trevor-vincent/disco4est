@@ -1520,6 +1520,13 @@ d4est_mesh_geometry_storage_initialize_data
         int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
 
+
+        d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                               (
+                                                d4est_factors,
+                                                ed
+                                               );
+        
         d4est_geometry_compute_xyz
           (
            d4est_ops,
@@ -1541,7 +1548,7 @@ d4est_mesh_geometry_storage_initialize_data
            ed->deg_quad,
            ed->q,
            ed->dq,
-           ed->xyz_quad
+           md_on_e.xyz_quad
           );
 
         
@@ -1627,7 +1634,7 @@ d4est_mesh_geometry_storage_initialize_aliases
         /* elem_data->J_quad = &d4est_factors->J_quad[elem_data->quad_stride]; */
         for (int i = 0; i < (P4EST_DIM); i++){
           elem_data->xyz[i] = &d4est_factors->xyz[i*local_sizes.local_nodes + elem_data->nodal_stride];
-          elem_data->xyz_quad[i] = &d4est_factors->xyz_quad[i*local_sizes.local_nodes_quad + elem_data->quad_stride];
+          /* elem_data->xyz_quad[i] = &d4est_factors->xyz_quad[i*local_sizes.local_nodes_quad + elem_data->quad_stride]; */
           for (int j = 0; j < (P4EST_DIM); j++){
             elem_data->xyz_rst_quad[i][j] = &d4est_factors->xyz_rst_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride];
             elem_data->rst_xyz_quad[i][j] = &d4est_factors->rst_xyz_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride];
@@ -1636,6 +1643,28 @@ d4est_mesh_geometry_storage_initialize_aliases
 
       }
     }
+}
+
+
+d4est_mesh_data_on_element_t
+d4est_mesh_data_on_element
+(
+ d4est_mesh_data_t* d4est_factors,
+ d4est_element_data_t* ed
+)
+{
+  d4est_mesh_local_sizes_t local_sizes = d4est_factors->local_sizes;
+  d4est_mesh_data_on_element_t mesh_data_on_e;
+  mesh_data_on_e.J_quad = &d4est_factors->J_quad[ed->quad_stride];
+  for (int i = 0; i < (P4EST_DIM); i++){
+    mesh_data_on_e.xyz[i] = &d4est_factors->xyz[i*local_sizes.local_nodes + ed->nodal_stride];
+    mesh_data_on_e.xyz_quad[i] = &d4est_factors->xyz_quad[i*local_sizes.local_nodes_quad + ed->quad_stride];
+    for (int j = 0; j < (P4EST_DIM); j++){
+      mesh_data_on_e.xyz_rst_quad[i][j] = &d4est_factors->xyz_rst_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + ed->quad_stride];
+      mesh_data_on_e.rst_xyz_quad[i][j] = &d4est_factors->rst_xyz_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + ed->quad_stride];
+    }
+  }
+  return mesh_data_on_e;
 }
 
 
@@ -1752,6 +1781,7 @@ d4est_mesh_init_field
  d4est_xyz_fcn_t init_fcn,
  d4est_operators_t* d4est_ops, // TODO: unused, remove?
  d4est_geometry_t* d4est_geom, // TODO: unused, remove?
+ d4est_mesh_data_t* d4est_factors,
  d4est_mesh_init_field_option_t option,
  void* user
 )
@@ -1781,17 +1811,25 @@ d4est_mesh_init_field
         }
         else if (option == INIT_FIELD_ON_QUAD){
           int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
+          d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                                 (
+                                                  d4est_factors,
+                                                  ed
+                                                 );
+
+
+
           for (int i = 0; i < volume_nodes_quad; i++){
-            node_vec[ed->quad_stride + i] = init_fcn(ed->xyz_quad[0][i],
-                                                      ed->xyz_quad[1][i],
+            node_vec[ed->quad_stride + i] = init_fcn(md_on_e.xyz_quad[0][i],
+                                                      md_on_e.xyz_quad[1][i],
 #if (P4EST_DIM)==3
-                                                      ed->xyz_quad[2][i],
+                                                      md_on_e.xyz_quad[2][i],
 #endif
                                                       user
                                                      );
           }
         }
-        else {
+         else {
           D4EST_ABORT("Not a supported init option");
         }
       }

@@ -310,6 +310,7 @@ problem_init
        two_punctures_initial_guess,
        d4est_ops,
        d4est_geom,
+       d4est_factors,
        INIT_FIELD_ON_LOBATTO,
        NULL
       );
@@ -447,6 +448,7 @@ problem_init
 
     d4est_norms_save(
                      p4est,
+                     d4est_factors,
                      (const char * []){ "u", NULL },
                      (double * []){ prob_vecs.u },
                      (double * []){ u_prev },
