@@ -175,6 +175,12 @@ d4est_poisson_apply_stiffness_matrix
                                                                       ed);
 
 
+
+        d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                               (
+                                                d4est_factors,
+                                                ed
+                                               );
         
         d4est_quadrature_apply_stiffness_matrix
           (
@@ -187,7 +193,7 @@ d4est_poisson_apply_stiffness_matrix
            &ed->u_elem[0],
            ed->deg,
            J_quad,
-           ed->rst_xyz_quad,
+           md_on_e.rst_xyz_quad,
            ed->deg_quad,
            ed->Au_elem
           );

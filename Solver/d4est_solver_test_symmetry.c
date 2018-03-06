@@ -111,20 +111,20 @@ d4est_solver_test_symmetry
     }
   }
 
-  if (print == SYM_PRINT_UNEQUAL_PAIRS_AND_XYZ){
-    printf("(i,j) Pairs that aren't equal\n");
-    for (int i = 0; i < local_nodes; i++){
-      for (int j = 0; j <= i; j++){
-        if (fabs(a_mat[i*local_nodes + j] - a_mat_trans[i*local_nodes + j]) > sym_eps) {
-          int e1 = d4est_mesh_debug_find_node(p4est, i);
-          int e2 = d4est_mesh_debug_find_node(p4est, j);
-          d4est_element_data_t* e1_data = d4est_mesh_get_element_data(p4est, e1);
-          d4est_element_data_t* e2_data = d4est_mesh_get_element_data(p4est, e2);
-          printf("node %d in element %d (x,y,z = %f,%f,%f), node %d in element %d (x,y,z = %f,%f,%f), A/A^t/ERR: %.20f %.20f %.20f\n", i, e1, e1_data->xyz[0][0],e1_data->xyz[1][0],  0., j, e2, e2_data->xyz[0][0],e2_data->xyz[1][0], 0., a_mat[i*local_nodes + j], a_mat_trans[i*local_nodes + j], fabs(a_mat[i*local_nodes + j] - a_mat_trans[i*local_nodes + j]));
-        }
-      }
-    }
-  }
+  /* if (print == SYM_PRINT_UNEQUAL_PAIRS_AND_XYZ){ */
+  /*   printf("(i,j) Pairs that aren't equal\n"); */
+  /*   for (int i = 0; i < local_nodes; i++){ */
+  /*     for (int j = 0; j <= i; j++){ */
+  /*       if (fabs(a_mat[i*local_nodes + j] - a_mat_trans[i*local_nodes + j]) > sym_eps) { */
+  /*         int e1 = d4est_mesh_debug_find_node(p4est, i); */
+  /*         int e2 = d4est_mesh_debug_find_node(p4est, j); */
+  /*         d4est_element_data_t* e1_data = d4est_mesh_get_element_data(p4est, e1); */
+  /*         d4est_element_data_t* e2_data = d4est_mesh_get_element_data(p4est, e2); */
+  /*         printf("node %d in element %d (x,y,z = %f,%f,%f), node %d in element %d (x,y,z = %f,%f,%f), A/A^t/ERR: %.20f %.20f %.20f\n", i, e1, e1_data->xyz[0][0],e1_data->xyz[1][0],  0., j, e2, e2_data->xyz[0][0],e2_data->xyz[1][0], 0., a_mat[i*local_nodes + j], a_mat_trans[i*local_nodes + j], fabs(a_mat[i*local_nodes + j] - a_mat_trans[i*local_nodes + j])); */
+  /*       } */
+  /*     } */
+  /*   } */
+  /* } */
   
   P4EST_FREE(u_temp);
   P4EST_FREE(Au_temp);

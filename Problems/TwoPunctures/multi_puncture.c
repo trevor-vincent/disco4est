@@ -200,68 +200,68 @@ multi_puncture_p_refine_everywhere
   d4est_amr->refinement_log[ed->id] = ed->deg + 1;
 }
 
-static void
-multi_puncture_find_punctures_and_prefine_outside_cube_element_marker
-(
-  p4est_iter_volume_info_t* info,
-  void* user_data
-){
-  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
-  d4est_element_data_t* ed = (d4est_element_data_t*) info->quad->p.user_data;
-  multi_puncture_params_t* params = d4est_amr->scheme->amr_scheme_data;
+/* static void */
+/* multi_puncture_find_punctures_and_prefine_outside_cube_element_marker */
+/* ( */
+/*   p4est_iter_volume_info_t* info, */
+/*   void* user_data */
+/* ){ */
+/*   d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer; */
+/*   d4est_element_data_t* ed = (d4est_element_data_t*) info->quad->p.user_data; */
+/*   multi_puncture_params_t* params = d4est_amr->scheme->amr_scheme_data; */
   
-  double xi [(P4EST_DIM)];
-  double xf [(P4EST_DIM)];
+/*   double xi [(P4EST_DIM)]; */
+/*   double xf [(P4EST_DIM)]; */
   
-  if (ed->region == 1){
-    d4est_geometry_compute_bounds(ed->xyz, ed->deg, xi, xf);
-    d4est_amr->refinement_log[ed->id] = ed->deg;
+/*   if (ed->region == 1){ */
+/*     d4est_geometry_compute_bounds(md_on_e.xyz, ed->deg, xi, xf); */
+/*     d4est_amr->refinement_log[ed->id] = ed->deg; */
 
-    for (int i = 0; i < params->number_of_punctures; i++){
-      if ((params->bh[i].XYZ[0] <= xf[0]) &&
-          (params->bh[i].XYZ[1] <= xf[1]) &&
-          (params->bh[i].XYZ[2] <= xf[2]) &&
-          (params->bh[i].XYZ[0] >= xi[0]) &&
-          (params->bh[i].XYZ[1] >= xi[1]) &&
-          (params->bh[i].XYZ[2] >= xi[2])){
-        d4est_amr->refinement_log[ed->id] = -ed->deg;
-        return;
-      }
-    }
-  }
-  else {
-    d4est_amr->refinement_log[ed->id] = ed->deg + 1;
-  }
-}
+/*     for (int i = 0; i < params->number_of_punctures; i++){ */
+/*       if ((params->bh[i].XYZ[0] <= xf[0]) && */
+/*           (params->bh[i].XYZ[1] <= xf[1]) && */
+/*           (params->bh[i].XYZ[2] <= xf[2]) && */
+/*           (params->bh[i].XYZ[0] >= xi[0]) && */
+/*           (params->bh[i].XYZ[1] >= xi[1]) && */
+/*           (params->bh[i].XYZ[2] >= xi[2])){ */
+/*         d4est_amr->refinement_log[ed->id] = -ed->deg; */
+/*         return; */
+/*       } */
+/*     } */
+/*   } */
+/*   else { */
+/*     d4est_amr->refinement_log[ed->id] = ed->deg + 1; */
+/*   } */
+/* } */
 
-static void
-multi_puncture_find_punctures_element_marker
-(
-  p4est_iter_volume_info_t* info,
-  void* user_data
-){
-  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
-  d4est_element_data_t* ed = (d4est_element_data_t*) info->quad->p.user_data;
-  multi_puncture_params_t* params = d4est_amr->scheme->amr_scheme_data;
+/* static void */
+/* multi_puncture_find_punctures_element_marker */
+/* ( */
+/*   p4est_iter_volume_info_t* info, */
+/*   void* user_data */
+/* ){ */
+/*   d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer; */
+/*   d4est_element_data_t* ed = (d4est_element_data_t*) info->quad->p.user_data; */
+/*   multi_puncture_params_t* params = d4est_amr->scheme->amr_scheme_data; */
   
-  double xi [(P4EST_DIM)];
-  double xf [(P4EST_DIM)];
+/*   double xi [(P4EST_DIM)]; */
+/*   double xf [(P4EST_DIM)]; */
   
-  d4est_geometry_compute_bounds(ed->xyz, ed->deg, xi, xf);
-  d4est_amr->refinement_log[ed->id] = ed->deg;
+/*   d4est_geometry_compute_bounds(ed->xyz, ed->deg, xi, xf); */
+/*   d4est_amr->refinement_log[ed->id] = ed->deg; */
 
-  for (int i = 0; i < params->number_of_punctures; i++){
-    if ((params->bh[i].XYZ[0] <= xf[0]) &&
-        (params->bh[i].XYZ[1] <= xf[1]) &&
-        (params->bh[i].XYZ[2] <= xf[2]) &&
-        (params->bh[i].XYZ[0] >= xi[0]) &&
-        (params->bh[i].XYZ[1] >= xi[1]) &&
-        (params->bh[i].XYZ[2] >= xi[2])){
-      d4est_amr->refinement_log[ed->id] = -ed->deg;
-      return;
-    }
-  }
-}
+/*   for (int i = 0; i < params->number_of_punctures; i++){ */
+/*     if ((params->bh[i].XYZ[0] <= xf[0]) && */
+/*         (params->bh[i].XYZ[1] <= xf[1]) && */
+/*         (params->bh[i].XYZ[2] <= xf[2]) && */
+/*         (params->bh[i].XYZ[0] >= xi[0]) && */
+/*         (params->bh[i].XYZ[1] >= xi[1]) && */
+/*         (params->bh[i].XYZ[2] >= xi[2])){ */
+/*       d4est_amr->refinement_log[ed->id] = -ed->deg; */
+/*       return; */
+/*     } */
+/*   } */
+/* } */
 
 int
 problem_set_mortar_degree

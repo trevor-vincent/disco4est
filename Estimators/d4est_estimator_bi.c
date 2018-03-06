@@ -13,11 +13,18 @@
 static double
 d4est_estimator_get_diam
 (
+ d4est_mesh_data_t* d4est_factors,
  d4est_element_data_t* ed,
  diam_compute_option_t diam_opt
 )
 {
-  return d4est_geometry_compute_diam(ed->xyz,ed->deg,diam_opt); 
+  d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                         (
+                                          d4est_factors,
+                                          ed
+                                         );
+  
+  return d4est_geometry_compute_diam(md_on_e.xyz,ed->deg,diam_opt); 
 }
 
 static void
@@ -440,7 +447,7 @@ d4est_estimator_bi_compute
         /* handle ||R||^2 * h^2/p^2 term */
         /* printf("*eta2 = %.15f\n",*eta2); */
         
-        double h = d4est_estimator_get_diam(ed, diam_opt);
+        double h = d4est_estimator_get_diam(d4est_factors,ed, diam_opt);
         /* *eta2 *= h*h/(deg*deg); */
         estimator[ed->id] *= h*h/(deg*deg);
         

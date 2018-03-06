@@ -326,6 +326,13 @@ d4est_ip_energy_norm_compute
         double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
                                                                       ed);
 
+
+        d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                               (
+                                                d4est_factors,
+                                                ed
+                                               );
+
         
         energy_norm_data->ip_energy_norm_sqr_volume_term += d4est_gradient_l2_norm
                                                            (
@@ -338,7 +345,7 @@ d4est_ip_energy_norm_compute
                                                             &(u[ed->nodal_stride]),
                                                             ed->deg,
                                                             ed->deg_quad,
-                                                            ed->rst_xyz_quad,
+                                                            md_on_e.rst_xyz_quad,
                                                             J_quad
                                                            );
     

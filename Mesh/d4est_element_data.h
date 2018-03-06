@@ -36,13 +36,13 @@ typedef struct {
   p4est_qcoord_t dq;
   
   /* points on lobatto grid */
-  double* xyz [(P4EST_DIM)]; 
+  /* double* xyz [(P4EST_DIM)];  */
 
   /* geometric factors for volume quadrature */
   /* double* J_quad; /\* Jacobian *\/ */
   /* double* xyz_quad [(P4EST_DIM)]; /\* points on quadrature grid *\/ */
-  double* xyz_rst_quad[(P4EST_DIM)][(P4EST_DIM)]; /* mapping derivatives */
-  double* rst_xyz_quad[(P4EST_DIM)][(P4EST_DIM)]; /* inverse mapping derivatives */
+  /* double* xyz_rst_quad[(P4EST_DIM)][(P4EST_DIM)]; /\* mapping derivatives *\/ */
+  /* double* rst_xyz_quad[(P4EST_DIM)][(P4EST_DIM)]; /\* inverse mapping derivatives *\/ */
 
   /* estimator variables */
   /* double local_estimator; */

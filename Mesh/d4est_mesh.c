@@ -227,10 +227,16 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
     }
   }
 
+  d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                         (
+                                          d4est_factors,
+                                          e_m
+                                         );
+  
   for (int d = 0; d < (P4EST_DIM); d++){
 
     d4est_operators_apply_slicer(d4est_ops,
-                                 e_m->xyz[d],
+                                 md_on_e.xyz[d],
                                  (P4EST_DIM),
                                  f_m,
                                  e_m->deg,
@@ -1219,53 +1225,53 @@ d4est_mesh_debug_find_node
   return -1;
 }
 
-void
-d4est_mesh_print_element_data_debug
-(
- p4est_t* p4est
-)
-{
-/* #ifndef D4EST_DEBUG */
-/*   D4EST_ABORT("compile with the debug flag if you want to print curved element data"); */
-/* #endif */
+/* void */
+/* d4est_mesh_print_element_data_debug */
+/* ( */
+/*  p4est_t* p4est */
+/* ) */
+/* { */
+/* /\* #ifndef D4EST_DEBUG *\/ */
+/* /\*   D4EST_ABORT("compile with the debug flag if you want to print curved element data"); *\/ */
+/* /\* #endif *\/ */
 
   
-  for (p4est_topidx_t tt = p4est->first_local_tree;
-       tt <= p4est->last_local_tree;
-       ++tt)
-    {
-      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-      sc_array_t* tquadrants = &tree->quadrants;
-      int Q = (p4est_locidx_t) tquadrants->elem_count;
-      for (int q = 0; q < Q; ++q) {
-        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        d4est_element_data_t* ed = quad->p.user_data;
+/*   for (p4est_topidx_t tt = p4est->first_local_tree; */
+/*        tt <= p4est->last_local_tree; */
+/*        ++tt) */
+/*     { */
+/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
+/*       sc_array_t* tquadrants = &tree->quadrants; */
+/*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
+/*       for (int q = 0; q < Q; ++q) { */
+/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
+/*         d4est_element_data_t* ed = quad->p.user_data; */
 
-        printf("** Element %d **\n", ed->id);
-        printf("deg, deg_quad = %d, %d\n", ed->deg, ed->deg_quad);
-        printf("tree, tree_quadid = %d, %d\n", ed->tree, ed->tree_quadid);
+/*         printf("** Element %d **\n", ed->id); */
+/*         printf("deg, deg_quad = %d, %d\n", ed->deg, ed->deg_quad); */
+/*         printf("tree, tree_quadid = %d, %d\n", ed->tree, ed->tree_quadid); */
 
         
-        int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), ed->deg );
+/*         int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), ed->deg ); */
        
-#ifndef NDEBUG
-#if (P4EST_DIM)==2
-        printf("q = %d, %d, dq = %d\n", ed->q[0], ed->q[1], ed->dq);
-        DEBUG_PRINT_2ARR_DBL(ed->xyz[0], ed->xyz[1], volume_nodes);
-        /* DEBUG_PRINT_3ARR_DBL(ed->xyz[0], ed->xyz[1], volume_nodes); */
-#elif (P4EST_DIM)==3
-        printf("q = %d, %d, %d, dq = %d\n", ed->q[0], ed->q[1], ed->q[2], ed->dq);
-        DEBUG_PRINT_3ARR_DBL(ed->xyz[0], ed->xyz[1], ed->xyz[2], volume_nodes);
-#else
-        D4EST_ABORT("DIM = 2 or 3");
-#endif
-#endif
+/* #ifndef NDEBUG */
+/* #if (P4EST_DIM)==2 */
+/*         printf("q = %d, %d, dq = %d\n", ed->q[0], ed->q[1], ed->dq); */
+/*         DEBUG_PRINT_2ARR_DBL(ed->xyz[0], ed->xyz[1], volume_nodes); */
+/*         /\* DEBUG_PRINT_3ARR_DBL(ed->xyz[0], ed->xyz[1], volume_nodes); *\/ */
+/* #elif (P4EST_DIM)==3 */
+/*         printf("q = %d, %d, %d, dq = %d\n", ed->q[0], ed->q[1], ed->q[2], ed->dq); */
+/*         DEBUG_PRINT_3ARR_DBL(ed->xyz[0], ed->xyz[1], ed->xyz[2], volume_nodes); */
 /* #else */
-        /* D4EST_ABORT("DEBUG flag must be set"); */
+/*         D4EST_ABORT("DIM = 2 or 3"); */
 /* #endif */
-      }
-    }
-}
+/* #endif */
+/* /\* #else *\/ */
+/*         /\* D4EST_ABORT("DEBUG flag must be set"); *\/ */
+/* /\* #endif *\/ */
+/*       } */
+/*     } */
+/* } */
 
 double
 d4est_mesh_compute_l2_norm_sqr
@@ -1536,7 +1542,7 @@ d4est_mesh_geometry_storage_initialize_data
            ed->deg,
            ed->q,
            ed->dq,
-           ed->xyz
+           md_on_e.xyz
           );
 
         d4est_geometry_compute_xyz
@@ -1556,8 +1562,8 @@ d4est_mesh_geometry_storage_initialize_data
             double* tmp = P4EST_ALLOC(double, volume_nodes);
             for (int d = 0; d < (P4EST_DIM); d++){
               for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-                d4est_operators_apply_dij(d4est_ops, &ed->xyz[d][0], (P4EST_DIM), ed->deg, d1, tmp);
-                d4est_quadrature_interpolate(d4est_ops, d4est_quad, d4est_geom, &mesh_object, QUAD_OBJECT_VOLUME, QUAD_INTEGRAND_UNKNOWN, tmp, ed->deg, &ed->xyz_rst_quad[d][d1][0], ed->deg_quad);
+                d4est_operators_apply_dij(d4est_ops, &(md_on_e.xyz[d][0]), (P4EST_DIM), ed->deg, d1, tmp);
+                d4est_quadrature_interpolate(d4est_ops, d4est_quad, d4est_geom, &mesh_object, QUAD_OBJECT_VOLUME, QUAD_INTEGRAND_UNKNOWN, tmp, ed->deg, &(md_on_e.xyz_rst_quad[d][d1][0]), ed->deg_quad);
                 /* double *dxyz_print = &ed->xyz_rst_quad[d][d1][0]; */
                 /* DEBUG_PRINT_ARR_DBL(dxyz_print, volume_nodes_quad); */
               }
@@ -1574,7 +1580,7 @@ d4est_mesh_geometry_storage_initialize_data
              ed->q,
              ed->dq,
              ed->deg_quad,
-             ed->xyz_rst_quad
+             md_on_e.xyz_rst_quad
             );
         }
         else {
@@ -1594,16 +1600,16 @@ d4est_mesh_geometry_storage_initialize_data
 
         d4est_geometry_compute_jacobian
           (
-           ed->xyz_rst_quad,
+           md_on_e.xyz_rst_quad,
            J_quad,
            volume_nodes_quad
           );
 
         d4est_geometry_compute_drst_dxyz
           (
-           ed->xyz_rst_quad,
+           md_on_e.xyz_rst_quad,
            J_quad,
-           ed->rst_xyz_quad,
+           md_on_e.rst_xyz_quad,
            volume_nodes_quad
           );
       }
@@ -1633,11 +1639,11 @@ d4est_mesh_geometry_storage_initialize_aliases
 
         /* elem_data->J_quad = &d4est_factors->J_quad[elem_data->quad_stride]; */
         for (int i = 0; i < (P4EST_DIM); i++){
-          elem_data->xyz[i] = &d4est_factors->xyz[i*local_sizes.local_nodes + elem_data->nodal_stride];
+          /* elem_data->xyz[i] = &d4est_factors->xyz[i*local_sizes.local_nodes + elem_data->nodal_stride]; */
           /* elem_data->xyz_quad[i] = &d4est_factors->xyz_quad[i*local_sizes.local_nodes_quad + elem_data->quad_stride]; */
           for (int j = 0; j < (P4EST_DIM); j++){
-            elem_data->xyz_rst_quad[i][j] = &d4est_factors->xyz_rst_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride];
-            elem_data->rst_xyz_quad[i][j] = &d4est_factors->rst_xyz_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride];
+            /* elem_data->xyz_rst_quad[i][j] = &d4est_factors->xyz_rst_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride]; */
+            /* elem_data->rst_xyz_quad[i][j] = &d4est_factors->rst_xyz_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride]; */
           }
         }
 
@@ -1797,13 +1803,20 @@ d4est_mesh_init_field
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
 
+        d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                               (
+                                                d4est_factors,
+                                                ed
+                                               );
         if (option == INIT_FIELD_ON_LOBATTO){
           int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+
+          
           for (int i = 0; i < volume_nodes; i++){
-            node_vec[ed->nodal_stride + i] = init_fcn(ed->xyz[0][i],
-                                                      ed->xyz[1][i],
+            node_vec[ed->nodal_stride + i] = init_fcn(md_on_e.xyz[0][i],
+                                                      md_on_e.xyz[1][i],
 #if (P4EST_DIM)==3
-                                                      ed->xyz[2][i],
+                                                      md_on_e.xyz[2][i],
 #endif
                                                       user
                                                      );
@@ -1811,12 +1824,6 @@ d4est_mesh_init_field
         }
         else if (option == INIT_FIELD_ON_QUAD){
           int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
-          d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
-                                                 (
-                                                  d4est_factors,
-                                                  ed
-                                                 );
-
 
 
           for (int i = 0; i < volume_nodes_quad; i++){
@@ -1991,6 +1998,7 @@ double
 d4est_mesh_compare_two_fields
 (
  p4est_t* p4est,
+ d4est_mesh_data_t* d4est_factors,
  double* field1,
  double* field2,
  const char* msg,
@@ -2012,6 +2020,13 @@ d4est_mesh_compare_two_fields
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
         d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+
+        d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                               (
+                                                d4est_factors,
+                                                ed
+                                               );
+
         for (int i = 0; i < volume_nodes; i++){
           int on_bndry = d4est_geometry_does_element_touch_boundary(p4est, quad, tt);
 
@@ -2029,9 +2044,9 @@ d4est_mesh_compare_two_fields
                          ed->id,
                          ed->deg,
                          on_bndry,
-                         ed->xyz[0][i],
-                         ed->xyz[1][i],
-                         ((P4EST_DIM)==3) ? ed->xyz[2][i] : 0.,
+                         md_on_e.xyz[0][i],
+                         md_on_e.xyz[1][i],
+                         ((P4EST_DIM)==3) ? md_on_e.xyz[2][i] : 0.,
                          field1[ed->nodal_stride + i],
                          field2[ed->nodal_stride + i],
                          fabs(field1[ed->nodal_stride + i] - field2[ed->nodal_stride + i]),
