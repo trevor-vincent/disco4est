@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
   
   /* start just-in-time dg-math */
   d4est_operators_t* d4est_ops = d4est_ops_init(20);
-  d4est_mesh_data_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
+  d4est_mesh_data_t* geometric_factors = d4est_mesh_data_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature");
   
   initial_grid_input->initial_nodes = d4est_mesh_update
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
     );
 
   d4est_mesh_initial_extents_destroy(initial_grid_input);
-  d4est_mesh_geometry_storage_destroy(geometric_factors);
+  d4est_mesh_data_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   
   if (ghost) {

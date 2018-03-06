@@ -584,7 +584,7 @@ d4est_mesh_compute_mortar_quadrature_sizes
 }
 
 d4est_mesh_data_t*
-d4est_mesh_geometry_storage_init()
+d4est_mesh_data_init()
 {
   d4est_mesh_data_t* d4est_factors = P4EST_ALLOC(d4est_mesh_data_t, 1);
   d4est_factors->J_quad = NULL;
@@ -604,7 +604,7 @@ d4est_mesh_geometry_storage_init()
 }
 
 static void
-d4est_mesh_geometry_storage_realloc
+d4est_mesh_data_realloc
 (
  p4est_t* p4est,
  d4est_mesh_data_t* d4est_factors,
@@ -662,7 +662,7 @@ d4est_mesh_geometry_storage_realloc
 
 
 void
-d4est_mesh_geometry_storage_printout
+d4est_mesh_data_printout
 (
  d4est_mesh_data_t* d4est_factors
 )
@@ -685,7 +685,7 @@ d4est_mesh_geometry_storage_printout
 
 
 void
-d4est_mesh_geometry_storage_destroy
+d4est_mesh_data_destroy
 (
  d4est_mesh_data_t* d4est_factors
 )
@@ -1471,7 +1471,7 @@ d4est_mesh_init_element_data
 }
 
 static void
-d4est_mesh_geometry_storage_initialize_data
+d4est_mesh_data_compute
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -1619,7 +1619,7 @@ d4est_mesh_geometry_storage_initialize_data
 
 
 /* void */
-/* d4est_mesh_geometry_storage_initialize_aliases */
+/* d4est_mesh_data_initialize_aliases */
 /* ( */
 /*  p4est_t* p4est, */
 /*  d4est_mesh_data_t* d4est_factors, */
@@ -1728,18 +1728,22 @@ d4est_mesh_update
   
   if (geom_init_option == INITIALIZE_GEOMETRY_DATA)
     {
-      d4est_mesh_geometry_storage_realloc(
-                                          p4est,
-                                          d4est_factors,
-                                          local_sizes
-      );
-      d4est_mesh_geometry_storage_initialize_data(
-                                                  p4est,
-                                                  d4est_ops,
-                                                  d4est_geom,
-                                                  d4est_quad,
-                                                  d4est_factors
-      );
+      d4est_mesh_data_realloc
+        (
+         p4est,
+         d4est_factors,
+         local_sizes
+        );
+      
+      d4est_mesh_data_compute
+        (
+         p4est,
+         d4est_ops,
+         d4est_geom,
+         d4est_quad,
+         d4est_factors
+        );
+      
       d4est_mesh_compute_mortar_quadrature_quantities
         (
          p4est,
@@ -1750,8 +1754,6 @@ d4est_mesh_update
          d4est_quad,
          d4est_factors
         );
-
-
       
     }
 

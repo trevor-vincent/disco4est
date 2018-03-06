@@ -55,7 +55,7 @@ multigrid_element_data_updater_destroy
    * and may be used afterwards */
   
   for (int level = 0; level < num_of_levels-1; level++){
-    d4est_mesh_geometry_storage_destroy(updater->geometric_factors[level]);
+    d4est_mesh_data_destroy(updater->geometric_factors[level]);
   }
 
   updater->current_geometric_factors = NULL;
@@ -95,7 +95,7 @@ multigrid_element_data_updater_update
   else if (mg_data->mg_state == DOWNV_POST_BALANCE){
     int compute_geometric_factors = (updater->geometric_factors[level - 1] == NULL);
     if (compute_geometric_factors) {
-      updater->geometric_factors[level-1] = d4est_mesh_geometry_storage_init();
+      updater->geometric_factors[level-1] = d4est_mesh_data_init();
     }
 
    /* update ghost data */

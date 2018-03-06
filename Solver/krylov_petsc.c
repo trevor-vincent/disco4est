@@ -258,7 +258,7 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_aij.u, vecs_for_aij.local_nodes); */
   /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_aij.Au, vecs_for_aij.local_nodes); */
   /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_aij.rhs, vecs_for_aij.local_nodes); */
-  d4est_mesh_geometry_storage_printout(petsc_ctx->d4est_factors);
+  /* d4est_mesh_data_printout(petsc_ctx->d4est_factors); */
 
 
   /* residual = 0.; */
