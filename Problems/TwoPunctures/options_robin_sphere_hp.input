@@ -1,6 +1,6 @@
 [initial_mesh]
 min_quadrants = -1
-min_level = 2
+min_level = 0
 fill_uniform = 1
 region0_deg = 1
 region0_deg_quad_inc = 0
@@ -31,10 +31,20 @@ sipg_penalty_fcn = maxp_sqr_over_minh
 [geometry]
 name = cubed_sphere_7tree
 R0 = 10
-R1 = 40
+R1 = 1000
 ;R2 = 1000
 compactify_outer_shell = 0
-compactify_inner_shell = 0
+compactify_inner_shell = 1
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[uncompactified_geometry]
+name = cubed_sphere_7tree
+R0 = 10
+R1 = 1000
+;R2 = 1000
+compactify_outer_shell = 0
+compactify_inner_shell = 1
 DX_compute_method = analytic
 JAC_compute_method = numerical
 

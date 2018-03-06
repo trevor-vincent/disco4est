@@ -367,9 +367,34 @@ problem_init
   point_dof[0] = 0;
 
   int iterations = 1;
+
+  zlog_category_t *c_geom = zlog_get_category("d4est_geometry_uncompactified");
+  d4est_geometry_t* d4est_geom_uncompactified = d4est_geometry_new(p4est->mpirank, input_file,"uncompactified_geometry",c_geom);
+  d4est_mesh_data_t* d4est_factors_uncompactified = d4est_mesh_data_init(p4est);
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
+
+
+    d4est_mesh_data_realloc
+      (
+       p4est,
+       d4est_factors_uncompactified,
+       d4est_factors->local_sizes
+      );
+    
+    d4est_mesh_data_compute
+      (
+       p4est,
+       *ghost,
+       *ghost_data,
+       d4est_ops,
+       d4est_geom_uncompactified,
+       d4est_quad,
+       d4est_factors_uncompactified
+      );
+
+    
     double* estimator =
       d4est_estimator_bi_compute
       (
@@ -383,13 +408,13 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_factors,
-       d4est_geom,
-       d4est_factors,
+       d4est_geom_uncompactified,
+       d4est_factors_uncompactified,
        d4est_quad,
        NO_DIAM_APPROX
       );
 
-    
+
     
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,7);
     d4est_estimator_stats_compute_per_bin(p4est, estimator, stats, 7, in_bin);
@@ -692,7 +717,8 @@ problem_init
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
-  
+  d4est_mesh_data_destroy(d4est_factors_uncompactified);
+  d4est_geometry_destroy(d4est_geom_uncompactified);  
   d4est_amr_destroy(d4est_amr);
   /* d4est_amr_destroy(d4est_amr_use_puncture_finder); */
   /* d4est_amr_destroy(d4est_amr_p_refine_only_in_center_cube); */

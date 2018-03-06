@@ -383,12 +383,12 @@ problem_init
        *ghost_data,
        d4est_ops,
        d4est_geom,
-       d4est_quad,
        d4est_factors,
+       d4est_geom,
+       d4est_factors,
+       d4est_quad,
        NO_DIAM_APPROX
       );
-
-    
     
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,2);
     d4est_estimator_stats_compute_per_bin(p4est, estimator, stats, 2, in_bin);

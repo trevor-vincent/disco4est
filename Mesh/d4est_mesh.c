@@ -603,7 +603,7 @@ d4est_mesh_data_init()
   return d4est_factors;
 }
 
-static void
+void
 d4est_mesh_data_realloc
 (
  p4est_t* p4est,
@@ -1470,10 +1470,12 @@ d4est_mesh_init_element_data
   return local_sizes;
 }
 
-static void
+void
 d4est_mesh_data_compute
 (
  p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -1614,6 +1616,18 @@ d4est_mesh_data_compute
           );
       }
     }
+      
+  d4est_mesh_compute_mortar_quadrature_quantities
+    (
+     p4est,
+     ghost,
+     ghost_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors
+    );
+  
 }
 
 
@@ -1738,15 +1752,6 @@ d4est_mesh_update
       d4est_mesh_data_compute
         (
          p4est,
-         d4est_ops,
-         d4est_geom,
-         d4est_quad,
-         d4est_factors
-        );
-      
-      d4est_mesh_compute_mortar_quadrature_quantities
-        (
-         p4est,
          ghost,
          ghost_data,
          d4est_ops,
@@ -1754,6 +1759,7 @@ d4est_mesh_update
          d4est_quad,
          d4est_factors
         );
+
       
     }
 

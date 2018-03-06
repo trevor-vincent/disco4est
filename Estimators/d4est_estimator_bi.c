@@ -395,9 +395,11 @@ d4est_estimator_bi_compute
  p4est_ghost_t* ghost,
  d4est_element_data_t* ghost_data,
  d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom,
+ d4est_geometry_t* d4est_geom_for_residual,
+ d4est_mesh_data_t* d4est_factors_for_residual,
+ d4est_geometry_t* d4est_geom_for_integrals,
+ d4est_mesh_data_t* d4est_factors_for_integrals,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_data_t* d4est_factors,
  diam_compute_option_t diam_opt
 )
 {
@@ -410,24 +412,26 @@ d4est_estimator_bi_compute
      fcns,
      vecs,
      d4est_ops,
-     d4est_geom,
+     d4est_geom_for_residual,
      d4est_quad,
-     d4est_factors
+     d4est_factors_for_residual
     );
   
   d4est_mesh_compute_l2_norm_sqr
     (
      p4est,
      d4est_ops,
-     d4est_geom,
+     d4est_geom_for_integrals,
      d4est_quad,
-     d4est_factors,
+     d4est_factors_for_integrals,
      vecs->Au,
      vecs->local_nodes,
      /* STORE_LOCALLY, */
      NULL,
      estimator
     );
+
+
 
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
@@ -441,14 +445,7 @@ d4est_estimator_bi_compute
         d4est_element_data_t* ed = quad->p.user_data; 
         int deg = ed->deg;
         int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg);
-        /* double* eta2 = &(ed->local_estimator); */
-
-
-        /* handle ||R||^2 * h^2/p^2 term */
-        /* printf("*eta2 = %.15f\n",*eta2); */
-        
-        double h = d4est_estimator_get_diam(d4est_factors,ed, diam_opt);
-        /* *eta2 *= h*h/(deg*deg); */
+        double h = d4est_estimator_get_diam(d4est_factors_for_integrals, ed, diam_opt);
         estimator[ed->id] *= h*h/(deg*deg);
         
         d4est_util_copy_1st_to_2nd
@@ -460,7 +457,7 @@ d4est_estimator_bi_compute
        
       }
     }
-
+  
   p4est_ghost_exchange_data(p4est,ghost,ghost_data);
 
   int ghost_nodes = d4est_mesh_get_ghost_nodes(ghost, ghost_data);
@@ -476,9 +473,9 @@ d4est_estimator_bi_compute
      ghost,
      ghost_data,
      d4est_ops,
-     d4est_geom,
+     d4est_geom_for_residual,
      d4est_quad,
-     d4est_factors,
+     d4est_factors_for_residual,
      dudr
     );
   
@@ -507,33 +504,15 @@ d4est_estimator_bi_compute
      ghost,
      ghost_data,
      d4est_ops,
-     d4est_geom,
+     d4est_geom_for_integrals,
      d4est_quad,
-     d4est_factors,
+     d4est_factors_for_integrals,
      &flux_fcns,
      DO_NOT_EXCHANGE_GHOST_DATA
     );
 
+  /* DEBUG_PRINT_ARR_DBL(estimator, p4est->local_num_quadrants); */
   
-    /* for (p4est_topidx_t tt = p4est->first_local_tree; */
-    /*    tt <= p4est->last_local_tree; */
-    /*    ++tt) */
-    /* { */
-    /*   p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-    /*   sc_array_t* tquadrants = &tree->quadrants; */
-    /*   int Q = (p4est_locidx_t) tquadrants->elem_count; */
-    /*   for (int q = 0; q < Q; ++q) { */
-    /*     p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-    /*     d4est_element_data_t* ed = quad->p.user_data;  */
-    /*     int deg = ed->deg; */
-    /*     int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg); */
-    /*     /\* double* eta2 = &(ed->local_estimator); *\/ */
-    /*     /\* handle ||R||^2 * h^2/p^2 term *\/ */
-    /*     D4EST_ASSERT(fabs(estimator[ed->id] - *eta2) < 1e-15); */
-    /*     printf("TEST PASSED\n"); */
-    /*   } */
-    /* } */
-
   D4EST_FREE_DIM_VEC(dudr);
   return estimator;
 }

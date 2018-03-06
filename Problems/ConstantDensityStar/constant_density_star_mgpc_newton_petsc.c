@@ -315,8 +315,10 @@ problem_init
       *ghost_data,
       d4est_ops,
       d4est_geom,
-      d4est_quad,
       d4est_factors,
+      d4est_geom,
+      d4est_factors,
+      d4est_quad,
       DIAM_APPROX_CUBE
     );
     
