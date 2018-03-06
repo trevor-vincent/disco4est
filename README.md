@@ -59,7 +59,7 @@ Configuration options are loaded from an `options.input` file residing in the sa
   - `min_level`: Number of initial mesh refinements.
   - `fill_uniform`
   - `regionX_deg`: Initial polynomial degree in region X.
-  - `region0_deg_quad_inc`
+  - `regionX_deg_quad_inc`: Initial quadrature polynomial degree increment in region X.
 - `[amr]`
   - `scheme` can be one of the following AMR refinement schemes:
     - `uniform_h`: Divides each element into 4 sub-elements in 2 dimensions, or into 8 sub-elements in 3 dimension.
