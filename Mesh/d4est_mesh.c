@@ -1618,38 +1618,38 @@ d4est_mesh_geometry_storage_initialize_data
 
 
 
-void
-d4est_mesh_geometry_storage_initialize_aliases
-(
- p4est_t* p4est,
- d4est_mesh_data_t* d4est_factors,
- d4est_mesh_local_sizes_t local_sizes
-)
-{
-  for (p4est_topidx_t tt = p4est->first_local_tree;
-       tt <= p4est->last_local_tree;
-       ++tt)
-    {
-      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-      sc_array_t* tquadrants = &tree->quadrants;
-      int QQ = (p4est_locidx_t) tquadrants->elem_count;
-      for (int qq = 0; qq < QQ; ++qq) {
-        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
-        d4est_element_data_t* elem_data = (d4est_element_data_t*)(quad->p.user_data);
+/* void */
+/* d4est_mesh_geometry_storage_initialize_aliases */
+/* ( */
+/*  p4est_t* p4est, */
+/*  d4est_mesh_data_t* d4est_factors, */
+/*  d4est_mesh_local_sizes_t local_sizes */
+/* ) */
+/* { */
+/*   for (p4est_topidx_t tt = p4est->first_local_tree; */
+/*        tt <= p4est->last_local_tree; */
+/*        ++tt) */
+/*     { */
+/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
+/*       sc_array_t* tquadrants = &tree->quadrants; */
+/*       int QQ = (p4est_locidx_t) tquadrants->elem_count; */
+/*       for (int qq = 0; qq < QQ; ++qq) { */
+/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq); */
+/*         d4est_element_data_t* elem_data = (d4est_element_data_t*)(quad->p.user_data); */
 
-        /* elem_data->J_quad = &d4est_factors->J_quad[elem_data->quad_stride]; */
-        for (int i = 0; i < (P4EST_DIM); i++){
-          /* elem_data->xyz[i] = &d4est_factors->xyz[i*local_sizes.local_nodes + elem_data->nodal_stride]; */
-          /* elem_data->xyz_quad[i] = &d4est_factors->xyz_quad[i*local_sizes.local_nodes_quad + elem_data->quad_stride]; */
-          for (int j = 0; j < (P4EST_DIM); j++){
-            /* elem_data->xyz_rst_quad[i][j] = &d4est_factors->xyz_rst_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride]; */
-            /* elem_data->rst_xyz_quad[i][j] = &d4est_factors->rst_xyz_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride]; */
-          }
-        }
+/*         /\* elem_data->J_quad = &d4est_factors->J_quad[elem_data->quad_stride]; *\/ */
+/*         for (int i = 0; i < (P4EST_DIM); i++){ */
+/*           /\* elem_data->xyz[i] = &d4est_factors->xyz[i*local_sizes.local_nodes + elem_data->nodal_stride]; *\/ */
+/*           /\* elem_data->xyz_quad[i] = &d4est_factors->xyz_quad[i*local_sizes.local_nodes_quad + elem_data->quad_stride]; *\/ */
+/*           for (int j = 0; j < (P4EST_DIM); j++){ */
+/*             /\* elem_data->xyz_rst_quad[i][j] = &d4est_factors->xyz_rst_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride]; *\/ */
+/*             /\* elem_data->rst_xyz_quad[i][j] = &d4est_factors->rst_xyz_quad[(i*(P4EST_DIM) + j)*local_sizes.local_nodes_quad + elem_data->quad_stride]; *\/ */
+/*           } */
+/*         } */
 
-      }
-    }
-}
+/*       } */
+/*     } */
+/* } */
 
 
 d4est_mesh_data_on_element_t
@@ -1733,7 +1733,6 @@ d4est_mesh_update
                                           d4est_factors,
                                           local_sizes
       );
-      d4est_mesh_geometry_storage_initialize_aliases(p4est, d4est_factors, local_sizes);
       d4est_mesh_geometry_storage_initialize_data(
                                                   p4est,
                                                   d4est_ops,
@@ -1755,13 +1754,6 @@ d4est_mesh_update
 
       
     }
-
-  if (alias_init_option == INITIALIZE_GEOMETRY_ALIASES &&
-      geom_init_option != INITIALIZE_GEOMETRY_DATA /* if this is false, then this will be a waste of time */
-     ){
-    d4est_mesh_geometry_storage_initialize_aliases(p4est, d4est_factors, local_sizes);
-  }
-
 
   if (alias_init_option == INITIALIZE_GEOMETRY_ALIASES ||
       geom_init_option == INITIALIZE_GEOMETRY_DATA /* if this is false, then this will be a waste of time */
