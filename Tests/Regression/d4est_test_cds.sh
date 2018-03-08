@@ -3,7 +3,7 @@ echo ${PWD}
 sed 's|num_of_amr_steps = .*|num_of_amr_steps = 1|g' ../ConstantDensityStar/options.input > options.input
 sed -i 's|ksp_type = .*|ksp_type = cg|g' options.input
 sed -i 's|ksp_do_not_use_preconditioner = 0|ksp_do_not_use_preconditioner = 1|g' options.input
-../ConstantDensityStar/constant_density_star_driver options.input 2&>1 disco4est.out
+../ConstantDensityStar/constant_density_star_driver options.input > disco4est.out
 RES=$(cat disco4est.out | grep -c 0.0000318356651187705076136)
 rm options.input
 if [ $RES -ne "1" ]; then
