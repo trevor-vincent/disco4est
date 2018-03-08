@@ -134,28 +134,6 @@ amr_set_element_gamma
   return gamma_hpn;
 }
 
-int
-problem_set_mortar_degree
-(
- d4est_element_data_t* elem_data,
- void* user_ctx
-)
-{
-  return elem_data->deg;
-}
-
-
-
-void
-problem_set_degrees_after_amr
-(
- d4est_element_data_t* elem_data,
- void* user_ctx
-)
-{
-  elem_data->deg_quad = elem_data->deg + 3;
-}
-
 
 void
 problem_init

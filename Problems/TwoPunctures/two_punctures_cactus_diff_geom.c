@@ -186,11 +186,11 @@ amr_mark_element
  double eta2,
  d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
+ d4est_amr_smooth_pred_params_t* params,
  void* user
 )
 {
   problem_ctx_t* ctx = user;
-  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
 
   double eta2_percentile
     = d4est_estimator_stats_get_percentile(&stats[elem_data->tree],params->percentile);
@@ -205,11 +205,11 @@ amr_set_element_gamma
  p4est_t* p4est,
  d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
+ d4est_amr_smooth_pred_params_t* params,
  void* user
 )
 {
   problem_ctx_t* ctx = user;
-  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
   gamma_params_t gamma_hpn;
   gamma_hpn.gamma_h = params->gamma_h;
   gamma_hpn.gamma_p = params->gamma_p;

@@ -204,7 +204,7 @@ int d4est_amr_smooth_pred_params_handler
     pconfig->gamma_h = atof(value);
   }
   else if (d4est_util_match_couple(section,"amr",name,"initial_pred")) {
-    D4EST_ASSERT(pconfig->initial_pred == -1);
+    D4EST_ASSERT(pconfig->initial_pred == 0);
     pconfig->initial_pred = atof(value);
   }
   else if (d4est_util_match_couple(section,"amr",name,"gamma_p")) {
