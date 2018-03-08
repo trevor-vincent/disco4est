@@ -241,7 +241,6 @@ problem_init
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
   
-  d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
   d4est_poisson_dirichlet_bc_t bc_data_for_jac;
   bc_data_for_jac.dirichlet_fcn = zero_fcn;
   bc_data_for_jac.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
@@ -262,7 +261,6 @@ problem_init
 
   problem_ctx_t ctx;
   ctx.two_punctures_params = &two_punctures_params;
-  ctx.smooth_pred_params = &smooth_pred_params;
   ctx.flux_data_for_jac = flux_data_for_jac;
   ctx.flux_data_for_res = flux_data_for_res;
   

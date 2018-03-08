@@ -3,7 +3,6 @@
 
 #include <d4est_util.h>
 #include <d4est_element_data.h>
-#include <d4est_amr_smooth_pred.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux.h>
 #include <multigrid.h>
@@ -28,7 +27,6 @@ typedef struct {
   two_punctures_params_t* two_punctures_params;
   d4est_poisson_flux_data_t* flux_data_for_jac;
   d4est_poisson_flux_data_t* flux_data_for_res;
-  d4est_amr_smooth_pred_params_t* smooth_pred_params;
   
 } problem_ctx_t;
 

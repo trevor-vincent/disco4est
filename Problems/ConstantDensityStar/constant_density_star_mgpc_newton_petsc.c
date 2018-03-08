@@ -96,19 +96,14 @@ amr_mark_element
  double eta2,
  d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
+ d4est_amr_smooth_pred_params_t* params,
  void* user
 )
 {
   problem_ctx_t* ctx = user;
-  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
-
-  /* if (p4est->mpirank == 0) */
-    /* printf("p4est->local_num_quadrants*p4est->mpisize < params->inflation_size = %d\n",p4est->local_num_quadrants*p4est->mpisize < params->inflation_size); */
   if (p4est->local_num_quadrants*p4est->mpisize < params->inflation_size){
-
     double eta2_percentile
       = d4est_estimator_stats_get_percentile(stats,25);
-    /* printf("Inflation with 25 percentile, eta2_percentile = %.15f\n", eta2_percentile); */
     return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
   }
   else{
@@ -125,11 +120,11 @@ amr_set_element_gamma
  p4est_t* p4est,
  d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
+ d4est_amr_smooth_pred_params_t* params,
  void* user
 )
 {
   problem_ctx_t* ctx = user;
-  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
   
   gamma_params_t gamma_hpn;
   gamma_hpn.gamma_h = params->gamma_h;
@@ -138,7 +133,6 @@ amr_set_element_gamma
 
   return gamma_hpn;
 }
-
 
 int
 problem_set_mortar_degree
@@ -185,8 +179,7 @@ problem_init
 
   constant_density_star_params_t constant_density_star_params = constant_density_star_input(input_file);
   
-  d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
-   d4est_poisson_dirichlet_bc_t bc_data_for_jac;
+  d4est_poisson_dirichlet_bc_t bc_data_for_jac;
   bc_data_for_jac.dirichlet_fcn = zero_fcn;
   bc_data_for_jac.user = &constant_density_star_params;
   bc_data_for_jac.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
@@ -202,7 +195,6 @@ problem_init
 
   problem_ctx_t ctx;
   ctx.constant_density_star_params = &constant_density_star_params;
-  ctx.smooth_pred_params = &smooth_pred_params;
   ctx.flux_data_for_jac = flux_data_for_jac;
   ctx.flux_data_for_res = flux_data_for_res;
                            

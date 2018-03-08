@@ -16,7 +16,6 @@ typedef struct {
 
 typedef struct {
 
-  d4est_amr_smooth_pred_params_t* smooth_pred_params;
   d4est_poisson_flux_data_t* flux_data_for_apply_lhs;
   d4est_poisson_flux_data_t* flux_data_for_build_rhs;
   stamm_params_t* stamm_params;

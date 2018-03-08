@@ -15,29 +15,6 @@
 #define ONE_OVER_CHILDREN 0.25
 #endif
 
-/* void */
-/* d4est_amr_smooth_pred_print */
-/* ( */
-/*  p4est_t* p4est */
-/* ) */
-/* { */
-/*   for (p4est_topidx_t tt = p4est->first_local_tree; */
-/*        tt <= p4est->last_local_tree; */
-/*        ++tt) */
-/*     { */
-/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-/*       sc_array_t* tquadrants = &tree->quadrants; */
-/*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
-/*       for (int q = 0; q < Q; ++q) { */
-/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-/*         d4est_element_data_t* ed = quad->p.user_data; */
-/*         printf("Element %d predictor = %.25f\n", ed->id, ed->local_predictor); */
-/*       } */
-/*     } */
-/* } */
-
-
-
 static void
 d4est_amr_smooth_pred_pre_refine_callback
 (
@@ -49,41 +26,16 @@ d4est_amr_smooth_pred_pre_refine_callback
   d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
   
   if (smooth_pred_data->predictor == NULL){
-    /* smooth_pred_data->predictors = P4EST_REALLOC */
-    /*                                ( */
-    /*                                 smooth_pred_data->predictors, */
-    /*                                 double, */
-    /*                                 p4est->local_num_quadrants */
-    /*                                ); */
-    /* d4est_linalg_fill_vec(smooth_pred_data->predictors, 0., p4est->local_num_quadrants); */
-
     smooth_pred_data->predictor = P4EST_REALLOC
                                    (
                                     smooth_pred_data->predictor,
                                     double,
                                     p4est->local_num_quadrants
                                    );
-    d4est_linalg_fill_vec(smooth_pred_data->predictor, 0., p4est->local_num_quadrants);
+    d4est_linalg_fill_vec(smooth_pred_data->predictor, smooth_pred_data->smooth_pred_params->initial_pred, p4est->local_num_quadrants);
     
   }
-
-  /* int pred_stride = 0; */
-  /* for (p4est_topidx_t tt = p4est->first_local_tree; */
-  /*      tt <= p4est->last_local_tree; */
-  /*      ++tt) */
-  /*   { */
-  /*     p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-  /*     sc_array_t* tquadrants = &tree->quadrants; */
-  /*     int Q = (p4est_locidx_t) tquadrants->elem_count; */
-  /*     for (int q = 0; q < Q; ++q) { */
-  /*       p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-  /*       d4est_element_data_t* ed = quad->p.user_data; */
-  /*       ed->local_predictor = smooth_pred_data->predictors[pred_stride]; */
-  /*       pred_stride++; */
-  /*     } */
-  /*   } */
 }
-
 
 static void
 d4est_amr_smooth_pred_compute_post_balance_predictor
@@ -127,7 +79,7 @@ d4est_amr_smooth_pred_compute_post_balance_predictor
       post_balance_volume_nodes *= (P4EST_CHILDREN);
       for (int j = 0; j < post_balance_volume_nodes; j++){
         gamma_params_t gamma_hpn
-          = smooth_pred_data->marker.set_element_gamma_fcn(p4est, NULL, NULL, smooth_pred_data->marker.user);
+          = smooth_pred_data->marker.set_element_gamma_fcn(p4est, NULL, NULL, smooth_pred_data->smooth_pred_params,smooth_pred_data->marker.user);
         int h_pow = abs(d4est_amr->balance_log[i]);
         (*predictors)[post_balance_stride + j] = (ONE_OVER_CHILDREN)*gamma_hpn.gamma_h*d4est_util_dbl_pow_int(.5, 2*(h_pow))*aux[pre_balance_stride];        
       }
@@ -156,13 +108,6 @@ d4est_amr_smooth_pred_post_balance_callback
 
   d4est_amr_t* d4est_amr = (d4est_amr_t*) user;
   d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
-  
-  /* smooth_pred_data->predictors = P4EST_REALLOC */
-  /*                                ( */
-  /*                                 smooth_pred_data->predictors, */
-  /*                                 double, */
-  /*                                 p4est->local_num_quadrants */
-  /*                                ); */
 
   d4est_amr_smooth_pred_compute_post_balance_predictor
     (
@@ -171,28 +116,6 @@ d4est_amr_smooth_pred_post_balance_callback
      smooth_pred_data,
      &smooth_pred_data->predictor
     );
-  
-  
-  
-  /* int pred_stride = 0; */
-  /* for (p4est_topidx_t tt = p4est->first_local_tree; */
-  /*      tt <= p4est->last_local_tree; */
-  /*      ++tt) */
-  /*   { */
-  /*     p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-  /*     sc_array_t* tquadrants = &tree->quadrants; */
-  /*     int Q = (p4est_locidx_t) tquadrants->elem_count; */
-  /*     for (int q = 0; q < Q; ++q) { */
-  /*       p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-  /*       d4est_element_data_t* ed = quad->p.user_data; */
-  /*       smooth_pred_data->predictors[pred_stride] = ed->local_predictor; */
-
-  /*       /\* D4EST_ASSERT( fabs(ed->local_predictor - smooth_pred_data->predictor[pred_stride]) < 1e-15); *\/ */
-  /*       /\* printf("local_predictor = %.15f, predictor = %.15f\n", ed->local_predictor, smooth_pred_data->predictor[pred_stride]); *\/ */
-        
-  /*       pred_stride++; */
-  /*     } */
-  /*   } */
 }
 
 static void
@@ -208,9 +131,6 @@ d4est_amr_smooth_pred_mark_elements
   d4est_estimator_stats_t* stats = d4est_amr->d4est_estimator_stats;
   
   double eta2 = d4est_amr->d4est_estimator[elem_data->id];
-  /* double eta2_pred = elem_data->local_predictor; */
-
-  /* D4EST_ASSERT(fabs(eta2_pred - smooth_pred_data->predictor[elem_data->id]) < 1e-15); */
   double eta2_pred = smooth_pred_data->predictor[elem_data->id];//elem_data->local_predictor;
 
   gamma_params_t gamma_hpn =
@@ -219,6 +139,7 @@ d4est_amr_smooth_pred_mark_elements
      info->p4est,
      stats,
      elem_data,
+     smooth_pred_data->smooth_pred_params,
      smooth_pred_data->marker.user
     );
   
@@ -229,6 +150,7 @@ d4est_amr_smooth_pred_mark_elements
      eta2,
      stats,
      elem_data,
+     smooth_pred_data->smooth_pred_params,
      smooth_pred_data->marker.user
     );
 
@@ -236,12 +158,10 @@ d4est_amr_smooth_pred_mark_elements
 
   if (is_marked){
     if (eta2 <= eta2_pred && elem_data->deg < max_degree){
-      /* printf("ELEMENT %d P-REFINED\n", elem_data->id); */
       d4est_amr->refinement_log[elem_data->id] = d4est_util_min_int(elem_data->deg + 1, max_degree);
       eta2_pred = gamma_hpn.gamma_p*eta2;
     }
     else {
-      /* printf("ELEMENT %d H-REFINED\n", elem_data->id); */
       d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;
       eta2_pred = gamma_hpn.gamma_h*eta2*d4est_util_dbl_pow_int(.5, 2*(elem_data->deg))*(ONE_OVER_CHILDREN);
     }
@@ -249,80 +169,17 @@ d4est_amr_smooth_pred_mark_elements
   else {
     eta2_pred = gamma_hpn.gamma_n*eta2_pred;
     d4est_amr->refinement_log[elem_data->id] = elem_data->deg;
-  }
-  
-  /* elem_data->local_predictor = eta2_pred; */
-  /* elem_data->local_predictor = eta2_pred; */
+  }  
   smooth_pred_data->predictor[elem_data->id] = eta2_pred;
 }
-
-/* static void */
-/* d4est_amr_smooth_pred_balance_replace_callback ( */
-/* 			     p4est_t * p4est, */
-/* 			     p4est_topidx_t which_tree, */
-/* 			     int num_outgoing, */
-/* 			     p4est_quadrant_t * outgoing[], */
-/* 			     int num_incoming, */
-/* 			     p4est_quadrant_t * incoming[] */
-/* 			     ) */
-/* { */
-/*   D4EST_ASSERT(num_outgoing == 1); */
-/*   d4est_amr_t* d4est_amr = (d4est_amr_t*) p4est->user_pointer; */
-/*   d4est_operators_t* d4est_ops = d4est_amr->d4est_ops; */
-/*   d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data); */
-/*   d4est_estimator_stats_t** stats = d4est_amr->d4est_estimator_stats; */
-/*   d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data; */
-/*   d4est_element_data_t* child_data; */
-/*   int i; */
-
-/*   int degh [(P4EST_CHILDREN)]; */
-/*   int degH = parent_data->deg; */
-
-/*   gamma_params_t gamma_hpn */
-/*     = smooth_pred_data->marker.set_element_gamma_fcn(p4est, stats, parent_data, smooth_pred_data->marker.user); */
-  
-/*   for (i = 0; i < (P4EST_CHILDREN); i++) */
-/*     degh[i] = degH; */
-
-/*   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), degH); */
-/*   int h_pow = parent_data->deg; */
-    
-/*   for (i = 0; i < (P4EST_CHILDREN); i++){ */
-/*     child_data = (d4est_element_data_t*) incoming[i]->p.user_data; */
-/*     child_data->local_predictor = (ONE_OVER_CHILDREN)*gamma_hpn.gamma_h*d4est_util_dbl_pow_int(.5, 2*(h_pow))*parent_data->local_predictor; */
-/*   } */
-
-/* } */
-
-
-/* static void */
-/* d4est_amr_smooth_pred_refine_replace_callback ( */
-/* 			     p4est_t * p4est, */
-/* 			     p4est_topidx_t which_tree, */
-/* 			     int num_outgoing, */
-/* 			     p4est_quadrant_t * outgoing[], */
-/* 			     int num_incoming, */
-/* 			     p4est_quadrant_t * incoming[] */
-/* 			     ) */
-/* { */
-/*   D4EST_ASSERT(num_outgoing == 1); */
-/*   d4est_element_data_t* parent_data = (d4est_element_data_t*) outgoing[0]->p.user_data; */
-/*   d4est_element_data_t* child_data; */
-
-/*   for (int i = 0; i < (P4EST_CHILDREN); i++){ */
-/*     child_data = (d4est_element_data_t*) incoming[i]->p.user_data; */
-/*     child_data->local_predictor = parent_data->local_predictor; */
-/*   } */
-/* } */
-
 
 void
 d4est_amr_smooth_pred_destroy(d4est_amr_scheme_t* scheme){
 
   d4est_amr_smooth_pred_data_t* smooth_pred_data =
     (d4est_amr_smooth_pred_data_t*)scheme->amr_scheme_data;  
-  /* P4EST_FREE(smooth_pred_data->predictors); */
   P4EST_FREE(smooth_pred_data->predictor);
+  P4EST_FREE(smooth_pred_data->smooth_pred_params);
   P4EST_FREE(smooth_pred_data);
   P4EST_FREE(scheme);
 }
@@ -346,6 +203,10 @@ int d4est_amr_smooth_pred_params_handler
     D4EST_ASSERT(pconfig->gamma_h == -1);
     pconfig->gamma_h = atof(value);
   }
+  else if (d4est_util_match_couple(section,"amr",name,"initial_pred")) {
+    D4EST_ASSERT(pconfig->initial_pred == -1);
+    pconfig->initial_pred = atof(value);
+  }
   else if (d4est_util_match_couple(section,"amr",name,"gamma_p")) {
     D4EST_ASSERT(pconfig->gamma_p == -1);
     pconfig->gamma_p = atof(value);
@@ -363,33 +224,35 @@ int d4est_amr_smooth_pred_params_handler
     pconfig->inflation_size = atoi(value);
   }
   else {
-    return 0;  /* unknown section/name, error */
+    return 0; 
   }
   return 1;
 }
 
-d4est_amr_smooth_pred_params_t
+d4est_amr_smooth_pred_params_t*
 d4est_amr_smooth_pred_params_input
 (
  const char* input_file
 )
 {
-  d4est_amr_smooth_pred_params_t input;
-  input.gamma_h = -1;
-  input.gamma_n = -1;
-  input.gamma_p = -1;
-  input.sigma = -1;
-  input.percentile = -1;
-  input.inflation_size = -1;
+  d4est_amr_smooth_pred_params_t* input = D4EST_ALLOC(d4est_amr_smooth_pred_params_t, 1);
+  input->initial_pred;
+  input->gamma_h = -1;
+  input->gamma_n = -1;
+  input->gamma_p = -1;
+  input->sigma = -1;
+  input->percentile = -1;
+  input->inflation_size = -1;
+  input->initial_pred = 0;
   
-  if (ini_parse(input_file, d4est_amr_smooth_pred_params_handler, &input) < 0) {
+  if (ini_parse(input_file, d4est_amr_smooth_pred_params_handler, input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("amr", input.gamma_h, -1);
-  D4EST_CHECK_INPUT("amr", input.gamma_p, -1);
-  D4EST_CHECK_INPUT("amr", input.gamma_n, -1);
-  D4EST_ASSERT((input.sigma != -1) || (input.percentile != -1));
+  D4EST_CHECK_INPUT("amr", input->gamma_h, -1);
+  D4EST_CHECK_INPUT("amr", input->gamma_p, -1);
+  D4EST_CHECK_INPUT("amr", input->gamma_n, -1);
+  D4EST_ASSERT((input->sigma != -1) || (input->percentile != -1));
   
   return input;
 }
@@ -402,26 +265,26 @@ d4est_amr_smooth_pred_init
  p4est_t* p4est,
  const char* input_file,
  d4est_amr_scheme_t* scheme,
- void* marker //smooth_pred_marker_t marker
+ void* marker
 )
 {  
-
   d4est_amr_smooth_pred_data_t* smooth_pred_data;
   smooth_pred_data = P4EST_ALLOC(d4est_amr_smooth_pred_data_t, 1);
   smooth_pred_data->marker = *((d4est_amr_smooth_pred_marker_t*)marker);
-  /* smooth_pred_data->predictors = NULL; */
   smooth_pred_data->predictor = NULL;
 
+  d4est_amr_smooth_pred_params_t* smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
+
+  smooth_pred_data->smooth_pred_params = smooth_pred_params;
+  
   scheme->pre_refine_callback
     = d4est_amr_smooth_pred_pre_refine_callback;
   
   scheme->balance_replace_callback_fcn_ptr
-    = NULL;//d4est_amr_smooth_pred_balance_replace_callback;
-    /* = d4est_amr_smooth_pred_balance_replace_callback; */
+    = NULL;
 
   scheme->refine_replace_callback_fcn_ptr
-    = NULL;//d4est_amr_smooth_pred_refine_replace_callback;
-    /* = d4est_amr_smooth_pred_refine_replace_callback; */
+    = NULL;
 
   scheme->mark_elements
     = d4est_amr_smooth_pred_mark_elements;

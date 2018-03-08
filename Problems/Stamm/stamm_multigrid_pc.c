@@ -36,11 +36,11 @@ amr_mark_element
  double eta2,
  d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
+ d4est_amr_smooth_pred_params_t* params,
  void* user
 )
 {
   problem_ctx_t* ctx = user;
-  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
   
   double eta2_avg = stats->mean;
   printf("eta2_avg, eta2, params->sigma = %.25f,%.25f,%.25f\n",eta2_avg,eta2,params->sigma);
@@ -54,11 +54,11 @@ amr_set_element_gamma
  p4est_t* p4est,
  d4est_estimator_stats_t* stats,
  d4est_element_data_t* elem_data,
+ d4est_amr_smooth_pred_params_t* params,
  void* user
 )
 {
   problem_ctx_t* ctx = user;
-  d4est_amr_smooth_pred_params_t* params = ctx->smooth_pred_params;
   
   gamma_params_t gamma_hpn;
   gamma_hpn.gamma_h = params->gamma_h;
@@ -108,8 +108,6 @@ problem_init
 {
   int initial_nodes = initial_extents->initial_nodes;
   stamm_params_t stamm_params = stamm_params_input(input_file);
-  d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
-
 
   d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
   bc_data_for_lhs.dirichlet_fcn = zero_fcn;
@@ -125,7 +123,6 @@ problem_init
 
   problem_ctx_t ctx;
   ctx.stamm_params = &stamm_params;
-  ctx.smooth_pred_params = &smooth_pred_params;
   ctx.flux_data_for_apply_lhs = flux_data_for_apply_lhs;
   ctx.flux_data_for_build_rhs = flux_data_for_build_rhs;
                            
