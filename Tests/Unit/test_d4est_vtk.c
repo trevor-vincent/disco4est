@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
       for (int q = 0; q < Q; ++q, ++k) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
-        element_volume[k] = ed->volume;
+        element_volume[k] = geometric_factors->volume[ed->id];
       }
     }
   
@@ -212,18 +212,6 @@ int main(int argc, char *argv[])
   int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
   d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
     
-  /* d4est_vtk_save_geometry_and_dg_fields */
-    /* ( */
-    /*  "test_d4est_vtk", */
-    /*  p4est, */
-    /*  d4est_ops, */
-    /*  deg_array, */
-    /*  "test_d4est_vtk_options.input", */
-    /*  "d4est_vtk_geometry", */
-    /*  test_d4est_vtk_user, */
-    /*  sinvec */
-    /* ); */
-
   d4est_vtk_save
     (
      p4est,
@@ -236,7 +224,6 @@ int main(int argc, char *argv[])
      (double**)((const double*[]){element_volume, NULL}),
      -1
     );
-  /*  */
      
   P4EST_FREE(deg_array);
   P4EST_FREE(element_volume);

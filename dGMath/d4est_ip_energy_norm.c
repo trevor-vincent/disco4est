@@ -21,6 +21,7 @@ d4est_ip_energy_norm_boundary
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
  d4est_poisson_flux_boundary_data_t* boundary_data,
  void* bc_params,
  void* params
@@ -59,7 +60,8 @@ d4est_ip_energy_norm_boundary
      h_quad,
      1,
      1,
-     &face_nodes_m_quad
+     &face_nodes_m_quad,
+     (data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *data->size_params
     );
 
   for (int i = 0; i < face_nodes_m_quad; i++){
@@ -117,6 +119,7 @@ d4est_ip_energy_norm_interface
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
  d4est_poisson_flux_interface_data_t* interface_data,
  void* params
 )
@@ -174,7 +177,8 @@ d4est_ip_energy_norm_interface
      hm_mortar_quad,
     interface_data->faces_mortar,
      faces_m,
-     nodes_mortar_quad
+     nodes_mortar_quad,
+     (data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *data->size_params
     );
 
 
@@ -193,7 +197,8 @@ d4est_ip_energy_norm_interface
      hp_mortar_quad,
      interface_data->faces_mortar,
      faces_p,
-     nodes_mortar_quad
+     nodes_mortar_quad,
+     (data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *data->size_params
     );
   
   int stride = 0;

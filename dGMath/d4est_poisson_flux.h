@@ -75,6 +75,7 @@ void (*d4est_poisson_flux_interface_fcn_t)
  d4est_operators_t*,
  d4est_geometry_t*,
  d4est_quadrature_t*,
+ d4est_mesh_data_t*,
  d4est_poisson_flux_interface_data_t*,
  void*
 );
@@ -88,6 +89,7 @@ void (*d4est_poisson_flux_boundary_fcn_t)
  d4est_operators_t*,
  d4est_geometry_t*,
  d4est_quadrature_t*,
+ d4est_mesh_data_t*,
  d4est_poisson_flux_boundary_data_t*,
  void*,
  void*

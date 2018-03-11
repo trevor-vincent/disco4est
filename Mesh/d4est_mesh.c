@@ -84,11 +84,9 @@ d4est_mesh_set_initial_extents
   else{
     D4EST_ASSERT(input->checkpoint_deg_array != NULL);
     elem_data->deg = input->checkpoint_deg_array[elem_data->id];
-  }
-  
+  }  
   elem_data->deg_quad = input->deg_quad_inc[region] +
                             elem_data->deg;
-  /* printf("[BEFORE_AMR]: deg, deg_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_quad, input->deg_quad_inc[region], region); */
 }
 
 
@@ -102,10 +100,7 @@ d4est_mesh_set_quadratures_after_amr
   d4est_mesh_initial_extents_t* input = user_ctx;
   int region = elem_data->region;
   elem_data->deg_quad = input->deg_quad_inc[region] +
-                            elem_data->deg;
-
-  /* printf("[AFTER_AMR]: deg, deg_quad, deg_quad_inc, region = %d, %d, %d, %d\n", elem_data->deg, elem_data->deg_quad, input->deg_quad_inc[region], region); */
-               
+                            elem_data->deg;               
 }
 
 void
@@ -447,11 +442,8 @@ d4est_mesh_compute_mortar_quadrature_quantities
  d4est_mesh_data_t* d4est_factors
 )
 {
-
-  /* printf("[D4EST_INFO]: Computing quadrature quantities\n"); */
   d4est_mortars_fcn_ptrs_t flux_fcns;
   flux_fcns.flux_interface_fcn = d4est_mesh_compute_mortar_quadrature_quantities_interface_callback;
-  /* flux_fcns.flux_interface_fcn = NULL; */
   flux_fcns.flux_boundary_fcn = d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback;
   flux_fcns.user_ctx = (void*)d4est_factors;
   
@@ -599,6 +591,12 @@ d4est_mesh_data_init()
   d4est_factors->n_m_mortar_quad = NULL;
   d4est_factors->xyz_m_mortar_quad = NULL;
   d4est_factors->xyz_m_mortar_lobatto = NULL;
+
+  d4est_factors->j_div_sj_min = NULL;
+  d4est_factors->diam_face = NULL;
+  d4est_factors->diam_volume = NULL;
+  d4est_factors->area = NULL;
+  d4est_factors->volume = NULL;
   
   return d4est_factors;
 }
@@ -657,7 +655,29 @@ d4est_mesh_data_realloc
   d4est_factors->xyz_m_mortar_lobatto = P4EST_REALLOC(d4est_factors->xyz_m_mortar_lobatto,
                                                       double,
                                                       local_vector_boundary_nodes_quad);
+
+
+  d4est_factors->j_div_sj_min = P4EST_REALLOC(d4est_factors->j_div_sj_min,
+                                              double,
+                                              p4est->local_num_quadrants*(P4EST_FACES));
+
+
+  d4est_factors->diam_face = P4EST_REALLOC(d4est_factors->diam_face,
+                                              double,
+                                              p4est->local_num_quadrants*(P4EST_FACES));
   
+
+  d4est_factors->area = P4EST_REALLOC(d4est_factors->area,
+                                              double,
+                                              p4est->local_num_quadrants*(P4EST_FACES));
+
+  d4est_factors->volume = P4EST_REALLOC(d4est_factors->volume,
+                                              double,
+                                              p4est->local_num_quadrants);
+
+  d4est_factors->diam_volume = P4EST_REALLOC(d4est_factors->diam_volume,
+                                             double,
+                                             p4est->local_num_quadrants);
 }
 
 
@@ -667,20 +687,9 @@ d4est_mesh_data_printout
  d4est_mesh_data_t* d4est_factors
 )
 {
-  /* int local_nodes = d4est_factors->local_sizes.local_nodes; */
-  /* int local_nodes_quad = d4est_factors->local_sizes.local_nodes_quad; */
-  /* int vector_nodes = local_nodes*(P4EST_DIM);  */
-  /* int matrix_nodes_quad = local_nodes_quad*(P4EST_DIM)*(P4EST_DIM); */
   int local_matrix_mortar_nodes_quad = d4est_factors->local_sizes.local_mortar_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
   int local_vector_mortar_nodes_quad = d4est_factors->local_sizes.local_mortar_nodes_quad*(P4EST_DIM);
   int local_vector_boundary_nodes_quad = d4est_factors->local_sizes.local_boundary_nodes_quad*(P4EST_DIM);
-
-  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->drst_dxyz_p_mortar_quad_porder, local_matrix_mortar_nodes_quad); */
-  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->drst_dxyz_m_mortar_quad, local_matrix_mortar_nodes_quad); */
-  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->xyz_m_mortar_lobatto, local_vector_boundary_nodes_quad); */
-  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->xyz_m_mortar_quad, local_vector_boundary_nodes_quad); */
-  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->n_m_mortar_quad, local_vector_mortar_nodes_quad); */
-  /* DEBUG_PRINT_ARR_DBL_SUM(d4est_factors->sj_m_mortar_quad, d4est_factors->local_sizes.local_mortar_nodes_quad); */
 }
 
 
@@ -702,6 +711,11 @@ d4est_mesh_data_destroy
     P4EST_FREE(d4est_factors->xyz_m_mortar_quad);
     P4EST_FREE(d4est_factors->xyz_m_mortar_lobatto);
     P4EST_FREE(d4est_factors->sj_m_mortar_quad);
+    P4EST_FREE(d4est_factors->diam_face);
+    P4EST_FREE(d4est_factors->j_div_sj_min);
+    P4EST_FREE(d4est_factors->diam_volume);
+    P4EST_FREE(d4est_factors->area);
+    P4EST_FREE(d4est_factors->volume);
     P4EST_FREE(d4est_factors);
   }
 }
@@ -711,7 +725,8 @@ d4est_mesh_init_element_size_parameters
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom
+ d4est_geometry_t* d4est_geom,
+ d4est_mesh_data_t* d4est_factors
 )
 {
   d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t,1);
@@ -777,7 +792,8 @@ d4est_mesh_init_element_size_parameters
               diam_volume = diam_temp;
           }
         }
-        ed->diam_volume = diam_volume;
+        /* ed->diam_volume = diam_volume; */
+        d4est_factors->diam_volume[ed->id] = diam_volume;
   
         d4est_geometry_compute_dxyz_drst
           (
@@ -803,7 +819,9 @@ d4est_mesh_init_element_size_parameters
         for (int i = 0; i < volume_nodes_lobatto; i++)
           ones[i] = 1.;
 
-        ed->volume = d4est_quadrature_innerproduct
+        /* ed->volume = d4est_quadrature_innerproduct */
+        d4est_factors->volume[ed->id]
+          = d4est_quadrature_innerproduct
                      (
                       d4est_ops,
                       d4est_geom,
@@ -844,7 +862,9 @@ d4est_mesh_init_element_size_parameters
              COMPUTE_NORMAL_USING_JACOBIAN
             );
 
-          ed->area[f] = d4est_quadrature_innerproduct
+          /* ed->area[f] = d4est_quadrature_innerproduct */
+          d4est_factors->area[ed->id*(P4EST_FACES) + f]
+            = d4est_quadrature_innerproduct
                         (
                          d4est_ops,
                          d4est_geom,
@@ -872,9 +892,12 @@ d4est_mesh_init_element_size_parameters
             }
           }
 
-          ed->diam_face[f] = diam_face;
+          
+          /* ed->diam_face[f] = diam_face; */
+          d4est_factors->diam_face[ed->id*(P4EST_FACES) + f] = diam_face;
 
-          ed->j_div_sj_min[f] = d4est_util_min_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto);
+          /* ed->j_div_sj_min[f] = d4est_util_min_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto); */
+          d4est_factors->j_div_sj_min[ed->id*(P4EST_FACES) + f] = d4est_util_min_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto);
  
         }
      
@@ -1225,54 +1248,6 @@ d4est_mesh_debug_find_node
   return -1;
 }
 
-/* void */
-/* d4est_mesh_print_element_data_debug */
-/* ( */
-/*  p4est_t* p4est */
-/* ) */
-/* { */
-/* /\* #ifndef D4EST_DEBUG *\/ */
-/* /\*   D4EST_ABORT("compile with the debug flag if you want to print curved element data"); *\/ */
-/* /\* #endif *\/ */
-
-  
-/*   for (p4est_topidx_t tt = p4est->first_local_tree; */
-/*        tt <= p4est->last_local_tree; */
-/*        ++tt) */
-/*     { */
-/*       p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-/*       sc_array_t* tquadrants = &tree->quadrants; */
-/*       int Q = (p4est_locidx_t) tquadrants->elem_count; */
-/*       for (int q = 0; q < Q; ++q) { */
-/*         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-/*         d4est_element_data_t* ed = quad->p.user_data; */
-
-/*         printf("** Element %d **\n", ed->id); */
-/*         printf("deg, deg_quad = %d, %d\n", ed->deg, ed->deg_quad); */
-/*         printf("tree, tree_quadid = %d, %d\n", ed->tree, ed->tree_quadid); */
-
-        
-/*         int volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM), ed->deg ); */
-       
-/* #ifndef NDEBUG */
-/* #if (P4EST_DIM)==2 */
-/*         printf("q = %d, %d, dq = %d\n", ed->q[0], ed->q[1], ed->dq); */
-/*         DEBUG_PRINT_2ARR_DBL(ed->xyz[0], ed->xyz[1], volume_nodes); */
-/*         /\* DEBUG_PRINT_3ARR_DBL(ed->xyz[0], ed->xyz[1], volume_nodes); *\/ */
-/* #elif (P4EST_DIM)==3 */
-/*         printf("q = %d, %d, %d, dq = %d\n", ed->q[0], ed->q[1], ed->q[2], ed->dq); */
-/*         DEBUG_PRINT_3ARR_DBL(ed->xyz[0], ed->xyz[1], ed->xyz[2], volume_nodes); */
-/* #else */
-/*         D4EST_ABORT("DIM = 2 or 3"); */
-/* #endif */
-/* #endif */
-/* /\* #else *\/ */
-/*         /\* D4EST_ABORT("DEBUG flag must be set"); *\/ */
-/* /\* #endif *\/ */
-/*       } */
-/*     } */
-/* } */
-
 double
 d4est_mesh_compute_l2_norm_sqr
 (
@@ -1351,6 +1326,21 @@ d4est_mesh_compute_l2_norm_sqr
   return l2_norm_sqr;
 }
 
+d4est_mesh_size_parameters_t
+d4est_mesh_get_size_parameters
+(
+ d4est_mesh_data_t* factors
+)
+{
+  d4est_mesh_size_parameters_t size_params;
+  size_params.j_div_sj_min = factors->j_div_sj_min;
+  size_params.diam_face = factors->diam_face;
+  size_params.diam_volume = factors->diam_volume;
+  size_params.area = factors->area;
+  size_params.volume = factors->volume;
+  return size_params;
+}
+
 
 d4est_mesh_local_sizes_t
 d4est_mesh_init_element_data
@@ -1370,7 +1360,6 @@ d4est_mesh_init_element_data
   int local_nodes = 0;
   int local_sqr_nodes = 0;
   int local_nodes_quad = 0;
-  /* int local_sqr_nodes_invM = 0; */
 
   /* strides */
   int sqr_nodal_stride = 0;
@@ -1407,22 +1396,12 @@ d4est_mesh_init_element_data
         elem_data->quad_stride = quad_stride;
 
         elem_data->region = d4est_geom->get_region(d4est_geom, elem_data->q, elem_data->dq, elem_data->tree);
-
         
         /* user_fcn should set degree,
            or the degree will be assumed to be set */
         if (user_fcn != NULL){
-          /* problem_set_degrees_donald_trump(elem_data, user_ctx); */
           user_fcn(elem_data, user_ctx);
         }
-
-        /* printf("[UPDATE]: deg, deg_quad, region = %d, %d, %d\n", elem_data->deg, elem_data->deg_quad, elem_data->region); */
-
-        /* printf("elem_data->deg = %d\n", elem_data->deg); */
-        /* printf("elem_data->deg_quad = %d\n", elem_data->deg_quad); */
-        
-        /* elem_data->deg = 2; */
-        /* elem_data->deg_quad = 2; */
 
         D4EST_ASSERT(elem_data->deg > 0
                    &&
@@ -1588,18 +1567,8 @@ d4est_mesh_data_compute
         else {
           D4EST_ABORT("Not a supported compute method for DX");
         }
-
-        /* for (int d = 0; d < (P4EST_DIM); d++){ */
-        /*   for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
-        /*     double *dxyz_print = &ed->xyz_rst_quad[d][d1][0]; */
-        /*     DEBUG_PRINT_ARR_DBL(dxyz_print, volume_nodes_quad); */
-        /*   } */
-        /* } */
-        
-    
         double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
                                                                       ed);
-
         d4est_geometry_compute_jacobian
           (
            md_on_e.xyz_rst_quad,
@@ -1625,6 +1594,15 @@ d4est_mesh_data_compute
      d4est_ops,
      d4est_geom,
      d4est_quad,
+     d4est_factors
+    );
+
+
+  d4est_mesh_init_element_size_parameters
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom,
      d4est_factors
     );
   
@@ -1725,7 +1703,9 @@ d4est_mesh_update
                                  d4est_factors,
                                  user_fcn,//problem_set_degrees_donald_trump,
                                  user_ctx);
-  
+
+
+  /* WILL BE DEPRECATED SOON */
   if (quad_init_option == INITIALIZE_QUADRATURE_DATA)
     {
       d4est_quadrature_reinit(
@@ -1738,8 +1718,6 @@ d4est_mesh_update
       );
     }
 
-    
-  
   if (geom_init_option == INITIALIZE_GEOMETRY_DATA)
     {
       d4est_mesh_data_realloc
@@ -1759,23 +1737,9 @@ d4est_mesh_update
          d4est_quad,
          d4est_factors
         );
-
-      
     }
 
-  if (alias_init_option == INITIALIZE_GEOMETRY_ALIASES ||
-      geom_init_option == INITIALIZE_GEOMETRY_DATA /* if this is false, then this will be a waste of time */
-     ){
 
-    d4est_mesh_init_element_size_parameters
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom
-      );
-
-  }
-  
   return local_sizes.local_nodes;
 }
 

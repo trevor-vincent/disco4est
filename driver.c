@@ -52,7 +52,6 @@ int main(int argc, char *argv[])
 
   p4est_init(NULL, SC_LP_ERROR);
   /* p4est_init(NULL, SC_LP_ALWAYS); */
-
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                     (argc == 2) ? argv[1] : "options.input",

@@ -144,6 +144,7 @@ problem_init
   
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
+  penalty_data.size_params = NULL;
   penalty_data.u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
   penalty_data.gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
@@ -290,6 +291,7 @@ problem_init
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
+    ip_norm_data.size_params = NULL;
 
     energy_norm_ctx.energy_norm_data = &ip_norm_data;
     energy_norm_ctx.energy_estimator_sq_local = stats->total;

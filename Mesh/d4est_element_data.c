@@ -186,7 +186,6 @@ d4est_element_data_copy_from_vec_to_storage_callback
   d4est_element_data_t* d4est_element_data = (d4est_element_data_t *) q->p.user_data;
   double* u = (double*) info->p4est->user_pointer;
   int* stride = (int*) user_data;
-  
   int dim = (P4EST_DIM);
   int deg = d4est_element_data->deg;
   int volume_nodes = d4est_lgl_get_nodes(dim,deg);

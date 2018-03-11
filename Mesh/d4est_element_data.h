@@ -35,20 +35,7 @@ typedef struct {
   p4est_qcoord_t q [(P4EST_DIM)];
   p4est_qcoord_t dq;
   
-  /* points on lobatto grid */
-  /* double* xyz [(P4EST_DIM)];  */
-
-  /* geometric factors for volume quadrature */
-  /* double* J_quad; /\* Jacobian *\/ */
-  /* double* xyz_quad [(P4EST_DIM)]; /\* points on quadrature grid *\/ */
-  /* double* xyz_rst_quad[(P4EST_DIM)][(P4EST_DIM)]; /\* mapping derivatives *\/ */
-  /* double* rst_xyz_quad[(P4EST_DIM)][(P4EST_DIM)]; /\* inverse mapping derivatives *\/ */
-
-  /* estimator variables */
-  /* double local_estimator; */
-  /* double local_predictor; */
-
-  /* local nodal fields */
+  /* WILL BE DEPRECATED SOON */
   double u_elem[MAX_NODES];   /* storage for MPI transfers */
   double* dudr_elem[(P4EST_DIM)];   /* alias for dudr */
   double* Au_elem;  /* alias for Au */
@@ -57,11 +44,11 @@ typedef struct {
   int deg_quad; /* deg for volume quadrature */
 
   /* different element size parameters */
-  double j_div_sj_min [(P4EST_FACES)];
-  double diam_face [(P4EST_FACES)];
-  double diam_volume;
-  double area [(P4EST_FACES)];
-  double volume;
+  /* double j_div_sj_min [(P4EST_FACES)]; */
+  /* double diam_face [(P4EST_FACES)]; */
+  /* double diam_volume; */
+  /* double area [(P4EST_FACES)]; */
+  /* double volume; */
   
 } d4est_element_data_t;
 

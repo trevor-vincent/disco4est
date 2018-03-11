@@ -232,8 +232,7 @@ problem_init
  const char* input_file,
  sc_MPI_Comm mpicomm
 )
-{
-  
+{ 
   int initial_nodes = initial_extents->initial_nodes;
   two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file
                                                                            );
@@ -367,18 +366,18 @@ problem_init
 
   int iterations = 1;
 
-  zlog_category_t *c_geom = zlog_get_category("d4est_geometry_uncompactified");
-  d4est_geometry_t* d4est_geom_uncompactified = d4est_geometry_new(p4est->mpirank, input_file,"uncompactified_geometry",c_geom);
-  d4est_mesh_data_t* d4est_factors_uncompactified = d4est_mesh_data_init(p4est);
+  zlog_category_t *c_geom = zlog_get_category("d4est_geometry_compactified");
+  d4est_geometry_t* d4est_geom_compactified = d4est_geometry_new(p4est->mpirank, input_file,"compactified_geometry",c_geom);
+  d4est_mesh_data_t* d4est_factors_compactified = d4est_mesh_data_init(p4est);
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
-
+    
 
     d4est_mesh_data_realloc
       (
        p4est,
-       d4est_factors_uncompactified,
+       d4est_factors_compactified,
        d4est_factors->local_sizes
       );
     
@@ -388,11 +387,15 @@ problem_init
        *ghost,
        *ghost_data,
        d4est_ops,
-       d4est_geom_uncompactified,
+       d4est_geom_compactified,
        d4est_quad,
-       d4est_factors_uncompactified
+       d4est_factors_compactified
       );
 
+    d4est_ip_energy_norm_data_t ip_norm_data;
+    penalty_data.size_params = NULL;
+    ip_norm_data.size_params = NULL;
+    sipg_params->size_params = NULL;
     
     double* estimator =
       d4est_estimator_bi_compute
@@ -407,8 +410,8 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_factors,
-       d4est_geom_uncompactified,
-       d4est_factors_uncompactified,
+       d4est_geom_compactified,
+       d4est_factors_compactified,
        d4est_quad,
        NO_DIAM_APPROX
       );
@@ -457,7 +460,7 @@ problem_init
          level
         );
     }
-    d4est_ip_energy_norm_data_t ip_norm_data;
+
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
@@ -716,8 +719,8 @@ problem_init
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
-  d4est_mesh_data_destroy(d4est_factors_uncompactified);
-  d4est_geometry_destroy(d4est_geom_uncompactified);  
+  d4est_mesh_data_destroy(d4est_factors_compactified);
+  d4est_geometry_destroy(d4est_geom_compactified);  
   d4est_amr_destroy(d4est_amr);
   /* d4est_amr_destroy(d4est_amr_use_puncture_finder); */
   /* d4est_amr_destroy(d4est_amr_p_refine_only_in_center_cube); */

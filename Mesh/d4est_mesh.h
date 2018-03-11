@@ -9,7 +9,7 @@
 
 typedef enum {INITIALIZE_QUADRATURE_DATA, DO_NOT_INITIALIZE_QUADRATURE_DATA} d4est_mesh_quadrature_data_init_option_t;
 typedef enum {INITIALIZE_GEOMETRY_DATA, DO_NOT_INITIALIZE_GEOMETRY_DATA} d4est_mesh_geometry_data_init_option_t;
-typedef enum {INITIALIZE_GEOMETRY_ALIASES, DO_NOT_INITIALIZE_GEOMETRY_ALIASES}d4est_mesh_geometry_aliases_init_option_t;
+typedef enum {INITIALIZE_GEOMETRY_ALIASES,              DO_NOT_INITIALIZE_GEOMETRY_ALIASES}d4est_mesh_geometry_aliases_init_option_t;
 typedef enum {DISCARD_BOUNDARY, DISCARD_INTERIOR, DISCARD_NOTHING} d4est_mesh_boundary_option_t;
 typedef enum {INIT_FIELD_NOT_SET, INIT_FIELD_ON_LOBATTO, INIT_FIELD_ON_QUAD} d4est_mesh_init_field_option_t;
 typedef enum {PRINT, DO_NOT_PRINT, PRINT_ON_ERROR} d4est_mesh_print_option_t;
@@ -54,6 +54,15 @@ typedef struct {
   
 } d4est_mesh_data_on_element_t;
 
+typedef struct {
+
+  double* j_div_sj_min;
+  double* diam_face;
+  double* diam_volume;
+  double* area;
+  double* volume;
+  
+} d4est_mesh_size_parameters_t;
 
 typedef struct {
 
@@ -71,6 +80,12 @@ typedef struct {
   double* n_m_mortar_quad;
   double* xyz_m_mortar_quad;
   double* xyz_m_mortar_lobatto;
+
+  double* j_div_sj_min;
+  double* diam_face;
+  double* diam_volume;
+  double* area;
+  double* volume;
 
 } d4est_mesh_data_t;
 
@@ -105,6 +120,7 @@ void d4est_mesh_init_field(p4est_t *p4est,double *node_vec,d4est_xyz_fcn_t init_
 int d4est_mesh_update(p4est_t *p4est,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mesh_quadrature_data_init_option_t quad_init_option,d4est_mesh_geometry_data_init_option_t geom_init_option,d4est_mesh_geometry_aliases_init_option_t alias_init_option,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
 void d4est_mesh_data_compute(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors);
 d4est_mesh_local_sizes_t d4est_mesh_init_element_data(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
+d4est_mesh_size_parameters_t d4est_mesh_get_size_parameters(d4est_mesh_data_t *factors);
 double *d4est_mesh_get_jacobian_on_quadrature_points(d4est_mesh_data_t *d4est_factors,d4est_element_data_t *ed);
 double d4est_mesh_compute_l2_norm_sqr(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,double *nodal_vec,int local_nodes,int(*skip_element_fcn)(d4est_element_data_t *),double *l2_array);
 int d4est_mesh_debug_find_node(p4est_t *p4est,int node);

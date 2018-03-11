@@ -38,7 +38,7 @@ compactify_inner_shell = 1
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
-[uncompactified_geometry]
+[compactified_geometry]
 name = cubed_sphere_7tree
 R0 = 10
 R1 = 1000

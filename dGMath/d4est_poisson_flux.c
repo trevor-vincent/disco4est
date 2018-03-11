@@ -40,7 +40,6 @@ d4est_poisson_flux_boundary
   int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, deg_quad);
   double* u_m_on_f_m = P4EST_ALLOC(double, face_nodes_m_lobatto);
   double* u_m_on_f_m_quad = P4EST_ALLOC(double, face_nodes_m_quad);
-  /* double* j_div_sj_quad = P4EST_ALLOC(double, face_nodes_m_quad); */
   double* dudr_m_on_f_m [(P4EST_DIM)];
   double* dudr_m_on_f_m_quad [(P4EST_DIM)];
   double* dudx_m_on_f_m_quad [(P4EST_DIM)];
@@ -49,7 +48,6 @@ d4est_poisson_flux_boundary
 
   double* n_on_f_m_quad [(P4EST_DIM)];
   double* xyz_on_f_m_quad [(P4EST_DIM)];
-  /* double* n_sj_on_f_m_quad [(P4EST_DIM)]; */
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* xyz_on_f_m_lobatto [(P4EST_DIM)];
   double* sj_on_f_m_quad = &d4est_factors->sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
@@ -68,15 +66,9 @@ d4est_poisson_flux_boundary
      }
    }
   
-  
-  /* D4EST_ALLOC_DBYD_MAT(drst_dxyz_quad, face_nodes_m_quad); */
-  /* D4EST_ALLOC_DIM_VEC(xyz_on_f_m_lobatto, face_nodes_m_lobatto); */
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m, face_nodes_m_lobatto);
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m_quad, face_nodes_m_quad);
   D4EST_ALLOC_DIM_VEC(dudx_m_on_f_m_quad,  face_nodes_m_quad);
-  /* D4EST_ALLOC_DIM_VEC(n_on_f_m_quad, face_nodes_m_quad); */
-  /* D4EST_ALLOC_DIM_VEC(n_sj_on_f_m_quad, face_nodes_m_quad); */
-  /* D4EST_ALLOC_DIM_VEC(xyz_on_f_m_quad, face_nodes_m_quad); */
 
   d4est_quadrature_mortar_t face_object; /* will not be used anyway */
   face_object.dq = e_m->dq;
@@ -240,6 +232,7 @@ d4est_poisson_flux_boundary
        d4est_ops,
        d4est_geom,
        d4est_quad,
+       d4est_factors,
        &boundary_data,
        d4est_poisson_flux_params->bc_data,
        d4est_poisson_flux_params->flux_data
@@ -858,6 +851,7 @@ static void
      d4est_ops,
      d4est_geom,
      d4est_quad,
+     d4est_factors,
      &interface_data,
      d4est_poisson_flux_params->flux_data
     );
