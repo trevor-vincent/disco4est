@@ -100,6 +100,7 @@ typedef struct {
   int do_not_solve;
   int use_compactified_size_params;
   int use_error_l2_as_estimator;
+  int use_dirichlet;
   
 } two_punctures_init_params_t;
 
@@ -129,6 +130,10 @@ int two_punctures_init_params_handler
     D4EST_ASSERT(pconfig->use_compactified_size_params == -1);
     pconfig->use_compactified_size_params = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"problem",name,"use_dirichlet")) {
+    D4EST_ASSERT(pconfig->use_dirichlet == -1);
+    pconfig->use_dirichlet = atoi(value);
+  }
   else if (d4est_util_match_couple(section,"problem",name,"use_error_l2_as_estimator")) {
     D4EST_ASSERT(pconfig->use_error_l2_as_estimator == -1);
     pconfig->use_error_l2_as_estimator = atoi(value);
@@ -149,6 +154,7 @@ two_punctures_init_params_input
 {
   two_punctures_init_params_t input;
   input.do_not_solve = -1;
+  input.use_dirichlet = -1;
   input.use_compactified_size_params = -1;
   input.use_error_l2_as_estimator = -1;
 
@@ -159,6 +165,7 @@ two_punctures_init_params_input
   D4EST_CHECK_INPUT("problem", input.do_not_solve, -1);
   D4EST_CHECK_INPUT("problem", input.use_compactified_size_params, -1);
   D4EST_CHECK_INPUT("problem", input.use_error_l2_as_estimator, -1);
+  D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
   
   return input;
 }
@@ -220,30 +227,51 @@ problem_init
 { 
   int initial_nodes = initial_extents->initial_nodes;
   two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file
-                                                                           );
-  
+                                                                           ); 
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
  
-  
-  d4est_poisson_dirichlet_bc_t bc_data_for_jac;
-  bc_data_for_jac.dirichlet_fcn = zero_fcn;
-  bc_data_for_jac.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
-  d4est_poisson_dirichlet_bc_t bc_data_for_res;
-  bc_data_for_res.dirichlet_fcn = zero_fcn;
-  bc_data_for_res.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
-  
   d4est_poisson_dirichlet_bc_t bc_data_for_bi;
   bc_data_for_bi.dirichlet_fcn = zero_fcn;
   bc_data_for_bi.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
-  d4est_poisson_flux_data_t* flux_data_for_bi = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_bi);
-  
-  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac);
-  
-  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_for_res);
+  d4est_poisson_flux_data_t* flux_data_for_bi
+    = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_bi);
 
+
+  
+  d4est_poisson_flux_data_t* flux_data_for_jac = NULL;
+  d4est_poisson_flux_data_t* flux_data_for_res = NULL;
+
+  if(init_params.use_dirichlet){
+    d4est_poisson_dirichlet_bc_t bc_data_for_jac;
+    bc_data_for_jac.dirichlet_fcn = zero_fcn;
+    bc_data_for_jac.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
+
+    d4est_poisson_dirichlet_bc_t bc_data_for_res;
+    bc_data_for_res.dirichlet_fcn = zero_fcn;
+    bc_data_for_res.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
+  
+    flux_data_for_jac
+      = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac);
+  
+    flux_data_for_res
+      = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_for_res);
+  }
+  else {  
+    d4est_poisson_robin_bc_t bc_data_for_jac;
+    bc_data_for_jac.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
+    bc_data_for_jac.robin_rhs = two_punctures_robin_bc_rhs_fcn;
+
+    d4est_poisson_robin_bc_t bc_data_for_res;
+    bc_data_for_res.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
+    bc_data_for_res.robin_rhs = two_punctures_robin_bc_rhs_fcn;
+  
+    flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, BC_ROBIN, &bc_data_for_jac);
+    flux_data_for_res = d4est_poisson_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_for_res);
+  }
+  
   problem_ctx_t ctx;
   ctx.two_punctures_params = &two_punctures_params;
   ctx.flux_data_for_jac = flux_data_for_jac;

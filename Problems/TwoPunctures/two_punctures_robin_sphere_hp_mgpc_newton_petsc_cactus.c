@@ -302,6 +302,7 @@ problem_init
   init_two_punctures_data(&two_punctures_params);
   
   d4est_amr_smooth_pred_params_t smooth_pred_params = d4est_amr_smooth_pred_params_input(input_file);
+  
   d4est_poisson_robin_bc_t bc_data_for_jac;
   bc_data_for_jac.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
   bc_data_for_jac.robin_rhs = two_punctures_robin_bc_rhs_fcn;

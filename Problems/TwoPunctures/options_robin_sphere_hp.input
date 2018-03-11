@@ -11,6 +11,7 @@ region1_deg_quad_inc = 0
 do_not_solve = 0
 use_compactified_size_params = 0
 use_error_l2_as_estimator = 0
+use_dirichlet = 1
 
 [amr]
 scheme = smooth_pred
