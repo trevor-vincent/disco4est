@@ -36,17 +36,6 @@
 #include "two_punctures_cactus_fcns.h"
 
 static
-int in_bin(d4est_element_data_t* ed, int bin){
-  if (bin == ed->tree){
-    return 1;
-  }
-  else {
-    return 0;
-  }
-}
-
-
-static
 double solve_for_c
 (
  double c,
@@ -110,6 +99,7 @@ typedef struct {
   
   int do_not_solve;
   int use_compactified_size_params;
+  int use_error_l2_as_estimator;
   
 } two_punctures_init_params_t;
 
@@ -139,6 +129,10 @@ int two_punctures_init_params_handler
     D4EST_ASSERT(pconfig->use_compactified_size_params == -1);
     pconfig->use_compactified_size_params = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"problem",name,"use_error_l2_as_estimator")) {
+    D4EST_ASSERT(pconfig->use_error_l2_as_estimator == -1);
+    pconfig->use_error_l2_as_estimator = atoi(value);
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -156,6 +150,7 @@ two_punctures_init_params_input
   two_punctures_init_params_t input;
   input.do_not_solve = -1;
   input.use_compactified_size_params = -1;
+  input.use_error_l2_as_estimator = -1;
 
   if (ini_parse(input_file, two_punctures_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
@@ -163,6 +158,7 @@ two_punctures_init_params_input
 
   D4EST_CHECK_INPUT("problem", input.do_not_solve, -1);
   D4EST_CHECK_INPUT("problem", input.use_compactified_size_params, -1);
+  D4EST_CHECK_INPUT("problem", input.use_error_l2_as_estimator, -1);
   
   return input;
 }
@@ -182,7 +178,7 @@ amr_mark_element
   problem_ctx_t* ctx = user;
 
   double eta2_percentile
-    = d4est_estimator_stats_get_percentile(&stats[elem_data->tree],params->percentile);
+    = d4est_estimator_stats_get_percentile(stats,params->percentile);
   
   return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
 }
@@ -413,20 +409,28 @@ problem_init
        NO_DIAM_APPROX
       );
 
-
-    
-    d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,7);
-    d4est_estimator_stats_compute_per_bin(p4est, estimator, stats, 7, in_bin);
-    d4est_estimator_stats_print(&stats[0]);
-    d4est_estimator_stats_print(&stats[1]);
-    d4est_estimator_stats_print(&stats[2]);
-    d4est_estimator_stats_print(&stats[3]);
-    d4est_estimator_stats_print(&stats[4]);
-    d4est_estimator_stats_print(&stats[5]);
-    d4est_estimator_stats_print(&stats[6]);
-
+    d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
+    d4est_estimator_stats_compute(p4est, estimator, stats);
     d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_prev, error, prob_vecs.local_nodes);
-
+    double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
+    
+    if(init_params.use_error_l2_as_estimator){
+      d4est_mesh_compute_l2_norm_sqr
+        (
+         p4est,
+         d4est_ops,
+         d4est_geom,
+         d4est_quad,
+         d4est_factors,
+         error,
+         prob_vecs.local_nodes,
+         NULL,
+         error_l2
+        );
+      
+      d4est_util_copy_1st_to_2nd(error_l2, estimator, p4est->local_num_quadrants);
+    }    
+    
     d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
     if (level != 0){
       DEBUG_PRINT_ARR_DBL(smooth_pred_data->predictor,p4est->local_num_quadrants);
@@ -452,8 +456,8 @@ problem_init
          "d4est_vtk",
          (const char * []){"u","u_prev","error", NULL},
          (double* []){prob_vecs.u, u_prev, error},
-         (const char * []){"estimator",NULL},
-         (double* []){estimator},
+         (const char * []){"estimator,error_l2",NULL},
+         (double* []){estimator,error_l2},
          level
         );
     }
@@ -463,9 +467,7 @@ problem_init
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
 
 
-    double total_est = 0.;
-    for (int t = 0; t < 7; t++)
-      total_est += stats[t].total;
+    double total_est = stats[0].total;
     
     energy_norm_ctx.energy_norm_data = &ip_norm_data;
     energy_norm_ctx.energy_estimator_sq_local = total_est;
@@ -711,7 +713,7 @@ problem_init
       multigrid_data_destroy(mg_data);
       multigrid_matrix_operator_destroy(user_callbacks);
    
-
+      P4EST_FREE(error_l2);
     P4EST_FREE(estimator);
   }
 
@@ -726,6 +728,7 @@ problem_init
   d4est_poisson_flux_destroy(flux_data_for_jac);
   d4est_poisson_flux_destroy(flux_data_for_res);
   P4EST_FREE(error);
+
   P4EST_FREE(u_prev);
   P4EST_FREE(prob_vecs.u);
   P4EST_FREE(prob_vecs.Au);

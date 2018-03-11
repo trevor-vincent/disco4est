@@ -650,7 +650,7 @@ two_punctures_initial_guess
   /* if (r2 > 10.) */
   /*   return 1/(r2); */
   /* else */
-  return 0.;
+  return 1.;
 }
 
 

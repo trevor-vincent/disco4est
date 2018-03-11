@@ -1319,10 +1319,6 @@ d4est_poisson_flux_sipg_params_new
   d4est_poisson_flux_data->destroy = d4est_poisson_flux_sipg_params_destroy;
 }
 
-
-
-
-
 void
 d4est_poisson_flux_sipg_params_destroy
 (
