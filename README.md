@@ -23,7 +23,7 @@ The dependencies are MPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will need a
 
 1) `git clone --recursive https://github.com/trevor-vincent/d4est && cd d4est`
 
-2) Duplicate one of the `Support/cmake/machine.cmake.*.example` build configuration files to `Support/cmake/machine.cmake` and modify it to fit the local machine.
+2) Duplicate one of the `Support/CMake/machine.cmake.*.example` build configuration files to `Support/CMake/machine.cmake` and modify it to fit the local machine.
   - Adjust the `CMAKE_BUILD_TYPE` variable to `Release` for (much faster) production builds.
   - If you choose to use the bundled libraries, then these will be located in the build directory and will be compiled only once, unless you change cmake commandline options or delete the build directory.
   - The cmake script searches for the MPI build on your system, so this never needs to be specified.
