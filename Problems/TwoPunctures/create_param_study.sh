@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 function write_submit_scinet {
     cat <<EOF1 > submit.sh
 #PBS -l nodes=${6}:ppn=8
@@ -20,7 +19,6 @@ EOF1
 
 }
 
-
 function write_submit_graham {
     cat <<EOF1 > submit.sh
 #!/bin/bash
@@ -32,6 +30,25 @@ function write_submit_graham {
 source /home/tvincent/d4est.env
 cd ${1}
 time mpirun -np $4 ./${2}  2>&1 | tee disco4est.out
+
+EOF1
+}
+
+
+function write_submit_minerva {
+    cat <<EOF1 > submit.sh
+
+#!/bin/bash -
+#SBATCH -J test_d4est           # Job Name
+#SBATCH -o test_d4est.stdout    # Output file name
+#SBATCH -e test_d4est.stderr    # Error file name
+#SBATCH -n 1                    # Number of cores
+#SBATCH --ntasks-per-node 16    # DO NOT TOUCH: number of MPI ranks per node
+#SBATCH -t 24:0:00               # Max run time
+#SBATCH --no-requeue
+
+source path/to/Support/Scripts/submit.env
+mpirun -n 4 path/to/problem_executable
 
 EOF1
 }
@@ -86,8 +103,8 @@ JAC_compute_method = numerical
 
 [compactified_geometry]
 name = cubed_sphere_7tree
-R0 = 10
-R1 = 1000
+R0 = 1
+R1 = 2
 ;R2 = 1000
 compactify_outer_shell = 0
 compactify_inner_shell = 1
@@ -202,14 +219,14 @@ cheby_print_eig = 0;
 EOF
 }
 
-arr1=( 2 3 ) #min_level
-arr2=( 1 2 ) #deg
-arr3=( 0 2) #deg_quad_inc
-arr4=( 4 5 6 ) #hrefine til inview
-arr5=( 0 1 ) #penalty
-arr6=( 2.0 20.0 100.0 ) #domain size
-arr7=( 10 12 ) #Gauss offset
-arr8=( 1000 )
+arr1=( 0 1 ) #min_level
+arr2=( 0 1 ) #deg
+arr3=( .25 1 ) #deg_quad_inc
+arr4=( 0 10000 ) #hrefine til inview
+arr5=( 2 20 ) #penalty
+arr6=( 100 1000 10000 ) #domain size
+arr7=( 1e-5 1e-8) #Gauss offset
+arr8=( 15 30 )
 arr9=( 0 1 )
 
 for a in "${arr1[@]}"
@@ -242,7 +259,7 @@ do
 				hours=$4
 				nodes=$((${cores} / 8))
 				write_options $a $b $c $d $e $f $g $h $i
-				write_submit $rundir $executable $SHORTNAME $cores $hours $nodes
+				write_submit_graham $rundir $executable $SHORTNAME $cores $hours $nodes
 				cp "${executable_path}/${executable}" "${PWD}/${executable}"
 				cd ..
 				
