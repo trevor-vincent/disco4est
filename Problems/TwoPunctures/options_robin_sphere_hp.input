@@ -122,6 +122,17 @@ ksp_converged_reason = 1
 ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 1
 
+[krylov_petsc_no_mg]
+ksp_type = fcg
+ksp_atol = 1e-15
+ksp_rtol = 1e-15
+ksp_max_it = 10000
+ksp_view = 1
+ksp_monitor = 1
+ksp_converged_reason = 1
+ksp_initial_guess_nonzero = 0
+ksp_monitor_singular_value = 1
+
 [multigrid]
 vcycle_imax = 1;
 vcycle_rtol = 1e-9;

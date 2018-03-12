@@ -461,7 +461,7 @@ problem_init
     
     d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
     if (level != 0){
-      DEBUG_PRINT_ARR_DBL(smooth_pred_data->predictor,p4est->local_num_quadrants);
+      /* DEBUG_PRINT_ARR_DBL(smooth_pred_data->predictor,p4est->local_num_quadrants); */
       d4est_vtk_save
         (
          p4est,
@@ -470,8 +470,8 @@ problem_init
          "d4est_vtk",
          (const char * []){"u","u_prev","error", NULL},
          (double* []){prob_vecs.u, u_prev, error},
-         (const char * []){"estimator","predictor",NULL},
-         (double* []){estimator,smooth_pred_data->predictor},
+         (const char * []){"estimator",NULL},
+         (double* []){estimator},
          level
         );
     }
@@ -515,7 +515,7 @@ problem_init
                      (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx }
     );
     
-    if (level != d4est_amr->num_of_amr_steps){
+    if (level != d4est_amr->num_of_amr_steps && level != 0){
 
       if (p4est->mpirank == 0)
         printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level+1);
@@ -627,7 +627,13 @@ problem_init
       newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_params);
 
       krylov_petsc_params_t krylov_params;
-      krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_params);
+
+      if (num_of_levels <= 1){
+        krylov_petsc_input(p4est, input_file, "krylov_petsc_no_mg", &krylov_params);
+      }
+      else {
+        krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_params);
+      }
       
       newton_petsc_solve
         (
