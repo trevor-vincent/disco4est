@@ -22,7 +22,6 @@ EOF1
 function write_submit_graham {
     cat <<EOF1 > submit.sh
 #!/bin/bash
-#SBATCH --account=rrg-pfeiffer
 #SBATCH --ntasks=${4}               # number of MPI processes
 #SBATCH --mem-per-cpu=1024M      # memory; default unit is megabytes
 #SBATCH --time=$5-00:00           # time (DD-HH:MM)
@@ -77,7 +76,7 @@ scheme = smooth_pred
 num_of_amr_steps = 15
 max_degree = 7 
 gamma_h = $3
-initial_error = $4
+initial_pred = $4
 gamma_p = 0.1
 gamma_n = 1.
 inflation_size = 128
@@ -182,6 +181,18 @@ ksp_converged_reason = 1
 ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 1
 
+
+[krylov_petsc_no_mg]
+ksp_type = fcg
+ksp_atol = 1e-15
+ksp_rtol = 1e-15
+ksp_max_it = 10000
+ksp_view = 1
+ksp_monitor = 1
+ksp_converged_reason = 1
+ksp_initial_guess_nonzero = 0
+ksp_monitor_singular_value = 1
+
 [multigrid]
 vcycle_imax = 1;
 vcycle_rtol = 1e-9;
@@ -219,15 +230,15 @@ cheby_print_eig = 0;
 EOF
 }
 
-arr1=( 0 1 ) #min_level
-arr2=( 0 1 ) #deg
-arr3=( .25 1 ) #deg_quad_inc
+arr1=( 1 2 3 4 ) #min_level
+arr2=( 0 ) #deg
+arr3=( .25 ) #deg_quad_inc
 arr4=( 0 10000 ) #hrefine til inview
-arr5=( 2 20 ) #penalty
-arr6=( 100 1000 10000 ) #domain size
-arr7=( 1e-5 1e-8) #Gauss offset
-arr8=( 15 30 )
-arr9=( 0 1 )
+arr5=( 2 ) #penalty
+arr6=( 100000 1000000 10000000 ) #domain size
+arr7=( 1e-8 ) #Gauss offset
+arr8=( 30 )
+arr9=( 1 )
 
 for a in "${arr1[@]}"
 do

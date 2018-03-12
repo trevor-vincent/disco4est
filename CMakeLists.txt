@@ -17,7 +17,7 @@ project(d4est)
 
 # Directory where customize cmake files reside
 set(CMAKE_MODULE_PATH
-  ${CMAKE_SOURCE_DIR}/Support/cmake
+  ${CMAKE_SOURCE_DIR}/Support/CMake
   ${CMAKE_MODULE_PATH}
 )
 include(machine)
