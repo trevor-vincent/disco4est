@@ -102,6 +102,7 @@ problem_init
   L2_norm_ctx.d4est_ops = d4est_ops;
   L2_norm_ctx.d4est_geom = d4est_geom;
   L2_norm_ctx.d4est_quad = d4est_quad;
+  L2_norm_ctx.d4est_factors = d4est_factors;
 
   if (p4est->mpirank == 0)
     d4est_norms_write_headers(
