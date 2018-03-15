@@ -492,7 +492,7 @@ problem_init
          "d4est_vtk",
          (const char * []){"u","u_prev","error", NULL},
          (double* []){prob_vecs.u, u_prev, error},
-         (const char * []){"estimator,error_l2",NULL},
+         (const char * []){"estimator","error_l2",NULL},
          (double* []){estimator,error_l2},
          level
         );
