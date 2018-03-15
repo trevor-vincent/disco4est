@@ -321,7 +321,7 @@ problem_init
   energy_norm_ctx.d4est_geom = d4est_geom;
   energy_norm_ctx.d4est_quad = d4est_quad;
   energy_norm_ctx.d4est_factors = d4est_factors;
-  energy_norm_ctx.fit = NULL;
+  /* energy_norm_ctx.fit = NULL; */
   // These are updated later
   energy_norm_ctx.ghost = *ghost;
   energy_norm_ctx.ghost_data = *ghost_data;

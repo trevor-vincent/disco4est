@@ -89,19 +89,31 @@ d4est_norms_fcn_Linfty
   return norm;
 }
 
+d4est_norms_linear_fit_t*
+d4est_norms_linear_fit_init
+(
+)
+{
+  d4est_norms_linear_fit_t* fit = P4EST_ALLOC(d4est_norms_linear_fit_t, 1);
+  fit->log_norm_data = NULL;
+  fit->dof_data = NULL;
+  fit->num_of_data_entries = 0;
+  fit->stride = 0;
+  return fit;
+}
 
 void
-d4est_norms_fcn_energy_fit
+d4est_norms_linear_fit
 (
  p4est_t* p4est,
- d4est_norms_fcn_energy_fit_t* fit
+ d4est_norms_linear_fit_t* fit
 )
 {
   double slope;
   double intercept;
   d4est_util_linear_regression
     (
-     fit->log_energy_norm_data,
+     fit->log_norm_data,
      fit->dof_data,
      &slope,
      &intercept,
@@ -109,42 +121,46 @@ d4est_norms_fcn_energy_fit
     );
 
   if (p4est->mpirank == 0) {
-    zlog_category_t *c_default = zlog_get_category("d4est_norms_fcn_energy_fit");
-    zlog_info(c_default, "(2): C1 = %f, C2 = %.15f", intercept, slope);
+    zlog_category_t *c_default = zlog_get_category("d4est_norms_linear_fit");
+    zlog_info(c_default, "C1 = %f, C2 = %.15f", intercept, slope);
   }
 }
 
 void
-d4est_norms_fcn_energy_add_entry_and_fit
+d4est_norms_linear_fit_add_entry_and_fit
 (
  p4est_t* p4est,
- d4est_norms_fcn_energy_fit_t* fit,
- double global_energy_norm_sqr,
+ d4est_norms_linear_fit_t* fit,
+ double global_norm_sqr,
  double global_dof
 ){
-  if (global_energy_norm_sqr > 0.){
-    fit->log_energy_norm_data[fit->stride] = log(sqrt(global_energy_norm_sqr));
-    fit->dof_data[fit->stride] = pow(global_dof, 1./(2.*(P4EST_DIM)-1.));
+  if (global_norm_sqr > 0.){
+    fit->num_of_data_entries += 1;
+    fit->log_norm_data = P4EST_REALLOC(fit->log_norm_data, double, fit->num_of_data_entries);
+    fit->dof_data = P4EST_REALLOC(fit->dof_data, double, fit->num_of_data_entries);
+    
+    fit->log_norm_data[fit->stride] = log(sqrt(global_norm_sqr));
+    fit->dof_data[fit->stride] = global_dof;
     fit->stride += 1;
 
     if (fit->stride >= 2){
       if (p4est->mpirank == 0){
-        zlog_category_t *c_default = zlog_get_category("d4est_norms_fcn_energy_fit");
-        zlog_info(c_default, "(1): ||err|| = C1*exp(C2*DOF^(1/%d))", 2*(P4EST_DIM)-1);
-        zlog_info(c_default, "(1): ||err|| = %.15f", sqrt(global_energy_norm_sqr));
+        zlog_category_t *c_default = zlog_get_category("d4est_norms_linear_fit");
+        zlog_info(c_default, "||err|| = C1*exp(C2*DOF)");
+        zlog_info(c_default, "||err|| = %.15f", sqrt(global_norm_sqr));
       }
-      d4est_norms_fcn_energy_fit(p4est,fit);
+      d4est_norms_linear_fit(p4est,fit);
     }
   }
 }
 
 void
-d4est_norms_fcn_energy_destroy_fit
+d4est_norms_linear_fit_destroy
 (
- d4est_norms_fcn_energy_fit_t* fit
+ d4est_norms_linear_fit_t* fit
 )
 {
-  P4EST_FREE(fit->log_energy_norm_data);
+  P4EST_FREE(fit->log_norm_data);
   P4EST_FREE(fit->dof_data);
   P4EST_FREE(fit);
 }
@@ -190,28 +206,28 @@ d4est_norms_fcn_energy
   );
 
   // Need num_nodes for fit
-  int num_nodes;
-  if (ctx->fit != NULL) {
-    sc_reduce(
-      &num_nodes_local,
-      &num_nodes,
-      1,
-      sc_MPI_INT,
-      sc_MPI_SUM,
-      0,
-      sc_MPI_COMM_WORLD
-    );
-  }
+  /* int num_nodes; */
+  /* if (ctx->fit != NULL) { */
+  /*   sc_reduce( */
+  /*     &num_nodes_local, */
+  /*     &num_nodes, */
+  /*     1, */
+  /*     sc_MPI_INT, */
+  /*     sc_MPI_SUM, */
+  /*     0, */
+  /*     sc_MPI_COMM_WORLD */
+  /*   ); */
+  /* } */
   
   // Perform energy norm fit
-  if (ctx->fit != NULL && ctx->p4est->mpirank == 0) {
-    d4est_norms_fcn_energy_add_entry_and_fit(
-      ctx->p4est,
-      ctx->fit,
-      norm_sq,
-      num_nodes
-    );
-  }
+  /* if (ctx->fit != NULL && ctx->p4est->mpirank == 0) { */
+  /*   d4est_norms_fcn_energy_add_entry_and_fit( */
+  /*     ctx->p4est, */
+  /*     ctx->fit, */
+  /*     norm_sq, */
+  /*     num_nodes */
+  /*   ); */
+  /* } */
 
   return sqrt(norm_sq);
 }
@@ -298,7 +314,8 @@ d4est_norms_save
   void **analytical_solution_ctxs,
   const char **norm_names,
   d4est_norm_fcn_t *norm_fcns,
-  void **norm_fcn_ctxs
+  void **norm_fcn_ctxs,
+  d4est_norms_linear_fit_t** linear_fits
 )
 {
   zlog_category_t *c_default = zlog_get_category("d4est_norms");
@@ -380,6 +397,21 @@ d4est_norms_save
       );
 
     }
+
+    if (linear_fits != NULL){
+      for (int i_norms=0; i_norms < num_norms; i_norms++) {
+        if (linear_fits[i_norms] != NULL){
+          d4est_norms_linear_fit_add_entry_and_fit
+            (
+             p4est,
+             linear_fits[i_norms],
+             norms[i_norms],
+             num_nodes
+            );
+        }
+      }        
+    }
+    
 
     // Write to output file
     if (p4est->mpirank == 0) {

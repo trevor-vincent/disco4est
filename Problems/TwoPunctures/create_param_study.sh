@@ -272,8 +272,8 @@ do
 				write_options $a $b $c $d $e $f $g $h $i
 				write_submit_graham $rundir $executable $SHORTNAME $cores $hours $nodes
 				cp "${executable_path}/${executable}" "${PWD}/${executable}"
+				cp "${executable_path}/*.conf" "${PWD}/"
 				cd ..
-				
 				done
 			    done
 			done

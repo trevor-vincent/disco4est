@@ -345,7 +345,7 @@ problem_init
   energy_norm_ctx.d4est_geom = d4est_geom;
   energy_norm_ctx.d4est_quad = d4est_quad;
   energy_norm_ctx.d4est_factors = d4est_factors;
-  energy_norm_ctx.fit = NULL;
+  /* energy_norm_ctx.fit = NULL; */
   // These are updated later
   energy_norm_ctx.ghost = *ghost;
   energy_norm_ctx.ghost_data = *ghost_data;
@@ -360,10 +360,12 @@ problem_init
 
 
   
+  
   d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
   double point [4][100];
   double point_diff [4][100];
+  double point_spec_diff [4][100];
   double point_err [4];
   double point_dof [100];
   
@@ -376,12 +378,18 @@ problem_init
   point[3][0] = 0;
   point_diff[3][0] = 0;
   point_dof[0] = 0;
+  point_spec_diff[0][0] = 0;
+  point_spec_diff[1][0] = 0;
+  point_spec_diff[2][0] = 0;
+  point_spec_diff[3][0] = 0;
 
   int iterations = 1;
 
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry_compactified");
   d4est_geometry_t* d4est_geom_compactified = d4est_geometry_new(p4est->mpirank, input_file,"compactified_geometry",c_geom);
   d4est_mesh_data_t* d4est_factors_compactified = d4est_mesh_data_init(p4est);
+
+  d4est_norms_linear_fit_t* l2_linear_fit = d4est_norms_linear_fit_init();
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
@@ -495,25 +503,26 @@ problem_init
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
 
 
-    double total_est = stats[0].total;
-    
+    double total_est = stats[0].total;    
     energy_norm_ctx.energy_norm_data = &ip_norm_data;
     energy_norm_ctx.energy_estimator_sq_local = total_est;
     energy_norm_ctx.ghost = *ghost;
     energy_norm_ctx.ghost_data = *ghost_data;
 
-    d4est_norms_save(
-                     p4est,
-                     d4est_factors,
-                     (const char * []){ "u", NULL },
-                     (double * []){ prob_vecs.u },
-                     (double * []){ u_prev },
-                     (d4est_xyz_fcn_t []){ NULL },
-                     (void * []){ NULL },
-                     (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
-                     (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy, &d4est_norms_fcn_energy_estimator },
-                     (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx }
-    );
+    d4est_norms_save
+      (
+       p4est,
+       d4est_factors,
+       (const char * []){ "u", NULL },
+       (double * []){ prob_vecs.u },
+       (double * []){ u_prev },
+       (d4est_xyz_fcn_t []){ NULL },
+       (void * []){ NULL },
+       (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
+       (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy, &d4est_norms_fcn_energy_estimator },
+       (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx },
+       (d4est_norms_linear_fit_t * []){ l2_linear_fit, NULL, NULL, NULL }
+      );
     
     if (level != d4est_amr->num_of_amr_steps && level != 0){
 
@@ -687,6 +696,11 @@ problem_init
     double* point3_diff = &point_diff[1][0];
     double* point10_diff = &point_diff[2][0];
     double* point100_diff = &point_diff[3][0];
+    double* point0_spec_diff = &point_spec_diff[0][0];
+    double* point3_spec_diff = &point_spec_diff[1][0];
+    double* point10_spec_diff = &point_spec_diff[2][0];
+    double* point100_spec_diff = &point_spec_diff[3][0];
+    
     int global_nodes;
     sc_reduce(
               &prob_vecs.local_nodes,
@@ -723,10 +737,15 @@ problem_init
         point[p][iterations] = points_global[p];
         point_diff[p][iterations] = fabs(point[p][iterations] - point[p][iterations-1]);
       }
-      DEBUG_PRINT_3ARR_DBL(dof, point0, point0_diff, iterations+1);
-      DEBUG_PRINT_3ARR_DBL(dof, point3, point3_diff, iterations+1);
-      DEBUG_PRINT_3ARR_DBL(dof, point10, point10_diff, iterations+1);
-      DEBUG_PRINT_3ARR_DBL(dof, point100, point100_diff, iterations+1);
+      point_spec_diff[0][iterations] = fabs(point[0][iterations] - 9.1491800832898661e-03);
+      point_spec_diff[1][iterations] = fabs(point[1][iterations] - 1.7465903974328671e-02);
+      point_spec_diff[3][iterations] = fabs(point[2][iterations] - 3.2454599160906218e-03);
+      point_spec_diff[4][iterations] = fabs(point[3][iterations] - 3.0137193015666880e-04);
+      
+      DEBUG_PRINT_4ARR_DBL(dof, point0, point0_diff, point0_spec_diff, iterations+1);
+      DEBUG_PRINT_4ARR_DBL(dof, point3, point3_diff, point3_spec_diff,iterations+1);
+      DEBUG_PRINT_4ARR_DBL(dof, point10, point10_diff, point10_spec_diff,iterations+1);
+      DEBUG_PRINT_4ARR_DBL(dof, point100, point100_diff, point100_spec_diff,iterations+1);
     }
     iterations++;
     
@@ -759,6 +778,7 @@ problem_init
   /* d4est_amr_destroy(d4est_amr_p_refine_only_in_center_cube); */
   /* d4est_amr_destroy(d4est_amr_use_puncture_finder_and_prefine_outside_cube); */
   /* d4est_amr_destroy(d4est_amr_p_refine_everywhere); */
+  d4est_norms_linear_fit_destroy(l2_linear_fit);
   d4est_poisson_flux_destroy(flux_data_for_jac);
   d4est_poisson_flux_destroy(flux_data_for_res);
   P4EST_FREE(error);
