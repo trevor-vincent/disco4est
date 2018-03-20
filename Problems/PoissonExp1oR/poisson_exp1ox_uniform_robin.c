@@ -28,7 +28,18 @@
 #include <d4est_util.h>
 #include <time.h>
 #include <zlog.h>
-#include "poisson_sinx_fcns.h"
+#include "poisson_exp1ox_fcns.h"
+
+
+int
+problem_set_mortar_degree
+(
+ d4est_element_data_t* elem_data,
+ void* user_ctx
+)
+{
+  return elem_data->deg_quad;
+}
 
 void
 problem_init
@@ -57,7 +68,7 @@ problem_init
   bc_data_for_lhs.eval_method = eval_method;
   
   d4est_poisson_dirichlet_bc_t bc_data_for_rhs;
-  bc_data_for_rhs.dirichlet_fcn = poisson_sinx_boundary_fcn;
+  bc_data_for_rhs.dirichlet_fcn = poisson_exp1ox_boundary_fcn;
   bc_data_for_rhs.eval_method = eval_method;
   
   d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs);
@@ -70,8 +81,8 @@ problem_init
 
 
   d4est_elliptic_eqns_t prob_fcns;
-  prob_fcns.build_residual = poisson_sinx_build_residual;
-  prob_fcns.apply_lhs = poisson_sinx_apply_lhs;
+  prob_fcns.build_residual = poisson_exp1ox_build_residual;
+  prob_fcns.apply_lhs = poisson_exp1ox_apply_lhs;
   prob_fcns.user = &ctx;
 
 
@@ -115,7 +126,7 @@ problem_init
   d4est_mesh_init_field(
     p4est,
     prob_vecs.u,
-    poisson_sinx_initial_guess,
+    poisson_exp1ox_initial_guess,
     d4est_ops,
     d4est_geom,
     d4est_factors,
@@ -134,7 +145,7 @@ problem_init
     &prob_vecs,
     flux_data_for_build_rhs,
     prob_vecs.rhs,
-    poisson_sinx_rhs_fcn,
+    poisson_exp1ox_rhs_fcn,
     INIT_FIELD_ON_LOBATTO,
     &ctx
   );
@@ -232,7 +243,7 @@ problem_init
     d4est_mesh_init_field(
       p4est,
       u_analytic,
-      poisson_sinx_analytic_solution,
+      poisson_exp1ox_analytic_solution,
       d4est_ops, // unnecessary?
       d4est_geom, // unnecessary?
       d4est_factors,
@@ -329,7 +340,7 @@ problem_init
       &prob_vecs,
       flux_data_for_build_rhs,
       prob_vecs.rhs,
-      poisson_sinx_rhs_fcn,
+      poisson_exp1ox_rhs_fcn,
       INIT_FIELD_ON_LOBATTO,
       &ctx
     );

@@ -1,0 +1,52 @@
+[initial_mesh]
+min_quadrants = -1
+min_level = 2
+fill_uniform = 1
+region0_deg = 1
+region0_deg_quad_inc = 0
+region1_deg = 1
+region1_deg_quad_inc = 0
+
+[problem]
+use_dirichlet = 1
+
+[flux]
+name = sipg
+sipg_penalty_prefactor = 2.0
+sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO
+sipg_penalty_fcn = maxp_sqr_over_minh
+
+[amr]
+scheme = uniform_p
+num_of_amr_steps = 0
+max_degree = 7
+
+
+[geometry]
+name = cubed_sphere_7tree
+R0 = 5
+R1 = 12
+compactify_outer_shell = 0
+compactify_inner_shell = 1
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_vtk]
+filename = poisson_exp1ox_uniform
+geometry_section = geometry
+output_type = ascii
+grid_type = dg
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
+[d4est_solver_cg]
+iter = 1000000
+atol = 1e-15
+rtol = 1e-15
+monitor = 1
+
+[quadrature]
+name = legendre

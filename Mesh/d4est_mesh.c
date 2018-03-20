@@ -11,6 +11,7 @@
 #include <sc_reduce.h>
 #include <d4est_linalg.h>
 #include <d4est_ghost_data.h>
+
 static
 int d4est_mesh_initial_extents_handler
 (
@@ -2212,6 +2213,3 @@ d4est_mesh_interpolate_at_tree_coord
   data.err = 1;
   return data;
 }
-
-
-

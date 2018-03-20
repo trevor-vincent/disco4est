@@ -45,6 +45,30 @@ poisson_sinx_rhs_fcn
   return (PI)*(PI)*(P4EST_DIM)*poisson_sinx_analytic_solution(x,y,z,user);
 }
 
+
+static double
+poisson_sinx_boundary_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+)
+{
+  return poisson_sinx_analytic_solution
+    (
+     x,
+     y,
+#if (P4EST_DIM)==3
+     z,
+#endif
+     user
+    );
+}
+
+
 static double
 poisson_sinx_initial_guess
 (
@@ -60,7 +84,7 @@ poisson_sinx_initial_guess
 }
 
 static double
-poisson_sinx_boundary_fcn
+poisson_sinx__fcn
 (
  double x,
  double y,

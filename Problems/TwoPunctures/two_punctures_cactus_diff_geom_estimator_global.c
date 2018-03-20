@@ -447,23 +447,26 @@ problem_init
 
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
     d4est_estimator_stats_compute(p4est, estimator, stats);
-    d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_prev, error, prob_vecs.local_nodes);
+    /* d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_prev, error, prob_vecs.local_nodes); */
+    d4est_linalg_vec_fabsdiff(prob_vecs.u, u_prev, error, prob_vecs.local_nodes);
+    
     double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
     
+
+    d4est_mesh_compute_l2_norm_sqr
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       error,
+       prob_vecs.local_nodes,
+       NULL,
+       error_l2
+      );
+
     if(init_params.use_error_l2_as_estimator){
-      d4est_mesh_compute_l2_norm_sqr
-        (
-         p4est,
-         d4est_ops,
-         d4est_geom,
-         d4est_quad,
-         d4est_factors,
-         error,
-         prob_vecs.local_nodes,
-         NULL,
-         error_l2
-        );
-      
       d4est_util_copy_1st_to_2nd(error_l2, estimator, p4est->local_num_quadrants);
     }    
     

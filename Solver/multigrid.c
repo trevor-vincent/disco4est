@@ -18,7 +18,15 @@
 #include <zlog.h>
 #include <time.h>
 
-
+/** 
+ * Calculates the min level and max level of the multigrid
+ * hiearchy across cores. I would not trust the minimum except
+ * for the case of one processor.
+ * 
+ * @param p4est 
+ * @param min_level 
+ * @param max_level 
+ */
 void
 multigrid_get_level_range
 (
@@ -46,7 +54,6 @@ multigrid_get_level_range
       }
     }
 
-
   int local_reduce [2];
   int global_reduce [2];
   local_reduce[0] = -1*min;
@@ -70,6 +77,9 @@ multigrid_get_level_range
 
   
   *min_level = global_reduce[0]*-1;
+  if(p4est->mpisize == 1){
+    *min_level = 0;
+  }
   *max_level = global_reduce[1];
 }
 

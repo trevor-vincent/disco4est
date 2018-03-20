@@ -70,3 +70,4 @@ double d4est_norms_fcn_Linfty(double *field_value_errors,int num_nodes_local,voi
 double d4est_norms_fcn_L2(double *field_value_errors,int num_nodes_local,void *norm_fcn_ctx);
  
 #endif
+ 
