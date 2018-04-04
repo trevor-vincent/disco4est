@@ -215,7 +215,9 @@ typedef enum {D4EST_INT, D4EST_DOUBLE} d4est_builtin_t;
 
 /* This file was automatically generated.  Do not edit! */
 void d4est_util_gen_rand_vec(double *vec,int N,int seed,double a,double b);
+void d4est_util_copy_1st_to_2nd(double *v1,double *v2,int N);
 double d4est_util_max_dbl_array(double *arr,int N);
+double d4est_util_mean_dbl_array(double *arr,int N);
 double d4est_util_min_dbl_array(double *arr,int N);
 void d4est_util_compute_error_array(double *arr1,double *arr2,double *err,int N);
 int d4est_util_match(const char *str1,const char *str2);
@@ -249,7 +251,6 @@ int d4est_util_max_int(int a,int b);
 int d4est_util_min_int(int a,int b);
 double d4est_util_max(double a,double b);
 double d4est_util_min(double a,double b);
-void d4est_util_copy_1st_to_2nd(double *v1,double *v2,int N);
 int d4est_util_compact_1st_alongwith_2nd(double *array,double *array2,int size);
 int d4est_util_compact(double *array,int size);
 void d4est_util_make_directory(const char *dir,int add_cwd_to_dir);

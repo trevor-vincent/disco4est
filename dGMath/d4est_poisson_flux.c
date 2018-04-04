@@ -11,6 +11,8 @@
 #include <d4est_elliptic_data.h>
 #include <d4est_quadrature_lobatto.h>
 
+#define D4EST_H_EQ_J_DIV_SJ_QUAD
+
 int
 d4est_poisson_get_degree_mortar_quad
 (
@@ -50,6 +52,7 @@ d4est_poisson_flux_boundary
   double* xyz_on_f_m_quad [(P4EST_DIM)];
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* xyz_on_f_m_lobatto [(P4EST_DIM)];
+  double* j_div_sj_on_f_m_quad = &d4est_factors->j_div_sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
   double* sj_on_f_m_quad = &d4est_factors->sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
 
    for (int d = 0; d < (P4EST_DIM); d++){
@@ -121,9 +124,6 @@ d4est_poisson_flux_boundary
        dudr_m_on_f_m[d]
       );
 
-
-    /* DEBUG_PRINT_ARR_DBL(e_m->dudr_elem[d], d4est_lgl_get_nodes((P4EST_DIM), e_m->deg)); */
-    
     d4est_quadrature_interpolate
       (
        d4est_ops,
@@ -208,7 +208,7 @@ d4est_poisson_flux_boundary
   boundary_data.u_m_on_f_m_quad = u_m_on_f_m_quad;
   boundary_data.u_m_on_f_m = u_m_on_f_m;
   boundary_data.sj_on_f_m_quad = sj_on_f_m_quad;
-  /* boundary_data.j_div_sj_quad = j_div_sj_quad;  */
+  boundary_data.j_div_sj_quad = j_div_sj_on_f_m_quad;
 
   D4EST_COPY_DBYD_MAT(drst_dxyz_quad, boundary_data.drst_dxyz_quad);
   D4EST_COPY_DIM_VEC(dudx_m_on_f_m_quad, boundary_data.dudx_m_on_f_m_quad);
@@ -452,6 +452,15 @@ static void
   
   double* tmp = P4EST_ALLOC(double, total_side_nodes_p_quad);
 
+  double* j_div_sj_on_f_p_mortar_quad = NULL;
+  double* j_div_sj_on_f_p_mortar_quad_porder = NULL;
+  double* j_div_sj_on_f_m_mortar_quad = NULL;
+#ifdef D4EST_H_EQ_J_DIV_SJ_QUAD
+  j_div_sj_on_f_p_mortar_quad = D4EST_ALLOC(double, total_nodes_mortar_quad);
+  j_div_sj_on_f_p_mortar_quad_porder = &d4est_factors->j_div_sj_p_mortar_quad_porder[e_m[0]->mortar_quad_scalar_stride[f_m]];
+  j_div_sj_on_f_m_mortar_quad = &d4est_factors->j_div_sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+#endif
+  
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_porder, total_side_nodes_p_lobatto);
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_porder, total_nodes_mortar_quad);
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_quad_porder, total_nodes_mortar_quad);
@@ -773,19 +782,19 @@ static void
     }
 
 
-
-    /* d4est_operators_reorient_face_data */
-    /*     ( */
-    /*      d4est_ops, */
-    /*      &j_div_sj_on_f_p_mortar_quad_porder[oriented_face_mortar_stride], */
-    /*      (P4EST_DIM)-1, */
-    /*      deg_mortar_quad[face], */
-    /*      orientation, */
-    /*      f_m, */
-    /*      f_p, */
-    /*      &j_div_sj_on_f_p_mortar_quad[face_mortar_stride] */
-    /*     ); */
-    
+#ifdef D4EST_H_EQ_J_DIV_SJ_QUAD
+    d4est_operators_reorient_face_data
+        (
+         d4est_ops,
+         &j_div_sj_on_f_p_mortar_quad_porder[oriented_face_mortar_stride],
+         (P4EST_DIM)-1,
+         deg_mortar_quad[face],
+         orientation,
+         f_m,
+         f_p,
+         &j_div_sj_on_f_p_mortar_quad[face_mortar_stride]
+        );
+#endif    
     
     face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
   }
@@ -818,9 +827,9 @@ static void
   interface_data.u_m_on_f_m = u_m_on_f_m;
   interface_data.u_p_on_f_p = u_p_on_f_p;
   interface_data.sj_on_f_m_mortar_quad = sj_on_f_m_mortar_quad;
-  /* interface_data.j_div_sj_on_f_m_mortar_quad = j_div_sj_on_f_m_mortar_quad; */
+  interface_data.j_div_sj_on_f_m_mortar_quad = j_div_sj_on_f_m_mortar_quad;
   interface_data.u_p_on_f_p_mortar_quad = u_p_on_f_p_mortar_quad;
-  /* interface_data.j_div_sj_on_f_p_mortar_quad = j_div_sj_on_f_p_mortar_quad; */
+  interface_data.j_div_sj_on_f_p_mortar_quad = j_div_sj_on_f_p_mortar_quad;
   interface_data.deg_mortar_quad = deg_mortar_quad;
   interface_data.nodes_mortar_quad = nodes_mortar_quad;
   interface_data.deg_mortar_lobatto = deg_mortar_lobatto;
@@ -860,7 +869,9 @@ static void
 
   /* P4EST_FREE(j_div_sj_on_f_m_mortar_quad); */
   /* P4EST_FREE(j_div_sj_on_f_p_mortar_quad_porder); */
-  /* P4EST_FREE(j_div_sj_on_f_p_mortar_quad); */
+#ifdef D4EST_H_EQ_J_DIV_SJ_QUAD
+  P4EST_FREE(j_div_sj_on_f_p_mortar_quad);
+#endif
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_p_on_f_p);
   /* P4EST_FREE(sj_on_f_m_mortar_quad); */

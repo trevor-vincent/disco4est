@@ -29,7 +29,7 @@ d4est_poisson_flux_sipg_calculate_h
 )
 {
   if (sipg_flux_h == H_EQ_J_DIV_SJ_QUAD){
-    D4EST_ABORT("H_EQ_J_DIV_SJ_QUAD is no longer supported");
+    /* D4EST_ABORT("H_EQ_J_DIV_SJ_QUAD is no longer supported"); */
     int stride = 0;
     for (int f = 0; f < num_faces_mortar; f++){
       for (int k = 0; k < nodes_mortar_quad[f]; k++){
@@ -53,7 +53,6 @@ d4est_poisson_flux_sipg_calculate_h
     int stride = 0;
     double h [P4EST_HALF];
     for (int f = 0; f < num_faces_mortar; f++){
-      /* h[f] = (num_faces_side == num_faces_mortar) ? elems_side[f]->j_div_sj_min[face_side] : elems_side[0]->j_div_sj_min[face_side]; */
       h[f] = size_params.j_div_sj_min[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id*(P4EST_FACES) + face_side]; 
     }
                  
@@ -65,14 +64,12 @@ d4est_poisson_flux_sipg_calculate_h
       stride += nodes_mortar_quad[f];
     }
   }
-  else if (sipg_flux_h == H_EQ_VOLUME_DIV_AREA){
+
+  else if (sipg_flux_h == H_EQ_J_DIV_SJ_MEAN_LOBATTO){
     int stride = 0;
     double h [P4EST_HALF];
     for (int f = 0; f < num_faces_mortar; f++){
-      double volume = size_params.volume[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id]; 
-      double area = size_params.area[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id*(P4EST_FACES) + face_side]; 
-      h[f] = volume/area;
-      /* h[f] = (num_faces_side == num_faces_mortar) ? elems_side[f]->volume/elems_side[f]->area[face_side] : elems_side[0]->volume/elems_side[0]->area[face_side]; */
+      h[f] = size_params.j_div_sj_mean[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id*(P4EST_FACES) + face_side]; 
     }
                  
     for (int f = 0; f < num_faces_mortar; f++){
@@ -83,12 +80,49 @@ d4est_poisson_flux_sipg_calculate_h
       stride += nodes_mortar_quad[f];
     }
   }
+  
+  else if (sipg_flux_h == H_EQ_TOTAL_VOLUME_DIV_TOTAL_AREA){
+    int stride = 0;
+    double area_of_mortar = 0.;
+    double volume_of_elements_touching_mortar = 0.;
+    for (int f = 0; f < num_faces_side; f++){
+      area_of_mortar += size_params.area[elems_side[f]->id*(P4EST_FACES) + face_side];
+      volume_of_elements_touching_mortar += size_params.volume[elems_side[f]->id];
+    }
+    double h = volume_of_elements_touching_mortar/area_of_mortar;
+                 
+    for (int f = 0; f < num_faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        h_quad_mortar[ks] = h;
+      }
+      stride += nodes_mortar_quad[f];
+    }
+  }
+
+  else if (sipg_flux_h == H_EQ_VOLUME_DIV_AREA){
+    int stride = 0;
+    double h [P4EST_HALF];
+    for (int f = 0; f < num_faces_mortar; f++){
+      double volume = size_params.volume[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id];
+      double area = size_params.area[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id*(P4EST_FACES) + face_side];
+      h[f] = volume/area;
+    }
+         
+    for (int f = 0; f < num_faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        h_quad_mortar[ks] = h[f];
+      }
+      stride += nodes_mortar_quad[f];
+    }
+  }  
+  
   else if (sipg_flux_h == H_EQ_FACE_DIAM){
     int stride = 0;
     double h [P4EST_HALF];
     for (int f = 0; f < num_faces_mortar; f++){
       h[f] = size_params.diam_face[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id*(P4EST_FACES) + face_side]; 
-      /* h[f] = (num_faces_side == num_faces_mortar) ? elems_side[f]->diam_face[face_side] : elems_side[0]->diam_face[face_side]; */
     }
                  
     for (int f = 0; f < num_faces_mortar; f++){
@@ -253,49 +287,17 @@ d4est_poisson_flux_sipg_dirichlet_aux
     for (int l = 0; l < (P4EST_DIM); l++){
       term2_quad[l][i] = 0.;
       for (int d = 0; d < (P4EST_DIM); d++){
-        /* term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i] */
-                            /* *n_sj_on_f_m_quad[d][i] */
-                            /* *2.*u_m_on_f_m_min_u_at_bndry_quad; */
         term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i]
                             *n_on_f_m_quad[d][i]
                             *sj_on_f_m_quad[i]
-                            *2.*u_m_on_f_m_min_u_at_bndry_quad;
-
-
- /*        term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i] */
-/*                             *n_sj_on_f_m_quad[d][i] */
-/*                             *2.*bc_data->dirichlet_fcn */
-/*                             ( */
-/*                              boundary_data->xyz_on_f_m_quad[0][i], */
-/*                              boundary_data->xyz_on_f_m_quad[1][i], */
-/* #if (P4EST_DIM)==3 */
-/*                              boundary_data->xyz_on_f_m_quad[2][i], */
-/* #endif */
-/*                              bc_params->user */
-/*                             ); */
-        
+                            *2.*u_m_on_f_m_min_u_at_bndry_quad;        
       }
     }
-    /* term3_quad[i] = sj_on_f_m_quad[i] */
-                    /* *sigma[i] */
-                    /* *2.*u_m_on_f_m_min_u_at_bndry_quad; */
     term3_quad[i] = sj_on_f_m_quad[i]
                     *sigma[i]
                     *u_m_on_f_m_min_u_at_bndry_quad;
     
   }
-
-  /* for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
-  /*   for (int d2 = 0; d2 < (P4EST_DIM); d2++){ */
-  /*     DEBUG_PRINT_ARR_DBL(drst_dxyz_quad[d1][d2], face_nodes_m_quad); */
-  /*   } */
-  /*   DEBUG_PRINT_ARR_DBL(n_on_f_m_quad[d1], face_nodes_m_quad); */
-  /*   DEBUG_PRINT_ARR_DBL(term2_quad[d1], face_nodes_m_quad); */
-  /*   DEBUG_PRINT_ARR_DBL(dudx_m_on_f_m_quad[d1], face_nodes_m_quad); */
-  /* } */
-  /* DEBUG_PRINT_ARR_DBL(sj_on_f_m_quad, face_nodes_m_quad); */
-  /* DEBUG_PRINT_ARR_DBL(u_at_bndry_lobatto_to_quad, face_nodes_m_quad); */
-  /* DEBUG_PRINT_ARR_DBL(u_m_on_f_m_quad, face_nodes_m_quad); */
   
   d4est_quadrature_apply_galerkin_integral
     (
@@ -372,12 +374,6 @@ d4est_poisson_flux_sipg_dirichlet_aux
                                        );
 
   }
-
-  /* DEBUG_PRINT_ARR_DBL(DT_lifted_VT_w_term2_lobatto[0], d4est_lgl_get_nodes((P4EST_DIM),e_m->deg)); */
-  /* DEBUG_PRINT_ARR_DBL(DT_lifted_VT_w_term2_lobatto[1], d4est_lgl_get_nodes((P4EST_DIM),e_m->deg)); */
-  /* DEBUG_PRINT_ARR_DBL(DT_lifted_VT_w_term2_lobatto[2], d4est_lgl_get_nodes((P4EST_DIM),e_m->deg)); */
-        
-
   d4est_operators_apply_lift(
                              d4est_ops,
                              VT_w_term3_lobatto,
@@ -458,9 +454,6 @@ d4est_poisson_flux_sipg_dirichlet
   
   int volume_nodes_m = d4est_lgl_get_nodes((P4EST_DIM), e_m->deg);
 
-  /* DEBUG_PRINT_ARR_DBL(lifted_VT_w_term3_lobatto, volume_nodes_m); */
-  /* DEBUG_PRINT_ARR_DBL(lifted_VT_w_term1_lobatto, volume_nodes_m); */
-
   for (int i = 0; i < volume_nodes_m; i++){
     for (int d = 0; d < (P4EST_DIM); d++){
       e_m->Au_elem[i] += DT_lifted_VT_w_term2_lobatto[d][i];
@@ -469,8 +462,6 @@ d4est_poisson_flux_sipg_dirichlet
     e_m->Au_elem[i] += lifted_VT_w_term1_lobatto[i];
   }
 
-  /* printf("boundary sipg: "); */
-  /* DEBUG_PRINT_ARR_DBL_SUM(e_m->Au_elem, volume_nodes_m); */
   
   P4EST_FREE(u_at_bndry_lobatto);
   P4EST_FREE(u_at_bndry_lobatto_to_quad);
@@ -1146,6 +1137,9 @@ d4est_poisson_flux_sipg_params_get_string_from_h_calc
   else if (h_calc == H_EQ_J_DIV_SJ_MIN_LOBATTO){
     strcpy(string,"H_EQ_J_DIV_SJ_MIN_lOBATTO");
   }
+  else if (h_calc == H_EQ_J_DIV_SJ_MEAN_LOBATTO){
+    strcpy(string,"H_EQ_J_DIV_SJ_MEAN_lOBATTO");
+  }
   else if (h_calc == H_EQ_VOLUME_DIV_AREA){
     strcpy(string,"H_EQ_VOLUME_DIV_AREA");
   }
@@ -1212,7 +1206,9 @@ int d4est_poisson_flux_sipg_params_input_handler
 )
 {
   d4est_poisson_flux_sipg_params_t* pconfig = (d4est_poisson_flux_sipg_params_t*)user;
-  
+
+/* typedef enum { H_EQ_J_DIV_SJ_QUAD, H_EQ_J_DIV_SJ_MIN_LOBATTO, H_EQ_J_DIV_SJ_MEAN_LOBATTO, H_EQ_TREE_H, H_EQ_VOLUME_DIV_AREA, H_EQ_FACE_DIAM, H_EQ_TOTAL_VOLUME_DIV_TOTAL_AREA, H_EQ_NOTSET } h_calc_method_t;
+  */
   if (d4est_util_match_couple(section,"flux",name,"sipg_penalty_prefactor")) {
     D4EST_ASSERT(pconfig->sipg_penalty_prefactor == -1);
     pconfig->sipg_penalty_prefactor = atof(value);
@@ -1228,6 +1224,9 @@ int d4est_poisson_flux_sipg_params_input_handler
     }
     else if(d4est_util_match(value, "H_EQ_J_DIV_SJ_MIN_LOBATTO")){
       pconfig->sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO;
+    }
+    else if(d4est_util_match(value, "H_EQ_J_DIV_SJ_MEAN_LOBATTO")){
+      pconfig->sipg_flux_h = H_EQ_J_DIV_SJ_MEAN_LOBATTO;
     }
     else if(d4est_util_match(value, "H_EQ_VOLUME_DIV_AREA")){
       pconfig->sipg_flux_h = H_EQ_VOLUME_DIV_AREA;

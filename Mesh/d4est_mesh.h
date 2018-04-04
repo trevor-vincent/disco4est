@@ -57,6 +57,7 @@ typedef struct {
 typedef struct {
 
   double* j_div_sj_min;
+  double* j_div_sj_mean;
   double* diam_face;
   double* diam_volume;
   double* area;
@@ -76,12 +77,17 @@ typedef struct {
   
   double* drst_dxyz_m_mortar_quad;
   double* drst_dxyz_p_mortar_quad_porder;
+
+  double* j_div_sj_m_mortar_quad;
+  double* j_div_sj_p_mortar_quad_porder;
+  
   double* sj_m_mortar_quad;
   double* n_m_mortar_quad;
   double* xyz_m_mortar_quad;
   double* xyz_m_mortar_lobatto;
 
   double* j_div_sj_min;
+  double* j_div_sj_mean;
   double* diam_face;
   double* diam_volume;
   double* area;

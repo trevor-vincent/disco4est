@@ -606,6 +606,17 @@ d4est_util_min_dbl_array(double* arr, int N){
 }
 
 double
+d4est_util_mean_dbl_array(double* arr, int N){
+
+  double mean = 0.;
+  for (int i = 1; i < N; i++) {
+      mean += arr[i];
+  }
+  return mean/(double)N;
+}
+
+
+double
 d4est_util_max_dbl_array(double* arr, int N){
 
   double max = arr[0];

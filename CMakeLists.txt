@@ -96,8 +96,11 @@ SET (
   Mesh/d4est_xyz_functions.c
   Mesh/d4est_mortars.c
   Mesh/d4est_mortars_aux.c
-  Mesh/d4est_ghost_data.c
-  Mesh/d4est_ghost.c
+  # Ghost/d4est_ghost_data.c
+  # Ghost/d4est_ghost.c
+  # Databox/d4est_databox.c
+  # Dictionary/d4est_dictionary.c
+  # Dictionary/d4est_critbit.c
   Quadrature/d4est_quadrature.c
   Quadrature/d4est_quadrature_legendre.c
   Quadrature/d4est_quadrature_lobatto.c
