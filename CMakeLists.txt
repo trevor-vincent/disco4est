@@ -324,6 +324,8 @@ add_d4est_bash_regression_test(d4est_test_stamm.sh Regression d4est_test_stamm)
 add_d4est_bash_regression_test(d4est_test_cds.sh Regression d4est_test_constant_density_star)
 add_d4est_bash_regression_test(d4est_test_poisson_sinx.sh Regression d4est_test_poisson_sinx)
 add_d4est_bash_regression_test(d4est_test_twopunctures.sh Regression d4est_test_twopunctures)
+add_d4est_bash_regression_test(d4est_test_mpi.sh Regression d4est_test_mpi)
+
 
 # add_d4est_unit_test_3d(test_d4est_ghost_data_2 test_d4est_ghost_data_2.c Unit test_d4est_ghost_data_2)
 add_d4est_unit_test_3d(test_d4est_ghost_data test_d4est_ghost_data.c Unit test_d4est_ghost_data)

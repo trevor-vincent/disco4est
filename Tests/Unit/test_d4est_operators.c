@@ -54,9 +54,6 @@ test_d4est_operators_interpolate
   double ans = test_d4est_operators_poly_fcn(rst_new[0], rst_new[1], rst_new[2], dim, deg);
   double ans_check = d4est_operators_interpolate(d4est_ops, &rst_new[0], poly_lobatto, dim, deg);
 
-  printf("ans = %f\n",ans);
-  printf("ans_check = %f\n",ans_check);
-  
   P4EST_FREE(poly_lobatto);
   D4EST_ASSERT(fabs(ans -ans_check) < 1e-10);
 }
