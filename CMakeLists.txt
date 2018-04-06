@@ -104,7 +104,7 @@ SET (
   # Ghost/d4est_ghost.c
   Mesh/d4est_ghost.c
   Databox/d4est_databox.c
-  Databox/d4est_databox_helpers.c
+  # Databox/d4est_databox_helpers.c
   Dictionary/d4est_dictionary.c
   Dictionary/d4est_critbit.c
   Quadrature/d4est_quadrature.c
