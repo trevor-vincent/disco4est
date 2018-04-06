@@ -6,7 +6,7 @@ sed 's|num_of_amr_steps = .*|num_of_amr_steps = 9|g' ../Stamm/options.input > st
 # RES=$(cat disco4est.out | grep -c "0.0000000013301248793227330 0.0000000171172621537055147 0.0000013032058553497301960 0.0000007629001363926490040")
 RES0=$(cat disco4est.out | grep -c "0.000000001330124879")
 RES1=$(cat disco4est.out | grep -c "0.000000017117262153")
-RES2=$(cat disco4est.out | grep -c "0.000001303205855349")
+RES2=$(cat disco4est.out | grep -c "0.0000013032058553")
 RES3=$(cat disco4est.out | grep -c "0.000000762900136392")
 RES=$(echo $RES0 + $RES1 + $RES2 + $RES3 | bc) 
 rm stamm_options.input
