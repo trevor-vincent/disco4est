@@ -2,7 +2,7 @@ echo "Starting PoisosnSinx Regression test"
 echo ${PWD}
 cp ../PoissonSinx/options.input poisson_sinx_options.input
 ../PoissonSinx/poisson_sinx_uniform_driver poisson_sinx_options.input > disco4est.out
-RES=$(cat disco4est.out | grep -c "027 FNRMSQR 0.000000000000000000000378767161")
+RES=$(cat disco4est.out | grep -c "64 512 512 0.0426895934625")
 rm poisson_sinx_options.input
 if [ $RES -ne "1" ]; then
     echo "Test Fail"
