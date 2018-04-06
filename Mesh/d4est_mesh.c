@@ -1419,8 +1419,7 @@ d4est_mesh_init_element_data
         elem_data->q[2] = quad->z;
 #endif
 
-
-        
+        elem_data->mpi_rank = p4est->mpirank;
         elem_data->id = id_stride;
         elem_data->sqr_nodal_stride = sqr_nodal_stride;
         /* elem_data->sqr_mortar_stride = sqr_mortar_stride; */
@@ -2174,6 +2173,7 @@ d4est_mesh_volume_integral
     }
   return integral;
 }
+
 
 d4est_mesh_interpolate_data_t
 d4est_mesh_interpolate_at_tree_coord

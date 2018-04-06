@@ -45,6 +45,9 @@ include_directories(${CMAKE_SOURCE_DIR}/IO)
 include_directories(${CMAKE_SOURCE_DIR}/Quadrature)
 include_directories(${CMAKE_SOURCE_DIR}/Utilities)
 include_directories(${CMAKE_SOURCE_DIR}/Kron)
+# include_directories(${CMAKE_SOURCE_DIR}/Ghost)
+include_directories(${CMAKE_SOURCE_DIR}/Databox)
+include_directories(${CMAKE_SOURCE_DIR}/Dictionary)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${MPI_C_INCLUDE_PATH})
 
@@ -97,10 +100,13 @@ SET (
   Mesh/d4est_mortars.c
   Mesh/d4est_mortars_aux.c
   # Ghost/d4est_ghost_data.c
+  Mesh/d4est_ghost_data.c
   # Ghost/d4est_ghost.c
-  # Databox/d4est_databox.c
-  # Dictionary/d4est_dictionary.c
-  # Dictionary/d4est_critbit.c
+  Mesh/d4est_ghost.c
+  Databox/d4est_databox.c
+  Databox/d4est_databox_helpers.c
+  Dictionary/d4est_dictionary.c
+  Dictionary/d4est_critbit.c
   Quadrature/d4est_quadrature.c
   Quadrature/d4est_quadrature_legendre.c
   Quadrature/d4est_quadrature_lobatto.c
@@ -317,7 +323,8 @@ add_d4est_unit_test_3d(test_d4est_linalg test_d4est_linalg.c Unit test_d4est_lin
 add_d4est_bash_regression_test(d4est_test_stamm.sh Regression d4est_test_stamm)
 add_d4est_bash_regression_test(d4est_test_cds.sh Regression d4est_test_constant_density_star)
 add_d4est_bash_regression_test(d4est_test_poisson_sinx.sh Regression d4est_test_poisson_sinx)
-#add_d4est_unit_test_3d(test_d4est_ghost_data test_d4est_ghost_data.c . test_d4est_ghost_data)
+# add_d4est_unit_test_3d(test_d4est_ghost_data_2 test_d4est_ghost_data_2.c Unit test_d4est_ghost_data_2)
+add_d4est_unit_test_3d(test_d4est_ghost_data test_d4est_ghost_data.c Unit test_d4est_ghost_data)
 # add_d4est_unit_test_3d(test_d4est_operators_interpolate test_d4est_operators_interpolate.c . test_d4est_operators_interpolate)
 
 add_d4est_problem_2d(stamm_driver stamm_multigrid_pc.c Stamm)
