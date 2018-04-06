@@ -64,6 +64,7 @@ Configuration options are loaded from an `options.input` file residing in the sa
   - `scheme` can be one of the following AMR refinement schemes:
     - `uniform_h`: Divides each element into 4 sub-elements in 2 dimensions, or into 8 sub-elements in 3 dimension.
     - `uniform_p`: Increases the polynomial order on each element by 1.
+    - `smooth_pred`: hp-amr scheme that uses estimator performance to determine h or p refinement
   - `num_of_amr_steps`
   - `max_degree`
 
