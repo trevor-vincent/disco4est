@@ -21,6 +21,15 @@ if [ $RES -ne "2" ]; then
     exit 1
 else
     echo "MPI Regression Test Success"
+    echo "****************** MPI REGRESSION TEST OUTPUT BEGIN *****************"
+    echo "****************** MPI REGRESSION TEST OUTPUT BEGIN *****************"
+    echo "****************** MPI REGRESSION TEST OUTPUT BEGIN *****************"
+    echo "****************** MPI REGRESSION TEST OUTPUT BEGIN *****************"
+    cat disco4est.out
+    echo "****************** MPI REGRESSION TEST OUTPUT END *****************"
+    echo "****************** MPI REGRESSION TEST OUTPUT END *****************"
+    echo "****************** MPI REGRESSION TEST OUTPUT END *****************"
+    echo "****************** MPI REGRESSION TEST OUTPUT END *****************"
     rm disco4est.out
 fi
 
