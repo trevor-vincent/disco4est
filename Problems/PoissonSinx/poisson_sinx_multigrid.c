@@ -244,6 +244,21 @@ problem_init
     double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
     d4est_linalg_vec_fabsdiff(prob_vecs.u, u_analytic, error, prob_vecs.local_nodes);
 
+    double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
+    d4est_mesh_compute_l2_norm_sqr
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       error,
+       prob_vecs.local_nodes,
+       NULL,
+       error_l2
+      );
+    
+    
     // Save to VTK file
     d4est_vtk_save(
       p4est,
@@ -252,8 +267,8 @@ problem_init
       "d4est_vtk",
       (const char * []){"u","u_analytic","error", NULL},
       (double* []){prob_vecs.u, u_analytic, error},
-      (const char * []){NULL},
-      (double* []){NULL},
+      (const char * []){"error_l2",NULL},
+      (double* []){error_l2},
       level
     );
     
@@ -271,7 +286,8 @@ problem_init
       (void * []){ &L2_norm_ctx, NULL },
       NULL
     );
-    
+
+    P4EST_FREE(error_l2);    
     P4EST_FREE(error);
     P4EST_FREE(u_analytic);
 

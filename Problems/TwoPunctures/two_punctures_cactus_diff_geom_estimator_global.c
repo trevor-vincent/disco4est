@@ -226,12 +226,10 @@ problem_init
 )
 { 
   int initial_nodes = initial_extents->initial_nodes;
-  two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file
-                                                                           ); 
+  two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file); 
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
  
-
   d4est_poisson_dirichlet_bc_t bc_data_for_bi;
   bc_data_for_bi.dirichlet_fcn = zero_fcn;
   bc_data_for_bi.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
@@ -772,7 +770,7 @@ problem_init
       P4EST_FREE(error_l2);
     P4EST_FREE(estimator);
   }
-
+  
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_mesh_data_destroy(d4est_factors_compactified);
   d4est_geometry_destroy(d4est_geom_compactified);  

@@ -5,6 +5,58 @@
 #include <multigrid.h>
 #include <multigrid_matrix_operator.h>
 
+
+double
+constant_density_star_robin_coeff_sphere_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user,
+ d4est_poisson_flux_boundary_data_t* boundary_data,
+ int mortar_node
+)
+{
+  double r2 = x*x + y*y + z*z;
+  return 1/sqrt(r2);
+}
+
+double
+constant_density_star_robin_bc_rhs_for_jac_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user,
+ d4est_poisson_flux_boundary_data_t* boundary_data,
+ int mortar_node
+)
+{
+  return 0.;
+}
+
+double
+constant_density_star_robin_bc_rhs_for_res_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user,
+ d4est_poisson_flux_boundary_data_t* boundary_data,
+ int mortar_node
+)
+{
+  double r2 = x*x + y*y + z*z;
+  return 1/sqrt(r2);
+}
+
+
 typedef struct {
 
   /* set externally */

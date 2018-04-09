@@ -637,7 +637,7 @@ two_punctures_robin_coeff_brick_fcn
     return NAN;
   }
 }
-
+ 0
 double
 two_punctures_robin_coeff_sphere_fcn
 (

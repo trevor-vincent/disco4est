@@ -53,30 +53,30 @@ sipg_flux_h = $7
 sipg_penalty_fcn = maxp_sqr_over_minh
 
 [geometry]
-name = cubed_sphere_7tree
+name = cubed_sphere
 R0 = $8
 R1 = $9
-;R2 = 1000
+R2 = $11
 compactify_outer_shell = 0
 compactify_inner_shell = $10
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
 [compactified_geometry]
-name = cubed_sphere_7tree
+name = cubed_sphere
 R0 = 1
 R1 = 2
-;R2 = 1000
+R2 = 1000
 compactify_outer_shell = 0
 compactify_inner_shell = $10
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
 [d4est_vtk_geometry]
-name = cubed_sphere_7tree
+name = cubed_sphere
 R0 = 1
 R1 = 2
-;R2 = 3
+R2 = 3
 compactify_outer_shell = 0
 compactify_inner_shell = $10
 DX_compute_method = analytic
@@ -199,9 +199,10 @@ arr4=( 10000 ) #hrefine til inview
 arr5=( .25 1 ) #penalty
 arr6=( 2. ) #domain size
 arr7=( "H_EQ_VOLUME_DIV_AREA" "H_EQ_J_DIV_SJ_MIN_LOBATTO" ) #penalty
-arr8=( 5 15 )
-arr9=( 100 1000 )
+arr8=( 5 10 )
+arr9=( 8 15 )
 arr10=( 0 1 )
+arr11=( 100 1000 )
 
 for a in "${arr1[@]}"
 do
@@ -223,7 +224,8 @@ do
 				do
 				    for i in "${arr10[@]}"
 				    do
- 					NEWDIR="2pun_${a}_${b}_${c}_${d}_${e}_${f}_${g}_${h}_${i}_${j}"
+					for i in "${arr11[@]}"
+					do 					NEWDIR="2pun_${a}_${b}_${c}_${d}_${e}_${f}_${g}_${h}_${i}_${j}_${k}"
 					mkdir $NEWDIR
 					cd $NEWDIR
 					SHORTNAME="2pun${a}${b}${c}${d}${e}${f}${g}${h}${i}"
@@ -233,11 +235,12 @@ do
 					cores=$3
 					hours=$4
 					nodes=$((${cores} / 8))
-					write_options $a $b $c $d $e $f $g $h $i $j
+					write_options $a $b $c $d $e $f $g $h $i $j $k
 					write_submit_graham $rundir $executable $SHORTNAME $cores $hours $nodes
 					cp "${executable_path}/${executable}" "${PWD}/${executable}"
 					cp "${executable_path}/*.conf" "${PWD}/"
 					cd ..
+					done
 				    done
 				done
 			    done

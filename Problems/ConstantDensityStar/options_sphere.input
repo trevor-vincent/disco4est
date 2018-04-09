@@ -1,0 +1,136 @@
+[initial_mesh]
+min_quadrants = -1
+min_level = 0
+fill_uniform = 1
+region0_deg = 1
+region0_deg_quad_inc = 0
+region1_deg = 1
+region1_deg_quad_inc = 0
+
+[amr]
+scheme = smooth_pred
+num_of_amr_steps = 1
+max_degree = 7 
+gamma_h = .25
+gamma_p = 0.1
+gamma_n = 1.
+inflation_size = 128
+percentile = 10
+amr_level_for_uniform_p = 8
+
+[flux]
+name = sipg
+sipg_penalty_prefactor = 2.0
+sipg_flux_h = H_EQ_TREE_H
+sipg_penalty_fcn = maxp_sqr_over_minh
+
+[problem]
+use_dirichlet = 1
+rho0_div_rhoc = .001
+R = 8
+cx = 0
+cy = 0
+cz = 0
+do_not_solve = 0
+
+[geometry]
+name = cubed_sphere_7tree
+R0 = 10
+R1 = 1000
+;R2 = 1000
+compactify_outer_shell = 0
+compactify_inner_shell = 1
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[compactified_geometry]
+name = cubed_sphere_7tree
+R0 = 10
+R1 = 1000
+;R2 = 1000
+compactify_outer_shell = 0
+compactify_inner_shell = 1
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+
+[d4est_vtk]
+filename = constant_density_star
+geometry_section = geometry
+output_type = ascii
+grid_type = dg
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
+
+[d4est_solver_newton]
+imin = 10
+imax = 10
+monitor = 1
+rtol = 1e-15
+atol = 1e-15
+
+[krylov_petsc]
+ksp_type = fcg
+ksp_atol = 1e-15
+ksp_rtol = 1e-15
+ksp_max_it = 10000
+ksp_view = 1
+ksp_monitor = 1
+ksp_converged_reason = 1
+ksp_initial_guess_nonzero = 1
+ksp_monitor_singular_value = 1
+ksp_do_not_use_preconditioner = 0
+
+[newton_petsc]
+snes_atol = 1e-15
+snes_rtol = 1e-50
+snes_stol = 1e-1
+snes_max_funcs = 1000000000
+snes_type = newtonls
+snes_max_it = 5
+snes_monitor = 1
+snes_linesearch_order = 3
+snes_linesearch_monitor = 1
+snes_converged_reason = 1
+snes_view = 1
+
+[quadrature]
+name = legendre
+
+
+[multigrid]
+vcycle_imax = 1;
+vcycle_rtol = 1e-9;
+vcycle_atol = 0.;
+smoother_name = mg_smoother_cheby
+bottom_solver_name = mg_bottom_solver_cheby
+
+[mg_bottom_solver_cg_d4est]
+bottom_iter = 100;
+bottom_rtol = 1e-10;
+bottom_atol = 0.;
+bottom_print_residual_norm = 0;
+
+[mg_smoother_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eigs = 0;
+
+[mg_bottom_solver_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eig = 0;
