@@ -275,7 +275,7 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   return ierr;
 }
 
-krylov_info_t
+krylov_petsc_info_t
 krylov_petsc_solve
 (
  p4est_t* p4est,
@@ -300,7 +300,7 @@ krylov_petsc_solve
 
   krylov_petsc_set_options_database_from_params(krylov_petsc_params);
 
-  krylov_info_t info;
+  krylov_petsc_info_t info;
   KSP ksp;
   Vec x,b;
   PC             pc;
@@ -371,7 +371,7 @@ krylov_petsc_solve
 
   KSPSolve(ksp,b,x);
   
-  KSPGetIterationNumber(ksp, &(info.iterations));
+  KSPGetIterationNumber(ksp, &(info.total_krylov_iterations));
   KSPGetResidualNorm(ksp, &(info.residual_norm));
 
   MatDestroy(&A);
@@ -383,7 +383,7 @@ krylov_petsc_solve
   
   if (p4est->mpirank == 0) {
     double duration_seconds = ((double)(clock() - start)) / CLOCKS_PER_SEC;
-    zlog_info(c_default, "Krylov PETSc solve complete in %.2f seconds (%d iterations). Residual norm: %.2e", duration_seconds, info.iterations, info.residual_norm);
+    zlog_info(c_default, "Krylov PETSc solve complete in %.2f seconds (%d iterations). Residual norm: %.2e", duration_seconds, info.total_krylov_iterations, info.residual_norm);
   }
 
   return info;

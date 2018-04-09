@@ -330,7 +330,8 @@ newton_petsc_set_options_database_from_params
   
 }
 
-void newton_petsc_solve
+newton_petsc_info_t
+newton_petsc_solve
 (
  p4est_t* p4est,
  d4est_elliptic_data_t* vecs,
@@ -389,7 +390,10 @@ void newton_petsc_solve
   
   KSPSetFromOptions(ksp);
   SNESSetFromOptions(snes);//CHKERRQ(ierr);
-    
+
+  /* Set the counters to not reset every linear step */
+  SNESSetCountersReset(snes,PETSC_FALSE);
+  
   double* u0 = P4EST_ALLOC(double, vecs->local_nodes);
   vecs->u0 = u0;
   
@@ -416,6 +420,12 @@ void newton_petsc_solve
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
+
+  newton_petsc_info_t info;
+  SNESGetIterationNumber(snes,&info.total_newton_iterations);
+  SNESGetLinearSolveIterations(snes,&info.total_krylov_iterations);
+  SNESGetFunctionNorm(snes, &info.residual_norm);
+    
   if (p4est->mpirank == 0){
     printf("[NEWTON_PETSC]: Finished in %f seconds\n", time_spent); 
   }
@@ -425,4 +435,6 @@ void newton_petsc_solve
   VecDestroy(&x);//CHKERRQ(ierr);  
   VecDestroy(&r);//CHKERRQ(ierr);
   SNESDestroy(&snes);//CHKERRQ(ierr);
+
+  return info;
 }

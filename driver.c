@@ -6,11 +6,12 @@
 #include <d4est_checkpoint.h>
 #include <d4est_element_data.h>
 #include <petscsnes.h>
-#include <d4est_norms.h>
+#include <time.h>
 #include <zlog.h>
 
 int main(int argc, char *argv[])
 {
+  clock_t begin = clock();
   sc_MPI_Comm mpicomm;
   PetscInitialize(&argc,&argv,(char*)0,NULL);
   mpicomm = PETSC_COMM_WORLD;
@@ -171,12 +172,13 @@ int main(int argc, char *argv[])
 
   if (proc_rank == 0) {
     zlog_info(c_default, "Completed garbage collection.");
-    #ifdef D4EST_PROBLEM_NAME
-      zlog_info(c_default, "Completed problem %s.", D4EST_PROBLEM_NAME);
-    #endif
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    zlog_info(c_default, "Completed problem in %f seconds", time_spent);
   }
 
   zlog_fini();
+
   
   return 0;
 }
