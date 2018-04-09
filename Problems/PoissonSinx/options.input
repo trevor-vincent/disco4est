@@ -60,7 +60,7 @@ write_deg = 1
 
 [krylov_petsc]
 ksp_type = fcg
-ksp_atol = 1e-18
+ksp_atol = 5e-15
 ksp_rtol = 1e-20
 ksp_max_it = 10000
 ksp_view = 0
