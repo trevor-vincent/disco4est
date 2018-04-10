@@ -21,10 +21,10 @@
 #include <d4est_poisson_flux_sipg.h>
 #include <newton_petsc.h>
 #include <krylov_petsc.h>
-#include <krylov_pc_multigrid.h>
-#include <multigrid_logger_residual.h>
-#include <multigrid_element_data_updater.h>
-#include <multigrid.h>
+/* #include <krylov_pc_multigrid.h> */
+/* #include <multigrid_logger_residual.h> */
+/* #include <multigrid_element_data_updater.h> */
+/* #include <multigrid.h> */
 #include <d4est_util.h>
 #include <time.h>
 #include <zlog.h>
@@ -143,38 +143,38 @@ problem_init
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; level++) {
 
     // Setup multigrid
-    krylov_pc_t* pc = NULL;
+    /* krylov_pc_t* pc = NULL; */
 
-    int multigrid_min_level, multigrid_max_level;
-    multigrid_get_level_range(p4est, &multigrid_min_level, &multigrid_max_level);
-    zlog_debug(c_default, "Multigrid [min_level, max_level] = [%d,%d]", multigrid_min_level, multigrid_max_level);
+    /* int multigrid_min_level, multigrid_max_level; */
+    /* multigrid_get_level_range(p4est, &multigrid_min_level, &multigrid_max_level); */
+    /* zlog_debug(c_default, "Multigrid [min_level, max_level] = [%d,%d]", multigrid_min_level, multigrid_max_level); */
       
     /* need to do a reduce on min,max_level before supporting multiple proc */
     /* mpi_assert(proc_size == 1); */
-    int num_of_levels = multigrid_max_level + 1;
+    /* int num_of_levels = multigrid_max_level + 1; */
       
-    multigrid_logger_t* logger = multigrid_logger_residual_init();
+    /* multigrid_logger_t* logger = multigrid_logger_residual_init(); */
       
-    multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init(
-                                                                                    num_of_levels,
-                                                                                    ghost,
-                                                                                    ghost_data,
-                                                                                    d4est_factors,
-                                                                                    d4est_mesh_set_quadratures_after_amr,
-                                                                                    initial_extents
-    );
+    /* multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init( */
+    /*                                                                                 num_of_levels, */
+    /*                                                                                 ghost, */
+    /*                                                                                 ghost_data, */
+    /*                                                                                 d4est_factors, */
+    /*                                                                                 d4est_mesh_set_quadratures_after_amr, */
+    /*                                                                                 initial_extents */
+    /* ); */
       
-    multigrid_data_t* mg_data = multigrid_data_init(
-                                                    p4est,
-                                                    d4est_ops,
-                                                    d4est_geom,
-                                                    d4est_quad,
-                                                    num_of_levels,
-                                                    logger,
-                                                    NULL,
-                                                    updater,
-                                                    input_file
-    );
+    /* multigrid_data_t* mg_data = multigrid_data_init( */
+    /*                                                 p4est, */
+    /*                                                 d4est_ops, */
+    /*                                                 d4est_geom, */
+    /*                                                 d4est_quad, */
+    /*                                                 num_of_levels, */
+    /*                                                 logger, */
+    /*                                                 NULL, */
+    /*                                                 updater, */
+    /*                                                 input_file */
+    /* ); */
       
     /* multigrid_solve */
     /*   ( */
@@ -184,7 +184,7 @@ problem_init
     /*    mg_data */
     /*   ); */
       
-    pc = krylov_pc_multigrid_create(mg_data, NULL);
+    /* pc = krylov_pc_multigrid_create(mg_data, NULL); */
 
 
     // Krylov PETSc solve
@@ -222,7 +222,7 @@ problem_init
        d4est_quad,
        d4est_factors,
        &fcg_params,
-       pc
+       NULL/* pc */
       );
 
     // Compute and save mesh data to a VTK file

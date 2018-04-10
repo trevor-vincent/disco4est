@@ -41,7 +41,7 @@ typedef struct {
   double* Au_elem;  /* alias for Au */
   
   int deg; /* nodal degree */
-  int deg_quad; /* deg for volume quadrature */
+  int deg_quad; /* deg for quadrature */
 
   /* different element size parameters */
   /* double j_div_sj_min [(P4EST_FACES)]; */
