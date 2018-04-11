@@ -3,7 +3,7 @@ include (ExternalProject)
 #
 # Bundled hdf5 paths.
 #
-set(HDF5_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/ThirdParty/hdf5/install")
+set(HDF5_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/third_party/hdf5/install")
 set(HDF5_BUNDLED_LIB    "${HDF5_BUNDLED_PREFIX}/lib/libhdf5-static.a")
 
 macro(hdf5_use_bundled)
@@ -45,9 +45,9 @@ message(STATUS "Use hdf5 library: ${HDF5_LIBRARIES}")
 macro(hdf5_build)
   ExternalProject_Add(hdf5
     URL                 https://support.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.10.1.tar.gz
-    PREFIX              ${CMAKE_BINARY_DIR}/ThirdParty/hdf5
+    PREFIX              ${CMAKE_BINARY_DIR}/third_party/hdf5
     CMAKE_ARGS
-    -DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_BINARY_DIR}/ThirdParty/hdf5/install
+    -DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_BINARY_DIR}/third_party/hdf5/install
     -DBUILD_SHARED_LIBS:BOOL=OFF
     -DCMAKE_CXX_FLAGS:STRING=-Wunused-but-set-variable -Wunused-variable -Wincompatible-pointer-types -Wformat-nonliteral -Wstrict-overflow -Wconversion -Wunused-but-set-variable -Wunsafe-loop-optimizations -Wunused-parameter -Wlarger-than= -Wdiscarded-qualifiers -Wfloat-equal -Wmaybe-uninitialized -Wcomment
     -DCMAKE_C_FLAGS:STRING=-Wunused-but-set-variable -Wunused-variable -Wincompatible-pointer-types -Wformat-nonliteral -Wstrict-overflow -Wconversion -Wunused-but-set-variable -Wunsafe-loop-optimizations -Wunused-parameter -Wlarger-than= -Wdiscarded-qualifiers -Wfloat-equal -Wmaybe-uninitialized -Wcomment

@@ -3,7 +3,7 @@ include(ProcessorCount)
 #
 # Bundled petsc paths.
 #
-set(PETSC_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/ThirdParty/petsc/install")
+set(PETSC_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/third_party/petsc/install")
 set(PETSC_BUNDLED_LIBRARIES
   ${PETSC_BUNDLED_PREFIX}/lib/libpetsc.a
   )
@@ -66,9 +66,9 @@ macro(petsc_build)
     "--with-lapack-lib=${OPENBLAS_LIBRARIES}"
     )    
   ExternalProject_Add(petsc
-    PREFIX    ${CMAKE_BINARY_DIR}/ThirdParty/petsc
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/ThirdParty/petsc/
-    CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc &&
+    PREFIX    ${CMAKE_BINARY_DIR}/third_party/petsc
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/petsc/
+    CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/third_party/petsc &&
     python configure
     ${petsc_config_args}
     ${blas_config_args}
@@ -79,8 +79,8 @@ macro(petsc_build)
     --with-shared-libraries=0
     --with-silent-rules=1
     --prefix=${PETSC_BUNDLED_PREFIX}
-    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make -j1 --silent V=0
-    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/petsc && make install --silent
+    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/third_party/petsc && make -j1 --silent V=0
+    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/third_party/petsc && make install --silent
     )
   if(ENABLE_BUNDLED_OPENBLAS)
     add_dependencies(petsc openblas)

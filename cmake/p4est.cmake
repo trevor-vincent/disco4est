@@ -2,7 +2,7 @@ include(ProcessorCount)
 #
 # Bundled p4est paths.
 #
-set(P4EST_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/ThirdParty/p4est/install")
+set(P4EST_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/third_party/p4est/install")
 set(P4EST_BUNDLED_LIBRARIES
   ${P4EST_BUNDLED_PREFIX}/lib/libp4est.a
   ${P4EST_BUNDLED_PREFIX}/lib/libsc.a
@@ -102,9 +102,9 @@ macro(p4est_build)
     set(p4est_config_args "")
   endif("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
   ExternalProject_Add(p4est
-    PREFIX    ${CMAKE_BINARY_DIR}/ThirdParty/p4est
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/ThirdParty/p4est/
-    CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && git submodule init && git submodule update && ./bootstrap &&
+    PREFIX    ${CMAKE_BINARY_DIR}/third_party/p4est
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/p4est/
+    CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/third_party/p4est && git submodule init && git submodule update && ./bootstrap &&
     ./configure
     "CC=${MPI_C_COMPILER}"
     "CXX=${MPI_CXX_COMPILER}"
@@ -120,8 +120,8 @@ macro(p4est_build)
     # --disable-shared
     # --without-zlib
     --prefix=${P4EST_BUNDLED_PREFIX}
-    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make --silent V=0 ${num_of_build_threads}
-    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/p4est && make install --silent V=0
+    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/third_party/p4est && make --silent V=0 ${num_of_build_threads}
+    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/third_party/p4est && make install --silent V=0
   )
   add_dependencies(p4est zlib)
   if(ENABLE_BUNDLED_OPENBLAS)

@@ -3,7 +3,7 @@ include (ExternalProject)
 #
 # Bundled zlog paths.
 #
-set(ZLOG_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/ThirdParty/zlog/install")
+set(ZLOG_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/third_party/zlog/install")
 set(ZLOG_BUNDLED_LIB    "${ZLOG_BUNDLED_PREFIX}/lib/libzlog.a")
 
 macro(zlog_use_bundled)
@@ -44,11 +44,11 @@ message(STATUS "Use zlog library: ${ZLOG_LIBRARIES}")
 
 macro(zlog_build)
   ExternalProject_Add(zlog
-    PREFIX              ${CMAKE_BINARY_DIR}/ThirdParty/zlog
-    SOURCE_DIR          ${CMAKE_SOURCE_DIR}/ThirdParty/zlog
+    PREFIX              ${CMAKE_BINARY_DIR}/third_party/zlog
+    SOURCE_DIR          ${CMAKE_SOURCE_DIR}/third_party/zlog
     CONFIGURE_COMMAND   ""
-    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/ThirdParty/zlog && make PREFIX=${ZLOG_BUNDLED_PREFIX}
-    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/ThirdParty/zlog && make PREFIX=${ZLOG_BUNDLED_PREFIX} install
+    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/third_party/zlog && make PREFIX=${ZLOG_BUNDLED_PREFIX}
+    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/third_party/zlog && make PREFIX=${ZLOG_BUNDLED_PREFIX} install
   )
   set_target_properties(zlog PROPERTIES EXCLUDE_FROM_ALL ON)
   add_dependencies(build_bundled_libs zlog)

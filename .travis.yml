@@ -12,7 +12,7 @@ matrix:
 script:
     cd $HOME
     && sudo apt-get install -y mpich
-    && ln -s ${TRAVIS_BUILD_DIR}/Support/CMake/machine.cmake.bundled.example ${TRAVIS_BUILD_DIR}/Support/CMake/machine.cmake
+    && ln -s ${TRAVIS_BUILD_DIR}/cmake/machine.cmake.bundled.example ${TRAVIS_BUILD_DIR}/cmake/machine.cmake
     && mkdir build_${TRAVIS_OS_NAME}_${BUILD_TYPE}
     && cd ./build_${TRAVIS_OS_NAME}_${BUILD_TYPE}
     && cmake ${TRAVIS_BUILD_DIR} -DCMAKE_C_FLAGS=-std=c99

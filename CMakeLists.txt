@@ -17,7 +17,7 @@ project(d4est)
 
 # Directory where customize cmake files reside
 set(CMAKE_MODULE_PATH
-  ${CMAKE_SOURCE_DIR}/Support/CMake
+  ${CMAKE_SOURCE_DIR}/cmake
   ${CMAKE_MODULE_PATH}
 )
 include(machine)
@@ -27,27 +27,27 @@ find_package(MPI REQUIRED)
 ##
 ## Set build include path
 ##
-include_directories(${CMAKE_SOURCE_DIR}/EllipticSystem)
-include_directories(${CMAKE_SOURCE_DIR}/Geometry)
-include_directories(${CMAKE_SOURCE_DIR}/Solver)
-include_directories(${CMAKE_SOURCE_DIR}/Estimators)
-include_directories(${CMAKE_SOURCE_DIR}/dGMath)
-include_directories(${CMAKE_SOURCE_DIR}/LinearAlgebra)
-include_directories(${CMAKE_SOURCE_DIR}/GridFunctions)
-include_directories(${CMAKE_SOURCE_DIR}/Problems)
-include_directories(${CMAKE_SOURCE_DIR}/Utilities)
-include_directories(${CMAKE_SOURCE_DIR}/pXest)
-include_directories(${CMAKE_SOURCE_DIR}/hpAMR)
-include_directories(${CMAKE_SOURCE_DIR}/ElementData)
-include_directories(${CMAKE_SOURCE_DIR}/Mesh)
-include_directories(${CMAKE_SOURCE_DIR}/Operators)
-include_directories(${CMAKE_SOURCE_DIR}/IO)
-include_directories(${CMAKE_SOURCE_DIR}/Quadrature)
-include_directories(${CMAKE_SOURCE_DIR}/Utilities)
-include_directories(${CMAKE_SOURCE_DIR}/Kron)
-# include_directories(${CMAKE_SOURCE_DIR}/Ghost)
-include_directories(${CMAKE_SOURCE_DIR}/Databox)
-include_directories(${CMAKE_SOURCE_DIR}/Dictionary)
+include_directories(${CMAKE_SOURCE_DIR}/src/EllipticSystem)
+include_directories(${CMAKE_SOURCE_DIR}/src/Geometry)
+include_directories(${CMAKE_SOURCE_DIR}/src/Solver)
+include_directories(${CMAKE_SOURCE_DIR}/src/Estimators)
+include_directories(${CMAKE_SOURCE_DIR}/src/dGMath)
+include_directories(${CMAKE_SOURCE_DIR}/src/LinearAlgebra)
+include_directories(${CMAKE_SOURCE_DIR}/src/GridFunctions)
+include_directories(${CMAKE_SOURCE_DIR}/src/Problems)
+include_directories(${CMAKE_SOURCE_DIR}/src/Utilities)
+include_directories(${CMAKE_SOURCE_DIR}/src/pXest)
+include_directories(${CMAKE_SOURCE_DIR}/src/hpAMR)
+include_directories(${CMAKE_SOURCE_DIR}/src/ElementData)
+include_directories(${CMAKE_SOURCE_DIR}/src/Mesh)
+include_directories(${CMAKE_SOURCE_DIR}/src/Operators)
+include_directories(${CMAKE_SOURCE_DIR}/src/IO)
+include_directories(${CMAKE_SOURCE_DIR}/src/Quadrature)
+include_directories(${CMAKE_SOURCE_DIR}/src/Utilities)
+include_directories(${CMAKE_SOURCE_DIR}/src/Kron)
+# include_directories(${CMAKE_SOURCE_DIR}/src/Ghost)
+include_directories(${CMAKE_SOURCE_DIR}/src/Databox)
+include_directories(${CMAKE_SOURCE_DIR}/src/Dictionary)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${MPI_C_INCLUDE_PATH})
 
@@ -58,80 +58,80 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MPI_C_COMPILE_FLAG}")
 
 SET (
   SRCS_3D_ONLY
-  Geometry/d4est_geometry_cubed_sphere.c
-  Geometry/d4est_connectivity_cubed_sphere.c
-  Geometry/d4est_geometry_general_wedge.c
-  Geometry/d4est_geometry_hole_in_a_box.c
-  )
+  src/Geometry/d4est_geometry_cubed_sphere.c
+  src/Geometry/d4est_connectivity_cubed_sphere.c
+  src/Geometry/d4est_geometry_general_wedge.c
+  src/Geometry/d4est_geometry_hole_in_a_box.c
+)
 
 SET (
   SRCS_2D_ONLY
-  Geometry/d4est_geometry_disk.c
-  )
+  src/Geometry/d4est_geometry_disk.c
+)
 
 SET (
   SRCS
-  Utilities/ini.c
-  Utilities/d4est_util.c
-  LinearAlgebra/d4est_linalg.c
-  EllipticSystem/d4est_elliptic_eqns.c
-  EllipticSystem/d4est_elliptic_data.c
-  Kron/d4est_kron.c
-  dGMath/d4est_operators.c
-  dGMath/d4est_gradient.c
-  dGMath/d4est_ip_energy_norm.c
-  dGMath/d4est_lgl.c
-  dGMath/d4est_reference.c
-  dGMath/d4est_poisson.c
-  dGMath/d4est_poisson_flux.c
-  dGMath/d4est_poisson_flux_sipg.c
-  Geometry/d4est_geometry_brick.c
-  Geometry/d4est_geometry.c
-  Estimators/d4est_estimator_stats.c
-  Estimators/d4est_estimator_bi.c
-  Estimators/d4est_estimator_residual.c
-  hpAMR/d4est_amr.c
-  hpAMR/d4est_amr_uniform.c
-  hpAMR/d4est_amr_random.c
-  hpAMR/d4est_amr_smooth_pred.c
-  Mesh/d4est_element_data.c
-  Mesh/d4est_mesh.c
-  Mesh/d4est_xyz_functions.c
-  Mesh/d4est_mortars.c
-  Mesh/d4est_mortars_aux.c
-  # Ghost/d4est_ghost_data.c
-  Mesh/d4est_ghost_data.c
-  # Ghost/d4est_ghost.c
-  Mesh/d4est_ghost.c
-  Databox/d4est_databox.c
-  # Databox/d4est_databox_helpers.c
-  Dictionary/d4est_dictionary.c
-  Dictionary/d4est_critbit.c
-  Quadrature/d4est_quadrature.c
-  Quadrature/d4est_quadrature_legendre.c
-  Quadrature/d4est_quadrature_lobatto.c
-  IO/d4est_h5.c
-  IO/d4est_checkpoint.c
-  IO/d4est_vtk.c
-  IO/d4est_norms.c
-  Solver/d4est_solver_cg.c
-  Solver/d4est_solver_fcg.c
-  Solver/d4est_solver_newton.c
-  Solver/krylov_petsc.c
-  Solver/newton_petsc.c
-  Solver/krylov_pc_multigrid.c
-  Solver/multigrid.c
-  Solver/multigrid_bottom_solver_cg.c
-  Solver/multigrid_bottom_solver_cheby.c
-  Solver/multigrid_bottom_solver_krylov_petsc.c
-  Solver/multigrid_element_data_updater.c
-  Solver/multigrid_logger_residual.c
-  Solver/multigrid_matrix_operator.c
-  Solver/multigrid_smoother_cheby.c
-  Solver/multigrid_smoother_krylov_petsc.c
-  Solver/cg_eigs.c
-  Solver/d4est_solver_jacobian_tester.c
-  Solver/d4est_solver_test_symmetry.c
+  src/Utilities/ini.c
+  src/Utilities/d4est_util.c
+  src/LinearAlgebra/d4est_linalg.c
+  src/EllipticSystem/d4est_elliptic_eqns.c
+  src/EllipticSystem/d4est_elliptic_data.c
+  src/Kron/d4est_kron.c
+  src/dGMath/d4est_operators.c
+  src/dGMath/d4est_gradient.c
+  src/dGMath/d4est_ip_energy_norm.c
+  src/dGMath/d4est_lgl.c
+  src/dGMath/d4est_reference.c
+  src/dGMath/d4est_poisson.c
+  src/dGMath/d4est_poisson_flux.c
+  src/dGMath/d4est_poisson_flux_sipg.c
+  src/Geometry/d4est_geometry_brick.c
+  src/Geometry/d4est_geometry.c
+  src/Estimators/d4est_estimator_stats.c
+  src/Estimators/d4est_estimator_bi.c
+  src/Estimators/d4est_estimator_residual.c
+  src/hpAMR/d4est_amr.c
+  src/hpAMR/d4est_amr_uniform.c
+  src/hpAMR/d4est_amr_random.c
+  src/hpAMR/d4est_amr_smooth_pred.c
+  src/Mesh/d4est_element_data.c
+  src/Mesh/d4est_mesh.c
+  src/Mesh/d4est_xyz_functions.c
+  src/Mesh/d4est_mortars.c
+  src/Mesh/d4est_mortars_aux.c
+  src/# Ghost/d4est_ghost_data.c
+  src/Mesh/d4est_ghost_data.c
+  src/# Ghost/d4est_ghost.c
+  src/Mesh/d4est_ghost.c
+  src/Databox/d4est_databox.c
+  src/# Databox/d4est_databox_helpers.c
+  src/Dictionary/d4est_dictionary.c
+  src/Dictionary/d4est_critbit.c
+  src/Quadrature/d4est_quadrature.c
+  src/Quadrature/d4est_quadrature_legendre.c
+  src/Quadrature/d4est_quadrature_lobatto.c
+  src/IO/d4est_h5.c
+  src/IO/d4est_checkpoint.c
+  src/IO/d4est_vtk.c
+  src/IO/d4est_norms.c
+  src/Solver/d4est_solver_cg.c
+  src/Solver/d4est_solver_fcg.c
+  src/Solver/d4est_solver_newton.c
+  src/Solver/krylov_petsc.c
+  src/Solver/newton_petsc.c
+  src/Solver/krylov_pc_multigrid.c
+  src/Solver/multigrid.c
+  src/Solver/multigrid_bottom_solver_cg.c
+  src/Solver/multigrid_bottom_solver_cheby.c
+  src/Solver/multigrid_bottom_solver_krylov_petsc.c
+  src/Solver/multigrid_element_data_updater.c
+  src/Solver/multigrid_logger_residual.c
+  src/Solver/multigrid_matrix_operator.c
+  src/Solver/multigrid_smoother_cheby.c
+  src/Solver/multigrid_smoother_krylov_petsc.c
+  src/Solver/cg_eigs.c
+  src/Solver/d4est_solver_jacobian_tester.c
+  src/Solver/d4est_solver_test_symmetry.c
   )
 
 add_library(d8est ${SRCS} ${SRCS_3D_ONLY})
@@ -149,7 +149,7 @@ include(petsc)
 include(zlog)
 include(hdf5)
 
-subdirs(ThirdParty)
+subdirs(third_party)
 
 SET (
   LIBS
@@ -190,7 +190,7 @@ set_property(TARGET d8est APPEND_STRING PROPERTY
 
 
 function(add_d4est_problem_3d exec src parent_dir)
-  add_executable(${exec} driver.c ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/${src})
+  add_executable(${exec} src/driver.c ${CMAKE_SOURCE_DIR}/src/Problems/${parent_dir}/${src})
   target_link_libraries(${exec} d8est)
   set_target_properties(${exec} PROPERTIES COMPILE_DEFINITIONS "DIM=3")
   target_compile_definitions(${exec} PRIVATE D4EST_PROBLEM_NAME="${parent_dir}")
@@ -201,18 +201,18 @@ function(add_d4est_problem_3d exec src parent_dir)
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/*.input
+    ${CMAKE_SOURCE_DIR}/src/Problems/${parent_dir}/*.input
     ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/)
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/IO/logging.conf
+    ${CMAKE_SOURCE_DIR}/src/IO/logging.conf
     ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/logging.conf)
 endfunction()
 
 
 function(add_d4est_problem_2d exec src parent_dir)
-  add_executable(${exec} driver.c ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/${src})
+  add_executable(${exec} src/driver.c ${CMAKE_SOURCE_DIR}/src/Problems/${parent_dir}/${src})
   target_link_libraries(${exec} d4est)
   set_target_properties(${exec} PROPERTIES COMPILE_DEFINITIONS "DIM=2")
   set_target_properties(${exec}
@@ -222,18 +222,18 @@ function(add_d4est_problem_2d exec src parent_dir)
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/Problems/${parent_dir}/*.input
+    ${CMAKE_SOURCE_DIR}/src/Problems/${parent_dir}/*.input
     ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/)
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/IO/logging.conf
+    ${CMAKE_SOURCE_DIR}/src/IO/logging.conf
     ${CMAKE_CURRENT_BINARY_DIR}/${parent_dir}/logging.conf)
 endfunction()
 
 
 function(add_d4est_unit_test_3d exec src parent_dir test_name)
-  add_executable(${exec} ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/${src})
+  add_executable(${exec} ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/${src})
   target_link_libraries(${exec} d8est)
   add_test(NAME ${test_name} COMMAND ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
   target_compile_definitions(${exec} PRIVATE DIM=3)
@@ -245,18 +245,18 @@ function(add_d4est_unit_test_3d exec src parent_dir test_name)
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
+    ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/*.input
     "${CMAKE_BINARY_DIR}/Tests/")
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/IO/logging.conf
+    ${CMAKE_SOURCE_DIR}/src/IO/logging.conf
     ${CMAKE_CURRENT_BINARY_DIR}/Tests/logging.conf)
 endfunction()
 
 
 function(add_d4est_unit_test_2d exec src parent_dir test_name)
-  add_executable(${exec} ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/${src})
+  add_executable(${exec} ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/${src})
   target_link_libraries(${exec} d4est)
   add_test(NAME ${test_name} COMMAND ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
   target_compile_definitions(${exec} PRIVATE DIM=3)
@@ -268,12 +268,12 @@ function(add_d4est_unit_test_2d exec src parent_dir test_name)
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
+    ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/*.input
     "${CMAKE_BINARY_DIR}/Tests/")
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/IO/logging.conf
+    ${CMAKE_SOURCE_DIR}/src/IO/logging.conf
     ${CMAKE_CURRENT_BINARY_DIR}/Tests/logging.conf)
 endfunction()
 
@@ -284,7 +284,7 @@ function(add_d4est_bash_regression_test exec parent_dir test_name)
   # add_custom_command(
     # TARGET d4est POST_BUILD
     # COMMAND ${CMAKE_COMMAND} -E copy
-    # ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.input
+    # ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/*.input
     # "${CMAKE_BINARY_DIR}/Tests/${parent_dir}")
 
     # find_program (BASH_PROGRAM bash)
@@ -293,7 +293,7 @@ function(add_d4est_bash_regression_test exec parent_dir test_name)
     add_custom_command(
       TARGET d4est POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy
-      ${CMAKE_SOURCE_DIR}/Tests/${parent_dir}/*.sh
+      ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/*.sh
       "${CMAKE_BINARY_DIR}/Tests/")
 
     add_test(NAME ${test_name} COMMAND bash ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
@@ -304,7 +304,7 @@ function(add_d4est_bash_regression_test exec parent_dir test_name)
   # add_custom_command(
     # TARGET d4est POST_BUILD
     # COMMAND ${CMAKE_COMMAND} -E copy
-    # ${CMAKE_SOURCE_DIR}/IO/logging.conf
+    # ${CMAKE_SOURCE_DIR}/src/IO/logging.conf
     # ${CMAKE_CURRENT_BINARY_DIR}/Tests/${parent_dir}/logging.conf)
 endfunction()
 

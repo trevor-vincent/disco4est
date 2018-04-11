@@ -3,7 +3,7 @@ include (ExternalProject)
 #
 # Bundled zlib paths.
 #
-set(ZLIB_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/ThirdParty/zlib/install")
+set(ZLIB_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/third_party/zlib/install")
 set(ZLIB_BUNDLED_LIB    "${ZLIB_BUNDLED_PREFIX}/lib/libz.a")
 
 macro(zlib_use_bundled)
@@ -51,10 +51,10 @@ message(STATUS "Use zlib library: ${ZLIB_LIBRARIES}")
 
 macro(zlib_build)
   ExternalProject_Add(zlib
-    PREFIX              ${CMAKE_BINARY_DIR}/ThirdParty/zlib
-    SOURCE_DIR          ${CMAKE_SOURCE_DIR}/ThirdParty/zlib
+    PREFIX              ${CMAKE_BINARY_DIR}/third_party/zlib
+    SOURCE_DIR          ${CMAKE_SOURCE_DIR}/third_party/zlib
     CMAKE_ARGS
-      -DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_BINARY_DIR}/ThirdParty/zlib/install
+      -DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_BINARY_DIR}/third_party/zlib/install
       # -DBUILD_SHARED_LIBS:BOOL=OFF
   )
   set_target_properties(zlib PROPERTIES EXCLUDE_FROM_ALL ON)
