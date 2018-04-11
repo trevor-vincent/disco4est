@@ -348,9 +348,4 @@ d4est_poisson_apply_aij
     );
 
   D4EST_FREE_DIM_VEC(dudr);
-  
-  
-  /* printf("after apply mortar matrices "); */
-  /* DEBUG_PRINT_ARR_DBL(prob_vecs->Au, prob_vecs->local_nodes); */
-  
 }

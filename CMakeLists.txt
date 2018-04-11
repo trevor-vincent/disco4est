@@ -45,7 +45,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src/IO)
 include_directories(${CMAKE_SOURCE_DIR}/src/Quadrature)
 include_directories(${CMAKE_SOURCE_DIR}/src/Utilities)
 include_directories(${CMAKE_SOURCE_DIR}/src/Kron)
-# include_directories(${CMAKE_SOURCE_DIR}/src/Ghost)
 include_directories(${CMAKE_SOURCE_DIR}/src/Databox)
 include_directories(${CMAKE_SOURCE_DIR}/src/Dictionary)
 include_directories(${CMAKE_BINARY_DIR})
@@ -99,12 +98,9 @@ SET (
   src/Mesh/d4est_xyz_functions.c
   src/Mesh/d4est_mortars.c
   src/Mesh/d4est_mortars_aux.c
-  src/# Ghost/d4est_ghost_data.c
   src/Mesh/d4est_ghost_data.c
-  src/# Ghost/d4est_ghost.c
   src/Mesh/d4est_ghost.c
   src/Databox/d4est_databox.c
-  src/# Databox/d4est_databox_helpers.c
   src/Dictionary/d4est_dictionary.c
   src/Dictionary/d4est_critbit.c
   src/Quadrature/d4est_quadrature.c
@@ -178,16 +174,12 @@ endif()
 
 message("LIBS=${LIBS}")
 target_link_libraries(d4est ${LIBS})
-# set_target_properties(d4est PROPERTIES COMPILE_DEFINITIONS "DIM=2")
 set_property(TARGET d4est APPEND_STRING PROPERTY
   COMPILE_FLAGS " -DDIM=2")
 
-
 target_link_libraries(d8est ${LIBS})
-# set_target_properties(d8est PROPERTIES COMPILE_DEFINITIONS "DIM=3")
 set_property(TARGET d8est APPEND_STRING PROPERTY
   COMPILE_FLAGS " -DDIM=3")
-
 
 function(add_d4est_problem_3d exec src parent_dir)
   add_executable(${exec} src/driver.c ${CMAKE_SOURCE_DIR}/src/Problems/${parent_dir}/${src})
@@ -277,35 +269,14 @@ function(add_d4est_unit_test_2d exec src parent_dir test_name)
     ${CMAKE_CURRENT_BINARY_DIR}/Tests/logging.conf)
 endfunction()
 
-
-
 function(add_d4est_bash_regression_test exec parent_dir test_name)
-  # add_test(${test_name} "source ${CMAKE_BINARY_DIR}/Tests/${parent_dir}/${exec}")
-  # add_custom_command(
-    # TARGET d4est POST_BUILD
-    # COMMAND ${CMAKE_COMMAND} -E copy
-    # ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/*.input
-    # "${CMAKE_BINARY_DIR}/Tests/${parent_dir}")
-
-    # find_program (BASH_PROGRAM bash)
-
-    # if (BASH_PROGRAM)
     add_custom_command(
       TARGET d4est POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy
       ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/*.sh
       "${CMAKE_BINARY_DIR}/Tests/")
 
-    add_test(NAME ${test_name} COMMAND bash ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
-    
-    # endif (BASH_PROGRAM)
-    
-
-  # add_custom_command(
-    # TARGET d4est POST_BUILD
-    # COMMAND ${CMAKE_COMMAND} -E copy
-    # ${CMAKE_SOURCE_DIR}/src/IO/logging.conf
-    # ${CMAKE_CURRENT_BINARY_DIR}/Tests/${parent_dir}/logging.conf)
+    add_test(NAME ${test_name} COMMAND bash ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)  
 endfunction()
 
 
@@ -320,16 +291,13 @@ add_d4est_unit_test_3d(test_d4est_vtk test_d4est_vtk.c Unit test_d4est_vtk)
 add_d4est_unit_test_3d(test_d4est_operators test_d4est_operators.c Unit test_d4est_operators)
 add_d4est_unit_test_3d(test_d4est_kron test_d4est_kron.c Unit test_d4est_kron)
 add_d4est_unit_test_3d(test_d4est_linalg test_d4est_linalg.c Unit test_d4est_linalg)
+add_d4est_unit_test_3d(test_d4est_ghost_data test_d4est_ghost_data.c Unit test_d4est_ghost_data)
+
 add_d4est_bash_regression_test(d4est_test_stamm.sh Regression d4est_test_stamm)
 add_d4est_bash_regression_test(d4est_test_cds.sh Regression d4est_test_constant_density_star)
 add_d4est_bash_regression_test(d4est_test_poisson_sinx.sh Regression d4est_test_poisson_sinx)
 add_d4est_bash_regression_test(d4est_test_twopunctures.sh Regression d4est_test_twopunctures)
 add_d4est_bash_regression_test(d4est_test_mpi.sh Regression d4est_test_mpi)
-
-
-# add_d4est_unit_test_3d(test_d4est_ghost_data_2 test_d4est_ghost_data_2.c Unit test_d4est_ghost_data_2)
-add_d4est_unit_test_3d(test_d4est_ghost_data test_d4est_ghost_data.c Unit test_d4est_ghost_data)
-# add_d4est_unit_test_3d(test_d4est_operators_interpolate test_d4est_operators_interpolate.c . test_d4est_operators_interpolate)
 
 add_d4est_problem_2d(stamm_driver stamm_multigrid_pc.c Stamm)
 add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c PoissonSinx)
@@ -337,10 +305,4 @@ add_d4est_problem_3d(poisson_sinx_multigrid_driver poisson_sinx_multigrid.c Pois
 add_d4est_problem_3d(poisson_exp1or_uniform_driver poisson_exp1or_uniform.c PoissonExp1oR)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
 add_d4est_problem_3d(constant_density_star_robin_driver constant_density_star_robin.c ConstantDensityStar)
-# add_d4est_problem_3d(two_punctures_robin_driver two_punctures_robin_sphere_hp_mgpc_newton_petsc_cactus.c TwoPunctures)
-# add_d4est_problem_3d(two_punctures_robin_2_driver two_punctures_cactus.c TwoPunctures)
-# add_d4est_problem_3d(two_punctures_robin_3_driver two_punctures_cactus_2.c TwoPunctures)
-# add_d4est_problem_3d(two_punctures_robin_diff_geom_driver two_punctures_cactus_diff_geom.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_diff_geom_estimator_global_driver two_punctures_cactus_diff_geom_estimator_global.c TwoPunctures)
-# add_d4est_problem_3d(multi_puncture_robin_driver multi_puncture.c TwoPunctures)
-# add_d4est_problem_3d(two_punctures_dirichlet_driver two_punctures_dirichlet_sphere_hp_mgpc_newton_petsc_cactus.c TwoPunctures)
