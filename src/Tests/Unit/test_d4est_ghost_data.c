@@ -11,6 +11,7 @@
 #include <d4est_ghost_data.h>
 #include <d4est_field.h>
 #include <d4est_ghost.h>
+#include <d4est_util.h>
 #include <petscsnes.h>
 #include <zlog.h>
 
@@ -25,7 +26,7 @@ poly_fcn
 #endif
  void* user
 ){
-  return x;
+  return x*y*z;
 }
 
 static double
@@ -45,6 +46,13 @@ sinxyz_fcn
 
 int main(int argc, char *argv[])
 {
+
+#ifndef D4EST_TEST
+  D4EST_ABORT("D4EST_TEST not defined");
+#else
+  printf("D4EST_TEST is defined\n");
+#endif
+  
   sc_MPI_Comm mpicomm;
   PetscInitialize(&argc,&argv,(char*)0,NULL);
   mpicomm = PETSC_COMM_WORLD;
@@ -195,28 +203,12 @@ int main(int argc, char *argv[])
                    (void*)initial_grid_input
                   );
 
-  double* sinvec = P4EST_ALLOC(double, nodes);
-  /* double* element_volume = P4EST_ALLOC(double, p4est->local_num_quadrants); */
-
-  /* int k = 0; */
-  /* for (p4est_topidx_t tt = p4est->first_local_tree; */
-  /*      tt <= p4est->last_local_tree; */
-  /*      ++tt) */
-  /*   { */
-  /*     p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-  /*     sc_array_t* tquadrants = &tree->quadrants; */
-  /*     int Q = (p4est_locidx_t) tquadrants->elem_count; */
-  /*     for (int q = 0; q < Q; ++q, ++k) { */
-  /*       p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q); */
-  /*       d4est_element_data_t* ed = quad->p.user_data; */
-  /*       /\* element_volume[k] = ed->volume; *\/ */
-  /*     } */
-  /*   } */
+  double* vecs = P4EST_ALLOC(double, 2*nodes);
   
   d4est_mesh_init_field
     (
      p4est,
-     sinvec,
+     vecs,
      sinxyz_fcn,
      d4est_ops,
      d4est_geom,
@@ -225,66 +217,95 @@ int main(int argc, char *argv[])
      NULL
     );
 
+  d4est_mesh_init_field
+    (
+     p4est,
+     &vecs[nodes],
+     poly_fcn,
+     d4est_ops,
+     d4est_geom,
+     d4est_factors,
+     INIT_FIELD_ON_LOBATTO,
+     NULL
+    );
+  
   int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
   d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
-    
-
-  
+     
   d4est_vtk_save
     (
      p4est,
      d4est_ops,
      "test_d4est_ghost_data.input",
      "d4est_vtk",
-     (const char*[]){"sinvec", NULL},
-     (double**)((const double*[]){sinvec, NULL}),
+     (const char*[]){"sinvec", "polyvec", NULL},
+     (double**)((const double*[]){vecs, &vecs[nodes], NULL}),
      (const char*[]){NULL},
      (double**)((const double*[]){NULL}),
      -1
     );
-  /*  */
 
-  /* double* poly = P4EST_ALLOC(double, nodes); */
+  /* d4est_element_data_copy_from_vec_to_storage(p4est, sinvec); */
 
-  /* d4est_mesh_init_field */
-  /*   ( */
-  /*    p4est, */
-  /*    poly, */
-  /*    poly_fcn, */
-  /*    d4est_ops, */
-  /*    d4est_geom, */
-  /*    d4est_factors, */
-  /*    INIT_FIELD_ON_LOBATTO, */
-  /*    NULL */
-  /*   ); */
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
 
-  /* DEBUG_PRINT_ARR_DBL(sinvec, nodes); */
-
-  d4est_element_data_copy_from_vec_to_storage(p4est, sinvec);
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        d4est_util_copy_1st_to_2nd(&vecs[ed->nodal_stride], &ed->test_vecs[0][0], volume_nodes);
+        d4est_util_copy_1st_to_2nd(&vecs[nodes + ed->nodal_stride], &ed->test_vecs[1][0], volume_nodes);
+      }
+    }
+  
+  
   d4est_ghost_t* d4est_ghost = d4est_ghost_init(p4est);
-  d4est_field_type_t field_type = VOLUME_NODAL;
+  d4est_field_type_t field_type [2] = {VOLUME_NODAL,VOLUME_NODAL};
   d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
                                                                d4est_ghost,
-                                                               &field_type,
-                                                               1);
-  d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data,sinvec);
+                                                               &field_type[0],
+                                                               2);
+  
+  d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data,vecs);
   /* /\*  *\/ */
   for (int gid = 0; gid < d4est_ghost->ghost->ghosts.elem_count; gid++){
     d4est_element_data_t* ged = &d4est_ghost->ghost_elements[gid];
 
     double* ud = d4est_ghost_data_get_field_on_element(ged,0,d4est_ghost_data);
-    double* up = &ged->u_elem[0];
+    double* up = &ged->test_vecs[0][0];
 
     int size = d4est_element_data_get_size_of_field
                (
                 ged,
                 d4est_ghost_data->transfer_types[0]
                );
-    
+
+
     int compare = d4est_util_compare_vecs(ud, up, size, 1e-15);
-    /* DEBUG_PRINT_ARR_DBL(up,size); */
+    
+    double* ud1 = d4est_ghost_data_get_field_on_element(ged,1,d4est_ghost_data);
+    double* up1 = &ged->test_vecs[1][0];
+
+    int size1 = d4est_element_data_get_size_of_field
+               (
+                ged,
+                d4est_ghost_data->transfer_types[1]
+               );
+  
+    
+    int compare1 = d4est_util_compare_vecs(ud1, up1, size1, 1e-15);
+    
     if (!compare){
       DEBUG_PRINT_2ARR_DBL(ud, up, size);
+    }
+    if (!compare1){
+      DEBUG_PRINT_2ARR_DBL(ud1, up1, size);
     }
   }
   
@@ -292,10 +313,8 @@ int main(int argc, char *argv[])
   d4est_ghost_data_destroy(d4est_ghost_data);
   
 
-  /* P4EST_FREE(poly); */
   P4EST_FREE(deg_array);
-  /* P4EST_FREE(element_volume); */
-  P4EST_FREE(sinvec);
+  P4EST_FREE(vecs);
   d4est_amr_destroy(d4est_amr_random);
   
 

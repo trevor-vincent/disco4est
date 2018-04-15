@@ -131,9 +131,11 @@ SET (
   )
 
 add_library(d8est ${SRCS} ${SRCS_3D_ONLY})
+add_library(d8est_test ${SRCS} ${SRCS_3D_ONLY})
 add_library(d4est ${SRCS} ${SRCS_2D_ONLY})
 
 add_dependencies(d8est build_bundled_libs)
+add_dependencies(d8est_test build_bundled_libs)
 add_dependencies(d4est build_bundled_libs)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
 add_custom_target(build_bundled_libs)
@@ -181,6 +183,10 @@ target_link_libraries(d8est ${LIBS})
 set_property(TARGET d8est APPEND_STRING PROPERTY
   COMPILE_FLAGS " -DDIM=3")
 
+target_link_libraries(d8est_test ${LIBS})
+set_property(TARGET d8est_test APPEND_STRING PROPERTY
+  COMPILE_FLAGS "-DDIM=3 -DD4EST_TEST=1")
+
 function(add_d4est_problem_3d exec src parent_dir)
   add_executable(${exec} src/driver.c ${CMAKE_SOURCE_DIR}/src/Problems/${parent_dir}/${src})
   target_link_libraries(${exec} d8est)
@@ -226,13 +232,15 @@ endfunction()
 
 function(add_d4est_unit_test_3d exec src parent_dir test_name)
   add_executable(${exec} ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/${src})
-  target_link_libraries(${exec} d8est)
+  target_link_libraries(${exec} d8est_test)
   add_test(NAME ${test_name} COMMAND ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
-  target_compile_definitions(${exec} PRIVATE DIM=3)
+  # target_compile_definitions(${exec} PRIVATE DIM=3)
+  target_compile_definitions(${exec} PRIVATE DIM=3 D4EST_TEST=1)
   set_target_properties(${exec}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/"
     )
+
   
   add_custom_command(
     TARGET ${exec} POST_BUILD
@@ -251,12 +259,12 @@ function(add_d4est_unit_test_2d exec src parent_dir test_name)
   add_executable(${exec} ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/${src})
   target_link_libraries(${exec} d4est)
   add_test(NAME ${test_name} COMMAND ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
-  target_compile_definitions(${exec} PRIVATE DIM=3)
+  target_compile_definitions(${exec} PRIVATE DIM=2 D4EST_TEST=1)
   set_target_properties(${exec}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/"
     )
-  
+  # target_compile_definitions(${exec} PRIVATE D4EST_TEST=1)  
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy

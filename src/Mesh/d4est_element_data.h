@@ -37,6 +37,11 @@ typedef struct {
   
   /* WILL BE DEPRECATED SOON */
   double u_elem[MAX_NODES];   /* storage for MPI transfers */
+
+#ifdef D4EST_TEST
+  double test_vecs[3][MAX_NODES];
+#endif
+
   double* dudr_elem[(P4EST_DIM)];   /* alias for dudr */
   double* Au_elem;  /* alias for Au */
   
