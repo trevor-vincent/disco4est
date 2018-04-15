@@ -49,8 +49,6 @@ int main(int argc, char *argv[])
 
 #ifndef D4EST_TEST
   D4EST_ABORT("D4EST_TEST not defined");
-#else
-  printf("D4EST_TEST is defined\n");
 #endif
   
   sc_MPI_Comm mpicomm;
@@ -173,8 +171,12 @@ int main(int argc, char *argv[])
   p4est_partition(p4est, 1, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
 
-  d4est_amr_t* d4est_amr_random = d4est_amr_init_uniform_h(p4est, 7, 1);
-  
+  /* d4est_amr_t* d4est_amr_random = d4est_amr_init_uniform_h(p4est, 7, 1); */
+  int num_of_amr_steps = 3;
+  d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, 7, num_of_amr_steps);
+
+  int nodes = -1;
+  for (int i = 0; i < num_of_amr_steps; i++){
   d4est_amr_step
     (
      p4est,
@@ -187,7 +189,7 @@ int main(int argc, char *argv[])
      NULL
     );
 
-  int nodes = d4est_mesh_update
+  nodes = d4est_mesh_update
                   (
                    p4est,
                    ghost,
@@ -202,7 +204,8 @@ int main(int argc, char *argv[])
                    d4est_mesh_set_quadratures_after_amr,
                    (void*)initial_grid_input
                   );
-
+  }
+  
   double* vecs = P4EST_ALLOC(double, 2*nodes);
   
   d4est_mesh_init_field
