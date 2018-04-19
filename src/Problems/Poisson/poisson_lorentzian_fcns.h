@@ -13,6 +13,40 @@ typedef struct {
 } problem_ctx_t;
 
 
+double
+poisson_lorentzian_robin_coeff_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user,
+ d4est_poisson_flux_boundary_data_t* boundary_data,
+ int mortar_node
+)
+{
+  double r2 = x*x + y*y + z*z;
+  return sqrt(r2)/(1. + r2);
+}
+
+double
+poisson_lorentzian_robin_bc_rhs_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user,
+ d4est_poisson_flux_boundary_data_t* boundary_data,
+ int mortar_node
+)
+{
+  return 0.;
+}
+
+
 static double
 poisson_lorentzian_analytic_solution
 (

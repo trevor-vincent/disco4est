@@ -30,6 +30,54 @@
 #include <zlog.h>
 #include "poisson_lorentzian_fcns.h"
 
+
+typedef struct {
+  
+  int use_dirichlet;
+  
+} poisson_lorentzian_init_params_t;
+
+
+
+static
+int poisson_lorentzian_init_params_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  poisson_lorentzian_init_params_t* pconfig = (poisson_lorentzian_init_params_t*)user;
+  if (d4est_util_match_couple(section,"problem",name,"use_dirichlet")) {
+    D4EST_ASSERT(pconfig->use_dirichlet == -1);
+    pconfig->use_dirichlet = atoi(value);
+  }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+static
+poisson_lorentzian_init_params_t
+poisson_lorentzian_init_params_input
+(
+ const char* input_file
+)
+{
+  poisson_lorentzian_init_params_t input;
+  input.use_dirichlet = -1;
+
+  if (ini_parse(input_file, poisson_lorentzian_init_params_handler, &input) < 0) {
+    D4EST_ABORT("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
+  
+  return input;
+}
+
 void
 problem_init
 (
@@ -48,25 +96,51 @@ problem_init
   zlog_category_t *c_default = zlog_get_category("problem");
 
   int initial_nodes = initial_extents->initial_nodes;
+
+
+
+  poisson_lorentzian_init_params_t init_params = poisson_lorentzian_init_params_input
+                                            (
+                                             input_file
+                                            ); 
+
   
   dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
   
   // Setup boundary conditions
-  d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
-  bc_data_for_lhs.dirichlet_fcn = zero_fcn;
-  bc_data_for_lhs.eval_method = eval_method;
+
+  d4est_poisson_robin_bc_t bc_data_robin_for_lhs;
+  bc_data_robin_for_lhs.robin_coeff = poisson_lorentzian_robin_coeff_fcn;
+  bc_data_robin_for_lhs.robin_rhs = poisson_lorentzian_robin_bc_rhs_fcn;
   
-  d4est_poisson_dirichlet_bc_t bc_data_for_rhs;
-  bc_data_for_rhs.dirichlet_fcn = poisson_lorentzian_boundary_fcn;
-  bc_data_for_rhs.eval_method = eval_method;
+  d4est_poisson_dirichlet_bc_t bc_data_dirichlet_for_lhs;
+  bc_data_dirichlet_for_lhs.dirichlet_fcn = zero_fcn;
+  bc_data_dirichlet_for_lhs.eval_method = eval_method;
   
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs);
+  d4est_poisson_dirichlet_bc_t bc_data_dirichlet_for_rhs;
+  bc_data_dirichlet_for_rhs.dirichlet_fcn = poisson_lorentzian_boundary_fcn;
+  bc_data_dirichlet_for_rhs.eval_method = eval_method;
   
-  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_rhs);
+  d4est_poisson_flux_data_t* flux_data_for_lhs = NULL;//d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_lhs);
+  
+  d4est_poisson_flux_data_t* flux_data_for_rhs = NULL;//d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
+
+  if(init_params.use_dirichlet){
+    flux_data_for_lhs
+      = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_lhs);
+  
+    flux_data_for_rhs
+      = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
+  }
+  else {  
+    flux_data_for_lhs = d4est_poisson_flux_new(p4est, input_file, BC_ROBIN, &bc_data_robin_for_lhs);
+    flux_data_for_rhs = d4est_poisson_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_robin_for_lhs);
+  }
+  
 
   problem_ctx_t ctx;
-  ctx.flux_data_for_apply_lhs = flux_data_for_apply_lhs;
-  ctx.flux_data_for_build_rhs = flux_data_for_build_rhs;
+  ctx.flux_data_for_apply_lhs = flux_data_for_lhs;
+  ctx.flux_data_for_build_rhs = flux_data_for_rhs;
 
 
   d4est_elliptic_eqns_t prob_fcns;
@@ -81,7 +155,7 @@ problem_init
   prob_vecs.rhs = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.local_nodes = initial_nodes;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
+  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_lhs->flux_data;
   
   
   // Setup norm function contexts
@@ -132,7 +206,7 @@ problem_init
     d4est_quad,
     d4est_factors,
     &prob_vecs,
-    flux_data_for_build_rhs,
+    flux_data_for_rhs,
     prob_vecs.rhs,
     poisson_lorentzian_rhs_fcn,
     INIT_FIELD_ON_LOBATTO,
@@ -343,7 +417,7 @@ problem_init
       d4est_quad,
       d4est_factors,
       &prob_vecs,
-      flux_data_for_build_rhs,
+      flux_data_for_rhs,
       prob_vecs.rhs,
       poisson_lorentzian_rhs_fcn,
       INIT_FIELD_ON_LOBATTO,
@@ -355,8 +429,8 @@ problem_init
     zlog_info(c_default, "Finishing up. Starting garbage collection...");
     
   d4est_amr_destroy(d4est_amr);
-  d4est_poisson_flux_destroy(flux_data_for_apply_lhs);
-  d4est_poisson_flux_destroy(flux_data_for_build_rhs);
+  d4est_poisson_flux_destroy(flux_data_for_lhs);
+  d4est_poisson_flux_destroy(flux_data_for_rhs);
   P4EST_FREE(prob_vecs.u);
   P4EST_FREE(prob_vecs.Au);
   P4EST_FREE(prob_vecs.rhs);
