@@ -6,8 +6,6 @@
 #include <d4est_operators.h>
 #include <zlog.h>
 
-
-/** This object encapsulates a custom geometry transformation. */
 typedef struct d4est_geometry d4est_geometry_t;
 
 typedef enum {COMPUTE_NORMAL_USING_JACOBIAN, COMPUTE_NORMAL_USING_CROSS_PRODUCT} normal_compute_method_t;
@@ -38,9 +36,9 @@ typedef struct {
 
 typedef enum {GEOM_CUBED_SPHERE_13TREE,
               GEOM_CUBED_SPHERE_7TREE,
-              GEOM_CUBED_SPHERE_OUTER_SHELL,
-              GEOM_CUBED_SPHERE_INNER_SHELL,
-              GEOM_CUBED_SPHERE_INNEROUTER_SHELL,
+              GEOM_CUBED_SPHERE_OUTER_WEDGE,
+              GEOM_CUBED_SPHERE_INNER_WEDGE,
+              GEOM_CUBED_SPHERE_INNEROUTER_WEDGE,
               GEOM_CUBED_SPHERE_WITH_CUBE_HOLE,
               GEOM_CUBED_SPHERE_WITH_SPHERE_HOLE,
               GEOM_DISK_5TREE,
@@ -64,11 +62,6 @@ typedef enum {GEOM_CUBED_SPHERE_13TREE,
 
 typedef enum {COORDS_INTEG_RST, COORDS_P4EST_INT, COORDS_TREE_UNITCUBE} coords_type_t;
 
-/** Forward transformation from the reference unit square to physical space.
- * Note that the two-dimensional connectivities have 3D vertex coordinates
- * that can be used in the transformation if so desired.
- * The physical space "xyz" is user-defined, currently used for VTK output.
- */
 typedef void        (*d4est_geometry_VEC_t) (d4est_geometry_t*,
                                            p4est_topidx_t ,
                                            p4est_qcoord_t [(P4EST_DIM)],
@@ -95,10 +88,6 @@ typedef void        (*d4est_geometry_SCA_t) (d4est_geometry_t*,
                                             );
 
 
-/** Destructor prototype for a user-allocated \a p4est_geometry_t.
- * It is invoked by p4est_geometry_destroy.  If the user chooses to
- * reserve the structure statically, simply don't call p4est_geometry_destroy.
- */
 typedef void        (*d4est_geometry_destroy_t) (d4est_geometry_t * geom);
 
 struct d4est_geometry {

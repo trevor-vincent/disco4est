@@ -19,6 +19,15 @@ int d4est_geometry_cubed_sphere_get_number_of_regions
   else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_13TREE){
     return 3;
   }
+  else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_INNER_WEDGE){
+    return 1;
+  }
+  else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_OUTER_WEDGE){
+    return 1;
+  }
+  else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_INNEROUTER_WEDGE){
+    return 1;
+  }
   else {
     D4EST_ABORT("Not supported yet");
     return -1;
@@ -51,6 +60,15 @@ int d4est_geometry_cubed_sphere_get_region
     else {                  /* center cube */
       return 2;
     }
+  }
+  else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_INNER_WEDGE){
+    return 0;
+  }
+  else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_OUTER_WEDGE){
+    return 0;
+  }
+  else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_INNEROUTER_WEDGE){
+    return tree;
   }
   else {
     D4EST_ABORT("Not supported yet");
@@ -1791,6 +1809,7 @@ d4est_geometry_cubed_sphere_outer_shell_block_new
     zlog_debug(c_default, "NAME = cubed sphere outer shell block");
     zlog_debug(c_default, "R0 = %.25f", sphere_attrs->R0);
     zlog_debug(c_default, "R1 = %.25f", sphere_attrs->R1);
+    zlog_debug(c_default, "R2 = %.25f", sphere_attrs->R2);
     zlog_debug(c_default, "compactify_outer_shell = %d", sphere_attrs->compactify_outer_shell);
   }
 }
@@ -1858,3 +1877,4 @@ d4est_geometry_cubed_sphere_with_sphere_hole_new
     zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
+

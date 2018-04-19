@@ -156,17 +156,17 @@ d4est_geometry_new(int mpirank,
     d4est_geometry_cubed_sphere_with_sphere_hole_new(mpirank, input_file, input_section, c_default,  d4est_geom);
     d4est_geom->geom_type = GEOM_CUBED_SPHERE_WITH_SPHERE_HOLE;
   }
-  else if (d4est_util_match(input.name,"cubed_sphere_innerouter_shell")) {
+  else if (d4est_util_match(input.name,"cubed_sphere_innerouter_wedge")) {
     d4est_geometry_cubed_sphere_innerouter_shell_new(mpirank, input_file, input_section, c_default, d4est_geom);
-    d4est_geom->geom_type = GEOM_CUBED_SPHERE_INNEROUTER_SHELL;
+    d4est_geom->geom_type = GEOM_CUBED_SPHERE_INNEROUTER_WEDGE;
   }
-  else if (d4est_util_match(input.name,"cubed_sphere_outer_shell_block")){
+  else if (d4est_util_match(input.name,"cubed_sphere_outer_wedge")){
     d4est_geometry_cubed_sphere_outer_shell_block_new(mpirank, input_file, input_section, c_default, d4est_geom);
-    d4est_geom->geom_type = GEOM_CUBED_SPHERE_OUTER_SHELL;
+    d4est_geom->geom_type = GEOM_CUBED_SPHERE_OUTER_WEDGE;
   }
-  else if (d4est_util_match(input.name,"cubed_sphere_inner_shell_block")){
+  else if (d4est_util_match(input.name,"cubed_sphere_inner_wedge")){
     d4est_geometry_cubed_sphere_inner_shell_block_new(mpirank, input_file, input_section, c_default, d4est_geom);
-    d4est_geom->geom_type = GEOM_CUBED_SPHERE_INNER_SHELL;
+    d4est_geom->geom_type = GEOM_CUBED_SPHERE_INNER_WEDGE;
   }
   else if (d4est_util_match(input.name,"none")){
     d4est_geom->geom_type = GEOM_NONE;

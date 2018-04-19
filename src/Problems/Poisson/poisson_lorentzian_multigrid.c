@@ -28,18 +28,7 @@
 #include <d4est_util.h>
 #include <time.h>
 #include <zlog.h>
-#include "poisson_exp1ox_fcns.h"
-
-
-int
-problem_set_mortar_degree
-(
- d4est_element_data_t* elem_data,
- void* user_ctx
-)
-{
-  return elem_data->deg_quad;
-}
+#include "poisson_lorentzian_fcns.h"
 
 void
 problem_init
@@ -68,7 +57,7 @@ problem_init
   bc_data_for_lhs.eval_method = eval_method;
   
   d4est_poisson_dirichlet_bc_t bc_data_for_rhs;
-  bc_data_for_rhs.dirichlet_fcn = poisson_exp1ox_boundary_fcn;
+  bc_data_for_rhs.dirichlet_fcn = poisson_lorentzian_boundary_fcn;
   bc_data_for_rhs.eval_method = eval_method;
   
   d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs);
@@ -81,8 +70,8 @@ problem_init
 
 
   d4est_elliptic_eqns_t prob_fcns;
-  prob_fcns.build_residual = poisson_exp1ox_build_residual;
-  prob_fcns.apply_lhs = poisson_exp1ox_apply_lhs;
+  prob_fcns.build_residual = poisson_lorentzian_build_residual;
+  prob_fcns.apply_lhs = poisson_lorentzian_apply_lhs;
   prob_fcns.user = &ctx;
 
 
@@ -126,7 +115,7 @@ problem_init
   d4est_mesh_init_field(
     p4est,
     prob_vecs.u,
-    poisson_exp1ox_initial_guess,
+    poisson_lorentzian_initial_guess,
     d4est_ops,
     d4est_geom,
     d4est_factors,
@@ -145,7 +134,7 @@ problem_init
     &prob_vecs,
     flux_data_for_build_rhs,
     prob_vecs.rhs,
-    poisson_exp1ox_rhs_fcn,
+    poisson_lorentzian_rhs_fcn,
     INIT_FIELD_ON_LOBATTO,
     &ctx
   );
@@ -200,41 +189,41 @@ problem_init
 
     // Krylov PETSc solve
     
-    /* krylov_petsc_params_t krylov_petsc_params; */
-    /* krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_petsc_params); */
+    krylov_petsc_params_t krylov_petsc_params;
+    krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_petsc_params);
     
-    /* krylov_petsc_solve( */
-    /*   p4est, */
-    /*   &prob_vecs, */
-    /*   &prob_fcns, */
-    /*   ghost, */
-    /*   ghost_data, */
-    /*   d4est_ops, */
-    /*   d4est_geom, */
-    /*   d4est_quad, */
-    /*   d4est_factors, */
-    /*   &krylov_petsc_params, */
-    /*   pc */
-    /* ); */
+    krylov_petsc_solve(
+      p4est,
+      &prob_vecs,
+      &prob_fcns,
+      ghost,
+      ghost_data,
+      d4est_ops,
+      d4est_geom,
+      d4est_quad,
+      d4est_factors,
+      &krylov_petsc_params,
+      pc
+    );
 
 
-    d4est_solver_cg_params_t fcg_params;
-    d4est_solver_cg_input(p4est, input_file, "d4est_solver_cg", "[D4EST_SOLVER_CG]", &fcg_params);
+    /* d4est_solver_cg_params_t fcg_params; */
+    /* d4est_solver_cg_input(p4est, input_file, "d4est_solver_cg", "[D4EST_SOLVER_CG]", &fcg_params); */
     
-    d4est_solver_cg_solve
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       ghost,
-       ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       &fcg_params,
-       pc
-      );
+    /* d4est_solver_cg_solve */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    &prob_fcns, */
+    /*    ghost, */
+    /*    ghost_data, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*    d4est_factors, */
+    /*    &fcg_params, */
+    /*    pc */
+    /*   ); */
 
     // Compute and save mesh data to a VTK file
     
@@ -243,7 +232,7 @@ problem_init
     d4est_mesh_init_field(
       p4est,
       u_analytic,
-      poisson_exp1ox_analytic_solution,
+      poisson_lorentzian_analytic_solution,
       d4est_ops, // unnecessary?
       d4est_geom, // unnecessary?
       d4est_factors,
@@ -255,6 +244,21 @@ problem_init
     double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
     d4est_linalg_vec_fabsdiff(prob_vecs.u, u_analytic, error, prob_vecs.local_nodes);
 
+    double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
+    d4est_mesh_compute_l2_norm_sqr
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       error,
+       prob_vecs.local_nodes,
+       NULL,
+       error_l2
+      );
+    
+    
     // Save to VTK file
     d4est_vtk_save(
       p4est,
@@ -263,8 +267,8 @@ problem_init
       "d4est_vtk",
       (const char * []){"u","u_analytic","error", NULL},
       (double* []){prob_vecs.u, u_analytic, error},
-      (const char * []){NULL},
-      (double* []){NULL},
+      (const char * []){"error_l2",NULL},
+      (double* []){error_l2},
       level
     );
     
@@ -282,7 +286,8 @@ problem_init
       (void * []){ &L2_norm_ctx, NULL },
       NULL
     );
-    
+
+    P4EST_FREE(error_l2);    
     P4EST_FREE(error);
     P4EST_FREE(u_analytic);
 
@@ -340,7 +345,7 @@ problem_init
       &prob_vecs,
       flux_data_for_build_rhs,
       prob_vecs.rhs,
-      poisson_exp1ox_rhs_fcn,
+      poisson_lorentzian_rhs_fcn,
       INIT_FIELD_ON_LOBATTO,
       &ctx
     );
