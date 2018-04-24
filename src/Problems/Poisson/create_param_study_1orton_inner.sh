@@ -28,12 +28,13 @@ region1_deg = $1
 region1_deg_quad_inc = $2
 
 [problem]
-use_dirichlet = $9
+use_dirichlet = $3
+n = $4
 
 [flux]
 name = sipg
-sipg_penalty_prefactor = $3
-sipg_flux_h = $4
+sipg_penalty_prefactor = $5
+sipg_flux_h = $6
 sipg_penalty_fcn = maxp_sqr_over_minh
 
 [amr]
@@ -42,11 +43,11 @@ num_of_amr_steps = 100
 max_degree = 7
 
 [geometry]
-name = cubed_sphere_7tree
-R0 = $5
-R1 = $6
+name = cubed_sphere_inner_wedge
+R0 = $7
+R1 = $8
 compactify_outer_shell = 0
-compactify_inner_shell = 1
+compactify_inner_shell = $9
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
@@ -76,8 +77,8 @@ ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 0
 
 [multigrid]
-vcycle_imax = $7;
-vcycle_rtol = $8;
+vcycle_imax = 1;
+vcycle_rtol = 1e-15;
 vcycle_atol = 0.;
 smoother_name = mg_smoother_cheby
 bottom_solver_name = mg_bottom_solver_cg_d4est
@@ -114,13 +115,13 @@ EOF
 
 arr1=( 1 2 3 4 5 ) 
 arr2=( 0 1 ) #percentile
-arr3=( 2. 10. ) #gammah
-arr4=( "H_EQ_J_DIV_SJ_MIN_LOBATTO" ) #penalty
-arr5=( 5 ) #hrefine til inview
-arr6=( 10 1000 ) #domain size
-arr7=( 1 ) #Gauss offset
-arr8=( 1e-15 )
-arr9=( 0 1 )
+arr3=( 0 1 ) #gammah
+arr4=( 1 2 3 4 5 ) #gammah
+arr5=( 2 ) #gammah
+arr6=( "H_EQ_J_DIV_SJ_MIN_LOBATTO" ) #penalty
+arr7=( 5 ) #hrefine til inview
+arr8=( 10 1000 ) #domain size
+arr9=( 1 ) #Gauss offset
 
 for a in "${arr1[@]}"
 do
