@@ -285,7 +285,7 @@ problem_init
       d4est_quad,
       d4est_factors,
       &krylov_petsc_params,
-      pc
+      (num_of_levels == 1) ? NULL : pc
     );
 
 
