@@ -1,6 +1,24 @@
 #ifndef MULTIGRID_CALLBACKS_H
 #define MULTIGRID_CALLBACKS_H 
 
+static void
+multigrid_p_coarsen
+(
+ p4est_iter_volume_info_t * info,
+ void *user_data
+){
+  multigrid_data_t* mg_data = (multigrid_data_t*) info->p4est->user_pointer;
+  multigrid_refine_data_t* coarse_grid_refinement = (multigrid_refine_data_t*) mg_data->coarse_grid_refinement;
+  p4est_quadrant_t *q = info->quad;
+  d4est_element_data_t* ed = (d4est_element_data_t *) q->p.user_data;
+  int* stride = &mg_data->stride;
+  coarse_grid_refinement[*stride].hrefine = 0;
+  coarse_grid_refinement[*stride].degh[0] = ed->deg;
+  coarse_grid_refinement[*stride].degH = d4est_util_max_int(ed->deg - 1,1);
+  ed->deg = coarse_grid_refinement[*stride].degH;
+  (*stride)++;
+}
+
 static int
 multigrid_coarsen (
                    p4est_t * p4est,

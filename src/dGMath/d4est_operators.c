@@ -1373,9 +1373,8 @@ void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double* in, int di
 
 void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int dim,
                          int face, int deg, double* out) {
+  
   D4EST_ASSERT(face < 2 * (dim));
-  /* int nodes = d4est_util_pow_int(deg+1, DIM); */
-
   double* slicer_1d = d4est_operators_fetch_lift_1d(d4est_ops, deg);
 
   int dir;  /* x <-> 0; y <-> 1; z <-> 2  */
@@ -1404,8 +1403,6 @@ void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int 
     side = -1;
     D4EST_ABORT("ERROR 0: d4est_operators_lift_boundary_vec");
   }
-
-  /* d4est_util_print_matrix(slicer_1d, (deg+1), 1, "slicer_1d = ", 0); */
 
   if (dim == 2){
 

@@ -427,19 +427,32 @@ problem_init
 
     // Setup multigrid
     
-    int min_level, max_level;
+    /* int min_level, max_level; */
 
-    multigrid_get_level_range(p4est, &min_level, &max_level);
-    zlog_debug(c_default, "Multigrid (min_level, max_level) = (%d, %d)", min_level, max_level);
+    /* multigrid_get_level_range(p4est, &min_level, &max_level); */
+    /* zlog_debug(c_default, "Multigrid (min_level, max_level) = (%d, %d)", min_level, max_level); */
 
     /* need to do a reduce on min,max_level before supporting multiple proc */
     /* mpi_assert(proc_size == 1); */
-    int num_of_levels = max_level + 1;
+    /* int num_of_levels = max_level + 1; */
+
+    multigrid_data_t* mg_data = multigrid_data_init(
+      p4est,
+      d4est_ops,
+      d4est_geom,
+      d4est_quad,
+      /* num_of_levels, */
+      /* logger, */
+      /* user_callbacks, */
+      /* updater, */
+      input_file
+    );
+
 
     multigrid_logger_t* logger = multigrid_logger_residual_init();
     
     multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init(
-      num_of_levels,
+      mg_data->num_of_levels,
       ghost,
       ghost_data,
       d4est_factors,
@@ -447,20 +460,16 @@ problem_init
       initial_extents
     );
 
-    multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, num_of_levels);
+    multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, mg_data->num_of_levels);
 
-    multigrid_data_t* mg_data = multigrid_data_init(
-      p4est,
-      d4est_ops,
-      d4est_geom,
-      d4est_quad,
-      num_of_levels,
-      logger,
-      user_callbacks,
-      updater,
-      input_file
+    
+    multigrid_set_callbacks(
+                            mg_data,
+                            logger,
+                            user_callbacks,
+                            updater
     );
-
+    
     krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, constant_density_star_krylov_pc_setup_fcn);
     ctx.use_matrix_operator = 1;
     ctx.mg_data = mg_data;
@@ -512,7 +521,7 @@ problem_init
 
     krylov_pc_multigrid_destroy(pc);
     multigrid_logger_residual_destroy(logger);
-    multigrid_element_data_updater_destroy(updater, num_of_levels);
+    multigrid_element_data_updater_destroy(updater, mg_data->num_of_levels);
     multigrid_data_destroy(mg_data);
     multigrid_matrix_operator_destroy(user_callbacks);
 

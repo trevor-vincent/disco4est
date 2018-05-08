@@ -18,6 +18,34 @@
 #include <zlog.h>
 #include <time.h>
 
+
+int
+multigrid_get_p_coarsen_levels
+(
+ p4est_t* p4est
+)
+{
+  int local_max_degree = d4est_mesh_get_local_max_degree(p4est);
+  int global_max_degree = -1;
+  
+  if(p4est->mpisize > 1){
+    sc_allreduce
+      (
+       &local_max_degree,
+       &global_max_degree,
+       1,
+       sc_MPI_INT,
+       sc_MPI_MAX,
+       sc_MPI_COMM_WORLD
+      );
+  }
+  else {
+    global_max_degree = local_max_degree;
+  }
+
+  return global_max_degree - 1;
+}
+
 /** 
  * Calculates the min level and max level of the multigrid
  * hiearchy across cores. I would not trust the minimum except
@@ -27,12 +55,10 @@
  * @param min_level 
  * @param max_level 
  */
-void
-multigrid_get_level_range
+int
+multigrid_get_h_coarsen_levels
 (
- p4est_t* p4est,
- int* min_level,
- int* max_level
+ p4est_t* p4est
 )
 {
   int level;
@@ -76,11 +102,13 @@ multigrid_get_level_range
   }
 
   
-  *min_level = global_reduce[0]*-1;
+  int min_level = global_reduce[0]*-1;
   if(p4est->mpisize == 1){
-    *min_level = 0;
+    min_level = 0;
   }
-  *max_level = global_reduce[1];
+  int max_level = global_reduce[1];
+
+  return max_level + 1;
 }
 
 static void
@@ -141,6 +169,10 @@ int multigrid_input_handler
   if (d4est_util_match_couple(section,"multigrid",name,"vcycle_imax")) {
     D4EST_ASSERT(mg_data->vcycle_imax == -1);
     mg_data->vcycle_imax = atoi(value);
+  }
+  if (d4est_util_match_couple(section,"multigrid",name,"use_p_coarsen")) {
+    D4EST_ASSERT(mg_data->use_p_coarsen == 0);
+    mg_data->use_p_coarsen = atoi(value);
   }
   else if (d4est_util_match_couple(section,"multigrid",name,"vcycle_rtol")) {
     D4EST_ASSERT(mg_data->vcycle_rtol == -1);
@@ -272,23 +304,26 @@ multigrid_data_init
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- int num_of_levels,
- multigrid_logger_t* logger,
- multigrid_user_callbacks_t* user_callbacks,
- multigrid_element_data_updater_t* updater,
+ /* int num_of_levels, */
+
  const char* input_file
 )
 {
   multigrid_data_t* mg_data = P4EST_ALLOC(multigrid_data_t, 1);
   D4EST_ASSERT(num_of_levels > 0);
 
+  int multigrid_min_level, multigrid_max_level;
+  int num_of_h_coarsen_levels = multigrid_get_h_coarsen_levels(p4est);  
+
   mg_data->d4est_ops = d4est_ops;
   mg_data->d4est_geom = d4est_geom;
   mg_data->d4est_quad = d4est_quad;
-  mg_data->num_of_levels = num_of_levels;
+  mg_data->num_of_levels = num_of_h_coarsen_levels;
   mg_data->vcycle_atol = -1;
   mg_data->vcycle_rtol = -1;
   mg_data->vcycle_imax = -1;
+  mg_data->num_of_p_coarsen_levels = 0;
+  mg_data->use_p_coarsen = 0;
   mg_data->bottom_solver_name[0] = '*';
   mg_data->smoother_name[0] = '*';
   mg_data->Ae_at0 = NULL;
@@ -304,6 +339,11 @@ multigrid_data_init
     D4EST_ABORT("Can't load input file");
   }
 
+  if (mg_data->use_p_coarsen == 1){
+    mg_data->num_of_p_coarsen_levels = multigrid_get_p_coarsen_levels(p4est);
+    mg_data->num_of_levels += mg_data->num_of_p_coarsen_levels;
+  }
+
   D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_atol, -1);
   D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_rtol, -1);
   D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_imax, -1);
@@ -315,6 +355,7 @@ multigrid_data_init
   
   if(p4est->mpirank == 0){
     zlog_category_t *c_default = zlog_get_category("d4est_multigrid");
+    zlog_debug(c_default, "Multigrid h_levels p_levels total_levels = [%d,%d,%d]", mg_data->num_of_levels - mg_data->num_of_p_coarsen_levels, mg_data->num_of_p_coarsen_levels, mg_data->num_of_levels);
     zlog_debug(c_default, "Multigrid Parameters");
     zlog_debug(c_default, "vcycle imax = %d", mg_data->vcycle_imax);
     zlog_debug(c_default, "vcycle rtol = %.25f", mg_data->vcycle_rtol);
@@ -323,11 +364,25 @@ multigrid_data_init
     zlog_debug(c_default, "bottom solver = %s", mg_data->bottom_solver_name);
   }
 
+  mg_data->logger = NULL;
+  mg_data->user_callbacks = NULL;
+  mg_data->elem_data_updater = NULL;
+  
+  return mg_data;
+}
+
+void
+multigrid_set_callbacks
+(
+ multigrid_data_t* mg_data,
+ multigrid_logger_t* logger,
+ multigrid_user_callbacks_t* user_callbacks,
+ multigrid_element_data_updater_t* updater
+)
+{
   mg_data->logger = logger;
   mg_data->user_callbacks = user_callbacks;
   mg_data->elem_data_updater = updater;
-  
-  return mg_data;
 }
 
 
@@ -528,16 +583,28 @@ multigrid_vcycle
     zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
 #endif
     mg_data->mg_state = DOWNV_PRE_COARSEN; multigrid_update_components(p4est, level, NULL);
-    
-    /* increments the stride */
-    p4est_coarsen_ext (p4est,
-                       0,
-                       1,
-                       multigrid_coarsen,
-                       multigrid_coarsen_init,
-                       NULL
-                      );
 
+    /* increments the stride */
+    if(mg_data->use_p_coarsen == 1 && (level > toplevel - mg_data->num_of_p_coarsen_levels)){
+      p4est_iterate(p4est,
+                    NULL,
+                    NULL,
+                    multigrid_p_coarsen,
+                    NULL,
+#if P4EST_DIM==3
+                    NULL,
+#endif
+                    NULL);
+    }
+    else{  
+      p4est_coarsen_ext (p4est,
+                         0,
+                         1,
+                         multigrid_coarsen,
+                         multigrid_coarsen_init,
+                         NULL
+                        );
+    }
 #ifdef DEBUG_INFO
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_POST_COARSEN");

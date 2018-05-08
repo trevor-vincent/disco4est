@@ -591,40 +591,51 @@ problem_init
 
 
 
-    int min_level, max_level;
+    /* int min_level, max_level; */
 
-      multigrid_get_level_range(p4est, &min_level, &max_level);
-      printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level);
+      /* multigrid_get_level_range(p4est, &min_level, &max_level); */
+      /* printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level); */
 
-      int num_of_levels = (max_level-min_level) + 1;
+      /* int num_of_levels = (max_level-min_level) + 1; */
 
  
       multigrid_logger_t* logger = multigrid_logger_residual_init
                                    (
                                    );
     
-      multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init
+   
+    
+    
+      multigrid_data_t* mg_data = multigrid_data_init(p4est,
+                                                      d4est_ops,
+                                                      d4est_geom,
+                                                      d4est_quad,
+                                                      /* num_of_levels, */
+                                                      /* logger, */
+                                                      /* user_callbacks, */
+                                                      /* updater, */
+                                                      input_file
+                                                     );
+
+   multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init
                                                   (
-                                                   num_of_levels,
+                                                   mg_data->num_of_levels,
                                                    ghost,
                                                    ghost_data,
                                                    d4est_factors,
                                                    d4est_mesh_set_quadratures_after_amr,
                                                    initial_extents
                                                   );
-    
-      multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, num_of_levels);
-    
-      multigrid_data_t* mg_data = multigrid_data_init(p4est,
-                                                      d4est_ops,
-                                                      d4est_geom,
-                                                      d4est_quad,
-                                                      num_of_levels,
-                                                      logger,
-                                                      user_callbacks,
-                                                      updater,
-                                                      input_file
-                                                     );
+      
+      multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, mg_data->num_of_levels);
+
+      multigrid_set_callbacks(
+                            mg_data,
+                            logger,
+                            user_callbacks,
+                            updater
+                           );
+      
 
       krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, two_punctures_krylov_pc_setup_fcn);
       ctx.use_matrix_operator = 1;
@@ -638,7 +649,7 @@ problem_init
 
       krylov_petsc_params_t krylov_params;
 
-      if (num_of_levels <= 1){
+      if (mg_data->num_of_levels <= 1){
         krylov_petsc_input(p4est, input_file, "krylov_petsc_no_mg", &krylov_params);
       }
       else {
@@ -658,7 +669,7 @@ problem_init
          d4est_factors,
          &krylov_params,
          &newton_params,
-         (num_of_levels <= 1) ? NULL : pc
+         (mg_data->num_of_levels <= 1) ? NULL : pc
         );
     }
 
@@ -763,7 +774,7 @@ problem_init
 
       krylov_pc_multigrid_destroy(pc);
       multigrid_logger_residual_destroy(logger);
-      multigrid_element_data_updater_destroy(updater, num_of_levels);
+      multigrid_element_data_updater_destroy(updater, mg_data->num_of_levels);
       multigrid_data_destroy(mg_data);
       multigrid_matrix_operator_destroy(user_callbacks);
    

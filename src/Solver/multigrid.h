@@ -166,7 +166,9 @@ struct multigrid_data_t {
   /* ******* REQUIRED EXTERNAL PARAMETERS ******* */
   /* ******* SET BY FUNCTION CALL ******** */
   int num_of_levels;
-
+  int use_p_coarsen;
+  int num_of_p_coarsen_levels;
+  
   /* ******* SET BY INPUT FILE ******** */
   int vcycle_imax; /* max number of vcycles */
   char smoother_name [50];
@@ -224,11 +226,13 @@ struct multigrid_data_t {
 /* This file was automatically generated.  Do not edit! */
 void multigrid_solve(p4est_t *p4est,d4est_elliptic_data_t *vecs,d4est_elliptic_eqns_t *fcns,multigrid_data_t *mg_data);
 void multigrid_data_destroy(multigrid_data_t *mg_data);
-multigrid_data_t *multigrid_data_init(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,int num_of_levels,multigrid_logger_t *logger,multigrid_user_callbacks_t *user_callbacks,multigrid_element_data_updater_t *updater,const char *input_file);
+void multigrid_set_callbacks(multigrid_data_t *mg_data,multigrid_logger_t *logger,multigrid_user_callbacks_t *user_callbacks,multigrid_element_data_updater_t *updater);
+multigrid_data_t *multigrid_data_init(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,const char *input_file);
 void multigrid_destroy_bottom_solver(multigrid_data_t *mg_data);
 void multigrid_set_bottom_solver(p4est_t *p4est,const char *input_file,multigrid_data_t *mg_data);
 void multigrid_destroy_smoother(multigrid_data_t *mg_data);
 void multigrid_set_smoother(p4est_t *p4est,const char *input_file,multigrid_data_t *mg_data);
-void multigrid_get_level_range(p4est_t *p4est,int *min_level,int *max_level);
+int multigrid_get_h_coarsen_levels(p4est_t *p4est);
+int multigrid_get_p_coarsen_levels(p4est_t *p4est);
 
 #endif

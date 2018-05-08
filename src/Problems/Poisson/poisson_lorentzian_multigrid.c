@@ -219,37 +219,48 @@ problem_init
     // Setup multigrid
     krylov_pc_t* pc = NULL;
 
-    int multigrid_min_level, multigrid_max_level;
-    multigrid_get_level_range(p4est, &multigrid_min_level, &multigrid_max_level);
-    zlog_debug(c_default, "Multigrid [min_level, max_level] = [%d,%d]", multigrid_min_level, multigrid_max_level);
       
     /* need to do a reduce on min,max_level before supporting multiple proc */
     /* mpi_assert(proc_size == 1); */
-    int num_of_levels = multigrid_max_level + 1;
+
       
     multigrid_logger_t* logger = multigrid_logger_residual_init();
       
+      
+    multigrid_data_t* mg_data
+      = multigrid_data_init
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       /* num_of_levels, */
+       /* logger, */
+       /* NULL, */
+       /* updater, */
+       input_file
+    );
+
+
+
     multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init(
-                                                                                    num_of_levels,
+                                                                                    mg_data->num_of_levels,
                                                                                     ghost,
                                                                                     ghost_data,
                                                                                     d4est_factors,
                                                                                     d4est_mesh_set_quadratures_after_amr,
                                                                                     initial_extents
     );
-      
-    multigrid_data_t* mg_data = multigrid_data_init(
-                                                    p4est,
-                                                    d4est_ops,
-                                                    d4est_geom,
-                                                    d4est_quad,
-                                                    num_of_levels,
-                                                    logger,
-                                                    NULL,
-                                                    updater,
-                                                    input_file
+
+    
+    multigrid_set_callbacks(
+                            mg_data,
+                            logger,
+                            NULL,
+                            updater
     );
-      
+    
+    
     /* multigrid_solve */
     /*   ( */
     /*    p4est, */
@@ -277,7 +288,7 @@ problem_init
       d4est_quad,
       d4est_factors,
       &krylov_petsc_params,
-      (num_of_levels == 1) ? NULL : pc
+      (mg_data->num_of_levels == 1) ? NULL : pc
     );
 
 
