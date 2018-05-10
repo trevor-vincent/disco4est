@@ -10,7 +10,9 @@
 #include <ini.h>
 #include <d4est_util.h>
 #include <multigrid_callbacks.h>
+#include <multigrid_element_data_updater.h>
 #include <multigrid_smoother_cheby.h>
+#include <multigrid_logger_residual.h>
 #include <multigrid_smoother_krylov_petsc.h>
 #include <multigrid_bottom_solver_cg.h>
 #include <multigrid_bottom_solver_cheby.h>
@@ -304,8 +306,10 @@ multigrid_data_init
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- /* int num_of_levels, */
-
+ p4est_ghost_t** ghost,
+ d4est_element_data_t** ghost_data,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_mesh_initial_extents_t* initial_extents,
  const char* input_file
 )
 {
@@ -364,31 +368,36 @@ multigrid_data_init
     zlog_debug(c_default, "bottom solver = %s", mg_data->bottom_solver_name);
   }
 
-  mg_data->logger = NULL;
-  mg_data->user_callbacks = NULL;
-  mg_data->elem_data_updater = NULL;
-  
+  mg_data->logger = multigrid_logger_residual_init();
+  mg_data->elem_data_updater = multigrid_element_data_updater_init
+                               (
+                                mg_data->num_of_levels,
+                                ghost,
+                                ghost_data,
+                                d4est_factors,
+                                d4est_mesh_set_quadratures_after_amr,
+                                initial_extents
+                               );  
+  mg_data->user_callbacks = NULL;  
   return mg_data;
 }
 
 void
-multigrid_set_callbacks
+multigrid_set_user_callbacks
 (
  multigrid_data_t* mg_data,
- multigrid_logger_t* logger,
- multigrid_user_callbacks_t* user_callbacks,
- multigrid_element_data_updater_t* updater
+ multigrid_user_callbacks_t* user_callbacks
 )
 {
-  mg_data->logger = logger;
   mg_data->user_callbacks = user_callbacks;
-  mg_data->elem_data_updater = updater;
 }
 
 
 void
 multigrid_data_destroy(multigrid_data_t* mg_data)
 {
+  multigrid_logger_residual_destroy(mg_data->logger);
+  multigrid_element_data_updater_destroy(mg_data->elem_data_updater, mg_data->num_of_levels);
   multigrid_destroy_smoother(mg_data);
   multigrid_destroy_bottom_solver(mg_data);
   P4EST_FREE(mg_data);

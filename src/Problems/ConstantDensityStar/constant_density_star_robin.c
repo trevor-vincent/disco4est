@@ -504,28 +504,29 @@ problem_init
       d4est_ops,
       d4est_geom,
       d4est_quad,
-      /* num_of_levels, */
-      /* logger, */
-      /* user_callbacks, */
-      /* updater, */
+      ghost,
+      ghost_data,
+      d4est_factors,
+      initial_extents,
       input_file
     );
 
 
-    multigrid_logger_t* logger = multigrid_logger_residual_init();
+
+    /* multigrid_logger_t* logger = multigrid_logger_residual_init(); */
     
-    multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init(
-      mg_data->num_of_levels,
-      ghost,
-      ghost_data,
-      d4est_factors,
-      d4est_mesh_set_quadratures_after_amr,
-      initial_extents
-    );
+    /* multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init( */
+      /* mg_data->num_of_levels, */
+      /* ghost, */
+      /* ghost_data, */
+      /* d4est_factors, */
+      /* d4est_mesh_set_quadratures_after_amr, */
+      /* initial_extents */
+    /* ); */
 
     multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, mg_data->num_of_levels);
 
-    multigrid_set_callbacks(mg_data,logger,user_callbacks,updater);
+    multigrid_set_user_callbacks(mg_data,user_callbacks);
     
     
     krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, constant_density_star_krylov_pc_setup_fcn);
@@ -578,8 +579,8 @@ problem_init
     zlog_info(c_default, "Saved checkpoint %d for process %d.", level, p4est->mpirank);
 
     krylov_pc_multigrid_destroy(pc);
-    multigrid_logger_residual_destroy(logger);
-    multigrid_element_data_updater_destroy(updater, mg_data->num_of_levels);
+    /* multigrid_logger_residual_destroy(logger); */
+    /* multigrid_element_data_updater_destroy(updater, mg_data->num_of_levels); */
     multigrid_data_destroy(mg_data);
     multigrid_matrix_operator_destroy(user_callbacks);
 

@@ -219,46 +219,37 @@ problem_init
     // Setup multigrid
     krylov_pc_t* pc = NULL;
 
-      
-    /* need to do a reduce on min,max_level before supporting multiple proc */
-    /* mpi_assert(proc_size == 1); */
-
-      
-    multigrid_logger_t* logger = multigrid_logger_residual_init();
-      
-      
-    multigrid_data_t* mg_data
-      = multigrid_data_init
-      (
-       p4est,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       /* num_of_levels, */
-       /* logger, */
-       /* NULL, */
-       /* updater, */
-       input_file
+    multigrid_data_t* mg_data = multigrid_data_init(
+      p4est,
+      d4est_ops,
+      d4est_geom,
+      d4est_quad,
+      ghost,
+      ghost_data,
+      d4est_factors,
+      initial_extents,
+      input_file
     );
 
 
 
-    multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init(
-                                                                                    mg_data->num_of_levels,
-                                                                                    ghost,
-                                                                                    ghost_data,
-                                                                                    d4est_factors,
-                                                                                    d4est_mesh_set_quadratures_after_amr,
-                                                                                    initial_extents
-    );
+
+    /* multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init( */
+    /*                                                                                 mg_data->num_of_levels, */
+    /*                                                                                 ghost, */
+    /*                                                                                 ghost_data, */
+    /*                                                                                 d4est_factors, */
+    /*                                                                                 d4est_mesh_set_quadratures_after_amr, */
+    /*                                                                                 initial_extents */
+    /* ); */
 
     
-    multigrid_set_callbacks(
-                            mg_data,
-                            logger,
-                            NULL,
-                            updater
-    );
+    /* multigrid_set_user_callbacks( */
+                            /* mg_data, */
+                            /* logger, */
+                            /* NULL, */
+                            /* updater */
+    /* ); */
     
     
     /* multigrid_solve */

@@ -226,8 +226,8 @@ struct multigrid_data_t {
 /* This file was automatically generated.  Do not edit! */
 void multigrid_solve(p4est_t *p4est,d4est_elliptic_data_t *vecs,d4est_elliptic_eqns_t *fcns,multigrid_data_t *mg_data);
 void multigrid_data_destroy(multigrid_data_t *mg_data);
-void multigrid_set_callbacks(multigrid_data_t *mg_data,multigrid_logger_t *logger,multigrid_user_callbacks_t *user_callbacks,multigrid_element_data_updater_t *updater);
-multigrid_data_t *multigrid_data_init(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,const char *input_file);
+void multigrid_set_user_callbacks(multigrid_data_t *mg_data,multigrid_user_callbacks_t *user_callbacks);
+multigrid_data_t *multigrid_data_init(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,p4est_ghost_t **ghost,d4est_element_data_t **ghost_data,d4est_mesh_data_t *d4est_factors,d4est_mesh_initial_extents_t *initial_extents,const char *input_file);
 void multigrid_destroy_bottom_solver(multigrid_data_t *mg_data);
 void multigrid_set_bottom_solver(p4est_t *p4est,const char *input_file,multigrid_data_t *mg_data);
 void multigrid_destroy_smoother(multigrid_data_t *mg_data);

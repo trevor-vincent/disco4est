@@ -599,41 +599,36 @@ problem_init
       /* int num_of_levels = (max_level-min_level) + 1; */
 
  
-      multigrid_logger_t* logger = multigrid_logger_residual_init
-                                   (
-                                   );
-    
-   
-    
-    
+      /* multigrid_logger_t* logger = multigrid_logger_residual_init */
+      /*                              ( */
+      /*                              ); */
+      
       multigrid_data_t* mg_data = multigrid_data_init(p4est,
                                                       d4est_ops,
                                                       d4est_geom,
                                                       d4est_quad,
-                                                      /* num_of_levels, */
-                                                      /* logger, */
-                                                      /* user_callbacks, */
-                                                      /* updater, */
+                                                      ghost,
+                                                      ghost_data,
+                                                      d4est_factors,
+                                                      initial_extents,
                                                       input_file
                                                      );
 
-   multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init
-                                                  (
-                                                   mg_data->num_of_levels,
-                                                   ghost,
-                                                   ghost_data,
-                                                   d4est_factors,
-                                                   d4est_mesh_set_quadratures_after_amr,
-                                                   initial_extents
-                                                  );
+   /* multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init */
+   /*                                                ( */
+   /*                                                 mg_data->num_of_levels, */
+   /*                                                 ghost, */
+   /*                                                 ghost_data, */
+   /*                                                 d4est_factors, */
+   /*                                                 d4est_mesh_set_quadratures_after_amr, */
+   /*                                                 initial_extents */
+   /*                                                ); */
       
       multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, mg_data->num_of_levels);
 
-      multigrid_set_callbacks(
+      multigrid_set_user_callbacks(
                             mg_data,
-                            logger,
-                            user_callbacks,
-                            updater
+                            user_callbacks
                            );
       
 
@@ -773,8 +768,8 @@ problem_init
 
 
       krylov_pc_multigrid_destroy(pc);
-      multigrid_logger_residual_destroy(logger);
-      multigrid_element_data_updater_destroy(updater, mg_data->num_of_levels);
+      /* multigrid_logger_residual_destroy(logger); */
+      /* multigrid_element_data_updater_destroy(updater, mg_data->num_of_levels); */
       multigrid_data_destroy(mg_data);
       multigrid_matrix_operator_destroy(user_callbacks);
    
