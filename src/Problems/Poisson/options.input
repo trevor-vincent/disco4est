@@ -5,6 +5,9 @@ fill_uniform = 1
 region0_deg = 1
 region0_deg_quad_inc = 0
 
+[problem]
+use_dirichlet = 1
+
 [flux]
 name = sipg
 sipg_penalty_prefactor = 2.0
@@ -68,6 +71,7 @@ ksp_monitor = 1
 ksp_converged_reason = 1
 ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 0
+ksp_residual_history = 2
 
 [multigrid]
 vcycle_imax = 1;

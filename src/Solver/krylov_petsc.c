@@ -79,7 +79,11 @@ int krylov_petsc_input_handler
     pconfig->ksp_do_not_use_preconditioner = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
   }
-  
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_residual_history")) {
+    D4EST_ASSERT(pconfig->ksp_residual_history == 0);
+    pconfig->ksp_residual_history = atoi(value);
+    D4EST_ASSERT(atoi(value) <= 0 || atoi(value) >= 2);
+  } 
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -111,7 +115,7 @@ krylov_petsc_set_options_database_from_params
     PetscOptionsSetValue(NULL,"-ksp_initial_guess_nonzero","");
   else
     PetscOptionsClearValue(NULL,"-ksp_initial_guess_nonzero");
-
+  
   if(input->ksp_monitor_singular_value == 1)
     PetscOptionsSetValue(NULL,"-ksp_monitor_singular_value","");
   else
@@ -163,6 +167,7 @@ krylov_petsc_input
   input->ksp_chebyshev_esteig_random = -1;
   input->ksp_monitor_singular_value = 0;
   input->ksp_do_not_use_preconditioner = 0;
+  input->ksp_residual_history = 0;
   
   D4EST_ASSERT(sizeof(input->input_section) <= 50);
   snprintf (input->input_section, sizeof(input->input_section), "%s", input_section);
@@ -196,6 +201,7 @@ krylov_petsc_input
     zlog_debug(c_default, "ksp_converged_reason = %d", input->ksp_converged_reason);
     zlog_debug(c_default, "ksp_initial_guess_nonzero = %d", input->ksp_initial_guess_nonzero);
     zlog_debug(c_default, "ksp_do_not_use_preconditioner = %d", input->ksp_do_not_use_preconditioner);
+    zlog_debug(c_default, "ksp_residual_history = %d", input->ksp_residual_history);
     if(d4est_util_match(input->ksp_type,"chebyshev")){
       zlog_debug(c_default, "ksp_chebyshev_esteig_steps = %s", input->ksp_chebyshev_esteig_steps);
       zlog_debug(c_default, "ksp_chebyshev_esteig = %s", input->ksp_chebyshev_esteig);
@@ -304,8 +310,6 @@ krylov_petsc_solve
   KSP ksp;
   Vec x,b;
   PC             pc;
-  /* double* u_temp; */
-  /* double* rhs_temp; */
 
   krylov_ctx_t petsc_ctx;
   petsc_ctx.p4est = p4est;
@@ -317,7 +321,22 @@ krylov_petsc_solve
   petsc_ctx.d4est_geom = d4est_geom;
   petsc_ctx.d4est_quad = d4est_quad;
   petsc_ctx.d4est_factors = d4est_factors;
+  /* petsc_ctx.residual_history = P4EST_ALLOC(double,2); */
+  petsc_ctx.ksp = &ksp;
+  /* if(krylov_petsc_params->ksp_residual_history){ */
+    /* petsc_ctx.residual_history_size = 2; */
 
+  /* } */
+  /* else { */
+    /* petsc_ctx.residual_history_size = 0; */
+  /* } */
+
+  /* 217       ierr = KSPSetResidualHistory(_ksp, */
+  /* 218                                    PETSC_NULL,   // pointer to the array which holds the history */
+  /* 219                                    PETSC_DECIDE, // size of the array holding the history */
+  /* 220                                    PETSC_TRUE);  // Whether or not to reset the history for each solve. */
+  
+  
   int local_nodes = vecs->local_nodes;
   double* u = vecs->u;
   double* rhs = vecs->rhs;
@@ -331,7 +350,7 @@ krylov_petsc_solve
   VecSetSizes(x, local_nodes, PETSC_DECIDE);//CHKERRQ(ierr);
   VecSetFromOptions(x);//CHKERRQ(ierr);
   VecDuplicate(x,&b);//CHKERRQ(ierr);
-
+  KSPSetResidualHistory(ksp,PETSC_NULL,PETSC_DECIDE,PETSC_TRUE);
   
   KSPGetPC(ksp,&pc);
   if (krylov_pc != NULL && krylov_petsc_params->ksp_do_not_use_preconditioner == 0) {
@@ -347,6 +366,8 @@ krylov_petsc_solve
     PCSetType(pc,PCNONE);//CHKERRQ(ierr);
   }
 
+
+  
 
   KSPSetFromOptions(ksp);
   /* KSPSetUp(ksp); */

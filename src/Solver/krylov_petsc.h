@@ -24,7 +24,8 @@ typedef struct {
   int ksp_initial_guess_nonzero;
   int ksp_monitor_singular_value;
   int ksp_do_not_use_preconditioner;
-  
+
+  int ksp_residual_history;
   char ksp_chebyshev_esteig_steps [25];
   char ksp_chebyshev_esteig [25];
   int ksp_chebyshev_esteig_random;

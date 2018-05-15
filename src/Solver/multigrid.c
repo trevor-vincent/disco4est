@@ -314,7 +314,7 @@ multigrid_data_init
 )
 {
   multigrid_data_t* mg_data = P4EST_ALLOC(multigrid_data_t, 1);
-  D4EST_ASSERT(num_of_levels > 0);
+  D4EST_ASSERT(mg_data->num_of_levels > 0);
 
   int multigrid_min_level, multigrid_max_level;
   int num_of_h_coarsen_levels = multigrid_get_h_coarsen_levels(p4est);  

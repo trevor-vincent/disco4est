@@ -12,6 +12,7 @@
 typedef struct {
 
   p4est_t* p4est;
+  KSP* ksp;
   d4est_elliptic_data_t* vecs;
   d4est_elliptic_eqns_t* fcns;
   p4est_ghost_t** ghost;

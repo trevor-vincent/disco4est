@@ -12,7 +12,6 @@ typedef struct {
 
 } problem_ctx_t;
 
-
 double
 poisson_lorentzian_robin_coeff_fcn
 (
