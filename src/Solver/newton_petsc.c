@@ -372,6 +372,7 @@ newton_petsc_solve
   
   SNESSetFunction(snes,r,newton_petsc_get_residual,(void*)&petsc_ctx);//CHKERRQ(ierr);
   SNESGetKSP(snes,&ksp);
+  petsc_ctx.ksp = &ksp;
 
   PC pc;
   KSPGetPC(ksp,&pc);
@@ -387,7 +388,7 @@ newton_petsc_solve
   else {
     PCSetType(pc,PCNONE);//CHKERRQ(ierr);
   }
-  
+
   KSPSetFromOptions(ksp);
   SNESSetFromOptions(snes);//CHKERRQ(ierr);
 
@@ -414,7 +415,8 @@ newton_petsc_solve
   VecPlaceArray(x, vecs->u);
 
   clock_t begin = clock();
-
+  KSPSetResidualHistory(ksp,PETSC_NULL,PETSC_DECIDE,PETSC_TRUE);
+  
   SNESSolve(snes,NULL,x);
 
   clock_t end = clock();
