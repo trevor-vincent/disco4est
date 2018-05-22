@@ -300,7 +300,7 @@ void test_d4est_linalg_set_column()
     };
 
   double col [10];
-  d4est_linalg_fill_vec(col, 1., 10);
+  d4est_util_fill_array(col, 1., 10);
   d4est_linalg_set_column(&A[0][0], col, 3, 10, 10);
 
   double err_max, err_temp;

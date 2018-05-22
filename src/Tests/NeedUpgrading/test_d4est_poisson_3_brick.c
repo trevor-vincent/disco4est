@@ -458,7 +458,7 @@ test_d4est_poisson_2_brick_interface_old_style
     double* term1_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
     double* ones_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
     double* VT_w_term1_mortar_lobatto = P4EST_ALLOC(double, total_nodes_mortar_lobatto);
-    d4est_linalg_fill_vec(ones_mortar_quad, 1., total_nodes_mortar_quad);
+    d4est_util_fill_array(ones_mortar_quad, 1., total_nodes_mortar_quad);
   stride = 0;
   int stride_lobatto = 0;
   for (int f = 0; f < faces_mortar; f++){

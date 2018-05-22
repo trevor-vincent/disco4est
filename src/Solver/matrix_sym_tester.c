@@ -51,7 +51,7 @@ d4est_solver_test_symmetry
   vecs->Au = Au_temp;
   vecs->local_nodes = local_nodes;
   
-  d4est_linalg_fill_vec(vecs->u, 0., vecs->local_nodes);
+  d4est_util_fill_array(vecs->u, 0., vecs->local_nodes);
   
   for (i = 0; i < vecs->local_nodes; i++){
     vecs->u[i] = 1.;

@@ -480,7 +480,7 @@ void d4est_operators_compute_PT_mat_P
 
   int volume_nodes_H = d4est_lgl_get_nodes(dim, degH);
 
-  d4est_linalg_fill_vec(PT_mat_P, 0., volume_nodes_H*volume_nodes_H);
+  d4est_util_fill_array(PT_mat_P, 0., volume_nodes_H*volume_nodes_H);
   double* P = P4EST_ALLOC(double, total_volume_nodes_h*volume_nodes_H);
   double* PT = P4EST_ALLOC(double, total_volume_nodes_h*volume_nodes_H);
   double* mat_P_i = P4EST_ALLOC(double, max_volume_nodes_h*volume_nodes_H);
@@ -1134,7 +1134,7 @@ void d4est_operators_apply_hp_restrict(d4est_operators_t* d4est_ops, double* in,
 
   int stride = 0;
   double* tmp = P4EST_ALLOC(double, nodesH);
-  d4est_linalg_fill_vec(out, 0., nodesH);
+  d4est_util_fill_array(out, 0., nodesH);
 
   for (c = 0; c < children; c++) {
     hp_restrict_1d = d4est_operators_fetch_hp_restrict_1d(d4est_ops, degH, degh[c]);
@@ -1511,9 +1511,13 @@ static void d4est_operators_build_p_prolong_transpose_1d(d4est_operators_t* d4es
 }
 
 
-double* d4est_operators_fetch_p_prolong_transpose_1d(d4est_operators_t* d4est_ops,
-                                                   int degH, int degh) {
-
+double* d4est_operators_fetch_p_prolong_transpose_1d
+(
+ d4est_operators_t* d4est_ops,
+ int degH,
+ int degh
+)
+{
   int size = (degh + 1) * (degH + 1);
   return d4est_operators_2index_fetch(d4est_ops,
                                       d4est_ops->p_prolong_transpose_1d_table,
@@ -1545,7 +1549,7 @@ void d4est_operators_apply_hp_prolong_transpose(d4est_operators_t* d4est_ops, do
 
   int stride = 0;
   double* tmp = P4EST_ALLOC(double, nodesH);
-  d4est_linalg_fill_vec(out, 0., nodesH);
+  d4est_util_fill_array(out, 0., nodesH);
 
   for (c = 0; c < children; c++) {
     hp_prolong_transpose_1d =
@@ -1626,7 +1630,7 @@ void d4est_operators_build_hp_restrict_interp_1d_aux(
                              &hp_restrict_interp_matrix_1d[n * nodesh], nodesh,
                              nodesh);
     else if (r < -1. || r > 1.)
-      d4est_linalg_fill_vec(&hp_restrict_interp_matrix_1d[n * nodesh], 0., nodesh);
+      d4est_util_fill_array(&hp_restrict_interp_matrix_1d[n * nodesh], 0., nodesh);
     else
       d4est_linalg_matvec_plus_vec(1., inv_v1d_trans_degh, phi_modal, 0.0,
                              &hp_restrict_interp_matrix_1d[n * nodesh], nodesh,
@@ -1689,7 +1693,7 @@ void d4est_operators_apply_hp_restrict_interp(d4est_operators_t* d4est_ops, doub
 
   int stride = 0;
   double* tmp = P4EST_ALLOC(double, nodesH);
-  d4est_linalg_fill_vec(out, 0., nodesH);
+  d4est_util_fill_array(out, 0., nodesH);
 
   for (c = 0; c < children; c++) {
     hp_restrict_1d = d4est_operators_fetch_hp_restrict_interp_1d(d4est_ops, degH, degh[c]);

@@ -1,43 +1,32 @@
 [initial_mesh]
 min_quadrants = -1
-min_level = 2
+min_level = 1
 fill_uniform = 1
-region0_deg = 1
+region0_deg = 2
 region0_deg_quad_inc = 0
+region1_deg = 2
+region1_deg_quad_inc = 0
 
 [problem]
-use_dirichlet = 1
+use_dirichlet = 0
 
 [flux]
 name = sipg
-sipg_penalty_prefactor = 2.0
-sipg_flux_h = H_EQ_VOLUME_DIV_AREA
+sipg_penalty_prefactor = 1.1
+sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO
 sipg_penalty_fcn = maxp_sqr_over_minh
 
 [amr]
-scheme = uniform_p
+scheme = uniform_h
 num_of_amr_steps = 0
 max_degree = 7
 
-
-; [amr]
-; scheme = smooth_pred
-; num_of_amr_steps = 15
-; max_degree = 7 
-; gamma_h = 10.0
-; gamma_p = 0.1
-; gamma_n = 1.
-; sigma = .25
-
-
 [geometry]
-name = brick
-X0 = 0.0
-X1 = 1.0
-Y0 = 0.0
-Y1 = 1.0
-Z0 = 0.0
-Z1 = 1.0
+name = cubed_sphere_7tree
+R0 = 5
+R1 = 1000
+compactify_outer_shell = 0
+compactify_inner_shell = 1
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
@@ -52,25 +41,8 @@ write_rank = 1
 wrap_rank = 0
 write_deg = 1
 
-; [geometry]
-; name = cubed_sphere
-; R0 = 1
-; R1 = 2
-; R2 = 3
-; compactify_outer_shell = 0
-; compactify_inner_shell = 0
-; DX_compute_method = analytic
-; JAC_compute_method = numerical
-
-; [d4est_vtk_geometry]
-; name = cubed_sphere
-; R0 = 0.5
-; R1 = 0.75
-; R2 = 1
-; compactify_outer_shell = 0
-; compactify_inner_shell = 0
-; DX_compute_method = analytic
-; JAC_compute_method = numerical
+[quadrature]
+name = legendre
 
 [krylov_petsc]
 ksp_type = fcg
@@ -82,11 +54,11 @@ ksp_monitor = 1
 ksp_converged_reason = 1
 ksp_initial_guess_nonzero = 0
 ksp_monitor_singular_value = 0
-ksp_residual_history = 2
+ksp_do_not_use_preconditioner = 1
 
 [multigrid]
-vcycle_imax = 1;
-vcycle_rtol = 1e-9;
+vcycle_imax = 3;
+vcycle_rtol = 1e-15;
 vcycle_atol = 0.;
 smoother_name = mg_smoother_cheby
 bottom_solver_name = mg_bottom_solver_cg_d4est
@@ -99,7 +71,7 @@ bottom_print_residual_norm = 0;
 
 [mg_smoother_cheby]
 cheby_imax = 8;
-cheby_eigs_cg_imax = 10;
+cheby_eigs_cg_imax = 30;
 cheby_eigs_lmax_lmin_ratio = 30.;
 cheby_eigs_max_multiplier = 1.;
 cheby_eigs_reuse_fromdownvcycle = 0;
@@ -117,24 +89,8 @@ cheby_eigs_reuse_fromlastvcycle = 0;
 cheby_print_residual_norm = 0;
 cheby_print_eig = 0;
 
-[d4est_solver_fcg]
-iter = 1000
-atol = 1e-15
-rtol = 1e-15
-vi = 20
-monitor = 1
-precond_flag = 0
 
 [d4est_solver_cg]
-iter = 1000000
-atol = 1e-15
-rtol = 1e-15
-monitor = 1
-
-[quadrature]
-name = legendre
-
-[d4est_cg]
 iter = 1
 atol = 1e-15
 rtol = 1e-15

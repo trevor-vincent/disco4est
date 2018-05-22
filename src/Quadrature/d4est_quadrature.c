@@ -337,7 +337,7 @@ void d4est_quadrature_apply_stiffness_matrix
   double* VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_lobatto);
   double* DTlp_VT_W_V_Dl_in = P4EST_ALLOC(double, volume_nodes_lobatto);
   
-  d4est_linalg_fill_vec(out, 0., volume_nodes_lobatto);
+  d4est_util_fill_array(out, 0., volume_nodes_lobatto);
   
   for (int k = 0; k < dim; k++){
     for (int lp = 0; lp < dim; lp++){

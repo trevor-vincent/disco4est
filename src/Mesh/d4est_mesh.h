@@ -142,6 +142,8 @@ void d4est_mesh_get_array_of_degrees(p4est_t *p4est,void *deg_array,d4est_builti
 void d4est_mesh_data_destroy(d4est_mesh_data_t *d4est_factors);
 void d4est_mesh_data_printout(d4est_mesh_data_t *d4est_factors);
 void d4est_mesh_data_realloc(p4est_t *p4est,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t local_sizes);
+void d4est_mesh_data_debug_print(p4est_t *p4est,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t local_sizes);
+void d4est_mesh_data_zero(p4est_t *p4est,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t local_sizes);
 d4est_mesh_data_t *d4est_mesh_data_init();
 void d4est_mesh_compute_mortar_quadrature_sizes(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t *local_sizes);
 void d4est_mesh_compute_mortar_quadrature_quantities(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors);

@@ -79,11 +79,11 @@ int krylov_petsc_input_handler
     pconfig->ksp_do_not_use_preconditioner = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
   }
-  else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_residual_history")) {
-    D4EST_ASSERT(pconfig->ksp_residual_history == 0);
-    pconfig->ksp_residual_history = atoi(value);
-    D4EST_ASSERT(atoi(value) <= 0 || atoi(value) >= 2);
-  } 
+  /* else if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_residual_history")) { */
+    /* D4EST_ASSERT(pconfig->ksp_residual_history == 0); */
+    /* pconfig->ksp_residual_history = atoi(value); */
+    /* D4EST_ASSERT(atoi(value) <= 0 || atoi(value) >= 2); */
+  /* }  */
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -167,7 +167,7 @@ krylov_petsc_input
   input->ksp_chebyshev_esteig_random = -1;
   input->ksp_monitor_singular_value = 0;
   input->ksp_do_not_use_preconditioner = 0;
-  input->ksp_residual_history = 0;
+  /* input->ksp_residual_history = 0; */
   
   D4EST_ASSERT(sizeof(input->input_section) <= 50);
   snprintf (input->input_section, sizeof(input->input_section), "%s", input_section);
@@ -201,7 +201,7 @@ krylov_petsc_input
     zlog_debug(c_default, "ksp_converged_reason = %d", input->ksp_converged_reason);
     zlog_debug(c_default, "ksp_initial_guess_nonzero = %d", input->ksp_initial_guess_nonzero);
     zlog_debug(c_default, "ksp_do_not_use_preconditioner = %d", input->ksp_do_not_use_preconditioner);
-    zlog_debug(c_default, "ksp_residual_history = %d", input->ksp_residual_history);
+    /* zlog_debug(c_default, "ksp_residual_history = %d", input->ksp_residual_history); */
     if(d4est_util_match(input->ksp_type,"chebyshev")){
       zlog_debug(c_default, "ksp_chebyshev_esteig_steps = %s", input->ksp_chebyshev_esteig_steps);
       zlog_debug(c_default, "ksp_chebyshev_esteig = %s", input->ksp_chebyshev_esteig);

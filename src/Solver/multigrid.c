@@ -485,7 +485,7 @@ multigrid_vcycle
   d4est_elliptic_data_copy_ptrs(vecs, &vecs_for_bottom_solve);
   
   /* initialize error to zero */
-  /* d4est_linalg_fill_vec(mg_data->err, 0., mg_data->fine_nodes); */
+  /* d4est_util_fill_array(mg_data->err, 0., mg_data->fine_nodes); */
 
   /* initialize stride */
   mg_data->stride = 0;
@@ -522,7 +522,7 @@ multigrid_vcycle
     /**********************************************************/
     
     /* set initial guess for error */
-    d4est_linalg_fill_vec(&err_at0[stride_to_fine_data], 0., nodes_on_level_of_multigrid[level]);//mg_data->fine_nodes);
+    d4est_util_fill_array(&err_at0[stride_to_fine_data], 0., nodes_on_level_of_multigrid[level]);//mg_data->fine_nodes);
 
     if (level == toplevel){
       vecs_for_smooth.Au = vecs->Au;
@@ -753,7 +753,7 @@ multigrid_vcycle
   /**********************************************************/
 
   /* set initial guess for error */
-  d4est_linalg_fill_vec(&err_at0[stride_to_fine_data], 0., nodes_on_level_of_multigrid[bottomlevel]);
+  d4est_util_fill_array(&err_at0[stride_to_fine_data], 0., nodes_on_level_of_multigrid[bottomlevel]);
   
   /* vecs_for_bottom_solve.Au = mg_data->Ae;//[mg_data->fine_nodes]; */
   vecs_for_bottom_solve.Au = &Ae_at0[stride_to_fine_data];//[mg_data->fine_nodes];

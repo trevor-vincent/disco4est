@@ -126,7 +126,10 @@ void d4est_solver_cg_solve
      d4est_factors
     );
   
-  /* DEBUG_PRINT_2ARR_DBL(vecs->u, vecs->Au, vecs->local_nodes); */
+
+  DEBUG_PRINT_ARR_DBL_SUM(vecs->u, vecs->local_nodes);
+  DEBUG_PRINT_ARR_DBL_SUM(vecs->rhs, vecs->local_nodes);
+  DEBUG_PRINT_ARR_DBL_SUM(vecs->Au, vecs->local_nodes);
   
   d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
 

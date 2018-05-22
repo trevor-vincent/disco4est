@@ -45,6 +45,19 @@ void d4est_util_make_directory(const char* dir, int add_cwd_to_dir)
   free(full_dir);
 }
 
+void
+d4est_util_fill_array (double *v, double val, int N)
+{
+  int                 i;
+  for (i = 0; i < N; i++)
+    v[i] = val;
+}
+
+void
+d4est_util_zero_array (double *v, int N)
+{
+  d4est_util_fill_array(v, 0., N);
+}
 
 int d4est_util_compact(double *array, int size)
 {

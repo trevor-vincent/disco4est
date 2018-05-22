@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
   MPI_Comm_size(mpicomm, &proc_size);
   MPI_Comm_rank(mpicomm, &proc_rank);
   
-  
   // Initialize logging
   if (zlog_init("logging.conf") != 0)
     printf("Initializing logging failed.\n");
@@ -96,7 +95,7 @@ int main(int argc, char *argv[])
   }
 
   p4est_partition(p4est, 1, NULL);
-  p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
+  p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
 
   
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);

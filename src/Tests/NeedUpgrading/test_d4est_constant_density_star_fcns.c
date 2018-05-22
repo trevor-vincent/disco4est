@@ -288,7 +288,7 @@ int main(int argc, char *argv[])
         elliptic_data.Au = Apoly_vec;
         elliptic_data.local_nodes = local_nodes;
  
-        d4est_linalg_fill_vec(Apoly_vec, 0., local_nodes);
+        d4est_util_fill_array(Apoly_vec, 0., local_nodes);
         constant_density_star_apply_jac_add_nonlinear_term
           (
            p4est,
@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
           jac_last_node_error[i] = fabs(jac_last_node[i] - jac_last_node[i-1]);
         }
               
-        d4est_linalg_fill_vec(Apoly_vec, 0., local_nodes);
+        d4est_util_fill_array(Apoly_vec, 0., local_nodes);
         constant_density_star_build_residual_add_nonlinear_term
           (
            p4est,

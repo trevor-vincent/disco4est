@@ -369,7 +369,7 @@ curved_test_mortarjacobianterms_interface
   
 
   for (int d = 0; d < (P4EST_DIM); d++){
-    d4est_linalg_fill_vec
+    d4est_util_fill_array
       (
        dudx_m_on_f_m_mortar_quad[d],
        0.0,
@@ -377,7 +377,7 @@ curved_test_mortarjacobianterms_interface
       );
 
 
-    d4est_linalg_fill_vec
+    d4est_util_fill_array
       (
        dudx_p_on_f_p_mortar_quad_porder[d],
        0.0,
@@ -385,7 +385,7 @@ curved_test_mortarjacobianterms_interface
       );
 
 
-    d4est_linalg_fill_vec
+    d4est_util_fill_array
       (
        dudx_m_on_f_m_mortar_quad_analytic[d],
        0.0,
@@ -393,7 +393,7 @@ curved_test_mortarjacobianterms_interface
       );
 
 
-    d4est_linalg_fill_vec
+    d4est_util_fill_array
       (
        dudx_p_on_f_p_mortar_quad_porder_analytic[d],
        0.0,

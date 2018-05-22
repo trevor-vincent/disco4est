@@ -272,9 +272,9 @@ test_d4est_mortars_computations_sj_and_n_on_interface
         int deg = ed->deg;
         int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg);
         ed->Au_elem = &(prob_vecs->Au[ed->nodal_stride]);
-        d4est_linalg_fill_vec(&(ed->u_elem[0]), 0., volume_nodes_lobatto);
+        d4est_util_fill_array(&(ed->u_elem[0]), 0., volume_nodes_lobatto);
         for (int i = 0; i < (P4EST_DIM); i++){
-          d4est_linalg_fill_vec(&ed->dudr_elem[i][0], 0., volume_nodes_lobatto);
+          d4est_util_fill_array(&ed->dudr_elem[i][0], 0., volume_nodes_lobatto);
         }
       }
     }

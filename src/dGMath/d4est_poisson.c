@@ -133,6 +133,9 @@ void
       }
     }
 
+    /* DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, rhs, local_nodes); */
+    /* DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, Au_eq_0, local_nodes); */
+
   d4est_linalg_vec_axpy(-1., Au_eq_0, rhs, local_nodes);  
   P4EST_FREE(u_eq_0);
   P4EST_FREE(Au_eq_0);
@@ -314,7 +317,9 @@ d4est_poisson_apply_aij
      d4est_factors
     );
 
+  
 
+  
   p4est_ghost_exchange_data(p4est,ghost,ghost_data);
 
   int ghost_nodes = d4est_mesh_get_ghost_nodes(ghost, ghost_data);
@@ -335,6 +340,15 @@ d4est_poisson_apply_aij
      dudr
     );
 
+
+  /* int total_nodes = prob_vecs->local_nodes + ghost_nodes; */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM_EXT("before apply_matrices", p4est->mpirank, dudr[0], total_nodes); */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM_EXT("before apply_matrices", p4est->mpirank, dudr[1], total_nodes); */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM_EXT("before apply_matrices", p4est->mpirank, dudr[2], total_nodes); */
+  
+
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM_EXT("before apply_matrices", p4est->mpirank, prob_vecs->Au, prob_vecs->local_nodes); */
+  
   d4est_poisson_apply_mortar_matrices
     (
      p4est,
@@ -347,5 +361,9 @@ d4est_poisson_apply_aij
      d4est_factors
     );
 
+ /* DEBUG_PRINT_MPI_ARR_DBL_SUM_EXT("after apply_matrices", p4est->mpirank, prob_vecs->Au, prob_vecs->local_nodes); */
+  
+  
+  
   D4EST_FREE_DIM_VEC(dudr);
 }

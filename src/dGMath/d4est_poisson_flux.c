@@ -150,7 +150,7 @@ d4est_poisson_flux_boundary
     );
   
   for (int d = 0; d < (P4EST_DIM); d++){
-    d4est_linalg_fill_vec
+    d4est_util_fill_array
       (
        dudx_m_on_f_m_quad[d],
        0.0,
@@ -199,6 +199,11 @@ d4est_poisson_flux_boundary
 
 
   /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_lobatto[0], face_nodes_m_lobatto); */
+
+
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_m->mpi_rank, dudx_m_on_f_m_quad[0], face_nodes_m_quad); */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_m->mpi_rank, dudx_m_on_f_m_quad[1], face_nodes_m_quad); */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_m->mpi_rank, dudx_m_on_f_m_quad[2], face_nodes_m_quad); */
   
   d4est_poisson_flux_boundary_data_t boundary_data;
   boundary_data.deg_mortar_quad = deg_quad;
@@ -239,20 +244,13 @@ d4est_poisson_flux_boundary
       );
   }
   
-  /* D4EST_FREE_DIM_VEC(xyz_on_f_m_lobatto); */
-  /* D4EST_FREE_DIM_VEC(xyz_on_f_m_quad); */
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m);
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m_quad);
   D4EST_FREE_DIM_VEC(dudx_m_on_f_m_quad);
-  /* D4EST_FREE_DIM_VEC(n_on_f_m_quad); */
-  /* D4EST_FREE_DIM_VEC(n_sj_on_f_m_quad); */
-  /* D4EST_FREE_DBYD_MAT(drst_dxyz_quad); */
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_m_on_f_m_quad);
   P4EST_FREE(u_at_bndry_lobatto);
   P4EST_FREE(u_at_bndry_lobatto_to_quad);
-  /* P4EST_FREE(sj_on_f_m_quad); */
-  /* P4EST_FREE(j_div_sj_quad); */
 }
 
 static void
@@ -513,6 +511,14 @@ static void
     stride += face_nodes_p_lobatto[i];
   }
 
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_m[0]->mpi_rank,u_p_on_f_p, total_side_nodes_p_lobatto); */
+
+  /* double* u_elem_m = &e_m[0]->u_elem[0]; */
+  /* double* u_elem_p = &e_p[0]->u_elem[0]; */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_m[0]->mpi_rank, u_elem_m, d4est_lgl_get_nodes((P4EST_DIM), e_m[0]->deg)); */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_m[0]->mpi_rank, u_elem_p, d4est_lgl_get_nodes((P4EST_DIM), e_m[0]->deg)); */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_p[0]->mpi_rank,u_m_on_f_m, total_side_nodes_m_lobatto); */
+
 
   /* project (-)-side u trace vector onto mortar space */
   d4est_mortars_project_side_onto_mortar_space
@@ -729,7 +735,7 @@ static void
   
   
   for (int d = 0; d < (P4EST_DIM); d++){
-    d4est_linalg_fill_vec
+    d4est_util_fill_array
       (
        dudx_m_on_f_m_mortar_quad[d],
        0.0,
@@ -737,7 +743,7 @@ static void
       );
 
 
-    d4est_linalg_fill_vec
+    d4est_util_fill_array
       (
        dudx_p_on_f_p_mortar_quad_porder[d],
        0.0,
@@ -843,7 +849,13 @@ static void
   D4EST_COPY_DIM_VEC(dudx_p_on_f_p_mortar_quad,interface_data.dudx_p_on_f_p_mortar_quad);
   D4EST_COPY_DIM_VEC(n_on_f_m_mortar_quad,interface_data.n_on_f_m_mortar_quad);
   /* D4EST_COPY_DIM_VEC(n_sj_on_f_m_mortar_quad,interface_data.n_sj_on_f_m_mortar_quad); */
-
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_m[0]->mpi_rank,dudx_m_on_f_m_mortar_quad[0], total_nodes_mortar_quad); */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_p[0]->mpi_rank,dudx_p_on_f_p_mortar_quad[0], total_nodes_mortar_quad); */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_m[0]->mpi_rank,dudx_m_on_f_m_mortar_quad[1], total_nodes_mortar_quad); */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_p[0]->mpi_rank,dudx_p_on_f_p_mortar_quad[1], total_nodes_mortar_quad); */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_m[0]->mpi_rank,dudx_m_on_f_m_mortar_quad[2], total_nodes_mortar_quad); */
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(e_p[0]->mpi_rank,dudx_p_on_f_p_mortar_quad[2], total_nodes_mortar_quad); */
+  
   if (d4est_poisson_flux_params->interface_fcn != NULL){
   d4est_poisson_flux_params->interface_fcn
     (
@@ -867,14 +879,11 @@ static void
 
   }
 
-  /* P4EST_FREE(j_div_sj_on_f_m_mortar_quad); */
-  /* P4EST_FREE(j_div_sj_on_f_p_mortar_quad_porder); */
 #ifdef D4EST_H_EQ_J_DIV_SJ_QUAD
   P4EST_FREE(j_div_sj_on_f_p_mortar_quad);
 #endif
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_p_on_f_p);
-  /* P4EST_FREE(sj_on_f_m_mortar_quad); */
   P4EST_FREE(tmp);  
   P4EST_FREE(u_m_on_f_m_mortar);
   P4EST_FREE(u_m_on_f_m_mortar_quad);

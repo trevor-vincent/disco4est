@@ -168,17 +168,20 @@ d4est_mesh_initial_extents_parse
   else {
     D4EST_CHECK_INPUT("initial_mesh", initial_extents->checkpoint_prefix, NULL);
   }
+
+  int trees = d4est_geom->p4est_conn->num_trees;
   
   if(
      proc_size != 1
      &&
-     d4est_util_int_pow_int((P4EST_CHILDREN), initial_extents->min_level) < proc_size
+     trees*d4est_util_int_pow_int((P4EST_CHILDREN), initial_extents->min_level) < proc_size
      &&
      initial_extents->min_quadrants < proc_size
   ){
     if (proc_rank == 0){
       printf("[D4EST_ERROR]: proc_size = %d\n", proc_size);
       printf("[D4EST_ERROR]: min_level = %d\n", initial_extents->min_level);
+      printf("[D4EST_ERROR]: elements = %d\n",  trees*d4est_util_int_pow_int((P4EST_CHILDREN), initial_extents->min_level));
       D4EST_ABORT("[D4EST_ERROR]: Starting p4est with elements < processes\n");
     }
   }
@@ -619,6 +622,86 @@ d4est_mesh_data_init()
 }
 
 void
+d4est_mesh_data_zero
+(
+ p4est_t* p4est,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_mesh_local_sizes_t local_sizes
+)
+{
+  int local_nodes = local_sizes.local_nodes;
+  int local_nodes_quad = local_sizes.local_nodes_quad;
+  int vector_nodes = local_nodes*(P4EST_DIM);
+  int vector_nodes_quad = local_nodes_quad*(P4EST_DIM);
+  int matrix_nodes_quad = local_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
+  int local_matrix_mortar_nodes_quad = local_sizes.local_mortar_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
+  int local_vector_mortar_nodes_quad = local_sizes.local_mortar_nodes_quad*(P4EST_DIM);
+  int local_vector_boundary_nodes_quad = local_sizes.local_boundary_nodes_quad*(P4EST_DIM);
+
+  d4est_util_zero_array(d4est_factors->xyz, vector_nodes);
+  d4est_util_zero_array(d4est_factors->xyz_quad, vector_nodes_quad);
+  d4est_util_zero_array(d4est_factors->J_quad, local_nodes_quad);
+  d4est_util_zero_array(d4est_factors->xyz_rst_quad, matrix_nodes_quad);
+  d4est_util_zero_array(d4est_factors->rst_xyz_quad, matrix_nodes_quad);   
+  d4est_util_zero_array(d4est_factors->drst_dxyz_m_mortar_quad, local_matrix_mortar_nodes_quad);
+  
+  d4est_util_zero_array(d4est_factors->drst_dxyz_p_mortar_quad_porder, local_matrix_mortar_nodes_quad);   
+  
+  d4est_util_zero_array(d4est_factors->j_div_sj_m_mortar_quad, local_sizes.local_mortar_nodes_quad);  
+  d4est_util_zero_array(d4est_factors->j_div_sj_p_mortar_quad_porder, local_sizes.local_mortar_nodes_quad);   
+  d4est_util_zero_array(d4est_factors->sj_m_mortar_quad, local_sizes.local_mortar_nodes_quad);   
+  d4est_util_zero_array(d4est_factors->n_m_mortar_quad, local_vector_mortar_nodes_quad);
+  d4est_util_zero_array(d4est_factors->xyz_m_mortar_quad, local_vector_boundary_nodes_quad);
+  d4est_util_zero_array(d4est_factors->xyz_m_mortar_lobatto, local_vector_boundary_nodes_quad);
+  
+  d4est_util_zero_array(d4est_factors->j_div_sj_min, p4est->local_num_quadrants*(P4EST_FACES));
+  d4est_util_zero_array(d4est_factors->j_div_sj_mean, p4est->local_num_quadrants*(P4EST_FACES));
+  d4est_util_zero_array(d4est_factors->diam_face, p4est->local_num_quadrants*(P4EST_FACES));
+  d4est_util_zero_array(d4est_factors->area, p4est->local_num_quadrants*(P4EST_FACES));
+  d4est_util_zero_array(d4est_factors->volume,p4est->local_num_quadrants);
+  d4est_util_zero_array(d4est_factors->diam_volume,p4est->local_num_quadrants);  
+}
+
+
+void
+d4est_mesh_data_debug_print
+(
+ p4est_t* p4est,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_mesh_local_sizes_t local_sizes
+)
+{
+  int local_nodes = local_sizes.local_nodes;
+  int local_nodes_quad = local_sizes.local_nodes_quad;
+  int vector_nodes = local_nodes*(P4EST_DIM);
+  int vector_nodes_quad = local_nodes_quad*(P4EST_DIM);
+  int matrix_nodes_quad = local_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
+  int local_matrix_mortar_nodes_quad = local_sizes.local_mortar_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
+  int local_vector_mortar_nodes_quad = local_sizes.local_mortar_nodes_quad*(P4EST_DIM);
+  int local_vector_boundary_nodes_quad = local_sizes.local_boundary_nodes_quad*(P4EST_DIM);
+
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->xyz, vector_nodes);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->xyz_quad, vector_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->J_quad, local_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->xyz_rst_quad, matrix_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->rst_xyz_quad, matrix_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->drst_dxyz_m_mortar_quad, local_matrix_mortar_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->drst_dxyz_p_mortar_quad_porder, local_matrix_mortar_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->j_div_sj_m_mortar_quad, local_sizes.local_mortar_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->j_div_sj_p_mortar_quad_porder, local_sizes.local_mortar_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->sj_m_mortar_quad, local_sizes.local_mortar_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->n_m_mortar_quad, local_vector_mortar_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->xyz_m_mortar_quad, local_vector_boundary_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->xyz_m_mortar_lobatto, local_vector_boundary_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->j_div_sj_min, p4est->local_num_quadrants*(P4EST_FACES));
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->j_div_sj_mean, p4est->local_num_quadrants*(P4EST_FACES));
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->diam_face, p4est->local_num_quadrants*(P4EST_FACES));
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->area, p4est->local_num_quadrants*(P4EST_FACES));
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->volume,p4est->local_num_quadrants);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->diam_volume,p4est->local_num_quadrants);  
+}
+
+void
 d4est_mesh_data_realloc
 (
  p4est_t* p4est,
@@ -628,8 +711,10 @@ d4est_mesh_data_realloc
 {
   d4est_factors->local_sizes = local_sizes;
 
-  if (p4est->mpirank == 0)
+  if (p4est->mpirank == 0){
     printf("[D4EST_INFO]: Reallocing storage for geometry data\n");
+  }
+  
   int local_nodes = local_sizes.local_nodes;
   int local_nodes_quad = local_sizes.local_nodes_quad;
 
@@ -1787,6 +1872,13 @@ d4est_mesh_update
          d4est_factors,
          local_sizes
         );
+
+      d4est_mesh_data_zero
+        (
+         p4est,
+         d4est_factors,
+         local_sizes
+        );
       
       d4est_mesh_data_compute
         (
@@ -1798,6 +1890,15 @@ d4est_mesh_update
          d4est_quad,
          d4est_factors
         );
+
+
+      d4est_mesh_data_debug_print
+        (
+         p4est,
+         d4est_factors,
+         local_sizes
+        );
+      
     }
 
 

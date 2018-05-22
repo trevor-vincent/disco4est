@@ -286,7 +286,6 @@ problem_init
     P4EST_FREE(u_analytic);
     P4EST_FREE(error);
 
-
     d4est_ip_energy_norm_data_t ip_norm_data;
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
     ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;

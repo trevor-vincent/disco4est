@@ -96,7 +96,7 @@ multigrid_smoother_cheby_iterate
   double alpha,beta;
   p = P4EST_ALLOC(double, local_nodes);
   
-  d4est_linalg_fill_vec(p, 0., local_nodes);
+  d4est_util_fill_array(p, 0., local_nodes);
   for (i = 0; i < iter; i++){
     /* calculate residual r = rhs - Au */
 

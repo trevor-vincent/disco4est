@@ -217,14 +217,6 @@ d4est_linalg_vec_dot (double *x, double *y, int N)
   return ddot_ (&N, x, &incx, y, &incy);
 }
 
-void
-d4est_linalg_fill_vec (double *v, double val, int N)
-{
-  int                 i;
-  for (i = 0; i < N; i++)
-    v[i] = val;
-}
-
 /**
  * This routine will work irrespective of the
  * data order (COL or ROW major) b.c the matrix is

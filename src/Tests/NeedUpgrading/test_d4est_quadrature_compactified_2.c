@@ -93,7 +93,7 @@ test_d4est_quadrature_compactified_surface_integrals_bndry
   double* sj_on_f_m_quad_comp = P4EST_ALLOC(double, face_nodes_m_quad);
   
   double* ones_quad = P4EST_ALLOC(double, face_nodes_m_quad);
-  d4est_linalg_fill_vec(ones_quad, 1., face_nodes_m_quad);
+  d4est_util_fill_array(ones_quad, 1., face_nodes_m_quad);
   
 
   d4est_mortars_compute_geometric_data_on_mortar

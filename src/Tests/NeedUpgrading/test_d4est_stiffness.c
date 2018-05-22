@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
         stiff_last_node_error[i] = fabs(stiff_last_node[i] - stiff_last_node[i-1]);
       }
 
-      d4est_linalg_fill_vec(Apoly_vec, 0., local_nodes);
+      d4est_util_fill_array(Apoly_vec, 0., local_nodes);
 
       d4est_poisson_apply_mortar_matrices
         (

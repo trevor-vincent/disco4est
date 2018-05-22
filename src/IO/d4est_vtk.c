@@ -119,9 +119,11 @@ d4est_vtk_write_binary (FILE * vtkfile, char *numeric_data,
   if (output_type == D4EST_VTK_BINARY){
     return sc_vtk_write_binary (vtkfile, numeric_data, byte_length);
   }
+#ifdef D4EST_USE_ZLIB
   else if (output_type == D4EST_VTK_ZLIB_BINARY){
     return sc_vtk_write_compressed (vtkfile, numeric_data, byte_length);
   }
+#endif
   else {
     D4EST_ABORT("wrong vtk type");
     return 1;

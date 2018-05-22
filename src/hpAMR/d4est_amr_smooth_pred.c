@@ -32,7 +32,7 @@ d4est_amr_smooth_pred_pre_refine_callback
                                     double,
                                     p4est->local_num_quadrants
                                    );
-    d4est_linalg_fill_vec(smooth_pred_data->predictor, smooth_pred_data->smooth_pred_params->initial_pred, p4est->local_num_quadrants);
+    d4est_util_fill_array(smooth_pred_data->predictor, smooth_pred_data->smooth_pred_params->initial_pred, p4est->local_num_quadrants);
     
   }
 }

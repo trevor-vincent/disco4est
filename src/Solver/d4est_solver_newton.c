@@ -200,7 +200,7 @@ d4est_solver_newton_solve
     vecs_for_linsolve.Au = Jstep;
 
     /* set initial guess */
-    d4est_linalg_fill_vec(vecs_for_linsolve.u, 0., n);
+    d4est_util_fill_array(vecs_for_linsolve.u, 0., n);
 
     krylov_fcn
       (

@@ -39,6 +39,26 @@
   } while(0)
 
 
+#define DEBUG_PRINT_MPI_ARR_DBL_SUM(mpirank, a, n) do {    \
+    double sum = 0.;                                  \
+    for (int i = 0; i < n; i++) {                     \
+      sum += a[i];                                    \
+    }                                                 \
+    printf("%d: %s sum = %.25f\n",mpirank, #a, sum);   \
+  } while(0)
+
+
+
+#define DEBUG_PRINT_MPI_ARR_DBL_SUM_EXT(h,mpirank, a, n) do {   \
+    double sum = 0.;                                  \
+    for (int i = 0; i < n; i++) {                     \
+      sum += a[i];                                    \
+    }                                                 \
+    printf("%d: %s %s sum = %.25f\n", mpirank, h, #a, sum);       \
+  } while(0)
+
+
+
 #define DEBUG_PRINT_ARR_INT(a, n) do {                \
     printf("%s = \n",#a);                       \
     for (int i = 0; i < n; i++) {               \
@@ -253,6 +273,8 @@ double d4est_util_max(double a,double b);
 double d4est_util_min(double a,double b);
 int d4est_util_compact_1st_alongwith_2nd(double *array,double *array2,int size);
 int d4est_util_compact(double *array,int size);
+void d4est_util_zero_array(double *v,int N);
+void d4est_util_fill_array(double *v,double val,int N);
 void d4est_util_make_directory(const char *dir,int add_cwd_to_dir);
 char *d4est_util_add_cwd(const char *dir);
 double d4est_util_secant_fcn(double x);

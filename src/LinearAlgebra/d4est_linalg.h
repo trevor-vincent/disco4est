@@ -12,7 +12,7 @@ void d4est_linalg_vec_fabs(double *x,int N);
 void d4est_linalg_vec_fabsdiff(double* x, double* y, double* result, int N);
 void d4est_linalg_sym_eigvecs(double *A,double *eig_vals,int N);
 void d4est_linalg_sym_eigvals(double *A,double *eig_vals,int N);
-void d4est_linalg_fill_vec(double *v,double val,int N);
+void d4est_util_fill_array(double *v,double val,int N);
 void d4est_linalg_vec_xpby(double *x,double beta,double *y,int N);
 void d4est_linalg_vec_axpyeqz(double alpha,double *x,double *y,double *z,int N);
 void d4est_linalg_vec_axpy(double alpha,double *x,double *y,int N);
