@@ -50,6 +50,11 @@ d4est_poisson_flux_sipg_calculate_h
     }
   }
   else if (sipg_flux_h == H_EQ_J_DIV_SJ_MIN_LOBATTO){
+
+    /* when we try to compute h for the "plus" side and if this side exists on another processor, this will fail because it tries to receive
+     * the j_div_sj_min from the local memory not the other processors memeory. This needs to be fixed before use, hence the ABORT */
+    D4EST_ABORT("NOT WORKING IN PARALLEL BECAUSE j_div_sj_min only indexes on local processor");
+    
     int stride = 0;
     double h [P4EST_HALF];
 

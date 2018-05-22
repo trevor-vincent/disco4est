@@ -439,9 +439,6 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
      j_div_sj_p_mortar_quad_porder,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
-
-  
-  
   
 }
 
@@ -1892,12 +1889,12 @@ d4est_mesh_update
         );
 
 
-      d4est_mesh_data_debug_print
-        (
-         p4est,
-         d4est_factors,
-         local_sizes
-        );
+      /* d4est_mesh_data_debug_print */
+      /*   ( */
+      /*    p4est, */
+      /*    d4est_factors, */
+      /*    local_sizes */
+      /*   ); */
       
     }
 

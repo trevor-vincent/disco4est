@@ -74,7 +74,6 @@ problem_init
   prob_fcns.apply_lhs = poisson_sinx_apply_lhs;
   prob_fcns.user = &ctx;
 
-
   d4est_elliptic_data_t prob_vecs;
   prob_vecs.Au = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.u = P4EST_ALLOC(double, initial_nodes);
@@ -82,10 +81,8 @@ problem_init
   prob_vecs.local_nodes = initial_nodes;
 
   d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
-  
-  
+   
   // Setup norm function contexts
-  
   d4est_norms_fcn_L2_ctx_t L2_norm_ctx;
   L2_norm_ctx.p4est = p4est;
   L2_norm_ctx.d4est_ops = d4est_ops;
