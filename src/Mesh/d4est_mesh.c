@@ -193,6 +193,7 @@ d4est_mesh_initial_extents_parse
 void
 d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
 (
+ p4est_t* p4est,
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
@@ -276,6 +277,7 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
 void
 d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
 (
+ p4est_t* p4est,
  d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
@@ -478,6 +480,7 @@ d4est_mesh_compute_mortar_quadrature_quantities
 static void
 d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback
 (
+ p4est_t* p4est,
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
@@ -507,6 +510,7 @@ d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback
 static void
 d4est_mesh_compute_mortar_quadrature_sizes_interface_callback
 (
+ p4est_t* p4est,
  d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
@@ -702,6 +706,7 @@ void
 d4est_mesh_data_realloc
 (
  p4est_t* p4est,
+ p4est_ghost_t* p4est_ghost,
  d4est_mesh_data_t* d4est_factors,
  d4est_mesh_local_sizes_t local_sizes
 )
@@ -765,32 +770,34 @@ d4est_mesh_data_realloc
                                                       local_vector_boundary_nodes_quad);
 
 
+  int ghost_elements = p4est_ghost->ghosts.elem_count;
+  
   d4est_factors->j_div_sj_min = P4EST_REALLOC(d4est_factors->j_div_sj_min,
                                               double,
-                                              p4est->local_num_quadrants*(P4EST_FACES));
+                                              (p4est->local_num_quadrants + ghost_elements)*(P4EST_FACES));
 
   
   d4est_factors->j_div_sj_mean = P4EST_REALLOC(d4est_factors->j_div_sj_mean,
                                               double,
-                                              p4est->local_num_quadrants*(P4EST_FACES));
+                                              (p4est->local_num_quadrants + ghost_elements)*(P4EST_FACES));
 
 
   d4est_factors->diam_face = P4EST_REALLOC(d4est_factors->diam_face,
-                                              double,
-                                              p4est->local_num_quadrants*(P4EST_FACES));
+                                           double,
+                                           (p4est->local_num_quadrants + ghost_elements)*(P4EST_FACES));
   
 
   d4est_factors->area = P4EST_REALLOC(d4est_factors->area,
-                                              double,
-                                              p4est->local_num_quadrants*(P4EST_FACES));
+                                      double,
+                                      (p4est->local_num_quadrants + ghost_elements)*(P4EST_FACES));
 
   d4est_factors->volume = P4EST_REALLOC(d4est_factors->volume,
-                                              double,
-                                              p4est->local_num_quadrants);
+                                        double,
+                                        (p4est->local_num_quadrants + ghost_elements));
 
   d4est_factors->diam_volume = P4EST_REALLOC(d4est_factors->diam_volume,
                                              double,
-                                             p4est->local_num_quadrants);
+                                             (p4est->local_num_quadrants + ghost_elements));
 }
 
 
@@ -838,8 +845,217 @@ d4est_mesh_data_destroy
   }
 }
 
+
 static void
 d4est_mesh_init_element_size_parameters
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_element_data_t* ed,
+ int stride
+)
+{
+  d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t,1);
+  d4est_quadrature_lobatto_new(d4est_quad, NULL, NULL);
+
+  d4est_rst_t rst_points_lobatto;
+  rst_points_lobatto = d4est_quadrature_get_rst_points
+                       (
+                        d4est_ops,
+                        d4est_quad,
+                        d4est_geom,
+                        NULL,
+                        QUAD_OBJECT_VOLUME,
+                        QUAD_INTEGRAND_UNKNOWN,
+                        ed->deg
+                       );
+
+  int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+  int face_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM)-1, ed->deg);
+  
+  double* xyz_lobatto [(P4EST_DIM)];
+  D4EST_ALLOC_DIM_VEC(xyz_lobatto, volume_nodes_lobatto);
+  double* dxyz_drst_lobatto [(P4EST_DIM)][(P4EST_DIM)];
+  D4EST_ALLOC_DBYD_MAT(dxyz_drst_lobatto, volume_nodes_lobatto);
+  double* j_lobatto = P4EST_ALLOC(double, volume_nodes_lobatto);
+
+  double* xyz_on_f_lobatto [(P4EST_DIM)];
+  D4EST_ALLOC_DIM_VEC(xyz_on_f_lobatto, face_nodes_lobatto);
+  double* sj_on_f_lobatto = P4EST_ALLOC(double, face_nodes_lobatto);
+  double* j_div_sj_on_f_lobatto = P4EST_ALLOC(double, face_nodes_lobatto);
+  
+  d4est_geometry_compute_xyz
+    (
+     d4est_ops,
+     d4est_geom,
+     rst_points_lobatto,
+     ed->tree,
+     ed->deg,
+     ed->q,
+     ed->dq,
+     xyz_lobatto
+    );
+
+  double diam_volume = -1;
+  for (int i = 0; i < volume_nodes_lobatto; i++){
+    for (int j = i + 1; j < volume_nodes_lobatto; j++){
+      double diam_temp = 0.;
+      for (int d = 0; d < (P4EST_DIM); d++){
+        diam_temp += pow(fabs(xyz_lobatto[d][i] - xyz_lobatto[d][j]), 2);
+      }
+      diam_temp = sqrt(diam_temp);
+      if (diam_temp > diam_volume)
+        diam_volume = diam_temp;
+    }
+  }
+  /* ed->diam_volume = diam_volume; */
+  d4est_factors->diam_volume[ed->id + stride] = diam_volume;
+  
+  d4est_geometry_compute_dxyz_drst
+    (
+     d4est_ops,
+     d4est_geom,
+     rst_points_lobatto,
+     ed->tree,
+     ed->q,
+     ed->dq,
+     ed->deg,
+     dxyz_drst_lobatto
+    );
+
+    
+  d4est_geometry_compute_jacobian
+    (
+     dxyz_drst_lobatto,
+     j_lobatto,
+     volume_nodes_lobatto
+    );
+  
+  double* ones = P4EST_ALLOC(double, volume_nodes_lobatto);
+  for (int i = 0; i < volume_nodes_lobatto; i++)
+    ones[i] = 1.;
+
+  /* ed->volume = d4est_quadrature_innerproduct */
+  d4est_factors->volume[ed->id + stride]
+    = d4est_quadrature_innerproduct
+    (
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     NULL,
+     QUAD_OBJECT_VOLUME,
+     QUAD_INTEGRAND_UNKNOWN,
+     ones,
+     NULL,
+     j_lobatto,
+     ed->deg
+    );
+
+
+  for (int f = 0; f < (P4EST_FACES); f++){
+
+    d4est_mortars_compute_geometric_data_on_mortar
+      (
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       QUAD_INTEGRAND_UNKNOWN,
+       ed->tree,
+       ed->q,
+       ed->dq,
+       -1,
+       1,
+       1,
+       &ed->deg,
+       &ed->deg,
+       f,
+       xyz_on_f_lobatto,
+       NULL,
+       sj_on_f_lobatto,
+       NULL,
+       NULL,
+       j_div_sj_on_f_lobatto,
+       COMPUTE_NORMAL_USING_JACOBIAN
+      );
+
+    d4est_factors->area[(ed->id+stride)*(P4EST_FACES) + f ]
+      = d4est_quadrature_innerproduct
+      (
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       NULL,
+       QUAD_OBJECT_MORTAR,
+       QUAD_INTEGRAND_UNKNOWN,
+       ones,
+       NULL,
+       sj_on_f_lobatto,
+       ed->deg
+      );
+
+
+    double diam_face = -1;
+    for (int i = 0; i < face_nodes_lobatto; i++){
+      for (int j = i + 1; j < face_nodes_lobatto; j++){
+        double diam_temp = 0.;
+        for (int d = 0; d < (P4EST_DIM); d++){
+          diam_temp += pow(fabs(xyz_on_f_lobatto[d][i] - xyz_on_f_lobatto[d][j]), 2);
+        }
+        diam_temp = sqrt(diam_temp);
+        if (diam_temp > diam_face)
+          diam_face = diam_temp;
+      }
+    }
+          
+    d4est_factors->diam_face[(ed->id+stride)*(P4EST_FACES) + f] = diam_face;
+    d4est_factors->j_div_sj_min[(ed->id+stride)*(P4EST_FACES) + f] = d4est_util_min_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto);
+    d4est_factors->j_div_sj_mean[(ed->id+stride)*(P4EST_FACES) + f] = d4est_util_mean_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto); 
+  }
+     
+  P4EST_FREE(ones);
+
+  D4EST_FREE_DIM_VEC(xyz_lobatto);
+  D4EST_FREE_DBYD_MAT(dxyz_drst_lobatto);
+  D4EST_FREE_DIM_VEC(xyz_on_f_lobatto);
+  D4EST_FREE(sj_on_f_lobatto);
+  D4EST_FREE(j_div_sj_on_f_lobatto);
+  D4EST_FREE(j_lobatto);
+
+
+  P4EST_FREE(d4est_quad);
+}
+
+static void
+d4est_mesh_init_element_size_parameters_ghost
+(
+ p4est_t* p4est,
+ p4est_ghost_t* ghost,
+ d4est_element_data_t* ghost_data,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_mesh_data_t* d4est_factors
+ 
+)
+{
+  for (int gid = 0; gid < ghost->ghosts.elem_count; gid++){
+    d4est_element_data_t* ged = &ghost_data[gid];
+    ged->id = gid;
+    d4est_mesh_init_element_size_parameters
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_factors,
+       ged,
+       p4est->local_num_quadrants
+      );    
+  }
+}
+
+static void
+d4est_mesh_init_element_size_parameters_local
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -847,9 +1063,6 @@ d4est_mesh_init_element_size_parameters
  d4est_mesh_data_t* d4est_factors
 )
 {
-  d4est_quadrature_t* d4est_quad = P4EST_ALLOC(d4est_quadrature_t,1);
-  d4est_quadrature_lobatto_new(d4est_quad, NULL, NULL);
-
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree; tt++)
     {
@@ -859,175 +1072,19 @@ d4est_mesh_init_element_size_parameters
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
-
-        d4est_rst_t rst_points_lobatto;
-        rst_points_lobatto = d4est_quadrature_get_rst_points
-                             (
-                              d4est_ops,
-                              d4est_quad,
-                              d4est_geom,
-                              NULL,
-                              QUAD_OBJECT_VOLUME,
-                              QUAD_INTEGRAND_UNKNOWN,
-                              ed->deg
-                             );
-
-        int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
-        int face_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM)-1, ed->deg);
-  
-        double* xyz_lobatto [(P4EST_DIM)];
-        D4EST_ALLOC_DIM_VEC(xyz_lobatto, volume_nodes_lobatto);
-        double* dxyz_drst_lobatto [(P4EST_DIM)][(P4EST_DIM)];
-        D4EST_ALLOC_DBYD_MAT(dxyz_drst_lobatto, volume_nodes_lobatto);
-        double* j_lobatto = P4EST_ALLOC(double, volume_nodes_lobatto);
-
-        double* xyz_on_f_lobatto [(P4EST_DIM)];
-        D4EST_ALLOC_DIM_VEC(xyz_on_f_lobatto, face_nodes_lobatto);
-        double* sj_on_f_lobatto = P4EST_ALLOC(double, face_nodes_lobatto);
-        double* j_div_sj_on_f_lobatto = P4EST_ALLOC(double, face_nodes_lobatto);
-  
-        d4est_geometry_compute_xyz
+        d4est_mesh_init_element_size_parameters
           (
+           p4est,
            d4est_ops,
            d4est_geom,
-           rst_points_lobatto,
-           ed->tree,
-           ed->deg,
-           ed->q,
-           ed->dq,
-           xyz_lobatto
+           d4est_factors,
+           ed,
+           0
           );
-
-        double diam_volume = -1;
-        for (int i = 0; i < volume_nodes_lobatto; i++){
-          for (int j = i + 1; j < volume_nodes_lobatto; j++){
-            double diam_temp = 0.;
-            for (int d = 0; d < (P4EST_DIM); d++){
-              diam_temp += pow(fabs(xyz_lobatto[d][i] - xyz_lobatto[d][j]), 2);
-            }
-            diam_temp = sqrt(diam_temp);
-            if (diam_temp > diam_volume)
-              diam_volume = diam_temp;
-          }
-        }
-        /* ed->diam_volume = diam_volume; */
-        d4est_factors->diam_volume[ed->id] = diam_volume;
-  
-        d4est_geometry_compute_dxyz_drst
-          (
-           d4est_ops,
-           d4est_geom,
-           rst_points_lobatto,
-           ed->tree,
-           ed->q,
-           ed->dq,
-           ed->deg,
-           dxyz_drst_lobatto
-          );
-
-    
-        d4est_geometry_compute_jacobian
-          (
-           dxyz_drst_lobatto,
-           j_lobatto,
-           volume_nodes_lobatto
-          );
-  
-        double* ones = P4EST_ALLOC(double, volume_nodes_lobatto);
-        for (int i = 0; i < volume_nodes_lobatto; i++)
-          ones[i] = 1.;
-
-        /* ed->volume = d4est_quadrature_innerproduct */
-        d4est_factors->volume[ed->id]
-          = d4est_quadrature_innerproduct
-                     (
-                      d4est_ops,
-                      d4est_geom,
-                      d4est_quad,
-                      NULL,
-                      QUAD_OBJECT_VOLUME,
-                      QUAD_INTEGRAND_UNKNOWN,
-                      ones,
-                      NULL,
-                      j_lobatto,
-                      ed->deg
-                     );
-
-
-        for (int f = 0; f < (P4EST_FACES); f++){
-
-          d4est_mortars_compute_geometric_data_on_mortar
-            (
-             d4est_ops,
-             d4est_geom,
-             d4est_quad,
-             QUAD_INTEGRAND_UNKNOWN,
-             ed->tree,
-             ed->q,
-             ed->dq,
-             -1,
-             1,
-             1,
-             &ed->deg,
-             &ed->deg,
-             f,
-             xyz_on_f_lobatto,
-             NULL,
-             sj_on_f_lobatto,
-             NULL,
-             NULL,
-             j_div_sj_on_f_lobatto,
-             COMPUTE_NORMAL_USING_JACOBIAN
-            );
-
-          d4est_factors->area[ed->id*(P4EST_FACES) + f]
-            = d4est_quadrature_innerproduct
-                        (
-                         d4est_ops,
-                         d4est_geom,
-                         d4est_quad,
-                         NULL,
-                         QUAD_OBJECT_MORTAR,
-                         QUAD_INTEGRAND_UNKNOWN,
-                         ones,
-                         NULL,
-                         sj_on_f_lobatto,
-                         ed->deg
-                        );
-
-
-          double diam_face = -1;
-          for (int i = 0; i < face_nodes_lobatto; i++){
-            for (int j = i + 1; j < face_nodes_lobatto; j++){
-              double diam_temp = 0.;
-              for (int d = 0; d < (P4EST_DIM); d++){
-                diam_temp += pow(fabs(xyz_on_f_lobatto[d][i] - xyz_on_f_lobatto[d][j]), 2);
-              }
-              diam_temp = sqrt(diam_temp);
-              if (diam_temp > diam_face)
-                diam_face = diam_temp;
-            }
-          }
-          
-          d4est_factors->diam_face[ed->id*(P4EST_FACES) + f] = diam_face;
-          d4est_factors->j_div_sj_min[ed->id*(P4EST_FACES) + f] = d4est_util_min_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto);
-          d4est_factors->j_div_sj_mean[ed->id*(P4EST_FACES) + f] = d4est_util_mean_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto); 
-        }
-     
-        P4EST_FREE(ones);
-
-        D4EST_FREE_DIM_VEC(xyz_lobatto);
-        D4EST_FREE_DBYD_MAT(dxyz_drst_lobatto);
-        D4EST_FREE_DIM_VEC(xyz_on_f_lobatto);
-        D4EST_FREE(sj_on_f_lobatto);
-        D4EST_FREE(j_div_sj_on_f_lobatto);
-        D4EST_FREE(j_lobatto);
       }
     }
-
-
-  P4EST_FREE(d4est_quad);
 }
+
 
 void
 d4est_mesh_get_array_of_degrees
@@ -1741,9 +1798,20 @@ d4est_mesh_data_compute
     );
 
 
-  d4est_mesh_init_element_size_parameters
+  d4est_mesh_init_element_size_parameters_local
     (
      p4est,
+     d4est_ops,
+     d4est_geom,
+     d4est_factors
+    );
+
+
+  d4est_mesh_init_element_size_parameters_ghost
+    (
+     p4est,
+     ghost,
+     ghost_data,
      d4est_ops,
      d4est_geom,
      d4est_factors
@@ -1866,6 +1934,7 @@ d4est_mesh_update
       d4est_mesh_data_realloc
         (
          p4est,
+         ghost,
          d4est_factors,
          local_sizes
         );

@@ -14,6 +14,7 @@ typedef enum {EXCHANGE_GHOST_DATA, DO_NOT_EXCHANGE_GHOST_DATA} d4est_mortars_exc
 /* No problem specific data needed */
 typedef void (*d4est_mortars_interface_fcn_t)
 (
+ p4est_t*,
  d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
@@ -34,6 +35,7 @@ typedef void (*d4est_mortars_interface_fcn_t)
 /* We need the problem specific data */
 typedef void (*d4est_mortars_boundary_fcn_t)
 (
+ p4est_t*,
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id,

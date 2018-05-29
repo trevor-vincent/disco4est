@@ -15,6 +15,7 @@
 static void
 d4est_ip_energy_norm_boundary
 (
+ p4est_t* p4est,
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
@@ -50,6 +51,7 @@ d4est_ip_energy_norm_boundary
   double* h_quad = P4EST_ALLOC(double, face_nodes_m_quad);
   d4est_poisson_flux_sipg_calculate_h
     (
+     p4est,
      &e_m,
      f_m,
      d4est_ops,
@@ -106,6 +108,7 @@ d4est_ip_energy_norm_boundary
 static void
 d4est_ip_energy_norm_interface
 (
+ p4est_t* p4est,
  d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
@@ -167,6 +170,7 @@ d4est_ip_energy_norm_interface
 
   d4est_poisson_flux_sipg_calculate_h
     (
+     p4est,
      e_m,
      f_m,
      d4est_ops,
@@ -187,6 +191,7 @@ d4est_ip_energy_norm_interface
   
     d4est_poisson_flux_sipg_calculate_h
     (
+     p4est,
      &e_p_oriented[0],
      f_p,
      d4est_ops,

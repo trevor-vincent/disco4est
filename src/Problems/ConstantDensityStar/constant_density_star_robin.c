@@ -304,6 +304,7 @@ problem_init
     d4est_mesh_data_realloc
       (
        p4est,
+       ghost,
        d4est_factors_compactified,
        d4est_factors->local_sizes
       );

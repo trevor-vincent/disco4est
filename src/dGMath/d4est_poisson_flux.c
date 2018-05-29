@@ -25,6 +25,7 @@ d4est_poisson_get_degree_mortar_quad
 static void
 d4est_poisson_flux_boundary
 (
+ p4est_t* p4est,
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
@@ -231,6 +232,7 @@ d4est_poisson_flux_boundary
   if (d4est_poisson_flux_params->boundary_fcn != NULL){
     d4est_poisson_flux_params->boundary_fcn
       (
+       p4est,
        e_m,
        f_m,
        mortar_side_id_m,
@@ -256,6 +258,7 @@ d4est_poisson_flux_boundary
 static void
  d4est_poisson_flux_interface
 (
+ p4est_t* p4est,
  d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
@@ -859,6 +862,7 @@ static void
   if (d4est_poisson_flux_params->interface_fcn != NULL){
   d4est_poisson_flux_params->interface_fcn
     (
+     p4est,
      e_m,
      faces_m,
      f_m,

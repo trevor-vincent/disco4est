@@ -14,6 +14,7 @@
 void
 d4est_poisson_flux_sipg_calculate_h
 (
+ p4est_t* p4est,
  d4est_element_data_t** elems_side,
  int face_side,
  d4est_operators_t* d4est_ops,
@@ -53,13 +54,16 @@ d4est_poisson_flux_sipg_calculate_h
 
     /* when we try to compute h for the "plus" side and if this side exists on another processor, this will fail because it tries to receive
      * the j_div_sj_min from the local memory not the other processors memeory. This needs to be fixed before use, hence the ABORT */
-    D4EST_ABORT("NOT WORKING IN PARALLEL BECAUSE j_div_sj_min only indexes on local processor");
     
     int stride = 0;
     double h [P4EST_HALF];
 
     for (int f = 0; f < num_faces_mortar; f++){
-      h[f] = size_params.j_div_sj_min[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id*(P4EST_FACES) + face_side];
+      int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
+      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
+      int element_index = element_id + stride;
+      
+      h[f] = size_params.j_div_sj_min[element_index*(P4EST_FACES) + face_side]; 
     } 
                  
     for (int f = 0; f < num_faces_mortar; f++){
@@ -75,7 +79,11 @@ d4est_poisson_flux_sipg_calculate_h
     int stride = 0;
     double h [P4EST_HALF];
     for (int f = 0; f < num_faces_mortar; f++){
-      h[f] = size_params.j_div_sj_mean[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id*(P4EST_FACES) + face_side]; 
+
+      int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
+      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
+      int element_index = element_id + stride;
+      h[f] = size_params.j_div_sj_mean[element_index*(P4EST_FACES) + face_side]; 
     }
                  
     for (int f = 0; f < num_faces_mortar; f++){
@@ -108,10 +116,14 @@ d4est_poisson_flux_sipg_calculate_h
 
   else if (sipg_flux_h == H_EQ_VOLUME_DIV_AREA){
     int stride = 0;
-    double h [P4EST_HALF];
+    double h [P4EST_HALF];    
     for (int f = 0; f < num_faces_mortar; f++){
-      double volume = size_params.volume[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id];
-      double area = size_params.area[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id*(P4EST_FACES) + face_side];
+      int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
+      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
+      int element_index = element_id + stride;
+
+      double volume = size_params.volume[element_index];
+      double area = size_params.area[element_index*(P4EST_FACES) + face_side];
       h[f] = volume/area;
     }
          
@@ -148,6 +160,7 @@ d4est_poisson_flux_sipg_calculate_h
 void
 d4est_poisson_flux_sipg_dirichlet_aux
 (
+ p4est_t* p4est,
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
@@ -206,6 +219,7 @@ d4est_poisson_flux_sipg_dirichlet_aux
   
   d4est_poisson_flux_sipg_calculate_h
     (
+     p4est,
      &e_m,
      f_m,
      d4est_ops,
@@ -397,6 +411,7 @@ d4est_poisson_flux_sipg_dirichlet_aux
 static void
 d4est_poisson_flux_sipg_dirichlet
 (
+ p4est_t* p4est,
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
@@ -435,6 +450,7 @@ d4est_poisson_flux_sipg_dirichlet
   
   d4est_poisson_flux_sipg_dirichlet_aux
     (
+     p4est,
      e_m,
      f_m,
      mortar_side_id_m,
@@ -490,6 +506,7 @@ d4est_poisson_flux_sipg_dirichlet
 void
 d4est_poisson_flux_sipg_robin_aux
 (
+ p4est_t* p4est,
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
@@ -595,6 +612,7 @@ d4est_poisson_flux_sipg_robin_aux
 static void
 d4est_poisson_flux_sipg_robin
 (
+ p4est_t* p4est,
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id_m,
@@ -617,6 +635,7 @@ d4est_poisson_flux_sipg_robin
 
   d4est_poisson_flux_sipg_robin_aux
     (
+     p4est,
      e_m,
      f_m,
      mortar_side_id_m,
@@ -648,6 +667,7 @@ d4est_poisson_flux_sipg_robin
 void
 d4est_poisson_flux_sipg_interface_aux
 (
+ p4est_t* p4est,
  d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
@@ -721,6 +741,7 @@ d4est_poisson_flux_sipg_interface_aux
 
   d4est_poisson_flux_sipg_calculate_h
     (
+     p4est,
      e_m,
      f_m,
      d4est_ops,
@@ -741,6 +762,7 @@ d4est_poisson_flux_sipg_interface_aux
  
     d4est_poisson_flux_sipg_calculate_h
     (
+     p4est,
      &e_p_oriented[0],
      f_p,
      d4est_ops,
@@ -967,6 +989,7 @@ d4est_poisson_flux_sipg_interface_aux
 static void
 d4est_poisson_flux_sipg_interface
 (
+ p4est_t* p4est,
  d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
@@ -1013,6 +1036,7 @@ d4est_poisson_flux_sipg_interface
   
   d4est_poisson_flux_sipg_interface_aux
     (
+     p4est,
      e_m,
      faces_m,
      f_m,
@@ -1333,5 +1357,4 @@ d4est_poisson_flux_sipg_params_destroy
   P4EST_FREE(data->flux_data);
   P4EST_FREE(data);
 }
-
 

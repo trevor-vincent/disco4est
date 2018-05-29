@@ -62,6 +62,7 @@ typedef struct {
 typedef
 void (*d4est_poisson_flux_interface_fcn_t)
 (
+ p4est_t*,
  d4est_element_data_t**,
  int,
  int,
@@ -83,6 +84,7 @@ void (*d4est_poisson_flux_interface_fcn_t)
 typedef
 void (*d4est_poisson_flux_boundary_fcn_t)
 (
+ p4est_t*,
  d4est_element_data_t*,
  int,
  int,

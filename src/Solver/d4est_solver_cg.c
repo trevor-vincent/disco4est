@@ -127,10 +127,6 @@ void d4est_solver_cg_solve
     );
   
 
-  DEBUG_PRINT_ARR_DBL_SUM(vecs->u, vecs->local_nodes);
-  DEBUG_PRINT_ARR_DBL_SUM(vecs->rhs, vecs->local_nodes);
-  DEBUG_PRINT_ARR_DBL_SUM(vecs->Au, vecs->local_nodes);
-  
   d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
 
   /* r = f - Au ; Au is stored in r so r = rhs - r */

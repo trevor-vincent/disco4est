@@ -704,6 +704,7 @@ void d4est_mortars_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *in
           if (flux_fcn_ptrs->flux_interface_fcn != NULL){
           flux_fcn_ptrs->flux_interface_fcn
             (
+             info->p4est,
              e_m,
              (P4EST_HALF),
              side[s_m]->face,
@@ -745,6 +746,7 @@ void d4est_mortars_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *in
             if (flux_fcn_ptrs->flux_interface_fcn != NULL){
               flux_fcn_ptrs->flux_interface_fcn
                 (
+                 info->p4est,
                  e_m,
                  1,
                  side[s_m]->face,
@@ -775,6 +777,7 @@ void d4est_mortars_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *in
 
             if (flux_fcn_ptrs->flux_interface_fcn != NULL){
             flux_fcn_ptrs->flux_interface_fcn(
+                                              info->p4est,
                                               e_m, 1, side[s_m]->face, mortar_side_id_m, e_p, 1, side[s_p]->face, mortar_side_id_p, e_m_is_ghost,
                                               info->orientation, d4est_ops, geom, d4est_quad, d4est_factors, flux_fcn_ptrs->user_ctx);
             }
@@ -797,7 +800,7 @@ void d4est_mortars_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *in
     mortar_side_id_p = -1;
 
     if (flux_fcn_ptrs->flux_boundary_fcn != NULL){
-      flux_fcn_ptrs->flux_boundary_fcn(e_m[0], side->face, mortar_side_id_m,
+      flux_fcn_ptrs->flux_boundary_fcn(info->p4est, e_m[0], side->face, mortar_side_id_m,
                                        d4est_ops, geom, d4est_quad, d4est_factors,
                                        flux_fcn_ptrs->user_ctx);
     }
