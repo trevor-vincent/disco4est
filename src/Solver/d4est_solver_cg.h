@@ -1,6 +1,7 @@
 #ifndef D4EST_SOLVER_CG_H
 #define D4EST_SOLVER_CG_H 
 
+#include <pXest.h>
 #include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
 #include <krylov_pc.h>
