@@ -37,9 +37,13 @@ multigrid_bottom_solver_cheby_input_handler
     D4EST_ASSERT(pconfig->cheby_print_residual_norm == -1);
     pconfig->cheby_print_residual_norm = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"mg_bottom_solver_cheby",name,"cheby_print_eig")) {
-    D4EST_ASSERT(pconfig->cheby_print_eig == -1);
-    pconfig->cheby_print_eig = atoi(value);
+  else if (d4est_util_match_couple(section,"mg_bottom_solver_cheby",name,"cheby_print_spectral_bound")) {
+    D4EST_ASSERT(pconfig->cheby_print_spectral_bound == -1);
+    pconfig->cheby_print_spectral_bound = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"mg_bottom_solver_cheby",name,"cheby_print_spectral_bound_iterations")) {
+    D4EST_ASSERT(pconfig->cheby_print_spectral_bound_iterations == -1);
+    pconfig->cheby_print_spectral_bound_iterations = atoi(value);
   }
   else {
     return 0;  /* unknown section/name, error */
@@ -74,6 +78,7 @@ multigrid_bottom_solver_cheby
      mg_data->d4est_quad,
      updater->current_geometric_factors,
      cheby->cheby_eigs_cg_imax,
+     cheby->cheby_print_spectral_bound_iterations,
      &cheby->eig
     );
 
@@ -83,8 +88,9 @@ multigrid_bottom_solver_cheby
   double lmin = cheby->eig/cheby->cheby_eigs_lmax_lmin_ratio;
   double lmax = cheby->eig;
 
-  if (cheby->cheby_print_eig){
-    printf("[MG_BOTTOM_SOLVER_CHEBY]: Lev %d Max_eig %.25f\n", level, cheby->eig);
+  if (cheby->cheby_print_spectral_bound){
+    zlog_category_t *c_default = zlog_get_category("d4est_multigrid_bottom_solver_cheby");    
+    zlog_info(c_default, "Lev %d Max_eig %f Multiplier %f\n", level, cheby->eig, cheby->cheby_eigs_max_multiplier);
   }
   
   multigrid_smoother_cheby_iterate
@@ -129,7 +135,8 @@ multigrid_bottom_solver_cheby_init
   cheby_data->cheby_eigs_lmax_lmin_ratio = -1;
   cheby_data->cheby_eigs_max_multiplier = -1;
   cheby_data->cheby_print_residual_norm = -1;
-  cheby_data->cheby_print_eig = -1;
+  cheby_data->cheby_print_spectral_bound = -1;
+  cheby_data->cheby_print_spectral_bound_iterations = -1;
   
   if (ini_parse(input_file, multigrid_bottom_solver_cheby_input_handler, cheby_data) < 0) {
     D4EST_ABORT("Can't load input file");
@@ -140,7 +147,8 @@ multigrid_bottom_solver_cheby_init
   D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_eigs_lmax_lmin_ratio, -1);
   D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_eigs_max_multiplier, -1);
   D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_residual_norm, -1);
-  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_eig, -1);
+  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_spectral_bound, -1);
+  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_spectral_bound_iterations, -1);
   
   if(p4est->mpirank == 0){
     printf("[D4EST_INFO]: Multigrid Bottom Solver Cheby Parameters\n");
@@ -149,7 +157,8 @@ multigrid_bottom_solver_cheby_init
     printf("[D4EST_INFO]: Cheby eigs lmax_lmin_ratio = %f\n", cheby_data->cheby_eigs_lmax_lmin_ratio);
     printf("[D4EST_INFO]: Cheby eigs max multiplier = %.25f\n", cheby_data->cheby_eigs_max_multiplier);
     printf("[D4EST_INFO]: Cheby print residual norm = %d\n", cheby_data->cheby_print_residual_norm);
-    printf("[D4EST_INFO]: Cheby print eig = %d\n", cheby_data->cheby_print_eig);
+    printf("[D4EST_INFO]: Cheby print spectral bound = %d\n", cheby_data->cheby_print_spectral_bound);
+    printf("[D4EST_INFO]: Cheby print spectral bound iterations = %d\n", cheby_data->cheby_print_spectral_bound_iterations);
   }
 
   bottom_solver->user = cheby_data;

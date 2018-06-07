@@ -122,6 +122,7 @@ SET (
   src/Solver/multigrid_bottom_solver_krylov_petsc.c
   src/Solver/multigrid_element_data_updater.c
   src/Solver/multigrid_logger_residual.c
+  src/Solver/multigrid_profiler_basic.c
   src/Solver/multigrid_matrix_operator.c
   src/Solver/multigrid_smoother_cheby.c
   src/Solver/multigrid_smoother_krylov_petsc.c
@@ -315,7 +316,7 @@ add_d4est_problem_3d(poisson_sinx_uniform_debug_driver poisson_sinx_uniform_debu
 add_d4est_problem_3d(poisson_sinx_multigrid_driver poisson_sinx_multigrid.c Poisson)
 add_d4est_problem_3d(poisson_lorentzian_multigrid_driver poisson_lorentzian_multigrid.c Poisson)
 add_d4est_problem_3d(poisson_lorentzian_cg_driver poisson_lorentzian_cg.c Poisson)
-add_d4est_problem_3d(poisson_lorentzian_eigs_driver poisson_lorentzian_eigs.c Poisson)
+# add_d4est_problem_3d(poisson_lorentzian_eigs_driver poisson_lorentzian_eigs.c Poisson)
 
 add_d4est_problem_3d(poisson_lorentzian_amr_multigrid_driver poisson_lorentzian_amr_multigrid.c Poisson)
 add_d4est_problem_3d(poisson_1orton_multigrid_driver poisson_1orton_multigrid.c Poisson)

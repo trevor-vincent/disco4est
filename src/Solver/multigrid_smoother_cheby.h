@@ -18,7 +18,8 @@ typedef struct {
   int cheby_eigs_reuse_fromdownvcycle;
   int cheby_eigs_reuse_fromlastvcycle;
   int cheby_print_residual_norm;
-  int cheby_print_eigs;
+  int cheby_print_spectral_bound;
+  int cheby_print_spectral_bound_iterations;
 
 } multigrid_smoother_cheby_t;
 

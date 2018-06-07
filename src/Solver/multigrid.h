@@ -39,15 +39,6 @@ typedef enum
     END
   } multigrid_state_t;
 
-/* typedef */
-/* void */
-/* (*multigrid_user_setup_callback_fcn_t) */
-/* ( */
-/*  p4est_t*, */
-/*  multigrid_data_t*, /\* current level *\/ */
-/*  void* */
-/* ); */
-
 typedef
 void
 (*multigrid_update_callback_fcn_t)
@@ -118,6 +109,14 @@ typedef struct {
 
 } multigrid_logger_t;
 
+
+typedef struct {
+
+  multigrid_update_callback_fcn_t update;
+  void* user;
+
+} multigrid_profiler_t;
+
 typedef struct {
 
   multigrid_update_callback_fcn_t update;
@@ -175,9 +174,9 @@ struct multigrid_data_t {
   char bottom_solver_name [50];
   double vcycle_rtol; /* residual tolerance for termination */
   double vcycle_atol;
+  int use_profiler;
 
   /* ******* INTERNAL PARAMETERS ******* */
-  
   multigrid_state_t mg_state;
   multigrid_refine_data_t* coarse_grid_refinement;
   d4est_operators_t* d4est_ops;
@@ -206,6 +205,7 @@ struct multigrid_data_t {
   
   /* INTERNAL COMPONENTS */
   multigrid_smoother_t* smoother;
+  multigrid_profiler_t* profiler;
   multigrid_logger_t* logger;
   multigrid_bottom_solver_t* bottom_solver;
   multigrid_user_callbacks_t* user_callbacks;
@@ -220,6 +220,13 @@ struct multigrid_data_t {
   int* elements_on_level_of_surrogate_multigrid;
   int* nodes_on_level_of_multigrid;
   int* nodes_on_level_of_surrogate_multigrid;
+
+  int print_state_info;
+  int use_power_method_debug;
+  double power_atol;
+  double power_rtol;
+  double power_imax;
+  double power_imin;
   
 };
 

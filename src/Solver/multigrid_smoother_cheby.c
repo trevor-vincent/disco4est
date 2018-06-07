@@ -44,9 +44,13 @@ multigrid_smoother_cheby_input_handler
     D4EST_ASSERT(pconfig->cheby_print_residual_norm == -1);
     pconfig->cheby_print_residual_norm = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"cheby_print_eigs")) {
-    D4EST_ASSERT(pconfig->cheby_print_eigs == -1);
-    pconfig->cheby_print_eigs = atoi(value);
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"cheby_print_spectral_bound")) {
+    D4EST_ASSERT(pconfig->cheby_print_spectral_bound == -1);
+    pconfig->cheby_print_spectral_bound = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"cheby_print_spectral_bound_iterations")) {
+    D4EST_ASSERT(pconfig->cheby_print_spectral_bound_iterations == -1);
+    pconfig->cheby_print_spectral_bound_iterations = atoi(value);
   }
   else {
     return 0;  /* unknown section/name, error */
@@ -217,7 +221,6 @@ multigrid_smoother_cheby
   multigrid_smoother_cheby_t* cheby = mg_data->smoother->user;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   
-  
   if (cheby->cheby_eigs_compute){
       cg_eigs
         (
@@ -231,6 +234,7 @@ multigrid_smoother_cheby
          mg_data->d4est_quad,
          updater->current_geometric_factors,
          cheby->cheby_eigs_cg_imax,
+         cheby->cheby_print_spectral_bound_iterations, 
          &cheby->eigs[level]
         );
 
@@ -241,8 +245,9 @@ multigrid_smoother_cheby
   double lmin = cheby->eigs[level]/cheby->cheby_eigs_lmax_lmin_ratio;
   double lmax = cheby->eigs[level];
 
-  if (cheby->cheby_print_eigs){
-    printf("[MG_CHEBY_CHEBY]: Lev %d Max_eig %.25f\n", level, cheby->eigs[level]);
+  if (cheby->cheby_print_spectral_bound){
+    zlog_category_t *c_default = zlog_get_category("d4est_multigrid_smoother_cheby");    
+    zlog_info(c_default, "Lev %d Max_eig %f Multiplier %f", level, cheby->eigs[level], cheby->cheby_eigs_max_multiplier);
   }
   
   multigrid_smoother_cheby_iterate
@@ -281,7 +286,8 @@ multigrid_smoother_cheby_init
   cheby_data->cheby_eigs_reuse_fromdownvcycle = -1;
   cheby_data->cheby_eigs_reuse_fromlastvcycle = -1;
   cheby_data->cheby_print_residual_norm = -1;
-  cheby_data->cheby_print_eigs = -1;
+  cheby_data->cheby_print_spectral_bound = -1;
+  cheby_data->cheby_print_spectral_bound_iterations = -1;
 
   /* set internally */
   cheby_data->mpirank = p4est->mpirank;
@@ -290,41 +296,30 @@ multigrid_smoother_cheby_init
   if (ini_parse(input_file, multigrid_smoother_cheby_input_handler, cheby_data) < 0) {
     D4EST_ABORT("Can't load input file");
   }
-  if(cheby_data->cheby_imax == -1){
-    D4EST_ABORT("[D4EST_ERROR]: cheby_imax not set in multigrid input");
-  }
-  if(cheby_data->cheby_eigs_cg_imax == -1){
-    D4EST_ABORT("[D4EST_ERROR]: cheby_eigs_cg_imax not set in multigrid input");
-  }
-  if(cheby_data->cheby_eigs_lmax_lmin_ratio == -1){
-    D4EST_ABORT("[D4EST_ERROR]: cheby_eigs_lmax_lmin_ratio not set in multigrid input");
-  }
-  if(cheby_data->cheby_eigs_max_multiplier == -1){
-    D4EST_ABORT("[D4EST_ERROR]: cheby_eigs_max_multiplier not set in multigrid input");
-  }
-  if(cheby_data->cheby_eigs_reuse_fromdownvcycle == -1){
-    D4EST_ABORT("[D4EST_ERROR]: cheby_eigs_reuse_fromdownvcycle not set in multigrid input");
-  }
-  if(cheby_data->cheby_eigs_reuse_fromlastvcycle == -1){
-    D4EST_ABORT("[D4EST_ERROR]: cheby_eigs_reuse_fromlastvcycle not set in multigrid input");
-  }
-  if(cheby_data->cheby_print_residual_norm == -1){
-    D4EST_ABORT("[D4EST_ERROR]: cheby_print_residual_norm  not set in multigrid input");
-  }
-  if(cheby_data->cheby_print_eigs == -1){
-    D4EST_ABORT("[D4EST_ERROR]: cheby_print_eigs not set in multigrid input");
-  }
+
+  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_imax, -1);
+  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_cg_imax, -1);
+  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_lmax_lmin_ratio, -1);
+  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_max_multiplier, -1);
+  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_reuse_fromdownvcycle, -1);
+  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_reuse_fromlastvcycle, -1);
+  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_residual_norm, -1);
+  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_spectral_bound, -1);
+  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_spectral_bound_iterations, -1);
+  
   
   if(p4est->mpirank == 0){
-    printf("[D4EST_MG_SMOOTHER]: Multigrid_Smoother_Cheby_D4est Parameters\n");
-    printf("[D4EST_MG_SMOOTHER]: Smoother imax = %d\n", cheby_data->cheby_imax);
-    printf("[D4EST_MG_SMOOTHER]: Smoother eigs cg max = %d\n", cheby_data->cheby_eigs_cg_imax);
-    printf("[D4EST_MG_SMOOTHER]: Smoother eigs lmax_lmin_ratio = %f\n", cheby_data->cheby_eigs_lmax_lmin_ratio);
-    printf("[D4EST_MG_SMOOTHER]: Smoother eigs max multiplier = %.25f\n", cheby_data->cheby_eigs_max_multiplier);
-    printf("[D4EST_MG_SMOOTHER]: Smoother eigs reuse up vcycle = %d\n", cheby_data->cheby_eigs_reuse_fromdownvcycle);
-    printf("[D4EST_MG_SMOOTHER]: Smoother eigs reuse from last vcycle = %d\n", cheby_data->cheby_eigs_reuse_fromlastvcycle);
-    printf("[D4EST_MG_SMOOTHER]: Smoother print residual norm = %d\n", cheby_data->cheby_print_residual_norm);
-    printf("[D4EST_MG_SMOOTHER]: Smoother print eigs = %d\n", cheby_data->cheby_print_eigs);
+
+    zlog_category_t *c_default = zlog_get_category("multigrid_smoother_cheby");
+    
+    zlog_info(c_default, " Smoother imax = %d", cheby_data->cheby_imax);
+    zlog_info(c_default, " Smoother eigs cg max = %d", cheby_data->cheby_eigs_cg_imax);
+    zlog_info(c_default, " Smoother eigs lmax_lmin_ratio = %f", cheby_data->cheby_eigs_lmax_lmin_ratio);
+    zlog_info(c_default, " Smoother eigs max multiplier = %.25f", cheby_data->cheby_eigs_max_multiplier);
+    zlog_info(c_default, " Smoother eigs reuse up vcycle = %d", cheby_data->cheby_eigs_reuse_fromdownvcycle);
+    zlog_info(c_default, " Smoother eigs reuse from last vcycle = %d", cheby_data->cheby_eigs_reuse_fromlastvcycle);
+    zlog_info(c_default, " Smoother print residual norm = %d", cheby_data->cheby_print_residual_norm);
+    zlog_info(c_default, " Smoother print eigs = %d", cheby_data->cheby_print_spectral_bound);
   }
 
   smoother->user = cheby_data;

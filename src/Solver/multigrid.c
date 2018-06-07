@@ -13,6 +13,8 @@
 #include <multigrid_element_data_updater.h>
 #include <multigrid_smoother_cheby.h>
 #include <multigrid_logger_residual.h>
+#include <multigrid_profiler_basic.h>
+#include <d4est_power_method.h>
 #include <multigrid_smoother_krylov_petsc.h>
 #include <multigrid_bottom_solver_cg.h>
 #include <multigrid_bottom_solver_cheby.h>
@@ -134,6 +136,12 @@ multigrid_update_components
     }
   }
 
+  if (mg_data->profiler != NULL){
+    if (mg_data->profiler->update != NULL){
+      mg_data->profiler->update(p4est, level, data);
+    }
+  }
+  
   if (mg_data->bottom_solver != NULL){
     if (mg_data->bottom_solver->update != NULL){
       mg_data->bottom_solver->update(p4est, level, data);
@@ -172,9 +180,37 @@ int multigrid_input_handler
     D4EST_ASSERT(mg_data->vcycle_imax == -1);
     mg_data->vcycle_imax = atoi(value);
   }
-  if (d4est_util_match_couple(section,"multigrid",name,"use_p_coarsen")) {
+  else if (d4est_util_match_couple(section,"multigrid",name,"use_p_coarsen")) {
     D4EST_ASSERT(mg_data->use_p_coarsen == 0);
     mg_data->use_p_coarsen = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"multigrid",name,"use_power_method_debug")) {
+    D4EST_ASSERT(mg_data->use_power_method_debug == 0);
+    mg_data->use_power_method_debug = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"multigrid",name,"print_state_info")) {
+    D4EST_ASSERT(mg_data->print_state_info == 0);
+    mg_data->print_state_info = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"multigrid",name,"power_atol")) {
+    D4EST_ASSERT(mg_data->power_atol == -1);
+    mg_data->power_atol = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"multigrid",name,"power_rtol")) {
+    D4EST_ASSERT(mg_data->power_rtol == -1);
+    mg_data->power_rtol = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"multigrid",name,"power_imin")) {
+    D4EST_ASSERT(mg_data->power_imin == -1);
+    mg_data->power_imin = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"multigrid",name,"power_imax")) {
+    D4EST_ASSERT(mg_data->power_imax == -1);
+    mg_data->power_imax = atoi(value);
+  } 
+  else if (d4est_util_match_couple(section,"multigrid",name,"use_profiler")) {
+    D4EST_ASSERT(mg_data->use_profiler == 0);
+    mg_data->use_profiler = atoi(value);
   }
   else if (d4est_util_match_couple(section,"multigrid",name,"vcycle_rtol")) {
     D4EST_ASSERT(mg_data->vcycle_rtol == -1);
@@ -327,6 +363,13 @@ multigrid_data_init
   mg_data->vcycle_atol = -1;
   mg_data->vcycle_rtol = -1;
   mg_data->vcycle_imax = -1;
+  mg_data->use_profiler = 0;
+  mg_data->power_atol = -1;
+  mg_data->print_state_info = 0;
+  mg_data->power_rtol = -1;
+  mg_data->power_imax = -1;
+  mg_data->power_imin = -1;
+  mg_data->use_power_method_debug = 0;
   mg_data->num_of_p_coarsen_levels = 0;
   mg_data->use_p_coarsen = 0;
   mg_data->bottom_solver_name[0] = '*';
@@ -367,9 +410,17 @@ multigrid_data_init
     zlog_debug(c_default, "vcycle atol = %.25f", mg_data->vcycle_atol);
     zlog_debug(c_default, "smoother = %s", mg_data->smoother_name);
     zlog_debug(c_default, "bottom solver = %s", mg_data->bottom_solver_name);
+    zlog_debug(c_default, "use_profiler = %d", mg_data->use_profiler);
+    zlog_debug(c_default, "use_power_method_debug = %d", mg_data->use_power_method_debug);
   }
 
   mg_data->logger = multigrid_logger_residual_init();
+  if (mg_data->use_profiler == 1){
+    mg_data->profiler = multigrid_profiler_basic_init();
+  }
+  else {
+    mg_data->profiler = NULL;
+  }
   mg_data->elem_data_updater = multigrid_element_data_updater_init
                                (
                                 mg_data->num_of_levels,
@@ -397,6 +448,7 @@ multigrid_set_user_callbacks
 void
 multigrid_data_destroy(multigrid_data_t* mg_data)
 {
+  multigrid_profiler_basic_destroy(mg_data->profiler);
   multigrid_logger_residual_destroy(mg_data->logger);
   multigrid_element_data_updater_destroy(mg_data->elem_data_updater, mg_data->num_of_levels);
   multigrid_destroy_smoother(mg_data);
@@ -498,14 +550,14 @@ multigrid_vcycle
   /**********************************************************/
   /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
 
-#ifdef DEBUG_INFO
+  if (mg_data->print_state_info){
   zlog_debug(c_default, "Level = %d", toplevel);
   zlog_debug(c_default, "State = %s", "PRE_V");
   zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[toplevel]);
   zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[toplevel]);
   zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[toplevel]);
   zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[toplevel]);
-#endif
+  }
   mg_data->mg_state = PRE_V; multigrid_update_components(p4est, toplevel, NULL);
 
   
@@ -543,14 +595,14 @@ multigrid_vcycle
     /**********************************************************/
     /**********************************************************/
 
-#ifdef DEBUG_INFO
+  if (mg_data->print_state_info){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_PRE_SMOOTH");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
     zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
     zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
     zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
-#endif
+}
     mg_data->mg_state = DOWNV_PRE_SMOOTH; multigrid_update_components(p4est, level, &vecs_for_smooth);
     
     mg_data->smoother->smooth
@@ -562,15 +614,40 @@ multigrid_vcycle
        fine_level
       );
     
-#ifdef DEBUG_INFO
+  if (mg_data->print_state_info){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_POST_SMOOTH");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
     zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
     zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
     zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
-#endif
+  }
     mg_data->mg_state = DOWNV_POST_SMOOTH; multigrid_update_components(p4est, level, &vecs_for_smooth);
+
+
+    if (mg_data->use_power_method_debug){
+
+      multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
+      p4est_ghost_t* ghost = *(updater->ghost);
+      void* ghost_data = *(updater->ghost_data);
+      
+      d4est_power_method
+        (
+         p4est,
+         &vecs_for_smooth,
+         fcns,
+         ghost,
+         ghost_data,
+         mg_data->d4est_ops,
+         mg_data->d4est_geom,
+         mg_data->d4est_quad,
+         updater->current_geometric_factors,
+         mg_data->power_atol,
+         mg_data->power_rtol,
+         mg_data->power_imax,
+         mg_data->power_imin
+        );
+    }
     
     /**********************************************************/
     /**********************************************************/
@@ -584,14 +661,14 @@ multigrid_vcycle
     /******************* BEGIN COARSEN ************************/
     /**********************************************************/
     /**********************************************************/
-#ifdef DEBUG_INFO
+  if (mg_data->print_state_info){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_PRE_COARSEN");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
     zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
     zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
     zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
-#endif
+  }
     mg_data->mg_state = DOWNV_PRE_COARSEN; multigrid_update_components(p4est, level, NULL);
 
     /* increments the stride */
@@ -615,14 +692,14 @@ multigrid_vcycle
                          NULL
                         );
     }
-#ifdef DEBUG_INFO
+  if (mg_data->print_state_info){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_POST_COARSEN");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
     zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
     zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
     zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
-#endif
+  }
     
     mg_data->mg_state = DOWNV_POST_COARSEN; multigrid_update_components(p4est, level, NULL);
 
@@ -692,14 +769,14 @@ multigrid_vcycle
     mg_data->temp_stride = 0;
     mg_data->intergrid_ptr = &rres_at0[stride_to_fine_data];//&(mg_data->rres)[0];
 
-#ifdef DEBUG_INFO
+  if (mg_data->print_state_info){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_PRE_RESTRICTION");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
     zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
     zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
     zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
-#endif
+  }
     
     mg_data->mg_state = DOWNV_PRE_RESTRICTION; multigrid_update_components(p4est, level, NULL);
 
@@ -717,14 +794,14 @@ multigrid_vcycle
                   NULL
     );
 
-#ifdef DEBUG_INFO
+  if (mg_data->print_state_info){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_POST_RESTRICTION");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
     zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
     zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
     zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
-#endif
+  }
     
     mg_data->mg_state = DOWNV_POST_RESTRICTION; multigrid_update_components(p4est, level, NULL);
 
@@ -892,6 +969,33 @@ multigrid_vcycle
     mg_data->mg_state = UPV_POST_SMOOTH; multigrid_update_components(p4est, level, &vecs_for_smooth);
 
 
+
+    if (mg_data->use_power_method_debug){
+
+      multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
+      p4est_ghost_t* ghost = *(updater->ghost);
+      void* ghost_data = *(updater->ghost_data);
+      
+      d4est_power_method
+        (
+         p4est,
+         &vecs_for_smooth,
+         fcns,
+         ghost,
+         ghost_data,
+         mg_data->d4est_ops,
+         mg_data->d4est_geom,
+         mg_data->d4est_quad,
+         updater->current_geometric_factors,
+         mg_data->power_atol,
+         mg_data->power_rtol,
+         mg_data->power_imax,
+         mg_data->power_imin
+        );
+    }
+    
+
+    
     /**********************************************************/
     /**********************************************************/
     /******************* END SMOOTH ***************************/

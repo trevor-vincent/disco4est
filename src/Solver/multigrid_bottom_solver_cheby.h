@@ -11,7 +11,8 @@ typedef struct {
   double cheby_eigs_lmax_lmin_ratio;
   double cheby_eigs_max_multiplier;
   int cheby_print_residual_norm;
-  int cheby_print_eig;
+  int cheby_print_spectral_bound;
+  int cheby_print_spectral_bound_iterations;
 
 } multigrid_bottom_solver_cheby_t;
 
