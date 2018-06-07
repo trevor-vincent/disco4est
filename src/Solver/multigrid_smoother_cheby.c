@@ -84,6 +84,7 @@ multigrid_smoother_cheby_iterate
 {
   multigrid_data_t* mg_data = (multigrid_data_t*) p4est->user_pointer;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
+  zlog_category_t *c_default = zlog_get_category("d4est_multigrid_smoother_cheby");   
   p4est_ghost_t* ghost = *(updater->ghost);
   void* ghost_data = *(updater->ghost_data);
   
@@ -121,7 +122,7 @@ multigrid_smoother_cheby_iterate
     d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
 
     if(print_residual_norm && p4est->mpirank == 0){
-      printf("[CHEBYSHEV]: iter, residual = %d, %.25f\n", i, d4est_linalg_vec_dot(r,r,local_nodes));
+      zlog_info(c_default, "[CHEBYSHEV]: iter, residual = %d, %.25f", i, d4est_linalg_vec_dot(r,r,local_nodes));
     }
     
     if (i == 0)

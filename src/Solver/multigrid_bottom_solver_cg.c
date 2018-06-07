@@ -56,6 +56,7 @@ multigrid_bottom_solver_cg_d4est
 {
   multigrid_data_t* mg_data = p4est->user_pointer;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
+  zlog_category_t *c_default = zlog_get_category("multigrid_bottom_solver_cg");   
   p4est_ghost_t* ghost = *(updater->ghost);
   void* ghost_data = *(updater->ghost_data);
   d4est_geometry_t* d4est_geom = mg_data->d4est_geom;
@@ -183,7 +184,7 @@ multigrid_bottom_solver_cg_d4est
     d4est_linalg_vec_xpby(r, beta, d, local_nodes);
 
     if (p4est->mpirank == 0 && cg_params->bottom_print_residual_norm == 1){
-      printf("[MG_BOTTOM_SOLVER_CG_D4EST]: ITER %03d RNRMSQR %.25f\n", i, delta_new);
+      zlog_info(c_default, "iter %03d rnrmsqr %.25f", i, delta_new);
     }
   }
   
