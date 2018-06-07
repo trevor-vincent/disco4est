@@ -181,7 +181,7 @@ cg_eigs
     }
 
     if (print_spectral_bound_iterations){
-      zlog_info(c_default, "CG eig spectral bound = %f", *spectral_bound);
+      zlog_info(c_default, "iter %d, CG eig spectral bound = %f", i, *spectral_bound);
     }
   }
   
