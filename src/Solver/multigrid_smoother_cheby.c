@@ -41,15 +41,15 @@ multigrid_smoother_cheby_input_handler
     pconfig->cheby_eigs_reuse_fromlastvcycle = atoi(value);
   }
   else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"cheby_print_residual_norm")) {
-    D4EST_ASSERT(pconfig->cheby_print_residual_norm == -1);
+    D4EST_ASSERT(pconfig->cheby_print_residual_norm == 0);
     pconfig->cheby_print_residual_norm = atoi(value);
   }
   else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"cheby_print_spectral_bound")) {
-    D4EST_ASSERT(pconfig->cheby_print_spectral_bound == -1);
+    D4EST_ASSERT(pconfig->cheby_print_spectral_bound == 0);
     pconfig->cheby_print_spectral_bound = atoi(value);
   }
   else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"cheby_print_spectral_bound_iterations")) {
-    D4EST_ASSERT(pconfig->cheby_print_spectral_bound_iterations == -1);
+    D4EST_ASSERT(pconfig->cheby_print_spectral_bound_iterations == 0);
     pconfig->cheby_print_spectral_bound_iterations = atoi(value);
   }
   else {
@@ -286,9 +286,9 @@ multigrid_smoother_cheby_init
   cheby_data->cheby_eigs_max_multiplier = -1;
   cheby_data->cheby_eigs_reuse_fromdownvcycle = -1;
   cheby_data->cheby_eigs_reuse_fromlastvcycle = -1;
-  cheby_data->cheby_print_residual_norm = -1;
-  cheby_data->cheby_print_spectral_bound = -1;
-  cheby_data->cheby_print_spectral_bound_iterations = -1;
+  cheby_data->cheby_print_residual_norm = 0;
+  cheby_data->cheby_print_spectral_bound = 0;
+  cheby_data->cheby_print_spectral_bound_iterations = 0;
 
   /* set internally */
   cheby_data->mpirank = p4est->mpirank;
@@ -304,9 +304,9 @@ multigrid_smoother_cheby_init
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_max_multiplier, -1);
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_reuse_fromdownvcycle, -1);
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_reuse_fromlastvcycle, -1);
-  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_residual_norm, -1);
-  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_spectral_bound, -1);
-  D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_spectral_bound_iterations, -1);
+  /* D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_residual_norm, -1); */
+  /* D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_spectral_bound, -1); */
+  /* D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_spectral_bound_iterations, -1); */
   
   
   if(p4est->mpirank == 0){

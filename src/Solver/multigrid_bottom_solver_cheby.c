@@ -34,15 +34,15 @@ multigrid_bottom_solver_cheby_input_handler
     pconfig->cheby_eigs_max_multiplier = atof(value);
   }
   else if (d4est_util_match_couple(section,"mg_bottom_solver_cheby",name,"cheby_print_residual_norm")) {
-    D4EST_ASSERT(pconfig->cheby_print_residual_norm == -1);
+    D4EST_ASSERT(pconfig->cheby_print_residual_norm == 0);
     pconfig->cheby_print_residual_norm = atoi(value);
   }
   else if (d4est_util_match_couple(section,"mg_bottom_solver_cheby",name,"cheby_print_spectral_bound")) {
-    D4EST_ASSERT(pconfig->cheby_print_spectral_bound == -1);
+    D4EST_ASSERT(pconfig->cheby_print_spectral_bound == 0);
     pconfig->cheby_print_spectral_bound = atoi(value);
   }
   else if (d4est_util_match_couple(section,"mg_bottom_solver_cheby",name,"cheby_print_spectral_bound_iterations")) {
-    D4EST_ASSERT(pconfig->cheby_print_spectral_bound_iterations == -1);
+    D4EST_ASSERT(pconfig->cheby_print_spectral_bound_iterations == 0);
     pconfig->cheby_print_spectral_bound_iterations = atoi(value);
   }
   else {
@@ -134,9 +134,9 @@ multigrid_bottom_solver_cheby_init
   cheby_data->cheby_eigs_cg_imax = -1;
   cheby_data->cheby_eigs_lmax_lmin_ratio = -1;
   cheby_data->cheby_eigs_max_multiplier = -1;
-  cheby_data->cheby_print_residual_norm = -1;
-  cheby_data->cheby_print_spectral_bound = -1;
-  cheby_data->cheby_print_spectral_bound_iterations = -1;
+  cheby_data->cheby_print_residual_norm = 0;
+  cheby_data->cheby_print_spectral_bound = 0;
+  cheby_data->cheby_print_spectral_bound_iterations = 0;
   
   if (ini_parse(input_file, multigrid_bottom_solver_cheby_input_handler, cheby_data) < 0) {
     D4EST_ABORT("Can't load input file");
@@ -146,9 +146,9 @@ multigrid_bottom_solver_cheby_init
   D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_eigs_cg_imax, -1);
   D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_eigs_lmax_lmin_ratio, -1);
   D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_eigs_max_multiplier, -1);
-  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_residual_norm, -1);
-  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_spectral_bound, -1);
-  D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_spectral_bound_iterations, -1);
+  /* D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_residual_norm, -1); */
+  /* D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_spectral_bound, -1); */
+  /* D4EST_CHECK_INPUT("mg_bottom_solver_cheby", cheby_data->cheby_print_spectral_bound_iterations, -1); */
   
   if(p4est->mpirank == 0){
     printf("[D4EST_INFO]: Multigrid Bottom Solver Cheby Parameters\n");
