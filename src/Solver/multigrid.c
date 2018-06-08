@@ -552,7 +552,7 @@ multigrid_vcycle
   /**********************************************************/
   /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
 
-  if (mg_data->print_state_info){
+  if (mg_data->print_state_info && p4est->mpirank == 0){
   zlog_debug(c_default, "Level = %d", toplevel);
   zlog_debug(c_default, "State = %s", "PRE_V");
   zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[toplevel]);
@@ -597,7 +597,7 @@ multigrid_vcycle
     /**********************************************************/
     /**********************************************************/
 
-  if (mg_data->print_state_info){
+  if (mg_data->print_state_info && p4est->mpirank == 0){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_PRE_SMOOTH");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
@@ -616,7 +616,7 @@ multigrid_vcycle
        fine_level
       );
     
-  if (mg_data->print_state_info){
+  if (mg_data->print_state_info && p4est->mpirank == 0){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_POST_SMOOTH");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
@@ -663,7 +663,7 @@ multigrid_vcycle
     /******************* BEGIN COARSEN ************************/
     /**********************************************************/
     /**********************************************************/
-  if (mg_data->print_state_info){
+  if (mg_data->print_state_info && p4est->mpirank == 0){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_PRE_COARSEN");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
@@ -694,7 +694,7 @@ multigrid_vcycle
                          NULL
                         );
     }
-  if (mg_data->print_state_info){
+  if (mg_data->print_state_info && p4est->mpirank == 0){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_POST_COARSEN");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
@@ -710,9 +710,6 @@ multigrid_vcycle
     /******************* END COARSEN **************************/
     /**********************************************************/
     /**********************************************************/
-    
-    /* p4est has changed, so update the element data, this does not change the stride */
-    /* element_data_init(p4est, -1); */
 
     /* update surrogate info */
     nodes_on_level_of_surrogate_multigrid[level-1] = d4est_mesh_get_local_nodes(p4est);
@@ -740,16 +737,7 @@ multigrid_vcycle
     /******************* END BALANCE **************************/
     /**********************************************************/
     /**********************************************************/
-    
-    /* element_data_init(p4est, -1); */
-
-    /* /\* update ghost data *\/ */
-    /* P4EST_FREE(*ghost_data); */
-    /* p4est_ghost_destroy (*ghost); */
-    /* *ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE); */
-    /* *ghost_data = P4EST_ALLOC (element_data_t, */
-    /*                            (*ghost)->ghosts.elem_count); */
-
+  
     /* update coarse grid info */
     elements_on_level_of_multigrid[level-1] = p4est->local_num_quadrants;
     total_elements_on_multigrid += elements_on_level_of_multigrid[level-1];
@@ -764,14 +752,13 @@ multigrid_vcycle
     res_at0 = P4EST_REALLOC(res_at0, double, total_nodes_on_multigrid);
     rres_at0 = P4EST_REALLOC(rres_at0, double, total_nodes_on_multigrid);
 
-
     /* always zero these before restriction or prolongation */
     mg_data->coarse_stride = 0;
     mg_data->fine_stride = 0;
     mg_data->temp_stride = 0;
     mg_data->intergrid_ptr = &rres_at0[stride_to_fine_data];//&(mg_data->rres)[0];
 
-  if (mg_data->print_state_info){
+  if (mg_data->print_state_info && p4est->mpirank == 0){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_PRE_RESTRICTION");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
@@ -781,8 +768,6 @@ multigrid_vcycle
   }
     
     mg_data->mg_state = DOWNV_PRE_RESTRICTION; multigrid_update_components(p4est, level, NULL);
-
-    
     
     p4est_iterate(
                   p4est,
@@ -796,7 +781,7 @@ multigrid_vcycle
                   NULL
     );
 
-  if (mg_data->print_state_info){
+  if (mg_data->print_state_info && p4est->mpirank == 0){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_POST_RESTRICTION");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);

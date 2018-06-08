@@ -15,7 +15,7 @@ use_dirichlet = 0
 
 [amr]
 scheme = smooth_pred
-num_of_amr_steps = 15
+num_of_amr_steps = 0
 max_degree = 7 
 gamma_h = 1
 initial_pred = 10000

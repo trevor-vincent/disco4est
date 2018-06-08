@@ -78,7 +78,8 @@ multigrid_smoother_cheby_iterate
  int iter,
  double lmin,
  double lmax,
- int print_residual_norm
+ int print_residual_norm,
+ int mg_level
  /* multigrid_cheby_params_t* cheby_params */
 )
 {
@@ -122,7 +123,7 @@ multigrid_smoother_cheby_iterate
     d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
 
     if(print_residual_norm && p4est->mpirank == 0){
-      zlog_info(c_default, "[CHEBYSHEV]: iter, residual = %d, %.25f", i, d4est_linalg_vec_dot(r,r,local_nodes));
+      zlog_info(c_default, "mg_level, iter, residual = %d,%d,%.25f", mg_level, i, d4est_linalg_vec_dot(r,r,local_nodes));
     }
     
     if (i == 0)
@@ -248,7 +249,7 @@ multigrid_smoother_cheby
 
   if (cheby->cheby_print_spectral_bound && p4est->mpirank == 0){
     zlog_category_t *c_default = zlog_get_category("d4est_multigrid_smoother_cheby");    
-    zlog_info(c_default, "Lev %d Max_eig %f Multiplier %f", level, cheby->eigs[level], cheby->cheby_eigs_max_multiplier);
+    zlog_info(c_default, "mg_level,spectral_bound,multiplier = %d,%f,%f", level, cheby->eigs[level], cheby->cheby_eigs_max_multiplier);
   }
   
   multigrid_smoother_cheby_iterate
@@ -260,7 +261,8 @@ multigrid_smoother_cheby
      iter,
      lmin,
      lmax,
-     cheby->cheby_print_residual_norm
+     cheby->cheby_print_residual_norm,
+     level
     );
 }
 

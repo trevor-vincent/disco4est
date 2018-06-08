@@ -102,7 +102,8 @@ multigrid_bottom_solver_cheby
      iter,
      lmin,
      lmax,
-     cheby->cheby_print_residual_norm
+     cheby->cheby_print_residual_norm,
+     level
     );
 }
 

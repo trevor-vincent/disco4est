@@ -361,11 +361,11 @@ problem_init
   
   d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
-  double point [4][100];
-  double point_diff [4][100];
-  double point_spec_diff [4][100];
+  double point [4][30];
+  double point_diff [4][30];
+  double point_spec_diff [4][30];
   double point_err [4];
-  double point_dof [100];
+  double point_dof [30];
   
   point[0][0] = 0;
   point_diff[0][0] = 0;
@@ -747,8 +747,8 @@ problem_init
       }
       point_spec_diff[0][iterations] = fabs(point[0][iterations] - 9.1491800832898661e-03);
       point_spec_diff[1][iterations] = fabs(point[1][iterations] - 1.7465903974328671e-02);
-      point_spec_diff[3][iterations] = fabs(point[2][iterations] - 3.2454599160906218e-03);
-      point_spec_diff[4][iterations] = fabs(point[3][iterations] - 3.0137193015666880e-04);
+      point_spec_diff[2][iterations] = fabs(point[2][iterations] - 3.2454599160906218e-03);
+      point_spec_diff[3][iterations] = fabs(point[3][iterations] - 3.0137193015666880e-04);
       
       DEBUG_PRINT_4ARR_DBL(dof, point0, point0_diff, point0_spec_diff, iterations+1);
       DEBUG_PRINT_4ARR_DBL(dof, point3, point3_diff, point3_spec_diff,iterations+1);
@@ -769,23 +769,17 @@ problem_init
 
 
       krylov_pc_multigrid_destroy(pc);
-      /* multigrid_logger_residual_destroy(logger); */
-      /* multigrid_element_data_updater_destroy(updater, mg_data->num_of_levels); */
       multigrid_data_destroy(mg_data);
       multigrid_matrix_operator_destroy(user_callbacks);
    
       P4EST_FREE(error_l2);
-    P4EST_FREE(estimator);
+      P4EST_FREE(estimator);
   }
   
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_mesh_data_destroy(d4est_factors_compactified);
-  d4est_geometry_destroy(d4est_geom_compactified);  
+  d4est_geometry_destroy(d4est_geom_compactified);
   d4est_amr_destroy(d4est_amr);
-  /* d4est_amr_destroy(d4est_amr_use_puncture_finder); */
-  /* d4est_amr_destroy(d4est_amr_p_refine_only_in_center_cube); */
-  /* d4est_amr_destroy(d4est_amr_use_puncture_finder_and_prefine_outside_cube); */
-  /* d4est_amr_destroy(d4est_amr_p_refine_everywhere); */
   d4est_norms_linear_fit_destroy(l2_linear_fit);
   d4est_poisson_flux_destroy(flux_data_for_jac);
   d4est_poisson_flux_destroy(flux_data_for_res);
