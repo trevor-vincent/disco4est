@@ -73,7 +73,8 @@ d4est_power_method
       );
 
     sqrt_global_norm = sqrt(global_norm);
-    zlog_info(c_default, "%d/%d: eig_val = %.15f", k, imax, sqrt_global_norm);
+    if (p4est->mpirank == 0)
+      zlog_info(c_default, "%#define /%d: eig_val = %.15f", k, imax, sqrt_global_norm);
     
     if (k != 0 && k > imin && fabs(sqrt_global_norm - sqrt_global_norm_prev) < atol + rtol*sqrt_global_norm_prev){
       break;

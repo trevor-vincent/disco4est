@@ -246,7 +246,7 @@ multigrid_smoother_cheby
   double lmin = cheby->eigs[level]/cheby->cheby_eigs_lmax_lmin_ratio;
   double lmax = cheby->eigs[level];
 
-  if (cheby->cheby_print_spectral_bound){
+  if (cheby->cheby_print_spectral_bound && p4est->mpirank == 0){
     zlog_category_t *c_default = zlog_get_category("d4est_multigrid_smoother_cheby");    
     zlog_info(c_default, "Lev %d Max_eig %f Multiplier %f", level, cheby->eigs[level], cheby->cheby_eigs_max_multiplier);
   }

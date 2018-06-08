@@ -180,7 +180,7 @@ cg_eigs
       *spectral_bound = temp_max;
     }
 
-    if (print_spectral_bound_iterations){
+    if (print_spectral_bound_iterations && p4est->mpirank == 0){
       zlog_info(c_default, "iter %d, CG eig spectral bound = %f", i, *spectral_bound);
     }
   }

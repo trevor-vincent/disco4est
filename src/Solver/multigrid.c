@@ -448,7 +448,9 @@ multigrid_set_user_callbacks
 void
 multigrid_data_destroy(multigrid_data_t* mg_data)
 {
-  multigrid_profiler_basic_destroy(mg_data->profiler);
+  if (mg_data->profiler != NULL){
+    multigrid_profiler_basic_destroy(mg_data->profiler);
+  }
   multigrid_logger_residual_destroy(mg_data->logger);
   multigrid_element_data_updater_destroy(mg_data->elem_data_updater, mg_data->num_of_levels);
   multigrid_destroy_smoother(mg_data);
