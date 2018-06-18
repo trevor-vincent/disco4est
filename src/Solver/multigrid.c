@@ -342,8 +342,8 @@ multigrid_data_init
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- p4est_ghost_t** ghost,
- d4est_element_data_t** ghost_data,
+ d4est_ghost_t** d4est_ghost,
+ d4est_ghost_data_t** d4est_ghost_data,
  d4est_mesh_data_t* d4est_factors,
  d4est_mesh_initial_extents_t* initial_extents,
  const char* input_file
@@ -424,8 +424,8 @@ multigrid_data_init
   mg_data->elem_data_updater = multigrid_element_data_updater_init
                                (
                                 mg_data->num_of_levels,
-                                ghost,
-                                ghost_data,
+                                d4est_ghost,
+                                d4est_ghost_data,
                                 d4est_factors,
                                 d4est_mesh_set_quadratures_after_amr,
                                 initial_extents
@@ -630,16 +630,16 @@ multigrid_vcycle
     if (mg_data->use_power_method_debug){
 
       multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
-      p4est_ghost_t* ghost = *(updater->ghost);
-      void* ghost_data = *(updater->ghost_data);
+      d4est_ghost_t* d4est_ghost = *(updater->d4est_ghost);
+      d4est_ghost_data_t* d4est_ghost_data = *(updater->d4est_ghost_data);
       
       d4est_power_method
         (
          p4est,
          &vecs_for_smooth,
          fcns,
-         ghost,
-         ghost_data,
+         d4est_ghost,
+         d4est_ghost_data,
          mg_data->d4est_ops,
          mg_data->d4est_geom,
          mg_data->d4est_quad,
@@ -726,12 +726,12 @@ multigrid_vcycle
     /******************* BEGIN BALANCE ************************/
     /**********************************************************/
     /**********************************************************/
-    mg_data->mg_state = DOWNV_PRE_BALANCE; multigrid_update_components(p4est, level, NULL);
+    mg_data->mg_state = DOWNV_PRE_BALANCE; multigrid_update_components(p4est, level, &vecs_for_smooth);
     
     /* does not change the stride */
     p4est_balance_ext (p4est, P4EST_CONNECT_FACE, NULL, multigrid_store_balance_changes);
 
-    mg_data->mg_state = DOWNV_POST_BALANCE; multigrid_update_components(p4est, level, NULL);
+    mg_data->mg_state = DOWNV_POST_BALANCE; multigrid_update_components(p4est, level, &vecs_for_smooth);
     /**********************************************************/
     /**********************************************************/
     /******************* END BALANCE **************************/
@@ -767,7 +767,7 @@ multigrid_vcycle
     zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
   }
     
-    mg_data->mg_state = DOWNV_PRE_RESTRICTION; multigrid_update_components(p4est, level, NULL);
+    mg_data->mg_state = DOWNV_PRE_RESTRICTION; multigrid_update_components(p4est, level, &vecs_for_smooth);
     
     p4est_iterate(
                   p4est,
@@ -790,7 +790,7 @@ multigrid_vcycle
     zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
   }
     
-    mg_data->mg_state = DOWNV_POST_RESTRICTION; multigrid_update_components(p4est, level, NULL);
+    mg_data->mg_state = DOWNV_POST_RESTRICTION; multigrid_update_components(p4est, level, &vecs_for_smooth);
 
     d4est_util_copy_1st_to_2nd
       (
@@ -883,7 +883,7 @@ multigrid_vcycle
     /**********************************************************/
 
     
-    mg_data->mg_state = UPV_PRE_REFINE; multigrid_update_components(p4est, level, NULL);
+    mg_data->mg_state = UPV_PRE_REFINE; multigrid_update_components(p4est, level, &vecs_for_smooth);
     
     /* increments the stride */
     p4est_refine_ext(p4est,
@@ -895,7 +895,7 @@ multigrid_vcycle
                     );
 
 
-    mg_data->mg_state = UPV_POST_REFINE; multigrid_update_components(p4est, level, NULL);
+    mg_data->mg_state = UPV_POST_REFINE; multigrid_update_components(p4est, level, &vecs_for_smooth);
 
 
     /**********************************************************/
@@ -960,16 +960,16 @@ multigrid_vcycle
     if (mg_data->use_power_method_debug){
 
       multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
-      p4est_ghost_t* ghost = *(updater->ghost);
-      void* ghost_data = *(updater->ghost_data);
+      d4est_ghost_t* d4est_ghost = *(updater->d4est_ghost);
+      d4est_ghost_data_t* d4est_ghost_data = *(updater->d4est_ghost_data);
       
       d4est_power_method
         (
          p4est,
          &vecs_for_smooth,
          fcns,
-         ghost,
-         ghost_data,
+         d4est_ghost,
+         d4est_ghost_data,
          mg_data->d4est_ops,
          mg_data->d4est_geom,
          mg_data->d4est_quad,
@@ -1037,8 +1037,8 @@ multigrid_compute_residual
   
   multigrid_data_t* mg_data = p4est->user_pointer;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
-  p4est_ghost_t* ghost = *(updater->ghost);
-  void* ghost_data = *(updater->ghost_data);
+  d4est_ghost_t* d4est_ghost = *(updater->d4est_ghost);
+  d4est_ghost_data_t* d4est_ghost_data = *(updater->d4est_ghost_data);
   /* d4est_geometry_t* d4est_geom = mg_data->d4est_geom; */
   
   if (mg_data->mg_state == START){
@@ -1052,8 +1052,8 @@ multigrid_compute_residual
     d4est_elliptic_eqns_apply_lhs
       (
        p4est,
-       ghost,
-       ghost_data,
+       d4est_ghost,
+       d4est_ghost_data,
        fcns,
        vecs,
        mg_data->d4est_ops,

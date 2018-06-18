@@ -78,8 +78,8 @@ void d4est_solver_cg_solve
  p4est_t* p4est,
  d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
- p4est_ghost_t** ghost,
- d4est_element_data_t** ghost_data,
+ d4est_ghost_t** ghost,
+ d4est_ghost_data_t** ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -126,7 +126,8 @@ void d4est_solver_cg_solve
      d4est_factors
     );
   
-
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, vecs->Au, vecs->local_nodes); */
+  
   d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
 
   /* r = f - Au ; Au is stored in r so r = rhs - r */
@@ -138,7 +139,7 @@ void d4est_solver_cg_solve
   double d_dot_Au_global;
 
   sc_allreduce(&delta_new, &delta_new_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,
-               sc_MPI_COMM_WORLD);
+               p4est->mpicomm);
 
   delta_new = delta_new_global;
   delta_0 = delta_new;
@@ -164,7 +165,7 @@ void d4est_solver_cg_solve
     d_dot_Au = d4est_linalg_vec_dot(d, Au, local_nodes);
 
     sc_allreduce(&d_dot_Au, &d_dot_Au_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,
-                 sc_MPI_COMM_WORLD);
+                 p4est->mpicomm);
 
     d_dot_Au = d_dot_Au_global;
     alpha = delta_new / d_dot_Au;
@@ -178,7 +179,7 @@ void d4est_solver_cg_solve
     delta_new = d4est_linalg_vec_dot(r, r, local_nodes);
 
     sc_allreduce(&delta_new, &delta_new_global, 1, sc_MPI_DOUBLE, sc_MPI_SUM,
-                 sc_MPI_COMM_WORLD);
+                 p4est->mpicomm);
     delta_new = delta_new_global;
 
     beta = delta_new / delta_old;

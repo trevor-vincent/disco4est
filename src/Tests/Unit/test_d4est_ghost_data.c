@@ -127,10 +127,8 @@ int main(int argc, char *argv[])
   p4est_partition(p4est, 1, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
   
-  p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
-  d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
-                                                   ghost->ghosts.elem_count);
-   
+  d4est_ghost_t* d4est_ghost = d4est_ghost_init(p4est);
+     
 
   if (proc_rank == 0){
     printf("[D4EST_INFO]: mpisize = %d\n", proc_size);
@@ -153,12 +151,12 @@ int main(int argc, char *argv[])
   initial_grid_input->initial_nodes = d4est_mesh_update
                                (
                                 p4est,
-                                ghost,
-                                ghost_data,
+                                &d4est_ghost,
                                 d4est_ops,
                                 d4est_geom,
                                 d4est_quad,
                                 d4est_factors,
+                                INITIALIZE_GHOST,
                                 INITIALIZE_QUADRATURE_DATA,
                                 INITIALIZE_GEOMETRY_DATA,
                                 INITIALIZE_GEOMETRY_ALIASES,
@@ -180,8 +178,8 @@ int main(int argc, char *argv[])
   d4est_amr_step
     (
      p4est,
-     &ghost,
-     &ghost_data,
+     NULL,
+     NULL,
      d4est_ops,
      d4est_amr_random,
      NULL,
@@ -192,12 +190,12 @@ int main(int argc, char *argv[])
   nodes = d4est_mesh_update
                   (
                    p4est,
-                   ghost,
-                   ghost_data,
+                   &d4est_ghost,
                    d4est_ops,
                    d4est_geom,
                    d4est_quad,
                    d4est_factors,
+                   INITIALIZE_GHOST,
                    INITIALIZE_QUADRATURE_DATA,
                    INITIALIZE_GEOMETRY_DATA,
                    INITIALIZE_GEOMETRY_ALIASES,
@@ -205,6 +203,13 @@ int main(int argc, char *argv[])
                    (void*)initial_grid_input
                   );
   }
+
+  d4est_field_type_t field_type [2] = {VOLUME_NODAL,VOLUME_NODAL};
+  d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
+                                                               d4est_ghost,
+                                                               &field_type[0],
+                                                               2);
+  
   
   double* vecs = P4EST_ALLOC(double, 2*nodes);
   
@@ -268,13 +273,7 @@ int main(int argc, char *argv[])
     }
   
   
-  d4est_ghost_t* d4est_ghost = d4est_ghost_init(p4est);
-  d4est_field_type_t field_type [2] = {VOLUME_NODAL,VOLUME_NODAL};
-  d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
-                                                               d4est_ghost,
-                                                               &field_type[0],
-                                                               2);
-  
+
   d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data,vecs);
   /* /\*  *\/ */
   for (int gid = 0; gid < d4est_ghost->ghost->ghosts.elem_count; gid++){
@@ -325,13 +324,7 @@ int main(int argc, char *argv[])
   d4est_mesh_data_destroy(d4est_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   
-  if (ghost) {
-    p4est_ghost_destroy (ghost);
-    P4EST_FREE (ghost_data);
-    ghost = NULL;
-    ghost_data = NULL;
-  }
-  
+ 
   
   d4est_ops_destroy(d4est_ops);
   

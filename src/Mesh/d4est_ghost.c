@@ -51,6 +51,24 @@ d4est_ghost_init
   p4est_ghost_exchange_data(p4est, d4est_ghost->ghost, d4est_ghost->ghost_elements);
   d4est_ghost_get_mirror_elements(p4est, d4est_ghost);
 
+  int stride = 0;
+  for (int gid = 0; gid < d4est_ghost->ghost->ghosts.elem_count; gid++){
+    d4est_element_data_t* ged = &d4est_ghost->ghost_elements[gid];
+    int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),ged->deg);
+    ged->id = gid;
+    ged->nodal_stride = stride;
+    ged->quad_stride = -1;
+    ged->sqr_nodal_stride = -1;
+    for (int i = 0; i < (P4EST_FACES); i++){
+      ged->boundary_quad_vector_stride[i] = -1;
+      ged->mortar_quad_vector_stride[i] = -1;
+      ged->mortar_quad_scalar_stride[i] = -1;
+      ged->mortar_quad_matrix_stride[i] = -1;
+    }    
+    stride += volume_nodes_lobatto;    
+  }
+  
+
   return d4est_ghost;
 }
 

@@ -95,13 +95,14 @@ int main(int argc, char *argv[])
   }
 
   p4est_partition(p4est, 1, NULL);
-  p4est_balance (p4est, P4EST_CONNECT_FACE, NULL);
+  p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
 
   
-  p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
-  d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
-                                                   ghost->ghosts.elem_count);
+  /* p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE); */
+  /* d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t, */
+                                                   /* ghost->ghosts.elem_count); */
    
+  d4est_ghost_t* d4est_ghost = NULL;
 
   if (proc_rank == 0 && initial_grid_input->load_from_checkpoint == 0){
     zlog_debug(c_default, "min_quadrants = %d", initial_grid_input->min_quadrants);
@@ -117,16 +118,17 @@ int main(int argc, char *argv[])
   d4est_operators_t* d4est_ops = d4est_ops_init(20);
   d4est_mesh_data_t* d4est_factors = d4est_mesh_data_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature");
+
   
   initial_grid_input->initial_nodes = d4est_mesh_update
                                (
                                 p4est,
-                                ghost,
-                                ghost_data,
+                                &d4est_ghost,
                                 d4est_ops,
                                 d4est_geom,
                                 d4est_quad,
                                 d4est_factors,
+                                INITIALIZE_GHOST,
                                 INITIALIZE_QUADRATURE_DATA,
                                 INITIALIZE_GEOMETRY_DATA,
                                 INITIALIZE_GEOMETRY_ALIASES,
@@ -138,8 +140,7 @@ int main(int argc, char *argv[])
   problem_init
     (
      p4est,
-     &ghost,
-     &ghost_data,
+     &d4est_ghost,
      d4est_ops,
      d4est_geom,
      d4est_quad,
@@ -153,11 +154,12 @@ int main(int argc, char *argv[])
   d4est_mesh_data_destroy(d4est_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   
-  if (ghost) {
-    p4est_ghost_destroy (ghost);
-    P4EST_FREE (ghost_data);
-    ghost = NULL;
-    ghost_data = NULL;
+  if (d4est_ghost) {
+    d4est_ghost_destroy(d4est_ghost);
+    /* p4est_ghost_destroy (ghost); */
+    /* P4EST_FREE (ghost_data); */
+    /* ghost = NULL; */
+    /* ghost_data = NULL; */
   }
   
   

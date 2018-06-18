@@ -1,6 +1,7 @@
 #ifndef D4EST_QUAD_H
 #define D4EST_QUAD_H 
 
+#include <d4est_ghost.h>
 #include <d4est_geometry.h>
 
 /**
@@ -68,8 +69,8 @@ typedef void
 (*d4est_quadrature_reinit_fcn_t)
 (
  p4est_t* p4est,
- p4est_ghost_t* ghost,
- void* ghost_data,
+ /* p4est_ghost_t* ghost, */
+ /* void* ghost_data, */
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad
@@ -138,7 +139,7 @@ void d4est_quadrature_apply_mass_matrix(d4est_operators_t *d4est_ops,d4est_geome
 void d4est_quadrature_apply_stiffness_matrix(d4est_operators_t *d4est_ops,d4est_quadrature_t *d4est_quadrature,d4est_geometry_t *d4est_geometry,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *in,int deg_lobatto,double *jac_quad,double *rst_xyz[(P4EST_DIM)][(P4EST_DIM)],int deg_quad,double *out);
 void d4est_quadrature_apply_galerkin_integral(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geometry,d4est_quadrature_t *d4est_quadrature,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *in_quad,int deg_lobatto,double *jac_quad,int deg_quad,double *out);
 void d4est_quadrature_destroy(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad);
-void d4est_quadrature_reinit(p4est_t *p4est,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad);
+void d4est_quadrature_reinit(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad);
 d4est_quadrature_t *d4est_quadrature_new(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,const char *input_file,const char *input_section);
 
 

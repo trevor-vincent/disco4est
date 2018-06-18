@@ -26,6 +26,8 @@ typedef struct {
   double* dudx_p_on_f_p_mortar_quad [(P4EST_DIM)];
   double* n_on_f_m_mortar_quad [(P4EST_DIM)];
 
+  double* Au_m [(P4EST_FACES)];
+  
   int* face_nodes_m_lobatto;
   int* face_nodes_p_lobatto;
   int* deg_mortar_quad;
@@ -55,6 +57,8 @@ typedef struct {
   double* xyz_on_f_m_quad [(P4EST_DIM)];
   double* sj_on_f_m_quad;
   double* j_div_sj_quad;
+
+  double* Au_m;
   
 } d4est_poisson_flux_boundary_data_t;
 
@@ -104,6 +108,7 @@ typedef struct d4est_poisson_flux_data d4est_poisson_flux_data_t;
 
 struct d4est_poisson_flux_data{
 
+ 
   d4est_poisson_flux_type_t flux_type; 
   d4est_poisson_flux_interface_fcn_t interface_fcn;
   d4est_poisson_flux_boundary_fcn_t boundary_fcn;
@@ -114,6 +119,17 @@ struct d4est_poisson_flux_data{
 
   d4est_poisson_bc_t bc_type;
   void* bc_data;
+
+  /* internally set */
+  d4est_ghost_t* d4est_ghost;
+  d4est_ghost_data_t* d4est_ghost_data;
+  p4est_t* p4est;
+  double* u;
+  double* dudr_local [(P4EST_DIM)];
+  double* dudr_ghost [(P4EST_DIM)];
+  double* Au;
+  int local_nodes;
+  int which_field;
   
   void (*destroy)(d4est_poisson_flux_data_t*);
   
@@ -152,10 +168,6 @@ typedef struct {
 } d4est_poisson_dirichlet_bc_t;
 
 
-
-
-
-/* This file was automatically generated.  Do not edit! */
 void d4est_poisson_flux_destroy(d4est_poisson_flux_data_t *data);
 d4est_poisson_flux_data_t *d4est_poisson_flux_new(p4est_t *p4est,const char *input_file,d4est_poisson_bc_t bc_type,void *bc_data);
 d4est_mortars_fcn_ptrs_t d4est_poisson_flux_fetch_fcns(d4est_poisson_flux_data_t *data);

@@ -14,7 +14,7 @@ typedef enum {EXCHANGE_GHOST_DATA, DO_NOT_EXCHANGE_GHOST_DATA} d4est_mortars_exc
 /* No problem specific data needed */
 typedef void (*d4est_mortars_interface_fcn_t)
 (
- p4est_t*,
+ p4est_t* p4est,
  d4est_element_data_t** e_m,
  int faces_m,
  int f_m,
@@ -35,7 +35,7 @@ typedef void (*d4est_mortars_interface_fcn_t)
 /* We need the problem specific data */
 typedef void (*d4est_mortars_boundary_fcn_t)
 (
- p4est_t*,
+ p4est_t* p4est,
  d4est_element_data_t* e_m,
  int f_m,
  int mortar_side_id,
@@ -67,7 +67,7 @@ typedef struct {
 
 
 /* This file was automatically generated.  Do not edit! */
-int d4est_mortars_compute_flux_on_local_elements(p4est_t *p4est,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mortars_fcn_ptrs_t *fcn_ptrs,d4est_mortars_exchange_data_option_t option);
+int d4est_mortars_compute_flux_on_local_elements(p4est_t *p4est,d4est_ghost_t *d4est_ghost,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mortars_fcn_ptrs_t *fcn_ptrs);
 void d4est_mortars_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *info,void *user_data);
 void d4est_mortars_project_side_onto_mortar_space(d4est_operators_t *d4est_ops,double *in_side,int faces_side,int *deg_side,double *out_mortar,int faces_mortar,int *deg_mortar);
 void d4est_mortars_project_mass_mortar_onto_side(d4est_operators_t *dgmath,double *in_mortar,int faces_mortar,int *deg_mortar,double *out_side,int faces_side,int *deg_side);

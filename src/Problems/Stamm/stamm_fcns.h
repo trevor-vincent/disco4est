@@ -213,8 +213,8 @@ static void
 stamm_apply_lhs
 (
  p4est_t* p4est,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
+ d4est_ghost_t* d4est_ghost,
+ d4est_ghost_data_t* d4est_ghost_data,
  d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
@@ -226,7 +226,7 @@ stamm_apply_lhs
   problem_ctx_t* ctx = user;
   stamm_params_t* params = ctx->stamm_params;
   d4est_poisson_flux_data_t* flux_fcn_data = ctx->flux_data_for_apply_lhs;
-  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad,d4est_factors);
+  d4est_poisson_apply_aij(p4est, d4est_ghost, d4est_ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad,d4est_factors,0);
 
   /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs->Au, prob_vecs->local_nodes); */
   
@@ -237,8 +237,8 @@ static void
 stamm_build_residual
 (
  p4est_t* p4est,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
+ d4est_ghost_t* d4est_ghost,
+ d4est_ghost_data_t* d4est_ghost_data,
  d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
@@ -247,7 +247,7 @@ stamm_build_residual
  void* user
 )
 {
-  stamm_apply_lhs(p4est, ghost, ghost_data, prob_vecs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, user);
+  stamm_apply_lhs(p4est, d4est_ghost, d4est_ghost_data, prob_vecs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, user);
   d4est_linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
 }
 

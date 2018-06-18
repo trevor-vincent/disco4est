@@ -190,7 +190,8 @@ d4est_norms_fcn_energy
     ctx->d4est_ops,
     ctx->d4est_geom,
     ctx->d4est_quad,
-    ctx->d4est_factors
+    ctx->d4est_factors,
+    ctx->which_field
   );
 
   // Reduce over all parallel processes
@@ -204,30 +205,6 @@ d4est_norms_fcn_energy
     0,
     sc_MPI_COMM_WORLD
   );
-
-  // Need num_nodes for fit
-  /* int num_nodes; */
-  /* if (ctx->fit != NULL) { */
-  /*   sc_reduce( */
-  /*     &num_nodes_local, */
-  /*     &num_nodes, */
-  /*     1, */
-  /*     sc_MPI_INT, */
-  /*     sc_MPI_SUM, */
-  /*     0, */
-  /*     sc_MPI_COMM_WORLD */
-  /*   ); */
-  /* } */
-  
-  // Perform energy norm fit
-  /* if (ctx->fit != NULL && ctx->p4est->mpirank == 0) { */
-  /*   d4est_norms_fcn_energy_add_entry_and_fit( */
-  /*     ctx->p4est, */
-  /*     ctx->fit, */
-  /*     norm_sq, */
-  /*     num_nodes */
-  /*   ); */
-  /* } */
 
   return sqrt(norm_sq);
 }

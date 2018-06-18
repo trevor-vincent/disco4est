@@ -1,12 +1,17 @@
 #ifndef D4EST_ELLIPTIC_DATA_H
 #define D4EST_ELLIPTIC_DATA_H 
 
+#include <d4est_field.h>
+
 typedef struct {
 
   int mpi_rank;
-  
+    
   /* total nodes for this CPU */
   int local_nodes;
+
+  int num_of_fields;
+  d4est_field_type_t* field_types;
   
   /* used to store Aij*uj (pointer alias)*/
   double* Au;

@@ -8,8 +8,8 @@ multigrid_element_data_updater_t*
 multigrid_element_data_updater_init
 (
  int num_of_levels,
- p4est_ghost_t** ghost,
- d4est_element_data_t** ghost_data,
+ d4est_ghost_t** d4est_ghost,
+ d4est_ghost_data_t** d4est_ghost_data,
  d4est_mesh_data_t* d4est_mesh_data_toplevel,
  void(*element_data_init_user_fcn)(d4est_element_data_t*,void*),
  void* user
@@ -17,8 +17,9 @@ multigrid_element_data_updater_init
 {
   multigrid_element_data_updater_t* updater = P4EST_ALLOC(multigrid_element_data_updater_t,1);
   updater->update = multigrid_element_data_updater_update;
-  updater->ghost = ghost;
-  updater->ghost_data = ghost_data;
+  updater->d4est_ghost = d4est_ghost;
+  updater->d4est_ghost_data = d4est_ghost_data;
+  
   
   /* for curved infrastructure*/
   updater->element_data_init_user_fcn = element_data_init_user_fcn;
@@ -80,11 +81,11 @@ multigrid_element_data_updater_update
       (
        p4est,
        NULL,
-       NULL,
        mg_data->d4est_ops,
        mg_data->d4est_geom,
        mg_data->d4est_quad,
        NULL,
+       DO_NOT_INITIALIZE_GHOST,
        DO_NOT_INITIALIZE_QUADRATURE_DATA,
        DO_NOT_INITIALIZE_GEOMETRY_DATA,
        DO_NOT_INITIALIZE_GEOMETRY_ALIASES,
@@ -98,22 +99,16 @@ multigrid_element_data_updater_update
       updater->geometric_factors[level-1] = d4est_mesh_data_init();
     }
 
-   /* update ghost data */
-    P4EST_FREE(*(updater->ghost_data));
-    p4est_ghost_destroy (*(updater->ghost));
-    *(updater->ghost) = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
-    *(updater->ghost_data) = P4EST_ALLOC (d4est_element_data_t,
-                                          (*(updater->ghost))->ghosts.elem_count); 
 
-    d4est_mesh_update
+   d4est_mesh_update
       (
        p4est,
-       *(updater->ghost),
-       *(updater->ghost_data),
+       (updater->d4est_ghost),
        mg_data->d4est_ops,
        mg_data->d4est_geom,
        mg_data->d4est_quad,
        updater->geometric_factors[level - 1],
+       INITIALIZE_GHOST,
        INITIALIZE_QUADRATURE_DATA,
        /* (compute_geometric_factors == 1) ? INITIALIZE_GEOMETRY_DATA : DO_NOT_INITIALIZE_GEOMETRY_DATA, */
        INITIALIZE_GEOMETRY_DATA,
@@ -121,27 +116,34 @@ multigrid_element_data_updater_update
        updater->element_data_init_user_fcn,
        updater->user    
       );
+   
+    if (*(updater->d4est_ghost_data) != NULL){
+      d4est_ghost_data_destroy(*updater->d4est_ghost_data);
+      *(updater->d4est_ghost_data) = NULL;
+    } 
+
+    *(updater->d4est_ghost_data) = d4est_ghost_data_init(p4est,
+                                                         *(updater->d4est_ghost),
+                                                      vecs->field_types,
+                                                      vecs->num_of_fields);
+
+    
 
     updater->current_geometric_factors = updater->geometric_factors[level-1];
   }
   else if (mg_data->mg_state == UPV_POST_REFINE){    
-    P4EST_FREE(*(updater->ghost_data));
-    p4est_ghost_destroy (*(updater->ghost));
-    *(updater->ghost) = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
-    *(updater->ghost_data) = P4EST_ALLOC (d4est_element_data_t,
-                                          (*(updater->ghost))->ghosts.elem_count);
-
 
 
     d4est_mesh_update
       (
        p4est,
-       *(updater->ghost),
-       *(updater->ghost_data),
+       (updater->d4est_ghost),
+       /* *(updater->ghost_data), */
        mg_data->d4est_ops,
        mg_data->d4est_geom,
        mg_data->d4est_quad,
        updater->geometric_factors[level + 1],
+       INITIALIZE_GHOST,
        INITIALIZE_QUADRATURE_DATA,
        DO_NOT_INITIALIZE_GEOMETRY_DATA,
        INITIALIZE_GEOMETRY_ALIASES,
@@ -149,6 +151,17 @@ multigrid_element_data_updater_update
        updater->user    
       );
 
+
+    if (*(updater->d4est_ghost_data) != NULL){
+      d4est_ghost_data_destroy(*(updater->d4est_ghost_data));
+      *(updater->d4est_ghost_data) = NULL;
+    } 
+
+    *(updater->d4est_ghost_data) = d4est_ghost_data_init(p4est,
+                                                       *(updater->d4est_ghost),
+                                                      vecs->field_types,
+                                                      vecs->num_of_fields);
+    
     updater->current_geometric_factors = updater->geometric_factors[level+1];
        
   }

@@ -88,7 +88,7 @@ SET (
   src/Geometry/d4est_geometry.c
   src/Estimators/d4est_estimator_stats.c
   src/Estimators/d4est_estimator_bi.c
-  src/Estimators/d4est_estimator_residual.c
+  # src/Estimators/d4est_estimator_residual.c
   src/hpAMR/d4est_amr.c
   src/hpAMR/d4est_amr_uniform.c
   src/hpAMR/d4est_amr_random.c
@@ -112,7 +112,7 @@ SET (
   src/IO/d4est_norms.c
   src/Solver/d4est_solver_cg.c
   src/Solver/d4est_solver_fcg.c
-  src/Solver/d4est_solver_newton.c
+  # src/Solver/d4est_solver_newton.c
   src/Solver/krylov_petsc.c
   src/Solver/newton_petsc.c
   src/Solver/krylov_pc_multigrid.c
@@ -127,7 +127,7 @@ SET (
   src/Solver/multigrid_smoother_cheby.c
   src/Solver/multigrid_smoother_krylov_petsc.c
   src/Solver/cg_eigs.c
-  src/Solver/d4est_solver_jacobian_tester.c
+  # src/Solver/d4est_solver_jacobian_tester.c
   src/Solver/d4est_solver_full_matrix.c
   src/Solver/d4est_solver_matrix_symmetry.c
   src/Solver/d4est_power_method.c
@@ -312,14 +312,14 @@ add_d4est_bash_regression_test(d4est_test_mpi.sh Regression d4est_test_mpi)
 
 add_d4est_problem_2d(stamm_driver stamm_multigrid_pc.c Stamm)
 add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c Poisson)
-add_d4est_problem_3d(poisson_sinx_uniform_debug_driver poisson_sinx_uniform_debug.c Poisson)
+# add_d4est_problem_3d(poisson_sinx_uniform_debug_driver poisson_sinx_uniform_debug.c Poisson)
 add_d4est_problem_3d(poisson_sinx_multigrid_driver poisson_sinx_multigrid.c Poisson)
-add_d4est_problem_3d(poisson_lorentzian_multigrid_driver poisson_lorentzian_multigrid.c Poisson)
-add_d4est_problem_3d(poisson_lorentzian_cg_driver poisson_lorentzian_cg.c Poisson)
+# add_d4est_problem_3d(poisson_lorentzian_multigrid_driver poisson_lorentzian_multigrid.c Poisson)
+# add_d4est_problem_3d(poisson_lorentzian_cg_driver poisson_lorentzian_cg.c Poisson)
 # add_d4est_problem_3d(poisson_lorentzian_eigs_driver poisson_lorentzian_eigs.c Poisson)
 
-add_d4est_problem_3d(poisson_lorentzian_amr_multigrid_driver poisson_lorentzian_amr_multigrid.c Poisson)
-add_d4est_problem_3d(poisson_1orton_multigrid_driver poisson_1orton_multigrid.c Poisson)
+# add_d4est_problem_3d(poisson_lorentzian_amr_multigrid_driver poisson_lorentzian_amr_multigrid.c Poisson)
+# add_d4est_problem_3d(poisson_1orton_multigrid_driver poisson_1orton_multigrid.c Poisson)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
-add_d4est_problem_3d(constant_density_star_robin_driver constant_density_star_robin.c ConstantDensityStar)
+# add_d4est_problem_3d(constant_density_star_robin_driver constant_density_star_robin.c ConstantDensityStar)
 add_d4est_problem_3d(two_punctures_robin_diff_geom_estimator_global_driver two_punctures_cactus_diff_geom_estimator_global.c TwoPunctures)

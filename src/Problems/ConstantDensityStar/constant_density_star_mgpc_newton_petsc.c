@@ -139,8 +139,7 @@ void
 problem_init
 (
  p4est_t* p4est,
- p4est_ghost_t** ghost,
- d4est_element_data_t** ghost_data,
+ d4est_ghost_t** d4est_ghost,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -254,12 +253,10 @@ problem_init
   energy_norm_ctx.d4est_geom = d4est_geom;
   energy_norm_ctx.d4est_quad = d4est_quad;
   energy_norm_ctx.d4est_factors = d4est_factors;
+  energy_norm_ctx.which_field = 0;
   /* energy_norm_ctx.fit = NULL; */
   // These are updated later
-  energy_norm_ctx.ghost = *ghost;
-  energy_norm_ctx.ghost_data = *ghost_data;
-  energy_norm_ctx.energy_norm_data = NULL;
-  energy_norm_ctx.energy_estimator_sq_local = -1.;
+ 
 
   if (p4est->mpirank == 0)
     d4est_norms_write_headers(
@@ -273,6 +270,12 @@ problem_init
   }
 
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 2; level++) {
+
+    d4est_field_type_t field_type = VOLUME_NODAL;
+    d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
+                                                                 *d4est_ghost,
+                                                                 &field_type,
+                                                                 1);
     
     // Extract mesh data
 
@@ -282,15 +285,16 @@ problem_init
       &prob_fcns,
       penalty_data,
       constant_density_star_boundary_fcn,
-      *ghost,
-      *ghost_data,
+      *d4est_ghost,
+      d4est_ghost_data,
       d4est_ops,
       d4est_geom,
       d4est_factors,
       d4est_geom,
       d4est_factors,
       d4est_quad,
-      DIAM_APPROX_CUBE
+      DIAM_APPROX_CUBE,
+      0
     );
     
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
@@ -345,8 +349,8 @@ problem_init
 
     energy_norm_ctx.energy_norm_data = &ip_norm_data;
     energy_norm_ctx.energy_estimator_sq_local = stats->total;
-    energy_norm_ctx.ghost = *ghost;
-    energy_norm_ctx.ghost_data = *ghost_data;
+    energy_norm_ctx.ghost = *d4est_ghost;
+    energy_norm_ctx.ghost_data = d4est_ghost_data;
 
     d4est_norms_save(
       p4est,
@@ -377,8 +381,8 @@ problem_init
       d4est_amr_step
         (
          p4est,
-         ghost,
-         ghost_data,
+         NULL,
+         NULL,
          d4est_ops,
          (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr,
          &prob_vecs.u,
@@ -398,12 +402,12 @@ problem_init
 
     prob_vecs.local_nodes = d4est_mesh_update(
       p4est,
-      *ghost,
-      *ghost_data,
+      d4est_ghost,
       d4est_ops,
       d4est_geom,
       d4est_quad,
       d4est_factors,
+      INITIALIZE_GHOST,
       INITIALIZE_QUADRATURE_DATA,
       INITIALIZE_GEOMETRY_DATA,
       INITIALIZE_GEOMETRY_ALIASES,
@@ -411,6 +415,19 @@ problem_init
       initial_extents
     );
 
+
+   if (d4est_ghost_data != NULL){
+      d4est_ghost_data_destroy(d4est_ghost_data);
+      d4est_ghost_data = NULL;
+    } 
+    
+
+   d4est_ghost_data = d4est_ghost_data_init(p4est,
+                                            *d4est_ghost,
+                                            &field_type,
+                                            1);
+
+    
     if (p4est->mpirank == 0)
       zlog_info(c_default, "d4est mesh update complete.");
 
@@ -441,8 +458,8 @@ problem_init
       d4est_ops,
       d4est_geom,
       d4est_quad,
-      ghost,
-      ghost_data,
+      d4est_ghost,
+      &d4est_ghost_data,
       d4est_factors,
       initial_extents,
       input_file
@@ -487,13 +504,19 @@ problem_init
       
       if (p4est->mpirank == 0)
         zlog_info(c_default, "Performing Newton PETSc solve...");
-        
+
+
+
+      prob_vecs.field_types = &field_type;
+      prob_vecs.num_of_fields = 1;
+      
+      
       newton_petsc_solve(
         p4est,
         &prob_vecs,
         &prob_fcns,
-        ghost,
-        ghost_data,
+        d4est_ghost,
+        &d4est_ghost_data,
         d4est_ops,
         d4est_geom,
         d4est_quad,
@@ -526,6 +549,13 @@ problem_init
     multigrid_matrix_operator_destroy(user_callbacks);
 
     P4EST_FREE(estimator);
+
+
+    if (d4est_ghost_data != NULL){
+      d4est_ghost_data_destroy(d4est_ghost_data);
+      d4est_ghost_data = NULL;
+    } 
+    
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");

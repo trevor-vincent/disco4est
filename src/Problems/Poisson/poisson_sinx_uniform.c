@@ -21,10 +21,6 @@
 #include <d4est_poisson_flux_sipg.h>
 #include <newton_petsc.h>
 #include <krylov_petsc.h>
-/* #include <krylov_pc_multigrid.h> */
-/* #include <multigrid_logger_residual.h> */
-/* #include <multigrid_element_data_updater.h> */
-/* #include <multigrid.h> */
 #include <d4est_util.h>
 #include <time.h>
 #include <zlog.h>
@@ -34,8 +30,7 @@ void
 problem_init
 (
  p4est_t* p4est,
- p4est_ghost_t** ghost,
- d4est_element_data_t** ghost_data,
+ d4est_ghost_t** d4est_ghost,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -74,6 +69,7 @@ problem_init
   prob_fcns.apply_lhs = poisson_sinx_apply_lhs;
   prob_fcns.user = &ctx;
 
+
   d4est_elliptic_data_t prob_vecs;
   prob_vecs.Au = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.u = P4EST_ALLOC(double, initial_nodes);
@@ -81,7 +77,8 @@ problem_init
   prob_vecs.local_nodes = initial_nodes;
 
   d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
-   
+  
+  
   // Setup norm function contexts
   d4est_norms_fcn_L2_ctx_t L2_norm_ctx;
   L2_norm_ctx.p4est = p4est;
@@ -119,101 +116,69 @@ problem_init
     INIT_FIELD_ON_LOBATTO,
     NULL
   );
-    
-  d4est_poisson_build_rhs_with_strong_bc(
-    p4est,
-    *ghost,
-    *ghost_data,
-    d4est_ops,
-    d4est_geom,
-    d4est_quad,
-    d4est_factors,
-    &prob_vecs,
-    flux_data_for_build_rhs,
-    prob_vecs.rhs,
-    poisson_sinx_rhs_fcn,
-    INIT_FIELD_ON_LOBATTO,
-    &ctx
-  );
+
+  d4est_field_type_t field_type = VOLUME_NODAL;
+
+  
+  /* d4est_poisson_build_rhs_with_strong_bc( */
+  /*   p4est, */
+  /*   *d4est_ghost, */
+  /*   d4est_ghost_data, */
+  /*   d4est_ops, */
+  /*   d4est_geom, */
+  /*   d4est_quad, */
+  /*   d4est_factors, */
+  /*   &prob_vecs, */
+  /*   flux_data_for_build_rhs, */
+  /*   prob_vecs.rhs, */
+  /*   poisson_sinx_rhs_fcn, */
+  /*   INIT_FIELD_ON_LOBATTO, */
+  /*   &ctx, */
+  /*   0 */
+  /* ); */
 
 
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; level++) {
 
-    // Setup multigrid
-    /* krylov_pc_t* pc = NULL; */
-
-    /* int multigrid_min_level, multigrid_max_level; */
-    /* multigrid_get_level_range(p4est, &multigrid_min_level, &multigrid_max_level); */
-    /* zlog_debug(c_default, "Multigrid [min_level, max_level] = [%d,%d]", multigrid_min_level, multigrid_max_level); */
-      
-    /* need to do a reduce on min,max_level before supporting multiple proc */
-    /* mpi_assert(proc_size == 1); */
-    /* int num_of_levels = multigrid_max_level + 1; */
-      
-    /* multigrid_logger_t* logger = multigrid_logger_residual_init(); */
-      
-    /* multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init( */
-    /*                                                                                 num_of_levels, */
-    /*                                                                                 ghost, */
-    /*                                                                                 ghost_data, */
-    /*                                                                                 d4est_factors, */
-    /*                                                                                 d4est_mesh_set_quadratures_after_amr, */
-    /*                                                                                 initial_extents */
-    /* ); */
-      
-    /* multigrid_data_t* mg_data = multigrid_data_init( */
-    /*                                                 p4est, */
-    /*                                                 d4est_ops, */
-    /*                                                 d4est_geom, */
-    /*                                                 d4est_quad, */
-    /*                                                 num_of_levels, */
-    /*                                                 logger, */
-    /*                                                 NULL, */
-    /*                                                 updater, */
-    /*                                                 input_file */
-    /* ); */
-      
-    /* multigrid_solve */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs, */
-    /*    &prob_fcns, */
-    /*    mg_data */
-    /*   ); */
-      
-    /* pc = krylov_pc_multigrid_create(mg_data, NULL); */
-
-
-    // Krylov PETSc solve
+    d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
+                                                                 *d4est_ghost,
+                                                                 &field_type,
+                                                                 1);
+  
     
-    /* krylov_petsc_params_t krylov_petsc_params; */
-    /* krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_petsc_params); */
-    
-    /* krylov_petsc_solve( */
-    /*   p4est, */
-    /*   &prob_vecs, */
-    /*   &prob_fcns, */
-    /*   ghost, */
-    /*   ghost_data, */
-    /*   d4est_ops, */
-    /*   d4est_geom, */
-    /*   d4est_quad, */
-    /*   d4est_factors, */
-    /*   &krylov_petsc_params, */
-    /*   pc */
-    /* ); */
+    d4est_poisson_build_rhs_with_strong_bc(
+      p4est,
+      *d4est_ghost,
+      d4est_ghost_data,
+      d4est_ops,
+      d4est_geom,
+      d4est_quad,
+      d4est_factors,
+      &prob_vecs,
+      flux_data_for_build_rhs,
+      prob_vecs.rhs,
+      poisson_sinx_rhs_fcn,
+      INIT_FIELD_ON_LOBATTO,
+      &ctx,
+      0
+    );
 
 
     d4est_solver_cg_params_t fcg_params;
     d4est_solver_cg_input(p4est, input_file, "d4est_solver_cg", "[D4EST_SOLVER_CG]", &fcg_params);
+
+    //printf("Checkpoint 2\n");
+    /*  */
+
+
     
     d4est_solver_cg_solve
       (
        p4est,
        &prob_vecs,
        &prob_fcns,
-       ghost,
-       ghost_data,
+       d4est_ghost,
+       &d4est_ghost_data,
        d4est_ops,
        d4est_geom,
        d4est_quad,
@@ -222,6 +187,25 @@ problem_init
        NULL/* pc */
       );
 
+
+    /* krylov_petsc_params_t krylov_petsc_params; */
+    /* krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_petsc_params); */
+    
+    /* krylov_petsc_solve( */
+    /*   p4est, */
+    /*   &prob_vecs, */
+    /*   &prob_fcns, */
+    /*   d4est_ghost, */
+    /*   &d4est_ghost_data, */
+    /*   d4est_ops, */
+    /*   d4est_geom, */
+    /*   d4est_quad, */
+    /*   d4est_factors, */
+    /*   &krylov_petsc_params, */
+    /*   NULL//(mg_data->num_of_levels == 1) ? NULL : pc */
+    /* ); */
+
+    
     // Compute and save mesh data to a VTK file
     
     // Compute analytical field values
@@ -283,10 +267,10 @@ problem_init
       NULL
     );
     
-    P4EST_FREE(error_l2);    
+    P4EST_FREE(error_l2);
     P4EST_FREE(error);
     P4EST_FREE(u_analytic);
-
+    //printf("Checkpoint 3\n");
 
     // Perform the next AMR step
   
@@ -297,8 +281,8 @@ problem_init
 
       d4est_amr_step(
         p4est,
-        ghost,
-        ghost_data,
+        NULL,/* d4est_ghost, */
+        NULL,/* &d4est_ghost_data, */
         d4est_ops,
         d4est_amr,
         &prob_vecs.u,
@@ -310,15 +294,15 @@ problem_init
         zlog_info(c_default, "AMR refinement level %d of %d complete.", level + 1, d4est_amr->num_of_amr_steps);
     }
 
-
+    //printf("Checkpoint 4\n");
     prob_vecs.local_nodes = d4est_mesh_update(
       p4est,
-      *ghost,
-      *ghost_data,
+      d4est_ghost,
       d4est_ops,
       d4est_geom,
       d4est_quad,
       d4est_factors,
+      INITIALIZE_GHOST,
       INITIALIZE_QUADRATURE_DATA,
       INITIALIZE_GEOMETRY_DATA,
       INITIALIZE_GEOMETRY_ALIASES,
@@ -329,27 +313,16 @@ problem_init
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
     prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, prob_vecs.local_nodes);
     
-    
-    d4est_poisson_build_rhs_with_strong_bc(
-      p4est,
-      *ghost,
-      *ghost_data,
-      d4est_ops,
-      d4est_geom,
-      d4est_quad,
-      d4est_factors,
-      &prob_vecs,
-      flux_data_for_build_rhs,
-      prob_vecs.rhs,
-      poisson_sinx_rhs_fcn,
-      INIT_FIELD_ON_LOBATTO,
-      &ctx
-    );
+    if (d4est_ghost_data != NULL){
+      d4est_ghost_data_destroy(d4est_ghost_data);
+      d4est_ghost_data = NULL;
+    } 
   }
 
   if (p4est->mpirank == 0)
     zlog_info(c_default, "Finishing up. Starting garbage collection...");
-    
+
+
   d4est_amr_destroy(d4est_amr);
   d4est_poisson_flux_destroy(flux_data_for_apply_lhs);
   d4est_poisson_flux_destroy(flux_data_for_build_rhs);

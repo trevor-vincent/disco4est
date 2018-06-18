@@ -214,8 +214,7 @@ void
 problem_init
 (
  p4est_t* p4est,
- p4est_ghost_t** ghost,
- d4est_element_data_t** ghost_data,
+ d4est_ghost_t** d4est_ghost,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -345,8 +344,7 @@ problem_init
   energy_norm_ctx.d4est_factors = d4est_factors;
   /* energy_norm_ctx.fit = NULL; */
   // These are updated later
-  energy_norm_ctx.ghost = *ghost;
-  energy_norm_ctx.ghost_data = *ghost_data;
+  energy_norm_ctx.which_field = 0;
   energy_norm_ctx.energy_norm_data = NULL;
   energy_norm_ctx.energy_estimator_sq_local = -1.;
 
@@ -391,12 +389,18 @@ problem_init
   
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
+    d4est_field_type_t field_type = VOLUME_NODAL;
+    d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
+                                                                 *d4est_ghost,
+                                                                 &field_type,
+                                                                 1);
     
+    // Extract mesh data  
 
     d4est_mesh_data_realloc
       (
        p4est,
-       *ghost,
+       *d4est_ghost,
        d4est_factors_compactified,
        d4est_factors->local_sizes
       );
@@ -404,8 +408,7 @@ problem_init
     d4est_mesh_data_compute
       (
        p4est,
-       *ghost,
-       *ghost_data,
+       *d4est_ghost,
        d4est_ops,
        d4est_geom_compactified,
        d4est_quad,
@@ -433,15 +436,16 @@ problem_init
        &prob_fcns,
        penalty_data,
        zero_fcn,
-       *ghost,
-       *ghost_data,
+       *d4est_ghost,
+       d4est_ghost_data,
        d4est_ops,
        d4est_geom,
        d4est_factors,
        d4est_geom_compactified,
        d4est_factors_compactified,
        d4est_quad,
-       NO_DIAM_APPROX
+       NO_DIAM_APPROX,
+       0
       );
 
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
@@ -508,8 +512,8 @@ problem_init
     double total_est = stats[0].total;    
     energy_norm_ctx.energy_norm_data = &ip_norm_data;
     energy_norm_ctx.energy_estimator_sq_local = total_est;
-    energy_norm_ctx.ghost = *ghost;
-    energy_norm_ctx.ghost_data = *ghost_data;
+    energy_norm_ctx.ghost = *d4est_ghost;
+    energy_norm_ctx.ghost_data = d4est_ghost_data;
 
     d4est_norms_save
       (
@@ -554,8 +558,8 @@ problem_init
       d4est_amr_step
         (
          p4est,
-         ghost,
-         ghost_data,
+         NULL,
+         NULL,
          d4est_ops,
          d4est_amr,
          &prob_vecs.u,
@@ -571,12 +575,12 @@ problem_init
     prob_vecs.local_nodes = d4est_mesh_update
                             (
                              p4est,
-                             *ghost,
-                             *ghost_data,
+                             d4est_ghost,
                              d4est_ops,
                              d4est_geom,
                              d4est_quad,
                              d4est_factors,
+                             INITIALIZE_GHOST,
                              INITIALIZE_QUADRATURE_DATA,
                              INITIALIZE_GEOMETRY_DATA,
                              INITIALIZE_GEOMETRY_ALIASES,
@@ -584,6 +588,20 @@ problem_init
                              initial_extents
                             );
 
+
+
+    if (d4est_ghost_data != NULL){
+      d4est_ghost_data_destroy(d4est_ghost_data);
+      d4est_ghost_data = NULL;
+    } 
+    
+
+    d4est_ghost_data = d4est_ghost_data_init(p4est,
+                                             *d4est_ghost,
+                                             &field_type,
+                                             1);
+
+    
     
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
     u_prev = P4EST_REALLOC(u_prev, double, prob_vecs.local_nodes);
@@ -608,8 +626,8 @@ problem_init
                                                       d4est_ops,
                                                       d4est_geom,
                                                       d4est_quad,
-                                                      ghost,
-                                                      ghost_data,
+                                                      d4est_ghost,
+                                                      &d4est_ghost_data,
                                                       d4est_factors,
                                                       initial_extents,
                                                       input_file
@@ -651,14 +669,19 @@ problem_init
       else {
         krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_params);
       }
+
+      
+      prob_vecs.field_types = &field_type;
+      prob_vecs.num_of_fields = 1;
+
       
       newton_petsc_solve
         (
          p4est,
          &prob_vecs,
          &prob_fcns,
-         ghost,
-         ghost_data,
+         d4est_ghost,
+         &d4est_ghost_data,
          d4est_ops,
          d4est_geom,
          d4est_quad,
@@ -774,6 +797,14 @@ problem_init
    
       P4EST_FREE(error_l2);
       P4EST_FREE(estimator);
+
+
+    if (d4est_ghost_data != NULL){
+      d4est_ghost_data_destroy(d4est_ghost_data);
+      d4est_ghost_data = NULL;
+    } 
+
+      
   }
   
   printf("[D4EST_INFO]: Starting garbage collection...\n");

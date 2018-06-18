@@ -118,14 +118,14 @@ d4est_quadrature_new
 
 void
 d4est_quadrature_reinit(p4est_t* p4est,
-                        p4est_ghost_t* ghost,
-                        void* ghost_data,
+                        /* d4est_ghost_t* ghost, */
+                        /* void* ghost_data, */
                         d4est_operators_t* d4est_ops,
                         d4est_geometry_t* d4est_geom,
                         d4est_quadrature_t* d4est_quad)
 {
   if (d4est_quad->user_reinit != NULL)
-    d4est_quad->user_reinit(p4est, ghost, ghost_data, d4est_ops, d4est_geom, d4est_quad);
+    d4est_quad->user_reinit(p4est, d4est_ops, d4est_geom, d4est_quad);
 }
   
 void
@@ -1198,5 +1198,7 @@ void d4est_quadrature_compute_mass_matrix
 /*   } */
   
 /* } */
+/* This file was automatically generated.  Do not edit! */
+/* This file was automatically generated.  Do not edit! */
 /* This file was automatically generated.  Do not edit! */
 /* This file was automatically generated.  Do not edit! */

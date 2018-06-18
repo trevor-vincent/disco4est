@@ -6,7 +6,11 @@
 #include <d4est_xyz_functions_ext.h>
 #include <d4est_geometry.h>
 #include <d4est_quadrature.h>
+#include <d4est_ghost.h>
+#include <d4est_ghost_data.h>
 
+
+typedef enum {INITIALIZE_GHOST, DO_NOT_INITIALIZE_GHOST} d4est_mesh_ghost_init_option_t;
 typedef enum {INITIALIZE_QUADRATURE_DATA, DO_NOT_INITIALIZE_QUADRATURE_DATA} d4est_mesh_quadrature_data_init_option_t;
 typedef enum {INITIALIZE_GEOMETRY_DATA, DO_NOT_INITIALIZE_GEOMETRY_DATA} d4est_mesh_geometry_data_init_option_t;
 typedef enum {INITIALIZE_GEOMETRY_ALIASES,              DO_NOT_INITIALIZE_GEOMETRY_ALIASES}d4est_mesh_geometry_aliases_init_option_t;
@@ -113,19 +117,21 @@ typedef struct {
 } d4est_mesh_initial_extents_t;
 
 /* This file was automatically generated.  Do not edit! */
+double *d4est_mesh_get_field_on_element(p4est_t *p4est,d4est_element_data_t *ed,d4est_ghost_data_t *d4est_ghost_data,double *field,int local_nodes,int which_field);
+int d4est_mesh_is_it_a_ghost_element(p4est_t *p4est,d4est_element_data_t *ed);
 d4est_mesh_interpolate_data_t d4est_mesh_interpolate_at_tree_coord(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double abc[(P4EST_DIM)],int tree_id,double *f,int print);
 double d4est_mesh_volume_integral(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,int(*is_it_in_volume)(d4est_element_data_t *,void *),double(*compute_volume_integral)(d4est_element_data_t *,void *),void *user);
 double d4est_mesh_surface_integral(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,int(*is_it_on_surface)(d4est_element_data_t *,int,void *),double(*compute_face_integral)(d4est_element_data_t *,int,double *,double *[(P4EST_DIM)],double *[(P4EST_DIM)],double *[(P4EST_DIM)][(P4EST_DIM)],void *),void *user);
 double d4est_mesh_compare_two_fields(p4est_t *p4est,d4est_mesh_data_t *d4est_factors,double *field1,double *field2,const char *msg,d4est_mesh_boundary_option_t boundary_option,d4est_mesh_print_option_t print_option,double eps);
 int d4est_mesh_get_local_nodes(p4est_t *p4est);
-int d4est_mesh_get_ghost_nodes(p4est_ghost_t *ghost,d4est_element_data_t *ghost_data);
+int d4est_mesh_get_ghost_nodes(d4est_ghost_t *d4est_ghost);
 void d4est_mesh_get_local_nodes_callback(p4est_iter_volume_info_t *info,void *user_data);
 void d4est_mesh_init_field_ext(p4est_t *p4est,double *node_vec,d4est_xyz_fcn_ext_t xyz_fcn,void *user,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom);
 void d4est_mesh_compute_point_error(double *v1,double *v2,double *error,int local_nodes);
 void d4est_mesh_init_field(p4est_t *p4est,double *node_vec,d4est_xyz_fcn_t init_fcn,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_mesh_data_t *d4est_factors,d4est_mesh_init_field_option_t option,void *user);
-int d4est_mesh_update(p4est_t *p4est,p4est_ghost_t *ghost,void *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mesh_quadrature_data_init_option_t quad_init_option,d4est_mesh_geometry_data_init_option_t geom_init_option,d4est_mesh_geometry_aliases_init_option_t alias_init_option,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
-void d4est_mesh_data_compute(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors);
-d4est_mesh_local_sizes_t d4est_mesh_init_element_data(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
+int d4est_mesh_update(p4est_t *p4est,d4est_ghost_t **d4est_ghost,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mesh_ghost_init_option_t ghost_init_option,d4est_mesh_quadrature_data_init_option_t quad_init_option,d4est_mesh_geometry_data_init_option_t geom_init_option,d4est_mesh_geometry_aliases_init_option_t alias_init_option,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
+void d4est_mesh_data_compute(p4est_t *p4est,d4est_ghost_t *ghost,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors);
+d4est_mesh_local_sizes_t d4est_mesh_init_element_data(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,void(*user_fcn)(d4est_element_data_t *,void *),void *user_ctx);
 d4est_mesh_size_parameters_t d4est_mesh_get_size_parameters(d4est_mesh_data_t *factors);
 double *d4est_mesh_get_jacobian_on_quadrature_points(d4est_mesh_data_t *d4est_factors,d4est_element_data_t *ed);
 double d4est_mesh_compute_l2_norm_sqr(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,double *nodal_vec,int local_nodes,int(*skip_element_fcn)(d4est_element_data_t *),double *l2_array);
@@ -135,18 +141,18 @@ d4est_element_data_t *d4est_mesh_get_element_data(p4est_t *p4est,int local_eleme
 void d4est_mesh_print_number_of_elements_per_tree(p4est_t *p4est);
 int d4est_mesh_get_local_quad_nodes(p4est_t *p4est);
 int d4est_mesh_get_local_matrix_nodes(p4est_t *p4est);
-void d4est_mesh_compute_jacobian_on_lgl_grid(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double *jacobian_lgl);
+void d4est_mesh_compute_jacobian_on_lgl_grid(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double *jacobian_lgl,int max_deg);
 void d4est_mesh_get_array_of_quadrature_degrees(p4est_t *p4est,void *deg_array,d4est_builtin_t type);
 int d4est_mesh_get_local_max_degree(p4est_t *p4est);
 void d4est_mesh_get_array_of_degrees(p4est_t *p4est,void *deg_array,d4est_builtin_t type);
 void d4est_mesh_data_destroy(d4est_mesh_data_t *d4est_factors);
 void d4est_mesh_data_printout(d4est_mesh_data_t *d4est_factors);
-void d4est_mesh_data_realloc(p4est_t *p4est,p4est_ghost_t *p4est_ghost,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t local_sizes);
+void d4est_mesh_data_realloc(p4est_t *p4est,d4est_ghost_t *d4est_ghost,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t local_sizes);
 void d4est_mesh_data_debug_print(p4est_t *p4est,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t local_sizes);
 void d4est_mesh_data_zero(p4est_t *p4est,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t local_sizes);
 d4est_mesh_data_t *d4est_mesh_data_init();
-void d4est_mesh_compute_mortar_quadrature_sizes(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t *local_sizes);
-void d4est_mesh_compute_mortar_quadrature_quantities(p4est_t *p4est,p4est_ghost_t *ghost,d4est_element_data_t *ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors);
+void d4est_mesh_compute_mortar_quadrature_sizes(p4est_t *p4est,d4est_ghost_t *d4est_ghost,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t *local_sizes);
+void d4est_mesh_compute_mortar_quadrature_quantities(p4est_t *p4est,d4est_ghost_t *d4est_ghost,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors);
 void d4est_mesh_compute_mortar_quadrature_quantities_interface_callback(p4est_t *p4est,d4est_element_data_t **e_m,int faces_m,int f_m,int mortar_side_id_m,d4est_element_data_t **e_p,int faces_p,int f_p,int mortar_side_id_p,int *e_m_is_ghost,int orientation,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,void *params);
 d4est_mesh_data_on_element_t d4est_mesh_data_on_element(d4est_mesh_data_t *d4est_factors,d4est_element_data_t *ed);
 void d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback(p4est_t *p4est,d4est_element_data_t *e_m,int f_m,int mortar_side_id_m,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,void *params);

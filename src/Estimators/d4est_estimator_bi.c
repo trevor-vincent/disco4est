@@ -398,29 +398,30 @@ double*
 d4est_estimator_bi_compute
 (
  p4est_t* p4est,
- d4est_elliptic_data_t* vecs,
+ d4est_elliptic_data_t* d4est_elliptic_data,
  d4est_elliptic_eqns_t* fcns,
  d4est_estimator_bi_penalty_data_t bi_penalty_data,
  d4est_xyz_fcn_t u_bndry_fcn,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
+ d4est_ghost_t* d4est_ghost,
+ d4est_ghost_data_t* d4est_ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom_for_residual,
  d4est_mesh_data_t* d4est_factors_for_residual,
  d4est_geometry_t* d4est_geom_for_integrals,
  d4est_mesh_data_t* d4est_factors_for_integrals,
  d4est_quadrature_t* d4est_quad,
- diam_compute_option_t diam_opt
+ diam_compute_option_t diam_opt,
+ int which_field
 )
 {
   double* estimator = P4EST_ALLOC(double, p4est->local_num_quadrants);
   d4est_elliptic_eqns_build_residual
     (
      p4est,
-     ghost,
-     ghost_data,
+     d4est_ghost,
+     d4est_ghost_data,
      fcns,
-     vecs,
+     d4est_elliptic_data,
      d4est_ops,
      d4est_geom_for_residual,
      d4est_quad,
@@ -434,8 +435,8 @@ d4est_estimator_bi_compute
      d4est_geom_for_integrals,
      d4est_quad,
      d4est_factors_for_integrals,
-     vecs->Au,
-     vecs->local_nodes,
+     d4est_elliptic_data->Au,
+     d4est_elliptic_data->local_nodes,
      /* STORE_LOCALLY, */
      NULL,
      estimator
@@ -458,43 +459,59 @@ d4est_estimator_bi_compute
         double h = d4est_estimator_get_diam(d4est_factors_for_integrals, ed, diam_opt);
         estimator[ed->id] *= h*h/(deg*deg);
         
-        d4est_util_copy_1st_to_2nd
-          (
-           &(vecs->u[ed->nodal_stride]),
-           &(ed->u_elem)[0],
-           volume_nodes_lobatto
-          );
+        /* d4est_util_copy_1st_to_2nd */
+        /*   ( */
+        /*    &(vecs->u[ed->nodal_stride]), */
+        /*    &(ed->u_elem)[0], */
+        /*    volume_nodes_lobatto */
+        /*   ); */
        
       }
     }
   
-  p4est_ghost_exchange_data(p4est,ghost,ghost_data);
+  
+  d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data,d4est_elliptic_data->u);
+  
+  /* p4est_ghost_exchange_data(p4est,ghost,ghost_data); */
 
-  int ghost_nodes = d4est_mesh_get_ghost_nodes(ghost, ghost_data);
-  double* dudr [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(dudr,
-                                                  vecs->local_nodes
-                                                  + ghost_nodes
-                                                 );
+  double* dudr_local [(P4EST_DIM)];
+  D4EST_ALLOC_DIM_VEC(dudr_local,d4est_elliptic_data->local_nodes);
 
- 
+  int ghost_nodes = d4est_mesh_get_ghost_nodes(d4est_ghost);
+  double* dudr_ghost [(P4EST_DIM)];
+  D4EST_ALLOC_DIM_VEC(dudr_ghost, ghost_nodes);
+  
   d4est_poisson_compute_dudr
     (
      p4est,
-     ghost,
-     ghost_data,
+     d4est_ghost,
+     d4est_ghost_data,
      d4est_ops,
-     d4est_geom_for_residual,
+     d4est_geom_for_integrals,
      d4est_quad,
-     d4est_factors_for_residual,
-     dudr
+     d4est_factors_for_integrals,
+     dudr_local,
+     dudr_ghost,
+     d4est_elliptic_data->u,
+     d4est_elliptic_data->local_nodes,
+     which_field
     );
-  
   
   d4est_poisson_flux_data_t flux_data;
   flux_data.interface_fcn = d4est_estimator_bi_interface;
   flux_data.boundary_fcn = d4est_estimator_bi_dirichlet;
-  flux_data.get_deg_mortar_quad = d4est_poisson_get_degree_mortar_quad;
-  flux_data.get_deg_mortar_quad_ctx = NULL;
+  
+  flux_data.d4est_ghost_data = d4est_ghost_data;
+  flux_data.d4est_ghost = d4est_ghost;
+  flux_data.p4est = p4est;
+  flux_data.which_field = which_field;
+  flux_data.local_nodes = d4est_elliptic_data->local_nodes;
+  flux_data.u = d4est_elliptic_data->u;
+  flux_data.Au = d4est_elliptic_data->Au;
+  for (int i = 0; i < (P4EST_DIM); i++){
+    flux_data.dudr_local[i] = dudr_local[i];
+    flux_data.dudr_ghost[i] = dudr_ghost[i];
+  }
   
   d4est_poisson_dirichlet_bc_t bc_data;
   bc_data.dirichlet_fcn = u_bndry_fcn;
@@ -511,18 +528,20 @@ d4est_estimator_bi_compute
   d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
-     ghost,
-     ghost_data,
+     d4est_ghost,
+     /* ghost_data, */
      d4est_ops,
      d4est_geom_for_integrals,
      d4est_quad,
      d4est_factors_for_integrals,
-     &flux_fcns,
-     DO_NOT_EXCHANGE_GHOST_DATA
+     &flux_fcns
+     /* DO_NOT_EXCHANGE_GHOST_DATA */
     );
 
   /* DEBUG_PRINT_ARR_DBL(estimator, p4est->local_num_quadrants); */
   
-  D4EST_FREE_DIM_VEC(dudr);
+
+  D4EST_FREE_DIM_VEC(dudr_local);  
+  D4EST_FREE_DIM_VEC(dudr_ghost);  
   return estimator;
 }

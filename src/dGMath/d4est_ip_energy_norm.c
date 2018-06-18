@@ -288,12 +288,13 @@ d4est_ip_energy_norm_compute
  p4est_t* p4est,
  double* u,
  d4est_ip_energy_norm_data_t* energy_norm_data,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
+ d4est_ghost_t* d4est_ghost,
+ d4est_ghost_data_t* d4est_ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_data_t* d4est_factors
+ d4est_mesh_data_t* d4est_factors,
+ int which_field
 )
 {
   energy_norm_data->ip_energy_norm_sqr_volume_term = 0.;
@@ -316,12 +317,12 @@ d4est_ip_energy_norm_compute
         int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg);
         nodes += volume_nodes_lobatto;
         
-        d4est_util_copy_1st_to_2nd
-          (
-           &(u[ed->nodal_stride]),
-           &(ed->u_elem)[0],
-           volume_nodes_lobatto
-          );
+        /* d4est_util_copy_1st_to_2nd */
+        /*   ( */
+        /*    &(u[ed->nodal_stride]), */
+        /*    &(ed->u_elem)[0], */
+        /*    volume_nodes_lobatto */
+        /*   ); */
 
         d4est_quadrature_volume_t volume_object = {.dq = ed->dq,
                                               .tree = ed->tree,
@@ -364,25 +365,31 @@ d4est_ip_energy_norm_compute
     }
 
 
-  p4est_ghost_exchange_data(p4est,ghost,ghost_data);
+  d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data,u);
+  
+  /* p4est_ghost_exchange_data(p4est,ghost,ghost_data); */
 
-  int ghost_nodes = d4est_mesh_get_ghost_nodes(ghost, ghost_data);
-  double* dudr [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(dudr,
-                                                  nodes
-                                                  + ghost_nodes
-                                                 );
+  double* dudr_local [(P4EST_DIM)];
+  D4EST_ALLOC_DIM_VEC(dudr_local,nodes);
 
-
+  int ghost_nodes = d4est_mesh_get_ghost_nodes(d4est_ghost);
+  double* dudr_ghost [(P4EST_DIM)];
+  D4EST_ALLOC_DIM_VEC(dudr_ghost, ghost_nodes);
+  
   d4est_poisson_compute_dudr
     (
      p4est,
-     ghost,
-     ghost_data,
+     d4est_ghost,
+     d4est_ghost_data,
      d4est_ops,
      d4est_geom,
      d4est_quad,
      d4est_factors,
-     dudr
+     dudr_local,
+     dudr_ghost,
+     u,
+     nodes,
+     which_field
     );
   
   
@@ -391,22 +398,32 @@ d4est_ip_energy_norm_compute
   flux_data.boundary_fcn = d4est_ip_energy_norm_boundary;
   flux_data.bc_type = BC_NOT_SET;
   flux_data.flux_data = energy_norm_data;
-  flux_data.get_deg_mortar_quad = d4est_ip_energy_norm_get_deg_mortar_quad;
-  flux_data.get_deg_mortar_quad_ctx = NULL;
+  flux_data.d4est_ghost_data = d4est_ghost_data;
+  flux_data.d4est_ghost = d4est_ghost;
+  flux_data.p4est = p4est;
+  flux_data.which_field = which_field;
+  flux_data.local_nodes = nodes;
+  flux_data.u = u;
+  flux_data.Au = NULL;
+  for (int i = 0; i < (P4EST_DIM); i++){
+    flux_data.dudr_local[i] = dudr_local[i];
+    flux_data.dudr_ghost[i] = dudr_ghost[i];
+  }
+  
   
   d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(&flux_data);
   
   d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
-     ghost,
-     ghost_data,
+     d4est_ghost,
+     /* ghost_data, */
      d4est_ops,
      d4est_geom,
      d4est_quad,
      d4est_factors,
-     &flux_fcns,
-     DO_NOT_EXCHANGE_GHOST_DATA
+     &flux_fcns
+     /* DO_NOT_EXCHANGE_GHOST_DATA */
     );
 
 
@@ -415,7 +432,7 @@ d4est_ip_energy_norm_compute
   ip_energy_norm_sqr += energy_norm_data->ip_energy_norm_sqr_boundary_term;
   ip_energy_norm_sqr += energy_norm_data->ip_energy_norm_sqr_interface_term;
   return ip_energy_norm_sqr;
-
-  D4EST_FREE_DIM_VEC(dudr);
   
+  D4EST_FREE_DIM_VEC(dudr_local);  
+  D4EST_FREE_DIM_VEC(dudr_ghost);  
 }

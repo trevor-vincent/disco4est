@@ -6,53 +6,53 @@
 #include <d4est_field.h>
 #include <sc_reduce.h>
 
-static void
-d4est_element_data_copy_from_vec_to_storage_callback
-(
- p4est_iter_volume_info_t * info,
- void *user_data
-)
-{
-  p4est_quadrant_t *q = info->quad;
-  d4est_element_data_t* d4est_element_data = (d4est_element_data_t *) q->p.user_data;
-  double* u = (double*) info->p4est->user_pointer;
-  int* stride = (int*) user_data;
-  int dim = (P4EST_DIM);
-  int deg = d4est_element_data->deg;
-  int volume_nodes = d4est_lgl_get_nodes(dim,deg);
+/* static void */
+/* d4est_element_data_copy_from_vec_to_storage_callback */
+/* ( */
+/*  p4est_iter_volume_info_t * info, */
+/*  void *user_data */
+/* ) */
+/* { */
+/*   p4est_quadrant_t *q = info->quad; */
+/*   d4est_element_data_t* d4est_element_data = (d4est_element_data_t *) q->p.user_data; */
+/*   double* u = (double*) info->p4est->user_pointer; */
+/*   int* stride = (int*) user_data; */
+/*   int dim = (P4EST_DIM); */
+/*   int deg = d4est_element_data->deg; */
+/*   int volume_nodes = d4est_lgl_get_nodes(dim,deg); */
   
-  d4est_util_copy_1st_to_2nd
-    (
-     &u[*stride],
-     &(d4est_element_data->u_elem)[0],
-     volume_nodes
-    );
+/*   d4est_util_copy_1st_to_2nd */
+/*     ( */
+/*      &u[*stride], */
+/*      &(d4est_element_data->u_elem)[0], */
+/*      volume_nodes */
+/*     ); */
 
-  *stride += volume_nodes;
-}
+/*   *stride += volume_nodes; */
+/* } */
 
-void
-d4est_element_data_copy_from_vec_to_storage(
-                                             p4est_t* p4est,
-                                             double* vec
-)
-{
-  void* tmp = p4est->user_pointer;
-  p4est->user_pointer = vec;
-  int stride = 0;
+/* void */
+/* d4est_element_data_copy_from_vec_to_storage( */
+/*                                              p4est_t* p4est, */
+/*                                              double* vec */
+/* ) */
+/* { */
+/*   void* tmp = p4est->user_pointer; */
+/*   p4est->user_pointer = vec; */
+/*   int stride = 0; */
   
-  p4est_iterate(p4est,
-                NULL,
-                (void*)&stride,
-                d4est_element_data_copy_from_vec_to_storage_callback,
-                NULL,
-#if (P4EST_DIM)==3
-                NULL,       
-#endif                
-                NULL);
+/*   p4est_iterate(p4est, */
+/*                 NULL, */
+/*                 (void*)&stride, */
+/*                 d4est_element_data_copy_from_vec_to_storage_callback, */
+/*                 NULL, */
+/* #if (P4EST_DIM)==3 */
+/*                 NULL,        */
+/* #endif                 */
+/*                 NULL); */
 
-  p4est->user_pointer = tmp;
-}
+/*   p4est->user_pointer = tmp; */
+/* } */
 
 
 
@@ -60,59 +60,59 @@ d4est_element_data_copy_from_vec_to_storage(
 * WILL BE DEPRECATED EVENTUALLY
 * 
 */
-static void
-d4est_element_data_copy_from_storage_to_vec_callback
-(
- p4est_iter_volume_info_t * info,
- void *user_data
-)
-{
-  p4est_quadrant_t *q = info->quad;
-  d4est_element_data_t* d4est_element_data = (d4est_element_data_t *) q->p.user_data;
-  double* u = (double*) info->p4est->user_pointer;
-  int* stride = (int*) user_data;
+/* static void */
+/* d4est_element_data_copy_from_storage_to_vec_callback */
+/* ( */
+/*  p4est_iter_volume_info_t * info, */
+/*  void *user_data */
+/* ) */
+/* { */
+/*   p4est_quadrant_t *q = info->quad; */
+/*   d4est_element_data_t* d4est_element_data = (d4est_element_data_t *) q->p.user_data; */
+/*   double* u = (double*) info->p4est->user_pointer; */
+/*   int* stride = (int*) user_data; */
   
-  int dim = (P4EST_DIM);
-  int deg = d4est_element_data->deg;
-  int volume_nodes = d4est_lgl_get_nodes(dim,deg);
+/*   int dim = (P4EST_DIM); */
+/*   int deg = d4est_element_data->deg; */
+/*   int volume_nodes = d4est_lgl_get_nodes(dim,deg); */
   
-  d4est_util_copy_1st_to_2nd
-    (
-     &(d4est_element_data->u_elem)[0],
-     &u[*stride],
-     volume_nodes
-    );
+/*   d4est_util_copy_1st_to_2nd */
+/*     ( */
+/*      &(d4est_element_data->u_elem)[0], */
+/*      &u[*stride], */
+/*      volume_nodes */
+/*     ); */
 
-  *stride += volume_nodes;
-}
+/*   *stride += volume_nodes; */
+/* } */
 
 /**
 * WILL BE DEPRECATED EVENTUALLY
 * 
 */
-void
-d4est_element_data_copy_from_storage_to_vec
-(
- p4est_t* p4est,
- double* vec
-)
-{
-  void* tmp = p4est->user_pointer;
-  p4est->user_pointer = vec;
-  int stride = 0;
+/* void */
+/* d4est_element_data_copy_from_storage_to_vec */
+/* ( */
+/*  p4est_t* p4est, */
+/*  double* vec */
+/* ) */
+/* { */
+/*   void* tmp = p4est->user_pointer; */
+/*   p4est->user_pointer = vec; */
+/*   int stride = 0; */
   
-  p4est_iterate(p4est,
-                NULL,
-                (void*)&stride,
-                d4est_element_data_copy_from_storage_to_vec_callback,
-                NULL,
-#if (P4EST_DIM)==3
-                NULL,       
-#endif                
-                NULL);
+/*   p4est_iterate(p4est, */
+/*                 NULL, */
+/*                 (void*)&stride, */
+/*                 d4est_element_data_copy_from_storage_to_vec_callback, */
+/*                 NULL, */
+/* #if (P4EST_DIM)==3 */
+/*                 NULL,        */
+/* #endif                 */
+/*                 NULL); */
 
-  p4est->user_pointer = tmp;
-}
+/*   p4est->user_pointer = tmp; */
+/* } */
 
 
 /**

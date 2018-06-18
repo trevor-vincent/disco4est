@@ -3,7 +3,7 @@
 #include <d4est_element_data.h>
 #include <string.h>
 
-#define D4EST_GHOST_DATA_DEBUG
+//#define D4EST_GHOST_DATA_DEBUG
 
 static void
 d4est_ghost_data_compute_ids_and_strides
@@ -130,6 +130,7 @@ d4est_ghost_data_destroy
   d4est_ghost_data->num_vecs = -1;
   
   D4EST_FREE(d4est_ghost_data);
+  d4est_ghost_data = NULL;
 }
 
 

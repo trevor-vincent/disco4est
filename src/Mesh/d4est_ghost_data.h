@@ -12,7 +12,7 @@ typedef struct {
   int* transfer_strides;
   
   int* ghost_data_sizes;  
-  int receive_size;
+  int receive_size; /* total ghost nodes over all num_vecs */
   int** receive_strides;
   double* receive_data;  
 

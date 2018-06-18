@@ -587,8 +587,8 @@ void
 d4est_amr_step
 (
  p4est_t* p4est,
- p4est_ghost_t** ghost,
- d4est_element_data_t** ghost_data,
+ d4est_ghost_t** d4est_ghost,
+ d4est_ghost_data_t** d4est_ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_amr_t* d4est_amr,
  double** field,
@@ -638,12 +638,18 @@ d4est_amr_step
   
   p4est->user_pointer = backup;
 
-  p4est_ghost_destroy(*ghost);
-  P4EST_FREE(*ghost_data);
-  *ghost = NULL;
-  *ghost_data = NULL;
-  *ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE);
-  *ghost_data = P4EST_ALLOC(d4est_element_data_t, (*ghost)->ghosts.elem_count);
+
+  /* d4est_ghost_destroy(*d4est_ghost); */
+  /* *d4est_ghost = NULL; */
+
+  /* *d4est_ghost = d4est_ghost_init(p4est); */
+  /* *d4est_ghost_data = NULL; */
+  /* p4est_ghost_destroy(*ghost); */
+  /* P4EST_FREE(*ghost_data); */
+  /* *ghost = NULL; */
+  /* *ghost_data = NULL; */
+  /* *ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE); */
+  /* *ghost_data = P4EST_ALLOC(d4est_element_data_t, (*ghost)->ghosts.elem_count); */
 }
 
 void

@@ -14,4 +14,6 @@ d4est_elliptic_data_copy_ptrs
   pd2->local_nodes = pd1->local_nodes;
   pd2->mpi_rank = pd1->mpi_rank;
   pd2->user = pd1->user;
+  pd2->field_types = pd1->field_types;
+  pd2->num_of_fields = pd1->num_of_fields;
 }

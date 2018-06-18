@@ -17,8 +17,8 @@ multigrid_smoother_krylov_petsc
   d4est_operators_t* d4est_ops = mg_data->d4est_ops;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   krylov_petsc_params_t* params = mg_data->smoother->user;
-  p4est_ghost_t** ghost = (updater->ghost);
-  d4est_element_data_t** ghost_data = updater->ghost_data;
+  d4est_ghost_t** ghost = (updater->d4est_ghost);
+  d4est_ghost_data_t** ghost_data = updater->d4est_ghost_data;
 
   krylov_petsc_solve(p4est,
                      vecs,

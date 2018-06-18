@@ -4,15 +4,9 @@
 #include <pXest.h>
 #include <d4est_xyz_functions.h>
 #include <d4est_operators.h>
-#include <d4est_quadrature.h>
 #include <d4est_field.h>
 
-#define MAX_DEGREE 8
-#if (P4EST_DIM) == 3
-#define MAX_NODES (MAX_DEGREE + 1) * (MAX_DEGREE + 1) * (MAX_DEGREE + 1)
-#else
-#define MAX_NODES (MAX_DEGREE + 1) * (MAX_DEGREE + 1)
-#endif
+#define MAX_NODES 729
 
 typedef struct {
 
@@ -35,25 +29,12 @@ typedef struct {
   p4est_qcoord_t q [(P4EST_DIM)];
   p4est_qcoord_t dq;
   
-  /* WILL BE DEPRECATED SOON */
-  double u_elem[MAX_NODES];   /* storage for MPI transfers */
-
 #ifdef D4EST_TEST
   double test_vecs[3][MAX_NODES];
 #endif
 
-  double* dudr_elem[(P4EST_DIM)];   /* alias for dudr */
-  double* Au_elem;  /* alias for Au */
-  
   int deg; /* nodal degree */
   int deg_quad; /* deg for quadrature */
-
-  /* different element size parameters */
-  /* double j_div_sj_min [(P4EST_FACES)]; */
-  /* double diam_face [(P4EST_FACES)]; */
-  /* double diam_volume; */
-  /* double area [(P4EST_FACES)]; */
-  /* double volume; */
   
 } d4est_element_data_t;
 
