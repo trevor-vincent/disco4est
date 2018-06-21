@@ -1,0 +1,117 @@
+[initial_mesh]
+min_quadrants = -1
+min_level = 1
+fill_uniform = 1
+region0_deg = 2
+region0_deg_quad_inc = 0
+region1_deg = 2
+region1_deg_quad_inc = 0
+region2_deg = 2
+region2_deg_quad_inc = 0
+
+[mesh_parameters]
+face_h_type = FACE_H_EQ_J_DIV_SJ_QUAD
+volume_h_type = VOL_H_EQ_DIAM
+
+
+[problem]
+use_dirichlet = 1
+cg_eig_its = 30
+pow_eig_its = 30
+
+[flux]
+name = sipg
+sipg_penalty_prefactor = 1.1
+; sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO
+sipg_flux_h = H_EQ_J_DIV_SJ_QUAD
+sipg_penalty_fcn = maxp_sqr_over_minh
+
+[amr]
+scheme = uniform_h
+num_of_amr_steps = 0
+max_degree = 7
+
+[geometry]
+name = cubed_sphere_outer_wedge
+R1 = 5
+R2 = 1000
+compactify_outer_shell = 1
+compactify_inner_shell = 0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+
+; [geometry]
+; name = cubed_sphere
+; R0 = .3
+; R1 = .6
+; R2 = .9
+; compactify_outer_shell = 0
+; compactify_inner_shell = 0
+; DX_compute_method = analytic
+; JAC_compute_method = numerical
+
+[d4est_vtk]
+filename = poisson_sinx_uniform
+geometry_section = geometry
+output_type = ascii
+grid_type = dg
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
+[quadrature]
+name = legendre
+
+[krylov_petsc]
+ksp_type = fcg
+ksp_atol = 5e-15
+ksp_rtol = 1e-20
+ksp_max_it = 10000
+ksp_view = 0
+ksp_monitor = 1
+ksp_converged_reason = 1
+ksp_initial_guess_nonzero = 0
+ksp_monitor_singular_value = 0
+ksp_do_not_use_preconditioner = 0
+
+[multigrid]
+vcycle_imax = 1;
+vcycle_rtol = 1e-15;
+vcycle_atol = 0.;
+smoother_name = mg_smoother_cheby
+bottom_solver_name = mg_bottom_solver_cg_d4est
+
+[mg_bottom_solver_cg_d4est]
+bottom_iter = 100;
+bottom_rtol = 1e-10;
+bottom_atol = 0.;
+bottom_print_residual_norm = 0;
+
+[mg_smoother_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 30;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eigs = 0;
+
+[mg_bottom_solver_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 30;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 0;
+cheby_print_eig = 0;
+
+[d4est_solver_cg]
+iter = 100000
+atol = 1e-15
+rtol = 1e-15
+monitor = 1

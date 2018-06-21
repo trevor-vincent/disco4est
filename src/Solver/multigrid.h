@@ -154,7 +154,13 @@ typedef struct {
   d4est_mesh_initial_extents_t* initial_extents;
   
   /* alias to currently used geometric factors, points to an element of geometric_factors above */
-  d4est_mesh_data_t* current_geometric_factors;
+  d4est_mesh_data_t* current_d4est_factors;
+  d4est_ghost_t* current_d4est_ghost;
+  d4est_ghost_data_t* current_d4est_ghost_data;
+
+  /* set to 0 initially, set to 1 after factors, ghost, and ghost data have
+   * been allocated for the hiearchy */
+  int completed_alloc;
   
   void(*element_data_init_user_fcn)(d4est_element_data_t*,void*);
   void* user;
@@ -231,7 +237,7 @@ struct multigrid_data_t {
   double power_imin;
 
   /* if multigrid is being used as a preconditioner, keep track of pc updates */
-  int krylov_pc_updates;
+  int linear_operator_updates;
   
 };
 

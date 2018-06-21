@@ -116,7 +116,7 @@ multigrid_smoother_cheby_iterate
      mg_data->d4est_ops,
      mg_data->d4est_geom,
      mg_data->d4est_quad,
-     updater->current_geometric_factors
+     updater->current_d4est_factors
     );
   
     d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
@@ -151,7 +151,7 @@ multigrid_smoother_cheby_iterate
      mg_data->d4est_ops,
      mg_data->d4est_geom,
      mg_data->d4est_quad,
-     updater->current_geometric_factors
+     updater->current_d4est_factors
     );
   
   d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
@@ -234,7 +234,7 @@ multigrid_smoother_cheby
          mg_data->d4est_ops,
          mg_data->d4est_geom,
          mg_data->d4est_quad,
-         updater->current_geometric_factors,
+         updater->current_d4est_factors,
          cheby->cheby_eigs_cg_imax,
          cheby->cheby_print_spectral_bound_iterations, 
          &cheby->eigs[level]

@@ -32,7 +32,7 @@ multigrid_element_data_updater_init
   
   updater->geometric_factors[num_of_levels-1] = d4est_mesh_data_toplevel;
 
-  updater->current_geometric_factors = updater->geometric_factors[num_of_levels-1];
+  updater->current_d4est_factors = updater->geometric_factors[num_of_levels-1];
   updater->initial_extents = initial_extents;
 
   
@@ -61,7 +61,7 @@ multigrid_element_data_updater_destroy
     d4est_mesh_data_destroy(updater->geometric_factors[level]);
   }
 
-  updater->current_geometric_factors = NULL;
+  updater->current_d4est_factors = NULL;
   
   P4EST_FREE(updater->geometric_factors);
   P4EST_FREE(updater);
@@ -101,26 +101,44 @@ multigrid_element_data_updater_update
     int compute_geometric_factors = (updater->geometric_factors[level - 1] == NULL);
     if (compute_geometric_factors) {
       updater->geometric_factors[level-1] = d4est_mesh_data_init();
+
+      d4est_mesh_update
+        (
+         p4est,
+         (updater->d4est_ghost),
+         mg_data->d4est_ops,
+         mg_data->d4est_geom,
+         mg_data->d4est_quad,
+         updater->geometric_factors[level - 1],
+         updater->initial_extents,
+         INITIALIZE_GHOST,
+         INITIALIZE_QUADRATURE_DATA,
+         /* (compute_geometric_factors == 1) ? INITIALIZE_GEOMETRY_DATA : DO_NOT_INITIALIZE_GEOMETRY_DATA, */
+         INITIALIZE_GEOMETRY_DATA,
+         INITIALIZE_GEOMETRY_ALIASES,
+         updater->element_data_init_user_fcn,
+         updater->user    
+        );
     }
-
-
-   d4est_mesh_update
-      (
-       p4est,
-       (updater->d4est_ghost),
-       mg_data->d4est_ops,
-       mg_data->d4est_geom,
-       mg_data->d4est_quad,
-       updater->geometric_factors[level - 1],
-       updater->initial_extents,
-       INITIALIZE_GHOST,
-       INITIALIZE_QUADRATURE_DATA,
-       /* (compute_geometric_factors == 1) ? INITIALIZE_GEOMETRY_DATA : DO_NOT_INITIALIZE_GEOMETRY_DATA, */
-       INITIALIZE_GEOMETRY_DATA,
-       INITIALIZE_GEOMETRY_ALIASES,
-       updater->element_data_init_user_fcn,
-       updater->user    
-      );
+    else {
+      d4est_mesh_update
+        (
+         p4est,
+         (updater->d4est_ghost),
+         mg_data->d4est_ops,
+         mg_data->d4est_geom,
+         mg_data->d4est_quad,
+         updater->geometric_factors[level - 1],
+         updater->initial_extents,
+         INITIALIZE_GHOST,
+         INITIALIZE_QUADRATURE_DATA,
+         /* (compute_geometric_factors == 1) ? INITIALIZE_GEOMETRY_DATA : DO_NOT_INITIALIZE_GEOMETRY_DATA, */
+         DO_NOT_INITIALIZE_GEOMETRY_DATA,
+         INITIALIZE_GEOMETRY_ALIASES,
+         updater->element_data_init_user_fcn,
+         updater->user    
+        );
+    }
    
     if (*(updater->d4est_ghost_data) != NULL){
       d4est_ghost_data_destroy(*updater->d4est_ghost_data);
@@ -133,8 +151,7 @@ multigrid_element_data_updater_update
                                                       vecs->num_of_fields);
 
     
-
-    updater->current_geometric_factors = updater->geometric_factors[level-1];
+    updater->current_d4est_factors = updater->geometric_factors[level-1];
   }
   else if (mg_data->mg_state == UPV_POST_REFINE){    
 
@@ -168,7 +185,7 @@ multigrid_element_data_updater_update
                                                       vecs->field_types,
                                                       vecs->num_of_fields);
     
-    updater->current_geometric_factors = updater->geometric_factors[level+1];
+    updater->current_d4est_factors = updater->geometric_factors[level+1];
        
   }
   else {

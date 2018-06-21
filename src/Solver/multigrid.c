@@ -369,7 +369,7 @@ multigrid_data_init
   mg_data->power_rtol = -1;
   mg_data->power_imax = -1;
   mg_data->power_imin = -1;
-  mg_data->krylov_pc_updates = 0;
+  mg_data->linear_operator_updates = 0;
   mg_data->use_power_method_debug = 0;
   mg_data->num_of_p_coarsen_levels = 0;
   mg_data->use_p_coarsen = 0;
@@ -645,7 +645,7 @@ multigrid_vcycle
          mg_data->d4est_ops,
          mg_data->d4est_geom,
          mg_data->d4est_quad,
-         updater->current_geometric_factors,
+         updater->current_d4est_factors,
          mg_data->power_atol,
          mg_data->power_rtol,
          mg_data->power_imax,
@@ -975,7 +975,7 @@ multigrid_vcycle
          mg_data->d4est_ops,
          mg_data->d4est_geom,
          mg_data->d4est_quad,
-         updater->current_geometric_factors,
+         updater->current_d4est_factors,
          mg_data->power_atol,
          mg_data->power_rtol,
          mg_data->power_imax,
@@ -1061,7 +1061,7 @@ multigrid_compute_residual
        mg_data->d4est_ops,
        mg_data->d4est_geom,
        mg_data->d4est_quad,
-       updater->current_geometric_factors
+       updater->current_d4est_factors
       );
 
     

@@ -17,7 +17,7 @@ multigrid_matrix_operator_restriction_callback
   d4est_operators_t* d4est_ops = mg_data->d4est_ops;
   multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
-  if (mg_data->krylov_pc_updates == matrix_op->krylov_pc_updates + 1){
+  if (mg_data->linear_operator_updates == matrix_op->linear_operator_updates + 1){
     int* fine_matrix_stride = &matrix_op->fine_matrix_stride;
     int* coarse_matrix_stride = &matrix_op->coarse_matrix_stride;
     int fine_matrix_nodes = matrix_op->fine_matrix_nodes;
@@ -108,17 +108,17 @@ multigrid_matrix_operator_update_callback
   }
   else if(mg_data->mg_state == POST_V){
     matrix_op->completed_alloc = 1;
-    if (mg_data->krylov_pc_updates == matrix_op->krylov_pc_updates + 1){
-      matrix_op->krylov_pc_updates++;
+    if (mg_data->linear_operator_updates == matrix_op->linear_operator_updates + 1){
+      matrix_op->linear_operator_updates++;
     }
-    else if (mg_data->krylov_pc_updates == matrix_op->krylov_pc_updates){
+    else if (mg_data->linear_operator_updates == matrix_op->linear_operator_updates){
       return;
     }
     else {
       zlog_category_t *c_def = zlog_get_category("multigrid_matrix_operator");
-      zlog_info(c_def, "mg_data->krylov_pc_updates = %d\n",mg_data->krylov_pc_updates);
-      zlog_info(c_def, "matrix_op->krylov_pc_updates = %d\n",matrix_op->krylov_pc_updates);
-      D4EST_ABORT("not good values for krylov_pc_updates" );
+      zlog_info(c_def, "mg_data->linear_operator_updates = %d\n",mg_data->linear_operator_updates);
+      zlog_info(c_def, "matrix_op->linear_operator_updates = %d\n",matrix_op->linear_operator_updates);
+      D4EST_ABORT("not good values for linear_operator_updates" );
     }
   }
   else {
@@ -147,7 +147,7 @@ multigrid_matrix_operator_init
   matrix_op->fine_matrix_stride = -1;
   matrix_op->coarse_matrix_stride = -1;
   matrix_op->matrix = matrix_op->matrix_at0;
-  matrix_op->krylov_pc_updates = -1;
+  matrix_op->linear_operator_updates = -1;
 
   multigrid_user_callbacks_t* user_callbacks = P4EST_ALLOC(multigrid_user_callbacks_t, 1);
 

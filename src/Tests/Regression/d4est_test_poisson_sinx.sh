@@ -6,15 +6,15 @@ RES=$(cat disco4est.out | grep -c "64 512 512 0.0426895934625")
 rm poisson_sinx_options.input
 if [ $RES -ne "1" ]; then
     echo "Test Fail"
-    echo "****************** CDS REGRESSION TEST OUTPUT BEGIN *****************"
-    echo "****************** CDS REGRESSION TEST OUTPUT BEGIN *****************"
-    echo "****************** CDS REGRESSION TEST OUTPUT BEGIN *****************"
-    echo "****************** CDS REGRESSION TEST OUTPUT BEGIN *****************"
+    echo "****************** POISSON SINX REGRESSION TEST OUTPUT BEGIN *****************"
+    echo "****************** POISSON SINX REGRESSION TEST OUTPUT BEGIN *****************"
+    echo "****************** POISSON SINX REGRESSION TEST OUTPUT BEGIN *****************"
+    echo "****************** POISSON SINX REGRESSION TEST OUTPUT BEGIN *****************"
     cat disco4est.out
-    echo "****************** CDS REGRESSION TEST OUTPUT END *****************"
-    echo "****************** CDS REGRESSION TEST OUTPUT END *****************"
-    echo "****************** CDS REGRESSION TEST OUTPUT END *****************"
-    echo "****************** CDS REGRESSION TEST OUTPUT END *****************"
+    echo "****************** POISSON SINX REGRESSION TEST OUTPUT END *****************"
+    echo "****************** POISSON SINX REGRESSION TEST OUTPUT END *****************"
+    echo "****************** POISSON SINX REGRESSION TEST OUTPUT END *****************"
+    echo "****************** POISSON SINX REGRESSION TEST OUTPUT END *****************"
     rm disco4est.out
     exit 1
 else

@@ -28,7 +28,7 @@ multigrid_smoother_krylov_petsc
                      mg_data->d4est_ops,
                      mg_data->d4est_geom,
                      mg_data->d4est_quad,
-                     updater->current_geometric_factors,
+                     updater->current_d4est_factors,
                      params,
                      NULL);
 
@@ -48,7 +48,7 @@ multigrid_smoother_krylov_petsc
      mg_data->d4est_ops,
      mg_data->d4est_geom,
      mg_data->d4est_quad,
-     updater->current_geometric_factors
+     updater->current_d4est_factors
     );
 
 
