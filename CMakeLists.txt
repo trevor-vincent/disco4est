@@ -317,7 +317,7 @@ add_d4est_problem_2d(stamm_driver stamm_multigrid_pc.c Stamm)
 add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c Poisson)
 # add_d4est_problem_3d(poisson_sinx_uniform_debug_driver poisson_sinx_uniform_debug.c Poisson)
 add_d4est_problem_3d(poisson_sinx_multigrid_driver poisson_sinx_multigrid.c Poisson)
-# add_d4est_problem_3d(poisson_lorentzian_multigrid_driver poisson_lorentzian_multigrid.c Poisson)
+add_d4est_problem_3d(poisson_lorentzian_multigrid_driver poisson_lorentzian_multigrid.c Poisson)
 # add_d4est_problem_3d(poisson_lorentzian_cg_driver poisson_lorentzian_cg.c Poisson)
 # add_d4est_problem_3d(poisson_lorentzian_eigs_driver poisson_lorentzian_eigs.c Poisson)
 

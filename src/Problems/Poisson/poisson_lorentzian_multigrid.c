@@ -30,60 +30,11 @@
 #include <zlog.h>
 #include "poisson_lorentzian_fcns.h"
 
-
-typedef struct {
-  
-  int use_dirichlet;
-  
-} poisson_lorentzian_init_params_t;
-
-
-
-static
-int poisson_lorentzian_init_params_handler
-(
- void* user,
- const char* section,
- const char* name,
- const char* value
-)
-{
-  poisson_lorentzian_init_params_t* pconfig = (poisson_lorentzian_init_params_t*)user;
-  if (d4est_util_match_couple(section,"problem",name,"use_dirichlet")) {
-    D4EST_ASSERT(pconfig->use_dirichlet == -1);
-    pconfig->use_dirichlet = atoi(value);
-  }
-  else {
-    return 0;  /* unknown section/name, error */
-  }
-  return 1;
-}
-
-static
-poisson_lorentzian_init_params_t
-poisson_lorentzian_init_params_input
-(
- const char* input_file
-)
-{
-  poisson_lorentzian_init_params_t input;
-  input.use_dirichlet = -1;
-
-  if (ini_parse(input_file, poisson_lorentzian_init_params_handler, &input) < 0) {
-    D4EST_ABORT("Can't load input file");
-  }
-
-  D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
-  
-  return input;
-}
-
 void
 problem_init
 (
  p4est_t* p4est,
- p4est_ghost_t** ghost,
- d4est_element_data_t** ghost_data,
+ d4est_ghost_t** d4est_ghost,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -96,51 +47,25 @@ problem_init
   zlog_category_t *c_default = zlog_get_category("problem");
 
   int initial_nodes = initial_extents->initial_nodes;
-
-
-
-  poisson_lorentzian_init_params_t init_params = poisson_lorentzian_init_params_input
-                                            (
-                                             input_file
-                                            ); 
-
   
   dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
   
   // Setup boundary conditions
-
-  d4est_poisson_robin_bc_t bc_data_robin_for_lhs;
-  bc_data_robin_for_lhs.robin_coeff = poisson_lorentzian_robin_coeff_fcn;
-  bc_data_robin_for_lhs.robin_rhs = poisson_lorentzian_robin_bc_rhs_fcn;
+  d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
+  bc_data_for_lhs.dirichlet_fcn = zero_fcn;
+  bc_data_for_lhs.eval_method = eval_method;
   
-  d4est_poisson_dirichlet_bc_t bc_data_dirichlet_for_lhs;
-  bc_data_dirichlet_for_lhs.dirichlet_fcn = zero_fcn;
-  bc_data_dirichlet_for_lhs.eval_method = eval_method;
+  d4est_poisson_dirichlet_bc_t bc_data_for_rhs;
+  bc_data_for_rhs.dirichlet_fcn = poisson_lorentzian_boundary_fcn;
+  bc_data_for_rhs.eval_method = eval_method;
   
-  d4est_poisson_dirichlet_bc_t bc_data_dirichlet_for_rhs;
-  bc_data_dirichlet_for_rhs.dirichlet_fcn = poisson_lorentzian_boundary_fcn;
-  bc_data_dirichlet_for_rhs.eval_method = eval_method;
+  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs);
   
-  d4est_poisson_flux_data_t* flux_data_for_lhs = NULL;//d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_lhs);
-  
-  d4est_poisson_flux_data_t* flux_data_for_rhs = NULL;//d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
-
-  if(init_params.use_dirichlet){
-    flux_data_for_lhs
-      = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_lhs);
-  
-    flux_data_for_rhs
-      = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
-  }
-  else {  
-    flux_data_for_lhs = d4est_poisson_flux_new(p4est, input_file, BC_ROBIN, &bc_data_robin_for_lhs);
-    flux_data_for_rhs = d4est_poisson_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_robin_for_lhs);
-  }
-  
+  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_rhs);
 
   problem_ctx_t ctx;
-  ctx.flux_data_for_apply_lhs = flux_data_for_lhs;
-  ctx.flux_data_for_build_rhs = flux_data_for_rhs;
+  ctx.flux_data_for_apply_lhs = flux_data_for_apply_lhs;
+  ctx.flux_data_for_build_rhs = flux_data_for_build_rhs;
 
 
   d4est_elliptic_eqns_t prob_fcns;
@@ -155,11 +80,10 @@ problem_init
   prob_vecs.rhs = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.local_nodes = initial_nodes;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_lhs->flux_data;
+  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
   
   
   // Setup norm function contexts
-  
   d4est_norms_fcn_L2_ctx_t L2_norm_ctx;
   L2_norm_ctx.p4est = p4est;
   L2_norm_ctx.d4est_ops = d4est_ops;
@@ -196,90 +120,128 @@ problem_init
     INIT_FIELD_ON_LOBATTO,
     NULL
   );
-    
-  d4est_poisson_build_rhs_with_strong_bc(
-    p4est,
-    *ghost,
-    *ghost_data,
-    d4est_ops,
-    d4est_geom,
-    d4est_quad,
-    d4est_factors,
-    &prob_vecs,
-    flux_data_for_rhs,
-    prob_vecs.rhs,
-    poisson_lorentzian_rhs_fcn,
-    INIT_FIELD_ON_LOBATTO,
-    &ctx
-  );
 
+  d4est_field_type_t field_type = VOLUME_NODAL;
+
+  
+  /* d4est_poisson_build_rhs_with_strong_bc( */
+  /*   p4est, */
+  /*   *d4est_ghost, */
+  /*   d4est_ghost_data, */
+  /*   d4est_ops, */
+  /*   d4est_geom, */
+  /*   d4est_quad, */
+  /*   d4est_factors, */
+  /*   &prob_vecs, */
+  /*   flux_data_for_build_rhs, */
+  /*   prob_vecs.rhs, */
+  /*   poisson_lorentzian_rhs_fcn, */
+  /*   INIT_FIELD_ON_LOBATTO, */
+  /*   &ctx, */
+  /*   0 */
+  /* ); */
 
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; level++) {
 
+
+    d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
+                                                                 *d4est_ghost,
+                                                                 &field_type,
+                                                                 1);
+
+
+    
+    d4est_poisson_build_rhs_with_strong_bc(
+      p4est,
+      *d4est_ghost,
+      d4est_ghost_data,
+      d4est_ops,
+      d4est_geom,
+      d4est_quad,
+      d4est_factors,
+      &prob_vecs,
+      flux_data_for_build_rhs,
+      prob_vecs.rhs,
+      poisson_lorentzian_rhs_fcn,
+      INIT_FIELD_ON_LOBATTO,
+      &ctx,
+      0
+    );
+
+    /* int cg_its = 30; */
+    /* int pow_its = 1000; */
+   
+    /* double eig_power = */
+    /*   d4est_power_method */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    &prob_fcns, */
+    /*    *ghost, */
+    /*    ghost_data, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*    d4est_factors, */
+    /*    init_params.pow_eig_its */
+    /*   ); */
+
+  
+    /* double eig_cg; */
+    /* cg_eigs */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    &prob_fcns, */
+    /*    *ghost, */
+    /*    ghost_data, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*    d4est_factors, */
+    /*    init_params.cg_eig_its, */
+    /*    &eig_cg */
+    /*   ); */
+      
+
+    /*   printf("eig_power = %.15f after %d its, eig_cg = %.15f after %d its\n", eig_power, init_params.pow_eig_its, eig_cg, init_params.cg_eig_its); */
+    
     // Setup multigrid
     krylov_pc_t* pc = NULL;
-
     multigrid_data_t* mg_data = multigrid_data_init(
       p4est,
       d4est_ops,
       d4est_geom,
       d4est_quad,
-      ghost,
-      ghost_data,
+      d4est_ghost,
+      &d4est_ghost_data,
       d4est_factors,
       initial_extents,
       input_file
     );
 
-
-
-
-    /* multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init( */
-    /*                                                                                 mg_data->num_of_levels, */
-    /*                                                                                 ghost, */
-    /*                                                                                 ghost_data, */
-    /*                                                                                 d4est_factors, */
-    /*                                                                                 d4est_mesh_set_quadratures_after_amr, */
-    /*                                                                                 initial_extents */
-    /* ); */
-
-    
-    /* multigrid_set_user_callbacks( */
-                            /* mg_data, */
-                            /* logger, */
-                            /* NULL, */
-                            /* updater */
-    /* ); */
-    
-    
-    /* multigrid_solve */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs, */
-    /*    &prob_fcns, */
-    /*    mg_data */
-    /*   ); */
-      
     pc = krylov_pc_multigrid_create(mg_data, NULL);
-
 
     // Krylov PETSc solve
     
     krylov_petsc_params_t krylov_petsc_params;
     krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_petsc_params);
-    
+
+    prob_vecs.field_types = &field_type;
+    prob_vecs.num_of_fields = 1;
+      
     krylov_petsc_solve(
       p4est,
       &prob_vecs,
       &prob_fcns,
-      ghost,
-      ghost_data,
+      d4est_ghost,
+      &d4est_ghost_data,
       d4est_ops,
       d4est_geom,
       d4est_quad,
       d4est_factors,
       &krylov_petsc_params,
-      (mg_data->num_of_levels == 1) ? NULL : pc
+      pc
     );
 
 
@@ -377,8 +339,8 @@ problem_init
 
       d4est_amr_step(
         p4est,
-        ghost,
-        ghost_data,
+        NULL,
+        NULL,
         d4est_ops,
         d4est_amr,
         &prob_vecs.u,
@@ -391,14 +353,16 @@ problem_init
     }
 
 
-    prob_vecs.local_nodes = d4est_mesh_update(
+
+    d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update(
       p4est,
-      *ghost,
-      *ghost_data,
+      d4est_ghost,
       d4est_ops,
       d4est_geom,
       d4est_quad,
       d4est_factors,
+      initial_extents,
+      INITIALIZE_GHOST,
       INITIALIZE_QUADRATURE_DATA,
       INITIALIZE_GEOMETRY_DATA,
       INITIALIZE_GEOMETRY_ALIASES,
@@ -406,33 +370,29 @@ problem_init
       initial_extents
     );
 
+    prob_vecs.local_nodes = local_sizes.local_nodes;
+      
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
     prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, prob_vecs.local_nodes);
     
+    krylov_pc_multigrid_destroy(pc);
+    multigrid_data_destroy(mg_data);
+
+    if (d4est_ghost_data != NULL){
+      d4est_ghost_data_destroy(d4est_ghost_data);
+      d4est_ghost_data = NULL;
+    } 
+
+
     
-    d4est_poisson_build_rhs_with_strong_bc(
-      p4est,
-      *ghost,
-      *ghost_data,
-      d4est_ops,
-      d4est_geom,
-      d4est_quad,
-      d4est_factors,
-      &prob_vecs,
-      flux_data_for_rhs,
-      prob_vecs.rhs,
-      poisson_lorentzian_rhs_fcn,
-      INIT_FIELD_ON_LOBATTO,
-      &ctx
-    );
   }
 
   if (p4est->mpirank == 0)
     zlog_info(c_default, "Finishing up. Starting garbage collection...");
     
   d4est_amr_destroy(d4est_amr);
-  d4est_poisson_flux_destroy(flux_data_for_lhs);
-  d4est_poisson_flux_destroy(flux_data_for_rhs);
+  d4est_poisson_flux_destroy(flux_data_for_apply_lhs);
+  d4est_poisson_flux_destroy(flux_data_for_build_rhs);
   P4EST_FREE(prob_vecs.u);
   P4EST_FREE(prob_vecs.Au);
   P4EST_FREE(prob_vecs.rhs);
