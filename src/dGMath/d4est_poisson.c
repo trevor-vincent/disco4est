@@ -24,7 +24,7 @@ void
  d4est_mesh_data_t* d4est_factors,
  d4est_elliptic_data_t* prob_vecs,
  d4est_poisson_flux_data_t* flux_fcn_data_for_build_rhs,
- double* rhs,
+ double * restrict  rhs,
  d4est_xyz_fcn_t problem_rhs_fcn,
  d4est_mesh_init_field_option_t init_option,
  void* ctx,
@@ -160,8 +160,8 @@ d4est_poisson_apply_stiffness_matrix
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- double* u,
- double* Au,
+ double * restrict  u,
+ double * restrict  Au,
  int local_nodes,
  int which_field
 )
@@ -231,7 +231,7 @@ d4est_poisson_compute_dudr
  d4est_mesh_data_t* d4est_factors,
  double* dudr_local [(P4EST_DIM)],
  double* dudr_ghost [(P4EST_DIM)],
- double* u,
+ double * restrict  u,
  int local_nodes,
  int which_field
 ){

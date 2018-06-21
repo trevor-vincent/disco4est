@@ -54,7 +54,7 @@ void d4est_util_make_directory(const char* dir, int add_cwd_to_dir)
 }
 
 void
-d4est_util_fill_array (double *v, double val, int N)
+d4est_util_fill_array (double * restrict v, double val, int N)
 {
   int                 i;
   for (i = 0; i < N; i++)
@@ -62,12 +62,12 @@ d4est_util_fill_array (double *v, double val, int N)
 }
 
 void
-d4est_util_zero_array (double *v, int N)
+d4est_util_zero_array (double * restrict v, int N)
 {
   d4est_util_fill_array(v, 0., N);
 }
 
-int d4est_util_compact(double *array, int size)
+int d4est_util_compact(double * restrict array, int size)
 {
   int i;
   int last = 0;
@@ -82,7 +82,7 @@ int d4est_util_compact(double *array, int size)
   return(last + 1);
 }
 
-int d4est_util_compact_1st_alongwith_2nd(double *array, double* array2, int size)
+int d4est_util_compact_1st_alongwith_2nd(double * restrict array, double * restrict  restrict  array2, int size)
 {
   int i;
   int last = 0;
@@ -124,7 +124,7 @@ d4est_util_max_int(int a, int b)
 }
 
 void
-d4est_util_eye(double* eye, int N){
+d4est_util_eye(double * restrict  eye, int N){
   memset(eye, 0., sizeof(double)*N*N);
   int i;
   for (i = 0; i < N; i++) {
@@ -185,7 +185,7 @@ d4est_util_compare_double(double a, double b, double eps){
 }
 
 int
-d4est_util_compare_vecs(double* a, double*b, int N, double eps){
+d4est_util_compare_vecs(double * restrict  a, double * restrict b, int N, double eps){
   int i;
   for (i = 0; i < N; i++) {
     if(!d4est_util_compare_double(a[i],b[i],eps)){
@@ -200,8 +200,8 @@ d4est_util_compare_vecs(double* a, double*b, int N, double eps){
 void
 d4est_util_find_biggest_error
 (
- double* a,
- double* b,
+ double * restrict  a,
+ double * restrict  b,
  int N,
  double* biggest_err,
  int* biggest_id
@@ -219,7 +219,7 @@ d4est_util_find_biggest_error
 
 
 void 
-d4est_util_print_3d_matrix(double* mat_3d, int n, int m, int l, char message [], int print_rank){
+d4est_util_print_3d_matrix(double * restrict  mat_3d, int n, int m, int l, char message [], int print_rank){
   int mpiret,mpirank,i,j,slice;
   if (print_rank){
     mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
@@ -238,7 +238,7 @@ d4est_util_print_3d_matrix(double* mat_3d, int n, int m, int l, char message [],
 }
 
 void
-d4est_util_print_matrix(double* mat, int n, int m, char message [], int print_rank){
+d4est_util_print_matrix(double * restrict  mat, int n, int m, char message [], int print_rank){
   int mpiret,mpirank,i,j;
   if (print_rank){
     mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
@@ -273,7 +273,7 @@ d4est_util_print_matrix_int(int* mat, int n, int m, char message [], int print_r
 
 
 void
-d4est_util_print_matrices(double* mat, double* mat2, int n, int m, char message [])
+d4est_util_print_matrices(double * restrict  mat, double * restrict  mat2, int n, int m, char message [])
 {
   int i,j;
   printf("%s\n",message);
@@ -286,7 +286,7 @@ d4est_util_print_matrices(double* mat, double* mat2, int n, int m, char message 
 }
 
 void
-d4est_util_print_matrix_for_code(double* mat, int n, int m, char name []){
+d4est_util_print_matrix_for_code(double * restrict  mat, int n, int m, char name []){
   int i;
   printf("\n\n/* BEGIN %s */\n", name); 
   printf("/* %s is %d by %d */\n\n", name, n, m);
@@ -305,7 +305,7 @@ d4est_util_print_matrix_for_code(double* mat, int n, int m, char name []){
 
 
 void
-d4est_util_print_matrix_for_mathematica(double* mat, int n, int m, const char* name){
+d4est_util_print_matrix_for_mathematica(double * restrict  mat, int n, int m, const char* name){
   printf("\n\n%s = {", name);
   for (int i = 0; i < n; i++){
     printf("{");
@@ -353,7 +353,7 @@ d4est_util_uniform_rand_int(long int seed, int a, int b){
 }
 
 double
-d4est_util_max_error(double* u, double* u_sol, int N){
+d4est_util_max_error(double * restrict  u, double * restrict  u_sol, int N){
   int i;
   double temp;
   double e_max = -1.;
@@ -376,7 +376,7 @@ int d4est_util_sum_array_int(int* array, int N)
 }
 
 
-double d4est_util_sum_array_dbl(double* array, int N)
+double d4est_util_sum_array_dbl(double * restrict array, int N)
 {
   double sum = 0.;
   for (int i = 0; i < N; i++) {
@@ -408,7 +408,7 @@ d4est_util_sort_double_callback(const void *p, const void *q)
 }
 
 /* Sort an array of n integers, pointed to by a. */
-void d4est_util_sort_double(double *a, size_t n)
+void d4est_util_sort_double(double * restrict a, size_t n)
 {
     qsort(a, n, sizeof(double), d4est_util_sort_double_callback);
 }
@@ -425,7 +425,7 @@ typedef struct {
 double
 d4est_util_parallel_checksum_dbl
 (
- double* vec,
+ double * restrict  vec,
  int N
 )
 {
@@ -473,10 +473,10 @@ d4est_util_parallel_reduce_dbl_scalar
 void
 d4est_util_linear_regression
 (
- double* y,
- double* x,
- double* m,
- double* b,
+ double * restrict  y,
+ double * restrict  x,
+ double * restrict  m,
+ double * restrict  b,
  int n
 )
 {
@@ -514,7 +514,7 @@ int d4est_util_bisection
  double x2,
  double xacc,
  int iter,
- double* root,
+ double * restrict  root,
  void* user
 )
 {
@@ -540,7 +540,7 @@ int d4est_util_bisection
 
 
 double
-d4est_util_compute_median(double *x, int n){
+d4est_util_compute_median(double * restrict x, int n){
     if(n%2==0) {
         // if there is an even number of elements, return mean of the two elements in the middle
         return((x[n/2] + x[n/2 - 1]) / 2.0);
@@ -608,14 +608,14 @@ int d4est_util_match
 }
 
 void
-d4est_util_compute_error_array(double* arr1, double* arr2, double* err, int N){
+d4est_util_compute_error_array(double * restrict  arr1, double * restrict  arr2, double * restrict  err, int N){
   for (int i = 0; i < N; i++) {
     err[i] = fabs(arr2[i] - arr1[i]);
   }
 }
 
 double
-d4est_util_min_dbl_array(double* arr, int N){
+d4est_util_min_dbl_array(double * restrict  arr, int N){
 
   double min = arr[0];
   for (int i = 1; i < N; i++) {
@@ -627,7 +627,7 @@ d4est_util_min_dbl_array(double* arr, int N){
 }
 
 double
-d4est_util_mean_dbl_array(double* arr, int N){
+d4est_util_mean_dbl_array(double * restrict  arr, int N){
 
   double mean = 0.;
   for (int i = 1; i < N; i++) {
@@ -638,7 +638,7 @@ d4est_util_mean_dbl_array(double* arr, int N){
 
 
 double
-d4est_util_max_dbl_array(double* arr, int N){
+d4est_util_max_dbl_array(double * restrict  arr, int N){
 
   double max = arr[0];
   for (int i = 1; i < N; i++) {
@@ -650,12 +650,12 @@ d4est_util_max_dbl_array(double* arr, int N){
 }
 
 void
-d4est_util_copy_1st_to_2nd (double *v1, double *v2, int N)
+d4est_util_copy_1st_to_2nd (double * restrict v1, double * restrict v2, int N)
 {
   memcpy (v2, v1, N * sizeof (double));
 }
 
-void d4est_util_gen_rand_vec(double* vec, int N, int seed, double a, double b){
+void d4est_util_gen_rand_vec(double * restrict  vec, int N, int seed, double a, double b){
   int i;
   for (i = 0; i < N; i++) {
     vec[i] = d4est_util_uniform_rand(seed,a,b);
@@ -669,7 +669,7 @@ static void radix_double(const void * ptr, void * radix, void * arg) {
 void d4est_util_parallel_sort
 (
  sc_MPI_Comm mpicomm,
- double* array,
+ double * restrict  array,
  int local_size
 )
 {

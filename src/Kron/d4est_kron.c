@@ -35,7 +35,7 @@ d4est_kron_AoB (double *A, double *B, double *C, int a_rows, int a_cols,
 
 
 void
-d4est_kron_vec_o_vec_dot_x (double *vec, double*x, int vec_size, double* vecvec_dot_x)
+d4est_kron_vec_o_vec_dot_x (double * restrict vec, double* restrict x, int vec_size, double* restrict vecvec_dot_x)
 {
   for (int i = 0; i < vec_size; i++)
     for (int k = 0; k < vec_size; k++){
@@ -47,12 +47,12 @@ d4est_kron_vec_o_vec_dot_x (double *vec, double*x, int vec_size, double* vecvec_
 void
 d4est_kron_vec1_o_vec2_dot_x
 (
- double *vec1,
- double* vec2,
- double*x,
+ double * restrict  vec1,
+ double * restrict  vec2,
+ double * restrict x,
  int vec1_size,
  int vec2_size,
- double* vec1vec2_dot_x
+ double * restrict  vec1vec2_dot_x
 )
 {
   for (int i = 0; i < vec1_size; i++){
@@ -67,9 +67,9 @@ d4est_kron_vec1_o_vec2_dot_x
 double
 d4est_kron_vec1_o_vec2_dot_x_sum
 (
- double *vec1,
- double* vec2,
- double*x,
+ double * restrict vec1,
+ double * restrict  vec2,
+ double * restrict x,
  int vec1_size,
  int vec2_size
 )
@@ -89,8 +89,8 @@ d4est_kron_vec1_o_vec2_dot_x_sum
 double
 d4est_kron_vec1_o_vec2_dot_ones_sum
 (
- double *vec1,
- double* vec2,
+ double * restrict vec1,
+ double * restrict  vec2,
  int vec1_size,
  int vec2_size
 )
@@ -110,13 +110,13 @@ d4est_kron_vec1_o_vec2_dot_ones_sum
 void
 d4est_kron_vec1_o_vec2_dot_xy
 (
- double *vec1,
- double* vec2,
- double*x,
- double*y,
+ double * restrict vec1,
+ double * restrict  vec2,
+ double * restrict x,
+ double * restrict y,
  int vec1_size,
  int vec2_size,
- double* vec1vec2_dot_x
+ double * restrict  vec1vec2_dot_x
 )
 {
   for (int i = 0; i < vec1_size; i++){
@@ -131,15 +131,15 @@ d4est_kron_vec1_o_vec2_dot_xy
 void
 d4est_kron_vec1_o_vec2_dot_wxyz
 (
- double *vec1,
- double* vec2,
- double*w,
- double*x,
- double*y,
- double*z,
+ double * restrict vec1,
+ double * restrict  vec2,
+ double * restrict w,
+ double * restrict x,
+ double * restrict y,
+ double * restrict z,
  int vec1_size,
  int vec2_size,
- double* vec1vec2_dot_x
+ double * restrict  vec1vec2_dot_x
 )
 {
   for (int i = 0; i < vec1_size; i++){
@@ -154,14 +154,14 @@ d4est_kron_vec1_o_vec2_dot_wxyz
 void
 d4est_kron_vec1_o_vec2_o_vec3_dot_x
 (
- double *vec1,
- double* vec2,
- double* vec3,
- double*x,
+ double * restrict vec1,
+ double * restrict  vec2,
+ double * restrict  vec3,
+ double * restrict x,
  int vec1_size,
  int vec2_size,
  int vec3_size,
- double* vec1vec2vec3_dot_x
+ double * restrict  vec1vec2vec3_dot_x
 )
 {
   for (int i = 0; i < vec1_size; i++){
@@ -179,10 +179,10 @@ d4est_kron_vec1_o_vec2_o_vec3_dot_x
 double
 d4est_kron_vec1_o_vec2_o_vec3_dot_x_sum
 (
- double *vec1,
- double* vec2,
- double* vec3,
- double*x,
+ double * restrict vec1,
+ double * restrict  vec2,
+ double * restrict  vec3,
+ double * restrict x,
  int vec1_size,
  int vec2_size,
  int vec3_size
@@ -205,9 +205,9 @@ d4est_kron_vec1_o_vec2_o_vec3_dot_x_sum
 double
 d4est_kron_vec1_o_vec2_o_vec3_dot_ones_sum
 (
- double *vec1,
- double* vec2,
- double* vec3,
+ double * restrict vec1,
+ double * restrict  vec2,
+ double * restrict  vec3,
  int vec1_size,
  int vec2_size,
  int vec3_size
@@ -229,15 +229,15 @@ d4est_kron_vec1_o_vec2_o_vec3_dot_ones_sum
 void
 d4est_kron_vec1_o_vec2_o_vec3_dot_xy
 (
- double *vec1,
- double* vec2,
- double* vec3,
- double*x,
- double*y,
+ double * restrict vec1,
+ double * restrict  vec2,
+ double * restrict  vec3,
+ double * restrict x,
+ double * restrict y,
  int vec1_size,
  int vec2_size,
  int vec3_size,
- double* vec1vec2vec3_dot_x
+ double * restrict  vec1vec2vec3_dot_x
 )
 {
   for (int i = 0; i < vec1_size; i++){
@@ -255,17 +255,17 @@ d4est_kron_vec1_o_vec2_o_vec3_dot_xy
 void
 d4est_kron_vec1_o_vec2_o_vec3_dot_wxyz
 (
- double *vec1,
- double* vec2,
- double* vec3,
- double*w,
- double*x,
- double*y,
- double*z,
+ double * restrict vec1,
+ double * restrict  vec2,
+ double * restrict  vec3,
+ double * restrict w,
+ double * restrict x,
+ double * restrict y,
+ double * restrict z,
  int vec1_size,
  int vec2_size,
  int vec3_size,
- double* vec1vec2vec3_dot_x
+ double * restrict  vec1vec2vec3_dot_x
 )
 {
   for (int i = 0; i < vec1_size; i++){
@@ -281,7 +281,7 @@ d4est_kron_vec1_o_vec2_o_vec3_dot_wxyz
 
 
 void
-d4est_kron_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* vecvec_dot_xy)
+d4est_kron_vec_o_vec_dot_xy (double * restrict vec, double * restrict x, double * restrict  y, int vec_size, double * restrict  vecvec_dot_xy)
 {
   for (int i = 0; i < vec_size; i++)
     for (int k = 0; k < vec_size; k++){
@@ -291,7 +291,7 @@ d4est_kron_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_size, dou
 }
 
 void
-d4est_kron_vec_o_vec_dot_wxyz (double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vecvec_dot_wxyz)
+d4est_kron_vec_o_vec_dot_wxyz (double * restrict vec, double * restrict  w, double * restrict x, double * restrict  y, double * restrict  z, int vec_size, double * restrict  vecvec_dot_wxyz)
 {
   for (int i = 0; i < vec_size; i++)
     for (int k = 0; k < vec_size; k++){
@@ -302,7 +302,7 @@ d4est_kron_vec_o_vec_dot_wxyz (double *vec, double* w, double*x, double* y, doub
 
 
 void
-d4est_kron_oneover_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, int vec_size, double* vecvec_dot_xy)
+d4est_kron_oneover_vec_o_vec_dot_oneover_x_dot_y (double * restrict vec, double * restrict x, double * restrict  y, int vec_size, double * restrict  vecvec_dot_xy)
 {
   for (int i = 0; i < vec_size; i++)
     for (int k = 0; k < vec_size; k++){
@@ -312,7 +312,7 @@ d4est_kron_oneover_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, double*
 }
 
 void
-d4est_kron_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* vec_dot_xy)
+d4est_kron_vec_dot_xy (double * restrict vec, double * restrict x, double * restrict  y, int vec_size, double * restrict  vec_dot_xy)
 {
   for (int i = 0; i < vec_size; i++){
       vec_dot_xy[i] = vec[i] * x[i] * y[i];
@@ -321,7 +321,7 @@ d4est_kron_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* v
 
 
 void
-d4est_kron_vec_dot_wxyz (double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vec_dot_wxyz)
+d4est_kron_vec_dot_wxyz (double * restrict vec, double * restrict  w, double * restrict x, double * restrict  y, double * restrict  z, int vec_size, double * restrict  vec_dot_wxyz)
 {
   for (int i = 0; i < vec_size; i++){
       vec_dot_wxyz[i] = vec[i] * w[i] * x[i] * y[i] * z[i];
@@ -330,7 +330,7 @@ d4est_kron_vec_dot_wxyz (double *vec, double* w, double*x, double* y, double* z,
 
 
 void
-d4est_kron_vec_dot_x (double *vec, double*x,int vec_size, double* vec_dot_x)
+d4est_kron_vec_dot_x (double * restrict vec, double * restrict x,int vec_size, double * restrict  vec_dot_x)
 {
   for (int i = 0; i < vec_size; i++){
       vec_dot_x[i] = vec[i] * x[i];
@@ -338,7 +338,7 @@ d4est_kron_vec_dot_x (double *vec, double*x,int vec_size, double* vec_dot_x)
 }
 
 void
-d4est_kron_oneover_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, int vec_size, double* vec_dot_xy)
+d4est_kron_oneover_vec_dot_oneover_x_dot_y (double * restrict vec, double * restrict x, double * restrict  y, int vec_size, double * restrict  vec_dot_xy)
 {
   for (int i = 0; i < vec_size; i++){
     vec_dot_xy[i] = (1./(vec[i] * x[i])) * y[i];
@@ -346,7 +346,7 @@ d4est_kron_oneover_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, in
 }
 
 void
-d4est_kron_vec_o_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_size, double* vecvecvec_dot_xy)
+d4est_kron_vec_o_vec_o_vec_dot_xy (double * restrict vec, double * restrict x, double * restrict  y, int vec_size, double * restrict  vecvecvec_dot_xy)
 {
   int b_rows = vec_size*vec_size;
   
@@ -359,7 +359,7 @@ d4est_kron_vec_o_vec_o_vec_dot_xy (double *vec, double*x, double* y, int vec_siz
 }
 
 void
-d4est_kron_vec_o_vec_o_vec_dot_wxyz(double *vec, double* w, double*x, double* y, double* z, int vec_size, double* vecvecvec_dot_wxyz)
+d4est_kron_vec_o_vec_o_vec_dot_wxyz(double * restrict vec, double * restrict  w, double * restrict x, double * restrict  y, double * restrict  z, int vec_size, double * restrict  vecvecvec_dot_wxyz)
 {
   int b_rows = vec_size*vec_size;
   
@@ -381,7 +381,7 @@ d4est_kron_vec_o_vec_o_vec_dot_wxyz(double *vec, double* w, double*x, double* y,
 
 
 void
-d4est_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, double* y, int vec_size, double* vecvecvec_dot_xy)
+d4est_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y (double * restrict vec, double * restrict x, double * restrict  y, int vec_size, double * restrict  vecvecvec_dot_xy)
 {
   int b_rows = vec_size*vec_size;
   
@@ -394,7 +394,7 @@ d4est_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y (double *vec, double*x, d
 }
 
 void
-d4est_kron_vec_o_vec_o_vec_dot_x (double *vec, double*x, int vec_size, double* vecvecvec_dot_x)
+d4est_kron_vec_o_vec_o_vec_dot_x (double * restrict vec, double * restrict x, int vec_size, double * restrict  vecvecvec_dot_x)
 {
   int b_rows = vec_size*vec_size;
   
@@ -423,11 +423,11 @@ d4est_kron_vec_o_vec_o_vec_dot_x (double *vec, double*x, int vec_size, double* v
  * @param c_cols 
  */
 void
-d4est_kron_AoBoC (double *A, double *B, double *C, double *D, int a_rows,
+d4est_kron_AoBoC (double * restrict A, double * restrict B, double * restrict C, double * restrict D, int a_rows,
                    int a_cols, int b_rows, int b_cols, int c_rows, int c_cols)
 {
   double             *AoB =
-    (double*) malloc (sizeof (double) * a_rows * a_cols * b_rows * b_cols);
+    (double *) malloc (sizeof (double) * a_rows * a_cols * b_rows * b_cols);
 
   d4est_kron_AoB (A, B, AoB, a_rows, a_cols, b_rows, b_cols);
   d4est_kron_AoB (AoB, C, D, a_rows * b_rows, a_cols * b_cols, c_rows,
@@ -438,7 +438,7 @@ d4est_kron_AoBoC (double *A, double *B, double *C, double *D, int a_rows,
 
 
 void
-d4est_kron_A1A2x_nonsqr (double *A1A2x, double *A1, double *A2, double *X,
+d4est_kron_A1A2x_nonsqr (double * restrict A1A2x, double * restrict A1, double * restrict A2, double * restrict X,
                           int a1_rows, int a1_cols, int a2_rows, int a2_cols)
 {
   /* X should be a1_cols * a2_cols */
@@ -464,13 +464,13 @@ d4est_kron_A1A2x_nonsqr (double *A1A2x, double *A1, double *A2, double *X,
 }
 
 void
-d4est_kron_MAToIx_SQR (double *MAToIx, double *MAT, double *X, int N)
+d4est_kron_MAToIx_SQR (double * restrict MAToIx, double * restrict MAT, double * restrict X, int N)
 {
   d4est_linalg_mat_multiply (MAT, X, MAToIx, N, N, N);
 }
 
 void
-d4est_kron_IoMATx_SQR (double *IoMATx, double *MAT, double *X, int N)
+d4est_kron_IoMATx_SQR (double * restrict IoMATx, double * restrict MAT, double * restrict X, int N)
 {
   double             *tmp = (double *) malloc (sizeof (double) * N * N);
   double             *tmp1 = (double *) malloc (sizeof (double) * N * N);
@@ -484,7 +484,7 @@ d4est_kron_IoMATx_SQR (double *IoMATx, double *MAT, double *X, int N)
 }
 
 void
-d4est_kron_VECoIx_SQR (double *VECoIx, double *VEC, double *X, int N)
+d4est_kron_VECoIx_SQR (double * restrict VECoIx, double * restrict VEC, double * restrict X, int N)
 {
 
   d4est_linalg_mat_multiply (VEC, X, VECoIx, N, 1, N);
@@ -492,19 +492,19 @@ d4est_kron_VECoIx_SQR (double *VECoIx, double *VEC, double *X, int N)
 }
 
 void
-d4est_kron_VEC_TRANSoIx_SQR (double *VEC_TRANSoIx, double *VEC, double *X,
+d4est_kron_VEC_TRANSoIx_SQR (double * restrict VEC_TRANSoIx, double * restrict VEC, double * restrict X,
                               int N)
 {
   d4est_linalg_mat_multiply (VEC, X, VEC_TRANSoIx, 1, N, N);
 }
 
 void
-d4est_kron_IoVECx_SQR (double *IoVECx, double *VEC, double *X, int N)
+d4est_kron_IoVECx_SQR (double * restrict IoVECx, double * restrict VEC, double * restrict X, int N)
 {
   /* int N = (a1_rows*a2_rows > a2_rows*a1_cols) ? a1_rows*a2_rows : a2_rows*a1_cols; */
 
   double             *tmp = (double *) malloc (sizeof (double) * N * N);
-  /* double* tmp1 = (double*)malloc(sizeof(double)*N); */
+  /* double * restrict  tmp1 = (double * restrict )malloc(sizeof(double)*N); */
 
   d4est_linalg_mat_multiply (VEC, X, tmp, N, 1, N);
   d4est_linalg_mat_transpose_nonsqr (tmp, IoVECx, N, N);
@@ -514,7 +514,7 @@ d4est_kron_IoVECx_SQR (double *IoVECx, double *VEC, double *X, int N)
 }
 
 void
-d4est_kron_IoVEC_TRANSx_SQR (double *IoVEC_TRANSx, double *VEC, double *X,
+d4est_kron_IoVEC_TRANSx_SQR (double * restrict IoVEC_TRANSx, double * restrict VEC, double * restrict X,
                               int N)
 {
   double             *tmp1 = (double *) malloc (sizeof (double) * N * N);
@@ -526,8 +526,8 @@ d4est_kron_IoVEC_TRANSx_SQR (double *IoVEC_TRANSx, double *VEC, double *X,
 }
 
 void
-d4est_kron_A1A2A3x_nonsqr (double *A1A2A3x, double *A1, double *A2,
-                            double *A3, double *X, int a1_rows, int a1_cols,
+d4est_kron_A1A2A3x_nonsqr (double * restrict A1A2A3x, double * restrict A1, double * restrict A2,
+                            double * restrict A3, double * restrict X, int a1_rows, int a1_cols,
                             int a2_rows, int a2_cols, int a3_rows,
                             int a3_cols)
 {
@@ -545,13 +545,13 @@ d4est_kron_A1A2A3x_nonsqr (double *A1A2A3x, double *A1, double *A2,
 }
 
 void
-d4est_kron_MAToIoIx_SQR (double *MAToIoIx, double *MAT, double *X, int N)
+d4est_kron_MAToIoIx_SQR (double * restrict MAToIoIx, double * restrict MAT, double * restrict X, int N)
 {
   d4est_linalg_mat_multiply (MAT, X, MAToIoIx, N, N, N * N);
 }
 
 void
-d4est_kron_IoMAToIx_SQR (double *IoMAToIx, double *MAT, double *X, int N)
+d4est_kron_IoMAToIx_SQR (double * restrict IoMAToIx, double * restrict MAT, double * restrict X, int N)
 {
   int                 i;
   for (i = 0; i < N; i++) {
@@ -560,7 +560,7 @@ d4est_kron_IoMAToIx_SQR (double *IoMAToIx, double *MAT, double *X, int N)
 }
 
 void
-d4est_kron_IoIoMATx_SQR (double *IoIoMATx, double *MAT, double *X, int N)
+d4est_kron_IoIoMATx_SQR (double * restrict IoIoMATx, double * restrict MAT, double * restrict X, int N)
 {
   /* x should be N^2 by 1 */
   /* I should be N by N */
@@ -572,20 +572,20 @@ d4est_kron_IoIoMATx_SQR (double *IoIoMATx, double *MAT, double *X, int N)
 }
 
 void
-d4est_kron_VECoIoIx_SQR (double *VECoIoIx, double *VEC, double *X, int N)
+d4est_kron_VECoIoIx_SQR (double * restrict VECoIoIx, double * restrict VEC, double * restrict X, int N)
 {
   d4est_linalg_mat_multiply (VEC, X, VECoIoIx, N, 1, N * N);
 }
 
 void
-d4est_kron_VEC_TRANSoIoIx_SQR (double *VEC_TRANSoIoIx, double *VEC,
-                                double *X, int N)
+d4est_kron_VEC_TRANSoIoIx_SQR (double * restrict VEC_TRANSoIoIx, double * restrict VEC,
+                                double * restrict X, int N)
 {
   d4est_linalg_mat_multiply (VEC, X, VEC_TRANSoIoIx, 1, N, N * N);
 }
 
 void
-d4est_kron_IoVECoIx_SQR (double *IoVECoIx, double *VEC, double *X, int N)
+d4est_kron_IoVECoIx_SQR (double * restrict IoVECoIx, double * restrict VEC, double * restrict X, int N)
 {
   /* x should be N^2 by 1 */
   /* I should be N by N */
@@ -597,8 +597,8 @@ d4est_kron_IoVECoIx_SQR (double *IoVECoIx, double *VEC, double *X, int N)
 }
 
 void
-d4est_kron_IoVEC_TRANSoIx_SQR (double *IoVEC_TRANSoIx, double *VEC,
-                                double *X, int N)
+d4est_kron_IoVEC_TRANSoIx_SQR (double * restrict IoVEC_TRANSoIx, double * restrict VEC,
+                                double * restrict X, int N)
 {
   int                 i;
   for (i = 0; i < N; i++) {
@@ -608,7 +608,7 @@ d4est_kron_IoVEC_TRANSoIx_SQR (double *IoVEC_TRANSoIx, double *VEC,
 }
 
 void
-d4est_kron_IoIoVECx_SQR (double *IoIoVECx, double *VEC, double *X, int N)
+d4est_kron_IoIoVECx_SQR (double * restrict IoIoVECx, double * restrict VEC, double * restrict X, int N)
 {
   /* x should be N^2 by 1 */
   /* I should be N by N */
@@ -620,8 +620,8 @@ d4est_kron_IoIoVECx_SQR (double *IoIoVECx, double *VEC, double *X, int N)
 }
 
 void
-d4est_kron_IoIoVEC_TRANSx_SQR (double *IoIoVEC_TRANSx, double *VEC,
-                                double *X, int N)
+d4est_kron_IoIoVEC_TRANSx_SQR (double * restrict IoIoVEC_TRANSx, double * restrict VEC,
+                                double * restrict X, int N)
 {
   /* x should be N^2 by 1 */
   /* I should be N by N */

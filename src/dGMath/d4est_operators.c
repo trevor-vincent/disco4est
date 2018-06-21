@@ -174,7 +174,7 @@ double*
 d4est_operators_1index_fetch
 (
  d4est_operators_t* d4est_ops,
- double** table,
+ double** restrict table,
  int deg,
  int size,
  void (*build_fcn)(d4est_operators_t*, double*, int)
@@ -195,7 +195,7 @@ d4est_operators_1index_fetch
 double* d4est_operators_2index_fetch
 (
  d4est_operators_t* d4est_ops,
- double*** table,
+ double*** restrict table,
  int deg1,
  int deg2,
  int size,
@@ -225,8 +225,8 @@ double* d4est_operators_1index_2d_3d_fetch
  int deg,
  int dim,
  int size,
- double** table_2d,
- double** table_3d,
+ double** restrict table_2d,
+ double** restrict table_3d,
  void (*build_fcn)(d4est_operators_t*, double*, int, int)
 )
 {
@@ -258,7 +258,7 @@ double* d4est_operators_1index_2d_3d_fetch
 }
 
 
-void d4est_operators_build_Vij_1d(d4est_operators_t* d4est_ops, double* Vij_1d,
+void d4est_operators_build_Vij_1d(d4est_operators_t* d4est_ops, double * restrict  Vij_1d,
                                 int deg) {
   int i, j, rows, cols;
   const double* lobatto_nodes = d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, deg);
@@ -269,7 +269,7 @@ void d4est_operators_build_Vij_1d(d4est_operators_t* d4est_ops, double* Vij_1d,
 }
 
 static void d4est_operators_build_invvij_1d(d4est_operators_t* d4est_ops,
-                                   double* invvij_1d, int deg)
+                                   double * restrict  invvij_1d, int deg)
 {
   d4est_operators_build_Vij_1d(d4est_ops, invvij_1d, deg);
   d4est_linalg_invert(invvij_1d, deg + 1);
@@ -287,9 +287,9 @@ double* d4est_operators_fetch_invvij_1d(d4est_operators_t* d4est_ops, int deg) {
     );     
 }
 
-void d4est_operators_hp_apply_nd_prolong_with_ptr(double* Uh, int degh, double* UH,
+void d4est_operators_hp_apply_nd_prolong_with_ptr(double * restrict  Uh, int degh, double * restrict  UH,
                                          int degH, int dim, int c,
-                                         double* hp_prolong_matrix_1d) {
+                                         double * restrict  hp_prolong_matrix_1d) {
   D4EST_ASSERT((degH <= degh) && (c < (1 << dim)));
   int nodesh = degh + 1;
   int nodesH = degH + 1;
@@ -325,7 +325,7 @@ void d4est_operators_hp_apply_nd_prolong_with_ptr(double* Uh, int degh, double* 
 void d4est_operators_build_lobatto_to_gauss_interp_1d
 (
  d4est_operators_t* d4est_ops,
- double* ref_lobatto_to_gauss_interp_1d,
+ double * restrict  ref_lobatto_to_gauss_interp_1d,
  int lobatto_degree,
  int gauss_degree
 )
@@ -354,10 +354,10 @@ void d4est_operators_build_lobatto_to_gauss_interp_1d
 void d4est_operators_build_custom_lobatto_interp_1d
 (
  d4est_operators_t* d4est_ops,
- double* custom_lobatto_interp_1d,
+ double * restrict  custom_lobatto_interp_1d,
  int lobatto_degree,
  int custom_degree,
- double* custom_points /* size = custom_degree + 1 */
+ double * restrict  custom_points /* size = custom_degree + 1 */
 )
 {
   double* customVij = P4EST_ALLOC(double, (custom_degree + 1)*(lobatto_degree+1));
@@ -395,7 +395,7 @@ d4est_operators_fetch_lobatto_to_gauss_interp_1d(d4est_operators_t* d4est_ops, i
 void d4est_operators_build_lobatto_to_gauss_interp_trans_1d
 (
  d4est_operators_t* d4est_ops,
- double* ref_lobatto_to_gauss_interp_trans_1d,
+ double * restrict  ref_lobatto_to_gauss_interp_trans_1d,
  int lobatto_degree,
  int gauss_degree
 )
@@ -428,7 +428,7 @@ void d4est_operators_compute_prolong_matrix
  int dim,
  int* degh,
  int children,
- double* prolong_mat
+ double * restrict  prolong_mat
 )
 {
   int volume_nodes_h = 0;
@@ -460,12 +460,12 @@ void d4est_operators_compute_prolong_matrix
 void d4est_operators_compute_PT_mat_P
 (
  d4est_operators_t* d4est_ops,
- double* mat, /* dimensions of the degh space \sumi(deghi+1)^DIM x \sumi(deghi+1)^DIM */
+ double * restrict  mat, /* dimensions of the degh space \sumi(deghi+1)^DIM x \sumi(deghi+1)^DIM */
  int degH,
  int dim,
  int* degh,
  int children,
- double* PT_mat_P /* dimensions of the degH space: (degH+1)^DIM x (degH+1)^DIM */
+ double * restrict  PT_mat_P /* dimensions of the degH space: (degH+1)^DIM x (degH+1)^DIM */
 )
 {
   int volume_nodes_h [P4EST_CHILDREN];
@@ -512,9 +512,9 @@ void d4est_operators_compute_PT_mat_P
   P4EST_FREE(P);
 }
 
-void d4est_operators_hp_apply_nd_restrict_with_ptr(double* uH, int degH, double* uh,
+void d4est_operators_hp_apply_nd_restrict_with_ptr(double * restrict  uH, int degH, double * restrict  uh,
                                           int degh, int dim, int c,
-                                          double* hp_restrict_matrix_1d) {
+                                          double * restrict  hp_restrict_matrix_1d) {
 
   D4EST_ASSERT((degH <= degh) && (c < (1 << dim)));
 
@@ -551,7 +551,7 @@ void d4est_operators_hp_apply_nd_restrict_with_ptr(double* uH, int degH, double*
   }
 }
 
-static void d4est_operators_build_dVij_1d(d4est_operators_t* d4est_ops, double* dVij_1d,
+static void d4est_operators_build_dVij_1d(d4est_operators_t* d4est_ops, double * restrict  dVij_1d,
                                  int deg) {
   int i, j, rows, cols;
   double* lobatto_nodes = d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, deg);
@@ -561,7 +561,7 @@ static void d4est_operators_build_dVij_1d(d4est_operators_t* d4est_ops, double* 
       dVij_1d[i * cols + j] = d4est_lgl_gradjacobi(lobatto_nodes[i], 0., 0., j);
 }
 
-void d4est_operators_build_mij_1d(d4est_operators_t* d4est_ops, double* mij_1d,
+void d4est_operators_build_mij_1d(d4est_operators_t* d4est_ops, double * restrict  mij_1d,
                                 int deg) {
   int edge_nodes = deg + 1;
   double* v1d = (double*)P4EST_ALLOC(double, edge_nodes* edge_nodes);
@@ -577,7 +577,7 @@ void d4est_operators_build_mij_1d(d4est_operators_t* d4est_ops, double* mij_1d,
 
 
 static void
-d4est_operators_build_lobatto_nodes_1d(d4est_operators_t* d4est_ops, double* lobatto_nodes, int deg)
+d4est_operators_build_lobatto_nodes_1d(d4est_operators_t* d4est_ops, double * restrict  lobatto_nodes, int deg)
 {
   double* lobatto_weights = P4EST_ALLOC(double, deg+1);
   d4est_operators_lobatto_nodes_and_weights(deg+1, lobatto_nodes, lobatto_weights);
@@ -585,7 +585,7 @@ d4est_operators_build_lobatto_nodes_1d(d4est_operators_t* d4est_ops, double* lob
 }
 
 static void
-d4est_operators_build_lobatto_weights_1d(d4est_operators_t* d4est_ops, double* lobatto_weights, int deg)
+d4est_operators_build_lobatto_weights_1d(d4est_operators_t* d4est_ops, double * restrict  lobatto_weights, int deg)
 {
   double* lobatto_nodes = P4EST_ALLOC(double, deg+1);
   d4est_operators_lobatto_nodes_and_weights(deg+1, lobatto_nodes, lobatto_weights);
@@ -593,7 +593,7 @@ d4est_operators_build_lobatto_weights_1d(d4est_operators_t* d4est_ops, double* l
 }
 
 static void
-d4est_operators_build_lobatto_baryweights_1d(d4est_operators_t* d4est_ops, double* lobatto_baryweights, int deg)
+d4est_operators_build_lobatto_baryweights_1d(d4est_operators_t* d4est_ops, double * restrict  lobatto_baryweights, int deg)
 {
 
   double* weights = d4est_operators_fetch_lobatto_weights_1d(d4est_ops, deg);
@@ -640,7 +640,7 @@ double* d4est_operators_fetch_lobatto_baryweights_1d(d4est_operators_t* d4est_op
 }
 
 static void
-d4est_operators_build_gauss_nodes_1d(d4est_operators_t* d4est_ops, double* gauss_nodes, int deg)
+d4est_operators_build_gauss_nodes_1d(d4est_operators_t* d4est_ops, double * restrict  gauss_nodes, int deg)
 {
   double* gauss_weights = P4EST_ALLOC(double, deg+1);
   d4est_operators_gauss_nodes_and_weights(deg+1, gauss_nodes, gauss_weights);
@@ -648,7 +648,7 @@ d4est_operators_build_gauss_nodes_1d(d4est_operators_t* d4est_ops, double* gauss
 }
 
 static void
-d4est_operators_build_gauss_weights_1d(d4est_operators_t* d4est_ops, double* gauss_weights, int deg)
+d4est_operators_build_gauss_weights_1d(d4est_operators_t* d4est_ops, double * restrict  gauss_weights, int deg)
 {
   double* gauss_nodes = P4EST_ALLOC(double, deg+1);
   d4est_operators_gauss_nodes_and_weights(deg+1, gauss_nodes, gauss_weights);
@@ -699,12 +699,12 @@ d4est_operators_fetch_mij_1d
 }
 
 static void d4est_operators_build_invmij_1d(d4est_operators_t* d4est_ops,
-                                   double* invmij_1d, int deg) {
+                                   double * restrict  invmij_1d, int deg) {
   double* mij_1d = d4est_operators_fetch_mij_1d(d4est_ops, deg);
   d4est_linalg_invert_and_copy(mij_1d, invmij_1d, deg + 1);
 }
 
-static void d4est_operators_build_dij_1d(d4est_operators_t* d4est_ops, double* dij_1d,
+static void d4est_operators_build_dij_1d(d4est_operators_t* d4est_ops, double * restrict  dij_1d,
                                 int deg) {
   int edge_nodes = deg + 1;
   double* v1d = (double*)P4EST_ALLOC(double, edge_nodes* edge_nodes);
@@ -740,8 +740,8 @@ static double* d4est_operators_fetch_invmij_1d(d4est_operators_t* d4est_ops, int
   
 }
 
-void d4est_operators_apply_mij(d4est_operators_t* d4est_ops, double* in, int dim, int deg,
-                      double* out) {
+void d4est_operators_apply_mij(d4est_operators_t* d4est_ops, double * restrict  in, int dim, int deg,
+                      double* restrict out) {
   D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   double* mass_1d = d4est_operators_fetch_mij_1d(d4est_ops, deg);
 
@@ -759,8 +759,8 @@ void d4est_operators_apply_mij(d4est_operators_t* d4est_ops, double* in, int dim
   }
 }
 
-void d4est_operators_apply_invmij(d4est_operators_t* d4est_ops, double* in, int dim,
-                         int deg, double* out) {
+void d4est_operators_apply_invmij(d4est_operators_t* d4est_ops, double * restrict  in, int dim,
+                         int deg, double * restrict  out) {
   D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   double* inv_mass_1d = d4est_operators_fetch_invmij_1d(d4est_ops, deg);
 
@@ -794,9 +794,9 @@ static double* d4est_operators_fetch_dij_1d(d4est_operators_t* d4est_ops, int de
 
 
 static void d4est_operators_build_hp_prolong_1d_aux(int degH, int degh, int c,
-                                           double* inv_v1d_trans_degH,
-                                           double* lobatto_nodes_degh,
-                                           double* hp_prolong_matrix_1d) {
+                                           double * restrict  inv_v1d_trans_degH,
+                                           double * restrict  lobatto_nodes_degh,
+                                           double * restrict  hp_prolong_matrix_1d) {
   D4EST_ASSERT(degH <= degh);
   int n, i;
   int nodesH = degH + 1;
@@ -817,7 +817,7 @@ static void d4est_operators_build_hp_prolong_1d_aux(int degH, int degh, int c,
 }
 
 static void d4est_operators_build_hp_prolong_1d(d4est_operators_t* d4est_ops,
-                                       double* hp_prolong_1d, int degH,
+                                       double * restrict  hp_prolong_1d, int degH,
                                        int degh) {
   int edge_nodes_degH = degH + 1;
   int edge_nodes_degh = degh + 1;
@@ -845,7 +845,7 @@ static void d4est_operators_build_hp_prolong_1d(d4est_operators_t* d4est_ops,
 }
 
 void d4est_operators_build_p_prolong_1d(d4est_operators_t* d4est_ops,
-                                      double* p_prolong_1d, int degH,
+                                      double * restrict  p_prolong_1d, int degH,
                                       int degh) {
 
   double* degh_nodes = d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, degh);
@@ -867,8 +867,8 @@ void d4est_operators_build_p_prolong_1d(d4est_operators_t* d4est_ops,
 
 
 void d4est_operators_hp_apply_nd_prolong_transpose_with_ptr(
-    double* uH, int degH, double* uh, int degh, int dim, int c,
-    double* hp_prolong_transpose_matrix_1d) {
+    double * restrict  uH, int degH, double * restrict  uh, int degh, int dim, int c,
+    double * restrict  hp_prolong_transpose_matrix_1d) {
   /* sanity check */
   D4EST_ASSERT((degH <= degh) && (c < (1 << dim)));
 
@@ -940,8 +940,8 @@ double* d4est_operators_fetch_p_prolong_1d
                                      );
 }
 
-void d4est_operators_apply_hp_prolong(d4est_operators_t* d4est_ops, double* in, int degH,
-                             int dim, int* degh, double* out) {
+void d4est_operators_apply_hp_prolong(d4est_operators_t* d4est_ops, double * restrict  in, int degH,
+                             int dim, int* degh, double * restrict  out) {
   D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   int children = (1 << dim);
   int c;
@@ -956,8 +956,8 @@ void d4est_operators_apply_hp_prolong(d4est_operators_t* d4est_ops, double* in, 
   }
 }
 
-void d4est_operators_apply_p_prolong(d4est_operators_t* d4est_ops, double* in, int degH,
-                            int dim, int degh, double* out) {
+void d4est_operators_apply_p_prolong(d4est_operators_t* d4est_ops, double * restrict  in, int degH,
+                            int dim, int degh, double * restrict  out) {
   double* p_prolong_1d = d4est_operators_fetch_p_prolong_1d(d4est_ops, degH, degh);
 
   int nodesh = degh + 1;
@@ -984,10 +984,10 @@ void d4est_operators_apply_p_prolong(d4est_operators_t* d4est_ops, double* in, i
 }
 
 void d4est_operators_build_hp_restrict_1d_aux(int degh, int degH,
-                                            double* hp_prolong_matrix_1d,
-                                            double* mass_matrix_rs_degh,
-                                            double* inv_mass_matrix_rs_degH,
-                                            double* hp_restrict_matrix_1d) {
+                                            double * restrict  hp_prolong_matrix_1d,
+                                            double * restrict  mass_matrix_rs_degh,
+                                            double * restrict  inv_mass_matrix_rs_degH,
+                                            double * restrict  hp_restrict_matrix_1d) {
   int nodesH = degH + 1;
   int nodesh = degh + 1;
   int s;
@@ -1015,7 +1015,7 @@ void d4est_operators_build_hp_restrict_1d_aux(int degh, int degH,
 }
 
 static void d4est_operators_build_p_restrict_1d(d4est_operators_t* d4est_ops,
-                                       double* p_restrict_1d, int degH,
+                                       double * restrict  p_restrict_1d, int degH,
                                        int degh) {
   int edge_nodes_degH = degH + 1;
   int edge_nodes_degh = degh + 1;
@@ -1054,8 +1054,8 @@ double* d4est_operators_fetch_p_restrict_1d
 
 }
 
-void d4est_operators_apply_p_restrict(d4est_operators_t* d4est_ops, double* in, int degh,
-                             int dim, int degH, double* out) {
+void d4est_operators_apply_p_restrict(d4est_operators_t* d4est_ops, double * restrict  in, int degh,
+                             int dim, int degH, double * restrict  out) {
   double* p_restrict_1d = d4est_operators_fetch_p_restrict_1d(d4est_ops, degH, degh);
 
   int nodesh = degh + 1;
@@ -1082,7 +1082,7 @@ void d4est_operators_apply_p_restrict(d4est_operators_t* d4est_ops, double* in, 
 }
 
 static void d4est_operators_build_hp_restrict_1d(d4est_operators_t* d4est_ops,
-                                        double* hp_restrict_1d, int degH,
+                                        double * restrict  hp_restrict_1d, int degH,
                                         int degh) {
   int edge_nodes_degH = degH + 1;
   int edge_nodes_degh = degh + 1;
@@ -1124,8 +1124,8 @@ static double* d4est_operators_fetch_hp_restrict_1d(d4est_operators_t* d4est_ops
   
 }
 
-void d4est_operators_apply_hp_restrict(d4est_operators_t* d4est_ops, double* in, int* degh,
-                              int dim, int degH, double* out) {
+void d4est_operators_apply_hp_restrict(d4est_operators_t* d4est_ops, double * restrict  in, int* degh,
+                              int dim, int degH, double * restrict  out) {
   D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   int children = (1 << dim);
   int c;
@@ -1148,7 +1148,7 @@ void d4est_operators_apply_hp_restrict(d4est_operators_t* d4est_ops, double* in,
   P4EST_FREE(tmp);
 }
 
-static void d4est_operators_build_lobatto_rst_nd(d4est_operators_t* d4est_ops, double* ref_xyz_nd,
+static void d4est_operators_build_lobatto_rst_nd(d4est_operators_t* d4est_ops, double * restrict  ref_xyz_nd,
                                 int dim, int deg) {
   int nodes = deg + 1;
   int vol_nodes = d4est_lgl_get_nodes(dim, deg);
@@ -1181,7 +1181,7 @@ static void d4est_operators_build_lobatto_rst_nd(d4est_operators_t* d4est_ops, d
 }
 
 
-static void d4est_operators_build_gauss_rst_nd(d4est_operators_t* d4est_ops, double* ref_xyz_nd,
+static void d4est_operators_build_gauss_rst_nd(d4est_operators_t* d4est_ops, double * restrict  ref_xyz_nd,
                                 int dim, int deg) {
   int nodes = deg + 1;
   int vol_nodes = d4est_lgl_get_nodes(dim, deg);
@@ -1237,11 +1237,11 @@ double* d4est_operators_fetch_lobatto_rst_nd(d4est_operators_t* d4est_ops, int d
 void d4est_operators_apply_dij
 (
  d4est_operators_t* d4est_ops,
- double* in,
+ double * restrict  in,
  int dim,
  int deg,
  int dir,
- double* out
+ double * restrict  out
 )
 {
   D4EST_ASSERT(dir < dim && dir >= 0 && (dim == 1 || dim == 3 || dim == 2));
@@ -1284,7 +1284,7 @@ double* d4est_operators_fetch_gauss_rst_nd(d4est_operators_t* d4est_ops, int dim
 }
 
 
-static void d4est_operators_build_lift_1d(d4est_operators_t* d4est_ops, double* lift_1d, int deg) {
+static void d4est_operators_build_lift_1d(d4est_operators_t* d4est_ops, double * restrict  lift_1d, int deg) {
   memset(lift_1d, 0., sizeof(double) * 2 * (deg + 1));
   lift_1d[0] = 1.;
   lift_1d[2 * deg + 1] = 1.;
@@ -1304,8 +1304,8 @@ static double* d4est_operators_fetch_lift_1d(d4est_operators_t* d4est_ops, int d
   
 }
 
-void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double* in, int dim, int deg,
-                       int face, double* out) {
+void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double * restrict  in, int dim, int deg,
+                       int face, double * restrict  out) {
   D4EST_ASSERT(dim == 2 || dim == 3);
   D4EST_ASSERT(face < 2 * (dim));
 
@@ -1371,8 +1371,8 @@ void d4est_operators_apply_lift(d4est_operators_t* d4est_ops, double* in, int di
   }
 }
 
-void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int dim,
-                         int face, int deg, double* out) {
+void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double * restrict  in, int dim,
+                         int face, int deg, double * restrict  out) {
   
   D4EST_ASSERT(face < 2 * (dim));
   double* slicer_1d = d4est_operators_fetch_lift_1d(d4est_ops, deg);
@@ -1435,8 +1435,8 @@ void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double* in, int 
 }
 
 
-void d4est_operators_convert_nodal_to_modal(d4est_operators_t* d4est_ops, double* in,
-                                   int dim, int deg, double* out) {
+void d4est_operators_convert_nodal_to_modal(d4est_operators_t* d4est_ops, double * restrict  in,
+                                   int dim, int deg, double * restrict  out) {
   D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   int nodes = deg + 1;
   double* invvij_1d = P4EST_ALLOC(double, nodes* nodes);
@@ -1503,7 +1503,7 @@ void d4est_operators_build_p_prolong_1d_inverse(d4est_operators_t* d4est_ops,
 
 
 static void d4est_operators_build_p_prolong_transpose_1d(d4est_operators_t* d4est_ops,
-                                                double* p_prolong_transpose_1d,
+                                                double * restrict  p_prolong_transpose_1d,
                                                 int degH, int degh) {
   double* p_prolong_1d = d4est_operators_fetch_p_prolong_1d(d4est_ops, degH, degh);
   d4est_linalg_mat_transpose_nonsqr(p_prolong_1d, p_prolong_transpose_1d, (degh + 1),
@@ -1531,16 +1531,16 @@ double* d4est_operators_fetch_p_prolong_transpose_1d
 
 
 void d4est_operators_build_p_prolong_transpose_1d_inverse(d4est_operators_t* d4est_ops,
-                                                double* p_prolong_transpose_1d_inverse,
+                                                double * restrict  p_prolong_transpose_1d_inverse,
                                                 int degH, int degh) {
   double* p_prolong_transpose_1d = d4est_operators_fetch_p_prolong_transpose_1d(d4est_ops, degH, degh);
   d4est_linalg_leftinverse(p_prolong_transpose_1d, p_prolong_transpose_1d_inverse, degH + 1, degh + 1);
 }
 
 
-void d4est_operators_apply_hp_prolong_transpose(d4est_operators_t* d4est_ops, double* in,
+void d4est_operators_apply_hp_prolong_transpose(d4est_operators_t* d4est_ops, double * restrict  in,
                                        int* degh, int dim, int degH,
-                                       double* out) {
+                                       double * restrict  out) {
   D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   int children = (1 << dim);
   int c;
@@ -1568,9 +1568,9 @@ void d4est_operators_apply_hp_prolong_transpose(d4est_operators_t* d4est_ops, do
   P4EST_FREE(tmp);
 }
 
-void d4est_operators_apply_p_prolong_transpose(d4est_operators_t* d4est_ops, double* in,
+void d4est_operators_apply_p_prolong_transpose(d4est_operators_t* d4est_ops, double * restrict  in,
                                       int degh, int dim, int degH,
-                                      double* out) {
+                                      double * restrict  out) {
   double* p_prolong_transpose_1d =
       d4est_operators_fetch_p_prolong_transpose_1d(d4est_ops, degH, degh);
 
@@ -1602,8 +1602,8 @@ void d4est_operators_apply_p_prolong_transpose(d4est_operators_t* d4est_ops, dou
 
 static
 void d4est_operators_build_hp_restrict_interp_1d_aux(
-    int degh, int degH, int c, double* inv_v1d_trans_degh,
-    double* lobatto_nodes_degH, double* hp_restrict_interp_matrix_1d) {
+    int degh, int degH, int c, double * restrict  inv_v1d_trans_degh,
+    double * restrict  lobatto_nodes_degH, double * restrict  hp_restrict_interp_matrix_1d) {
   D4EST_ASSERT(degH <= degh);
   D4EST_ASSERT(c == 0 || c == 1);
 
@@ -1641,7 +1641,7 @@ void d4est_operators_build_hp_restrict_interp_1d_aux(
 }
 
 static void d4est_operators_build_hp_restrict_interp_1d(d4est_operators_t* d4est_ops,
-                                               double* hp_restrict_interp_1d,
+                                               double * restrict  hp_restrict_interp_1d,
                                                int degH, int degh) {
   int edge_nodes_degH = degH + 1;
   int edge_nodes_degh = degh + 1;
@@ -1682,9 +1682,9 @@ static double* d4est_operators_fetch_hp_restrict_interp_1d(d4est_operators_t* d4
                                      );
 }
 
-void d4est_operators_apply_hp_restrict_interp(d4est_operators_t* d4est_ops, double* in,
+void d4est_operators_apply_hp_restrict_interp(d4est_operators_t* d4est_ops, double * restrict  in,
                                      int* degh, int dim, int degH,
-                                     double* out) {
+                                     double * restrict  out) {
   D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   int children = (1 << dim);
   int c;
@@ -1707,8 +1707,8 @@ void d4est_operators_apply_hp_restrict_interp(d4est_operators_t* d4est_ops, doub
 }
 
 static void d4est_operators_build_p_restrict_interp_1d_aux(
-    int degh, int degH, double* inv_v1d_trans_degh, double* lobatto_nodes_degH,
-    double* hp_restrict_interp_matrix_1d) {
+    int degh, int degH, double * restrict  inv_v1d_trans_degh, double * restrict  lobatto_nodes_degH,
+    double * restrict  hp_restrict_interp_matrix_1d) {
   int n, i;
   int nodesH = degH + 1;
   int nodesh = degh + 1;
@@ -1729,7 +1729,7 @@ static void d4est_operators_build_p_restrict_interp_1d_aux(
 }
 
 static void d4est_operators_build_p_restrict_interp_1d(d4est_operators_t* d4est_ops,
-                                              double* hp_restrict_interp_1d,
+                                              double * restrict  hp_restrict_interp_1d,
                                               int degH, int degh) {
   D4EST_ASSERT(degH <= degh);
   /* int edge_nodes_degH = degH + 1; */
@@ -1773,8 +1773,8 @@ d4est_operators_fetch_p_restrict_interp_1d
                                      );  
 }
 
-void d4est_operators_apply_p_restrict_interp(d4est_operators_t* d4est_ops, double* in,
-                                    int degh, int dim, int degH, double* out) {
+void d4est_operators_apply_p_restrict_interp(d4est_operators_t* d4est_ops, double * restrict  in,
+                                    int degh, int dim, int degH, double * restrict  out) {
   double* p_restrict_1d = d4est_operators_fetch_p_restrict_interp_1d(d4est_ops, degH, degh);
 
   int nodesh = degh + 1;
@@ -1800,7 +1800,7 @@ void d4est_operators_apply_p_restrict_interp(d4est_operators_t* d4est_ops, doubl
   }
 }
 
-static void d4est_operators_build_flip_1d(d4est_operators_t* d4est_ops, double* flip_1d, int deg) {
+static void d4est_operators_build_flip_1d(d4est_operators_t* d4est_ops, double * restrict  flip_1d, int deg) {
   memset(flip_1d, 0., sizeof(double) * (deg + 1) * (deg + 1));
   int offset;
   int i;
@@ -1822,7 +1822,7 @@ static double* d4est_operators_fetch_flip_1d(d4est_operators_t* d4est_ops, int d
     );     
 }
 
-void d4est_operators_apply_flip(d4est_operators_t* d4est_ops, double* in, int dim, int deg,
+void d4est_operators_apply_flip(d4est_operators_t* d4est_ops, double * restrict  in, int dim, int deg,
                        int dir, double* out) {
   D4EST_ASSERT(dim == 1 || dim == 2);
   double* flip_1d = d4est_operators_fetch_flip_1d(d4est_ops, deg);
@@ -1845,13 +1845,13 @@ void d4est_operators_apply_flip(d4est_operators_t* d4est_ops, double* in, int di
 void d4est_operators_reorient_face_data
 (
  d4est_operators_t* d4est_ops,
- double* in,
+ double * restrict  in,
  int face_dim,
  int deg,
  int o, 
  int f_m,
  int f_p,
- double* out
+ double * restrict  out
 )
 {
   /* dim == 1 and o == 4 hasn't been unit tested therefore check for them */
@@ -1939,7 +1939,7 @@ void d4est_operators_reorient_face_data
 }
 
 
-static void d4est_operators_build_vtk_interp_1d(d4est_operators_t* d4est_ops, double* vtk_interp_1d, int deg) {
+static void d4est_operators_build_vtk_interp_1d(d4est_operators_t* d4est_ops, double * restrict  vtk_interp_1d, int deg) {
   memset(vtk_interp_1d, 0., sizeof(double) * (deg + 1) * (deg) * 2);
   /* left corners */
   for (int i = 0; i < deg; i++) {
@@ -1974,11 +1974,11 @@ static double* d4est_operators_fetch_vtk_interp_1d(d4est_operators_t* d4est_ops,
 void d4est_operators_apply_vtk_interp
 (
  d4est_operators_t* d4est_ops,
- double* in,
+ double * restrict  in,
  int dim,
  int deg,
  int c,
- double* out
+ double * restrict  out
 ){
   D4EST_ASSERT((c < (1 << dim)));
 
@@ -2012,7 +2012,7 @@ void d4est_operators_apply_vtk_interp
 static void d4est_operators_build_vtk_rst
 (
  d4est_operators_t* d4est_ops,
- double* vtk_rst,
+ double * restrict  vtk_rst,
  int dim, int deg
 )
 {
@@ -2044,10 +2044,10 @@ static void d4est_operators_build_vtk_rst
 void d4est_operators_convert_nodal_to_vtk
 (
  d4est_operators_t* d4est_ops,
- double* vec,
+ double * restrict  vec,
  int dim,
  int deg,
- double* vtk_vec /* should be (chiildren)*(deg)^dim */
+ double * restrict  vtk_vec /* should be (chiildren)*(deg)^dim */
 )
 {
   int deg_dim = (dim == 2) ? deg*deg : deg*deg*deg;
@@ -2089,7 +2089,7 @@ double* d4est_operators_fetch_vtk_rst
 }
 
 
-static void d4est_operators_build_dij_trans_1d(d4est_operators_t* d4est_ops, double* dij_trans_1d,
+static void d4est_operators_build_dij_trans_1d(d4est_operators_t* d4est_ops, double * restrict  dij_trans_1d,
                                 int deg) {
 
   double* Dr_1d = d4est_operators_fetch_dij_1d(d4est_ops, deg);
@@ -2112,8 +2112,8 @@ static double* d4est_operators_fetch_dij_trans_1d(d4est_operators_t* d4est_ops, 
 
 
 
-void d4est_operators_apply_dij_transpose(d4est_operators_t* d4est_ops, double* in, int dim, int deg,
-                      int dir, double* out) {
+void d4est_operators_apply_dij_transpose(d4est_operators_t* d4est_ops, double * restrict  in, int dim, int deg,
+                      int dir, double * restrict  out) {
   D4EST_ASSERT(dir < dim && dir >= 0 && (dim == 1 || dim == 3 || dim == 2));
   double* Dr_1d_transpose = d4est_operators_fetch_dij_trans_1d(d4est_ops, deg);
 
@@ -2144,8 +2144,8 @@ void d4est_operators_apply_dij_transpose(d4est_operators_t* d4est_ops, double* i
 
 double
 d4est_operators_interpolate(d4est_operators_t* d4est_ops,
-                            double* rst,
-                            double* f,
+                            double * restrict  rst,
+                            double * restrict  f,
                             int dim,
                             int deg
                            )
@@ -2202,8 +2202,8 @@ double
 d4est_operators_interpolate_using_bary
 (
  d4est_operators_t* d4est_ops,
- double* rst,
- double* f,
+ double * restrict  rst,
+ double * restrict  f,
  int dim,
  int deg
 )

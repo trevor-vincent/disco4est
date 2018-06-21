@@ -8,7 +8,7 @@
 
 
 void
-d4est_linalg_invert (double *A, int m)
+d4est_linalg_invert (double * restrict A, int m)
 {
   int                 N = m;
   int                 lwork = N * N;
@@ -25,7 +25,7 @@ d4est_linalg_invert (double *A, int m)
 }
 
 void
-d4est_linalg_invert_and_copy (double *A, double *inv_A, int m)
+d4est_linalg_invert_and_copy (double * restrict A, double * restrict inv_A, int m)
 {
   int                 i, j;
   for (i = 0; i < m; i++)
@@ -35,7 +35,7 @@ d4est_linalg_invert_and_copy (double *A, double *inv_A, int m)
 }
 
 void
-d4est_linalg_leftinverse(double *A, double* inv_A, int A_rows, int A_cols)
+d4est_linalg_leftinverse(double * restrict A, double * restrict  inv_A, int A_rows, int A_cols)
 {
   double* AT = (double *) malloc (sizeof (double) * A_rows * A_cols);
   double* ATA = (double *) malloc (sizeof (double) * A_cols * A_cols);
@@ -63,7 +63,7 @@ d4est_linalg_leftinverse(double *A, double* inv_A, int A_rows, int A_cols)
  * @param l rows(B)
  */
 void
-d4est_linalg_mat_multiply (double *A, double *B, double *C, int m, int l, int n)
+d4est_linalg_mat_multiply (double * restrict A, double * restrict B, double * restrict C, int m, int l, int n)
 {
   char                ntran = 'N';
   double              one = 1.;
@@ -78,8 +78,8 @@ d4est_linalg_mat_multiply (double *A, double *B, double *C, int m, int l, int n)
 }
 
 void
-d4est_linalg_matvec_plus_vec (double alpha, double *A, double *v, double beta,
-                        double *b, int m, int n)
+d4est_linalg_matvec_plus_vec (double alpha, double * restrict A, double * restrict v, double beta,
+                        double * restrict b, int m, int n)
 {
   char                ytran = 'T';
   int                 dimM = m;
@@ -96,7 +96,7 @@ d4est_linalg_matvec_plus_vec (double alpha, double *A, double *v, double beta,
 }
 
 void
-d4est_linalg_mat_transpose (double *A, double *Atrans, int N)
+d4est_linalg_mat_transpose (double * restrict A, double * restrict Atrans, int N)
 {
   int                 i, j;
   for (i = 0; i < N; i++)
@@ -113,7 +113,7 @@ d4est_linalg_mat_transpose (double *A, double *Atrans, int N)
  * @param A_cols
  */
 void
-d4est_linalg_mat_transpose_nonsqr (double *A, double *A_transpose, int A_rows,
+d4est_linalg_mat_transpose_nonsqr (double * restrict A, double * restrict A_transpose, int A_rows,
                              int A_cols)
 {
   int                 i, j;
@@ -132,7 +132,7 @@ d4est_linalg_mat_transpose_nonsqr (double *A, double *A_transpose, int A_rows,
  * @param M columns
  */
 void
-d4est_linalg_set_column (double *A, double *column, int col, int N, int M)
+ d4est_linalg_set_column (double * restrict A, double * restrict column, int col, int N, int M)
 {
   assert (col < M);
   int                 s = 0;
@@ -146,7 +146,7 @@ d4est_linalg_set_column (double *A, double *column, int col, int N, int M)
 }
 
 void
-d4est_linalg_set_column_opt (double *A, double *column, int col, int N, int M)
+d4est_linalg_set_column_opt (double * restrict A, double * restrict column, int col, int N, int M)
 {
   assert (col < M);
   int                 s = 0;
@@ -159,21 +159,21 @@ d4est_linalg_set_column_opt (double *A, double *column, int col, int N, int M)
 
 
 void
-d4est_linalg_vec_scale (double alpha, double *x, int N)
+d4est_linalg_vec_scale (double alpha, double * restrict x, int N)
 {
   int                 incx = 1;
   dscal_ (&N, &alpha, x, &incx);
 }
 
 void
-d4est_linalg_vec_normalize(double*x, int N)
+d4est_linalg_vec_normalize(double * restrict x, int N)
 {
   double xdotx = d4est_linalg_vec_dot(x,x,N);
   double norm = sqrt(xdotx);
   d4est_linalg_vec_scale(norm, x, N);
 }
 
-void d4est_linalg_vec_gen_random(double* vec, int N, long int seed, double a, double b){
+void d4est_linalg_vec_gen_random(double * restrict  vec, int N, long int seed, double a, double b){
   int i;
   for (i = 0; i < N; i++) {
     vec[i] = d4est_util_uniform_rand(seed,a,b);
@@ -181,14 +181,14 @@ void d4est_linalg_vec_gen_random(double* vec, int N, long int seed, double a, do
 }
 
 void
-d4est_linalg_vec_gen_normalized_random(double* vec, int N, long int seed, double a, double b)
+d4est_linalg_vec_gen_normalized_random(double * restrict  vec, int N, long int seed, double a, double b)
 {
   d4est_linalg_vec_gen_random(vec, N, seed, a, b);
   d4est_linalg_vec_normalize(vec, N);
 }
 
 void
-d4est_linalg_vec_axpy (double alpha, double *x, double *y, int N)
+d4est_linalg_vec_axpy (double alpha, double * restrict x, double * restrict y, int N)
 {
   int                 incx = 1;
   int                 incy = 1;
@@ -196,21 +196,21 @@ d4est_linalg_vec_axpy (double alpha, double *x, double *y, int N)
 }
 
 void
-d4est_linalg_vec_axpyeqz (double alpha, double *x, double *y, double *z, int N)
+d4est_linalg_vec_axpyeqz (double alpha, double * restrict x, double * restrict y, double * restrict z, int N)
 {
   d4est_util_copy_1st_to_2nd (y, z, N);
   d4est_linalg_vec_axpy (alpha, x, z, N);
 }
 
 void
-d4est_linalg_vec_xpby (double *x, double beta, double *y, int N)
+d4est_linalg_vec_xpby (double * restrict x, double beta, double * restrict y, int N)
 {
   d4est_linalg_vec_scale (beta, y, N);
   d4est_linalg_vec_axpy (1., x, y, N);
 }
 
 double
-d4est_linalg_vec_dot (double *x, double *y, int N)
+d4est_linalg_vec_dot (double * restrict x, double * restrict y, int N)
 {
   int                 incx = 1;
   int                 incy = 1;
@@ -227,7 +227,7 @@ d4est_linalg_vec_dot (double *x, double *y, int N)
  * @param N
  */
 void
-d4est_linalg_sym_eigvals (double *A, double *eig_vals, int N)
+d4est_linalg_sym_eigvals (double * restrict A, double * restrict eig_vals, int N)
 {
   const int           rows = N;
   char                no_vec = 'N';
@@ -240,7 +240,7 @@ d4est_linalg_sym_eigvals (double *A, double *eig_vals, int N)
 }
 
 void
-d4est_linalg_sym_eigvecs (double *A, double *eig_vals, int N)
+d4est_linalg_sym_eigvecs (double * restrict A, double * restrict eig_vals, int N)
 {
   const int           rows = N;
   char                jobz = 'V';
@@ -253,7 +253,7 @@ d4est_linalg_sym_eigvecs (double *A, double *eig_vals, int N)
 }
 
 void
-d4est_linalg_vec_fabs(double* x, int N)
+d4est_linalg_vec_fabs(double * restrict  x, int N) 
 {
   int i;
   for (i = 0; i < N; i++) {
@@ -262,7 +262,7 @@ d4est_linalg_vec_fabs(double* x, int N)
 }
 
 void
-d4est_linalg_vec_fabsdiff(double* x, double* y, double* result, int N)
+d4est_linalg_vec_fabsdiff(double * restrict  x, double * restrict  y, double * restrict  result, int N)
 {
   d4est_linalg_vec_axpyeqz(-1., x, y, result, N);
   d4est_linalg_vec_fabs(result, N);
@@ -271,9 +271,9 @@ d4est_linalg_vec_fabsdiff(double* x, double* y, double* result, int N)
 void
 d4est_linalg_component_mult
 (
- double* x,
- double* y,
- double* xy,
+ double * restrict  x,
+ double * restrict  y,
+ double * restrict  xy,
  int N
 )
 {
@@ -287,9 +287,9 @@ d4est_linalg_component_mult
 void
 d4est_linalg_component_div
 (
- double* x,
- double* y,
- double* xdivy,
+ double * restrict  x,
+ double * restrict  y,
+ double * restrict  xdivy,
  int N
 )
 {
@@ -317,9 +317,9 @@ d4est_linalg_cross_prod
  double bx,
  double by,
  double bz,
- double* axb_x,
- double* axb_y,
- double* axb_z
+ double * restrict  axb_x,
+ double * restrict  axb_y,
+ double * restrict  axb_z
 )
 {
   *axb_x = ay*bz - az*by;
@@ -330,7 +330,7 @@ d4est_linalg_cross_prod
 double
 d4est_linalg_vec_sum
 (
- double* vec,
+ double * restrict  vec,
  int N
 )
 {
@@ -346,9 +346,9 @@ d4est_linalg_vec_sum
 double
 d4est_linalg_vec1_trans_mat_vec2
 (
- double* vec1,
- double* mat,
- double* vec2,
+ double * restrict  vec1,
+ double * restrict  mat,
+ double * restrict  vec2,
  int N
 )
 {

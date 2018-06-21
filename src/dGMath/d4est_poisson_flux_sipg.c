@@ -25,19 +25,19 @@ d4est_poisson_flux_sipg_dirichlet_aux
  d4est_poisson_flux_boundary_data_t* boundary_data,
  void* boundary_condition_fcn_data,
  void* flux_parameter_data,
- double* term1_quad,
- double* VT_w_term1_lobatto,
- double* lifted_VT_w_term1_lobatto,
- double* term2_quad [P4EST_DIM],
- double* VT_w_term2_lobatto [P4EST_DIM],
- double* lifted_VT_w_term2_lobatto [P4EST_DIM],
- double* DT_lifted_VT_w_term2_lobatto [P4EST_DIM],
- double* term3_quad,
- double* VT_w_term3_lobatto,
- double* lifted_VT_w_term3_lobatto,
- double* sigma,
- double* u_at_bndry_lobatto,
- double* u_at_bndry_lobatto_to_quad
+ double * restrict  term1_quad,
+ double * restrict  VT_w_term1_lobatto,
+ double * restrict  lifted_VT_w_term1_lobatto,
+ double *  term2_quad [P4EST_DIM],
+ double *   VT_w_term2_lobatto [P4EST_DIM],
+ double *   lifted_VT_w_term2_lobatto [P4EST_DIM],
+ double *   DT_lifted_VT_w_term2_lobatto [P4EST_DIM],
+ double * restrict  term3_quad,
+ double * restrict  VT_w_term3_lobatto,
+ double * restrict  lifted_VT_w_term3_lobatto,
+ double * restrict  sigma,
+ double * restrict  u_at_bndry_lobatto,
+ double * restrict  u_at_bndry_lobatto_to_quad
 ){
   d4est_poisson_dirichlet_bc_t* bc_data = boundary_condition_fcn_data;
   
@@ -371,9 +371,9 @@ d4est_poisson_flux_sipg_robin_aux
  d4est_poisson_flux_boundary_data_t* boundary_data,
  void* boundary_condition_fcn_data,
  void* flux_parameter_data,
- double* term1_quad,
- double* VT_w_term1_lobatto,
- double* lifted_VT_w_term1_lobatto
+ double * restrict  term1_quad,
+ double * restrict  VT_w_term1_lobatto,
+ double * restrict  lifted_VT_w_term1_lobatto
 ){
   d4est_quadrature_mortar_t* face_object = boundary_data->face_object;
   int deg_mortar_quad = boundary_data->deg_mortar_quad;
@@ -539,27 +539,27 @@ d4est_poisson_flux_sipg_interface_aux
  d4est_mesh_data_t* d4est_factors,
  d4est_poisson_flux_interface_data_t* mortar_data,
  void* params,
- double* lifted_proj_VT_w_term1_mortar_lobatto,
- double* proj_VT_w_term1_mortar_lobatto,
- double* VT_w_term1_mortar_lobatto,
- double* term1_mortar_quad,
- double* DT_lifted_proj_VT_w_term2_mortar_lobatto [(P4EST_DIM)],
- double* lifted_proj_VT_w_term2_mortar_lobatto [(P4EST_DIM)],
- double* proj_VT_w_term2_mortar_lobatto [(P4EST_DIM)],
- double* VT_w_term2_mortar_lobatto [(P4EST_DIM)],
- double* term2_mortar_quad [(P4EST_DIM)],
- double* lifted_proj_VT_w_term3_mortar_lobatto,
- double* proj_VT_w_term3_mortar_lobatto,
- double* VT_w_term3_mortar_lobatto,
- double* term3_mortar_quad   
+ double * restrict  lifted_proj_VT_w_term1_mortar_lobatto,
+ double * restrict  proj_VT_w_term1_mortar_lobatto,
+ double * restrict  VT_w_term1_mortar_lobatto,
+ double * restrict  term1_mortar_quad,
+ double *   DT_lifted_proj_VT_w_term2_mortar_lobatto [(P4EST_DIM)],
+ double *   lifted_proj_VT_w_term2_mortar_lobatto [(P4EST_DIM)],
+ double *   proj_VT_w_term2_mortar_lobatto [(P4EST_DIM)],
+ double *   VT_w_term2_mortar_lobatto [(P4EST_DIM)],
+ double *   term2_mortar_quad [(P4EST_DIM)],
+ double * restrict  lifted_proj_VT_w_term3_mortar_lobatto,
+ double * restrict  proj_VT_w_term3_mortar_lobatto,
+ double * restrict  VT_w_term3_mortar_lobatto,
+ double * restrict  term3_mortar_quad   
 )
 {
   d4est_quadrature_mortar_t* mortar_face_object = mortar_data->mortar_face_object;
   
-  double* u_m_on_f_m_mortar_quad = mortar_data->u_m_on_f_m_mortar_quad;
-  double* sj_on_f_m_mortar_quad = mortar_data->sj_on_f_m_mortar_quad;
-  /* double* j_div_sj_on_f_m_mortar_quad = mortar_data->j_div_sj_on_f_m_mortar_quad; */
-  double* u_p_on_f_p_mortar_quad = mortar_data->u_p_on_f_p_mortar_quad;
+  double * restrict  u_m_on_f_m_mortar_quad = mortar_data->u_m_on_f_m_mortar_quad;
+  double * restrict  sj_on_f_m_mortar_quad = mortar_data->sj_on_f_m_mortar_quad;
+  /* double * restrict  j_div_sj_on_f_m_mortar_quad = mortar_data->j_div_sj_on_f_m_mortar_quad; */
+  double * restrict  u_p_on_f_p_mortar_quad = mortar_data->u_p_on_f_p_mortar_quad;
   /* double* j_div_sj_on_f_p_mortar_quad = mortar_data->j_div_sj_on_f_p_mortar_quad; */
   
   double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
@@ -591,8 +591,8 @@ d4est_poisson_flux_sipg_interface_aux
   double* ones_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
   d4est_util_fill_array(ones_mortar_quad, 1., total_nodes_mortar_quad);
 
-  double* hm_mortar_quad = mortar_data->hm_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
-  double* hp_mortar_quad = mortar_data->hp_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
+  double * restrict  hm_mortar_quad = mortar_data->hm_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
+  double * restrict  hp_mortar_quad = mortar_data->hp_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
 
  /*  d4est_poisson_flux_sipg_calculate_h */
  /*    ( */

@@ -25,7 +25,6 @@ init_sinxyz
   return sin(M_PI*x)*sin(M_PI*y)*sin(M_PI*z);
 }
 
-
 int main(int argc, char *argv[])
 {
   sc_MPI_Comm mpicomm;

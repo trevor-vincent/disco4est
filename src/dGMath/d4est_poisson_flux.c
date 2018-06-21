@@ -55,8 +55,8 @@ d4est_poisson_flux_boundary
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* xyz_on_f_m_lobatto [(P4EST_DIM)];
   /* double* j_div_sj_on_f_m_quad = &d4est_factors->j_div_sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]]; */
-  double* h_quad = &d4est_factors->hm_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
-  double* sj_on_f_m_quad = &d4est_factors->sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
+  double * restrict  h_quad = &d4est_factors->hm_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
+  double * restrict  sj_on_f_m_quad = &d4est_factors->sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
 
    for (int d = 0; d < (P4EST_DIM); d++){
      n_on_f_m_quad[d] = &d4est_factors->n_m_mortar_quad[e_m->mortar_quad_vector_stride[f_m] + d*face_nodes_m_quad];
@@ -448,7 +448,7 @@ static void
   double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* drst_dxyz_p_on_mortar_quad_porder [(P4EST_DIM)][(P4EST_DIM)];
   double* n_on_f_m_mortar_quad [(P4EST_DIM)];
-  double* sj_on_f_m_mortar_quad = &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+  double * restrict  sj_on_f_m_mortar_quad = &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
 
    for (int d = 0; d < (P4EST_DIM); d++){
      n_on_f_m_mortar_quad[d] = &d4est_factors->n_m_mortar_quad[e_m[0]->mortar_quad_vector_stride[f_m] + d*total_nodes_mortar_quad];
