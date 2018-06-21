@@ -8,7 +8,11 @@
 typedef struct multigrid_matrix_op_t multigrid_matrix_op_t;
 
 struct multigrid_matrix_op_t{  
-       
+  /* if multigrid is used as a preconditioner, this changes everytime a new newton iteration
+   * occurs, which would mean the operator should change, which means we should update the 
+   * the multigrid matrix operator */
+  int krylov_pc_updates;
+  
   int* matrix_nodes_on_level;
   int total_matrix_nodes_on_multigrid;
   

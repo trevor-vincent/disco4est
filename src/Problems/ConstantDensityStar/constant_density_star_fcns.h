@@ -700,9 +700,10 @@ void constant_density_star_krylov_pc_setup_fcn
  krylov_pc_t* krylov_pc
 )
 {
-  multigrid_data_t* mg_data = krylov_pc->pc_data;
+  krylov_pc_multigrid_data_t* krylov_pcmgdata = krylov_pc->pc_data;
+  multigrid_data_t* mg_data = krylov_pcmgdata->mg_data;
   krylov_ctx_t* ctx = krylov_pc->pc_ctx;
-
+  
   if (ctx->p4est->mpirank == 0)
     printf("[KRYLOV_PC_MULTIGRID_SETUP_FCN] Initializing Matrix Operator\n");
   

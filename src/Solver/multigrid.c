@@ -369,6 +369,7 @@ multigrid_data_init
   mg_data->power_rtol = -1;
   mg_data->power_imax = -1;
   mg_data->power_imin = -1;
+  mg_data->krylov_pc_updates = 0;
   mg_data->use_power_method_debug = 0;
   mg_data->num_of_p_coarsen_levels = 0;
   mg_data->use_p_coarsen = 0;

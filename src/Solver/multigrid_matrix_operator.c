@@ -17,31 +17,33 @@ multigrid_matrix_operator_restriction_callback
   d4est_operators_t* d4est_ops = mg_data->d4est_ops;
   multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
-  int* fine_matrix_stride = &matrix_op->fine_matrix_stride;
-  int* coarse_matrix_stride = &matrix_op->coarse_matrix_stride;
-  int fine_matrix_nodes = matrix_op->fine_matrix_nodes;
+  if (mg_data->krylov_pc_updates == matrix_op->krylov_pc_updates + 1){
+    int* fine_matrix_stride = &matrix_op->fine_matrix_stride;
+    int* coarse_matrix_stride = &matrix_op->coarse_matrix_stride;
+    int fine_matrix_nodes = matrix_op->fine_matrix_nodes;
   
-  double* matrix_children = &matrix_op->matrix[*fine_matrix_stride];
-  double* matrix_parent = &matrix_op->matrix[fine_matrix_nodes + *coarse_matrix_stride];
+    double* matrix_children = &matrix_op->matrix[*fine_matrix_stride];
+    double* matrix_parent = &matrix_op->matrix[fine_matrix_nodes + *coarse_matrix_stride];
 
-  d4est_operators_compute_PT_mat_P
-    (
-     d4est_ops,
-     matrix_children,
-     degH,
-     (P4EST_DIM),
-     degh,
-     num_children_h,
-     matrix_parent
-    );
+    d4est_operators_compute_PT_mat_P
+      (
+       d4est_ops,
+       matrix_children,
+       degH,
+       (P4EST_DIM),
+       degh,
+       num_children_h,
+       matrix_parent
+      );
 
-  for (int i = 0; i < num_children_h; i++){
-    int fine_volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM) , degh[i] );
-    (*fine_matrix_stride) += fine_volume_nodes*fine_volume_nodes;
+    for (int i = 0; i < num_children_h; i++){
+      int fine_volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM) , degh[i] );
+      (*fine_matrix_stride) += fine_volume_nodes*fine_volume_nodes;
+    }
+  
+    int coarse_volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM) , degH);
+    (*coarse_matrix_stride) += coarse_volume_nodes*coarse_volume_nodes;
   }
-  
-  int coarse_volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM) , degH);
-  (*coarse_matrix_stride) += coarse_volume_nodes*coarse_volume_nodes;
 }
 
 static void
@@ -106,6 +108,18 @@ multigrid_matrix_operator_update_callback
   }
   else if(mg_data->mg_state == POST_V){
     matrix_op->completed_alloc = 1;
+    if (mg_data->krylov_pc_updates == matrix_op->krylov_pc_updates + 1){
+      matrix_op->krylov_pc_updates++;
+    }
+    else if (mg_data->krylov_pc_updates == matrix_op->krylov_pc_updates){
+      return;
+    }
+    else {
+      zlog_category_t *c_def = zlog_get_category("multigrid_matrix_operator");
+      zlog_info(c_def, "mg_data->krylov_pc_updates = %d\n",mg_data->krylov_pc_updates);
+      zlog_info(c_def, "matrix_op->krylov_pc_updates = %d\n",matrix_op->krylov_pc_updates);
+      D4EST_ABORT("not good values for krylov_pc_updates" );
+    }
   }
   else {
     return;
@@ -133,6 +147,7 @@ multigrid_matrix_operator_init
   matrix_op->fine_matrix_stride = -1;
   matrix_op->coarse_matrix_stride = -1;
   matrix_op->matrix = matrix_op->matrix_at0;
+  matrix_op->krylov_pc_updates = -1;
 
   multigrid_user_callbacks_t* user_callbacks = P4EST_ALLOC(multigrid_user_callbacks_t, 1);
 

@@ -222,12 +222,16 @@ struct multigrid_data_t {
   int* nodes_on_level_of_multigrid;
   int* nodes_on_level_of_surrogate_multigrid;
 
+  /* OTHER INTERNAL PARAMETERS */
   int print_state_info;
   int use_power_method_debug;
   double power_atol;
   double power_rtol;
   double power_imax;
   double power_imin;
+
+  /* if multigrid is being used as a preconditioner, keep track of pc updates */
+  int krylov_pc_updates;
   
 };
 
