@@ -9,7 +9,6 @@
 typedef struct {
   
   penalty_calc_t u_penalty_fcn;
-  h_calc_method_t sipg_flux_h;
   double penalty_prefactor;
   d4est_mesh_size_parameters_t* size_params;
   void* user;

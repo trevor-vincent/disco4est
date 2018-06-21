@@ -47,6 +47,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src/Utilities)
 include_directories(${CMAKE_SOURCE_DIR}/src/Kron)
 include_directories(${CMAKE_SOURCE_DIR}/src/Databox)
 include_directories(${CMAKE_SOURCE_DIR}/src/Dictionary)
+include_directories(${CMAKE_SOURCE_DIR}/third_party/mpsort)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${MPI_C_INCLUDE_PATH})
 
@@ -131,6 +132,8 @@ SET (
   src/Solver/d4est_solver_full_matrix.c
   src/Solver/d4est_solver_matrix_symmetry.c
   src/Solver/d4est_power_method.c
+  third_party/mpsort/radixsort.c
+  third_party/mpsort/mpsort-mpi.c
   )
 
 add_library(d8est ${SRCS} ${SRCS_3D_ONLY})

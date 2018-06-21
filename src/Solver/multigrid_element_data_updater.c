@@ -12,7 +12,7 @@ multigrid_element_data_updater_init
  d4est_ghost_data_t** d4est_ghost_data,
  d4est_mesh_data_t* d4est_mesh_data_toplevel,
  void(*element_data_init_user_fcn)(d4est_element_data_t*,void*),
- void* user
+ d4est_mesh_initial_extents_t* initial_extents
 )
 {
   multigrid_element_data_updater_t* updater = P4EST_ALLOC(multigrid_element_data_updater_t,1);
@@ -23,7 +23,7 @@ multigrid_element_data_updater_init
   
   /* for curved infrastructure*/
   updater->element_data_init_user_fcn = element_data_init_user_fcn;
-  updater->user = user;
+  updater->user = initial_extents;
   updater->geometric_factors = P4EST_ALLOC(d4est_mesh_data_t*, num_of_levels);
 
   for (int level = 0; level < num_of_levels-1; level++){
@@ -33,6 +33,8 @@ multigrid_element_data_updater_init
   updater->geometric_factors[num_of_levels-1] = d4est_mesh_data_toplevel;
 
   updater->current_geometric_factors = updater->geometric_factors[num_of_levels-1];
+  updater->initial_extents = initial_extents;
+
   
   if (element_data_init_user_fcn == NULL){
     D4EST_ABORT("You must set the element data init user fcn for the element data updater\n");
@@ -76,6 +78,7 @@ multigrid_element_data_updater_update
   multigrid_data_t* mg_data = p4est->user_pointer;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
 
+  
   if (mg_data->mg_state == DOWNV_POST_COARSEN){
     d4est_mesh_update
       (
@@ -85,6 +88,7 @@ multigrid_element_data_updater_update
        mg_data->d4est_geom,
        mg_data->d4est_quad,
        NULL,
+       updater->initial_extents,
        DO_NOT_INITIALIZE_GHOST,
        DO_NOT_INITIALIZE_QUADRATURE_DATA,
        DO_NOT_INITIALIZE_GEOMETRY_DATA,
@@ -108,6 +112,7 @@ multigrid_element_data_updater_update
        mg_data->d4est_geom,
        mg_data->d4est_quad,
        updater->geometric_factors[level - 1],
+       updater->initial_extents,
        INITIALIZE_GHOST,
        INITIALIZE_QUADRATURE_DATA,
        /* (compute_geometric_factors == 1) ? INITIALIZE_GEOMETRY_DATA : DO_NOT_INITIALIZE_GEOMETRY_DATA, */
@@ -143,6 +148,7 @@ multigrid_element_data_updater_update
        mg_data->d4est_geom,
        mg_data->d4est_quad,
        updater->geometric_factors[level + 1],
+       updater->initial_extents,
        INITIALIZE_GHOST,
        INITIALIZE_QUADRATURE_DATA,
        DO_NOT_INITIALIZE_GEOMETRY_DATA,

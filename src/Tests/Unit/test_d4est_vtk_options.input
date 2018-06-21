@@ -9,6 +9,11 @@ region1_deg_quad_inc = 0
 region2_deg = 2
 region2_deg_quad_inc = 0
 
+[mesh_parameters]
+face_h_type = FACE_H_EQ_J_DIV_SJ_QUAD
+volume_h_type = VOL_H_EQ_DIAM
+
+
 [d4est_vtk_2]
 filename = cubed_sphere_binary
 geometry_section = geometry

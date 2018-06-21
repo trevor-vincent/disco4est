@@ -7,6 +7,10 @@ region0_deg_quad_inc = 0
 region1_deg = 1
 region1_deg_quad_inc = 0
 
+[mesh_parameters]
+face_h_type = FACE_H_EQ_J_DIV_SJ_MIN_LOBATTO
+volume_h_type = VOL_H_EQ_DIAM
+
 [problem]
 do_not_solve = 0
 use_compactified_size_params = 0

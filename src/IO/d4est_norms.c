@@ -417,7 +417,7 @@ d4est_norms_save
         );
       }
 
-      zlog_info(c_norms_output, output);
+       zlog_info(c_norms_output, output);
     }
     
   }

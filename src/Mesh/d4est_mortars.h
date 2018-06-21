@@ -7,8 +7,13 @@
 #include <d4est_element_data.h>
 #include <d4est_mesh.h>
 
+/* typedef enum */
+/*   { */
+/*     EXCHANGE_GHOST_DATA, */
+/*     DO_NOT_EXCHANGE_GHOST_DATA */
+/*   } d4est_mortars_exchange_data_option_t; */
 
-typedef enum {EXCHANGE_GHOST_DATA, DO_NOT_EXCHANGE_GHOST_DATA} d4est_mortars_exchange_data_option_t;
+
 
 
 /* No problem specific data needed */

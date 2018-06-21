@@ -430,7 +430,8 @@ multigrid_data_init
                                 d4est_mesh_set_quadratures_after_amr,
                                 initial_extents
                                );  
-  mg_data->user_callbacks = NULL;  
+  mg_data->user_callbacks = NULL;
+
   return mg_data;
 }
 

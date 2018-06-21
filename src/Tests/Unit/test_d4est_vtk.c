@@ -11,7 +11,6 @@
 #include <petscsnes.h>
 #include <zlog.h>
 
-
 static double
 init_sinxyz
 (
@@ -126,7 +125,8 @@ int main(int argc, char *argv[])
   d4est_mesh_data_t* geometric_factors = d4est_mesh_data_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] :      "test_d4est_vtk_options.input", "quadrature");
   
-  initial_grid_input->initial_nodes = d4est_mesh_update
+
+      d4est_mesh_local_sizes_t local_sizes= d4est_mesh_update
                                (
                                 p4est,
                                 &d4est_ghost,
@@ -134,6 +134,7 @@ int main(int argc, char *argv[])
                                 d4est_geom,
                                 d4est_quad,
                                 geometric_factors,
+                                initial_grid_input,
                                 INITIALIZE_GHOST,
                                 INITIALIZE_QUADRATURE_DATA,
                                 INITIALIZE_GEOMETRY_DATA,
@@ -142,7 +143,7 @@ int main(int argc, char *argv[])
                                 (void*)initial_grid_input
                                );
 
-
+      initial_grid_input->initial_nodes = local_sizes.local_nodes;
 
   d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, 7, 1);
 
@@ -161,7 +162,7 @@ int main(int argc, char *argv[])
   p4est_partition(p4est, 1, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
 
-  int nodes = d4est_mesh_update
+  local_sizes = d4est_mesh_update
                   (
                    p4est,
                    &d4est_ghost,
@@ -169,6 +170,7 @@ int main(int argc, char *argv[])
                    d4est_geom,
                    d4est_quad,
                    geometric_factors,
+                   initial_grid_input,
                    INITIALIZE_GHOST,
                    INITIALIZE_QUADRATURE_DATA,
                    INITIALIZE_GEOMETRY_DATA,
@@ -177,6 +179,8 @@ int main(int argc, char *argv[])
                    (void*)initial_grid_input
                   );
 
+  int nodes = local_sizes.local_nodes;
+  
   double* sinvec = P4EST_ALLOC(double, nodes);
   double* element_volume = P4EST_ALLOC(double, p4est->local_num_quadrants);
 

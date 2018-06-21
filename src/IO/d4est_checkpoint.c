@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <d4est_checkpoint.h>
+#include <d4est_h5.h>
 #include <d4est_mesh.h>
 #include <d4est_element_data.h>
 

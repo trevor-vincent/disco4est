@@ -12,152 +12,6 @@
 #include <d4est_poisson_flux.h>
 
 void
-d4est_poisson_flux_sipg_calculate_h
-(
- p4est_t* p4est,
- d4est_element_data_t** elems_side,
- int face_side,
- d4est_operators_t* d4est_ops,
- d4est_geometry_t* d4est_geom,
- d4est_quadrature_t* d4est_quad,
- h_calc_method_t sipg_flux_h,
- double* j_div_sj_quad_mortar,
- double* h_quad_mortar,
- int num_faces_mortar,
- int num_faces_side,
- int* nodes_mortar_quad,
- d4est_mesh_size_parameters_t size_params
-)
-{
-  if (sipg_flux_h == H_EQ_J_DIV_SJ_QUAD){
-    /* D4EST_ABORT("H_EQ_J_DIV_SJ_QUAD is no longer supported"); */
-    int stride = 0;
-    for (int f = 0; f < num_faces_mortar; f++){
-      for (int k = 0; k < nodes_mortar_quad[f]; k++){
-        int ks = k + stride;
-        h_quad_mortar[ks] = j_div_sj_quad_mortar[ks];
-      }
-      stride += nodes_mortar_quad[f];
-    }
-  }
-  else if (sipg_flux_h == H_EQ_TREE_H){
-    int stride = 0;
-    for (int f = 0; f < num_faces_mortar; f++){
-      for (int k = 0; k < nodes_mortar_quad[f]; k++){
-        int ks = k + stride;
-        h_quad_mortar[ks] = elems_side[0]->dq/(double)P4EST_ROOT_LEN;
-      }
-      stride += nodes_mortar_quad[f];
-    }
-  }
-  else if (sipg_flux_h == H_EQ_J_DIV_SJ_MIN_LOBATTO){
-
-    /* when we try to compute h for the "plus" side and if this side exists on another processor, this will fail because it tries to receive
-     * the j_div_sj_min from the local memory not the other processors memeory. This needs to be fixed before use, hence the ABORT */
-    
-    int stride = 0;
-    double h [P4EST_HALF];
-
-    for (int f = 0; f < num_faces_mortar; f++){
-      int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
-      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
-      int element_index = element_id + stride;
-      
-      h[f] = size_params.j_div_sj_min[element_index*(P4EST_FACES) + face_side]; 
-    } 
-                 
-    for (int f = 0; f < num_faces_mortar; f++){
-      for (int k = 0; k < nodes_mortar_quad[f]; k++){
-        int ks = k + stride;
-        h_quad_mortar[ks] = h[f];
-      }
-      stride += nodes_mortar_quad[f];
-    }
-  }
-
-  else if (sipg_flux_h == H_EQ_J_DIV_SJ_MEAN_LOBATTO){
-    int stride = 0;
-    double h [P4EST_HALF];
-    for (int f = 0; f < num_faces_mortar; f++){
-
-      int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
-      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
-      int element_index = element_id + stride;
-      h[f] = size_params.j_div_sj_mean[element_index*(P4EST_FACES) + face_side]; 
-    }
-                 
-    for (int f = 0; f < num_faces_mortar; f++){
-      for (int k = 0; k < nodes_mortar_quad[f]; k++){
-        int ks = k + stride;
-        h_quad_mortar[ks] = h[f];
-      }
-      stride += nodes_mortar_quad[f];
-    }
-  }
-  
-  else if (sipg_flux_h == H_EQ_TOTAL_VOLUME_DIV_TOTAL_AREA){
-    int stride = 0;
-    double area_of_mortar = 0.;
-    double volume_of_elements_touching_mortar = 0.;
-    for (int f = 0; f < num_faces_side; f++){
-      area_of_mortar += size_params.area[elems_side[f]->id*(P4EST_FACES) + face_side];
-      volume_of_elements_touching_mortar += size_params.volume[elems_side[f]->id];
-    }
-    double h = volume_of_elements_touching_mortar/area_of_mortar;
-                 
-    for (int f = 0; f < num_faces_mortar; f++){
-      for (int k = 0; k < nodes_mortar_quad[f]; k++){
-        int ks = k + stride;
-        h_quad_mortar[ks] = h;
-      }
-      stride += nodes_mortar_quad[f];
-    }
-  }
-
-  else if (sipg_flux_h == H_EQ_VOLUME_DIV_AREA){
-    int stride = 0;
-    double h [P4EST_HALF];    
-    for (int f = 0; f < num_faces_mortar; f++){
-      int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
-      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
-      int element_index = element_id + stride;
-
-      double volume = size_params.volume[element_index];
-      double area = size_params.area[element_index*(P4EST_FACES) + face_side];
-      h[f] = volume/area;
-    }
-         
-    for (int f = 0; f < num_faces_mortar; f++){
-      for (int k = 0; k < nodes_mortar_quad[f]; k++){
-        int ks = k + stride;
-        h_quad_mortar[ks] = h[f];
-      }
-      stride += nodes_mortar_quad[f];
-    }
-  }  
-  
-  else if (sipg_flux_h == H_EQ_FACE_DIAM){
-    int stride = 0;
-    double h [P4EST_HALF];
-    for (int f = 0; f < num_faces_mortar; f++){
-      h[f] = size_params.diam_face[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id*(P4EST_FACES) + face_side]; 
-    }
-                 
-    for (int f = 0; f < num_faces_mortar; f++){
-      for (int k = 0; k < nodes_mortar_quad[f]; k++){
-        int ks = k + stride;
-        h_quad_mortar[ks] = h[f];
-      }
-      stride += nodes_mortar_quad[f];
-    }
-  }
-  
-  else {
-    D4EST_ABORT("this sipg_flux_h is not supported");
-  }
-}
-
-void
 d4est_poisson_flux_sipg_dirichlet_aux
 (
  p4est_t* p4est,
@@ -193,7 +47,7 @@ d4est_poisson_flux_sipg_dirichlet_aux
   int face_nodes_m_quad = boundary_data->face_nodes_m_quad;
   double* u_m_on_f_m_quad = boundary_data->u_m_on_f_m_quad;
   double* sj_on_f_m_quad = boundary_data->sj_on_f_m_quad;
-  double* j_div_sj_quad = boundary_data->j_div_sj_quad;
+  /* double* j_div_sj_quad = boundary_data->j_div_sj_quad; */
   double* xyz_on_f_m_lobatto [(P4EST_DIM)]; 
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_quad [(P4EST_DIM)];  
@@ -211,28 +65,28 @@ d4est_poisson_flux_sipg_dirichlet_aux
   d4est_util_fill_array(ones_quad, 1., face_nodes_m_quad);
 
 
-  double* h_quad = P4EST_ALLOC(double, face_nodes_m_quad);
+  double* h_quad = boundary_data->h_quad;//P4EST_ALLOC(double, face_nodes_m_quad);
 
   d4est_mesh_size_parameters_t size_params = (ip_flux_params->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *ip_flux_params->size_params;
   //int debug = (ip_flux_params->size_params == NULL);
    
   
-  d4est_poisson_flux_sipg_calculate_h
-    (
-     p4est,
-     &e_m,
-     f_m,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     ip_flux_params->sipg_flux_h,
-     j_div_sj_quad,
-     h_quad,
-     1,
-     1,
-     &face_nodes_m_quad,
-     size_params
-    );
+  /* d4est_poisson_flux_sipg_calculate_h */
+  /*   ( */
+  /*    p4est, */
+  /*    &e_m, */
+  /*    f_m, */
+  /*    d4est_ops, */
+  /*    d4est_geom, */
+  /*    d4est_quad, */
+  /*    ip_flux_params->sipg_flux_h, */
+  /*    j_div_sj_quad, */
+  /*    h_quad, */
+  /*    1, */
+  /*    1, */
+  /*    &face_nodes_m_quad, */
+  /*    size_params */
+  /*   ); */
 
   
   for (int i = 0; i < face_nodes_m_quad; i++){
@@ -248,7 +102,7 @@ d4est_poisson_flux_sipg_dirichlet_aux
   }
 
   
-  P4EST_FREE(h_quad);
+  /* P4EST_FREE(h_quad); */
   
   for (int i = 0; i < face_nodes_m_lobatto; i++){
     u_at_bndry_lobatto[i] = bc_data->dirichlet_fcn
@@ -704,9 +558,9 @@ d4est_poisson_flux_sipg_interface_aux
   
   double* u_m_on_f_m_mortar_quad = mortar_data->u_m_on_f_m_mortar_quad;
   double* sj_on_f_m_mortar_quad = mortar_data->sj_on_f_m_mortar_quad;
-  double* j_div_sj_on_f_m_mortar_quad = mortar_data->j_div_sj_on_f_m_mortar_quad;
+  /* double* j_div_sj_on_f_m_mortar_quad = mortar_data->j_div_sj_on_f_m_mortar_quad; */
   double* u_p_on_f_p_mortar_quad = mortar_data->u_p_on_f_p_mortar_quad;
-  double* j_div_sj_on_f_p_mortar_quad = mortar_data->j_div_sj_on_f_p_mortar_quad;
+  /* double* j_div_sj_on_f_p_mortar_quad = mortar_data->j_div_sj_on_f_p_mortar_quad; */
   
   double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_mortar_quad [(P4EST_DIM)];
@@ -737,46 +591,46 @@ d4est_poisson_flux_sipg_interface_aux
   double* ones_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
   d4est_util_fill_array(ones_mortar_quad, 1., total_nodes_mortar_quad);
 
-  double* hm_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
-  double* hp_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
+  double* hm_mortar_quad = mortar_data->hm_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
+  double* hp_mortar_quad = mortar_data->hp_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
 
-  d4est_poisson_flux_sipg_calculate_h
-    (
-     p4est,
-     e_m,
-     f_m,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     ip_flux_params->sipg_flux_h,
-     j_div_sj_on_f_m_mortar_quad,
-     hm_mortar_quad,
-     mortar_data->faces_mortar,
-     faces_m,
-     nodes_mortar_quad,
-     (ip_flux_params->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *ip_flux_params->size_params
-    );
+ /*  d4est_poisson_flux_sipg_calculate_h */
+ /*    ( */
+ /*     p4est, */
+ /*     e_m, */
+ /*     f_m, */
+ /*     d4est_ops, */
+ /*     d4est_geom, */
+ /*     d4est_quad, */
+ /*     ip_flux_params->sipg_flux_h, */
+ /*     j_div_sj_on_f_m_mortar_quad, */
+ /*     hm_mortar_quad, */
+ /*     mortar_data->faces_mortar, */
+ /*     faces_m, */
+ /*     nodes_mortar_quad, */
+ /*     (ip_flux_params->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *ip_flux_params->size_params */
+ /*    ); */
 
 
-  d4est_element_data_t* e_p_oriented [(P4EST_HALF)];
- d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
+  /* d4est_element_data_t* e_p_oriented [(P4EST_HALF)]; */
+ /* d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented); */
   
-    d4est_poisson_flux_sipg_calculate_h
-    (
-     p4est,
-     &e_p_oriented[0],
-     f_p,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     ip_flux_params->sipg_flux_h,
-     j_div_sj_on_f_p_mortar_quad,
-     hp_mortar_quad,
-     mortar_data->faces_mortar,
-     faces_p,
-     nodes_mortar_quad,
-     (ip_flux_params->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *ip_flux_params->size_params
-    );
+ /*    d4est_poisson_flux_sipg_calculate_h */
+ /*    ( */
+ /*     p4est, */
+ /*     &e_p_oriented[0], */
+ /*     f_p, */
+ /*     d4est_ops, */
+ /*     d4est_geom, */
+ /*     d4est_quad, */
+ /*     ip_flux_params->sipg_flux_h, */
+ /*     j_div_sj_on_f_p_mortar_quad, */
+ /*     hp_mortar_quad, */
+ /*     mortar_data->faces_mortar, */
+ /*     faces_p, */
+ /*     nodes_mortar_quad, */
+ /*     (ip_flux_params->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *ip_flux_params->size_params */
+ /*    ); */
 
   double debug_sigma_sum = 0.;
   int stride = 0;
@@ -798,8 +652,8 @@ d4est_poisson_flux_sipg_interface_aux
   }
 
 
-  P4EST_FREE(hm_mortar_quad);
-  P4EST_FREE(hp_mortar_quad);
+  /* P4EST_FREE(hm_mortar_quad); */
+  /* P4EST_FREE(hp_mortar_quad); */
 
   
   stride = 0;
@@ -1162,36 +1016,6 @@ d4est_poisson_flux_sipg_penalty_maxp_sqr_over_minh
 }
 
 static void
-d4est_poisson_flux_sipg_params_get_string_from_h_calc
-(
- h_calc_method_t h_calc,
- char* string
-)
-{
-  if (h_calc == H_EQ_J_DIV_SJ_QUAD){
-    strcpy(string, "H_EQ_J_DIV_SJ_QUAD");
-  }
-  else if (h_calc == H_EQ_J_DIV_SJ_MIN_LOBATTO){
-    strcpy(string,"H_EQ_J_DIV_SJ_MIN_lOBATTO");
-  }
-  else if (h_calc == H_EQ_J_DIV_SJ_MEAN_LOBATTO){
-    strcpy(string,"H_EQ_J_DIV_SJ_MEAN_lOBATTO");
-  }
-  else if (h_calc == H_EQ_VOLUME_DIV_AREA){
-    strcpy(string,"H_EQ_VOLUME_DIV_AREA");
-  }
-  else if (h_calc == H_EQ_VOLUME_DIV_AREA){
-    strcpy(string,"H_EQ_FACE_DIAM");
-  }
-  else if (h_calc == H_EQ_TREE_H){
-    strcpy(string,"H_EQ_TREE_H");
-  }
-  else {
-    strcpy(string,"NOT_SET");
-  }
-}
-
-static void
 d4est_poisson_flux_sipg_params_get_string_from_penalty_fcn
 (
  penalty_calc_t fcn,
@@ -1254,31 +1078,7 @@ int d4est_poisson_flux_sipg_params_input_handler
     D4EST_ASSERT(pconfig->sipg_penalty_fcn == NULL);
     pconfig->sipg_penalty_fcn = d4est_poisson_flux_sipg_get_penalty_fcn_from_string(value);
   }
-  else if (d4est_util_match_couple(section,"flux",name,"sipg_flux_h")) {
-    D4EST_ASSERT(pconfig->sipg_flux_h == H_EQ_NOTSET);
-    if(d4est_util_match(value, "H_EQ_J_DIV_SJ_QUAD")){
-      pconfig->sipg_flux_h = H_EQ_J_DIV_SJ_QUAD;
-    }
-    else if(d4est_util_match(value, "H_EQ_J_DIV_SJ_MIN_LOBATTO")){
-      pconfig->sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO;
-    }
-    else if(d4est_util_match(value, "H_EQ_J_DIV_SJ_MEAN_LOBATTO")){
-      pconfig->sipg_flux_h = H_EQ_J_DIV_SJ_MEAN_LOBATTO;
-    }
-    else if(d4est_util_match(value, "H_EQ_VOLUME_DIV_AREA")){
-      pconfig->sipg_flux_h = H_EQ_VOLUME_DIV_AREA;
-    }
-    else if(d4est_util_match(value, "H_EQ_FACE_DIAM")){
-      pconfig->sipg_flux_h = H_EQ_FACE_DIAM;
-    }
-    else if(d4est_util_match(value, "H_EQ_TREE_H")){
-      pconfig->sipg_flux_h = H_EQ_TREE_H;
-    }
-    else {
-      printf("flux_h_calc = %s\n", value);
-      D4EST_ABORT("flux_h_calc is not set to a supported value\n");
-    }
-  }
+ 
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -1294,7 +1094,6 @@ d4est_poisson_flux_sipg_params_input
  d4est_poisson_flux_sipg_params_t* input
 )
 {
-  input->sipg_flux_h = H_EQ_NOTSET;
   input->sipg_penalty_fcn = NULL;
   input->sipg_penalty_prefactor = -1.;
 
@@ -1304,13 +1103,12 @@ d4est_poisson_flux_sipg_params_input
 
   D4EST_CHECK_INPUT("flux", input->sipg_penalty_prefactor, -1);
   D4EST_CHECK_INPUT("flux", input->sipg_penalty_fcn, NULL);
-  D4EST_CHECK_INPUT("flux", input->sipg_flux_h, H_EQ_NOTSET);
   
   char penalty_calculate_fcn [50];
   char h_eq [50];
 
   d4est_poisson_flux_sipg_params_get_string_from_penalty_fcn (input->sipg_penalty_fcn,penalty_calculate_fcn);
-  d4est_poisson_flux_sipg_params_get_string_from_h_calc (input->sipg_flux_h,h_eq);
+
 
   double check_function = input->sipg_penalty_fcn(1,.1,1,.1,0.);
 
@@ -1319,7 +1117,6 @@ d4est_poisson_flux_sipg_params_input
   if(p4est->mpirank == 0){
     printf("%s: d4est_poisson_flux_sipg_params_penalty_prefactor = %f\n", printf_prefix, input->sipg_penalty_prefactor);
     printf("%s: d4est_poisson_flux_sipg_params_penalty_calculate_fcn = %s\n", printf_prefix, penalty_calculate_fcn);
-    printf("%s: d4est_poisson_flux_sipg_params_h_calc = %s\n", printf_prefix, h_eq);
   }
 }
 

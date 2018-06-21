@@ -17,9 +17,9 @@ typedef struct {
   double* u_m_on_f_m;
   double* u_p_on_f_p;
   double* sj_on_f_m_mortar_quad;
-  double* j_div_sj_on_f_m_mortar_quad;
+  /* double* j_div_sj_on_f_m_mortar_quad; */
   double* u_p_on_f_p_mortar_quad;
-  double* j_div_sj_on_f_p_mortar_quad;
+  /* double* j_div_sj_on_f_p_mortar_quad; */
   
   double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_mortar_quad [(P4EST_DIM)];
@@ -27,6 +27,9 @@ typedef struct {
   double* n_on_f_m_mortar_quad [(P4EST_DIM)];
 
   double* Au_m [(P4EST_FACES)];
+
+  double* hm_mortar_quad;
+  double* hp_mortar_quad;
   
   int* face_nodes_m_lobatto;
   int* face_nodes_p_lobatto;
@@ -44,6 +47,7 @@ typedef struct {
 
   d4est_quadrature_mortar_t* face_object;
 
+  double* h_quad;
   int face_nodes_m_lobatto;
   int face_nodes_m_quad;
 
@@ -56,7 +60,7 @@ typedef struct {
   double* n_on_f_m_quad [(P4EST_DIM)];
   double* xyz_on_f_m_quad [(P4EST_DIM)];
   double* sj_on_f_m_quad;
-  double* j_div_sj_quad;
+  /* double* j_div_sj_quad; */
 
   double* Au_m;
   

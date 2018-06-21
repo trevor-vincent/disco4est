@@ -120,21 +120,24 @@ int main(int argc, char *argv[])
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature");
 
   
-  initial_grid_input->initial_nodes = d4est_mesh_update
-                               (
-                                p4est,
-                                &d4est_ghost,
-                                d4est_ops,
-                                d4est_geom,
-                                d4est_quad,
-                                d4est_factors,
-                                INITIALIZE_GHOST,
-                                INITIALIZE_QUADRATURE_DATA,
-                                INITIALIZE_GEOMETRY_DATA,
-                                INITIALIZE_GEOMETRY_ALIASES,
-                                d4est_mesh_set_initial_extents,
-                                (void*)initial_grid_input
-                               );
+  d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
+                                         (
+                                          p4est,
+                                          &d4est_ghost,
+                                          d4est_ops,
+                                          d4est_geom,
+                                          d4est_quad,
+                                          d4est_factors,
+                                          initial_grid_input,
+                                          INITIALIZE_GHOST,
+                                          INITIALIZE_QUADRATURE_DATA,
+                                          INITIALIZE_GEOMETRY_DATA,
+                                          INITIALIZE_GEOMETRY_ALIASES,
+                                          d4est_mesh_set_initial_extents,
+                                          (void*)initial_grid_input
+                                         );
+  
+  initial_grid_input->initial_nodes = local_sizes.local_nodes;
   
   /* Solve Problem */
   problem_init

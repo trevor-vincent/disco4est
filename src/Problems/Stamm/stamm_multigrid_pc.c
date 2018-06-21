@@ -147,7 +147,6 @@ problem_init
   penalty_data.u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
   penalty_data.gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
-  penalty_data.sipg_flux_h = sipg_params->sipg_flux_h;
   
   d4est_amr_smooth_pred_marker_t amr_marker;
   amr_marker.user = (void*)&ctx;
@@ -249,7 +248,6 @@ problem_init
        d4est_geom,
        d4est_factors,
        d4est_quad,
-       DIAM_APPROX_CUBE,
        0
       );
 
@@ -297,7 +295,6 @@ problem_init
 
     d4est_ip_energy_norm_data_t ip_norm_data;
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
-    ip_norm_data.sipg_flux_h = sipg_params->sipg_flux_h;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
     ip_norm_data.size_params = NULL;
 
@@ -342,7 +339,8 @@ problem_init
     }
 
 
-    prob_vecs.local_nodes = d4est_mesh_update
+
+      d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
                   (
                    p4est,
                    d4est_ghost,
@@ -351,6 +349,7 @@ problem_init
                    d4est_geom,
                    d4est_quad,
                    d4est_factors,
+                   initial_extents,
                    INITIALIZE_GHOST,
                    INITIALIZE_QUADRATURE_DATA,
                    INITIALIZE_GEOMETRY_DATA,
@@ -359,6 +358,8 @@ problem_init
                    initial_extents
                   );
 
+      prob_vecs.local_nodes = local_sizes.local_nodes;
+      
    if (d4est_ghost_data != NULL){
       d4est_ghost_data_destroy(d4est_ghost_data);
       d4est_ghost_data = NULL;

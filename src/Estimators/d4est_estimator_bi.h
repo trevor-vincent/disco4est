@@ -11,7 +11,6 @@ typedef struct {
   penalty_calc_t u_penalty_fcn;
   penalty_calc_t u_dirichlet_penalty_fcn;
   penalty_calc_t gradu_penalty_fcn;
-  h_calc_method_t sipg_flux_h;
   d4est_mesh_size_parameters_t* size_params;
   double penalty_prefactor;
   void* user;
@@ -193,6 +192,6 @@ houston_u_dirichlet_prefactor_maxp_minh
 }
 
 /* This file was automatically generated.  Do not edit! */
-double *d4est_estimator_bi_compute(p4est_t *p4est,d4est_elliptic_data_t *d4est_elliptic_data,d4est_elliptic_eqns_t *fcns,d4est_estimator_bi_penalty_data_t bi_penalty_data,d4est_xyz_fcn_t u_bndry_fcn,d4est_ghost_t *d4est_ghost,d4est_ghost_data_t *d4est_ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom_for_residual,d4est_mesh_data_t *d4est_factors_for_residual,d4est_geometry_t *d4est_geom_for_integrals,d4est_mesh_data_t *d4est_factors_for_integrals,d4est_quadrature_t *d4est_quad,diam_compute_option_t diam_opt,int which_field);
+double *d4est_estimator_bi_compute(p4est_t *p4est,d4est_elliptic_data_t *d4est_elliptic_data,d4est_elliptic_eqns_t *fcns,d4est_estimator_bi_penalty_data_t bi_penalty_data,d4est_xyz_fcn_t u_bndry_fcn,d4est_ghost_t *d4est_ghost,d4est_ghost_data_t *d4est_ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom_for_residual,d4est_mesh_data_t *d4est_factors_for_residual,d4est_geometry_t *d4est_geom_for_integrals,d4est_mesh_data_t *d4est_factors_for_integrals,d4est_quadrature_t *d4est_quad, int which_field);
 
 #endif

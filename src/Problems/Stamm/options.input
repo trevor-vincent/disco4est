@@ -5,6 +5,9 @@ fill_uniform = 1
 region0_deg = 2
 region0_deg_quad_inc = 0
 
+[mesh_parameters]
+face_h_type = FACE_H_EQ_TREE_H
+volume_h_type = VOL_H_EQ_CUBE_APPROX
 
 [problem]
 c2x = .5

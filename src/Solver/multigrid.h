@@ -151,7 +151,8 @@ typedef struct {
   d4est_mesh_data_t** geometric_factors;
   d4est_ghost_t** d4est_ghost;
   d4est_ghost_data_t** d4est_ghost_data;
-
+  d4est_mesh_initial_extents_t* initial_extents;
+  
   /* alias to currently used geometric factors, points to an element of geometric_factors above */
   d4est_mesh_data_t* current_geometric_factors;
   

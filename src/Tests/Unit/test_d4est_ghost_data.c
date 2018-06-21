@@ -148,23 +148,26 @@ int main(int argc, char *argv[])
   d4est_mesh_data_t* d4est_factors = d4est_mesh_data_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] :      "test_d4est_ghost_data.input", "quadrature");
   
-  initial_grid_input->initial_nodes = d4est_mesh_update
-                               (
-                                p4est,
-                                &d4est_ghost,
-                                d4est_ops,
-                                d4est_geom,
-                                d4est_quad,
-                                d4est_factors,
-                                INITIALIZE_GHOST,
-                                INITIALIZE_QUADRATURE_DATA,
-                                INITIALIZE_GEOMETRY_DATA,
-                                INITIALIZE_GEOMETRY_ALIASES,
-                                d4est_mesh_set_initial_extents,
-                                (void*)initial_grid_input
-                               );
 
 
+  d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
+                                         (
+                                          p4est,
+                                          &d4est_ghost,
+                                          d4est_ops,
+                                          d4est_geom,
+                                          d4est_quad,
+                                          d4est_factors,
+                                          initial_grid_input,
+                                          INITIALIZE_GHOST,
+                                          INITIALIZE_QUADRATURE_DATA,
+                                          INITIALIZE_GEOMETRY_DATA,
+                                          INITIALIZE_GEOMETRY_ALIASES,
+                                          d4est_mesh_set_initial_extents,
+                                          (void*)initial_grid_input
+                                         );
+
+  initial_grid_input->initial_nodes = local_sizes.local_nodes;
 
   p4est_partition(p4est, 1, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
@@ -187,21 +190,24 @@ int main(int argc, char *argv[])
      NULL
     );
 
-  nodes = d4est_mesh_update
-                  (
-                   p4est,
-                   &d4est_ghost,
-                   d4est_ops,
-                   d4est_geom,
-                   d4est_quad,
-                   d4est_factors,
-                   INITIALIZE_GHOST,
-                   INITIALIZE_QUADRATURE_DATA,
-                   INITIALIZE_GEOMETRY_DATA,
-                   INITIALIZE_GEOMETRY_ALIASES,
-                   d4est_mesh_set_quadratures_after_amr,
-                   (void*)initial_grid_input
-                  );
+  d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
+                                         (
+                                          p4est,
+                                          &d4est_ghost,
+                                          d4est_ops,
+                                          d4est_geom,
+                                          d4est_quad,
+                                          d4est_factors,
+                                          initial_grid_input,
+                                          INITIALIZE_GHOST,
+                                          INITIALIZE_QUADRATURE_DATA,
+                                          INITIALIZE_GEOMETRY_DATA,
+                                          INITIALIZE_GEOMETRY_ALIASES,
+                                          d4est_mesh_set_quadratures_after_amr,
+                                          (void*)initial_grid_input
+                                         );
+
+  nodes = local_sizes.local_nodes;
   }
 
   d4est_field_type_t field_type [2] = {VOLUME_NODAL,VOLUME_NODAL};

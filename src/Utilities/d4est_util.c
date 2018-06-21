@@ -2,6 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <time.h>
+#include <math.h>
+#include <mpsort.h>
 #include <p4est_vtk.h>
 #include <p4est_bits.h>
 #include <p4est_extended.h>
@@ -11,10 +17,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+
 double
 d4est_util_secant_fcn(double x){
   return 1./cos(x);
 }
+
 
 char* d4est_util_add_cwd(const char* dir)
 {
@@ -652,4 +660,20 @@ void d4est_util_gen_rand_vec(double* vec, int N, int seed, double a, double b){
   for (i = 0; i < N; i++) {
     vec[i] = d4est_util_uniform_rand(seed,a,b);
   }
+}
+
+static void radix_double(const void * ptr, void * radix, void * arg) {
+    *(double*)radix = *(const double*) ptr;
+}
+
+void d4est_util_parallel_sort
+(
+ sc_MPI_Comm mpicomm,
+ double* array,
+ int local_size
+)
+{
+  mpsort_mpi(array, local_size, sizeof(double),
+             radix_double, sizeof(double),
+             NULL, mpicomm);
 }

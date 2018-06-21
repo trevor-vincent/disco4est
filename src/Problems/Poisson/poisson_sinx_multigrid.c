@@ -316,13 +316,15 @@ problem_init
     }
 
 
-    prob_vecs.local_nodes = d4est_mesh_update(
+
+    d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update(
       p4est,
       d4est_ghost,
       d4est_ops,
       d4est_geom,
       d4est_quad,
       d4est_factors,
+      initial_extents,
       INITIALIZE_GHOST,
       INITIALIZE_QUADRATURE_DATA,
       INITIALIZE_GEOMETRY_DATA,
@@ -331,6 +333,8 @@ problem_init
       initial_extents
     );
 
+    prob_vecs.local_nodes = local_sizes.local_nodes;
+      
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
     prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, prob_vecs.local_nodes);
     

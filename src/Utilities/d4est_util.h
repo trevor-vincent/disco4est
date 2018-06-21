@@ -233,7 +233,14 @@
 typedef enum {D4EST_INT, D4EST_DOUBLE} d4est_builtin_t;
 
 
-/* This file was automatically generated.  Do not edit! */
+/** 
+ * Sorts array stored in parallel.
+ * 
+ * @param [in] mpicomm 
+ * @param [in,out] array 
+ * @param [in] local_size 
+ */
+void d4est_util_parallel_sort(sc_MPI_Comm mpicomm,double *array,int local_size);
 void d4est_util_gen_rand_vec(double *vec,int N,int seed,double a,double b);
 void d4est_util_copy_1st_to_2nd(double *v1,double *v2,int N);
 double d4est_util_max_dbl_array(double *arr,int N);

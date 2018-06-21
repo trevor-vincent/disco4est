@@ -36,7 +36,7 @@ d4est_ip_energy_norm_boundary
 
   double* u_m_on_f_m_quad = boundary_data->u_m_on_f_m_quad;
   double* sj_on_f_m_quad = boundary_data->sj_on_f_m_quad;
-  double* j_div_sj_quad = boundary_data->j_div_sj_quad;
+  /* double* j_div_sj_quad = boundary_data->j_div_sj_quad; */
   double* xyz_on_f_m_lobatto [(P4EST_DIM)]; 
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_quad [(P4EST_DIM)];  
@@ -48,23 +48,24 @@ d4est_ip_energy_norm_boundary
   double* ip_energy_norm_prefactor = P4EST_ALLOC(double, face_nodes_m_quad);
   double* ip_energy_norm = P4EST_ALLOC(double, face_nodes_m_quad);
 
-  double* h_quad = P4EST_ALLOC(double, face_nodes_m_quad);
-  d4est_poisson_flux_sipg_calculate_h
-    (
-     p4est,
-     &e_m,
-     f_m,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     data->sipg_flux_h,
-     j_div_sj_quad,
-     h_quad,
-     1,
-     1,
-     &face_nodes_m_quad,
-     (data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *data->size_params
-    );
+  double* h_quad = boundary_data->h_quad;
+                   //P4EST_ALLOC(double, face_nodes_m_quad);
+  /* d4est_poisson_flux_sipg_calculate_h */
+  /*   ( */
+  /*    p4est, */
+  /*    &e_m, */
+  /*    f_m, */
+  /*    d4est_ops, */
+  /*    d4est_geom, */
+  /*    d4est_quad, */
+  /*    data->sipg_flux_h, */
+  /*    j_div_sj_quad, */
+  /*    h_quad, */
+  /*    1, */
+  /*    1, */
+  /*    &face_nodes_m_quad, */
+  /*    (data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *data->size_params */
+  /*   ); */
 
   for (int i = 0; i < face_nodes_m_quad; i++){
     ip_energy_norm_prefactor[i] = data->u_penalty_fcn
@@ -76,7 +77,7 @@ d4est_ip_energy_norm_boundary
                         data->penalty_prefactor
                        );
   }  
-  P4EST_FREE(h_quad);
+  /* P4EST_FREE(h_quad); */
 
     for(int i = 0; i < face_nodes_m_quad; i++){
       ip_energy_norm[i] = 0.;
@@ -136,9 +137,9 @@ d4est_ip_energy_norm_interface
   
   double* u_m_on_f_m_mortar_quad = interface_data->u_m_on_f_m_mortar_quad;
   double* sj_on_f_m_mortar_quad = interface_data->sj_on_f_m_mortar_quad;
-  double* j_div_sj_on_f_m_mortar_quad = interface_data->j_div_sj_on_f_m_mortar_quad;
+  /* double* j_div_sj_on_f_m_mortar_quad = interface_data->j_div_sj_on_f_m_mortar_quad; */
   double* u_p_on_f_p_mortar_quad = interface_data->u_p_on_f_p_mortar_quad;
-  double* j_div_sj_on_f_p_mortar_quad = interface_data->j_div_sj_on_f_p_mortar_quad;
+  /* double* j_div_sj_on_f_p_mortar_quad = interface_data->j_div_sj_on_f_p_mortar_quad; */
   
   double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_mortar_quad [(P4EST_DIM)];
@@ -165,46 +166,46 @@ d4est_ip_energy_norm_interface
   double* ip_energy_norm = P4EST_ALLOC(double, total_nodes_mortar_quad);
 
 
-  double* hm_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
-  double* hp_mortar_quad = P4EST_ALLOC(double, total_nodes_mortar_quad);
-
-  d4est_poisson_flux_sipg_calculate_h
-    (
-     p4est,
-     e_m,
-     f_m,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     data->sipg_flux_h,
-     j_div_sj_on_f_m_mortar_quad,
-     hm_mortar_quad,
-    interface_data->faces_mortar,
-     faces_m,
-     nodes_mortar_quad,
-     (data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *data->size_params
-    );
-
-
-  d4est_element_data_t* e_p_oriented [(P4EST_HALF)];
- d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);
+  double* hm_mortar_quad = interface_data->hm_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
+  double* hp_mortar_quad = interface_data->hp_mortar_quad;//P4EST_ALLOC(double,
   
-    d4est_poisson_flux_sipg_calculate_h
-    (
-     p4est,
-     &e_p_oriented[0],
-     f_p,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     data->sipg_flux_h,
-     j_div_sj_on_f_p_mortar_quad,
-     hp_mortar_quad,
-     interface_data->faces_mortar,
-     faces_p,
-     nodes_mortar_quad,
-     (data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *data->size_params
-    );
+  /* d4est_poisson_flux_sipg_calculate_h */
+  /*   ( */
+  /*    p4est, */
+  /*    e_m, */
+  /*    f_m, */
+  /*    d4est_ops, */
+  /*    d4est_geom, */
+  /*    d4est_quad, */
+  /*    data->sipg_flux_h, */
+  /*    j_div_sj_on_f_m_mortar_quad, */
+  /*    hm_mortar_quad, */
+  /*   interface_data->faces_mortar, */
+  /*    faces_m, */
+  /*    nodes_mortar_quad, */
+  /*    (data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *data->size_params */
+  /*   ); */
+
+
+ /*  d4est_element_data_t* e_p_oriented [(P4EST_HALF)]; */
+ /* d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented); */
+  
+ /*    d4est_poisson_flux_sipg_calculate_h */
+ /*    ( */
+ /*     p4est, */
+ /*     &e_p_oriented[0], */
+ /*     f_p, */
+ /*     d4est_ops, */
+ /*     d4est_geom, */
+ /*     d4est_quad, */
+ /*     data->sipg_flux_h, */
+ /*     j_div_sj_on_f_p_mortar_quad, */
+ /*     hp_mortar_quad, */
+ /*     interface_data->faces_mortar, */
+ /*     faces_p, */
+ /*     nodes_mortar_quad, */
+ /*     (data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *data->size_params */
+ /*    ); */
   
   int stride = 0;
   for (int f = 0; f < faces_mortar; f++){
@@ -224,8 +225,8 @@ d4est_ip_energy_norm_interface
     stride += nodes_mortar_quad[f];
   }
 
-  P4EST_FREE(hm_mortar_quad);
-  P4EST_FREE(hp_mortar_quad);
+  /* P4EST_FREE(hm_mortar_quad); */
+  /* P4EST_FREE(hp_mortar_quad); */
   /* calculate symmetric interior penalty flux */
   int k;
   int f;

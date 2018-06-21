@@ -11,8 +11,6 @@ typedef struct d4est_geometry d4est_geometry_t;
 typedef enum {COMPUTE_NORMAL_USING_JACOBIAN, COMPUTE_NORMAL_USING_CROSS_PRODUCT} normal_compute_method_t;
 typedef enum {GEOM_COMPUTE_NUMERICAL, GEOM_COMPUTE_ANALYTIC, GEOM_COMPUTE_NOT_SET} geometric_quantity_compute_method_t;
 
-typedef enum { DIAM_APPROX, NO_DIAM_APPROX, DIAM_APPROX_CUBE} diam_compute_option_t;
-
 //         +----------------------+
 //         |			  |
 //         |			  |	     b
@@ -114,7 +112,6 @@ struct d4est_geometry {
 };
 
 /* This file was automatically generated.  Do not edit! */
-double d4est_geometry_compute_diam(double *xyz[(P4EST_DIM)],int deg,diam_compute_option_t option);
 double d4est_geometry_compute_bounds(double *xyz[(P4EST_DIM)],int deg,double xi[(P4EST_DIM)],double xf[(P4EST_DIM)]);
 double d4est_geometry_compute_lebesgue_measure(d4est_operators_t *d4est_ops,int deg_GL,double *jac_GL);
 int d4est_geometry_is_face_on_boundary(p4est_t *p4est,p4est_quadrant_t *q,int which_tree,int face);

@@ -11,7 +11,7 @@
 #include <d4est_elliptic_data.h>
 #include <d4est_quadrature_lobatto.h>
 
-#define D4EST_H_EQ_J_DIV_SJ_QUAD
+/* #define D4EST_H_EQ_J_DIV_SJ_QUAD */
 
 int
 d4est_poisson_get_degree_mortar_quad
@@ -54,7 +54,8 @@ d4est_poisson_flux_boundary
   double* xyz_on_f_m_quad [(P4EST_DIM)];
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* xyz_on_f_m_lobatto [(P4EST_DIM)];
-  double* j_div_sj_on_f_m_quad = &d4est_factors->j_div_sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
+  /* double* j_div_sj_on_f_m_quad = &d4est_factors->j_div_sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]]; */
+  double* h_quad = &d4est_factors->hm_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
   double* sj_on_f_m_quad = &d4est_factors->sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
 
    for (int d = 0; d < (P4EST_DIM); d++){
@@ -210,7 +211,8 @@ d4est_poisson_flux_boundary
   boundary_data.u_m_on_f_m_quad = u_m_on_f_m_quad;
   boundary_data.u_m_on_f_m = u_m_on_f_m;
   boundary_data.sj_on_f_m_quad = sj_on_f_m_quad;
-  boundary_data.j_div_sj_quad = j_div_sj_on_f_m_quad;
+  /* boundary_data.j_div_sj_quad = j_div_sj_on_f_m_quad; */
+  boundary_data.h_quad = h_quad;
 
 
   boundary_data.Au_m =  d4est_mesh_get_field_on_element
@@ -468,14 +470,17 @@ static void
   
   double* tmp = P4EST_ALLOC(double, total_side_nodes_p_quad);
 
-  double* j_div_sj_on_f_p_mortar_quad = NULL;
-  double* j_div_sj_on_f_p_mortar_quad_porder = NULL;
-  double* j_div_sj_on_f_m_mortar_quad = NULL;
-#ifdef D4EST_H_EQ_J_DIV_SJ_QUAD
-  j_div_sj_on_f_p_mortar_quad = D4EST_ALLOC(double, total_nodes_mortar_quad);
-  j_div_sj_on_f_p_mortar_quad_porder = &d4est_factors->j_div_sj_p_mortar_quad_porder[e_m[0]->mortar_quad_scalar_stride[f_m]];
-  j_div_sj_on_f_m_mortar_quad = &d4est_factors->j_div_sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
-#endif
+  /* double* j_div_sj_on_f_p_mortar_quad = NULL; */
+  /* double* j_div_sj_on_f_p_mortar_quad_porder = NULL; */
+  /* double* j_div_sj_on_f_m_mortar_quad = NULL; */
+/* #ifdef D4EST_H_EQ_J_DIV_SJ_QUAD */
+  /* j_div_sj_on_f_p_mortar_quad = D4EST_ALLOC(double, total_nodes_mortar_quad); */
+  /* j_div_sj_on_f_p_mortar_quad_porder = &d4est_factors->j_div_sj_p_mortar_quad_porder[e_m[0]->mortar_quad_scalar_stride[f_m]]; */
+  /* j_div_sj_on_f_m_mortar_quad = &d4est_factors->j_div_sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]]; */
+/* #endif */
+
+  double* hm_mortar_quad = &d4est_factors->hm_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+  double* hp_mortar_quad = &d4est_factors->hp_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
   
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_porder, total_side_nodes_p_lobatto);
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_porder, total_nodes_mortar_quad);
@@ -845,19 +850,19 @@ static void
     }
 
 
-#ifdef D4EST_H_EQ_J_DIV_SJ_QUAD
-    d4est_operators_reorient_face_data
-        (
-         d4est_ops,
-         &j_div_sj_on_f_p_mortar_quad_porder[oriented_face_mortar_stride],
-         (P4EST_DIM)-1,
-         deg_mortar_quad[face],
-         orientation,
-         f_m,
-         f_p,
-         &j_div_sj_on_f_p_mortar_quad[face_mortar_stride]
-        );
-#endif    
+/* #ifdef D4EST_H_EQ_J_DIV_SJ_QUAD */
+/*     d4est_operators_reorient_face_data */
+/*         ( */
+/*          d4est_ops, */
+/*          &j_div_sj_on_f_p_mortar_quad_porder[oriented_face_mortar_stride], */
+/*          (P4EST_DIM)-1, */
+/*          deg_mortar_quad[face], */
+/*          orientation, */
+/*          f_m, */
+/*          f_p, */
+/*          &j_div_sj_on_f_p_mortar_quad[face_mortar_stride] */
+/*         ); */
+/* #endif   */  
     
     face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
   }
@@ -890,9 +895,12 @@ static void
   interface_data.u_m_on_f_m = u_m_on_f_m;
   interface_data.u_p_on_f_p = u_p_on_f_p;
   interface_data.sj_on_f_m_mortar_quad = sj_on_f_m_mortar_quad;
-  interface_data.j_div_sj_on_f_m_mortar_quad = j_div_sj_on_f_m_mortar_quad;
+  /* interface_data.j_div_sj_on_f_m_mortar_quad = j_div_sj_on_f_m_mortar_quad; */
   interface_data.u_p_on_f_p_mortar_quad = u_p_on_f_p_mortar_quad;
-  interface_data.j_div_sj_on_f_p_mortar_quad = j_div_sj_on_f_p_mortar_quad;
+
+  interface_data.hp_mortar_quad = hp_mortar_quad;
+  interface_data.hm_mortar_quad = hm_mortar_quad;
+
   interface_data.deg_mortar_quad = deg_mortar_quad;
   interface_data.nodes_mortar_quad = nodes_mortar_quad;
   interface_data.deg_mortar_lobatto = deg_mortar_lobatto;
@@ -901,7 +909,7 @@ static void
   interface_data.face_nodes_m_lobatto = face_nodes_m_lobatto;
   interface_data.deg_p_lobatto = deg_p_lobatto;
   interface_data.face_nodes_p_lobatto = face_nodes_p_lobatto;
-
+  
 
   for (int i = 0; i < faces_m; i++){
     int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_poisson_flux_params->p4est,e_m[i]);
@@ -947,9 +955,9 @@ static void
 
   }
 
-#ifdef D4EST_H_EQ_J_DIV_SJ_QUAD
-  P4EST_FREE(j_div_sj_on_f_p_mortar_quad);
-#endif
+/* #ifdef D4EST_H_EQ_J_DIV_SJ_QUAD */
+  /* P4EST_FREE(j_div_sj_on_f_p_mortar_quad); */
+/* #endif */
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_p_on_f_p);
   P4EST_FREE(tmp);  

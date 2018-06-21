@@ -12,6 +12,8 @@
 #include <d4est_linalg.h>
 #include <d4est_ghost_data.h>
 
+
+
 static
 int d4est_mesh_initial_extents_handler
 (
@@ -41,6 +43,44 @@ int d4est_mesh_initial_extents_handler
   else if (d4est_util_match_couple(section,"initial_mesh",name,"checkpoint_prefix")) {
     D4EST_ASSERT(pconfig->checkpoint_prefix == NULL);
     asprintf(&pconfig->checkpoint_prefix,"%s", value);
+  }
+ else if (d4est_util_match_couple(section,"mesh_parameters",name,"face_h_type")) {
+    D4EST_ASSERT(pconfig->face_h_type == FACE_H_EQ_NOT_SET);
+    if(d4est_util_match(value, "FACE_H_EQ_J_DIV_SJ_QUAD")){
+      pconfig->face_h_type = FACE_H_EQ_J_DIV_SJ_QUAD;
+    }
+    else if(d4est_util_match(value, "FACE_H_EQ_J_DIV_SJ_MIN_LOBATTO")){
+      pconfig->face_h_type = FACE_H_EQ_J_DIV_SJ_MIN_LOBATTO;
+    }
+    else if(d4est_util_match(value, "FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO")){
+      pconfig->face_h_type = FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO;
+    }
+    else if(d4est_util_match(value, "FACE_H_EQ_VOLUME_DIV_AREA")){
+      pconfig->face_h_type = FACE_H_EQ_VOLUME_DIV_AREA;
+    }
+    else if(d4est_util_match(value, "FACE_H_EQ_FACE_DIAM")){
+      pconfig->face_h_type = FACE_H_EQ_FACE_DIAM;
+    }
+    else if(d4est_util_match(value, "FACE_H_EQ_TREE_H")){
+      pconfig->face_h_type = FACE_H_EQ_TREE_H;
+    }
+    else {
+      printf("face_h_type = %s\n", value);
+      D4EST_ABORT("face_h_type is not set to a supported value\n");
+    }
+  }
+ else if (d4est_util_match_couple(section,"mesh_parameters",name,"volume_h_type")) {
+    D4EST_ASSERT(pconfig->volume_h_type == VOL_H_EQ_NOT_SET);
+    if(d4est_util_match(value, "VOL_H_EQ_DIAM")){
+      pconfig->volume_h_type = VOL_H_EQ_DIAM;
+    }
+    else if(d4est_util_match(value, "VOL_H_EQ_CUBE_APPROX")){
+      pconfig->volume_h_type = VOL_H_EQ_CUBE_APPROX;
+    }
+    else {
+      printf("volume_h_type = %s\n", value);
+      D4EST_ABORT("volume_h_type is not set to a supported value\n");
+    }
   }
   else {
     for (int i = 0; i < pconfig->number_of_regions; i++){
@@ -115,6 +155,9 @@ d4est_mesh_initial_extents_destroy
   P4EST_FREE(initial_extents);
 }
 
+
+
+
 d4est_mesh_initial_extents_t*
 d4est_mesh_initial_extents_parse
 (
@@ -138,6 +181,8 @@ d4est_mesh_initial_extents_parse
   initial_extents->deg_quad_inc = P4EST_ALLOC(int, initial_extents->number_of_regions);
   initial_extents->load_from_checkpoint = 0;
   initial_extents->checkpoint_prefix = NULL;
+  initial_extents->volume_h_type = VOL_H_EQ_NOT_SET;
+  initial_extents->face_h_type = FACE_H_EQ_NOT_SET;
   
  for (int i = 0; i < initial_extents->number_of_regions; i++){
     initial_extents->deg[i] = -1;
@@ -169,6 +214,11 @@ d4est_mesh_initial_extents_parse
     D4EST_CHECK_INPUT("initial_mesh", initial_extents->checkpoint_prefix, NULL);
   }
 
+  D4EST_CHECK_INPUT("mesh_parameters", initial_extents->volume_h_type, VOL_H_EQ_NOT_SET);
+  D4EST_CHECK_INPUT("mesh_parameters", initial_extents->face_h_type, FACE_H_EQ_NOT_SET);
+
+  
+
   int trees = d4est_geom->p4est_conn->num_trees;
   
   if(
@@ -186,6 +236,9 @@ d4est_mesh_initial_extents_parse
     }
   }
 
+  /* printf("%s: d4est_poisson_flux_sipg_params_h_calc = %s\n", printf_prefix, h_eq); */
+  /* d4est_poisson_flux_sipg_params_get_string_from_h_calc (input->sipg_flux_h,h_eq); */
+  
   return initial_extents;
 }
 
@@ -216,9 +269,7 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
   double* drst_dxyz_m_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* drst_dxyz_p_mortar_quad_porder [(P4EST_DIM)][(P4EST_DIM)];
 
-  double* j_div_sj_m_mortar_quad = &d4est_factors->j_div_sj_m_mortar_quad[scalar_stride];
-  double* j_div_sj_p_mortar_quad_porder = &d4est_factors->j_div_sj_p_mortar_quad_porder[scalar_stride];
-  
+  double* h_quad = &d4est_factors->hm_mortar_quad[scalar_stride];
   double* sj_m_mortar_quad = &d4est_factors->sj_m_mortar_quad[scalar_stride];
   
   for (int i = 0; i < (P4EST_DIM); i++){
@@ -231,6 +282,9 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
     }
   }
 
+
+  double* j_div_sj_m_mortar_quad = P4EST_ALLOC(double, total_mortar_nodes_quad);
+  
   d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
                                          (
                                           d4est_factors,
@@ -272,8 +326,174 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
      j_div_sj_m_mortar_quad,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
-}
+
+  d4est_mesh_calculate_mortar_h
+    (
+     p4est,
+     &e_m,
+     f_m,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     *(d4est_mesh_face_h_t*)params,
+     j_div_sj_m_mortar_quad,
+     h_quad,
+     1,
+     1,
+     &total_mortar_nodes_quad,
+     d4est_mesh_get_size_parameters(d4est_factors)
+    );
+
+  P4EST_FREE(j_div_sj_m_mortar_quad);
   
+}
+
+void
+d4est_mesh_calculate_mortar_h
+(
+ p4est_t* p4est,
+ d4est_element_data_t** elems_side,
+ int face_side,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_face_h_t face_h_type,
+ double* j_div_sj_quad_mortar,
+ double* h_quad_mortar,
+ int num_faces_mortar,
+ int num_faces_side,
+ int* nodes_mortar_quad,
+ d4est_mesh_size_parameters_t size_params
+)
+{
+  if (face_h_type == FACE_H_EQ_J_DIV_SJ_QUAD){
+    /* D4EST_ABORT("H_EQ_J_DIV_SJ_QUAD is no longer supported"); */
+    int stride = 0;
+    for (int f = 0; f < num_faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        h_quad_mortar[ks] = j_div_sj_quad_mortar[ks];
+      }
+      stride += nodes_mortar_quad[f];
+    }
+  }
+  else if (face_h_type == FACE_H_EQ_TREE_H){
+    int stride = 0;
+    for (int f = 0; f < num_faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        h_quad_mortar[ks] = elems_side[0]->dq/(double)P4EST_ROOT_LEN;
+      }
+      stride += nodes_mortar_quad[f];
+    }
+  }
+  else if (face_h_type == FACE_H_EQ_J_DIV_SJ_MIN_LOBATTO){
+
+    /* when we try to compute h for the "plus" side and if this side exists on another processor, this will fail because it tries to receive
+     * the j_div_sj_min from the local memory not the other processors memeory. This needs to be fixed before use, hence the ABORT */
+    
+    int stride = 0;
+    double h [P4EST_HALF];
+
+    for (int f = 0; f < num_faces_mortar; f++){
+      int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
+      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
+      int element_index = element_id + stride;
+      
+      h[f] = size_params.j_div_sj_min[element_index*(P4EST_FACES) + face_side]; 
+    } 
+                 
+    for (int f = 0; f < num_faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        h_quad_mortar[ks] = h[f];
+      }
+      stride += nodes_mortar_quad[f];
+    }
+  }
+
+  else if (face_h_type == FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO){
+    int stride = 0;
+    double h [P4EST_HALF];
+    for (int f = 0; f < num_faces_mortar; f++){
+
+      int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
+      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
+      int element_index = element_id + stride;
+      h[f] = size_params.j_div_sj_mean[element_index*(P4EST_FACES) + face_side]; 
+    }
+                 
+    for (int f = 0; f < num_faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        h_quad_mortar[ks] = h[f];
+      }
+      stride += nodes_mortar_quad[f];
+    }
+  }
+  
+  else if (face_h_type == FACE_H_EQ_TOTAL_VOLUME_DIV_TOTAL_AREA){
+    int stride = 0;
+    double area_of_mortar = 0.;
+    double volume_of_elements_touching_mortar = 0.;
+    for (int f = 0; f < num_faces_side; f++){
+      area_of_mortar += size_params.area[elems_side[f]->id*(P4EST_FACES) + face_side];
+      volume_of_elements_touching_mortar += size_params.volume[elems_side[f]->id];
+    }
+    double h = volume_of_elements_touching_mortar/area_of_mortar;
+                 
+    for (int f = 0; f < num_faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        h_quad_mortar[ks] = h;
+      }
+      stride += nodes_mortar_quad[f];
+    }
+  }
+
+  else if (face_h_type == FACE_H_EQ_VOLUME_DIV_AREA){
+    int stride = 0;
+    double h [P4EST_HALF];    
+    for (int f = 0; f < num_faces_mortar; f++){
+      int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
+      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
+      int element_index = element_id + stride;
+
+      double volume = size_params.volume[element_index];
+      double area = size_params.area[element_index*(P4EST_FACES) + face_side];
+      h[f] = volume/area;
+    }
+         
+    for (int f = 0; f < num_faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        h_quad_mortar[ks] = h[f];
+      }
+      stride += nodes_mortar_quad[f];
+    }
+  }  
+  
+  else if (face_h_type == FACE_H_EQ_FACE_DIAM){
+    int stride = 0;
+    double h [P4EST_HALF];
+    for (int f = 0; f < num_faces_mortar; f++){
+      h[f] = size_params.diam_face[elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id*(P4EST_FACES) + face_side]; 
+    }
+                 
+    for (int f = 0; f < num_faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        h_quad_mortar[ks] = h[f];
+      }
+      stride += nodes_mortar_quad[f];
+    }
+  }
+  
+  else {
+    D4EST_ABORT("this face_h_type is not supported");
+  }
+}
+
 void
 d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
 (
@@ -391,8 +611,13 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
     }
   }
 
-  double* j_div_sj_m_mortar_quad = &d4est_factors->j_div_sj_m_mortar_quad[scalar_stride];
-  double* j_div_sj_p_mortar_quad_porder = &d4est_factors->j_div_sj_p_mortar_quad_porder[scalar_stride];
+  double* j_div_sj_m_mortar_quad = P4EST_ALLOC(double, total_mortar_nodes_quad);
+  double* j_div_sj_p_mortar_quad_porder = P4EST_ALLOC(double, total_mortar_nodes_quad); 
+  double* j_div_sj_p_mortar_quad = P4EST_ALLOC(double, total_mortar_nodes_quad); 
+
+
+  double* hm_mortar_quad = &d4est_factors->hm_mortar_quad[scalar_stride];
+  double* hp_mortar_quad = &d4est_factors->hp_mortar_quad[scalar_stride];
   
   d4est_mortars_compute_geometric_data_on_mortar
     (
@@ -441,7 +666,74 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
      j_div_sj_p_mortar_quad_porder,
      COMPUTE_NORMAL_USING_JACOBIAN
     );
+
   
+  int face_mortar_stride = 0;
+  for (int face = 0; face < faces_mortar; face++){
+    int face_p = face;
+    if (faces_mortar == (P4EST_HALF))
+      face_p = d4est_reference_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, face);
+
+    int oriented_face_mortar_stride = 0;
+    for (int b = 0; b < face_p; b++){
+      oriented_face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad_porder[b]);
+    }
+
+    d4est_operators_reorient_face_data
+        (
+         d4est_ops,
+         &j_div_sj_p_mortar_quad_porder[oriented_face_mortar_stride],
+         (P4EST_DIM)-1,
+         deg_mortar_quad[face],
+         orientation,
+         f_m,
+         f_p,
+         &j_div_sj_p_mortar_quad[face_mortar_stride]
+        );
+    
+    face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
+  }
+
+  d4est_mesh_calculate_mortar_h
+    (
+     p4est,
+     e_m,
+     f_m,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     *(d4est_mesh_face_h_t*)params,
+     j_div_sj_m_mortar_quad,
+     hm_mortar_quad,
+     faces_mortar,
+     faces_m,
+     mortar_nodes_quad,
+     d4est_mesh_get_size_parameters(d4est_factors)
+    );
+
+  /* d4est_element_data_t* e_p_oriented [(P4EST_HALF)]; */
+  /* d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented); */
+  
+  d4est_mesh_calculate_mortar_h
+    (
+     p4est,
+     &e_p_oriented[0],
+     f_p,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     *(d4est_mesh_face_h_t*)params,
+     j_div_sj_p_mortar_quad,
+     hp_mortar_quad,
+     faces_mortar,
+     faces_p,
+     mortar_nodes_quad,
+     d4est_mesh_get_size_parameters(d4est_factors)
+    );
+
+  P4EST_FREE(j_div_sj_p_mortar_quad);
+  P4EST_FREE(j_div_sj_m_mortar_quad);
+  P4EST_FREE(j_div_sj_p_mortar_quad_porder);  
 }
 
 void
@@ -452,13 +744,14 @@ d4est_mesh_compute_mortar_quadrature_quantities
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_data_t* d4est_factors
+ d4est_mesh_data_t* d4est_factors,
+ d4est_mesh_face_h_t face_h_type
 )
 {
   d4est_mortars_fcn_ptrs_t flux_fcns;
   flux_fcns.flux_interface_fcn = d4est_mesh_compute_mortar_quadrature_quantities_interface_callback;
   flux_fcns.flux_boundary_fcn = d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback;
-  flux_fcns.user_ctx = (void*)d4est_factors;
+  flux_fcns.user_ctx = (void*)&face_h_type;
 
   d4est_mortars_compute_flux_on_local_elements
     (
@@ -603,8 +896,8 @@ d4est_mesh_data_init()
   d4est_factors->drst_dxyz_m_mortar_quad = NULL;
   d4est_factors->drst_dxyz_p_mortar_quad_porder = NULL;
   
-  d4est_factors->j_div_sj_m_mortar_quad = NULL;
-  d4est_factors->j_div_sj_p_mortar_quad_porder = NULL;
+  d4est_factors->hm_mortar_quad = NULL;
+  d4est_factors->hp_mortar_quad = NULL;
 
   d4est_factors->sj_m_mortar_quad = NULL;
   d4est_factors->n_m_mortar_quad = NULL;
@@ -647,8 +940,8 @@ d4est_mesh_data_zero
   
   d4est_util_zero_array(d4est_factors->drst_dxyz_p_mortar_quad_porder, local_matrix_mortar_nodes_quad);   
   
-  d4est_util_zero_array(d4est_factors->j_div_sj_m_mortar_quad, local_sizes.local_mortar_nodes_quad);  
-  d4est_util_zero_array(d4est_factors->j_div_sj_p_mortar_quad_porder, local_sizes.local_mortar_nodes_quad);   
+  d4est_util_zero_array(d4est_factors->hm_mortar_quad, local_sizes.local_mortar_nodes_quad);  
+  d4est_util_zero_array(d4est_factors->hp_mortar_quad, local_sizes.local_mortar_nodes_quad);   
   d4est_util_zero_array(d4est_factors->sj_m_mortar_quad, local_sizes.local_mortar_nodes_quad);   
   d4est_util_zero_array(d4est_factors->n_m_mortar_quad, local_vector_mortar_nodes_quad);
   d4est_util_zero_array(d4est_factors->xyz_m_mortar_quad, local_vector_boundary_nodes_quad);
@@ -687,8 +980,8 @@ d4est_mesh_data_debug_print
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->rst_xyz_quad, matrix_nodes_quad);
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->drst_dxyz_m_mortar_quad, local_matrix_mortar_nodes_quad);
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->drst_dxyz_p_mortar_quad_porder, local_matrix_mortar_nodes_quad);
-  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->j_div_sj_m_mortar_quad, local_sizes.local_mortar_nodes_quad);
-  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->j_div_sj_p_mortar_quad_porder, local_sizes.local_mortar_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->hm_mortar_quad, local_sizes.local_mortar_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->hp_mortar_quad, local_sizes.local_mortar_nodes_quad);
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->sj_m_mortar_quad, local_sizes.local_mortar_nodes_quad);
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->n_m_mortar_quad, local_vector_mortar_nodes_quad);
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->xyz_m_mortar_quad, local_vector_boundary_nodes_quad);
@@ -743,11 +1036,11 @@ d4est_mesh_data_realloc
 
 
 
-  d4est_factors->j_div_sj_m_mortar_quad = P4EST_REALLOC(d4est_factors->j_div_sj_m_mortar_quad,
+  d4est_factors->hm_mortar_quad = P4EST_REALLOC(d4est_factors->hm_mortar_quad,
                                                       double,
                                                       local_sizes.local_mortar_nodes_quad);
 
-  d4est_factors->j_div_sj_p_mortar_quad_porder = P4EST_REALLOC(d4est_factors->j_div_sj_p_mortar_quad_porder,
+  d4est_factors->hp_mortar_quad = P4EST_REALLOC(d4est_factors->hp_mortar_quad,
                                                       double,
                                                       local_sizes.local_mortar_nodes_quad);
   
@@ -827,8 +1120,8 @@ d4est_mesh_data_destroy
 
     P4EST_FREE(d4est_factors->drst_dxyz_m_mortar_quad);
     P4EST_FREE(d4est_factors->drst_dxyz_p_mortar_quad_porder);
-    P4EST_FREE(d4est_factors->j_div_sj_m_mortar_quad);
-    P4EST_FREE(d4est_factors->j_div_sj_p_mortar_quad_porder);
+    P4EST_FREE(d4est_factors->hm_mortar_quad);
+    P4EST_FREE(d4est_factors->hp_mortar_quad);
     
     P4EST_FREE(d4est_factors->n_m_mortar_quad);
     P4EST_FREE(d4est_factors->xyz_m_mortar_quad);
@@ -853,6 +1146,7 @@ d4est_mesh_init_element_size_parameters
  d4est_geometry_t* d4est_geom,
  d4est_mesh_data_t* d4est_factors,
  d4est_element_data_t* ed,
+ d4est_mesh_volume_h_t volume_h_type,
  int stride
 )
 {
@@ -910,7 +1204,11 @@ d4est_mesh_init_element_size_parameters
     }
   }
   /* ed->diam_volume = diam_volume; */
-  d4est_factors->diam_volume[ed->id + stride] = diam_volume;
+  d4est_factors->diam_volume[ed->id + stride] = d4est_mesh_data_compute_volume_diam(
+                                                                                    xyz_lobatto,
+                                                                                    ed->deg,
+                                                                                    volume_h_type
+                                                                                   );
   
   d4est_geometry_compute_dxyz_drst
     (
@@ -1033,8 +1331,8 @@ d4est_mesh_init_element_size_parameters_ghost
  d4est_ghost_t* d4est_ghost,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- d4est_mesh_data_t* d4est_factors
- 
+ d4est_mesh_data_t* d4est_factors,
+ d4est_mesh_volume_h_t volume_h_type
 )
 {
   for (int gid = 0; gid < d4est_ghost->ghost->ghosts.elem_count; gid++){
@@ -1047,6 +1345,7 @@ d4est_mesh_init_element_size_parameters_ghost
        d4est_geom,
        d4est_factors,
        ged,
+       volume_h_type,
        p4est->local_num_quadrants
       );    
   }
@@ -1058,7 +1357,8 @@ d4est_mesh_init_element_size_parameters_local
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- d4est_mesh_data_t* d4est_factors
+ d4est_mesh_data_t* d4est_factors,
+ d4est_mesh_volume_h_t volume_h_type
 )
 {
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -1077,6 +1377,7 @@ d4est_mesh_init_element_size_parameters_local
            d4est_geom,
            d4est_factors,
            ed,
+           volume_h_type,
            0
           );
       }
@@ -1639,7 +1940,9 @@ d4est_mesh_data_compute
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_data_t* d4est_factors
+ d4est_mesh_data_t* d4est_factors,
+ d4est_mesh_face_h_t face_h_type,
+ d4est_mesh_volume_h_t volume_h_type
 )
 {
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -1767,15 +2070,6 @@ d4est_mesh_data_compute
       }
     }
       
-  d4est_mesh_compute_mortar_quadrature_quantities
-    (
-     p4est,
-     ghost,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     d4est_factors
-    );
 
 
   d4est_mesh_init_element_size_parameters_local
@@ -1783,7 +2077,8 @@ d4est_mesh_data_compute
      p4est,
      d4est_ops,
      d4est_geom,
-     d4est_factors
+     d4est_factors,
+     volume_h_type
     );
 
 
@@ -1793,8 +2088,20 @@ d4est_mesh_data_compute
      ghost,
      d4est_ops,
      d4est_geom,
-     d4est_factors
+     d4est_factors,
+     volume_h_type
     );
+
+  d4est_mesh_compute_mortar_quadrature_quantities
+    (
+     p4est,
+     ghost,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     face_h_type
+    ); 
   
 }
 
@@ -1867,7 +2174,7 @@ d4est_mesh_get_jacobian_on_quadrature_points
 }
 
 
-int
+d4est_mesh_local_sizes_t
 d4est_mesh_update
 (
  p4est_t* p4est,
@@ -1876,6 +2183,7 @@ d4est_mesh_update
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
+ d4est_mesh_initial_extents_t* initial_extents,
  d4est_mesh_ghost_init_option_t ghost_init_option,
  d4est_mesh_quadrature_data_init_option_t quad_init_option,
  d4est_mesh_geometry_data_init_option_t geom_init_option,
@@ -1952,7 +2260,9 @@ d4est_mesh_update
          d4est_ops,
          d4est_geom,
          d4est_quad,
-         d4est_factors
+         d4est_factors,
+         initial_extents->face_h_type,
+         initial_extents->volume_h_type
         );
 
 
@@ -1966,7 +2276,7 @@ d4est_mesh_update
     }
 
 
-  return local_sizes.local_nodes;
+  return local_sizes;
 }
 
 void
@@ -2429,7 +2739,7 @@ d4est_mesh_interpolate_at_tree_coord
           data.f_at_xyz = d4est_operators_interpolate(d4est_ops, &rst[0], &f[ed->nodal_stride], (P4EST_DIM), ed->deg);
 
           if (print){
-            printf("abc, xyz, f = %f, %f, %f, %f,%f,%f, %.15f\n", abc[0], abc[1], (P4EST_DIM)==3 ? abc[2] : 0, xyz[0], xyz[1], (P4EST_DIM)==3 ? xyz[2] : 0, data.f_at_xyz);
+            /* printf("abc, xyz, f = %f, %f, %f, %f,%f,%f, %.15f\n", abc[0], abc[1], (P4EST_DIM)==3 ? abc[2] : 0, xyz[0], xyz[1], (P4EST_DIM)==3 ? xyz[2] : 0, data.f_at_xyz); */
           }
           data.err = 0;
           return data;
@@ -2473,5 +2783,95 @@ d4est_mesh_get_field_on_element
   }
   else{
     return &field[which_field*local_nodes + ed->nodal_stride];
+  }
+}
+
+
+
+double
+d4est_mesh_data_compute_volume_diam
+(
+ double* xyz [(P4EST_DIM)],
+ int deg,
+ d4est_mesh_volume_h_t option
+)
+{
+  double diam = 0.;
+    
+  /* Use an approximate method to calculate diam: iterate through corners of element*/
+  /* if (option == DIAM_APPROX || option == DIAM_APPROX_CUBE){ */
+  /*   for (int i = 0; i < (P4EST_CHILDREN); i++){ */
+  /*     for (int j = 0; j < (P4EST_CHILDREN); j++){ */
+  /*       int corner_node_i = d4est_reference_corner_to_node((P4EST_DIM), deg, i); */
+  /*       int corner_node_j = d4est_reference_corner_to_node((P4EST_DIM), deg, j); */
+  /*       double diam_temp = 0; */
+  /*       for (int d = 0; d < (P4EST_DIM); d++){ */
+  /*         double diam_dx = xyz[d][corner_node_i] - xyz[d][corner_node_j]; */
+  /*         diam_temp += diam_dx*diam_dx; */
+  /*       } */
+  /*       diam_temp = sqrt(diam_temp);       */
+  /*       diam = (diam_temp > diam) ? diam_temp : diam; */
+  /*     } */
+  /*   } */
+
+  /*   if (option == DIAM_APPROX_CUBE){ */
+  /*     diam *= 1./sqrt(3.); */
+  /*   } */
+    
+  /* } */
+  /* else { */
+    int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), deg);
+    for (int i = 0; i < volume_nodes; i++){
+      for (int j = 0; j < volume_nodes; j++){
+        double diam_temp = 0;
+        /* printf("\n"); */
+        for (int d = 0; d < (P4EST_DIM); d++){
+          double diam_dx = xyz[d][i] - xyz[d][j];
+          /* printf("diam_dx = %f\n", diam_dx); */
+          diam_temp += diam_dx*diam_dx;
+        }
+        /* printf("diam_temp = %f\n",diam_temp);        */
+        diam_temp = sqrt(diam_temp);
+        diam = (diam_temp > diam) ? diam_temp : diam;
+      }
+    }
+
+
+    if (option == VOL_H_EQ_CUBE_APPROX){
+      diam *= 1./sqrt((P4EST_DIM));
+    }
+
+  return diam;
+}
+
+
+
+static void
+d4est_mesh_data_get_string_from_face_h_type
+(
+ d4est_mesh_face_h_t h_calc,
+ char* string
+)
+{
+  if (h_calc == FACE_H_EQ_J_DIV_SJ_QUAD){
+    strcpy(string, "FACE_H_EQ_J_DIV_SJ_QUAD");
+  }
+  else if (h_calc == FACE_H_EQ_J_DIV_SJ_MIN_LOBATTO){
+    strcpy(string,"FACE_H_EQ_J_DIV_SJ_MIN_lOBATTO");
+  }
+  else if (h_calc == FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO){
+    strcpy(string,"FACE_H_EQ_J_DIV_SJ_MEAN_lOBATTO");
+  }
+  else if (h_calc == FACE_H_EQ_VOLUME_DIV_AREA){
+    strcpy(string,"FACE_H_EQ_VOLUME_DIV_AREA");
+  }
+  else if (h_calc == FACE_H_EQ_VOLUME_DIV_AREA){
+    strcpy(string,"FACE_H_EQ_FACE_DIAM");
+  }
+  else if (h_calc == FACE_H_EQ_TREE_H){
+    strcpy(string,"FACE_H_EQ_TREE_H");
+  }
+  else {
+    strcpy(string,"NOT_SET");
   }
 }

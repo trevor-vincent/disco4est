@@ -20,7 +20,6 @@ d4est_h5_create_file
   H5Fclose(file_id);
   
   free(file_name);
-   
 }
 
 void
