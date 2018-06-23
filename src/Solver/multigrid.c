@@ -425,8 +425,8 @@ multigrid_data_init
   mg_data->elem_data_updater = multigrid_element_data_updater_init
                                (
                                 mg_data->num_of_levels,
-                                d4est_ghost,
-                                d4est_ghost_data,
+                                *d4est_ghost,
+                                *d4est_ghost_data,
                                 d4est_factors,
                                 d4est_mesh_set_quadratures_after_amr,
                                 initial_extents
@@ -632,8 +632,8 @@ multigrid_vcycle
     if (mg_data->use_power_method_debug){
 
       multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
-      d4est_ghost_t* d4est_ghost = *(updater->d4est_ghost);
-      d4est_ghost_data_t* d4est_ghost_data = *(updater->d4est_ghost_data);
+      d4est_ghost_t* d4est_ghost = updater->current_d4est_ghost;
+      d4est_ghost_data_t* d4est_ghost_data = updater->current_d4est_ghost_data;
       
       d4est_power_method
         (
@@ -962,8 +962,8 @@ multigrid_vcycle
     if (mg_data->use_power_method_debug){
 
       multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
-      d4est_ghost_t* d4est_ghost = *(updater->d4est_ghost);
-      d4est_ghost_data_t* d4est_ghost_data = *(updater->d4est_ghost_data);
+      d4est_ghost_t* d4est_ghost = updater->current_d4est_ghost;
+      d4est_ghost_data_t* d4est_ghost_data = updater->current_d4est_ghost_data;
       
       d4est_power_method
         (
@@ -1039,8 +1039,8 @@ multigrid_compute_residual
   
   multigrid_data_t* mg_data = p4est->user_pointer;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
-  d4est_ghost_t* d4est_ghost = *(updater->d4est_ghost);
-  d4est_ghost_data_t* d4est_ghost_data = *(updater->d4est_ghost_data);
+  d4est_ghost_t* d4est_ghost = updater->current_d4est_ghost;
+  d4est_ghost_data_t* d4est_ghost_data = updater->current_d4est_ghost_data;
   /* d4est_geometry_t* d4est_geom = mg_data->d4est_geom; */
   
   if (mg_data->mg_state == START){

@@ -57,8 +57,8 @@ multigrid_bottom_solver_cg_d4est
   multigrid_data_t* mg_data = p4est->user_pointer;
   multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   zlog_category_t *c_default = zlog_get_category("multigrid_bottom_solver_cg");   
-  d4est_ghost_t* d4est_ghost = *(updater->d4est_ghost);
-  d4est_ghost_data_t* d4est_ghost_data = *(updater->d4est_ghost_data);
+  d4est_ghost_t* d4est_ghost = updater->current_d4est_ghost;
+  d4est_ghost_data_t* d4est_ghost_data = updater->current_d4est_ghost_data;
   d4est_geometry_t* d4est_geom = mg_data->d4est_geom;
   
   int local_nodes;

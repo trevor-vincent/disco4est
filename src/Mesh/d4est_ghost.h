@@ -8,7 +8,7 @@ typedef struct {
 
   p4est_ghost_t* ghost;
   d4est_element_data_t* ghost_elements;
-  d4est_element_data_t** mirror_elements;
+  d4est_element_data_t* mirror_elements;
   
 } d4est_ghost_t;
 

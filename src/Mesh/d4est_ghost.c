@@ -30,8 +30,9 @@ d4est_ghost_get_mirror_elements
     D4EST_ASSERT (0 <= which_quad &&
                   which_quad < (p4est_locidx_t) tree->quadrants.elem_count);
     q = p4est_quadrant_array_index (&tree->quadrants, which_quad);
-    d4est_ghost->mirror_elements[zz] =
-      p4est->data_size == 0 ? &q->p.user_data : q->p.user_data;
+    d4est_ghost->mirror_elements[zz] = *(d4est_element_data_t*)q->p.user_data;
+      /* p4est->data_size == 0 ? &q->p.user_data : q->p.user_data; */
+      /* p4est->data_size == 0 ? &q->p.user_data : ; */
   } 
 }
 
@@ -46,7 +47,7 @@ d4est_ghost_init
   d4est_ghost->ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FULL);
 
   d4est_ghost->ghost_elements = D4EST_ALLOC (d4est_element_data_t, d4est_ghost->ghost->ghosts.elem_count);
-  d4est_ghost->mirror_elements = D4EST_ALLOC(d4est_element_data_t*, d4est_ghost->ghost->mirrors.elem_count);
+  d4est_ghost->mirror_elements = D4EST_ALLOC(d4est_element_data_t, d4est_ghost->ghost->mirrors.elem_count);
   
   p4est_ghost_exchange_data(p4est, d4est_ghost->ghost, d4est_ghost->ghost_elements);
   d4est_ghost_get_mirror_elements(p4est, d4est_ghost);
@@ -78,14 +79,16 @@ d4est_ghost_destroy
  d4est_ghost_t* d4est_ghost
 )
 {
-  /* free the ghost_elements */
-  D4EST_FREE(d4est_ghost->ghost_elements);
-  D4EST_FREE(d4est_ghost->mirror_elements);
+  if (d4est_ghost != NULL){
+    /* free the ghost_elements */
+    D4EST_FREE(d4est_ghost->ghost_elements);
+    D4EST_FREE(d4est_ghost->mirror_elements);
 
-  /* free the ghost object */
-  p4est_ghost_destroy(d4est_ghost->ghost);
+    /* free the ghost object */
+    p4est_ghost_destroy(d4est_ghost->ghost);
 
-  D4EST_FREE(d4est_ghost);
+    D4EST_FREE(d4est_ghost);
+  }
 }
 
 void
@@ -101,7 +104,7 @@ d4est_ghost_update
   
   d4est_ghost->ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FULL);
   d4est_ghost->ghost_elements = D4EST_ALLOC(d4est_element_data_t, d4est_ghost->ghost->ghosts.elem_count);  
-  d4est_ghost->mirror_elements = D4EST_ALLOC(d4est_element_data_t*, d4est_ghost->ghost->ghosts.elem_count);  
+  d4est_ghost->mirror_elements = D4EST_ALLOC(d4est_element_data_t, d4est_ghost->ghost->ghosts.elem_count);  
   
   p4est_ghost_exchange_data(p4est, d4est_ghost->ghost, d4est_ghost->ghost_elements);
   d4est_ghost_get_mirror_elements(p4est, d4est_ghost);

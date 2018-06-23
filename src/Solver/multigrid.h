@@ -145,22 +145,17 @@ typedef struct {
 
 
 typedef struct {
-
-
+  
   multigrid_update_callback_fcn_t update;
-  d4est_mesh_data_t** geometric_factors;
-  d4est_ghost_t** d4est_ghost;
-  d4est_ghost_data_t** d4est_ghost_data;
+  d4est_mesh_data_t** d4est_factors_on_level;
+  d4est_ghost_t** d4est_ghost_on_level;
+  d4est_ghost_data_t** d4est_ghost_data_on_level;
   d4est_mesh_initial_extents_t* initial_extents;
   
   /* alias to currently used geometric factors, points to an element of geometric_factors above */
   d4est_mesh_data_t* current_d4est_factors;
   d4est_ghost_t* current_d4est_ghost;
   d4est_ghost_data_t* current_d4est_ghost_data;
-
-  /* set to 0 initially, set to 1 after factors, ghost, and ghost data have
-   * been allocated for the hiearchy */
-  int completed_alloc;
   
   void(*element_data_init_user_fcn)(d4est_element_data_t*,void*);
   void* user;
@@ -170,11 +165,6 @@ typedef struct {
 struct multigrid_data_t {
  
   /* ******* REQUIRED EXTERNAL PARAMETERS ******* */
-  /* ******* SET BY FUNCTION CALL ******** */
-  int num_of_levels;
-  int use_p_coarsen;
-  int num_of_p_coarsen_levels;
-  
   /* ******* SET BY INPUT FILE ******** */
   int vcycle_imax; /* max number of vcycles */
   char smoother_name [50];
@@ -182,8 +172,17 @@ struct multigrid_data_t {
   double vcycle_rtol; /* residual tolerance for termination */
   double vcycle_atol;
   int use_profiler;
-
+  int print_state_info;
+  int use_power_method_debug;
+  double power_atol;
+  double power_rtol;
+  double power_imax;
+  double power_imin;
+  int use_p_coarsen; /* p-multigrid is untested */
+    
   /* ******* INTERNAL PARAMETERS ******* */
+  int num_of_levels;
+  int num_of_p_coarsen_levels; /* p-multigrid is untested */
   multigrid_state_t mg_state;
   multigrid_refine_data_t* coarse_grid_refinement;
   d4est_operators_t* d4est_ops;
@@ -228,15 +227,13 @@ struct multigrid_data_t {
   int* nodes_on_level_of_multigrid;
   int* nodes_on_level_of_surrogate_multigrid;
 
-  /* OTHER INTERNAL PARAMETERS */
-  int print_state_info;
-  int use_power_method_debug;
-  double power_atol;
-  double power_rtol;
-  double power_imax;
-  double power_imin;
 
-  /* if multigrid is being used as a preconditioner, keep track of pc updates */
+
+  /* UPDATED BY EXTERNAL FUNCTIONS */
+  /* if multigrid is being used as a preconditioner, keep track of linear operator updates, this is useful so that we don't need to recompute operator related
+ * quantities every time we run a v-cycle, only when the linear operator is updated
+ * (e.g. a new newton iteration) 
+ * This is used in multigrid_matrix_operator for example. */
   int linear_operator_updates;
   
 };

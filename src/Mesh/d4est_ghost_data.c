@@ -115,22 +115,24 @@ d4est_ghost_data_destroy
 (
  d4est_ghost_data_t* d4est_ghost_data
 ){
-  D4EST_FREE(d4est_ghost_data->transfer_types);
-  D4EST_FREE(d4est_ghost_data->transfer_strides);
-  D4EST_FREE(d4est_ghost_data->ghost_data_sizes);
+  if (d4est_ghost_data != NULL){
+    D4EST_FREE(d4est_ghost_data->transfer_types);
+    D4EST_FREE(d4est_ghost_data->transfer_strides);
+    D4EST_FREE(d4est_ghost_data->ghost_data_sizes);
   
-  for (int i = 0; i < d4est_ghost_data->num_ghosts; i++){
-    D4EST_FREE(d4est_ghost_data->receive_strides[i]);
-  }
-  D4EST_FREE(d4est_ghost_data->receive_strides);
-  D4EST_FREE(d4est_ghost_data->receive_data);
+    for (int i = 0; i < d4est_ghost_data->num_ghosts; i++){
+      D4EST_FREE(d4est_ghost_data->receive_strides[i]);
+    }
+    D4EST_FREE(d4est_ghost_data->receive_strides);
+    D4EST_FREE(d4est_ghost_data->receive_data);
 
-  d4est_ghost_data->receive_size = -1;
-  d4est_ghost_data->num_ghosts = -1;
-  d4est_ghost_data->num_vecs = -1;
+    d4est_ghost_data->receive_size = -1;
+    d4est_ghost_data->num_ghosts = -1;
+    d4est_ghost_data->num_vecs = -1;
   
-  D4EST_FREE(d4est_ghost_data);
-  d4est_ghost_data = NULL;
+    D4EST_FREE(d4est_ghost_data);
+    d4est_ghost_data = NULL;
+  }
 }
 
 
@@ -200,7 +202,7 @@ d4est_ghost_data_exchange
           total_memsize +=  sizeof(double)*
                             d4est_element_data_get_size_of_field
                             (
-                             d4est_ghost->mirror_elements[mirr],
+                             &d4est_ghost->mirror_elements[mirr],
                              d4est_ghost_data->transfer_types[tn]
                             );
 
@@ -218,7 +220,7 @@ d4est_ghost_data_exchange
           int mem_size = sizeof(double)*
                          d4est_element_data_get_size_of_field
                          (
-                          d4est_ghost->mirror_elements[mirr],
+                          &d4est_ghost->mirror_elements[mirr],
                           d4est_ghost_data->transfer_types[tn]
                          );
 
@@ -226,7 +228,7 @@ d4est_ghost_data_exchange
           double* field = &transfer_vecs[d4est_ghost_data->transfer_strides[tn]];
           D4EST_ASSERT(field != NULL);
           
-          int stride = d4est_element_data_get_stride_for_field(d4est_ghost->mirror_elements[mirr], d4est_ghost_data->transfer_types[tn]);
+          int stride = d4est_element_data_get_stride_for_field(&d4est_ghost->mirror_elements[mirr], d4est_ghost_data->transfer_types[tn]);
 
           /* printf("transfer stride, num_vecs, stride, mem_size, d4est_ghost->mirror_elements[mirr]->deg = %d,%d,%d,%d,%d\n",d4est_ghost_data->transfer_strides[tn], d4est_ghost_data->num_vecs, stride, mem_size,d4est_ghost->mirror_elements[mirr]->deg); */
           

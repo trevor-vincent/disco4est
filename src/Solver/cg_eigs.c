@@ -54,7 +54,9 @@ cg_eigs
  double* spectral_bound
 )
 {
-
+  D4EST_ASSERT(ghost != NULL);
+  D4EST_ASSERT(ghost_data != NULL);
+  
   zlog_category_t *c_default = zlog_get_category("cg_eigs");
   int local_nodes;
   double delta_new, delta_old;
