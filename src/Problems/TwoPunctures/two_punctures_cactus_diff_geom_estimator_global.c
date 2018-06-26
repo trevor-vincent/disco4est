@@ -183,8 +183,8 @@ amr_mark_element
 {
   problem_ctx_t* ctx = user;
 
-  double eta2_percentile
-    = d4est_estimator_stats_get_percentile(stats,params->percentile);
+  double eta2_percentile = stats->estimator_at_percentile;
+    /* = d4est_estimator_stats_get_percentile(stats,params->percentile); */
   
   return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
 }
@@ -447,14 +447,18 @@ problem_init
        0
       );
 
+    d4est_amr_smooth_pred_params_t* sp_params = d4est_amr_smooth_pred_params_input
+                                                (
+                                                 input_file
+                                                );
+
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
-    d4est_estimator_stats_compute(p4est, estimator, stats);
+    d4est_estimator_stats_compute(p4est, estimator, stats, sp_params->percentile, 1, 0);
     /* d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_prev, error, prob_vecs.local_nodes); */
     d4est_linalg_vec_fabsdiff(prob_vecs.u, u_prev, error, prob_vecs.local_nodes);
-    
     double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
+    P4EST_FREE(sp_params);
     
-
     d4est_mesh_compute_l2_norm_sqr
       (
        p4est,
@@ -507,7 +511,7 @@ problem_init
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
 
 
-    double total_est = stats[0].total;    
+    double total_est = stats->estimator_total;    
     energy_norm_ctx.energy_norm_data = &ip_norm_data;
     energy_norm_ctx.energy_estimator_sq_local = total_est;
     energy_norm_ctx.ghost = *d4est_ghost;

@@ -10,22 +10,6 @@
 #include <d4est_mortars.h>
 #include <d4est_poisson.h>
 
-/* static double */
-/* d4est_estimator_get_diam */
-/* ( */
-/*  d4est_mesh_data_t* d4est_factors, */
-/*  d4est_element_data_t* ed, */
-/*  diam_compute_option_t diam_opt */
-/* ) */
-/* { */
-/*   d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element */
-/*                                          ( */
-/*                                           d4est_factors, */
-/*                                           ed */
-/*                                          ); */
-  
-/*   return d4est_geometry_compute_diam(md_on_e.xyz,ed->deg,diam_opt);  */
-/* } */
 
 static void
 d4est_estimator_bi_dirichlet
@@ -42,9 +26,7 @@ d4est_estimator_bi_dirichlet
  void* boundary_condition_fcn_data,
  void* flux_parameter_data
 )
-{
-
-  
+{ 
   d4est_poisson_dirichlet_bc_t* bc_data = boundary_condition_fcn_data;
   d4est_estimator_bi_penalty_data_t* penalty_data = flux_parameter_data;
   double* estimator = penalty_data->estimator;
@@ -55,7 +37,6 @@ d4est_estimator_bi_dirichlet
 
   double* u_m_on_f_m_quad = boundary_data->u_m_on_f_m_quad;
   double* sj_on_f_m_quad = boundary_data->sj_on_f_m_quad;
-  /* double* j_div_sj_quad = boundary_data->j_div_sj_quad; */
   double* xyz_on_f_m_lobatto [(P4EST_DIM)]; 
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_quad [(P4EST_DIM)];  
@@ -546,3 +527,5 @@ d4est_estimator_bi_compute
   D4EST_FREE_DIM_VEC(dudr_ghost);  
   return estimator;
 }
+
+

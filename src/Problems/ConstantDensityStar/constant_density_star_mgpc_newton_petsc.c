@@ -102,13 +102,13 @@ amr_mark_element
 {
   problem_ctx_t* ctx = user;
   if (p4est->local_num_quadrants*p4est->mpisize < params->inflation_size){
-    double eta2_percentile
-      = d4est_estimator_stats_get_percentile(stats,25);
+    double eta2_percentile = stats->estimator_at_percentile;
+      /* = d4est_estimator_stats_get_percentile(stats,25); */
     return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
   }
   else{
-    double eta2_percentile
-      = d4est_estimator_stats_get_percentile(stats,params->percentile);
+    double eta2_percentile = stats->estimator_at_percentile;
+      /* = d4est_estimator_stats_get_percentile(stats,params->percentile); */
     return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
   }
 }
@@ -294,13 +294,25 @@ problem_init
       d4est_quad,
       0
     );
-    
+
+
+    d4est_amr_smooth_pred_params_t* sp_params = d4est_amr_smooth_pred_params_input
+                                             (
+                                              input_file
+                                             );
+
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
-    d4est_estimator_stats_compute(p4est, estimator, stats);
+    if (p4est->local_num_quadrants*p4est->mpisize < sp_params->inflation_size){
+      d4est_estimator_stats_compute(p4est, estimator, stats, 25, 1, 0);
+    }
+    else {
+      d4est_estimator_stats_compute(p4est, estimator, stats, sp_params->percentile, 1, 0);
+    }
+    /* printf("ctx.smooth_pred_params->percentile = %d\n",ctx.smooth_pred_params->percentile); */
     d4est_estimator_stats_print(stats);
+    P4EST_FREE(sp_params);
 
-
-    
+     
     // Compute analytical field values on mesh
     double* u_analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
     d4est_mesh_init_field(
@@ -345,7 +357,7 @@ problem_init
     ip_norm_data.size_params = NULL;
 
     energy_norm_ctx.energy_norm_data = &ip_norm_data;
-    energy_norm_ctx.energy_estimator_sq_local = stats->total;
+    energy_norm_ctx.energy_estimator_sq_local = stats->estimator_total;
     energy_norm_ctx.ghost = *d4est_ghost;
     energy_norm_ctx.ghost_data = d4est_ghost_data;
 

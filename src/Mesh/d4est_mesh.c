@@ -2244,14 +2244,6 @@ d4est_mesh_update
          d4est_factors,
          local_sizes
         );
-
-      /* d4est_mesh_data_zero */
-        /* ( */
-         /* p4est, */
-         /* d4est_factors, */
-         /* local_sizes */
-        /* ); */
-      
       d4est_mesh_data_compute
         (
          p4est,
@@ -2263,15 +2255,6 @@ d4est_mesh_update
          initial_extents->face_h_type,
          initial_extents->volume_h_type
         );
-
-
-      /* d4est_mesh_data_debug_print */
-      /*   ( */
-      /*    p4est, */
-      /*    d4est_factors, */
-      /*    local_sizes */
-      /*   ); */
-      
     }
 
 

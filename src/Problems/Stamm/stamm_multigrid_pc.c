@@ -42,7 +42,7 @@ amr_mark_element
 {
   problem_ctx_t* ctx = user;
   
-  double eta2_avg = stats->mean;
+  double eta2_avg = stats->estimator_mean;
   /* printf("eta2_avg, eta2, params->sigma = %.25f,%.25f,%.25f\n",eta2_avg,eta2,params->sigma); */
   return (eta2 >= params->sigma*eta2_avg);
 }
@@ -252,7 +252,7 @@ problem_init
       );
 
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
-    d4est_estimator_stats_compute(p4est, estimator, stats);
+    d4est_estimator_stats_compute(p4est, estimator, stats, 0, 1, 0);
     d4est_estimator_stats_print(stats);
 
 
@@ -299,7 +299,7 @@ problem_init
     ip_norm_data.size_params = NULL;
 
     energy_norm_ctx.energy_norm_data = &ip_norm_data;
-    energy_norm_ctx.energy_estimator_sq_local = stats->total;
+    energy_norm_ctx.energy_estimator_sq_local = stats->estimator_total;
     energy_norm_ctx.ghost = *d4est_ghost;
     energy_norm_ctx.ghost_data = d4est_ghost_data;
 

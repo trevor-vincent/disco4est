@@ -126,8 +126,6 @@ void d4est_solver_cg_solve
      d4est_factors
     );
   
-  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, vecs->Au, vecs->local_nodes); */
-  
   d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
 
   /* r = f - Au ; Au is stored in r so r = rhs - r */
@@ -151,15 +149,15 @@ void d4est_solver_cg_solve
     
     d4est_elliptic_eqns_apply_lhs
       (
-     p4est,
-     *ghost,
-     *ghost_data,
-     fcns,
-     vecs,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     d4est_factors
+       p4est,
+       *ghost,
+       *ghost_data,
+       fcns,
+       vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors
       );
     
     d_dot_Au = d4est_linalg_vec_dot(d, Au, local_nodes);
