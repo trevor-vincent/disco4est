@@ -278,8 +278,88 @@ problem_init
       NULL
     );
 
+
+    
+    
     // Compute errors between numerical and analytical field values
     double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
+    double* error_nofabs = P4EST_ALLOC(double, prob_vecs.local_nodes);
+
+    for (int i = 0; i < prob_vecs.local_nodes; i++){
+      error_nofabs[i] = prob_vecs.u[i] - u_analytic[i];
+    }
+
+    poisson_lorentzian_apply_lhs
+      (
+       p4est,
+       *d4est_ghost,
+       d4est_ghost_data,
+       &prob_vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       &ctx
+      );
+
+
+    double* laplace_u_analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
+
+
+    d4est_elliptic_data_t prob_vecs_analytic;
+    d4est_elliptic_data_copy_ptrs(&prob_vecs, &prob_vecs_analytic);
+
+    prob_vecs_analytic.Au = laplace_u_analytic;
+    prob_vecs_analytic.u = u_analytic;
+    
+    poisson_lorentzian_apply_lhs
+      (
+       p4est,
+       *d4est_ghost,
+       d4est_ghost_data,
+       &prob_vecs_analytic,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       &ctx
+      );
+ 
+    
+
+    
+    /* d4est_mesh_debug_boundary_elements(p4est, */
+    /*                                    d4est_ops, */
+    /*                                    d4est_factors, */
+    /*                                    (const char * []){"u","u_analytic","laplace_u","laplace_analytic", "error", NULL}, */
+    /*                                    (double* []){prob_vecs.u, prob_vecs_analytic.u, prob_vecs.Au, prob_vecs_analytic.Au, error_nofabs, NULL}, */
+    /*                                    prob_vecs.local_nodes */
+    /*                                   ); */
+
+
+
+    
+    d4est_mesh_debug_boundary_elements(p4est,
+                                       d4est_ops,
+                                       d4est_factors,
+                                       (const char * []){"u","u_analytic", NULL},
+                                       (double* []){prob_vecs.u, prob_vecs_analytic.u, NULL},
+                                       prob_vecs.local_nodes
+                                      );
+
+    
+    /* d4est_mesh_debug_boundary_elements(p4est, */
+    /*                                    d4est_ops, */
+    /*                                    d4est_factors, */
+    /*                                    (const char * []){"error", NULL}, */
+    /*                                    (double* []){error_nofabs, NULL}, */
+    /*                                    prob_vecs.local_nodes */
+    /*                                   ); */
+
+    
+    P4EST_FREE(error_nofabs);
+    P4EST_FREE(laplace_u_analytic);
+    
     d4est_linalg_vec_fabsdiff(prob_vecs.u, u_analytic, error, prob_vecs.local_nodes);
 
     double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);

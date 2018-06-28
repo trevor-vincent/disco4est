@@ -11,6 +11,7 @@ typedef struct {
   multigrid_data_t* mg_data;
   void(*user_setup_fcn)(krylov_pc_t* kpc);
 
+  int ratio_is_getting_bad_counts;
   
 } krylov_pc_multigrid_data_t;
 

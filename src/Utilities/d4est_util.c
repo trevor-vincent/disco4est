@@ -677,3 +677,14 @@ void d4est_util_parallel_sort
              radix_double, sizeof(double),
              NULL, mpicomm);
 }
+
+
+/* void d4est_util_aligned_print */
+/* ( */
+/*  double** fields, */
+/*  const char** field_names, */
+/*  int size */
+/* ){ */
+
+
+/* } */

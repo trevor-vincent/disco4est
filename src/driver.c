@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(mpicomm, &proc_rank);
   
   // Initialize logging
-  if (zlog_init("logging.conf") != 0)
+  if (zlog_init("logging.conf") != 0) 
     printf("Initializing logging failed.\n");
   zlog_category_t *c_default = zlog_get_category("d4est");
   

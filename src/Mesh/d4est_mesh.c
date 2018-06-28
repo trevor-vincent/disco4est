@@ -269,6 +269,7 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
   double* drst_dxyz_m_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* drst_dxyz_p_mortar_quad_porder [(P4EST_DIM)][(P4EST_DIM)];
 
+  d4est_factors->element_touches_boundary[e_m->id] = 1;
   double* h_quad = &d4est_factors->hm_mortar_quad[scalar_stride];
   double* sj_m_mortar_quad = &d4est_factors->sj_m_mortar_quad[scalar_stride];
   
@@ -290,6 +291,32 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
                                           d4est_factors,
                                           e_m
                                          );
+
+
+  int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), e_m->deg);
+  int face_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM)-1, e_m->deg);
+  
+  double* node_on_face_vol = P4EST_ALLOC(double, volume_nodes_lobatto);
+  double* node_on_face = P4EST_ALLOC(double, face_nodes_lobatto);
+  int* node_touches_boundary = &d4est_factors->node_touches_boundary[e_m->nodal_stride];
+  
+  d4est_util_fill_array(node_on_face, 1., face_nodes_lobatto);
+
+  d4est_operators_apply_lift(d4est_ops,
+                             node_on_face,
+                             (P4EST_DIM),
+                             e_m->deg,
+                             f_m,
+                             node_on_face_vol);
+
+  for (int i = 0; i < volume_nodes_lobatto; i++){
+    if (node_on_face_vol[i] > 0.){
+      node_touches_boundary[i] = 1;
+    }
+  }
+  
+  P4EST_FREE(node_on_face);
+  P4EST_FREE(node_on_face_vol);
   
   for (int d = 0; d < (P4EST_DIM); d++){
 
@@ -895,7 +922,9 @@ d4est_mesh_data_init()
 
   d4est_factors->drst_dxyz_m_mortar_quad = NULL;
   d4est_factors->drst_dxyz_p_mortar_quad_porder = NULL;
-  
+
+  d4est_factors->element_touches_boundary = NULL;
+  d4est_factors->node_touches_boundary = NULL;
   d4est_factors->hm_mortar_quad = NULL;
   d4est_factors->hp_mortar_quad = NULL;
 
@@ -941,6 +970,7 @@ d4est_mesh_data_zero
   d4est_util_zero_array(d4est_factors->drst_dxyz_p_mortar_quad_porder, local_matrix_mortar_nodes_quad);   
   
   d4est_util_zero_array(d4est_factors->hm_mortar_quad, local_sizes.local_mortar_nodes_quad);  
+  /* d4est_util_zero_array(d4est_factors->element_touches_boundary, p4est->local_num_quadrants);   */
   d4est_util_zero_array(d4est_factors->hp_mortar_quad, local_sizes.local_mortar_nodes_quad);   
   d4est_util_zero_array(d4est_factors->sj_m_mortar_quad, local_sizes.local_mortar_nodes_quad);   
   d4est_util_zero_array(d4est_factors->n_m_mortar_quad, local_vector_mortar_nodes_quad);
@@ -981,6 +1011,8 @@ d4est_mesh_data_debug_print
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->drst_dxyz_m_mortar_quad, local_matrix_mortar_nodes_quad);
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->drst_dxyz_p_mortar_quad_porder, local_matrix_mortar_nodes_quad);
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->hm_mortar_quad, local_sizes.local_mortar_nodes_quad);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->element_touches_boundary, p4est->local_num_quadrants);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->node_touches_boundary, local_nodes);
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->hp_mortar_quad, local_sizes.local_mortar_nodes_quad);
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->sj_m_mortar_quad, local_sizes.local_mortar_nodes_quad);
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->n_m_mortar_quad, local_vector_mortar_nodes_quad);
@@ -1035,6 +1067,25 @@ d4est_mesh_data_realloc
 
 
 
+  d4est_factors->element_touches_boundary = P4EST_REALLOC(d4est_factors->element_touches_boundary,
+                                                      int,
+                                                      p4est->local_num_quadrants);
+
+
+  d4est_factors->node_touches_boundary = P4EST_REALLOC(d4est_factors->node_touches_boundary,
+                                                      int,
+                                                      local_nodes);
+
+
+  for (int i = 0; i < p4est->local_num_quadrants; i++){
+    d4est_factors->element_touches_boundary[i] = 0;
+  }
+
+  for (int i = 0; i < local_nodes; i++){
+    d4est_factors->node_touches_boundary[i] = 0;
+  }
+  
+  
   d4est_factors->hm_mortar_quad = P4EST_REALLOC(d4est_factors->hm_mortar_quad,
                                                       double,
                                                       local_sizes.local_mortar_nodes_quad);
@@ -1120,6 +1171,8 @@ d4est_mesh_data_destroy
     P4EST_FREE(d4est_factors->drst_dxyz_m_mortar_quad);
     P4EST_FREE(d4est_factors->drst_dxyz_p_mortar_quad_porder);
     P4EST_FREE(d4est_factors->hm_mortar_quad);
+    P4EST_FREE(d4est_factors->element_touches_boundary);
+    P4EST_FREE(d4est_factors->node_touches_boundary);
     P4EST_FREE(d4est_factors->hp_mortar_quad);
     
     P4EST_FREE(d4est_factors->n_m_mortar_quad);
@@ -2856,4 +2909,102 @@ d4est_mesh_data_get_string_from_face_h_type
   else {
     strcpy(string,"NOT_SET");
   }
+}
+
+
+void
+d4est_mesh_debug_boundary_elements
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_mesh_data_t* d4est_factors,
+ const char** field_names,
+ double** fields,
+ int local_nodes
+)
+{
+
+  int num_fields = -1;
+  while (field_names[++num_fields] != NULL)
+    continue;
+
+
+  
+  double** fields_modal = P4EST_ALLOC(double*, num_fields);
+  int max_degree = d4est_mesh_get_local_max_degree(p4est);
+  for (int i = 0; i < num_fields; i++){
+    fields_modal[i] = P4EST_ALLOC(double, d4est_lgl_get_nodes((P4EST_DIM), max_degree));
+  }
+          
+  
+  
+ for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        if (d4est_factors->element_touches_boundary[ed->id] == 1){
+          int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+
+
+          for (int fi = 0; fi < num_fields; fi++){
+            double* field_nodal = &fields[fi][ed->nodal_stride];
+            double* field_modal = fields_modal[fi];
+                                
+            d4est_operators_convert_nodal_to_modal(d4est_ops,
+                                                   field_nodal,
+                                                   (P4EST_DIM),
+                                                   ed->deg,
+                                                   field_modal
+                                                  );
+          }
+          
+          printf("Element id, tree-id, tree = %d, %d, %d\n", ed->id, qq, tt);
+
+          for (int i_fields = 0; i_fields < num_fields; i_fields++){
+            printf("%s ",field_names[i_fields]);
+          }
+
+          for (int i_fields = 0; i_fields < num_fields; i_fields++){            
+            printf("%s_modal ",field_names[i_fields]);
+          }
+          printf("\n");
+          
+          double* xyz [3];
+          double* x = &d4est_factors->xyz[ed->nodal_stride];
+          xyz[0] = x;
+          double* y = &d4est_factors->xyz[ed->nodal_stride + local_nodes];
+          xyz[1] = y;
+#if (P4EST_DIM)==3
+          double* z = &d4est_factors->xyz[ed->nodal_stride + 2*local_nodes];
+          xyz[2] = z;
+#endif
+
+
+          for (int i = 0; i < volume_nodes; i++){
+            for (int i_fields = 0; i_fields < (P4EST_DIM); i_fields++){
+              printf("%.15f  ", xyz[i_fields][i]);
+            }
+            for (int i_fields=0; i_fields < num_fields; i_fields++) {
+              printf("%.15f  ",fields[i_fields][ed->nodal_stride + i]);
+            }
+            for (int i_fields=0; i_fields < num_fields; i_fields++) {
+              printf("%.15f  ",fields_modal[i_fields][i]);
+            }
+            printf("\n");
+          }
+        }
+      }
+    }
+
+ P4EST_FREE(fields_modal);
+ for (int i = 0; i < num_fields; i++){
+   P4EST_FREE(fields_modal[i]);
+ }
 }

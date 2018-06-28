@@ -46,16 +46,24 @@ krylov_pc_multigrid_apply(krylov_pc_t* kpc, double* xp, double* yp)
   int na;
   double* residual_history;
   KSPGetResidualHistory(*kct->ksp,&residual_history,&na);
- 
+
+  int switch_to_krylov = 100;
+  /* If multigrid is failing, switch back to non-preconditioned krylov */
   if(na >=2)
     {
       double ratio = residual_history[na-1]/residual_history[na-2];      
-      if (ratio > .95){
+      if (ratio > .95 || (kpcmgdata->ratio_is_getting_bad_counts > 0
+                          && kpcmgdata->ratio_is_getting_bad_counts < switch_to_krylov)){
         printf("ratio is getting bad, it is = %f\n",ratio);
         d4est_util_copy_1st_to_2nd(xp,yp,local_nodes);
+        kpcmgdata->ratio_is_getting_bad_counts++;
         return;
       }
     }
+  if (kpcmgdata->ratio_is_getting_bad_counts >= switch_to_krylov){
+    kpcmgdata->ratio_is_getting_bad_counts = 0;
+  }
+
   
     d4est_util_fill_array(yp, 0., local_nodes);
     double* Au = P4EST_ALLOC(double, local_nodes); 
@@ -101,6 +109,7 @@ krylov_pc_multigrid_create
 
   krylov_pc_multigrid_data_t* kpcmgdata = P4EST_ALLOC(krylov_pc_multigrid_data_t,1);
   kpcmgdata->mg_data = mg_data;
+  kpcmgdata->ratio_is_getting_bad_counts = 0;
   mg_data->linear_operator_updates = 0;
   kpcmgdata->user_setup_fcn = user_setup_fcn;
   pc->pc_setup = krylov_pc_multigrid_setup;

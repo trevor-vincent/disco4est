@@ -108,6 +108,16 @@
   } while(0)
 
 
+
+#define DEBUG_PRINT_5ARR_DBL(a, b, c, d, e, n) do {      \
+    printf("%s, %s, %s, %s %s = \n",#a, #b, #c, #d, #e); \
+    for (int i = 0; i < n; i++) {                                       \
+      printf("%.16f %.16f %.16f %.16f %.16f \n",a[i], b[i], c[i], d[i], e[i]); \
+    }                                                                   \
+  } while(0)
+
+
+
 #define DEBUG_PRINT_6ARR_DBL(a, b, c, d, e, f, n) do {                        \
     printf("%s, %s, %s, %s %s %s = \n",#a, #b, #c, #d, #e, #f);                \
     for (int i = 0; i < n; i++) {                                       \

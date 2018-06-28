@@ -93,17 +93,17 @@ typedef struct {
   
   d4est_mesh_local_sizes_t local_sizes;
 
+  int* element_touches_boundary;
+  int* node_touches_boundary;
+  
   double* xyz;
   double* xyz_quad;
   double* xyz_rst_quad;
   double* J_quad;
   double* rst_xyz_quad;
-  
+
   double* drst_dxyz_m_mortar_quad;
   double* drst_dxyz_p_mortar_quad_porder; /* this is (+) side order */
-
-  /* double* j_div_sj_m_mortar_quad; */
-  /* double* j_div_sj_p_mortar_quad_porder; */
 
   double* hm_mortar_quad;
   double* hp_mortar_quad;
@@ -142,7 +142,9 @@ typedef struct {
   
 } d4est_mesh_initial_extents_t;
 
+ 
 /* This file was automatically generated.  Do not edit! */
+void d4est_mesh_debug_boundary_elements(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,const char **field_names,double **fields,int local_nodes);
 double *d4est_mesh_get_field_on_element(p4est_t *p4est,d4est_element_data_t *ed,d4est_ghost_data_t *d4est_ghost_data,double *field,int local_nodes,int which_field);
 int d4est_mesh_is_it_a_ghost_element(p4est_t *p4est,d4est_element_data_t *ed);
 d4est_mesh_interpolate_data_t d4est_mesh_interpolate_at_tree_coord(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double abc[(P4EST_DIM)],int tree_id,double *f,int print);

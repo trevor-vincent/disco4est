@@ -349,7 +349,11 @@ krylov_petsc_solve
     PCSetType(pc,PCNONE);//CHKERRQ(ierr);
   }
 
-
+  KSPSetResidualHistory(ksp,
+                        PETSC_NULL,   // pointer to the array which holds the history
+                        PETSC_DECIDE, // size of the array holding the history
+                        PETSC_TRUE);  // Whether or not to reset the history for each solve.
+  
   KSPSetFromOptions(ksp);
   /* KSPSetUp(ksp); */
   /* Create matrix-free shell for Aij */
