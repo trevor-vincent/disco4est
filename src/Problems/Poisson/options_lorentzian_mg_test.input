@@ -1,12 +1,12 @@
 [initial_mesh]
 min_quadrants = -1
-min_level = 1
+min_level = 3
 fill_uniform = 1
-region0_deg = 2
+region0_deg = 1
 region0_deg_quad_inc = 0
-region1_deg = 2
+region1_deg = 1
 region1_deg_quad_inc = 0
-region2_deg = 2
+region2_deg = 1
 region2_deg_quad_inc = 0
 
 [mesh_parameters]
@@ -31,25 +31,25 @@ scheme = uniform_h
 num_of_amr_steps = 0
 max_degree = 7
 
+; [geometry]
+; name = cubed_sphere_outer_wedge
+; R1 = 5
+; R2 = 1000
+; compactify_outer_shell = 1
+; compactify_inner_shell = 0
+; DX_compute_method = analytic
+; JAC_compute_method = numerical
+
+
 [geometry]
-name = cubed_sphere_outer_wedge
-R1 = 5
+name = cubed_sphere
+R0 = 5
+R1 = 10
 R2 = 1000
 compactify_outer_shell = 1
 compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
-
-
-; [geometry]
-; name = cubed_sphere
-; R0 = .3
-; R1 = .6
-; R2 = .9
-; compactify_outer_shell = 0
-; compactify_inner_shell = 0
-; DX_compute_method = analytic
-; JAC_compute_method = numerical
 
 [d4est_vtk]
 filename = poisson_sinx_uniform
@@ -66,7 +66,7 @@ write_deg = 1
 name = legendre
 
 [krylov_petsc]
-ksp_type = fcg
+ksp_type = fgmres
 ksp_atol = 5e-15
 ksp_rtol = 1e-20
 ksp_max_it = 10000
