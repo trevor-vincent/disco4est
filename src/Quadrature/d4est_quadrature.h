@@ -128,6 +128,7 @@ struct d4est_quadrature {
   d4est_quadrature_reinit_fcn_t user_reinit;
 };
 
+void d4est_quadrature_apply_inverse_mass_matrix(d4est_operators_t *d4est_ops,double *in,int deg_Lobatto,double *jac_Gauss,int deg_Gauss,int dim,double *out);
 double d4est_quadrature_lebesgue_measure(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *jac_object,int deg_object);
 double d4est_quadrature_innerproduct(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,double *u,double *v,double *jac_quad,int deg_quad);
 d4est_rst_t d4est_quadrature_get_rst_points(d4est_operators_t *d4est_ops,d4est_quadrature_t *d4est_quadrature,d4est_geometry_t *d4est_geometry,void *object,d4est_quadrature_object_type_t object_type,d4est_quadrature_integrand_type_t integrand_type,int degree);
@@ -141,6 +142,5 @@ void d4est_quadrature_apply_galerkin_integral(d4est_operators_t *d4est_ops,d4est
 void d4est_quadrature_destroy(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad);
 void d4est_quadrature_reinit(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad);
 d4est_quadrature_t *d4est_quadrature_new(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,const char *input_file,const char *input_section);
-
 
 #endif

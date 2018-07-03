@@ -138,7 +138,6 @@ test_d4est_operators_interp_lobatto_to_gauss
   P4EST_FREE(poly_lobatto);
   P4EST_FREE(poly_lobatto_to_gauss);
   P4EST_FREE(poly_gauss);
-  
 }
 
 void
@@ -372,6 +371,77 @@ test_d4est_operators_inv_vandermonde
   P4EST_FREE(invVij);
 }
 
+static void
+test_d4est_nodal_to_modal
+(
+ d4est_operators_t* d4est_ops,
+ int dim,
+ int deg
+)
+{
+  int nodes = d4est_lgl_get_nodes(dim,deg + 1);
+  double* r [3];
+  for (int d = 0; d < dim; d++){
+    r[d] = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, dim, deg, d);
+  }
+  /* double* vij = P4EST_ALLOC_ZERO(double, nodes*nodes); */
+  double* u_nodal = P4EST_ALLOC_ZERO(double, nodes);
+  double* u_nodal_2 = P4EST_ALLOC_ZERO(double, nodes);
+  double* u_modal = P4EST_ALLOC_ZERO(double, nodes);
+  double* u_modal_2 = P4EST_ALLOC_ZERO(double, nodes);
+  double* error = P4EST_ALLOC_ZERO(double, nodes);
+  double* error_modal = P4EST_ALLOC_ZERO(double, nodes);
+  double* error_modal_check = P4EST_ALLOC_ZERO(double, nodes);
+
+
+  for (int i = 0; i < deg + 1; i++){
+    for (int d = 0; d < dim; d++){
+      u_nodal[i] += pow(r[d][i],deg-1);
+      u_nodal_2[i] += pow(r[d][i],deg-1) + .001*r[d][i] + .001;
+    }
+    error[i] = u_nodal[i] - u_nodal_2[i];
+  }
+  
+  /* test_d4est_operators_v1d(vij, r, deg); */
+  d4est_operators_convert_nodal_to_modal(d4est_ops, u_nodal, dim, deg, u_modal);
+  d4est_operators_convert_nodal_to_modal(d4est_ops, u_nodal_2, dim, deg, u_modal_2);
+  d4est_operators_convert_nodal_to_modal(d4est_ops, error, dim, deg, error_modal);
+
+  for (int i = 0; i < nodes; i++){
+    error_modal_check[i] = u_modal[i] - u_modal_2[i];
+  }
+
+  if (d4est_util_compare_vecs(error_modal, error_modal_check, nodes, 100*D4EST_REAL_EPS) == 0){
+    printf("[D4EST_ERROR]: error_modal and errorl_modal_check are not equal\n");
+
+    for (int j = 0; j < nodes; j++){
+      printf("u_modal u_modal_2 error_modal = %.15f %.15f %.15f\n",  u_modal[j], u_modal_2[j], error_modal[j]);
+    } 
+    P4EST_FREE(u_nodal);
+    P4EST_FREE(u_nodal_2);
+    P4EST_FREE(u_modal);
+    P4EST_FREE(u_modal_2);
+    P4EST_FREE(error);
+    P4EST_FREE(error_modal);
+    P4EST_FREE(error_modal_check);
+    exit(1);
+  }
+  else {
+    printf("test_d4est_nodal_to_modal passed\n");
+  }
+  
+
+  
+  
+  P4EST_FREE(u_nodal);
+  P4EST_FREE(u_nodal_2);
+  P4EST_FREE(u_modal);
+  P4EST_FREE(u_modal_2);
+  P4EST_FREE(error);
+  P4EST_FREE(error_modal);
+  P4EST_FREE(error_modal_check);
+}
+
 
 static void
 test_d4est_operators_p_projection
@@ -387,10 +457,8 @@ test_d4est_operators_p_projection
   
   /* matrix of size nodes_H x nodes_h */
   double* Pij = P4EST_ALLOC(double, nodes_H*nodes_h);
-
   double* wH = d4est_operators_fetch_lobatto_weights_1d(d4est_ops, deg_H);
   double* wh = d4est_operators_fetch_lobatto_weights_1d(d4est_ops, deg_h);
-
   double* xH = d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, deg_H);
   double* xh = d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, deg_h);
 
@@ -458,23 +526,13 @@ test_d4est_operators_p_projection
 int main(int argc, char *argv[])
 {
   d4est_operators_t* d4est_ops = d4est_ops_init(20);  
-  test_d4est_operators_mass_1d(d4est_ops, 3);
-  test_d4est_operators_inv_vandermonde(d4est_ops);
-  test_d4est_operators_p_projection(d4est_ops);
-  test_d4est_operators_lagrange(d4est_ops);
-  for (int degH = 1; degH < 20; degH++)
-    for (int degh = degH; degh < 20; degh++)
-      test_d4est_operators_p_prolong_1d(d4est_ops, degH, degh);
-  for (int dim = 2; dim < 4; dim++)
-    for (int deg = 1; deg < 20; deg++)
-      test_d4est_operators_interp_lobatto_to_gauss(d4est_ops,dim,deg);
-  test_d4est_operators_interpolate(d4est_ops,3,5);
-  test_d4est_operators_interpolate(d4est_ops,3,2);
-  test_d4est_operators_interpolate(d4est_ops,3,1);
-  test_d4est_operators_interpolate(d4est_ops,3,3);
-  test_d4est_operators_interpolate(d4est_ops,2,5);
-  test_d4est_operators_interpolate(d4est_ops,2,4);
-  test_d4est_operators_interpolate(d4est_ops,2,2);
+
+  test_d4est_nodal_to_modal
+    (
+     d4est_ops,
+     3,
+     3
+    );
   
   /* printf("mass 2d = \n"); */
   /* test_d4est_operators_mass_nd */

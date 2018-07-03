@@ -1086,6 +1086,153 @@ void d4est_quadrature_compute_mass_matrix
 
 
 
+/* void d4est_quadrature_compute_inverse_mass_matrix */
+/* ( */
+/*  d4est_operators_t* d4est_ops, */
+/*  d4est_geometry_t* d4est_geometry, */
+/*  d4est_quadrature_t* d4est_quadrature, */
+/*  void* object, */
+/*  d4est_quadrature_object_type_t object_type, */
+/*  d4est_quadrature_integrand_type_t integrand_type, */
+/*  int deg_lobatto, */
+/*  double* jac_quad, */
+/*  int deg_quad, */
+/*  double* out */
+/* ) */
+/* { */
+
+/*   int volume_nodes_lobatto = d4est_lgl_get_nodes(dim,deg_lobatto); */
+/*   d4est_quadrature_compute_mass_matrix */
+/*     ( */
+/*      d4est_ops, */
+/*      d4est_geometry, */
+/*      d4est_quadrature, */
+/*      object, */
+/*      object_type, */
+/*      integrand_type, */
+/*      deg_lobatto, */
+/*      jac_quad, */
+/*      deg_quad, */
+/*      out */
+/*     ); */
+/*     d4est_linalg_invert(out, volume_nodes_lobatto); */
+/* } */
+
+void d4est_quadrature_apply_inverse_mass_matrix
+(
+ d4est_operators_t* d4est_ops,
+ double* in,
+ int deg_Lobatto,
+ double* jac_Gauss,
+ int deg_Gauss,
+ int dim,
+ double* out
+){
+  D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
+  D4EST_ASSERT(deg_Lobatto == deg_Gauss);
+  int volume_nodes_Gauss = d4est_lgl_get_nodes(dim, deg_Gauss);
+
+  double* in_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
+  double* one_over_w_j_in_Gauss = P4EST_ALLOC(double, volume_nodes_Gauss);
+  
+  double* Gauss_weights = d4est_operators_fetch_gauss_weights_1d(d4est_ops, deg_Gauss);
+  double* GLL_to_GL_interp_trans_inverse = d4est_operators_fetch_lobatto_to_gauss_interp_trans_inverse_1d(d4est_ops, deg_Lobatto);
+  double* GLL_to_GL_interp_inverse = d4est_operators_fetch_lobatto_to_gauss_interp_inverse_1d(d4est_ops, deg_Lobatto);
+  
+  int nodes_Lobatto = deg_Lobatto + 1;
+  int nodes_Gauss = deg_Gauss + 1;
+  
+  if (dim == 1){
+    d4est_linalg_matvec_plus_vec(1.0, GLL_to_GL_interp_trans_inverse, in, 0., in_Gauss, nodes_Gauss, nodes_Lobatto);
+    d4est_kron_oneover_vec_dot_oneover_x_dot_y(Gauss_weights, jac_Gauss, in_Gauss, nodes_Gauss, one_over_w_j_in_Gauss);
+    d4est_linalg_matvec_plus_vec(1.0, GLL_to_GL_interp_inverse, one_over_w_j_in_Gauss, 0., out, nodes_Lobatto, nodes_Gauss);
+  }
+  
+  else if (dim == 2){
+    d4est_kron_A1A2x_nonsqr
+      (
+       in_Gauss,
+       GLL_to_GL_interp_trans_inverse,
+       GLL_to_GL_interp_trans_inverse,
+       in,
+       nodes_Gauss,
+       nodes_Lobatto,
+       nodes_Gauss,
+       nodes_Lobatto
+      );
+    
+    d4est_kron_oneover_vec_o_vec_dot_oneover_x_dot_y
+      (
+       Gauss_weights,
+       jac_Gauss,
+       in_Gauss,
+       nodes_Gauss,
+       one_over_w_j_in_Gauss
+      );
+    
+    d4est_kron_A1A2x_nonsqr
+      (
+       out,
+       GLL_to_GL_interp_inverse,
+       GLL_to_GL_interp_inverse,
+       one_over_w_j_in_Gauss,
+       nodes_Lobatto,
+       nodes_Gauss,
+       nodes_Lobatto,
+       nodes_Gauss
+      );
+  }
+  
+  else if (dim == 3) {
+    d4est_kron_A1A2A3x_nonsqr(
+                               in_Gauss,
+                               GLL_to_GL_interp_trans_inverse,
+                               GLL_to_GL_interp_trans_inverse,
+                               GLL_to_GL_interp_trans_inverse,
+                               in,
+                               nodes_Gauss,
+                               nodes_Lobatto,
+                               nodes_Gauss,
+                               nodes_Lobatto,
+                               nodes_Gauss,
+                               nodes_Lobatto
+                              );
+    
+    d4est_kron_oneover_vec_o_vec_o_vec_dot_oneover_x_dot_y
+      (
+       Gauss_weights,
+       jac_Gauss,
+       in_Gauss,
+       nodes_Gauss,
+       one_over_w_j_in_Gauss
+      );
+    
+    d4est_kron_A1A2A3x_nonsqr(
+                               out,
+                               GLL_to_GL_interp_inverse,
+                               GLL_to_GL_interp_inverse,
+                               GLL_to_GL_interp_inverse,
+                               one_over_w_j_in_Gauss,
+                               nodes_Lobatto,
+                               nodes_Gauss,
+                               nodes_Lobatto,
+                               nodes_Gauss,
+                               nodes_Lobatto,
+                               nodes_Gauss
+                              );
+  } else {
+    P4EST_FREE(one_over_w_j_in_Gauss);
+    P4EST_FREE(in_Gauss);
+    D4EST_ABORT("ERROR: Apply mass matrix ref space, wrong dimension.");
+  }  
+  P4EST_FREE(one_over_w_j_in_Gauss);
+  P4EST_FREE(in_Gauss);
+}
+
+
+
+
+
 /* void d4est_quadrature_form_fofufofvlilj_matrix */
 /* ( */
 /*  d4est_operators_t* d4est_ops, */
@@ -1198,6 +1345,8 @@ void d4est_quadrature_compute_mass_matrix
 /*   } */
   
 /* } */
+/* This file was automatically generated.  Do not edit! */
+/* This file was automatically generated.  Do not edit! */
 /* This file was automatically generated.  Do not edit! */
 /* This file was automatically generated.  Do not edit! */
 /* This file was automatically generated.  Do not edit! */

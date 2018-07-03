@@ -26,7 +26,7 @@ poisson_lorentzian_robin_coeff_fcn
 )
 {
   double r2 = x*x + y*y + z*z;
-  return sqrt(r2)/(1. + r2);
+  return -sqrt(r2)/(1. + r2);
 }
 
 double
@@ -60,6 +60,7 @@ poisson_lorentzian_analytic_solution
   double r = sqrt(x*x + y*y + z*z);
   return 1./sqrt(1.+r*r);
 }
+
 
 static double
 poisson_lorentzian_rhs_fcn
@@ -146,6 +147,27 @@ poisson_lorentzian_apply_lhs
   d4est_poisson_flux_data_t* flux_fcn_data = ctx->flux_data_for_apply_lhs;
   d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad, d4est_factors,0);
 }
+
+
+static void
+poisson_lorentzian_apply_lhs_with_bc
+(
+ p4est_t* p4est,
+ d4est_ghost_t* ghost,
+ d4est_ghost_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ void* user
+)
+{
+  problem_ctx_t* ctx = user;
+  d4est_poisson_flux_data_t* flux_fcn_data = ctx->flux_data_for_build_rhs;
+  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad, d4est_factors,0);
+}
+
 
 
 static void

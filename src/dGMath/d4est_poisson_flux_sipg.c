@@ -428,7 +428,6 @@ d4est_poisson_flux_sipg_robin_aux
     /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_quad[0], face_nodes_m_quad); */
     /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_quad[1], face_nodes_m_quad); */
     /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_quad[2], face_nodes_m_quad); */
-    
     /* printf("robin_coeff_quad = %f, robin_rhs_quad = %f\n", robin_coeff_quad, robin_rhs_quad); */
     
     term1_quad[i] = sj_on_f_m_quad[i]

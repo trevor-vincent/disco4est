@@ -95,6 +95,7 @@ typedef struct {
 
   int* element_touches_boundary;
   int* node_touches_boundary;
+  int* face_touches_element;
   
   double* xyz;
   double* xyz_quad;
@@ -144,6 +145,7 @@ typedef struct {
 
  
 /* This file was automatically generated.  Do not edit! */
+void d4est_mesh_apply_invM_on_field(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,double *in,double *out);
 void d4est_mesh_debug_boundary_elements(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,const char **field_names,double **fields,int local_nodes);
 double *d4est_mesh_get_field_on_element(p4est_t *p4est,d4est_element_data_t *ed,d4est_ghost_data_t *d4est_ghost_data,double *field,int local_nodes,int which_field);
 int d4est_mesh_is_it_a_ghost_element(p4est_t *p4est,d4est_element_data_t *ed);

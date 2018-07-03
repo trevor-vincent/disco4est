@@ -29,6 +29,9 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
   d4est_ops->gauss_rst_3d_table = P4EST_ALLOC(double*, max_degree); 
   d4est_ops->flip_1d_table = P4EST_ALLOC(double*, max_degree);
   d4est_ops->vtk_interp_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->lobatto_to_gauss_interp_inverse_1d_table = P4EST_ALLOC(double*, max_degree);
+  d4est_ops->lobatto_to_gauss_interp_trans_inverse_1d_table = P4EST_ALLOC(double*, max_degree);
+
   
   d4est_ops->hp_prolong_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_ops->hp_restrict_1d_table = P4EST_ALLOC(double**, max_degree);
@@ -41,6 +44,7 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
   d4est_ops->lobatto_to_gauss_interp_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_ops->lobatto_to_gauss_interp_trans_1d_table = P4EST_ALLOC(double**, max_degree);
 
+  
   for (int i = 0; i < d4est_ops->max_degree; i++){
     d4est_ops->hp_prolong_1d_table[i] = P4EST_ALLOC(double*, max_degree);
     d4est_ops->hp_prolong_transpose_1d_table[i] = P4EST_ALLOC(double*, max_degree);
@@ -52,6 +56,10 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
     d4est_ops->p_prolong_transpose_1d_table[i] = P4EST_ALLOC(double*, max_degree);
     d4est_ops->lobatto_to_gauss_interp_trans_1d_table[i] = P4EST_ALLOC(double*, max_degree);
     d4est_ops->lobatto_to_gauss_interp_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    /* d4est_ops->lobatto_to_gauss_ interp_trans_inverse_1d_table[i] = P4EST_ALLOC(double*, max_degree); */
+    /* d4est_ops->lobatto_to_gauss_interp_inverse_1d_table[i] = P4EST_ALLOC(double*, max_degree); */
+    d4est_ops->lobatto_to_gauss_interp_trans_inverse_1d_table[i] = NULL;
+    d4est_ops->lobatto_to_gauss_interp_inverse_1d_table[i] = NULL;
     d4est_ops->vtk_interp_1d_table[i] = NULL;
     d4est_ops->mij_1d_table[i] = NULL;
     d4est_ops->lobatto_nodes_1d_table[i] = NULL;
@@ -132,6 +140,10 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
   P4EST_FREE(d4est_ops->gauss_rst_2d_table);
   P4EST_FREE(d4est_ops->gauss_rst_3d_table);
 
+  P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_trans_inverse_1d_table);
+  P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_inverse_1d_table);
+  
+
   for (int i = 0; i < d4est_ops->max_degree; i++){
     for(int j = 0; j < d4est_ops->max_degree; j++){
       P4EST_FREE(d4est_ops->hp_prolong_1d_table[i][j]);
@@ -166,7 +178,8 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
   P4EST_FREE(d4est_ops->p_prolong_1d_table);
   P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_trans_1d_table);
   P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_1d_table);
-     
+
+  
   P4EST_FREE(d4est_ops);
 }
 
@@ -404,6 +417,32 @@ void d4est_operators_build_lobatto_to_gauss_interp_trans_1d
   d4est_linalg_mat_transpose_nonsqr(ref_lobatto_to_gauss_interp_1d, ref_lobatto_to_gauss_interp_trans_1d, gauss_degree + 1, lobatto_degree + 1);
 }
 
+
+void d4est_operators_build_lobatto_to_gauss_interp_trans_inverse_1d
+(
+ d4est_operators_t* d4est_ops,
+ double * restrict  ref_lobatto_to_gauss_interp_trans_inverse_1d,
+ int deg
+)
+{
+  double* ref_lobatto_to_gauss_interp_trans_1d = d4est_operators_fetch_lobatto_to_gauss_interp_trans_1d(d4est_ops, deg, deg);
+  d4est_util_copy_1st_to_2nd(ref_lobatto_to_gauss_interp_trans_1d, ref_lobatto_to_gauss_interp_trans_inverse_1d, (deg + 1)*(deg + 1));
+  d4est_linalg_invert(ref_lobatto_to_gauss_interp_trans_inverse_1d, (deg + 1));  
+}
+
+
+void d4est_operators_build_lobatto_to_gauss_interp_inverse_1d
+(
+ d4est_operators_t* d4est_ops,
+ double * restrict  ref_lobatto_to_gauss_interp_inverse_1d,
+ int deg
+)
+{
+  double* ref_lobatto_to_gauss_interp_1d = d4est_operators_fetch_lobatto_to_gauss_interp_1d(d4est_ops, deg, deg);
+  d4est_util_copy_1st_to_2nd(ref_lobatto_to_gauss_interp_1d, ref_lobatto_to_gauss_interp_inverse_1d, (deg + 1)*(deg + 1));
+  d4est_linalg_invert(ref_lobatto_to_gauss_interp_inverse_1d, (deg + 1));  
+}
+
 double* d4est_operators_fetch_lobatto_to_gauss_interp_trans_1d
 (
  d4est_operators_t* d4est_ops,
@@ -420,6 +459,42 @@ double* d4est_operators_fetch_lobatto_to_gauss_interp_trans_1d
                                       d4est_operators_build_lobatto_to_gauss_interp_trans_1d
                                      );  
 }
+
+
+
+
+double* d4est_operators_fetch_lobatto_to_gauss_interp_trans_inverse_1d
+(
+ d4est_operators_t* d4est_ops,
+ int deg
+)
+{
+  int size = (deg + 1) * (deg + 1);
+  return d4est_operators_1index_fetch(d4est_ops,
+                                      d4est_ops->lobatto_to_gauss_interp_trans_inverse_1d_table,
+                                      deg,
+                                      size,
+                                      d4est_operators_build_lobatto_to_gauss_interp_trans_inverse_1d
+                                     );  
+}
+
+
+double* d4est_operators_fetch_lobatto_to_gauss_interp_inverse_1d
+(
+ d4est_operators_t* d4est_ops,
+ int deg
+)
+{
+  int size = (deg + 1) * (deg + 1);
+  return d4est_operators_1index_fetch(d4est_ops,
+                                      d4est_ops->lobatto_to_gauss_interp_inverse_1d_table,
+                                      deg,
+                                      size,
+                                      d4est_operators_build_lobatto_to_gauss_interp_inverse_1d
+                                     );  
+}
+
+
 
 void d4est_operators_compute_prolong_matrix
 (
@@ -1484,29 +1559,30 @@ void d4est_operators_apply_slicer(d4est_operators_t* d4est_ops, double * restric
 }
 
 
-void d4est_operators_convert_nodal_to_modal(d4est_operators_t* d4est_ops, double * restrict  in,
-                                   int dim, int deg, double * restrict  out) {
+void d4est_operators_convert_nodal_to_modal
+(
+ d4est_operators_t* d4est_ops,
+ double * restrict  in,
+ int dim,
+ int deg,
+ double * restrict  out
+)
+{
   D4EST_ASSERT(dim == 1 || dim == 2 || dim == 3);
   int nodes = deg + 1;
-  double* invvij_1d = P4EST_ALLOC(double, nodes* nodes);
-
-  /* TODO: probably could use build function for inv_Vij */
-  d4est_operators_build_Vij_1d(d4est_ops, invvij_1d, deg);
-  d4est_linalg_invert(invvij_1d, nodes);
-
+  double* invvij_1d =  d4est_operators_fetch_invvij_1d(d4est_ops, deg);
   if (dim == 1)
     d4est_linalg_matvec_plus_vec(1.0, invvij_1d, in, 0., out, nodes, nodes);
   else if (dim == 2) {
-    d4est_kron_A1A2x_nonsqr(out, invvij_1d, invvij_1d, in, nodes, nodes, nodes,
-                             nodes);
-  } else if (dim == 3) {
-    d4est_kron_A1A2A3x_nonsqr(out, invvij_1d, invvij_1d, invvij_1d, in, nodes,
-                               nodes, nodes, nodes, nodes, nodes);
-  } else {
+    d4est_kron_A1A2x_nonsqr(out, invvij_1d, invvij_1d, in, nodes, nodes, nodes, nodes);
+  }
+  else if (dim == 3) {
+    d4est_kron_A1A2A3x_nonsqr(out, invvij_1d, invvij_1d, invvij_1d,
+                              in, nodes, nodes, nodes, nodes, nodes, nodes);
+  }
+  else {
     D4EST_ABORT("[D4EST_ERROR]: Apply mass matrix ref space, wrong dimension.");
   }
-
-  P4EST_FREE(invvij_1d);
 }
 
 static void d4est_operators_build_hp_prolong_transpose_1d(
@@ -2244,8 +2320,11 @@ d4est_operators_interpolate(d4est_operators_t* d4est_ops,
   return sum;  
 }
 
-
-
+/* void */
+/* d4est_operators_spectral_filter */
+/* ( */
+/*  d4est_operators_t* d4est_ops, */
+ 
 
 double
 d4est_operators_interpolate_using_bary
@@ -2343,5 +2422,7 @@ d4est_operators_interpolate_using_bary
     
   return sum_num/sum_den;  
 }
+
+
 
 
