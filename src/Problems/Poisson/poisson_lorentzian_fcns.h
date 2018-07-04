@@ -26,7 +26,7 @@ poisson_lorentzian_robin_coeff_fcn
 )
 {
   double r2 = x*x + y*y + z*z;
-  return -sqrt(r2)/(1. + r2);
+  return sqrt(r2)/(1. + r2);
 }
 
 double
