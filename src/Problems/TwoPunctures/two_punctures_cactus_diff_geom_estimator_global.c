@@ -54,8 +54,52 @@ double solve_for_c
   return x - Rc;  
 }
 
+
+
+static
+double solve_for_c_outer
+(
+ double c,
+ void* user
+)
+{
+  double* Rs = user;
+  double R1 = Rs[0];
+  double R2 = Rs[1];
+  double Rc = Rs[2];
+  double m = (2 - 1)/((1/R2) - (1/R1));
+  double n = (1*R1 - 2*R2)/(R1 - R2);
+  double R = m/(c - n);
+  double pp = 2 - c;
+  double q = R;
+  double x = q;
+  return x - Rc;  
+}
+
+
 double
-get_inverted_wedge_point(double R1, double R2, double Rc, int compactified){
+get_inverted_outer_wedge_point(double R1, double R2, double Rc, int compactified){
+  D4EST_ASSERT(Rc >= R1 && Rc <= R2);
+  if (compactified){
+    double c;
+    if (Rc == R2){
+      c = 2;
+    }
+    else {
+      double Rs [] = {R1,R2,Rc};
+      int success = d4est_util_bisection(solve_for_c_outer, 1, 2, DBL_EPSILON, 100000, &c, &Rs[0]);
+      D4EST_ASSERT(!success);
+    }
+    return c - 1;
+  }
+  else{
+    D4EST_ABORT("get_inverted_outer_wedge_point not accepted yet");
+  }
+}
+
+
+double
+get_inverted_inner_wedge_point(double R1, double R2, double Rc, int compactified){
   D4EST_ASSERT(Rc >= R1 && Rc <= R2);
   if (compactified){
     double c;
@@ -712,13 +756,12 @@ problem_init
     point_err[1] = data.err;
     printf("2nd point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]);
     
-    data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,get_inverted_wedge_point(R0,R1,10,compactify_inner_shell)}, 3, prob_vecs.u, 1);
+    data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,get_inverted_inner_wedge_point(R0,R1,10,compactify_inner_shell)}, 3, prob_vecs.u, 1);
     point[2][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
     point_err[2] = data.err;
     printf("3rd point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]);
 
-    
-    data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,get_inverted_wedge_point(R0,R1, (100 > R1) ? R1 : 100,compactify_inner_shell)}, 3, prob_vecs.u, 1);
+    data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,get_inverted_inner_wedge_point(R0,R1, (100 > R1) ? R1 : 100,compactify_inner_shell)}, 3, prob_vecs.u, 1);
     point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
     point_err[3] = data.err;
     printf("4th point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]);
