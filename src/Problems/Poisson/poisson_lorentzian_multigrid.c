@@ -241,43 +241,7 @@ problem_init
       0
     );
 
-    /* int cg_its = 30; */
-    /* int pow_its = 1000; */
-   
-    /* double eig_power = */
-    /*   d4est_power_method */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs, */
-    /*    &prob_fcns, */
-    /*    *ghost, */
-    /*    ghost_data, */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    d4est_quad, */
-    /*    d4est_factors, */
-    /*    init_params.pow_eig_its */
-    /*   ); */
 
-  
-    /* double eig_cg; */
-    /* cg_eigs */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs, */
-    /*    &prob_fcns, */
-    /*    *ghost, */
-    /*    ghost_data, */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    d4est_quad, */
-    /*    d4est_factors, */
-    /*    init_params.cg_eig_its, */
-    /*    &eig_cg */
-    /*   ); */
-      
-
-    /*   printf("eig_power = %.15f after %d its, eig_cg = %.15f after %d its\n", eig_power, init_params.pow_eig_its, eig_cg, init_params.cg_eig_its); */
     
     // Setup multigrid
     krylov_pc_t* pc = NULL;

@@ -70,6 +70,54 @@ amr_set_element_gamma
 }
 
 
+
+
+typedef struct {
+  
+  int use_dirichlet;
+  
+} poisson_lorentzian_init_params_t;
+
+
+static
+int poisson_lorentzian_init_params_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  poisson_lorentzian_init_params_t* pconfig = (poisson_lorentzian_init_params_t*)user;
+  if (d4est_util_match_couple(section,"problem",name,"use_dirichlet")) {
+    D4EST_ASSERT(pconfig->use_dirichlet == -1);
+    pconfig->use_dirichlet = atoi(value);
+  }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+static
+poisson_lorentzian_init_params_t
+poisson_lorentzian_init_params_input
+(
+ const char* input_file
+)
+{
+  poisson_lorentzian_init_params_t input;
+  input.use_dirichlet = -1;
+
+  if (ini_parse(input_file, poisson_lorentzian_init_params_handler, &input) < 0) {
+    D4EST_ABORT("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
+  
+  return input;
+}
+
 int
 problem_set_mortar_degree
 (
@@ -107,24 +155,51 @@ problem_init
 )
 {
   int initial_nodes = initial_extents->initial_nodes;
-  /* poisson_lorentzian_params_t poisson_lorentzian_params = poisson_lorentzian_params_input(input_file); */
+  
 
-  d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
-  bc_data_for_lhs.dirichlet_fcn = zero_fcn;
-  bc_data_for_lhs.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
+  poisson_lorentzian_init_params_t init_params = poisson_lorentzian_init_params_input
+                                            (
+                                             input_file
+                                            ); 
+
   
-  d4est_poisson_dirichlet_bc_t bc_data_for_rhs;
-  bc_data_for_rhs.dirichlet_fcn = poisson_lorentzian_boundary_fcn;
-  bc_data_for_rhs.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
+  dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
   
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs);
+  // Setup boundary conditions
+
+  d4est_poisson_robin_bc_t bc_data_robin_for_lhs;
+  bc_data_robin_for_lhs.robin_coeff = poisson_lorentzian_robin_coeff_fcn;
+  bc_data_robin_for_lhs.robin_rhs = poisson_lorentzian_robin_bc_rhs_fcn;
   
-  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_for_rhs);
+  d4est_poisson_dirichlet_bc_t bc_data_dirichlet_for_lhs;
+  bc_data_dirichlet_for_lhs.dirichlet_fcn = zero_fcn;
+  bc_data_dirichlet_for_lhs.eval_method = eval_method;
+  
+  d4est_poisson_dirichlet_bc_t bc_data_dirichlet_for_rhs;
+  bc_data_dirichlet_for_rhs.dirichlet_fcn = poisson_lorentzian_boundary_fcn;
+  bc_data_dirichlet_for_rhs.eval_method = eval_method;
+  
+  d4est_poisson_flux_data_t* flux_data_for_lhs = NULL; //d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, 
+  d4est_poisson_flux_data_t* flux_data_for_rhs = NULL; //d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
+
+  if(init_params.use_dirichlet){
+    flux_data_for_lhs
+      = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_lhs);
+  
+    flux_data_for_rhs
+      = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
+  }
+  else {  
+    flux_data_for_lhs = d4est_poisson_flux_new(p4est, input_file, BC_ROBIN, &bc_data_robin_for_lhs);
+    flux_data_for_rhs = d4est_poisson_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_robin_for_lhs);
+  }
+  
+
 
   problem_ctx_t ctx;
-  /* ctx.poisson_lorentzian_params = &poisson_lorentzian_params; */
-  ctx.flux_data_for_apply_lhs = flux_data_for_apply_lhs;
-  ctx.flux_data_for_build_rhs = flux_data_for_build_rhs;
+  ctx.flux_data_for_apply_lhs = flux_data_for_lhs;
+  ctx.flux_data_for_build_rhs = flux_data_for_rhs;
+
                            
   d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = poisson_lorentzian_build_residual;
@@ -140,7 +215,7 @@ problem_init
   prob_vecs.rhs = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.local_nodes = initial_nodes;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
+  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_lhs->flux_data;
   
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
@@ -193,7 +268,7 @@ problem_init
      d4est_quad,
      d4est_factors,
      &prob_vecs,
-     flux_data_for_build_rhs,
+     flux_data_for_rhs,
      prob_vecs.rhs,
      poisson_lorentzian_rhs_fcn,
      INIT_FIELD_ON_LOBATTO,
@@ -231,8 +306,35 @@ problem_init
         (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL}
       );
 
+    zlog_category_t *c_geom = zlog_get_category("d4est_geometry_compactified");
+  d4est_geometry_t* d4est_geom_compactified = d4est_geometry_new(p4est->mpirank, input_file,"compactified_geometry", c_geom);
+  d4est_mesh_data_t* d4est_factors_compactified = d4est_mesh_data_init(p4est);
 
+    
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
+
+
+
+    d4est_mesh_data_realloc
+      (
+       p4est,
+       *d4est_ghost,
+       d4est_factors_compactified,
+       d4est_factors->local_sizes
+      );
+    
+    d4est_mesh_data_compute
+      (
+       p4est,
+       *d4est_ghost,
+       /* *ghost_data, */
+       d4est_ops,
+       d4est_geom_compactified,
+       d4est_quad,
+       d4est_factors_compactified,
+       initial_extents->face_h_type,
+       initial_extents->volume_h_type
+      );
     
     double* estimator = d4est_estimator_bi_compute
       (
@@ -246,8 +348,8 @@ problem_init
        d4est_ops,
        d4est_geom,
        d4est_factors,
-       d4est_geom,
-       d4est_factors,
+       d4est_geom_compactified,
+       d4est_factors_compactified,
        d4est_quad,
        0
       );
@@ -261,7 +363,9 @@ problem_init
     d4est_estimator_stats_compute(p4est, estimator, stats, sp_params->percentile, 1, 0);
     d4est_estimator_stats_print(stats);
 
+   double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
 
+    
     
     double* u_analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
     double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
@@ -281,6 +385,20 @@ problem_init
     for (int i = 0; i < prob_vecs.local_nodes; i++){
       error[i] = fabs(prob_vecs.u[i] - u_analytic[i]);
     }
+
+    d4est_mesh_compute_l2_norm_sqr
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       error,
+       prob_vecs.local_nodes,
+       NULL,
+       error_l2
+      );
+
     
     d4est_vtk_save
       (
@@ -288,15 +406,16 @@ problem_init
        d4est_ops,
        input_file,
        "d4est_vtk",
-       (const char * []){"u","u_analytic","error", NULL},
+       (const char * []){"u","u_analytic","error",  NULL},
        (double* []){prob_vecs.u, u_analytic, error},
-       (const char * []){NULL},
-       (double* []){NULL},
+       (const char * []){"estimator", "error_l2", NULL},
+       (double* []){estimator, error_l2, NULL},
        level
       );
 
     P4EST_FREE(u_analytic);
     P4EST_FREE(error);
+    P4EST_FREE(error_l2);
 
 
     d4est_ip_energy_norm_data_t ip_norm_data;
@@ -391,7 +510,7 @@ problem_init
        d4est_quad,
        d4est_factors,
        &prob_vecs,
-       flux_data_for_build_rhs,
+       flux_data_for_rhs,
        prob_vecs.rhs,
        poisson_lorentzian_rhs_fcn,
        INIT_FIELD_ON_LOBATTO,
@@ -488,14 +607,15 @@ problem_init
   if (d4est_ghost_data != NULL){
     d4est_ghost_data_destroy(d4est_ghost_data);
     d4est_ghost_data = NULL;
-  } 
+  }
   
-
+  d4est_mesh_data_destroy(d4est_factors_compactified);
+  d4est_geometry_destroy(d4est_geom_compactified);  
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
   d4est_amr_destroy(d4est_amr_uniform);
-  d4est_poisson_flux_destroy(flux_data_for_apply_lhs);
-  d4est_poisson_flux_destroy(flux_data_for_build_rhs);
+  d4est_poisson_flux_destroy(flux_data_for_lhs);
+  d4est_poisson_flux_destroy(flux_data_for_rhs);
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
   P4EST_FREE(prob_vecs.u);

@@ -47,7 +47,6 @@ d4est_estimator_bi_dirichlet
   D4EST_COPY_DIM_VEC(boundary_data->xyz_on_f_m_lobatto, xyz_on_f_m_lobatto); 
   double* Je2_prefactor = P4EST_ALLOC(double, face_nodes_m_quad);
   double* Je2 = P4EST_ALLOC(double, face_nodes_m_quad);
-
   double* h_quad = boundary_data->h_quad;//P4EST_ALLOC(double, face_nodes_m_quad);
   /* d4est_poisson_flux_sipg_calculate_h */
   /*   ( */
