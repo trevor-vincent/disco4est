@@ -192,6 +192,10 @@ int multigrid_input_handler
     D4EST_ASSERT(mg_data->print_state_info == 0);
     mg_data->print_state_info = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"multigrid",name,"print_level_info")) {
+    D4EST_ASSERT(mg_data->print_level_info == 0);
+    mg_data->print_level_info = atoi(value);
+  }
   else if (d4est_util_match_couple(section,"multigrid",name,"power_atol")) {
     D4EST_ASSERT(mg_data->power_atol == -1);
     mg_data->power_atol = atof(value);
@@ -366,6 +370,7 @@ multigrid_data_init
   mg_data->use_profiler = 0;
   mg_data->power_atol = -1;
   mg_data->print_state_info = 0;
+  mg_data->print_level_info = 0;
   mg_data->power_rtol = -1;
   mg_data->power_imax = -1;
   mg_data->power_imin = -1;
@@ -990,13 +995,13 @@ multigrid_vcycle
     /******************* END SMOOTH ***************************/
     /**********************************************************/
     /**********************************************************/
-
+ 
     
   }
 
   mg_data->mg_state = POST_V; multigrid_update_components(p4est, toplevel, NULL);
 
-  if (p4est->mpirank == 0){
+  if (p4est->mpirank == 0 || mg_data->print_level_info){
     for (level = toplevel; level >= bottomlevel; --level){
       zlog_debug(c_default, "For each processor, we have Level %d, Number of elements %d, Number of nodes %d",
              level,

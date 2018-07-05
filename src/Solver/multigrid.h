@@ -173,6 +173,7 @@ struct multigrid_data_t {
   double vcycle_atol;
   int use_profiler;
   int print_state_info;
+  int print_level_info;
   int use_power_method_debug;
   double power_atol;
   double power_rtol;

@@ -83,6 +83,7 @@ vcycle_rtol = 1e-15;
 vcycle_atol = 0.;
 smoother_name = mg_smoother_cheby
 bottom_solver_name = mg_bottom_solver_cg_d4est
+print_level_info = 1;
 
 [mg_bottom_solver_cg_d4est]
 bottom_iter = 100;
