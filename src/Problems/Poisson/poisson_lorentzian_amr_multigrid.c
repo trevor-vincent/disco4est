@@ -28,6 +28,99 @@
 #include <multigrid_element_data_updater.h>
 #include "poisson_lorentzian_fcns.h"
 
+
+static
+double solve_for_c
+(
+ double c,
+ void* user
+)
+{
+  double* Rs = user;
+  double R1 = Rs[0];
+  double R2 = Rs[1];
+  double Rc = Rs[2];
+  double m = (2 - 1)/((1/R2) - (1/R1));
+  double n = (1*R1 - 2*R2)/(R1 - R2);
+  double R = m/(c - n);
+  double pp = 2 - c;
+  double q = R/sqrt(1 + 2*pp);
+  double x = q;
+  return x - Rc;  
+}
+
+
+
+static
+double solve_for_c_outer
+(
+ double c,
+ void* user
+)
+{
+  double* Rs = user;
+  double R1 = Rs[0];
+  double R2 = Rs[1];
+  double Rc = Rs[2];
+  double m = (2 - 1)/((1/R2) - (1/R1));
+  double n = (1*R1 - 2*R2)/(R1 - R2);
+  double R = m/(c - n);
+  double pp = 2 - c;
+  double q = R;
+  double x = q;
+  return x - Rc;  
+}
+
+
+double
+get_inverted_outer_wedge_point(double R1, double R2, double Rc, int compactified){
+  D4EST_ASSERT(Rc >= R1 && Rc <= R2);
+  if (compactified){
+    double c;
+    if (Rc == R2){
+      c = 2;
+    }
+    else {
+      double Rs [] = {R1,R2,Rc};
+      int success = d4est_util_bisection(solve_for_c_outer, 1, 2, DBL_EPSILON, 100000, &c, &Rs[0]);
+      D4EST_ASSERT(!success);
+    }
+    return c - 1;
+  }
+  else{
+    D4EST_ABORT("get_inverted_outer_wedge_point not accepted yet");
+  }
+}
+
+
+double
+get_inverted_inner_wedge_point(double R1, double R2, double Rc, int compactified){
+  D4EST_ASSERT(Rc >= R1 && Rc <= R2);
+  if (compactified){
+    double c;
+    if (Rc == R2){
+      c = 2;
+    }
+    else {
+      double Rs [] = {R1,R2,Rc};
+      int success = d4est_util_bisection(solve_for_c, 1, 2, DBL_EPSILON, 100000, &c, &Rs[0]);
+      D4EST_ASSERT(!success);
+    }
+    return c - 1;
+  }
+  else{
+    return ((2*pow(R1,2) - 3*R1*R2 + pow(R2,2) - pow(Rc,2) + sqrt(pow(Rc,2)*(pow(R1,2) - 4*R1*R2 + 3*pow(R2,2) + pow(Rc,2))))/pow(R1 - R2,2)) - 1;
+  }
+}
+
+double
+get_inverted_box_point(double R0, double x){
+  double a = R0/sqrt(3);
+  D4EST_ASSERT(x <= a && x >= -a);
+  return (x + a)/(2*a);
+}
+
+
 static
 int
 amr_mark_element
@@ -310,6 +403,29 @@ problem_init
   d4est_geometry_t* d4est_geom_compactified = d4est_geometry_new(p4est->mpirank, input_file,"compactified_geometry", c_geom);
   d4est_mesh_data_t* d4est_factors_compactified = d4est_mesh_data_init(p4est);
 
+
+
+  double point [4][30];
+  double point_diff [4][30];
+  double point_spec_diff [4][30];
+  double point_err [4];
+  double point_dof [30];
+  
+  point[0][0] = 0;
+  point_diff[0][0] = 0;
+  point[1][0] = 0;
+  point_diff[1][0] = 0;
+  point[2][0] = 0;
+  point_diff[2][0] = 0;
+  point[3][0] = 0;
+  point_diff[3][0] = 0;
+  point_dof[0] = 0;
+  point_spec_diff[0][0] = 0;
+  point_spec_diff[1][0] = 0;
+  point_spec_diff[2][0] = 0;
+  point_spec_diff[3][0] = 0;
+
+  int iterations = 1;
     
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
@@ -594,6 +710,114 @@ problem_init
       );
 
 
+    d4est_mesh_interpolate_data_t data;
+
+    double R0 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R0;
+    double R1 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R1;
+    double R2 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R2;
+    int compactify_inner_shell = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_inner_shell;
+    int compactify_outer_shell = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_outer_shell;
+    d4est_geometry_type_t geom_type =  d4est_geom->geom_type;
+    
+    data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){get_inverted_box_point(R0,0),.5,.5}, 12, prob_vecs.u,  1);
+    point[0][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+    point_err[0] = data.err;
+    printf("1st point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]);
+    
+    data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){get_inverted_box_point(R0,3),.5,.5}, 12, prob_vecs.u, 1);
+    point[1][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+    point_err[1] = data.err;
+    printf("2nd point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]);
+    
+    data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,get_inverted_inner_wedge_point(R0,R1,10,compactify_inner_shell)}, 9, prob_vecs.u, 1);
+    point[2][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+    point_err[2] = data.err;
+    printf("3rd point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]);
+
+    /* if (geom_type == GEOM_CUBED_SPHERE_7TREE){ */
+    /* data =  d4est_mesh_interpolate_at_tree_coord(p4est, */
+    /*                                              d4est_ops, */
+    /*                                              d4est_geom, */
+    /*                                              (double []){.5,.5,get_inverted_inner_wedge_point(R0, */
+    /*                                                                                               R1, */
+    /*                                                                                               (100 > R1) ? R1 : 100,compactify_inner_shell)}, */
+    /*                                              3, */
+    /*                                              prob_vecs.u, 1); */
+    /* point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
+    /* point_err[3] = data.err; */
+    /* printf("4th point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]); */
+    /* } */
+    /* else if (geom_type == GEOM_CUBED_SPHERE_13TREE){ */
+    data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,get_inverted_outer_wedge_point(R1,R2, (100 > R2) ? R2 : 100, compactify_outer_shell)}, 3, prob_vecs.u, 1);
+    point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+    point_err[3] = data.err;
+    printf("4th point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]);
+    /* } */
+    /* else { */
+    /*   D4EST_ABORT("not support geom type"); */
+    /* } */
+    double* point0 = &point[0][0];
+    double* point3 = &point[1][0];
+    double* point10 = &point[2][0];
+    double* point100 = &point[3][0];
+    double* point0_diff = &point_diff[0][0];
+    double* point3_diff = &point_diff[1][0];
+    double* point10_diff = &point_diff[2][0];
+    double* point100_diff = &point_diff[3][0];
+    double* point0_spec_diff = &point_spec_diff[0][0];
+    double* point3_spec_diff = &point_spec_diff[1][0];
+    double* point10_spec_diff = &point_spec_diff[2][0];
+    double* point100_spec_diff = &point_spec_diff[3][0];
+    
+    int global_nodes;
+    sc_reduce(
+              &prob_vecs.local_nodes,
+              &global_nodes,
+              1,
+              sc_MPI_INT,
+              sc_MPI_SUM,
+              0,
+              sc_MPI_COMM_WORLD
+    );
+    point_dof[iterations] = global_nodes;
+    double* dof = &point_dof[0];
+    double points_global [4];
+    double points_local [4];
+    points_local[0] = point[0][iterations];
+    points_local[1] = point[1][iterations];
+    points_local[2] = point[2][iterations];
+    points_local[3] = point[3][iterations];
+
+    sc_reduce
+      (
+       &points_local,
+       &points_global,
+       4,
+       sc_MPI_DOUBLE,
+       sc_MPI_MAX,
+       0,
+       sc_MPI_COMM_WORLD
+      );
+
+     
+    if (p4est->mpirank == 0){
+      for (int p = 0; p < 4; p++){
+        point[p][iterations] = points_global[p];
+        point_diff[p][iterations] = fabs(point[p][iterations] - point[p][iterations-1]);
+      }
+      point_spec_diff[0][iterations] = fabs(point[0][iterations] - 1.);
+      point_spec_diff[1][iterations] = fabs(point[1][iterations] - 0.31622776601);
+      point_spec_diff[2][iterations] = fabs(point[2][iterations] - 0.09950371902);
+      point_spec_diff[3][iterations] = fabs(point[3][iterations] - 0.00999950003);
+      
+      DEBUG_PRINT_4ARR_DBL(dof, point0, point0_diff, point0_spec_diff, iterations+1);
+      DEBUG_PRINT_4ARR_DBL(dof, point3, point3_diff, point3_spec_diff,iterations+1);
+      DEBUG_PRINT_4ARR_DBL(dof, point10, point10_diff, point10_spec_diff,iterations+1);
+      DEBUG_PRINT_4ARR_DBL(dof, point100, point100_diff, point100_spec_diff,iterations+1);
+    }
+    iterations++;
+    
+
     krylov_pc_multigrid_destroy(pc);
     
     /* multigrid_logger_residual_destroy(logger); */
@@ -602,6 +826,9 @@ problem_init
 
 
     P4EST_FREE(estimator);
+
+
+    
   }
 
   if (d4est_ghost_data != NULL){
