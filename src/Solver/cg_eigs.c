@@ -37,6 +37,54 @@ tridiag_gershgorin
 }
 
 
+/* static void */
+/* tridiag_gershgorin_new */
+/* ( */
+/*  int i, */
+/*  int local_nodes, */
+/*  double a0, */
+/*  double b0, */
+/*  double a1, */
+/*  double b1, */
+/*  double* max, */
+/*  double* min */
+/* ) */
+/* { */
+/*   /\* Not ready yet *\/ */
+/*   if (i < 2){ */
+/*     *max = -1; */
+/*     *min = -1; */
+/*     return; */
+/*   } */
+  
+/*   double akm1 = alpha_history[(i-2) % 3]; */
+/*   double ak = alpha_history[(i-1) % 3]; */
+/*   double akp1 = alpha_history[(i) % 3]; */
+  
+/*   double bkm1 = beta_history[(i-2) % 3]; */
+/*   double bk = beta_history[(i-1) % 3]; */
+/*   double bkp1 = beta_history[(i) % 3]; */
+
+/*   double diag = bk/akm1 + 1/ak; */
+/*   double offdiag_sum = -sqrt(bk) */
+  
+/*   double diag, offdiag_sum; */
+/*   if (i != 0 && i < local_nodes) { */
+/*     diag = (1./a1 + b0/a0); */
+/*     offdiag_sum = fabs(sqrt(b1)/a1) + fabs(sqrt(b0)/a0); */
+/*   } */
+/*   else if (i == 0){ */
+/*     diag = 1./a1; */
+/*     offdiag_sum = sqrt(b1)/a1; */
+/*   } */
+/*   else { */
+/*     diag = 1./a1 + b0/a0; */
+/*     offdiag_sum = fabs(sqrt(b0)/a0); */
+/*   } */
+/*   *max = diag + offdiag_sum; */
+/*   *min = diag - offdiag_sum; */
+/* } */
+
 void
 cg_eigs
 (
@@ -62,7 +110,7 @@ cg_eigs
   double delta_new, delta_old;
   double alpha = -1.;
   double beta = -1.;
-  
+
   double* Au; 
   double* rhs;
   double* d;

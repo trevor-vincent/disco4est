@@ -3,7 +3,6 @@
 
 #include <pXest.h>
 #include <d4est_element_data.h>
-#define MAX_BINS 50
 
 typedef struct {
 

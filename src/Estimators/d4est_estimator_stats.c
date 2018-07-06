@@ -50,6 +50,7 @@ void d4est_estimator_stats_compute
      compute_mean,
      compute_max
     );
+
   
   P4EST_FREE(eta2);
 }
@@ -225,7 +226,9 @@ d4est_estimator_stats_compute_aux
       D4EST_ABORT("Don't call estimator stats if you're not computing anything");
     }
   }
+  /* for (int i = 0; i < local_size; i++){ */
 
+  /* } */
 }
 
 /* void */
@@ -292,12 +295,6 @@ d4est_estimator_stats_compute_aux
 
 void d4est_estimator_stats_print(d4est_estimator_stats_t* stats){
   printf("mpirank = %d\n", stats->mpirank);
-  if(stats->tree == -1){
-    printf("tree = ALL TREES\n");
-  }
-  else {
-    printf("tree = %d\n", stats->tree);
-  }
   printf("sample_size = %d\n", stats->estimator_sample_size);   
   printf("total = %.25f\n", stats->estimator_total);   
   printf("mean = %.25f\n", stats->estimator_mean);
