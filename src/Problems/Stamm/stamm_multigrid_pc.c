@@ -161,7 +161,7 @@ problem_init
      &amr_marker
     );
 
-  d4est_amr_t* d4est_amr_uniform = d4est_amr_init_uniform_h(p4est, d4est_amr->max_degree, d4est_amr->num_of_amr_steps);
+  d4est_amr_t* d4est_amr_uniform = d4est_amr_init_uniform_h(p4est, d4est_amr->num_of_amr_steps);
 
   d4est_mesh_init_field
     (

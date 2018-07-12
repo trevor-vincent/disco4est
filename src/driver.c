@@ -115,11 +115,11 @@ int main(int argc, char *argv[])
   sc_MPI_Barrier(mpicomm);
   
   /* start just-in-time dg-math */
-  d4est_operators_t* d4est_ops = d4est_ops_init(20);
+  d4est_operators_t* d4est_ops = d4est_ops_init(initial_grid_input->max_degree);
+  if(proc_rank == 0)
+    zlog_debug(c_default, "max_degree = %d", initial_grid_input->max_degree);
   d4est_mesh_data_t* d4est_factors = d4est_mesh_data_init(p4est);
-  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature");
-
-  
+  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature");  
   d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
                                          (
                                           p4est,

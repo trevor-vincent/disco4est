@@ -129,6 +129,7 @@ typedef struct {
   int min_level;
   int fill_uniform;
   int initial_nodes;
+  int max_degree;
 
   int number_of_regions;
   int* deg;

@@ -44,6 +44,11 @@ int d4est_mesh_initial_extents_handler
     D4EST_ASSERT(pconfig->checkpoint_prefix == NULL);
     asprintf(&pconfig->checkpoint_prefix,"%s", value);
   }
+  else if (d4est_util_match_couple(section,"mesh_parameters",name,"max_degree")) {
+    D4EST_ASSERT(pconfig->max_degree == -1);
+    pconfig->max_degree = atoi(value);
+    D4EST_ASSERT(atoi(value) > 0);
+  }
  else if (d4est_util_match_couple(section,"mesh_parameters",name,"face_h_type")) {
     D4EST_ASSERT(pconfig->face_h_type == FACE_H_EQ_NOT_SET);
     if(d4est_util_match(value, "FACE_H_EQ_J_DIV_SJ_QUAD")){
@@ -175,6 +180,7 @@ d4est_mesh_initial_extents_parse
   d4est_mesh_initial_extents_t* initial_extents = P4EST_ALLOC(d4est_mesh_initial_extents_t, 1);
   initial_extents->min_quadrants = -2;
   initial_extents->min_level = -2;
+  initial_extents->max_degree = -1;
   initial_extents->fill_uniform = -2;
   initial_extents->number_of_regions = d4est_geom->get_number_of_regions(d4est_geom);
   initial_extents->deg = P4EST_ALLOC(int, initial_extents->number_of_regions);
@@ -215,6 +221,7 @@ d4est_mesh_initial_extents_parse
   }
 
   D4EST_CHECK_INPUT("mesh_parameters", initial_extents->volume_h_type, VOL_H_EQ_NOT_SET);
+  D4EST_CHECK_INPUT("mesh_parameters", initial_extents->max_degree, -1);
   D4EST_CHECK_INPUT("mesh_parameters", initial_extents->face_h_type, FACE_H_EQ_NOT_SET);
 
   
@@ -1961,10 +1968,18 @@ d4est_mesh_init_element_data
           user_fcn(elem_data, user_ctx);
         }
 
+        
         D4EST_ASSERT(elem_data->deg > 0
-                   &&
-                   elem_data->deg_quad > 0
+                     &&
+                     elem_data->deg_quad > 0
                   );
+
+        if (elem_data->deg > d4est_ops->max_degree ||
+            elem_data->deg_quad > d4est_ops->max_degree){
+          printf("Element %d on processor %d has a degree that is too big\n", elem_data->id, p4est->mpirank);
+          printf("Element deg, deg_quad, max_degree = %d, %d, %d\n",elem_data->deg, elem_data->deg_quad, d4est_ops->max_degree);
+          D4EST_ABORT("Aborting...");
+        }
         
         int nodes = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg);
         int nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg_quad);

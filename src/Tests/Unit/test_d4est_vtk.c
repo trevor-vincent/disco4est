@@ -58,7 +58,6 @@ int main(int argc, char *argv[])
   if (proc_rank == 0)
     printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] :      "test_d4est_vtk_options.input");
  
- 
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                     (argc == 2) ? argv[1] :      "test_d4est_vtk_options.input",
@@ -144,7 +143,7 @@ int main(int argc, char *argv[])
 
       initial_grid_input->initial_nodes = local_sizes.local_nodes;
 
-  d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, 7, 1);
+  d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, 1);
 
   d4est_amr_step
     (

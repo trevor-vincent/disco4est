@@ -48,7 +48,6 @@
   } while(0)
 
 
-
 #define DEBUG_PRINT_MPI_ARR_DBL_SUM_EXT(h,mpirank, a, n) do {   \
     double sum = 0.;                                  \
     for (int i = 0; i < n; i++) {                     \

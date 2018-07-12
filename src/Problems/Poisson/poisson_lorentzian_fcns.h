@@ -45,7 +45,6 @@ poisson_lorentzian_robin_bc_rhs_fcn
   return 0.;
 }
 
-
 static double
 poisson_lorentzian_analytic_solution
 (

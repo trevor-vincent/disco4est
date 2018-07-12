@@ -11,12 +11,12 @@ region0_deg_quad_inc = 0
 [mesh_parameters]
 face_h_type = FACE_H_EQ_TREE_H
 volume_h_type = VOL_H_EQ_CUBE_APPROX
-
+max_degree = 7
 
 [amr]
 scheme = smooth_pred
 num_of_amr_steps = 1
-max_degree = 7 
+; max_degree = 7 
 gamma_h = .25
 gamma_p = 0.1
 gamma_n = 1.

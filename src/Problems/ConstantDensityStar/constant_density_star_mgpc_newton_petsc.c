@@ -210,7 +210,7 @@ problem_init
      &amr_marker
     );
 
-  d4est_amr_t* d4est_amr_uniform_p = d4est_amr_init_uniform_p(p4est,d4est_amr->max_degree,d4est_amr->num_of_amr_steps);
+  d4est_amr_t* d4est_amr_uniform_p = d4est_amr_init_uniform_p(p4est,d4est_amr->num_of_amr_steps);
   
   if (initial_extents->checkpoint_prefix == NULL){
     d4est_mesh_init_field

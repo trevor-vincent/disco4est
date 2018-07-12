@@ -920,6 +920,7 @@ d4est_geometry_compute_drst_dxyz
 )
 {
   for (int i = 0; i < volume_nodes; i++){
+
     double xr = dxyz_drst[0][0][i];
     double xs = dxyz_drst[0][1][i];
     
@@ -937,18 +938,18 @@ d4est_geometry_compute_drst_dxyz
 
     double J = jac[i];
 
-    double* rx = &drst_dxyz[0][0][i];
-    double* ry = &drst_dxyz[0][1][i];
-    double* sx = &drst_dxyz[1][0][i];
-    double* sy = &drst_dxyz[1][1][i];
+    double* restrict rx = &drst_dxyz[0][0][i];
+    double* restrict ry = &drst_dxyz[0][1][i];
+    double* restrict sx = &drst_dxyz[1][0][i];
+    double* restrict sy = &drst_dxyz[1][1][i];
 
 #if (P4EST_DIM)==3
-    double* rz = &drst_dxyz[0][2][i];
-    double* sz = &drst_dxyz[1][2][i];
+    double* restrict rz = &drst_dxyz[0][2][i];
+    double* restrict sz = &drst_dxyz[1][2][i];
     
-    double* tx = &drst_dxyz[2][0][i];
-    double* ty = &drst_dxyz[2][1][i];
-    double* tz = &drst_dxyz[2][2][i];
+    double* restrict tx = &drst_dxyz[2][0][i];
+    double* restrict ty = &drst_dxyz[2][1][i];
+    double* restrict tz = &drst_dxyz[2][2][i];
 #endif
 
 #if (P4EST_DIM)==3

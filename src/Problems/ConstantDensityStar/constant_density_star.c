@@ -173,10 +173,7 @@ problem_init
  sc_MPI_Comm mpicomm
 )
 {
-    /*  */
   constant_density_star_init_params_t init_params = constant_density_star_init_params_input(input_file
-                                                                           );
-
   
   constant_density_star_params_t constant_density_star_params = constant_density_star_input(input_file);
   

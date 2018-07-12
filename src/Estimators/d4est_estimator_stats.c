@@ -316,21 +316,29 @@ d4est_estimator_stats_get_global_percentile_parallel
   while(!(estimator_at_percentile > 0)){
 
     if (p4est->mpirank == temp_rank){
+
+      printf("******************************\n");
+      printf("******************************\n");
+      printf("mpisize = %d\n", p4est->mpisize);
+      printf("mpirank = %d\n", p4est->mpirank);
+      printf("global_id_from_end = %d\n", global_id_from_end);
+      printf("p4est->local_num_quadrants + stride = %d\n", p4est->local_num_quadrants + stride);
+      printf(" (global_id_from_end <= p4est->local_num_quadrants + stride) = %d\n",(global_id_from_end <= p4est->local_num_quadrants + stride));
+      DEBUG_PRINT_ARR_DBL(estimator, p4est->local_num_quadrants);
+      
       if (global_id_from_end <= p4est->local_num_quadrants + stride){
         if (global_id_from_end != stride){
           estimator_at_percentile = estimator[p4est->local_num_quadrants - (global_id_from_end - stride)];
+          printf("estimator_at_percentile = %.15f", estimator_at_percentile);
         }
         else {
           D4EST_ABORT("global_id_from_end == stride, should never happen");
-          /* estimator_at_percentile = estimator[local_num_quadrants - 1];  */
         }
       }
       else {
         stride += p4est->local_num_quadrants;
       }
     }
-    /* sc_MPI_Bcast(&estimator_at_percentile, sizeof(double), sc_MPI_DOUBLE, temp_rank, p4est->mpicomm); */
-    /* sc_MPI_Barrier(p4est->mpicomm); */
 
     double estimator_at_percentile_temp = estimator_at_percentile;
     sc_allreduce(&estimator_at_percentile_temp, &estimator_at_percentile, 1, sc_MPI_DOUBLE, sc_MPI_MAX,
@@ -339,7 +347,9 @@ d4est_estimator_stats_get_global_percentile_parallel
     if (!(estimator_at_percentile > 0)){
       temp_rank--;
       if (temp_rank == -1){
-        printf("percentile = %d", percentile);
+        if (p4est->mpirank == 0){
+          printf("Could not find percentile = %d\n", percentile);
+        }
         D4EST_ABORT("Could not find percentile");
       }
     }

@@ -19,7 +19,6 @@ typedef struct {
   double puncture_eps;
 } two_punctures_params_t;
 
-
 typedef struct {
 
   int use_matrix_operator;

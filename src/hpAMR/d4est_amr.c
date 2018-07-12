@@ -383,11 +383,11 @@ int d4est_amr_input_handler
     pconfig->num_of_amr_steps = atoi(value);
     D4EST_ASSERT(pconfig->num_of_amr_steps >= 0);
   }
-  else if (d4est_util_match_couple(section,"amr",name,"max_degree")) {
-    D4EST_ASSERT(pconfig->max_degree == -1);
-    pconfig->max_degree = atoi(value);
-    D4EST_ASSERT(atoi(value) > 0);
-  }
+  /* else if (d4est_util_match_couple(section,"amr",name,"max_degree")) { */
+    /* D4EST_ASSERT(pconfig->max_degree == -1); */
+    /* pconfig->max_degree = atoi(value); */
+    /* D4EST_ASSERT(atoi(value) > 0); */
+  /* } */
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -412,7 +412,7 @@ d4est_amr_input
   }
 
   D4EST_CHECK_INPUT("amr", d4est_amr->scheme->amr_scheme_type, AMR_NOT_SET);
-  D4EST_CHECK_INPUT("amr", d4est_amr->max_degree, -1);
+  /* D4EST_CHECK_INPUT("amr", d4est_amr->max_degree, -1); */
   D4EST_CHECK_INPUT("amr", d4est_amr->num_of_amr_steps, -1);
 
   if(d4est_amr->mpirank == 0){
@@ -462,7 +462,7 @@ d4est_amr_t*
 d4est_amr_init_uniform_h
 (
  p4est_t* p4est,
- int max_degree,
+ /* int max_degree, */
  int num_of_amr_steps
 )
 {
@@ -473,7 +473,7 @@ d4est_amr_init_uniform_h
   d4est_amr->balance_log = NULL;
   d4est_amr->refinement_log = NULL;
   d4est_amr->initial_log = NULL;
-  d4est_amr->max_degree = max_degree;
+  /* d4est_amr->max_degree = max_degree; */
   d4est_amr->num_of_amr_steps = num_of_amr_steps;
   scheme->amr_scheme_type = AMR_UNIFORM_H;
   d4est_amr_uniform_init(p4est, NULL, scheme, NULL);
@@ -486,7 +486,7 @@ d4est_amr_t*
 d4est_amr_init_uniform_p
 (
  p4est_t* p4est,
- int max_degree,
+ /* int max_degree, */
  int num_of_amr_steps
 )
 {
@@ -497,7 +497,7 @@ d4est_amr_init_uniform_p
   d4est_amr->balance_log = NULL;
   d4est_amr->refinement_log = NULL;
   d4est_amr->initial_log = NULL;
-  d4est_amr->max_degree = max_degree;
+  /* d4est_amr->max_degree = max_degree; */
   d4est_amr->num_of_amr_steps = num_of_amr_steps;
   scheme->amr_scheme_type = AMR_UNIFORM_P;
   d4est_amr_uniform_init(p4est, NULL, scheme, NULL);
@@ -511,7 +511,7 @@ d4est_amr_t*
 d4est_amr_init_random_hp
 (
  p4est_t* p4est,
- int max_degree,
+ /* int max_degree, */
  int num_of_amr_steps
 )
 {
@@ -522,7 +522,7 @@ d4est_amr_init_random_hp
   d4est_amr->balance_log = NULL;
   d4est_amr->refinement_log = NULL;
   d4est_amr->initial_log = NULL;
-  d4est_amr->max_degree = max_degree;
+  /* d4est_amr->max_degree = max_degree; *\/ */
   d4est_amr->num_of_amr_steps = num_of_amr_steps;
   scheme->amr_scheme_type = AMR_RANDOM_HP;
   d4est_amr_random_init(p4est, NULL, scheme, NULL);
@@ -542,7 +542,7 @@ d4est_amr_t*
 d4est_amr_custom_init
 (
  p4est_t* p4est,
- int max_degree,
+ /* int max_degree, */
  int num_of_amr_steps,
  void(*d4est_amr_custom_mark_elements)(p4est_iter_volume_info_t*,void*),
  void* user
@@ -555,7 +555,7 @@ d4est_amr_custom_init
   d4est_amr->balance_log = NULL;
   d4est_amr->refinement_log = NULL;
   d4est_amr->initial_log = NULL;
-  d4est_amr->max_degree = max_degree;
+  /* d4est_amr->max_degree = max_degree; */
   d4est_amr->num_of_amr_steps = num_of_amr_steps;
 
   scheme->amr_scheme_type = AMR_CUSTOM;
@@ -598,6 +598,7 @@ d4est_amr_step
 {
   zlog_category_t *c_default = zlog_get_category("d4est_amr");
 
+  d4est_amr->max_degree = d4est_ops->max_degree;
   d4est_amr->d4est_estimator_stats = stats;
   d4est_amr->d4est_estimator = d4est_estimator;
   
