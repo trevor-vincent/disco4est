@@ -661,13 +661,13 @@ problem_init
 
 
     
-    d4est_mesh_debug_boundary_elements(p4est,
-                                       d4est_ops,
-                                       d4est_factors,
-                                       (const char * []){"u","u_analytic","Minv_Au", "Minv_Au_analytic", "rhs_fcn",  NULL},
-                                       (double* []){prob_vecs.u, prob_vecs_analytic.u, Minv_Au, Minv_Au_analytic, rhs_fcn, NULL},
-                                       prob_vecs.local_nodes
-                                      );
+    /* d4est_mesh_debug_boundary_elements(p4est, */
+    /*                                    d4est_ops, */
+    /*                                    d4est_factors, */
+    /*                                    (const char * []){"u","u_analytic","Minv_Au", "Minv_Au_analytic", "rhs_fcn",  NULL}, */
+    /*                                    (double* []){prob_vecs.u, prob_vecs_analytic.u, Minv_Au, Minv_Au_analytic, rhs_fcn, NULL}, */
+    /*                                    prob_vecs.local_nodes */
+    /*                                   ); */
 
     
 
