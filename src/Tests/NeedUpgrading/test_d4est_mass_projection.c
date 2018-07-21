@@ -22,7 +22,7 @@ typedef struct {
 
   double quad_vs_mass_err;
   
-} test_d4est_mass_projection_data_t;
+} testd4est_mass_projection_data_t;
 
 
 static void
@@ -118,7 +118,7 @@ problem_build_p4est
 
 
 static void
-test_d4est_mass_projection_interface
+testd4est_mass_projection_interface
 (
  d4est_element_data_t** e_m,
  int faces_m,
@@ -137,7 +137,7 @@ test_d4est_mass_projection_interface
  void* params
 )
 {
-  test_d4est_mass_projection_data_t* data = params;
+  testd4est_mass_projection_data_t* data = params;
   d4est_quadrature_mortar_t* mortar_face_object = mortar_data->mortar_face_object;
   
   int faces_mortar = mortar_data->faces_mortar;
@@ -304,7 +304,7 @@ double* M_u_m_on_f_m_proj = P4EST_ALLOC(double, total_side_nodes_m_lobatto);
 }
 
 void
-test_d4est_mass_projection_on_interfaces
+testd4est_mass_projection_on_interfaces
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -317,11 +317,11 @@ test_d4est_mass_projection_on_interfaces
 )
 {
   d4est_poisson_flux_data_t* d4est_poisson_flux_data = P4EST_ALLOC(d4est_poisson_flux_data_t,1);
-  test_d4est_mass_projection_data_t* data = P4EST_ALLOC(test_d4est_mass_projection_data_t, 1);
+  testd4est_mass_projection_data_t* data = P4EST_ALLOC(testd4est_mass_projection_data_t, 1);
   data->quad_vs_mass_err = 0.;
   
   d4est_poisson_flux_data->user = data;
-  d4est_poisson_flux_data->interface_fcn = test_d4est_mass_projection_interface;
+  d4est_poisson_flux_data->interface_fcn = testd4est_mass_projection_interface;
   d4est_poisson_flux_data->boundary_fcn = NULL;
   d4est_poisson_flux_data->boundary_condition = NULL;
   d4est_poisson_flux_data->destroy = NULL;
@@ -366,7 +366,7 @@ int main(int argc, char *argv[])
   d4est_geom->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
   d4est_geom->JAC_compute_method = GEOM_COMPUTE_NUMERICAL;
 
-  d4est_geometry_brick_new(proc_rank, "test_d4est_poisson_1_brick.input", "geometry", "[Geometry]:", d4est_geom);
+  d4est_geometry_brick_new(proc_rank, "testd4est_poisson_1_brick.input", "geometry", "[Geometry]:", d4est_geom);
     
   p4est_t* p4est = problem_build_p4est
                    (
@@ -384,8 +384,8 @@ int main(int argc, char *argv[])
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
   
-  d4est_poisson_flux_data_t* flux_data = d4est_poisson_flux_new(p4est, "test_d4est_poisson_1_brick.input", zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, "test_d4est_poisson_1_brick.input", poly_vec_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data = d4est_poisson_flux_new(p4est, "testd4est_poisson_1_brick.input", zero_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, "testd4est_poisson_1_brick.input", poly_vec_fcn, NULL);
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
 
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
-                                          "test_d4est_poisson_1_brick.input",
+                                          "testd4est_poisson_1_brick.input",
                                           NULL
   );
 
@@ -450,7 +450,7 @@ int main(int argc, char *argv[])
       elliptic_data.Au = Apoly_vec;
       elliptic_data.local_nodes = local_nodes;
 
-      test_d4est_mass_projection_on_interfaces
+      testd4est_mass_projection_on_interfaces
         (
          p4est,
          ghost,

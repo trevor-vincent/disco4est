@@ -33,7 +33,7 @@ typedef struct {
   double surface_integral_GL;
   double surface_integral_comp;
   
-} test_d4est_quadrature_compactified_surface_integrals_data_t;
+} testd4est_quadrature_compactified_surface_integrals_data_t;
 
 static int
 uni_refine_function
@@ -72,7 +72,7 @@ problem_build_p4est
 
 
 static void
-test_d4est_quadrature_compactified_surface_integrals_bndry
+testd4est_quadrature_compactified_surface_integrals_bndry
 (
  d4est_element_data_t* e_m,
  int f_m,
@@ -85,7 +85,7 @@ test_d4est_quadrature_compactified_surface_integrals_bndry
 )
 {
 
-  test_d4est_quadrature_compactified_surface_integrals_data_t*  data = params;
+  testd4est_quadrature_compactified_surface_integrals_data_t*  data = params;
   int face_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg);
   int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg_quad);
 
@@ -197,7 +197,7 @@ test_d4est_quadrature_compactified_surface_integrals_bndry
 
 
 static void
-test_d4est_quadrature_compactified_surface_integrals_interface
+testd4est_quadrature_compactified_surface_integrals_interface
 (
  d4est_element_data_t** e_m,
  int faces_m,
@@ -215,7 +215,7 @@ test_d4est_quadrature_compactified_surface_integrals_interface
  void* params
 )
 {
-  test_d4est_quadrature_compactified_surface_integrals_data_t*  data = params;
+  testd4est_quadrature_compactified_surface_integrals_data_t*  data = params;
   
   int stride;
   int deg_p_lobatto [(P4EST_HALF)];
@@ -440,15 +440,15 @@ test_d4est_quadrature_compactified_surface_integrals_interface
 }
 
 d4est_mortars_fcn_ptrs_t
-test_d4est_quadrature_compactified_surface_integrals_fetch_fcns
+testd4est_quadrature_compactified_surface_integrals_fetch_fcns
 (
- test_d4est_quadrature_compactified_surface_integrals_data_t* data
+ testd4est_quadrature_compactified_surface_integrals_data_t* data
 )
 {
   
   d4est_mortars_fcn_ptrs_t curved_test_mortarjacobianterms_fcns;
-  curved_test_mortarjacobianterms_fcns.flux_interface_fcn = test_d4est_quadrature_compactified_surface_integrals_interface;
-  curved_test_mortarjacobianterms_fcns.flux_boundary_fcn = test_d4est_quadrature_compactified_surface_integrals_bndry;
+  curved_test_mortarjacobianterms_fcns.flux_interface_fcn = testd4est_quadrature_compactified_surface_integrals_interface;
+  curved_test_mortarjacobianterms_fcns.flux_boundary_fcn = testd4est_quadrature_compactified_surface_integrals_bndry;
   curved_test_mortarjacobianterms_fcns.params = (void*)data;
 
   return curved_test_mortarjacobianterms_fcns;
@@ -547,10 +547,10 @@ int main(int argc, char *argv[])
      NULL
     );
   
-  test_d4est_quadrature_compactified_surface_integrals_data_t test_data;
+  testd4est_quadrature_compactified_surface_integrals_data_t test_data;
   test_data.surface_integral_GL = 0.;
   test_data.surface_integral_comp = 0.;
-  d4est_mortars_fcn_ptrs_t ffp = test_d4est_quadrature_compactified_surface_integrals_fetch_fcns(&test_data);
+  d4est_mortars_fcn_ptrs_t ffp = testd4est_quadrature_compactified_surface_integrals_fetch_fcns(&test_data);
   
   d4est_mortars_compute_flux_on_local_elements
     (

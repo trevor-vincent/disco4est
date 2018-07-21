@@ -9,7 +9,7 @@
 #define D4EST_REAL_EPS 100*1e-15
 
 static double
-test_d4est_operators_poly_fcn
+testd4est_operators_poly_fcn
 (
  double r,
  double s,
@@ -23,7 +23,7 @@ test_d4est_operators_poly_fcn
 }
 
 void
-test_d4est_operators_interpolate
+testd4est_operators_interpolate
 (
  d4est_operators_t* d4est_ops,
  int dim,
@@ -44,14 +44,14 @@ test_d4est_operators_interpolate
     double xl = rst_lobatto[0][i];
     double yl = rst_lobatto[1][i];
     double zl = (dim == 3) ? rst_lobatto[2][i] : 0.;    
-    poly_lobatto[i] = test_d4est_operators_poly_fcn(xl, yl, zl, dim, deg);
+    poly_lobatto[i] = testd4est_operators_poly_fcn(xl, yl, zl, dim, deg);
   }
 
   double rst_new [3];
   rst_new[0] = .5;
   rst_new[1] = 0.1;
   rst_new[2] = -0.1;
-  double ans = test_d4est_operators_poly_fcn(rst_new[0], rst_new[1], rst_new[2], dim, deg);
+  double ans = testd4est_operators_poly_fcn(rst_new[0], rst_new[1], rst_new[2], dim, deg);
   double ans_check = d4est_operators_interpolate(d4est_ops, &rst_new[0], poly_lobatto, dim, deg);
 
   P4EST_FREE(poly_lobatto);
@@ -60,7 +60,7 @@ test_d4est_operators_interpolate
 
 
 void
-test_d4est_operators_interp_lobatto_to_gauss
+testd4est_operators_interp_lobatto_to_gauss
 (
  d4est_operators_t* d4est_ops,
  int dim,
@@ -97,8 +97,8 @@ test_d4est_operators_interp_lobatto_to_gauss
     double yl = rst_lobatto[1][i];
     double zl = (dim == 3) ? rst_lobatto[2][i] : 0.;
     
-    poly_gauss[i] = test_d4est_operators_poly_fcn(xg, yg, zg, dim, deg_gauss);
-    poly_lobatto[i] = test_d4est_operators_poly_fcn(xl, yl, zl, dim, deg_gauss);
+    poly_gauss[i] = testd4est_operators_poly_fcn(xg, yg, zg, dim, deg_gauss);
+    poly_lobatto[i] = testd4est_operators_poly_fcn(xl, yl, zl, dim, deg_gauss);
   }
  
   double* interp = d4est_operators_fetch_lobatto_to_gauss_interp_1d(d4est_ops, deg_lobatto, deg_gauss);
@@ -132,7 +132,7 @@ test_d4est_operators_interp_lobatto_to_gauss
     exit(1);
   }
   else {
-    printf("test_d4est_operators_interp_lobatto_to_gauss passed for dim = %d, deg = %d\n", dim, deg);
+    printf("testd4est_operators_interp_lobatto_to_gauss passed for dim = %d, deg = %d\n", dim, deg);
   }
 
   P4EST_FREE(poly_lobatto);
@@ -141,7 +141,7 @@ test_d4est_operators_interp_lobatto_to_gauss
 }
 
 void
-test_d4est_operators_mass_1d
+testd4est_operators_mass_1d
 (
  d4est_operators_t* d4est_ops,
  int deg
@@ -180,13 +180,13 @@ test_d4est_operators_mass_1d
     exit(1);
   }
   else {
-    printf("test_d4est_operators_mass_1d passed\n");
+    printf("testd4est_operators_mass_1d passed\n");
   }
   P4EST_FREE(mij);
 }
 
 void
-test_d4est_operators_mass_nd
+testd4est_operators_mass_nd
 (
  d4est_operators_t* d4est_ops,
  int dim,
@@ -218,7 +218,7 @@ test_d4est_operators_mass_nd
 }
 
 
-void test_d4est_operators_v1d(double* v1d, double* lobatto_nodes, int degree) {
+void testd4est_operators_v1d(double* v1d, double* lobatto_nodes, int degree) {
   int i, j, rows, cols;
   rows = cols = degree + 1;
   for (i = 0; i < rows; i++)
@@ -228,7 +228,7 @@ void test_d4est_operators_v1d(double* v1d, double* lobatto_nodes, int degree) {
 
 static
 double
-test_d4est_operators_lagrange_defn(double x, double* lgl, int j, int deg){
+testd4est_operators_lagrange_defn(double x, double* lgl, int j, int deg){
   
   int N = deg;
   double l = 1.;
@@ -240,7 +240,7 @@ test_d4est_operators_lagrange_defn(double x, double* lgl, int j, int deg){
 }
 
 void
-test_d4est_operators_p_prolong_1d
+testd4est_operators_p_prolong_1d
 (
  d4est_operators_t* d4est_ops,
  int degH,
@@ -258,7 +258,7 @@ test_d4est_operators_p_prolong_1d
     for (int j = 0; j < nodesH; j++){
       double x = lgl_h[i];
       double p_ops = P[i*nodesH + j];
-      double p_lag = test_d4est_operators_lagrange_defn(x, lgl_H, j, degH);
+      double p_lag = testd4est_operators_lagrange_defn(x, lgl_H, j, degH);
       double error = fabs(p_ops - p_lag);
       if (error > D4EST_REAL_EPS){
         printf("[D4EST_ERROR]: ERROR > D4EST_REAL_EPS -> p_ops, p_lag, error = %.15f, %.15f, %.15f\n", p_ops, p_lag, error);
@@ -266,11 +266,11 @@ test_d4est_operators_p_prolong_1d
       }   
     }
   }
-  printf("test_d4est_operators_p_prolong_1d degH = %d, degh = %d passed\n", degH, degh);
+  printf("testd4est_operators_p_prolong_1d degH = %d, degh = %d passed\n", degH, degh);
 }
 
 static void
-test_d4est_operators_lagrange
+testd4est_operators_lagrange
 (
  d4est_operators_t* d4est_ops
 )
@@ -301,7 +301,7 @@ test_d4est_operators_lagrange
       l[j] += (hk/gk)*pkxj*pkx;
     }
     l[j] *= w[j];
-    l_2[j] = test_d4est_operators_lagrange_defn(xp, x, j, deg);
+    l_2[j] = testd4est_operators_lagrange_defn(xp, x, j, deg);
   }
 
   if (d4est_util_compare_vecs(l, l_2, nodes, 100*D4EST_REAL_EPS) == 0){
@@ -313,7 +313,7 @@ test_d4est_operators_lagrange
     exit(1);
   }
   else {
-    printf("test_d4est_operators_lagrange passed\n");
+    printf("testd4est_operators_lagrange passed\n");
   }
 
   
@@ -322,7 +322,7 @@ test_d4est_operators_lagrange
 }
 
 void
-test_d4est_operators_inv_vandermonde
+testd4est_operators_inv_vandermonde
 (
  d4est_operators_t* d4est_ops
 )
@@ -352,7 +352,7 @@ test_d4est_operators_inv_vandermonde
     }
   }
 
-  test_d4est_operators_v1d(invVij_2, x, deg);
+  testd4est_operators_v1d(invVij_2, x, deg);
   d4est_linalg_invert(invVij_2, nodes);
 
   if (d4est_util_compare_vecs(invVij, invVij_2, nodes*nodes, 100*D4EST_REAL_EPS) == 0){
@@ -364,7 +364,7 @@ test_d4est_operators_inv_vandermonde
     exit(1);
   }
   else {
-    printf("test_d4est_operators_inv_vandermonde passed\n");
+    printf("testd4est_operators_inv_vandermonde passed\n");
   }
   
   P4EST_FREE(invVij_2);
@@ -372,7 +372,7 @@ test_d4est_operators_inv_vandermonde
 }
 
 static void
-test_d4est_nodal_to_modal
+testd4est_nodal_to_modal
 (
  d4est_operators_t* d4est_ops,
  int dim,
@@ -402,7 +402,7 @@ test_d4est_nodal_to_modal
     error[i] = u_nodal[i] - u_nodal_2[i];
   }
   
-  /* test_d4est_operators_v1d(vij, r, deg); */
+  /* testd4est_operators_v1d(vij, r, deg); */
   d4est_operators_convert_nodal_to_modal(d4est_ops, u_nodal, dim, deg, u_modal);
   d4est_operators_convert_nodal_to_modal(d4est_ops, u_nodal_2, dim, deg, u_modal_2);
   d4est_operators_convert_nodal_to_modal(d4est_ops, error, dim, deg, error_modal);
@@ -427,7 +427,7 @@ test_d4est_nodal_to_modal
     exit(1);
   }
   else {
-    printf("test_d4est_nodal_to_modal passed\n");
+    printf("testd4est_nodal_to_modal passed\n");
   }
   
 
@@ -444,7 +444,7 @@ test_d4est_nodal_to_modal
 
 
 static void
-test_d4est_operators_p_projection
+testd4est_operators_p_projection
 (
  d4est_operators_t* d4est_ops
 )
@@ -469,7 +469,7 @@ test_d4est_operators_p_projection
       double wmort_j = wh[j];
       double w_i = wH[i];
       double xmort_j = xh[j];
-      double li_xmort_j = test_d4est_operators_lagrange_defn(xmort_j, xH, i, deg_H);
+      double li_xmort_j = testd4est_operators_lagrange_defn(xmort_j, xH, i, deg_H);
 
       double hNs = 2./(2.*(double)Ns + 1.);
       double gNs = 2./(double)Ns;
@@ -488,8 +488,8 @@ test_d4est_operators_p_projection
   double* Vij_H = P4EST_ALLOC(double, nodes_H*nodes_H);
   double* invVij_h_trunc = P4EST_ALLOC(double, nodes_h*nodes_H);
  
-  test_d4est_operators_v1d(invVij_h, xh, deg_h);
-  test_d4est_operators_v1d(Vij_H, xH, deg_H);
+  testd4est_operators_v1d(invVij_h, xh, deg_h);
+  testd4est_operators_v1d(Vij_H, xH, deg_H);
   d4est_linalg_invert(invVij_h, nodes_h);
   for(int i = 0; i < nodes_H; i++)
     for (int j = 0; j < nodes_h; j++)
@@ -499,7 +499,7 @@ test_d4est_operators_p_projection
   /* d4est_util_print_matrices(Pij, Pij_3, nodes_H*nodes_h, 1, "Pij, Pij_3 = "); */
     
   if (d4est_util_compare_vecs(Pij, Pij_2, nodes_H*nodes_h, 100*D4EST_REAL_EPS) == 0){
-    /* d4est_d4est_util_print_matrices(w,x, nodes, 1, "w,x = "); */
+    /* d4est_util_print_matrices(w,x, nodes, 1, "w,x = "); */
     d4est_util_print_matrices(Pij, Pij_2, nodes_H*nodes_h, 1, "Pij, Pij_2 = ");
     d4est_util_print_matrices(Pij, Pij_3, nodes_H*nodes_h, 1, "Pij, Pij_3 = ");
     P4EST_FREE(Pij);
@@ -512,7 +512,7 @@ test_d4est_operators_p_projection
     exit(1);
   }
   else {
-    printf("test_d4est_operators_p_projection passed\n");
+    printf("testd4est_operators_p_projection passed\n");
   }
   
   P4EST_FREE(invVij_h_trunc);
@@ -527,7 +527,7 @@ int main(int argc, char *argv[])
 {
   d4est_operators_t* d4est_ops = d4est_ops_init(20);  
 
-  test_d4est_nodal_to_modal
+  testd4est_nodal_to_modal
     (
      d4est_ops,
      3,
@@ -535,7 +535,7 @@ int main(int argc, char *argv[])
     );
   
   /* printf("mass 2d = \n"); */
-  /* test_d4est_operators_mass_nd */
+  /* testd4est_operators_mass_nd */
   /*   ( */
   /*    d4est_ops, */
   /*    2, */
@@ -544,7 +544,7 @@ int main(int argc, char *argv[])
   
   /* printf("mass 3d = \n"); */
 
-  /* test_d4est_operators_mass_nd */
+  /* testd4est_operators_mass_nd */
   /*   ( */
   /*    d4est_ops, */
   /*    3, */

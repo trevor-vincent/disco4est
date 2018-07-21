@@ -38,9 +38,9 @@ function write_submit_minerva {
     cat <<EOF1 > submit.sh
 
 #!/bin/bash -
-#SBATCH -J test_d4est           # Job Name
-#SBATCH -o test_d4est.stdout    # Output file name
-#SBATCH -e test_d4est.stderr    # Error file name
+#SBATCH -J testd4est           # Job Name
+#SBATCH -o testd4est.stdout    # Output file name
+#SBATCH -e testd4est.stderr    # Error file name
 #SBATCH -n 1                    # Number of cores
 #SBATCH --ntasks-per-node 16    # DO NOT TOUCH: number of MPI ranks per node
 #SBATCH -t 24:0:00               # Max run time
@@ -200,7 +200,7 @@ vcycle_atol = 0.;
 smoother_name = mg_smoother_cheby
 bottom_solver_name = mg_bottom_solver_cheby
 
-[mg_bottom_solver_cg_d4est]
+[mg_bottom_solver_cgd4est]
 bottom_iter = 100;
 bottom_rtol = 1e-10;
 bottom_atol = 0.;

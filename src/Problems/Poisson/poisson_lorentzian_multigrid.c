@@ -19,12 +19,12 @@
 #include <d4est_element_data.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
-#include <newton_petsc.h>
-#include <krylov_petsc.h>
-#include <krylov_pc_multigrid.h>
-#include <multigrid_logger_residual.h>
-#include <multigrid_element_data_updater.h>
-#include <multigrid.h>
+#include <d4est_solver_newton_petsc.h>
+#include <d4est_solver_krylov_petsc.h>
+#include <d4est_krylov_pc_multigrid.h>
+#include <d4est_solver_multigrid_logger_residual.h>
+#include <d4est_solver_multigrid_element_data_updater.h>
+#include <d4est_solver_multigrid.h>
 #include <d4est_util.h>
 #include <time.h>
 #include <zlog.h>
@@ -361,9 +361,9 @@ problem_init
 
 
     
-    // Setup multigrid
-    krylov_pc_t* pc = NULL;
-    multigrid_data_t* mg_data = multigrid_data_init(
+    // Setup d4est_solver_multigrid
+    d4est_krylov_pc_t* pc = NULL;
+    d4est_solver_multigrid_data_t* mg_data = d4est_solver_multigrid_data_init(
       p4est,
       d4est_ops,
       d4est_geom,
@@ -375,7 +375,7 @@ problem_init
       input_file
     );
 
-    pc = krylov_pc_multigrid_create(mg_data, NULL);
+    pc = d4est_krylov_pc_multigrid_create(mg_data, NULL);
 
     // Krylov PETSc solve
     
@@ -505,8 +505,6 @@ problem_init
       DEBUG_PRINT_4ARR_DBL(dof, point100, point100_diff, point100_spec_diff,iterations+1);
     }
     iterations++;
-    
-    // Compute and save mesh data to a VTK file
     
     // Compute analytical field values
     double* u_analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
@@ -784,8 +782,8 @@ problem_init
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
     prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, prob_vecs.local_nodes);
     
-    krylov_pc_multigrid_destroy(pc);
-    multigrid_data_destroy(mg_data);
+    d4est_krylov_pc_multigrid_destroy(pc);
+    d4est_solver_multigrid_data_destroy(mg_data);
 
     if (d4est_ghost_data != NULL){
       d4est_ghost_data_destroy(d4est_ghost_data);

@@ -17,7 +17,7 @@
 #define DEG_SUB_TEST_4 2
 
 void
-test_d4est_quadrature_compactified_weights_and_abscissas
+testd4est_quadrature_compactified_weights_and_abscissas
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -25,7 +25,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas
  d4est_geometry_t* d4est_geom
 )
 {
-  char test_name [] = "test_d4est_quadrature_compactified_weights_and_abscissas";
+  char test_name [] = "testd4est_quadrature_compactified_weights_and_abscissas";
   printf("\nSTARTING %s sub-test\n", test_name);
   
   int deg = DEG_SUB_TEST_1;
@@ -125,7 +125,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas
 
 
 /* void */
-/* test_d4est_quadrature_compactified_weights_and_abscissas */
+/* testd4est_quadrature_compactified_weights_and_abscissas */
 /* ( */
 /*  p4est_t* p4est, */
 /*  d4est_operators_t* d4est_ops, */
@@ -133,7 +133,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas
 /*  d4est_geometry_t* d4est_geom */
 /* ) */
 /* { */
-/*   char test_name [] = "test_d4est_quadrature_compactified_weights_and_abscissas"; */
+/*   char test_name [] = "testd4est_quadrature_compactified_weights_and_abscissas"; */
 /*   printf("\nSTARTING %s sub-test\n", test_name); */
   
 /*   int deg = DEG_SUB_TEST_1; */
@@ -257,7 +257,7 @@ poly_fcn_no1ot
 
 
 void
-test_d4est_quadrature_compactified_weights_and_abscissas_volume
+testd4est_quadrature_compactified_weights_and_abscissas_volume
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -265,7 +265,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_volume
  d4est_geometry_t* d4est_geom
 )
 {
-  char test_name [] = "test_d4est_quadrature_compactified_weights_and_abscissas_volume";
+  char test_name [] = "testd4est_quadrature_compactified_weights_and_abscissas_volume";
   printf("\nSTARTING %s sub-test\n", test_name);
   
   int deg = DEG_SUB_TEST_2;
@@ -384,7 +384,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_volume
 }
 
 void
-test_d4est_quadrature_compactified_weights_and_abscissas_face
+testd4est_quadrature_compactified_weights_and_abscissas_face
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -392,7 +392,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_face
  d4est_geometry_t* d4est_geom
 )
 {
-  char test_name [] = "test_d4est_quadrature_compactified_weights_and_abscissas_face";
+  char test_name [] = "testd4est_quadrature_compactified_weights_and_abscissas_face";
   printf("\nSTARTING %s sub-test\n", test_name);
   
   int deg = DEG_SUB_TEST_3;
@@ -642,7 +642,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_face
 }
 
 void
-test_d4est_quadrature_compactified_weights_and_abscissas_interp_face
+testd4est_quadrature_compactified_weights_and_abscissas_interp_face
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -650,7 +650,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_interp_face
  d4est_geometry_t* d4est_geom
 )
 {
-  char test_name [] = "test_d4est_quadrature_compactified_weights_and_abscissas_face";
+  char test_name [] = "testd4est_quadrature_compactified_weights_and_abscissas_face";
   printf("\nSTARTING %s sub-test\n", test_name);
   
   int deg = DEG_SUB_TEST_4;
@@ -861,7 +861,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_interp_face
 
 
 void
-test_d4est_quadrature_compactified_weights_and_abscissas_galerkin_integral_face
+testd4est_quadrature_compactified_weights_and_abscissas_galerkin_integral_face
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -869,7 +869,7 @@ test_d4est_quadrature_compactified_weights_and_abscissas_galerkin_integral_face
  d4est_geometry_t* d4est_geom
 )
 {
-  char test_name [] = "test_d4est_quadrature_compactified_weights_and_abscissas_face";
+  char test_name [] = "testd4est_quadrature_compactified_weights_and_abscissas_face";
   printf("\nSTARTING %s sub-test\n", test_name);
   
   int deg = DEG_SUB_TEST_4;
@@ -1143,10 +1143,10 @@ int main(int argc, char *argv[])
   d4est_quadrature_compactified_new(p4est, d4est_ops, d4est_geom, d4est_quad, "", "");
 
   
-  test_d4est_quadrature_compactified_weights_and_abscissas(p4est, d4est_ops, d4est_quad, d4est_geom);
-  test_d4est_quadrature_compactified_weights_and_abscissas_volume(p4est, d4est_ops, d4est_quad, d4est_geom);
-  test_d4est_quadrature_compactified_weights_and_abscissas_face(p4est, d4est_ops, d4est_quad, d4est_geom);
-  test_d4est_quadrature_compactified_weights_and_abscissas_interp_face(p4est, d4est_ops, d4est_quad, d4est_geom);
+  testd4est_quadrature_compactified_weights_and_abscissas(p4est, d4est_ops, d4est_quad, d4est_geom);
+  testd4est_quadrature_compactified_weights_and_abscissas_volume(p4est, d4est_ops, d4est_quad, d4est_geom);
+  testd4est_quadrature_compactified_weights_and_abscissas_face(p4est, d4est_ops, d4est_quad, d4est_geom);
+  testd4est_quadrature_compactified_weights_and_abscissas_interp_face(p4est, d4est_ops, d4est_quad, d4est_geom);
 
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_geometry_destroy(d4est_geom);

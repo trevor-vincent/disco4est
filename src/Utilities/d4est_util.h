@@ -30,6 +30,15 @@
     }                                           \
   } while(0)
 
+
+#define DEBUG_PRINT_MPI_ARR_DBL(mpirank, a, n) do {      \
+    printf("%d: %s = \n", mpirank, #a);                    \
+    for (int i = 0; i < n; i++) {               \
+      printf("%.16f\n",a[i]);                   \
+    }                                           \
+  } while(0)
+
+
 #define DEBUG_PRINT_ARR_DBL_SUM(a, n) do {                \
     double sum = 0.;                                  \
     for (int i = 0; i < n; i++) {                     \
@@ -241,7 +250,7 @@
 
 typedef enum {D4EST_INT, D4EST_DOUBLE} d4est_builtin_t;
 
-
+void d4est_util_parallel_print(sc_MPI_Comm mpicomm,double *restrict array,int local_size);
 /** 
  * Sorts array stored in parallel.
  * 
@@ -249,48 +258,48 @@ typedef enum {D4EST_INT, D4EST_DOUBLE} d4est_builtin_t;
  * @param [in,out] array 
  * @param [in] local_size 
  */
-void d4est_util_parallel_sort(sc_MPI_Comm mpicomm,double *array,int local_size);
-void d4est_util_gen_rand_vec(double *vec,int N,int seed,double a,double b);
-void d4est_util_copy_1st_to_2nd(double *v1,double *v2,int N);
-double d4est_util_max_dbl_array(double *arr,int N);
-double d4est_util_mean_dbl_array(double *arr,int N);
-double d4est_util_min_dbl_array(double *arr,int N);
-void d4est_util_compute_error_array(double *arr1,double *arr2,double *err,int N);
+void d4est_util_parallel_sort(sc_MPI_Comm mpicomm,double *restrict array,int local_size);
+void d4est_util_gen_rand_vec(double *restrict vec,int N,int seed,double a,double b);
+void d4est_util_copy_1st_to_2nd(double *restrict v1,double *restrict v2,int N);
+double d4est_util_max_dbl_array(double *restrict arr,int N);
+double d4est_util_mean_dbl_array(double *restrict arr,int N);
+double d4est_util_min_dbl_array(double *restrict arr,int N);
+void d4est_util_compute_error_array(double *restrict arr1,double *restrict arr2,double *restrict err,int N);
 int d4est_util_match(const char *str1,const char *str2);
 int d4est_util_match_couple(const char *section1,const char *section2,const char *name1,const char *name2);
 int d4est_util_does_file_exist(const char *filename);
 double d4est_util_normal_deviate(double mu,double sigma);
-double d4est_util_compute_median(double *x,int n);
-int d4est_util_bisection(double funk(double,void *),double x1,double x2,double xacc,int iter,double *root,void *user);
-void d4est_util_linear_regression(double *y,double *x,double *m,double *b,int n);
+double d4est_util_compute_median(double *restrict x,int n);
+int d4est_util_bisection(double funk(double,void *),double x1,double x2,double xacc,int iter,double *restrict root,void *user);
+void d4est_util_linear_regression(double *restrict y,double *restrict x,double *restrict m,double *restrict b,int n);
 double d4est_util_parallel_reduce_dbl_scalar(double local);
-double d4est_util_parallel_checksum_dbl(double *vec,int N);
-void d4est_util_sort_double(double *a,size_t n);
-double d4est_util_sum_array_dbl(double *array,int N);
+double d4est_util_parallel_checksum_dbl(double *restrict vec,int N);
+void d4est_util_sort_double(double *restrict a,size_t n);
+double d4est_util_sum_array_dbl(double *restrict array,int N);
 int d4est_util_sum_array_int(int *array,int N);
-double d4est_util_max_error(double *u,double *u_sol,int N);
+double d4est_util_max_error(double *restrict u,double *restrict u_sol,int N);
 int d4est_util_uniform_rand_int(long int seed,int a,int b);
 double d4est_util_uniform_rand(long int seed,double a,double b);
-void d4est_util_print_matrix_for_mathematica(double *mat,int n,int m,const char *name);
-void d4est_util_print_matrix_for_code(double *mat,int n,int m,char name[]);
-void d4est_util_print_matrices(double *mat,double *mat2,int n,int m,char message[]);
+void d4est_util_print_matrix_for_mathematica(double *restrict mat,int n,int m,const char *name);
+void d4est_util_print_matrix_for_code(double *restrict mat,int n,int m,char name[]);
+void d4est_util_print_matrices(double *restrict mat,double *restrict mat2,int n,int m,char message[]);
 void d4est_util_print_matrix_int(int *mat,int n,int m,char message[],int print_rank);
-void d4est_util_print_matrix(double *mat,int n,int m,char message[],int print_rank);
-void d4est_util_print_3d_matrix(double *mat_3d,int n,int m,int l,char message[],int print_rank);
-void d4est_util_find_biggest_error(double *a,double *b,int N,double *biggest_err,int *biggest_id);
-int d4est_util_compare_vecs(double *a,double *b,int N,double eps);
+void d4est_util_print_matrix(double *restrict mat,int n,int m,char message[],int print_rank);
+void d4est_util_print_3d_matrix(double *restrict mat_3d,int n,int m,int l,char message[],int print_rank);
+void d4est_util_find_biggest_error(double *restrict a,double *restrict b,int N,double *biggest_err,int *biggest_id);
+int d4est_util_compare_vecs(double *restrict a,double *restrict b,int N,double eps);
 int d4est_util_compare_double(double a,double b,double eps);
 int d4est_util_int_pow_int(int base,int exp);
 double d4est_util_dbl_pow_int(double a,int b);
-void d4est_util_eye(double *eye,int N);
+void d4est_util_eye(double *restrict eye,int N);
 int d4est_util_max_int(int a,int b);
 int d4est_util_min_int(int a,int b);
 double d4est_util_max(double a,double b);
 double d4est_util_min(double a,double b);
-int d4est_util_compact_1st_alongwith_2nd(double *array,double *array2,int size);
-int d4est_util_compact(double *array,int size);
-void d4est_util_zero_array(double *v,int N);
-void d4est_util_fill_array(double *v,double val,int N);
+int d4est_util_compact_1st_alongwith_2nd(double *restrict array,double *restrict restrict array2,int size);
+int d4est_util_compact(double *restrict array,int size);
+void d4est_util_zero_array(double *restrict v,int N);
+void d4est_util_fill_array(double *restrict v,double val,int N);
 void d4est_util_make_directory(const char *dir,int add_cwd_to_dir);
 char *d4est_util_add_cwd(const char *dir);
 double d4est_util_secant_fcn(double x);

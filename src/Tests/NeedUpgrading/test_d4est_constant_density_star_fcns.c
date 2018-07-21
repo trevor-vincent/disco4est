@@ -28,7 +28,7 @@ typedef struct {
   int deg_volume_quad;
   int deg_mortar_quad;
   
-} test_d4est_constant_density_star_fcns_t;
+} testd4est_constant_density_star_fcns_t;
 
 /* static void */
 /* problem_set_degrees_init */
@@ -37,7 +37,7 @@ typedef struct {
 /*  void* user_ctx */
 /* ) */
 /* { */
-/*   test_d4est_constant_density_star_fcns_t* data = user_ctx; */
+/*   testd4est_constant_density_star_fcns_t* data = user_ctx; */
 /*   elem_data->deg = data->deg; */
 /*   elem_data->deg_quad = data->deg_volume_quad; */
 /* } */
@@ -49,7 +49,7 @@ get_deg_mortar_quad
  void* user_ctx
 )
 {
-  test_d4est_constant_density_star_fcns_t* data = user_ctx;
+  testd4est_constant_density_star_fcns_t* data = user_ctx;
   return data->deg_mortar_quad;
 }
 
@@ -105,7 +105,7 @@ boundary_fcn
 /*  */
 
 static double
-test_d4est_constant_density_star_initial_guess
+testd4est_constant_density_star_initial_guess
 (
  double x,
  double y,
@@ -123,7 +123,7 @@ problem_set_degrees_amr
  void* user_ctx
 )
 {
-  test_d4est_constant_density_star_fcns_t* data = user_ctx;
+  testd4est_constant_density_star_fcns_t* data = user_ctx;
   elem_data->deg = data->deg;
   elem_data->deg_quad = data->deg_volume_quad;
 }
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
   p4est_init(NULL, SC_LP_ERROR);
 
   
-  const char* input_file = "test_d4est_constant_density_star_fcns.input";
+  const char* input_file = "testd4est_constant_density_star_fcns.input";
   /*  */
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
   d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE;
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
-  test_d4est_constant_density_star_fcns_t deg_data;
+  testd4est_constant_density_star_fcns_t deg_data;
   D4EST_ASSERT(argc == 4);
   deg_data.deg = atoi(argv[1]);
   double eps = atof(argv[2]);
@@ -340,7 +340,7 @@ int main(int argc, char *argv[])
            d4est_quad,
            &elliptic_eqns,
            local_nodes,
-           test_d4est_constant_density_star_initial_guess,
+           testd4est_constant_density_star_initial_guess,
            NULL,
            eps,
            JAC_TEST_CENTRAL_DIFFERENCE,

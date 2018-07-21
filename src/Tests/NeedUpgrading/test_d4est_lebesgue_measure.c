@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
   d4est_geom->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
   d4est_geom->JAC_compute_method = GEOM_COMPUTE_NUMERICAL;
 
-  d4est_geometry_brick_new(proc_rank, "test_d4est_amr.input", "geometry", "[Geometry]:", d4est_geom);
+  d4est_geometry_brick_new(proc_rank, "testd4est_amr.input", "geometry", "[Geometry]:", d4est_geom);
     
   p4est_t* p4est = problem_build_p4est
                    (
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
-                                          "test_d4est_amr.input",
+                                          "testd4est_amr.input",
                                           NULL
   );
 

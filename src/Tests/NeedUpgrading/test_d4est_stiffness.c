@@ -26,7 +26,7 @@ typedef struct {
   int deg_volume_quad;
   int deg_mortar_quad;
   
-} test_d4est_stiffness_t;
+} testd4est_stiffness_t;
 
 static void
 problem_set_degrees_init
@@ -36,7 +36,7 @@ problem_set_degrees_init
 )
 {
   /* d4est_element_data_t* elem_data = elem_data_tmp; */
-  test_d4est_stiffness_t* data = user_ctx;
+  testd4est_stiffness_t* data = user_ctx;
   elem_data->deg = data->deg;
   elem_data->deg_quad = data->deg_volume_quad;
 }
@@ -49,7 +49,7 @@ get_deg_mortar_quad
 )
 {
   /* d4est_element_data_t* elem_data = elem_data_tmp; */
-  test_d4est_stiffness_t* data = user_ctx;
+  testd4est_stiffness_t* data = user_ctx;
   return data->deg_mortar_quad;
 }
 
@@ -108,7 +108,7 @@ problem_set_degrees_amr
  void* user_ctx
 )
 {
-  test_d4est_stiffness_t* data = user_ctx;
+  testd4est_stiffness_t* data = user_ctx;
   elem_data->deg = data->deg;
   elem_data->deg_quad = data->deg_volume_quad;
 }
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(mpicomm, &proc_rank);
   p4est_init(NULL, SC_LP_ERROR);
 
-  const char* input_file = "test_d4est_stiffness.input";
+  const char* input_file = "testd4est_stiffness.input";
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
                                                      input_file,
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
                     1
                    );
   
-  test_d4est_stiffness_t deg_data;
+  testd4est_stiffness_t deg_data;
   deg_data.deg = atoi(argv[1]);
   /* deg_data.deg_mortar_quad = atoi(argv[2]); */
   /* deg_data.deg_quad = atoi(argv[2]); */

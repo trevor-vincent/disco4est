@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
   p4est_init(NULL, SC_LP_ERROR);
   
  
-  const char* input_file = "test_d4est_boyen_york_model_fcns.input";
+  const char* input_file = "testd4est_boyen_york_model_fcns.input";
 
 
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");

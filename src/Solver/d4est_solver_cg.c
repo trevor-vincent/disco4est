@@ -85,7 +85,7 @@ void d4est_solver_cg_solve
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
  void* cg_params,
- krylov_pc_t* krylov_pc
+ d4est_krylov_pc_t* d4est_krylov_pc
 )
 { 
   d4est_solver_cg_params_t* params = cg_params;

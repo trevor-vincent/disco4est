@@ -21,7 +21,7 @@
 #include <d4est_poisson_flux_sipg.h>
 #include <newton_petsc.h>
 #include <krylov_petsc.h>
-#include <krylov_pc_multigrid.h>
+#include <d4est_krylov_pc_multigrid.h>
 #include <multigrid_logger_residual.h>
 #include <multigrid_element_data_updater.h>
 #include <multigrid.h>
@@ -225,7 +225,7 @@ problem_init
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; level++) {
 
     // Setup multigrid
-    krylov_pc_t* pc = NULL;
+    d4est_krylov_pc_t* pc = NULL;
 
     /* int multigrid_min_level, multigrid_max_level; */
     /* multigrid_get_level_range(p4est, &multigrid_min_level, &multigrid_max_level); */
@@ -236,7 +236,7 @@ problem_init
     /* int num_of_levels = multigrid_max_level + 1; */
       
 
-    multigrid_data_t* mg_data = multigrid_data_init(
+    d4est_solver_multigrid_data_t* mg_data = multigrid_data_init(
       p4est,
       d4est_ops,
       d4est_geom,
@@ -272,7 +272,7 @@ problem_init
     /*    mg_data */
     /*   ); */
       
-    pc = krylov_pc_multigrid_create(mg_data, NULL);
+    pc = d4est_krylov_pc_multigrid_create(mg_data, NULL);
 
 
     // Krylov PETSc solve

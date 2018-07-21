@@ -21,13 +21,13 @@
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
 #include <d4est_solver_newton.h>
-#include <multigrid.h>
-#include <krylov_pc_multigrid.h>
-#include <multigrid_logger_residual.h>
-#include <multigrid_element_data_updater.h>
-#include <multigrid_matrix_operator.h>
-#include <krylov_petsc.h>
-#include <newton_petsc.h>
+#include <d4est_solver_multigrid.h>
+#include <d4est_krylov_pc_multigrid.h>
+#include <d4est_solver_multigrid_logger_residual.h>
+#include <d4est_solver_multigrid_element_data_updater.h>
+#include <d4est_solver_multigrid_matrix_operator.h>
+#include <d4est_solver_krylov_petsc.h>
+#include <d4est_solver_newton_petsc.h>
 #include <d4est_util.h>
 #include <d4est_h5.h>
 #include <d4est_checkpoint.h>
@@ -670,7 +670,7 @@ problem_init
       /*                              ( */
       /*                              ); */
       
-      multigrid_data_t* mg_data = multigrid_data_init(p4est,
+      d4est_solver_multigrid_data_t* mg_data = d4est_solver_multigrid_data_init(p4est,
                                                       d4est_ops,
                                                       d4est_geom,
                                                       d4est_quad,
@@ -681,25 +681,14 @@ problem_init
                                                       input_file
                                                      );
 
-   /* multigrid_element_data_updater_t* updater = multigrid_element_data_updater_init */
-   /*                                                ( */
-   /*                                                 mg_data->num_of_levels, */
-   /*                                                 ghost, */
-   /*                                                 ghost_data, */
-   /*                                                 d4est_factors, */
-   /*                                                 d4est_mesh_set_quadratures_after_amr, */
-   /*                                                 initial_extents */
-   /*                                                ); */
-      
-      multigrid_user_callbacks_t* user_callbacks = multigrid_matrix_operator_init(p4est, mg_data->num_of_levels);
+      d4est_solver_multigrid_user_callbacks_t* user_callbacks = d4est_solver_multigrid_matrix_operator_init(p4est, mg_data->num_of_levels);
 
-      multigrid_set_user_callbacks(
+      d4est_solver_multigrid_set_user_callbacks(
                             mg_data,
                             user_callbacks
-                           );
-      
+                           );     
 
-      krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, two_punctures_krylov_pc_setup_fcn);
+      d4est_krylov_pc_t* pc = d4est_krylov_pc_multigrid_create(mg_data, two_punctures_pc_setup_fcn);
       ctx.use_matrix_operator = 1;
       ctx.mg_data = mg_data;
 
@@ -842,9 +831,9 @@ problem_init
       );
 
 
-      krylov_pc_multigrid_destroy(pc);
-      multigrid_data_destroy(mg_data);
-      multigrid_matrix_operator_destroy(user_callbacks);
+      d4est_krylov_pc_multigrid_destroy(pc);
+      d4est_solver_multigrid_data_destroy(mg_data);
+      d4est_solver_multigrid_matrix_operator_destroy(user_callbacks);
    
       P4EST_FREE(error_l2);
       P4EST_FREE(estimator);

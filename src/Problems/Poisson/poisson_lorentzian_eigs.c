@@ -21,7 +21,7 @@
 #include <d4est_poisson_flux_sipg.h>
 #include <newton_petsc.h>
 #include <krylov_petsc.h>
-#include <krylov_pc_multigrid.h>
+#include <d4est_krylov_pc_multigrid.h>
 #include <d4est_power_method.h>
 #include <d4est_solver_full_matrix.h>
 #include <d4est_solver_matrix_symmetry.h>
@@ -235,9 +235,9 @@ problem_init
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; level++) {
 
     // Setup multigrid
-    /* krylov_pc_t* pc = NULL; */
+    /* d4est_krylov_pc_t* pc = NULL; */
 
-    /* multigrid_data_t* mg_data = multigrid_data_init( */
+    /* d4est_solver_multigrid_data_t* mg_data = multigrid_data_init( */
     /*   p4est, */
     /*   d4est_ops, */
     /*   d4est_geom, */
@@ -250,7 +250,7 @@ problem_init
     /* ); */
 
       
-    /* pc = krylov_pc_multigrid_create(mg_data, NULL); */
+    /* pc = d4est_krylov_pc_multigrid_create(mg_data, NULL); */
 
 
     int cg_its = 30;
@@ -436,7 +436,7 @@ problem_init
     );
 
 
-      /* krylov_pc_multigrid_destroy(pc); */
+      /* d4est_krylov_pc_multigrid_destroy(pc); */
       /* multigrid_data_destroy(mg_data); */
 
     

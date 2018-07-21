@@ -16,7 +16,7 @@ typedef void
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
  void* params,
- krylov_pc_t* krylov_pc
+ d4est_krylov_pc_t* d4est_krylov_pc
 );
 
 #endif

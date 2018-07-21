@@ -21,7 +21,7 @@
 #include <newton_petsc.h>
 #include <krylov_petsc.h>
 #include <multigrid.h>
-#include <krylov_pc_multigrid.h>
+#include <d4est_krylov_pc_multigrid.h>
 #include <multigrid_logger_residual.h>
 #include <multigrid_element_data_updater.h>
 #include <multigrid_matrix_operator.h>
@@ -289,7 +289,7 @@ problem_init
     /*   ); */
 
     
-    multigrid_data_t* mg_data = multigrid_data_init(p4est,
+    d4est_solver_multigrid_data_t* mg_data = multigrid_data_init(p4est,
                                                     d4est_ops,
                                                     d4est_geom,
                                                     d4est_quad,
@@ -300,7 +300,7 @@ problem_init
                                                     input_file
                                                    );
 
-    krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, okendon_krylov_pc_setup_fcn);
+    d4est_krylov_pc_t* pc = d4est_krylov_pc_multigrid_create(mg_data, okendond4est_krylov_pc_setup_fcn);
     ctx.use_matrix_operator = 1;
     ctx.mg_data = mg_data;
 
@@ -325,7 +325,7 @@ problem_init
          pc
         );
 
-    krylov_pc_multigrid_destroy(pc);
+    d4est_krylov_pc_multigrid_destroy(pc);
     multigrid_logger_residual_destroy(logger);
     multigrid_element_data_updater_destroy(updater, num_of_levels);
     multigrid_data_destroy(mg_data);

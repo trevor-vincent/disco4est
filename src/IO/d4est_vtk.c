@@ -1632,7 +1632,7 @@ d4est_vtk_write_element_data
 }
 
 void
-d4est_vtk_save
+d4est_vtk_save_aux
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -1642,19 +1642,19 @@ d4est_vtk_save
  double ** dg_fields,
  const char ** element_field_names,
  double ** element_fields,
- int folder_number
-)
-{
-  zlog_category_t *c_default = zlog_get_category("d4est_vtk");
+ const char* folder,
+ int sub_folder_number
+){
+ zlog_category_t *c_default = zlog_get_category("d4est_vtk");
   if (p4est->mpirank == 0)
     zlog_info(c_default, "Saving mesh data to VTK file...");
 
   d4est_vtk_context_t* cont = d4est_vtk_dg_context_new(p4est, d4est_ops, input_file, input_section);
 
-  cont->folder = d4est_util_add_cwd("VTK");
+  cont->folder = d4est_util_add_cwd(folder);
   d4est_util_make_directory(cont->folder,0);
-  if (folder_number >= 0){
-    asprintf(&cont->folder,"%s%d/", cont->folder, folder_number);
+  if (sub_folder_number >= 0){
+    asprintf(&cont->folder,"%s%d/", cont->folder, sub_folder_number);
   }
   d4est_util_make_directory(cont->folder,0);
   
@@ -1710,5 +1710,34 @@ d4est_vtk_save
   
   if (p4est->mpirank == 0)
     zlog_info(c_default, "VTK file saved.");
+
 }
 
+void
+d4est_vtk_save
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ const char* input_file,
+ const char* input_section,
+ const char ** dg_field_names,
+ double ** dg_fields,
+ const char ** element_field_names,
+ double ** element_fields,
+ int sub_folder_number
+)
+{
+  d4est_vtk_save_aux
+    (
+     p4est,
+     d4est_ops,
+     input_file,
+     input_section,
+     dg_field_names,
+     dg_fields,
+     element_field_names,
+     element_fields,
+     "VTK",
+     sub_folder_number
+    );
+}

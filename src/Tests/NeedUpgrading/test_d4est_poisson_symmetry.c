@@ -88,7 +88,7 @@ neg_laplacian_poly_vec_fcn
 
 
 static void
-test_d4est_poisson_symmetry_apply_lhs
+testd4est_poisson_symmetry_apply_lhs
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(mpicomm, &proc_rank);
   p4est_init(NULL, SC_LP_ERROR);
 
-  const char* input_file = "test_d4est_poisson_symmetry.input";
+  const char* input_file = "testd4est_poisson_symmetry.input";
   
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 
 
   d4est_elliptic_eqns_t elliptic_eqns;
-  elliptic_eqns.apply_lhs = test_d4est_poisson_symmetry_apply_lhs;
+  elliptic_eqns.apply_lhs = testd4est_poisson_symmetry_apply_lhs;
   elliptic_eqns.user = flux_data;
 
   

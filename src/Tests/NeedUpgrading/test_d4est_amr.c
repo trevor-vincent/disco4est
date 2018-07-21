@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
   p4est_init(NULL, SC_LP_ERROR);
 
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
-  d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,                                                    "test_d4est_amr.input",
+  d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,                                                    "testd4est_amr.input",
                                                     "geometry",
                                                     c_geom);
 
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
-                                          "test_d4est_amr.input",
+                                          "testd4est_amr.input",
                                           NULL
   );
 
@@ -206,8 +206,8 @@ int main(int argc, char *argv[])
          poly_vec,
          poly_vec_compare,
          error,
-         "test_d4est_amr.input",
-         "test_d4est_amr",
+         "testd4est_amr.input",
+         "testd4est_amr",
          local_nodes,
          level,0);
 

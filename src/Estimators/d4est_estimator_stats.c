@@ -50,7 +50,6 @@ void d4est_estimator_stats_compute
      compute_mean,
      compute_max
     );
-
   
   P4EST_FREE(eta2);
 }
@@ -206,7 +205,7 @@ d4est_estimator_stats_compute_aux
   }
   else {
     stats->estimator_sample_size = p4est->global_num_quadrants;
-    d4est_util_parallel_sort(p4est->mpicomm, eta2, local_size);
+    d4est_util_parallel_sort(p4est->mpicomm, eta2, local_size);    
     if (compute_percentile){
       stats->estimator_at_percentile = d4est_estimator_stats_get_global_percentile_parallel
                                        (

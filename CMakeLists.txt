@@ -114,20 +114,21 @@ SET (
   src/Solver/d4est_solver_cg.c
   src/Solver/d4est_solver_fcg.c
   # src/Solver/d4est_solver_newton.c
-  src/Solver/krylov_petsc.c
-  src/Solver/newton_petsc.c
-  src/Solver/krylov_pc_multigrid.c
-  src/Solver/multigrid.c
-  src/Solver/multigrid_bottom_solver_cg.c
-  src/Solver/multigrid_bottom_solver_cheby.c
-  src/Solver/multigrid_bottom_solver_krylov_petsc.c
-  src/Solver/multigrid_element_data_updater.c
-  src/Solver/multigrid_logger_residual.c
-  src/Solver/multigrid_profiler_basic.c
-  src/Solver/multigrid_matrix_operator.c
-  src/Solver/multigrid_smoother_cheby.c
-  src/Solver/multigrid_smoother_krylov_petsc.c
-  src/Solver/cg_eigs.c
+  src/Solver/d4est_solver_krylov_petsc.c
+  src/Solver/d4est_solver_newton_petsc.c
+  src/Solver/d4est_krylov_pc_multigrid.c
+  src/Solver/d4est_solver_multigrid.c
+  src/Solver/d4est_solver_multigrid_bottom_solver_cg.c
+  src/Solver/d4est_solver_multigrid_bottom_solver_cheby.c
+  src/Solver/d4est_solver_multigrid_bottom_solver_krylov_petsc.c
+  src/Solver/d4est_solver_multigrid_element_data_updater.c
+  src/Solver/d4est_solver_multigrid_logger_residual.c
+  src/Solver/d4est_solver_multigrid_profiler_basic.c
+  src/Solver/d4est_solver_multigrid_mesh_analyzer.c
+  src/Solver/d4est_solver_multigrid_matrix_operator.c
+  src/Solver/d4est_solver_multigrid_smoother_cheby.c
+  src/Solver/d4est_solver_multigrid_smoother_krylov_petsc.c
+  src/Solver/d4est_solver_cg_eigs.c
   # src/Solver/d4est_solver_jacobian_tester.c
   src/Solver/d4est_solver_full_matrix.c
   src/Solver/d4est_solver_matrix_symmetry.c
@@ -325,7 +326,6 @@ add_d4est_problem_3d(poisson_lorentzian_multigrid_driver poisson_lorentzian_mult
 add_d4est_problem_3d(poisson_lorentzian_amr_multigrid_driver poisson_lorentzian_amr_multigrid.c Poisson)
 # add_d4est_problem_3d(poisson_1orton_multigrid_driver poisson_1orton_multigrid.c Poisson)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
-#
-# add_d4est_problem_3d(constant_density_star_robin_driver constant_density_star_robin.c ConstantDensityStar)
 add_d4est_problem_3d(two_punctures_robin_diff_geom_estimator_global_driver two_punctures_cactus_diff_geom_estimator_global.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_diff_geom_estimator_global_13tree_driver two_punctures_cactus_diff_geom_estimator_global_13tree.c TwoPunctures)
+add_d4est_problem_3d(two_punctures_estimator_test_driver two_punctures_estimator_test.c TwoPunctures)

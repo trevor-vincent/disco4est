@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-double test_d4est_linalg_point_error_max(double* u, double* u_analytic, int N){ 
+double testd4est_linalg_point_error_max(double* u, double* u_analytic, int N){ 
   int i;
   double err_max, err_temp; 
   err_max = 0.;
@@ -18,7 +18,7 @@ double test_d4est_linalg_point_error_max(double* u, double* u_analytic, int N){
   return err_max;
 }
 
-void test_d4est_linalg_init_mat(double* A, int rows, int cols, double r){
+void testd4est_linalg_init_mat(double* A, int rows, int cols, double r){
   int i,j;
   for (i = 0; i < rows; i++) {
     for (j = 0; j < cols; j++) {
@@ -27,7 +27,7 @@ void test_d4est_linalg_init_mat(double* A, int rows, int cols, double r){
   }
 }
 
-void test_d4est_linalg_init_vec(double* v, int rows, double r){
+void testd4est_linalg_init_vec(double* v, int rows, double r){
   int i;
   for (i=0; i<rows; i++)
     v[i] = i - 4 + cos(r*i);
@@ -39,12 +39,12 @@ void test_d4est_linalg_init_vec(double* v, int rows, double r){
  * TODO: make dimensions different and random
  * TODO: initialize matrices randomly
  * 
- * @param test_d4est_linalg_mat_multiply 
+ * @param testd4est_linalg_mat_multiply 
  * 
  * @return 
  */
 
-void test_d4est_linalg_transpose()
+void testd4est_linalg_transpose()
 {
   const int A_rows = 3;
   const int A_cols = 4;
@@ -56,7 +56,7 @@ void test_d4est_linalg_transpose()
 
   int i,j;
 
-  test_d4est_linalg_init_mat(&A[0][0], A_rows, A_cols, 4.323);
+  testd4est_linalg_init_mat(&A[0][0], A_rows, A_cols, 4.323);
 
   d4est_linalg_mat_transpose_nonsqr(&A[0][0], &A_transpose[0][0], A_rows, A_cols);
   d4est_linalg_mat_transpose_nonsqr(&A_transpose[0][0], &A_transpose_transpose[0][0], A_cols, A_rows);
@@ -70,12 +70,12 @@ void test_d4est_linalg_transpose()
     }
 
   if (err_max > .0000001){
-    printf("test_d4est_linalg_transpose failed\n");
+    printf("testd4est_linalg_transpose failed\n");
     exit(1);
   }
 }
 
-void test_d4est_linalg_mat_multiply()
+void testd4est_linalg_mat_multiply()
 {
   const int m = 3;
   const int l = 3;
@@ -89,8 +89,8 @@ void test_d4est_linalg_mat_multiply()
 
   int i,j,k;
 
-  test_d4est_linalg_init_mat(&A[0][0], m, l, 4.323);
-  test_d4est_linalg_init_mat(&B[0][0], l, n, 53.23);
+  testd4est_linalg_init_mat(&A[0][0], m, l, 4.323);
+  testd4est_linalg_init_mat(&B[0][0], l, n, 53.23);
   
   for (i = 0; i < m; i++)
     for (j = 0; j < n; j++){
@@ -109,14 +109,14 @@ void test_d4est_linalg_mat_multiply()
 	err_max = err_temp;
     }
   if (err_max > .0000001){
-    printf("test_d4est_linalg_mat_multiply failed");
+    printf("testd4est_linalg_mat_multiply failed");
     exit(1);
   }
 }
 
 
 
-void test_d4est_linalg_mat_vec()
+void testd4est_linalg_mat_vec()
 {
   const int m = 10;
   const int l = 5;
@@ -129,8 +129,8 @@ void test_d4est_linalg_mat_vec()
 
   int i,k;
 
-  test_d4est_linalg_init_mat(&A[0][0], m, l, 4.323);
-  test_d4est_linalg_init_vec(&v[0], l, 23.23);
+  testd4est_linalg_init_mat(&A[0][0], m, l, 4.323);
+  testd4est_linalg_init_vec(&v[0], l, 23.23);
   
   for (i = 0; i < m; i++){
       Av_ans[i] = 0.;
@@ -148,13 +148,13 @@ void test_d4est_linalg_mat_vec()
       err_max = err_temp;
   }
   if (err_max > .0000001){
-    printf("test_d4est_linalg_mat_vec failed\n");
+    printf("testd4est_linalg_mat_vec failed\n");
     exit(1);
   }
 }
 
 
-void test_d4est_linalg_xpby()
+void testd4est_linalg_xpby()
 {
   const int l = 20;
   int i;
@@ -166,8 +166,8 @@ void test_d4est_linalg_xpby()
 
   double err_max, err_temp;
 
-  test_d4est_linalg_init_vec(&x[0], l, -22.22);
-  test_d4est_linalg_init_vec(&y[0], l, 21.23);
+  testd4est_linalg_init_vec(&x[0], l, -22.22);
+  testd4est_linalg_init_vec(&y[0], l, 21.23);
   
   for (i = 0; i < l; i++){
     xpby_ans[i] = x[i] + b*y[i];
@@ -183,13 +183,13 @@ void test_d4est_linalg_xpby()
       err_max = err_temp;
   }
   if (err_max > .0000001){
-    printf("test_d4est_linalg_xpby failed\n");
+    printf("testd4est_linalg_xpby failed\n");
     exit(1);
   }
 }
 
 
-void test_d4est_linalg_sym_eigvals()
+void testd4est_linalg_sym_eigvals()
 {
   int i;
   double A [10][10] =
@@ -232,13 +232,13 @@ void test_d4est_linalg_sym_eigvals()
       err_max = err_temp;
   }
   if (err_max > .0000001){
-    printf("test_d4est_linalg_sym_eigvals failed\n");
+    printf("testd4est_linalg_sym_eigvals failed\n");
     exit(1);
   }
 }
 
 
-void test_d4est_linalg_sym_eigvecs()
+void testd4est_linalg_sym_eigvecs()
 {
   int i;
   double A [10][10] =
@@ -273,16 +273,16 @@ void test_d4est_linalg_sym_eigvecs()
     /* d4est_util_print_matrix(&A_copy[i][0], 10, 1, "A_copy = ", 0); */
     /* d4est_util_print_matrix(&evec[0], 10, 1, "evec = ", 0); */
 
-    err_max += test_d4est_linalg_point_error_max(&A_copy[i][0], &evec[0], 10);
+    err_max += testd4est_linalg_point_error_max(&A_copy[i][0], &evec[0], 10);
   }
 
   if (err_max > .0000001){
-    printf("test_d4est_linalg_sym_eigvecs failed\n");
+    printf("testd4est_linalg_sym_eigvecs failed\n");
     exit(1);
   }
 }
 
-void test_d4est_linalg_set_column()
+void testd4est_linalg_set_column()
 {
   int i;
   double A [10][10] =
@@ -313,19 +313,19 @@ void test_d4est_linalg_set_column()
   }
 
   if (err_max > .0000001){
-    printf("test_d4est_linalg_set_column failed\n");
+    printf("testd4est_linalg_set_column failed\n");
     exit(1);
   }
 }
 
 int main(int argc, char *argv[])
 {
-  test_d4est_linalg_set_column();
-  test_d4est_linalg_sym_eigvecs();
-  test_d4est_linalg_sym_eigvals();
-  test_d4est_linalg_xpby();
-  test_d4est_linalg_mat_vec();
-  test_d4est_linalg_mat_multiply();
-  test_d4est_linalg_transpose();
+  testd4est_linalg_set_column();
+  testd4est_linalg_sym_eigvecs();
+  testd4est_linalg_sym_eigvals();
+  testd4est_linalg_xpby();
+  testd4est_linalg_mat_vec();
+  testd4est_linalg_mat_multiply();
+  testd4est_linalg_transpose();
   return 0;
 }

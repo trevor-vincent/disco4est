@@ -678,6 +678,26 @@ void d4est_util_parallel_sort
              NULL, mpicomm);
 }
 
+void d4est_util_parallel_print
+(
+ sc_MPI_Comm mpicomm,
+ double* restrict array,
+ int local_size
+)
+{
+  
+  int proc_size;
+  int proc_rank;
+  MPI_Comm_size(mpicomm, &proc_size);
+  MPI_Comm_rank(mpicomm, &proc_rank);
+  
+  for (int i = 0; i < proc_size; i++){
+    if (i == proc_rank){
+      DEBUG_PRINT_MPI_ARR_DBL(proc_rank, array, local_size);
+    }
+    sc_MPI_Barrier(mpicomm);
+  }
+}
 
 /* void d4est_util_aligned_print */
 /* ( */

@@ -144,9 +144,9 @@ int main(int argc, char *argv[])
   p4est_init(NULL, SC_LP_ERROR);
 
 #if (P4EST_DIM)==3
-  const char* input_file = "test_d4est_poisson_consistency_curved_3d.input";
+  const char* input_file = "testd4est_poisson_consistency_curved_3d.input";
 #else
-  const char* input_file = "test_d4est_poisson_consistency_curved_2d.input";
+  const char* input_file = "testd4est_poisson_consistency_curved_2d.input";
 #endif
   
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
@@ -360,7 +360,7 @@ int main(int argc, char *argv[])
          Apoly_vec_compare,
          error,
          input_file,
-         "test_d4est_poisson_2_cubed_sphere",
+         "testd4est_poisson_2_cubed_sphere",
          local_nodes,
          level,0);
 

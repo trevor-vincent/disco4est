@@ -1,7 +1,7 @@
 #include <pXest.h>
 
 static void
-test_d4est_mixed_element_data_init_callback
+testd4est_mixed_element_data_init_callback
 (
  p4est_iter_volume_info_t * info,
  void *user_data
@@ -9,19 +9,19 @@ test_d4est_mixed_element_data_init_callback
 {
   p4est_quadrant_t* q = info->quad;
   p4est_topidx_t which_tree = info->treeid;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t *) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t *) q->p.user_data;
   p4est_connectivity_t* pconnect = info->p4est->connectivity;
   
   p4est_qcoord_t dq;
 
-  int* test_d4est_mixed_element_data_stride = ((int*)info->p4est->user_pointer);
+  int* testd4est_mixed_element_data_stride = ((int*)info->p4est->user_pointer);
   int set_deg = *((int*)user_data);
   
   if ( set_deg >= 0)
     elem_data->deg = set_deg;
 
   elem_data->id = info->quadid;
-  elem_data->stride = *test_d4est_mixed_element_data_stride;
+  elem_data->stride = *testd4est_mixed_element_data_stride;
 
   dq = P4EST_QUADRANT_LEN(q->level);
   p4est_qcoord_to_vertex(pconnect,
@@ -36,7 +36,7 @@ test_d4est_mixed_element_data_init_callback
   elem_data->h = dq/(double)P4EST_ROOT_LEN;
   elem_data->jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) ); 
   elem_data->surface_jacobian = util_dbl_pow_int(.5*elem_data->h, (P4EST_DIM) - 1);
-  *test_d4est_mixed_element_data_stride += dgmath_get_nodes( (P4EST_DIM) , elem_data->deg);
+  *testd4est_mixed_element_data_stride += dgmath_get_nodes( (P4EST_DIM) , elem_data->deg);
 
 }
 
@@ -48,14 +48,14 @@ typedef struct {
 } init_node_vec_user_data_t;
 
 static void
-test_d4est_mixed_element_data_init_node_vec_callback
+testd4est_mixed_element_data_init_node_vec_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t*) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t*) q->p.user_data;
 
   init_node_vec_user_data_t* inv_user_data = (init_node_vec_user_data_t*) user_data;
   grid_fcn_t init_fcn = inv_user_data->init_fcn;
@@ -111,14 +111,14 @@ test_d4est_mixed_element_data_init_node_vec_callback
 }
 
 static void
-test_d4est_mixed_element_data_store_local_estimator_in_corner_array_callback
+testd4est_mixed_element_data_store_local_estimator_in_corner_array_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t*) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t*) q->p.user_data;
   double* corner_vec = (double*)user_data;
   
   double est = elem_data->local_estimator;
@@ -131,14 +131,14 @@ test_d4est_mixed_element_data_store_local_estimator_in_corner_array_callback
 }
 
 static void
-test_d4est_mixed_element_data_store_nodal_vec_in_vertex_array_callback
+testd4est_mixed_element_data_store_nodal_vec_in_vertex_array_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t*) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t*) q->p.user_data;
 
   double* nodal_vec = (double*)user_data;
   double* vertex_vec = (double*) info->p4est->user_pointer;
@@ -153,7 +153,7 @@ test_d4est_mixed_element_data_store_nodal_vec_in_vertex_array_callback
 }
 
 void
-test_d4est_mixed_element_data_init_node_vec
+testd4est_mixed_element_data_init_node_vec
 (
  p4est_t* p4est,
  double* nodal_vec,
@@ -171,7 +171,7 @@ test_d4est_mixed_element_data_init_node_vec
   p4est_iterate(p4est,
 		NULL,
 		(void *) &inv_user_data,
-		test_d4est_mixed_element_data_init_node_vec_callback,
+		testd4est_mixed_element_data_init_node_vec_callback,
 		NULL,
 #if (P4EST_DIM)==3
                  NULL,
@@ -183,19 +183,19 @@ test_d4est_mixed_element_data_init_node_vec
 }
 
 static void
-test_d4est_mixed_element_data_init_quadid_callback
+testd4est_mixed_element_data_init_quadid_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t *) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t *) q->p.user_data;
   elem_data->id = info->quadid;
 }
 
 void
-test_d4est_mixed_element_data_init_quadid
+testd4est_mixed_element_data_init_quadid
 (
  p4est_t* p4est
 )
@@ -203,7 +203,7 @@ test_d4est_mixed_element_data_init_quadid
   p4est_iterate(p4est,
 		NULL,
 		NULL,
-		test_d4est_mixed_element_data_init_quadid_callback,
+		testd4est_mixed_element_data_init_quadid_callback,
 		NULL,
 #if (P4EST_DIM)==3
                  NULL,       
@@ -221,7 +221,7 @@ typedef struct {
 
 
 static void
-test_d4est_mixed_element_data_print_node_vec_callback
+testd4est_mixed_element_data_print_node_vec_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
@@ -229,7 +229,7 @@ test_d4est_mixed_element_data_print_node_vec_callback
 
 {
   p4est_quadrant_t* q = info->quad;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t*) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t*) q->p.user_data;
   dgmath_jit_dbase_t* dgmath_jit_dbase = (dgmath_jit_dbase_t*)info->p4est->user_pointer;
   print_node_vec_user_data_t* pnv_user_data = (print_node_vec_user_data_t*)user_data;
   double* vec = pnv_user_data->vec;
@@ -297,7 +297,7 @@ test_d4est_mixed_element_data_print_node_vec_callback
 }
 
 void
-test_d4est_mixed_element_data_print_node_vec
+testd4est_mixed_element_data_print_node_vec
 (
  p4est_t* p4est,
  double* nodal_vec,
@@ -326,7 +326,7 @@ test_d4est_mixed_element_data_print_node_vec
     p4est_iterate(p4est,
                   NULL,
                   (void*)&pnv_user_data,
-                  test_d4est_mixed_element_data_print_node_vec_callback,
+                  testd4est_mixed_element_data_print_node_vec_callback,
                   NULL,
 #if (P4EST_DIM)==3
                   NULL,
@@ -341,7 +341,7 @@ test_d4est_mixed_element_data_print_node_vec
     p4est_iterate(p4est,
                   NULL,
                   (void*)&pnv_user_data,
-                  test_d4est_mixed_element_data_print_node_vec_callback,
+                  testd4est_mixed_element_data_print_node_vec_callback,
                   NULL,
 #if (P4EST_DIM)==3
                   NULL,
@@ -363,14 +363,14 @@ typedef struct {
 
 static
 void
-test_d4est_mixed_element_data_compute_l2_norm_sqr_callback
+testd4est_mixed_element_data_compute_l2_norm_sqr_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t*) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t*) q->p.user_data;
   compute_norm_user_data_t* compute_norm_user_data
     = (compute_norm_user_data_t*) user_data;
   
@@ -399,14 +399,14 @@ test_d4est_mixed_element_data_compute_l2_norm_sqr_callback
 
 static
 void
-test_d4est_mixed_element_data_compute_l2_norm_sqr_no_local_callback
+testd4est_mixed_element_data_compute_l2_norm_sqr_no_local_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t*) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t*) q->p.user_data;
   compute_norm_user_data_t* compute_norm_user_data
     = (compute_norm_user_data_t*) user_data;
   
@@ -430,7 +430,7 @@ test_d4est_mixed_element_data_compute_l2_norm_sqr_no_local_callback
 }
 
 double
-test_d4est_mixed_element_data_compute_l2_norm_sqr_no_local
+testd4est_mixed_element_data_compute_l2_norm_sqr_no_local
 (
  p4est_t* p4est,
  double* nodal_vec,
@@ -450,7 +450,7 @@ test_d4est_mixed_element_data_compute_l2_norm_sqr_no_local
   p4est_iterate(p4est,
 		NULL,
 		(void *) &compute_norm_user_data,
-		test_d4est_mixed_element_data_compute_l2_norm_sqr_no_local_callback,
+		testd4est_mixed_element_data_compute_l2_norm_sqr_no_local_callback,
 		NULL,
 #if (P4EST_DIM)==3
                  NULL,       
@@ -463,7 +463,7 @@ test_d4est_mixed_element_data_compute_l2_norm_sqr_no_local
 }
 
 /* double */
-/* test_d4est_mixed_element_data_compute_H1_norm_sqr */
+/* testd4est_mixed_element_data_compute_H1_norm_sqr */
 /* ( */
 /*  p4est_t* p4est, */
 /*  double* nodal_vec */
@@ -477,7 +477,7 @@ test_d4est_mixed_element_data_compute_l2_norm_sqr_no_local
 /*   p4est_iterate(p4est, */
 /* 		NULL, */
 /* 		(void *) &(h1_norm_sqr), */
-/* 		test_d4est_mixed_element_data_compute_H1_norm_sqr_callback, */
+/* 		testd4est_mixed_element_data_compute_H1_norm_sqr_callback, */
 /* 		NULL, */
 /* #if (P4EST_DIM)==3 */
 /*                  NULL,        */
@@ -493,14 +493,14 @@ test_d4est_mixed_element_data_compute_l2_norm_sqr_no_local
 
 static
 void
-test_d4est_mixed_element_data_compute_DG_norm_sqr_callback
+testd4est_mixed_element_data_compute_DG_norm_sqr_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t*) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t*) q->p.user_data;
 
   compute_norm_user_data_t* compute_norm_user_data
     = (compute_norm_user_data_t*) user_data;
@@ -550,36 +550,36 @@ test_d4est_mixed_element_data_compute_DG_norm_sqr_callback
 
 
 static void
-test_d4est_mixed_element_data_DG_norm_sqr_init_vecs_callback
+testd4est_mixed_element_data_DG_norm_sqr_init_vecs_callback
 (
  p4est_iter_volume_info_t * info,
  void *user_data
 )
 {
   p4est_quadrant_t *q = info->quad;
-  test_d4est_mixed_element_data_t* test_d4est_mixed_element_data = (test_d4est_mixed_element_data_t *) q->p.user_data;
+  testd4est_mixed_element_data_t* testd4est_mixed_element_data = (testd4est_mixed_element_data_t *) q->p.user_data;
   double* nodal_vec = (double*) user_data;
 
   int dim = (P4EST_DIM);
-  int deg = test_d4est_mixed_element_data->deg;
+  int deg = testd4est_mixed_element_data->deg;
   int i;
   
   for (i = 0; i < (P4EST_DIM); i++){
-    test_d4est_mixed_element_data->qstar_min_q[i] = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*dgmath_get_nodes(dim-1, deg));
+    testd4est_mixed_element_data->qstar_min_q[i] = P4EST_ALLOC_ZERO(double, (P4EST_FACES)*dgmath_get_nodes(dim-1, deg));
   }
 
-  test_d4est_mixed_element_data->u_elem = &(nodal_vec[test_d4est_mixed_element_data->stride]);
+  testd4est_mixed_element_data->u_elem = &(nodal_vec[testd4est_mixed_element_data->stride]);
 
   d4est_util_copy_1st_to_2nd(
-  test_d4est_mixed_element_data->u_elem,
-    &(test_d4est_mixed_element_data->u_storage)[0],
+  testd4est_mixed_element_data->u_elem,
+    &(testd4est_mixed_element_data->u_storage)[0],
     dgmath_get_nodes(dim, deg)
   );
 }
 
 
 double
-test_d4est_mixed_element_data_compute_l2_norm_sqr
+testd4est_mixed_element_data_compute_l2_norm_sqr
 (
  p4est_t* p4est,
  double* nodal_vec,
@@ -599,7 +599,7 @@ test_d4est_mixed_element_data_compute_l2_norm_sqr
   p4est_iterate(p4est,
 		NULL,
 		(void *) (&compute_norm_user_data),
-		test_d4est_mixed_element_data_compute_l2_norm_sqr_callback,
+		testd4est_mixed_element_data_compute_l2_norm_sqr_callback,
 		NULL,
 #if (P4EST_DIM)==3
                  NULL,       
@@ -613,27 +613,27 @@ test_d4est_mixed_element_data_compute_l2_norm_sqr
 
 
 void
-test_d4est_mixed_element_data_get_local_nodes_callback
+testd4est_mixed_element_data_get_local_nodes_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t*) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t*) q->p.user_data;
   int* local_nodes = (int*) user_data;
   *local_nodes += dgmath_get_nodes( (P4EST_DIM),
                                    elem_data->deg);
 }
 
-int test_d4est_mixed_element_data_get_local_nodes(p4est_t* p4est)
+int testd4est_mixed_element_data_get_local_nodes(p4est_t* p4est)
 {
   int local_nodes = 0;
   
   p4est_iterate(p4est,
 		NULL,
 		(void *) (&local_nodes),
-		test_d4est_mixed_element_data_get_local_nodes_callback,
+		testd4est_mixed_element_data_get_local_nodes_callback,
 		NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -643,7 +643,7 @@ int test_d4est_mixed_element_data_get_local_nodes(p4est_t* p4est)
   return local_nodes;
 }
 
-int test_d4est_mixed_element_data_get_local_matrix_nodes(p4est_t* p4est)
+int testd4est_mixed_element_data_get_local_matrix_nodes(p4est_t* p4est)
 {
   int local_matrix_nodes = 0;
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -655,7 +655,7 @@ int test_d4est_mixed_element_data_get_local_matrix_nodes(p4est_t* p4est)
       int Q = (p4est_locidx_t) tquadrants->elem_count;
       for (int q = 0; q < Q; ++q) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        test_d4est_mixed_element_data_t* ed = quad->p.user_data;
+        testd4est_mixed_element_data_t* ed = quad->p.user_data;
         int volume_nodes = dgmath_get_nodes((P4EST_DIM), ed->deg);
         local_matrix_nodes += volume_nodes*volume_nodes;
       }
@@ -672,20 +672,20 @@ int test_d4est_mixed_element_data_get_local_matrix_nodes(p4est_t* p4est)
  * not want to change the stored
  * degree
  */
-void test_d4est_mixed_element_data_init
+void testd4est_mixed_element_data_init
 (
  p4est_t* p4est,
  int deg
 )
 {
-  int test_d4est_mixed_element_data_stride = 0;
+  int testd4est_mixed_element_data_stride = 0;
   void* tmpptr = p4est->user_pointer;
-  p4est->user_pointer = (void*)&test_d4est_mixed_element_data_stride;
+  p4est->user_pointer = (void*)&testd4est_mixed_element_data_stride;
   
   p4est_iterate(p4est,
 		NULL,
 		(void*) &deg,
-		test_d4est_mixed_element_data_init_callback,
+		testd4est_mixed_element_data_init_callback,
 		NULL,
 #if (P4EST_DIM)==3
                  NULL,       
@@ -696,14 +696,14 @@ void test_d4est_mixed_element_data_init
 }
 
 static void
-test_d4est_mixed_element_data_print_callback
+testd4est_mixed_element_data_print_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t*) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t*) q->p.user_data;
   printf("**************\n");
   printf("Quad ID = %d\n", elem_data->id);
   printf("Stride = %d\n", elem_data->stride);
@@ -714,7 +714,7 @@ test_d4est_mixed_element_data_print_callback
 }
 
 void
-test_d4est_mixed_element_data_print
+testd4est_mixed_element_data_print
 (
  p4est_t* p4est
 )
@@ -722,7 +722,7 @@ test_d4est_mixed_element_data_print
   p4est_iterate(p4est,
 		NULL,
 		NULL,
-		test_d4est_mixed_element_data_print_callback,
+		testd4est_mixed_element_data_print_callback,
 		NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -743,7 +743,7 @@ test_d4est_mixed_element_data_print
  * @return 
  */
 void
-test_d4est_mixed_element_data_store_local_estimator_in_corner_array
+testd4est_mixed_element_data_store_local_estimator_in_corner_array
 (
  p4est_t* p4est,
  double* est_corner
@@ -752,7 +752,7 @@ test_d4est_mixed_element_data_store_local_estimator_in_corner_array
   p4est_iterate(p4est,
 		NULL,
 		est_corner,
-		test_d4est_mixed_element_data_store_local_estimator_in_corner_array_callback,
+		testd4est_mixed_element_data_store_local_estimator_in_corner_array_callback,
 		NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -761,7 +761,7 @@ test_d4est_mixed_element_data_store_local_estimator_in_corner_array
 }
 
 void
-test_d4est_mixed_element_data_store_nodal_vec_in_vertex_array
+testd4est_mixed_element_data_store_nodal_vec_in_vertex_array
 (
  p4est_t* p4est,
  double* nodal_vec,
@@ -774,7 +774,7 @@ test_d4est_mixed_element_data_store_nodal_vec_in_vertex_array
   p4est_iterate(p4est,
 		NULL,
 		nodal_vec,
-		test_d4est_mixed_element_data_store_nodal_vec_in_vertex_array_callback,
+		testd4est_mixed_element_data_store_nodal_vec_in_vertex_array_callback,
 		NULL,
 #if (P4EST_DIM)==3
                 NULL,
@@ -786,20 +786,20 @@ test_d4est_mixed_element_data_store_nodal_vec_in_vertex_array
 
 
 static void
-test_d4est_mixed_element_data_print_local_estimator_callback
+testd4est_mixed_element_data_print_local_estimator_callback
 (
  p4est_iter_volume_info_t* info,
  void* user_data
 )
 {
   p4est_quadrant_t* q = info->quad;
-  test_d4est_mixed_element_data_t* elem_data = (test_d4est_mixed_element_data_t*) q->p.user_data;
+  testd4est_mixed_element_data_t* elem_data = (testd4est_mixed_element_data_t*) q->p.user_data;
   printf("Quad %d: Local estimator %.20f, p = %d\n", elem_data->id, elem_data->local_estimator, elem_data->deg);
 }
 
 
 void
-test_d4est_mixed_element_data_print_local_estimator
+testd4est_mixed_element_data_print_local_estimator
 (
  p4est_t* p4est
 )
@@ -807,7 +807,7 @@ test_d4est_mixed_element_data_print_local_estimator
   p4est_iterate(p4est,
 		NULL,
 		NULL,
-		test_d4est_mixed_element_data_print_local_estimator_callback,
+		testd4est_mixed_element_data_print_local_estimator_callback,
 		NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -817,25 +817,25 @@ test_d4est_mixed_element_data_print_local_estimator
 
 
 static void
-test_d4est_mixed_element_data_copy_from_vec_to_storage_callback
+testd4est_mixed_element_data_copy_from_vec_to_storage_callback
 (
  p4est_iter_volume_info_t * info,
  void *user_data
 )
 {
   p4est_quadrant_t *q = info->quad;
-  test_d4est_mixed_element_data_t* test_d4est_mixed_element_data = (test_d4est_mixed_element_data_t *) q->p.user_data;
+  testd4est_mixed_element_data_t* testd4est_mixed_element_data = (testd4est_mixed_element_data_t *) q->p.user_data;
   double* u = (double*) info->p4est->user_pointer;
   int* stride = (int*) user_data;
   
   int dim = (P4EST_DIM);
-  int deg = test_d4est_mixed_element_data->deg;
+  int deg = testd4est_mixed_element_data->deg;
   int volume_nodes = dgmath_get_nodes(dim,deg);
   
   d4est_util_copy_1st_to_2nd
     (
      &u[*stride],
-     &(test_d4est_mixed_element_data->u_storage)[0],
+     &(testd4est_mixed_element_data->u_storage)[0],
      volume_nodes
     );
 
@@ -843,7 +843,7 @@ test_d4est_mixed_element_data_copy_from_vec_to_storage_callback
 }
 
 void
-test_d4est_mixed_element_data_copy_from_vec_to_storage(
+testd4est_mixed_element_data_copy_from_vec_to_storage(
  p4est_t* p4est,
  double* vec
  )
@@ -855,7 +855,7 @@ test_d4est_mixed_element_data_copy_from_vec_to_storage(
   p4est_iterate(p4est,
 		NULL,
 		(void*)&stride,
-		test_d4est_mixed_element_data_copy_from_vec_to_storage_callback,
+		testd4est_mixed_element_data_copy_from_vec_to_storage_callback,
 		NULL,
 #if (P4EST_DIM)==3
                 NULL,       
@@ -866,24 +866,24 @@ test_d4est_mixed_element_data_copy_from_vec_to_storage(
 }
 
 static void
-test_d4est_mixed_element_data_copy_from_storage_to_vec_callback
+testd4est_mixed_element_data_copy_from_storage_to_vec_callback
 (
  p4est_iter_volume_info_t * info,
  void *user_data
 )
 {
   p4est_quadrant_t *q = info->quad;
-  test_d4est_mixed_element_data_t* test_d4est_mixed_element_data = (test_d4est_mixed_element_data_t *) q->p.user_data;
+  testd4est_mixed_element_data_t* testd4est_mixed_element_data = (testd4est_mixed_element_data_t *) q->p.user_data;
   double* u = (double*) info->p4est->user_pointer;
   int* stride = (int*) user_data;
   
   int dim = (P4EST_DIM);
-  int deg = test_d4est_mixed_element_data->deg;
+  int deg = testd4est_mixed_element_data->deg;
   int volume_nodes = dgmath_get_nodes(dim,deg);
   
   d4est_util_copy_1st_to_2nd
     (
-     &(test_d4est_mixed_element_data->u_storage)[0],
+     &(testd4est_mixed_element_data->u_storage)[0],
      &u[*stride],
      volume_nodes
     );
@@ -892,7 +892,7 @@ test_d4est_mixed_element_data_copy_from_storage_to_vec_callback
 }
 
 void
-test_d4est_mixed_element_data_copy_from_storage_to_vec
+testd4est_mixed_element_data_copy_from_storage_to_vec
 (
  p4est_t* p4est,
  double* vec
@@ -905,7 +905,7 @@ test_d4est_mixed_element_data_copy_from_storage_to_vec
   p4est_iterate(p4est,
 		NULL,
 		(void*)&stride,
-		test_d4est_mixed_element_data_copy_from_storage_to_vec_callback,
+		testd4est_mixed_element_data_copy_from_storage_to_vec_callback,
 		NULL,
 #if (P4EST_DIM)==3
                 NULL,       

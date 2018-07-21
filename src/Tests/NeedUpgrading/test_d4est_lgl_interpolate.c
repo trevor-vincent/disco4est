@@ -58,16 +58,16 @@ int main(int argc, char *argv[])
 #endif
 
   if (proc_rank == 0)
-    printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] :      "test_d4est_vtk_options.input");
+    printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] :      "testd4est_vtk_options.input");
  
  
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
-                                                    (argc == 2) ? argv[1] :      "test_d4est_vtk_options.input",
+                                                    (argc == 2) ? argv[1] :      "testd4est_vtk_options.input",
                                                     "geometry",
                                                     c_geom);
 
-  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      "test_d4est_vtk_options.input", d4est_geom);
+  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      "testd4est_vtk_options.input", d4est_geom);
 
   p4est_t* p4est;
   if (initial_grid_input->load_from_checkpoint == 0){
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
   /* start just-in-time dg-math */
   d4est_operators_t* d4est_ops = d4est_ops_init(20);
   d4est_mesh_data_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
-  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] :      "test_d4est_vtk_options.input", "quadrature");
+  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] :      "testd4est_vtk_options.input", "quadrature");
   
   initial_grid_input->initial_nodes = d4est_mesh_update
                                (
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
     (
      p4est,
      d4est_ops,
-     "test_d4est_vtk_options.input",
+     "testd4est_vtk_options.input",
      "d4est_vtk",
      (const char*[]){"sinvec", NULL},
      (double**)((const double*[]){sinvec, NULL}),

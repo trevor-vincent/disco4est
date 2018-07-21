@@ -26,7 +26,7 @@ typedef struct {
   double interface_term_1_err;
   d4est_poisson_flux_sipg_params_t* sipg_params;
   
-} test_d4est_poisson_2_brick_data_t;
+} testd4est_poisson_2_brick_data_t;
 
 static void
 problem_set_degrees_init
@@ -120,7 +120,7 @@ problem_build_p4est
 }
 
 static double
-test_d4est_poisson_2_brick_dirichlet_term3
+testd4est_poisson_2_brick_dirichlet_term3
 (
  int deg,
  int face,
@@ -180,7 +180,7 @@ test_d4est_poisson_2_brick_dirichlet_term3
 }
 
 static double
-test_d4est_poisson_2_brick_dirichlet_term1
+testd4est_poisson_2_brick_dirichlet_term1
 (
  int deg,
  int face,
@@ -242,7 +242,7 @@ test_d4est_poisson_2_brick_dirichlet_term1
 
 
 static double
-test_d4est_poisson_2_brick_dirichlet_term2
+testd4est_poisson_2_brick_dirichlet_term2
 (
  int deg,
  int face,
@@ -302,7 +302,7 @@ test_d4est_poisson_2_brick_dirichlet_term2
 }
 
 static void
-test_d4est_poisson_2_brick_interface_old_style
+testd4est_poisson_2_brick_interface_old_style
 (
  d4est_element_data_t** e_m,
  int faces_m,
@@ -517,7 +517,7 @@ test_d4est_poisson_2_brick_interface_old_style
    }
   }
 
-  test_d4est_poisson_2_brick_data_t* data = params;
+  testd4est_poisson_2_brick_data_t* data = params;
   int volume_stride = 0;
   for (int f = 0; f < faces_m; f++){
     int volume_nodes_m = d4est_lgl_get_nodes((P4EST_DIM), e_m[f]->deg);
@@ -531,7 +531,7 @@ test_d4est_poisson_2_brick_interface_old_style
         term1_final_2 += lifted_proj_M_term1_old_style_mortar[d][i+volume_stride];
       
       
-      double term1_check = test_d4est_poisson_2_brick_dirichlet_term1
+      double term1_check = testd4est_poisson_2_brick_dirichlet_term1
                            (
                             e_m[f]->deg,
                             f_m,
@@ -564,7 +564,7 @@ test_d4est_poisson_2_brick_interface_old_style
 }
 
 static void
-test_d4est_poisson_2_brick_interface
+testd4est_poisson_2_brick_interface
 (
  d4est_element_data_t** e_m,
  int faces_m,
@@ -583,7 +583,7 @@ test_d4est_poisson_2_brick_interface
  void* params
 )
 {
-  test_d4est_poisson_2_brick_data_t* data = params;
+  testd4est_poisson_2_brick_data_t* data = params;
   int faces_mortar = mortar_data->faces_mortar;
   int total_side_nodes_m_lobatto = mortar_data->total_side_nodes_m_lobatto;
   int total_nodes_mortar_lobatto = mortar_data->total_nodes_mortar_lobatto;
@@ -648,7 +648,7 @@ test_d4est_poisson_2_brick_interface
     if (e_m_is_ghost[f] == 0){
       for (int i = 0; i < volume_nodes_m; i++){
 
-        lifted_proj_VT_w_term1_mortar_lobatto_check[i] = test_d4est_poisson_2_brick_dirichlet_term1
+        lifted_proj_VT_w_term1_mortar_lobatto_check[i] = testd4est_poisson_2_brick_dirichlet_term1
                                              (
                                               e_m[f]->deg,
                                               f_m,
@@ -688,7 +688,7 @@ test_d4est_poisson_2_brick_interface
 
 
 static void
-test_d4est_poisson_2_brick_dirichlet
+testd4est_poisson_2_brick_dirichlet
 (
  d4est_element_data_t* e_m,
  int f_m,
@@ -701,7 +701,7 @@ test_d4est_poisson_2_brick_dirichlet
  void* params
 )
 {
-  test_d4est_poisson_2_brick_data_t* data = params;
+  testd4est_poisson_2_brick_data_t* data = params;
   
   int face_nodes_m_lobatto = boundary_data->face_nodes_m_lobatto;
   int face_nodes_m_quad = boundary_data->face_nodes_m_quad;
@@ -760,7 +760,7 @@ test_d4est_poisson_2_brick_dirichlet
 
   /* int volume_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM), e_m->deg); */
   for (int i = 0; i < volume_nodes_m_lobatto; i++){
-    lifted_VT_w_term3_lobatto_check[i] = test_d4est_poisson_2_brick_dirichlet_term3
+    lifted_VT_w_term3_lobatto_check[i] = testd4est_poisson_2_brick_dirichlet_term3
                                          (
                                           e_m->deg,
                                           f_m,
@@ -777,7 +777,7 @@ test_d4est_poisson_2_brick_dirichlet
 
   /* printf("e_m->id, f_m = %d, %d\n", e_m->id, f_m);   */
   for (int i = 0; i < volume_nodes_m_lobatto; i++){
-    lifted_VT_w_term1_lobatto_check[i] = test_d4est_poisson_2_brick_dirichlet_term1
+    lifted_VT_w_term1_lobatto_check[i] = testd4est_poisson_2_brick_dirichlet_term1
                                          (
                                           e_m->deg,
                                           f_m,
@@ -795,7 +795,7 @@ test_d4est_poisson_2_brick_dirichlet
 
   /* printf(" DT_lifted_VT_w_term2_lobatto_check, DT_lifted_VT_w_term2_lobatto = \n"); */
   for (int i = 0; i < volume_nodes_m_lobatto; i++){
-    DT_lifted_VT_w_term2_lobatto_check[i] = test_d4est_poisson_2_brick_dirichlet_term2
+    DT_lifted_VT_w_term2_lobatto_check[i] = testd4est_poisson_2_brick_dirichlet_term2
                                          (
                                           e_m->deg,
                                           f_m,
@@ -844,7 +844,7 @@ test_d4est_poisson_2_brick_dirichlet
 }
 
 void
-test_d4est_poisson_2_brick_on_interfaces
+testd4est_poisson_2_brick_on_interfaces
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -857,20 +857,20 @@ test_d4est_poisson_2_brick_on_interfaces
 )
 {
   d4est_poisson_flux_data_t* d4est_poisson_flux_data = P4EST_ALLOC(d4est_poisson_flux_data_t,1);
-  test_d4est_poisson_2_brick_data_t* data = P4EST_ALLOC(test_d4est_poisson_2_brick_data_t, 1);
+  testd4est_poisson_2_brick_data_t* data = P4EST_ALLOC(testd4est_poisson_2_brick_data_t, 1);
   data->boundary_term_3_err = 0.;
   data->boundary_term_2_err = 0.;
   data->boundary_term_1_err = 0.;
   data->interface_term_1_err = 0.;
 
   d4est_poisson_flux_sipg_params_t* d4est_poisson_flux_sipg_params = P4EST_ALLOC(d4est_poisson_flux_sipg_params_t, 1);
-  d4est_poisson_flux_sipg_params_input(p4est, "flux", "test_d4est_poisson_2_brick.input", d4est_poisson_flux_sipg_params);
+  d4est_poisson_flux_sipg_params_input(p4est, "flux", "testd4est_poisson_2_brick.input", d4est_poisson_flux_sipg_params);
 
   data->sipg_params = d4est_poisson_flux_sipg_params;
   
   d4est_poisson_flux_data->user = data;
-  d4est_poisson_flux_data->interface_fcn = test_d4est_poisson_2_brick_interface_old_style;
-  d4est_poisson_flux_data->boundary_fcn = test_d4est_poisson_2_brick_dirichlet;
+  d4est_poisson_flux_data->interface_fcn = testd4est_poisson_2_brick_interface_old_style;
+  d4est_poisson_flux_data->boundary_fcn = testd4est_poisson_2_brick_dirichlet;
   d4est_poisson_flux_data->boundary_condition = zero_fcn;
   d4est_poisson_flux_data->destroy = NULL;
 
@@ -918,7 +918,7 @@ int main(int argc, char *argv[])
   d4est_geom->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
   d4est_geom->JAC_compute_method = GEOM_COMPUTE_NUMERICAL;
 
-  d4est_geometry_brick_new(proc_rank, "test_d4est_poisson_2_brick.input", "geometry", "[Geometry]:", d4est_geom);
+  d4est_geometry_brick_new(proc_rank, "testd4est_poisson_2_brick.input", "geometry", "[Geometry]:", d4est_geom);
     
   p4est_t* p4est = problem_build_p4est
                    (
@@ -936,8 +936,8 @@ int main(int argc, char *argv[])
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
   
-  d4est_poisson_flux_data_t* flux_data = d4est_poisson_flux_new(p4est, "test_d4est_poisson_2_brick.input", zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, "test_d4est_poisson_2_brick.input", poly_vec_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data = d4est_poisson_flux_new(p4est, "testd4est_poisson_2_brick.input", zero_fcn, NULL);
+  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, "testd4est_poisson_2_brick.input", poly_vec_fcn, NULL);
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
@@ -945,7 +945,7 @@ int main(int argc, char *argv[])
 
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
-                                          "test_d4est_poisson_2_brick.input",
+                                          "testd4est_poisson_2_brick.input",
                                           NULL
   );
 
@@ -1010,7 +1010,7 @@ int main(int argc, char *argv[])
       elliptic_data.Au = Apoly_vec;
       elliptic_data.local_nodes = local_nodes;
 
-      test_d4est_poisson_2_brick_on_interfaces
+      testd4est_poisson_2_brick_on_interfaces
         (
          p4est,
          ghost,

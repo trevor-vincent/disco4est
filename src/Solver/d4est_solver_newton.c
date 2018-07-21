@@ -3,7 +3,7 @@
 #include <d4est_solver_newton.h>
 #include <d4est_util.h>
 #include <ini.h>
-#include <krylov_pc.h>
+#include <d4est_krylov_pc.h>
 #include <krylov_petsc.h>
 #include <sc_reduce.h>
 #include <zlog.h>
@@ -116,7 +116,7 @@ d4est_solver_newton_solve
  d4est_solver_newton_params_t* nr_params,
  d4est_solver_krylov_fcn_t krylov_fcn,
  void* krylov_fcn_params,
- krylov_pc_t* krylov_pc
+ d4est_krylov_pc_t* d4est_krylov_pc
 )
 {
   zlog_category_t *c_default = zlog_get_category("solver_newton");
@@ -214,7 +214,7 @@ d4est_solver_newton_solve
        d4est_quad,
        d4est_factors,
        krylov_fcn_params,
-       krylov_pc
+       d4est_krylov_pc
       );
 
 

@@ -122,7 +122,7 @@ laplacian_poly_vec_fcn
 /*  */
 
 static double
-test_d4est_okendon_initial_guess
+testd4est_okendon_initial_guess
 (
  double x,
  double y,
@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
   d4est_geom->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
   d4est_geom->JAC_compute_method = GEOM_COMPUTE_NUMERICAL;
 
-  const char* input_file = "test_d4est_okendon_jacobian.input";
+  const char* input_file = "testd4est_okendon_jacobian.input";
   d4est_geometry_brick_new(proc_rank, input_file, "geometry", "[Geometry]:", d4est_geom);
     
   p4est_t* p4est = problem_build_p4est
@@ -281,7 +281,7 @@ int main(int argc, char *argv[])
        d4est_quad,
        &elliptic_eqns,
        local_nodes,
-       test_d4est_okendon_initial_guess,
+       testd4est_okendon_initial_guess,
        NULL,
        .01,
        JAC_TEST_FORWARD_DIFFERENCE,

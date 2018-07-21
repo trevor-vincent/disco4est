@@ -92,7 +92,7 @@ vcycle_imax = 1;
 vcycle_rtol = 1e-9;
 vcycle_atol = 0.;
 smoother_name = mg_smoother_cheby
-bottom_solver_name = mg_bottom_solver_cg_d4est
+bottom_solver_name = mg_bottom_solver_cgd4est
 use_power_method_debug = 1
 power_atol = 1e-15
 power_rtol = 1e-3
@@ -100,7 +100,7 @@ power_imax = 100
 power_imin = 10
 print_state_info = 1
 
-[mg_bottom_solver_cg_d4est]
+[mg_bottom_solver_cgd4est]
 bottom_iter = 100;
 bottom_rtol = 1e-10;
 bottom_atol = 0.;

@@ -4,7 +4,7 @@
 #include <pXest.h>
 #include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
-#include <krylov_pc.h>
+#include <d4est_krylov_pc.h>
 
 
 /* This file was automatically generated.  Do not edit! */

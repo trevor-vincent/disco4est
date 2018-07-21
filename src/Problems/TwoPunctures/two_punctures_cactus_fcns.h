@@ -6,8 +6,8 @@
 #include <d4est_amr_smooth_pred.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux.h>
-#include <multigrid.h>
-#include <multigrid_matrix_operator.h>
+#include <d4est_solver_multigrid.h>
+#include <d4est_solver_multigrid_matrix_operator.h>
 
 typedef struct {
 
@@ -27,7 +27,7 @@ typedef struct {
 typedef struct {
 
   int use_matrix_operator;
-  multigrid_data_t* mg_data;
+  d4est_solver_multigrid_data_t* mg_data;
   two_punctures_params_t* two_punctures_params;
   d4est_poisson_flux_data_t* flux_data_for_jac;
   d4est_poisson_flux_data_t* flux_data_for_res;
@@ -268,8 +268,8 @@ void two_punctures_apply_jac_add_nonlinear_term_using_matrix
 {
   double* M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
   problem_ctx_t* ctx = user;
-  multigrid_data_t* mg_data = ctx->mg_data;
-  multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
+  d4est_solver_multigrid_data_t* mg_data = ctx->mg_data;
+  d4est_solver_multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
   int matrix_stride = 0;
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -415,8 +415,8 @@ void two_punctures_apply_jac
       );
   else {
     
-    multigrid_data_t* mg_data = ctx->mg_data;
-    multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
+    d4est_solver_multigrid_data_t* mg_data = ctx->mg_data;
+    d4est_solver_multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
     if (matrix_op->matrix != matrix_op->matrix_at0){
     two_punctures_apply_jac_add_nonlinear_term_using_matrix
@@ -652,19 +652,19 @@ two_punctures_initial_guess
 
 
 static
-void two_punctures_krylov_pc_setup_fcn
+void two_punctures_pc_setup_fcn
 (
- krylov_pc_t* krylov_pc
+ d4est_krylov_pc_t* d4est_krylov_pc
 )
 {
-  krylov_pc_multigrid_data_t* krylov_pcmgdata = krylov_pc->pc_data;
-  multigrid_data_t* mg_data = krylov_pcmgdata->mg_data;
-  krylov_ctx_t* ctx = krylov_pc->pc_ctx;
+  d4est_krylov_pc_multigrid_data_t* d4est_krylov_pcmgdata = d4est_krylov_pc->pc_data;
+  d4est_solver_multigrid_data_t* mg_data = d4est_krylov_pcmgdata->mg_data;
+  krylov_ctx_t* ctx = d4est_krylov_pc->pc_ctx;
 
   if (ctx->p4est->mpirank == 0)
-    printf("[KRYLOV_PC_MULTIGRID_SETUP_FCN] Initializing Matrix Operator\n");
+    printf("[KRYLOV_PC_D4EST_SOLVER_MULTIGRID_SETUP_FCN] Initializing Matrix Operator\n");
   
-  multigrid_matrix_setup_fofufofvlilj_operator
+  d4est_solver_multigrid_matrix_setup_fofufofvlilj_operator
       (
        ctx->p4est,
        ctx->d4est_ops,

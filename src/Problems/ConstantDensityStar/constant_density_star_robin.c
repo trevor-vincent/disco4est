@@ -21,7 +21,7 @@
 #include <d4est_poisson_flux_sipg.h>
 #include <d4est_solver_newton.h>
 #include <multigrid.h>
-#include <krylov_pc_multigrid.h>
+#include <d4est_krylov_pc_multigrid.h>
 #include <multigrid_logger_residual.h>
 #include <multigrid_element_data_updater.h>
 #include <multigrid_matrix_operator.h>
@@ -500,7 +500,7 @@ problem_init
     /* mpi_assert(proc_size == 1); */
     /* int num_of_levels = max_level + 1; */
 
-    multigrid_data_t* mg_data = multigrid_data_init(
+    d4est_solver_multigrid_data_t* mg_data = multigrid_data_init(
       p4est,
       d4est_ops,
       d4est_geom,
@@ -530,7 +530,7 @@ problem_init
     multigrid_set_user_callbacks(mg_data,user_callbacks);
     
     
-    krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, constant_density_star_krylov_pc_setup_fcn);
+    d4est_krylov_pc_t* pc = d4est_krylov_pc_multigrid_create(mg_data, constant_density_stard4est_krylov_pc_setup_fcn);
     ctx.use_matrix_operator = 1;
     ctx.mg_data = mg_data;
 
@@ -579,7 +579,7 @@ problem_init
 
     zlog_info(c_default, "Saved checkpoint %d for process %d.", level, p4est->mpirank);
 
-    krylov_pc_multigrid_destroy(pc);
+    d4est_krylov_pc_multigrid_destroy(pc);
     /* multigrid_logger_residual_destroy(logger); */
     /* multigrid_element_data_updater_destroy(updater, mg_data->num_of_levels); */
     multigrid_data_destroy(mg_data);

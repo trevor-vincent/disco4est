@@ -173,6 +173,7 @@ int d4est_mesh_get_local_matrix_nodes(p4est_t *p4est);
 void d4est_mesh_compute_jacobian_on_lgl_grid(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double *jacobian_lgl,int max_deg);
 void d4est_mesh_get_array_of_quadrature_degrees(p4est_t *p4est,void *deg_array,d4est_builtin_t type);
 int d4est_mesh_get_local_max_degree(p4est_t *p4est);
+int d4est_mesh_get_local_degree_sum(p4est_t *p4est);
 void d4est_mesh_get_array_of_degrees(p4est_t *p4est,void *deg_array,d4est_builtin_t type);
 double d4est_mesh_data_compute_volume_diam(double *xyz[(P4EST_DIM)],int deg,d4est_mesh_volume_h_t option);
 void d4est_mesh_data_destroy(d4est_mesh_data_t *d4est_factors);

@@ -24,7 +24,7 @@
 #include <time.h>
 #include <multigrid.h>
 #include <multigrid_logger_residual.h>
-#include <krylov_pc_multigrid.h>
+#include <d4est_krylov_pc_multigrid.h>
 #include <multigrid_element_data_updater.h>
 #include "stamm_fcns.h"
 
@@ -352,7 +352,7 @@ problem_init
                                                 );
     
     
-    multigrid_data_t* mg_data = multigrid_data_init(p4est,
+    d4est_solver_multigrid_data_t* mg_data = multigrid_data_init(p4est,
                                                     d4est_ops,
                                                     d4est_geom,
                                                     d4est_quad,
@@ -372,7 +372,7 @@ problem_init
     /*    mg_data */
     /*   ); */
 
-    krylov_pc_t* pc = krylov_pc_multigrid_create(mg_data, NULL);
+    d4est_krylov_pc_t* pc = d4est_krylov_pc_multigrid_create(mg_data, NULL);
     
     krylov_petsc_params_t krylov_petsc_params;
     krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_petsc_params);
@@ -392,7 +392,7 @@ problem_init
       );
 
 
-    krylov_pc_multigrid_destroy(pc);
+    d4est_krylov_pc_multigrid_destroy(pc);
     
     multigrid_logger_residual_destroy(logger);
     multigrid_element_data_updater_destroy(updater, num_of_levels);

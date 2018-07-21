@@ -11,7 +11,7 @@
 #include <d4est_util.h>
 #include <ini.h>
 #include <d4est_linalg.h>
-#include <krylov_pc.h>
+#include <d4est_krylov_pc.h>
 #include <sc_reduce.h>
 
 static
@@ -113,7 +113,7 @@ d4est_solver_fcg_solve
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
  void* fcg_params,
- krylov_pc_t* krylov_pc
+ d4est_krylov_pc_t* d4est_krylov_pc
 )
 {
   d4est_solver_fcg_params_t* params = fcg_params;
@@ -158,7 +158,7 @@ d4est_solver_fcg_solve
     );
 
   krylov_ctx_t krylov_ctx;
-  if (krylov_pc != NULL && params->precond_flag == 1){
+  if (d4est_krylov_pc != NULL && params->precond_flag == 1){
     krylov_ctx.p4est = p4est;
     krylov_ctx.vecs = vecs;
     krylov_ctx.fcns = fcns;
@@ -191,12 +191,12 @@ d4est_solver_fcg_solve
   for (int i = 0; i < imax; i++) {
 
     /* w_i = B(r_i) */
-    if(krylov_pc != NULL && params->precond_flag == 1){
-      krylov_pc->pc_ctx = &krylov_ctx;
-      if (krylov_pc->pc_setup != NULL){
-        krylov_pc->pc_setup(krylov_pc);
+    if(d4est_krylov_pc != NULL && params->precond_flag == 1){
+      d4est_krylov_pc->pc_ctx = &krylov_ctx;
+      if (d4est_krylov_pc->pc_setup != NULL){
+        d4est_krylov_pc->pc_setup(d4est_krylov_pc);
       }
-      krylov_pc->pc_apply(krylov_pc, r, w);
+      d4est_krylov_pc->pc_apply(d4est_krylov_pc, r, w);
     }
     else {
       /* Identity preconditioner */

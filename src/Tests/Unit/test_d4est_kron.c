@@ -14,7 +14,7 @@ gen_rand_vec(double* pVec, int N, double a, double b){
 }
 
 void
-test_d4est_kron_AoBx() 
+testd4est_kron_AoBx() 
 {
   long int seed = time(NULL);
   srand(seed);
@@ -58,7 +58,7 @@ test_d4est_kron_AoBx()
     free(pX);
     free(pY1);
     free(pY2);
-    D4EST_ABORT("[test_d4est_kron_AoBx failed]");
+    D4EST_ABORT("[testd4est_kron_AoBx failed]");
   }
   
   free(pA);
@@ -70,7 +70,7 @@ test_d4est_kron_AoBx()
 }
 
 static void
-test_d4est_kron_AoBoCx()
+testd4est_kron_AoBoCx()
 {
   long int seed = time(NULL);
   srand(seed);
@@ -122,7 +122,7 @@ test_d4est_kron_AoBoCx()
     free(pX);
     free(pY1);
     free(pY2);
-    D4EST_ABORT("[test_d4est_kron_AoBoCx failed]");
+    D4EST_ABORT("[testd4est_kron_AoBoCx failed]");
   }
     
   free(pA);
@@ -139,7 +139,7 @@ test_d4est_kron_AoBoCx()
 int
 main (int argc, char *argv[])
 {
-  test_d4est_kron_AoBx();
-  test_d4est_kron_AoBoCx();
+  testd4est_kron_AoBx();
+  testd4est_kron_AoBoCx();
   return 0;
 }
