@@ -449,7 +449,6 @@ d4est_solver_multigrid_data_init
     mg_data->analyzer = d4est_solver_multigrid_mesh_analyzer_init();
   }
   else {
-    D4EST_ABORT("FUCK TRUMP");
     mg_data->analyzer = NULL;
   }
   
