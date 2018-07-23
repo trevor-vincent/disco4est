@@ -682,7 +682,8 @@ void d4est_util_parallel_print
 (
  sc_MPI_Comm mpicomm,
  double* restrict array,
- int local_size
+ int local_size,
+ int delay_ms
 )
 {
   
@@ -695,7 +696,7 @@ void d4est_util_parallel_print
     if (i == proc_rank){
       DEBUG_PRINT_MPI_ARR_DBL(proc_rank, array, local_size);
     }
-    usleep(100);
+    usleep(delay_ms);
     sc_MPI_Barrier(mpicomm);
   }
 }
