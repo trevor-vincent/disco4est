@@ -692,18 +692,13 @@ void d4est_util_parallel_print
  double* restrict array,
  int local_size
 )
-{
-  
+{  
   int proc_size;
   int proc_rank;
   MPI_Comm_size(mpicomm, &proc_size);
   MPI_Comm_rank(mpicomm, &proc_rank);
-
-  /* PPF_Print( mpicomm, */
-  /*            "%d prints\n", */
-  /*            proc_rank); */
-
   char* output = NULL;
+
   for (int i = 0; i < local_size; i++) {
     asprintf(
              &output,
@@ -714,14 +709,10 @@ void d4est_util_parallel_print
     );
   }
   
-  
-      /* for (int i = 0; i < local_size; i++){ */
   PPF_Print( mpicomm,
              "%s\n",
              output);
-      /* } */
-    /* sc_MPI_Barrier(mpicomm); */
-  /* }   */
+  
   free(output);
 }
 

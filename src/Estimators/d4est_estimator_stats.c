@@ -9,6 +9,13 @@
 #include <math.h>
 #include <sc_reduce.h>
 
+#ifndef PPF_USE_OLD_NAMES
+#include <ptools_ppf.h>
+#else
+#define PPF_Print PTC_Print
+#include <PTCPrint.h>
+#endif
+
 void d4est_estimator_stats_compute
 (
  p4est_t* p4est,
@@ -316,19 +323,13 @@ d4est_estimator_stats_get_global_percentile_parallel
 
     if (p4est->mpirank == temp_rank){
 
-      printf("******************************\n");
-      printf("******************************\n");
-      printf("mpisize = %d\n", p4est->mpisize);
-      printf("mpirank = %d\n", p4est->mpirank);
-      printf("global_id_from_end = %d\n", global_id_from_end);
-      printf("p4est->local_num_quadrants + stride = %d\n", p4est->local_num_quadrants + stride);
-      printf(" (global_id_from_end <= p4est->local_num_quadrants + stride) = %d\n",(global_id_from_end <= p4est->local_num_quadrants + stride));
-      DEBUG_PRINT_ARR_DBL(estimator, p4est->local_num_quadrants);
+      PPF_Print(p4est->mpicomm,"temp_rank = %d, global_id_from_end = %d, stride = %d, local_num_quad = %d \n", temp_rank, global_id_from_end, stride, p4est->local_num_quadrants);
       
       if (global_id_from_end <= p4est->local_num_quadrants + stride){
         if (global_id_from_end != stride){
           estimator_at_percentile = estimator[p4est->local_num_quadrants - (global_id_from_end - stride)];
-          printf("estimator_at_percentile = %.15f", estimator_at_percentile);
+          /* printf("estimator_at_percentile = %.15f", estimator_at_percentile); */
+          PPF_Print(p4est->mpicomm,"estimator_at_percentile = %.15f\n",estimator_at_percentile);
         }
         else {
           D4EST_ABORT("global_id_from_end == stride, should never happen");
@@ -353,6 +354,9 @@ d4est_estimator_stats_get_global_percentile_parallel
       }
     }
   }
+
+  /* estimator_at_percentile); *\/ */
+  PPF_Print(p4est->mpicomm,"FOUND: estimator_at_percentile = %.15f\n",estimator_at_percentile);
 
   /* sc_MPI_Barrier(p4est->mpicomm); */
   return estimator_at_percentile;

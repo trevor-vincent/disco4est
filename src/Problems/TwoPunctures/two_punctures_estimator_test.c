@@ -395,9 +395,6 @@ problem_init
                               (const char * []){"u", NULL},
                               (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL}
     );
-
-
-  
   
   d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
@@ -493,9 +490,7 @@ problem_init
     if (p4est->mpirank == 0){
       printf(" END PRINT AFTER SORT\n");
       printf(" *********************************\n");
-    }    
-    
-      
+    }          
   }
   
   printf("[D4EST_INFO]: Starting garbage collection...\n");
