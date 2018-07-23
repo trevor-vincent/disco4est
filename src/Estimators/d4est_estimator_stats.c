@@ -341,8 +341,9 @@ d4est_estimator_stats_get_global_percentile_parallel
     }
 
     double estimator_at_percentile_temp = estimator_at_percentile;
-    sc_allreduce(&estimator_at_percentile_temp, &estimator_at_percentile, 1, sc_MPI_DOUBLE, sc_MPI_MAX,
-                 p4est->mpicomm);
+    int stride_temp = stride;
+    sc_allreduce(&estimator_at_percentile_temp, &estimator_at_percentile, 1, sc_MPI_DOUBLE, sc_MPI_MAX, p4est->mpicomm);
+    sc_allreduce(&stride_temp, &stride, 1, sc_MPI_INT, sc_MPI_MAX, p4est->mpicomm);
     
     if (!(estimator_at_percentile > 0)){
       temp_rank--;

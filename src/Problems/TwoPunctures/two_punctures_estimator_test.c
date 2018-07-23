@@ -476,7 +476,7 @@ problem_init
     if (p4est->mpirank == 0){
       printf(" END PRINT BEFORE SORT\n");
       printf(" *********************************\n");
-    }                              
+    }
     sc_MPI_Barrier(p4est->mpicomm);
     d4est_util_parallel_sort(p4est->mpicomm, estimator, p4est->local_num_quadrants);
 
@@ -490,8 +490,20 @@ problem_init
     if (p4est->mpirank == 0){
       printf(" END PRINT AFTER SORT\n");
       printf(" *********************************\n");
-    }          
+    }
+
+
+  d4est_estimator_stats_get_global_percentile_parallel
+    (
+     p4est,
+     5,
+     estimator
+    );
+
+    
   }
+
+
   
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_mesh_data_destroy(d4est_factors_compactified);
