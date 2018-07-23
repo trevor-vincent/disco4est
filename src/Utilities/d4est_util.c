@@ -18,6 +18,14 @@
 #include <unistd.h>
 
 
+#ifndef PPF_USE_OLD_NAMES
+#include "ptools_ppf.h"
+#else
+#define PPF_Print PTC_Print
+#include "PTCPrint.h"
+#endif
+
+
 double
 d4est_util_secant_fcn(double x){
   return 1./cos(x);
@@ -682,8 +690,7 @@ void d4est_util_parallel_print
 (
  sc_MPI_Comm mpicomm,
  double* restrict array,
- int local_size,
- int delay_ms
+ int local_size
 )
 {
   
@@ -691,22 +698,30 @@ void d4est_util_parallel_print
   int proc_rank;
   MPI_Comm_size(mpicomm, &proc_size);
   MPI_Comm_rank(mpicomm, &proc_rank);
-  
-  for (int i = 0; i < proc_size; i++){
-    if (i == proc_rank){
-      DEBUG_PRINT_MPI_ARR_DBL(proc_rank, array, local_size);
-    }
-    usleep(delay_ms);
-    sc_MPI_Barrier(mpicomm);
+
+  /* PPF_Print( mpicomm, */
+  /*            "%d prints\n", */
+  /*            proc_rank); */
+
+  char* output = NULL;
+  for (int i = 0; i < local_size; i++) {
+    asprintf(
+             &output,
+             "%s %d %.15f\n",
+             output,
+             proc_rank,
+             array[i]
+    );
   }
+  
+  
+      /* for (int i = 0; i < local_size; i++){ */
+  PPF_Print( mpicomm,
+             "%s\n",
+             output);
+      /* } */
+    /* sc_MPI_Barrier(mpicomm); */
+  /* }   */
+  free(output);
 }
 
-/* void d4est_util_aligned_print */
-/* ( */
-/*  double** fields, */
-/*  const char** field_names, */
-/*  int size */
-/* ){ */
-
-
-/* } */

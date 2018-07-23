@@ -10,3 +10,5 @@ cmake/machine.cmake
 
 # Build
 /build*
+/third_party/PPF/ADOPTERS_GUIDE
+/third_party/PPF/testprint.c

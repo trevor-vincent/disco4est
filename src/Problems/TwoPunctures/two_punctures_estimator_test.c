@@ -475,20 +475,20 @@ problem_init
       printf(" *********************************\n");
     }
     sc_MPI_Barrier(p4est->mpicomm);
-    d4est_util_parallel_print(p4est->mpicomm, estimator, p4est->local_num_quadrants, 8*p4est->mpisize);
+    d4est_util_parallel_print(p4est->mpicomm, estimator, p4est->local_num_quadrants);
     if (p4est->mpirank == 0){
       printf(" END PRINT BEFORE SORT\n");
       printf(" *********************************\n");
     }                              
     sc_MPI_Barrier(p4est->mpicomm);
-    d4est_util_parallel_print(p4est->mpicomm, estimator, p4est->local_num_quadrants, 8*p4est->mpisize);
+    d4est_util_parallel_sort(p4est->mpicomm, estimator, p4est->local_num_quadrants);
 
     if (p4est->mpirank == 0){
       printf(" BEGIN PRINT AFTER SORT\n");
       printf(" *********************************\n");
     }
     sc_MPI_Barrier(p4est->mpicomm);
-    d4est_util_parallel_print(p4est->mpicomm, estimator, p4est->local_num_quadrants, 8*p4est->mpisize);
+    d4est_util_parallel_print(p4est->mpicomm, estimator, p4est->local_num_quadrants);
 
     if (p4est->mpirank == 0){
       printf(" END PRINT AFTER SORT\n");
