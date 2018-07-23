@@ -470,21 +470,30 @@ problem_init
        d4est_quad,
        0
       );
+    if (p4est->mpirank == 0){
+      printf(" BEGIN PRINT BEFORE SORT\n");
+      printf(" *********************************\n");
+    }
+    sc_MPI_Barrier(p4est->mpicomm);
+    d4est_util_parallel_print(p4est->mpicomm, estimator, p4est->local_num_quadrants);
+    if (p4est->mpirank == 0){
+      printf(" END PRINT BEFORE SORT\n");
+      printf(" *********************************\n");
+    }                              
+    sc_MPI_Barrier(p4est->mpicomm);
+    d4est_util_parallel_sort(p4est->mpicomm, estimator, p4est->local_num_quadrants);
 
-    printf(" BEGIN PRINT BEFORE SORT\n");
-    printf(" *********************************\n");
-    d4est_util_parallel_print(p4est->mpicomm, estimator, prob_vecs.local_nodes);
-    printf(" END PRINT BEFORE SORT\n");
-    printf(" *********************************\n");
-                              
-    d4est_util_parallel_sort(p4est->mpicomm, estimator, prob_vecs.local_nodes);
+    if (p4est->mpirank == 0){
+      printf(" BEGIN PRINT AFTER SORT\n");
+      printf(" *********************************\n");
+    }
+    sc_MPI_Barrier(p4est->mpicomm);
+    d4est_util_parallel_print(p4est->mpicomm, estimator, p4est->local_num_quadrants);
 
-    printf(" BEGIN PRINT AFTER SORT\n");
-    printf(" *********************************\n");
-    d4est_util_parallel_print(p4est->mpicomm, estimator, prob_vecs.local_nodes);
-    printf(" END PRINT AFTER SORT\n");
-    printf(" *********************************\n");
-    
+    if (p4est->mpirank == 0){
+      printf(" END PRINT AFTER SORT\n");
+      printf(" *********************************\n");
+    }    
     
       
   }
