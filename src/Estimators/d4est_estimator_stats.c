@@ -323,13 +323,13 @@ d4est_estimator_stats_get_global_percentile_parallel
 
     if (p4est->mpirank == temp_rank){
 
-      PPF_Print(p4est->mpicomm,"temp_rank = %d, global_id_from_end = %d, stride = %d, local_num_quad = %d \n", temp_rank, global_id_from_end, stride, p4est->local_num_quadrants);
+      //      printf("temp_rank = %d, global_id_from_end = %d, stride = %d, local_num_quad = %d \n", temp_rank, global_id_from_end, stride, p4est->local_num_quadrants);
       
       if (global_id_from_end <= p4est->local_num_quadrants + stride){
         if (global_id_from_end != stride){
           estimator_at_percentile = estimator[p4est->local_num_quadrants - (global_id_from_end - stride)];
           /* printf("estimator_at_percentile = %.15f", estimator_at_percentile); */
-          PPF_Print(p4est->mpicomm,"estimator_at_percentile = %.15f\n",estimator_at_percentile);
+	  //  printf("estimator_at_percentile = %.15f\n",estimator_at_percentile);
         }
         else {
           D4EST_ABORT("global_id_from_end == stride, should never happen");
@@ -357,7 +357,7 @@ d4est_estimator_stats_get_global_percentile_parallel
   }
 
   /* estimator_at_percentile); *\/ */
-  PPF_Print(p4est->mpicomm,"FOUND: estimator_at_percentile = %.15f\n",estimator_at_percentile);
+  //  printf("FOUND: estimator_at_percentile = %.15f\n",estimator_at_percentile);
 
   /* sc_MPI_Barrier(p4est->mpicomm); */
   return estimator_at_percentile;
