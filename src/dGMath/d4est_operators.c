@@ -1363,49 +1363,30 @@ static void d4est_operators_build_schwarz_restrictor_1d
 (
  d4est_operators_t* d4est_ops,
  double* restrict restrictor_1d,
- int deg_center,
- int deg_neighbour_left,
- int deg_neighbour_right,
- int overlap,
- int boundary /* -1 (boundary to left), 0 (interior element), 1 (boundary to right)  */
+ int deg, //degree of element before restriction
+ int restricted_size, //number of 1d nodes
+ int which_face_1d
 )
 {
-  D4EST_ASSERT(overlap < deg_neighbour_left + 1);
-  D4EST_ASSERT(overlap < deg_neighbour_right + 1);
+  D4EST_ASSERT(restricted_size < deg + 1);
+  D4EST_ASSERT(which_face_1d == 0 || which_face_1d == 1);
+  
+  int original_size = deg + 1;
 
-  if (boundary == 0) {
-    int restricted_size = overlap*2 + deg_center + 1;
-    int original_size = (deg_neighbour_left + 1) + (deg_neighbour_right + 1) + (deg_center+1);
+  memset(restrictor_1d, 0., sizeof(double) * original_size * restricted_size);
 
-    memset(restrictor_1d, 0., sizeof(double) * original_size * restricted_size);
-
-    for (int i = 0; i < restricted_size; i++){
-      restrictor_1d[i*original_size + deg_neighbour_left + 1 - overlap + i] = 1.;
+  for (int i = 0; i < restricted_size; i++){
+    if (which_face_1d == 0){
+      restrictor_1d[(deg+1)*(i) + i] = 1.;
+    }
+    else if (which_face_1d == 1){
+      restrictor_1d[(deg+1)*(i+1) - restricted_size + i] = 1.;
+    }
+    else {
+      D4EST_ABORT("which_face_1d should equal 0 or 1");
     }
   }
-  else if (boundary == 1) {
-    int restricted_size = overlap + deg_center + 1;
-    int original_size = (deg_neighbour_right + 1) + (deg_center+1);
-
-    memset(restrictor_1d, 0., sizeof(double) * original_size * restricted_size);
-
-    for (int i = 0; i < restricted_size; i++){
-      restrictor_1d[i*original_size] = 1.;
-    }
-  }
-  else if (boundary == -1) {
-    int restricted_size = overlap + deg_center + 1;
-    int original_size = (deg_neighbour_left + 1) + (deg_center+1);
-
-    memset(restrictor_1d, 0., sizeof(double) * original_size * restricted_size);
-
-    for (int i = 0; i < restricted_size; i++){
-      restrictor_1d[i*original_size + deg_neighbour_left + 1 - overlap + i] = 1.;
-    }
-  }
-  else {
-    D4EST_ABORT("not possible");
-  }  
+    
 }
 
 static void d4est_operators_build_lift_1d(d4est_operators_t* d4est_ops, double * restrict  lift_1d, int deg) {
