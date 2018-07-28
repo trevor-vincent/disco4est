@@ -81,9 +81,9 @@ vcycle_imax = 1;
 vcycle_rtol = 1e-15;
 vcycle_atol = 0.;
 smoother_name = mg_smoother_cheby
-bottom_solver_name = mg_bottom_solver_cgd4est
+bottom_solver_name = mg_bottom_solver_cg
 
-[mg_bottom_solver_cgd4est]
+[mg_bottom_solver_cg]
 bottom_iter = 100;
 bottom_rtol = 1e-10;
 bottom_atol = 0.;

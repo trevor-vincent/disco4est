@@ -310,8 +310,8 @@ d4est_solver_multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file,
                                                 input_file
                                                );
   }
-  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cgd4est")){
-    mg_data->bottom_solver = d4est_solver_multigrid_bottom_solver_cgd4est_init
+  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cg")){
+    mg_data->bottom_solver = d4est_solver_multigrid_bottom_solver_cg_init
                                                (
                                                 p4est,
                                                 input_file
@@ -340,8 +340,8 @@ d4est_solver_multigrid_destroy_bottom_solver( d4est_solver_multigrid_data_t* mg_
                                                 mg_data->bottom_solver
                                                );
   }
-  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cgd4est")){
-    d4est_solver_multigrid_bottom_solver_cgd4est_destroy
+  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_cg")){
+    d4est_solver_multigrid_bottom_solver_cg_destroy
       (
        mg_data->bottom_solver
       );

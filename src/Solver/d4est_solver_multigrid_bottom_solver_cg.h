@@ -10,11 +10,11 @@ typedef struct {
   int bottom_imax;
   int bottom_print_residual_norm;
   
-} d4est_solver_multigrid_bottom_solver_cgd4est_t;
+} d4est_solver_multigrid_bottom_solver_cg_t;
 
 
 /* This file was automatically generated.  Do not edit! */
-void d4est_solver_multigrid_bottom_solver_cgd4est_destroy(d4est_solver_multigrid_bottom_solver_t *bottom);
-d4est_solver_multigrid_bottom_solver_t *d4est_solver_multigrid_bottom_solver_cgd4est_init(p4est_t *p4est,const char *input_file);
+void d4est_solver_multigrid_bottom_solver_cg_destroy(d4est_solver_multigrid_bottom_solver_t *bottom);
+d4est_solver_multigrid_bottom_solver_t *d4est_solver_multigrid_bottom_solver_cg_init(p4est_t *p4est,const char *input_file);
 
 #endif
