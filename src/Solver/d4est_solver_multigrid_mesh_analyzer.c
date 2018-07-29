@@ -57,7 +57,7 @@ void d4est_solver_multigrid_mesh_analyzer_update
   
   if(mg_data->mg_state == START){
     mesh_analyzer->stride = (P4EST_MAXLEVEL);
-    printf("P4EST_MAXLEVEL = %d\n", P4EST_MAXLEVEL);
+    /* printf("P4EST_MAXLEVEL = %d\n", P4EST_MAXLEVEL); */
     mesh_analyzer->levels = 1;
     mesh_analyzer->p4est_checksums[mesh_analyzer->stride]
       = p4est_checksum(p4est);
