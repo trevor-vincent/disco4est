@@ -417,7 +417,7 @@ d4est_amr_input
 
   if(d4est_amr->mpirank == 0){
     zlog_info(c_default, "num_of_amr_steps = %d",  d4est_amr->num_of_amr_steps);
-    zlog_info(c_default, "max_degree = %d",  d4est_amr->max_degree);
+    //    zlog_info(c_default, "max_degree = %d",  d4est_amr->max_degree);
   }
 }
 

@@ -74,6 +74,9 @@ int main(int argc, char *argv[])
      NULL,
      NULL
     );
+    
+    p4est_partition(p4est, 1, NULL);
+    p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
   }
   else {
     p4est = d4est_checkpoint_load_mesh
@@ -83,6 +86,7 @@ int main(int argc, char *argv[])
              &d4est_geom->p4est_conn
             );
 
+    zlog_info(c_default, "Successfully loaded checkpoint mesh");
 
     p4est_reset_data(p4est,
                      sizeof(d4est_element_data_t),
@@ -92,10 +96,9 @@ int main(int argc, char *argv[])
     
     initial_grid_input->checkpoint_deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
     d4est_h5_read_dataset(p4est->mpirank, initial_grid_input->checkpoint_prefix, "degree", H5T_NATIVE_INT, initial_grid_input->checkpoint_deg_array);
-  }
 
-  p4est_partition(p4est, 1, NULL);
-  p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
+    zlog_info(c_default, "Successfully read checkpoint degrees");
+  }
 
   
   /* p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE); */
