@@ -332,6 +332,7 @@ problem_init
       error[i] = fabs(prob_vecs.u[i] - u_analytic[i]);
     }
     
+    d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
     // Save mesh data to VTK file
     d4est_vtk_save(
       p4est,
@@ -390,8 +391,6 @@ problem_init
       d4est_amr_step
         (
          p4est,
-         NULL,
-         NULL,
          d4est_ops,
          (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr,
          &prob_vecs.u,
@@ -508,7 +507,7 @@ problem_init
     if (!init_params.do_not_solve){
 
       newton_petsc_params_t newton_params;
-      newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_params);
+      newton_petsc_input(p4est, input_file, &newton_params);
 
       krylov_petsc_params_t krylov_params;
       krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_params);
@@ -546,9 +545,12 @@ problem_init
       level,
       "checkpoint",
       p4est,
+      d4est_amr,
       d4est_factors,
       (const char * []){"u", NULL},
-      (double* []){prob_vecs.u}
+      (double* []){prob_vecs.u},
+      (const char * []){"predictor", NULL},
+      (double* []){smooth_pred_data->predictor}
     );
 
     zlog_info(c_default, "Saved checkpoint %d for process %d.", level, p4est->mpirank);

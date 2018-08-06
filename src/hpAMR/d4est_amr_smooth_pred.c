@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+#include <stdio.h>
 #include <pXest.h>
 #include <d4est_element_data.h>
 #include <d4est_elliptic_data.h>
@@ -5,8 +7,11 @@
 #include <d4est_linalg.h>
 #include <d4est_util.h>
 #include <d4est_amr.h>
+#include <d4est_h5.h>
 #include <ini.h>
 #include <d4est_amr_smooth_pred.h>
+#include <d4est_checkpoint.h>
+#include <d4est_h5.h>
 #include <math.h>
 
 #if (P4EST_DIM)==3
@@ -24,7 +29,8 @@ d4est_amr_smooth_pred_pre_refine_callback
 {
   d4est_amr_t* d4est_amr = (d4est_amr_t*) user;
   d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
-  
+
+  /* This array is only NULL if there has been no amr steps (e.g. the first step) */
   if (smooth_pred_data->predictor == NULL){
     smooth_pred_data->predictor = P4EST_REALLOC
                                    (
@@ -32,7 +38,34 @@ d4est_amr_smooth_pred_pre_refine_callback
                                     double,
                                     p4est->local_num_quadrants
                                    );
-    d4est_util_fill_array(smooth_pred_data->predictor, smooth_pred_data->smooth_pred_params->initial_pred, p4est->local_num_quadrants);
+
+
+    
+    if (smooth_pred_data->smooth_pred_params->load_from_checkpoint == 1){
+      d4est_checkpoint_read_dataset
+        (
+         p4est,
+         smooth_pred_data->smooth_pred_params->checkpoint_prefix,
+         "predictor",
+         H5T_NATIVE_DOUBLE,
+         smooth_pred_data->predictor,
+         smooth_pred_data->smooth_pred_params->checkpoint_number
+        );
+
+
+      double sum = d4est_util_sum_array_dbl(smooth_pred_data->predictor, p4est->local_num_quadrants);
+
+      d4est_checkpoint_check_dataset(p4est,
+                             smooth_pred_data->smooth_pred_params->checkpoint_prefix,
+                             "predictor",
+                             H5T_NATIVE_DOUBLE,
+                             (void*)&sum,
+                             smooth_pred_data->smooth_pred_params->checkpoint_number
+                            );      
+    }
+    else {
+      d4est_util_fill_array(smooth_pred_data->predictor, smooth_pred_data->smooth_pred_params->initial_pred, p4est->local_num_quadrants);
+    }
     
   }
 }
@@ -179,6 +212,7 @@ d4est_amr_smooth_pred_destroy(d4est_amr_scheme_t* scheme){
   d4est_amr_smooth_pred_data_t* smooth_pred_data =
     (d4est_amr_smooth_pred_data_t*)scheme->amr_scheme_data;  
   P4EST_FREE(smooth_pred_data->predictor);
+  free(smooth_pred_data->smooth_pred_params->checkpoint_prefix);
   P4EST_FREE(smooth_pred_data->smooth_pred_params);
   P4EST_FREE(smooth_pred_data);
   P4EST_FREE(scheme);
@@ -204,12 +238,16 @@ int d4est_amr_smooth_pred_params_handler
     pconfig->gamma_h = atof(value);
   }
   else if (d4est_util_match_couple(section,"amr",name,"initial_pred")) {
-    D4EST_ASSERT(pconfig->initial_pred == 0);
+    D4EST_ASSERT(pconfig->initial_pred == -1);
     pconfig->initial_pred = atof(value);
   }
   else if (d4est_util_match_couple(section,"amr",name,"gamma_p")) {
     D4EST_ASSERT(pconfig->gamma_p == -1);
     pconfig->gamma_p = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"load_from_checkpoint")) {
+    D4EST_ASSERT(pconfig->load_from_checkpoint == 0);
+    pconfig->load_from_checkpoint = atoi(value);
   }
   else if (d4est_util_match_couple(section,"amr",name,"gamma_n")) {
     D4EST_ASSERT(pconfig->gamma_n == -1);
@@ -223,6 +261,14 @@ int d4est_amr_smooth_pred_params_handler
     D4EST_ASSERT(pconfig->inflation_size == -1);
     pconfig->inflation_size = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"checkpoint_number")) {
+    D4EST_ASSERT(pconfig->checkpoint_number == -1);
+    pconfig->checkpoint_number = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"checkpoint_prefix")) {
+    D4EST_ASSERT(pconfig->checkpoint_prefix == NULL);
+    asprintf(&pconfig->checkpoint_prefix,"%s", value);
+  }  
   else {
     return 0; 
   }
@@ -235,6 +281,7 @@ d4est_amr_smooth_pred_params_input
  const char* input_file
 )
 {
+  zlog_category_t *c_default = zlog_get_category("d4est_amr_smooth_pred");
   d4est_amr_smooth_pred_params_t* input = D4EST_ALLOC(d4est_amr_smooth_pred_params_t, 1);
   input->initial_pred;
   input->gamma_h = -1;
@@ -243,7 +290,10 @@ d4est_amr_smooth_pred_params_input
   input->sigma = -1;
   input->percentile = -1;
   input->inflation_size = -1;
-  input->initial_pred = 0;
+  input->initial_pred = -1;
+  input->load_from_checkpoint = 0;
+  input->checkpoint_number = -1;
+  input->checkpoint_prefix = NULL;
   
   if (ini_parse(input_file, d4est_amr_smooth_pred_params_handler, input) < 0) {
     D4EST_ABORT("Can't load input file");
@@ -252,7 +302,20 @@ d4est_amr_smooth_pred_params_input
   D4EST_CHECK_INPUT("amr", input->gamma_h, -1);
   D4EST_CHECK_INPUT("amr", input->gamma_p, -1);
   D4EST_CHECK_INPUT("amr", input->gamma_n, -1);
-  D4EST_ASSERT((input->sigma != -1) || (input->percentile != -1));
+
+  if ( !(input->initial_pred >= 0.) && input->load_from_checkpoint != 1){
+    zlog_info(c_default, "You must set initial_pred or load_from_checkpoint for smooth_pred amr");
+    D4EST_ABORT("Can't initialize smooth_pred");
+  }
+
+  if (input->load_from_checkpoint == 1){
+    D4EST_CHECK_INPUT("amr", input->checkpoint_prefix, NULL);
+  }
+  
+  if (input->sigma == -1 && input->percentile == -1){
+    zlog_info(c_default, "You must set sigma or percentile for smooth_pred amr");
+    D4EST_ABORT("Can't initialize smooth_pred");
+  }
   
   return input;
 }

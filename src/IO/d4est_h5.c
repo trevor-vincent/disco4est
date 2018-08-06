@@ -1,7 +1,11 @@
 #define _GNU_SOURCE
+#include <stdio.h>
 #include <d4est_h5.h>
+#include <d4est_util.h>
 #include <hdf5.h>
+/* #include <hdf5_hl.h> */
 #include <stdlib.h>
+#include <zlog.h>
 
 void
 d4est_h5_create_file
@@ -62,6 +66,29 @@ d4est_h5_create_dataset
   free(dataset_path);
 }
 
+/* int */
+/* d4est_h5_does_dataset_exist */
+/* ( */
+/*  int mpirank, */
+/*  const char* file_name_prefix, */
+/*  const char* dataset_name */
+/* ) */
+/* { */
+/*   zlog_category_t *c_default = zlog_get_category("d4est_h5"); */
+/*   char* file_name; */
+/*   asprintf(&file_name,"%s_%d.h5", file_name_prefix, mpirank); */
+/*   char* dataset_path; */
+/*   asprintf(&dataset_path,"/%s", dataset_name); */
+  
+/*   hid_t file_id = H5Fopen(file_name, H5F_ACC_RDWR, H5P_DEFAULT); */
+/*   int err = H5LTpath_valid(file_id,dataset_path,0); */
+/*   H5Fclose(file_id); */
+
+/*   free(file_name); */
+/*   free(dataset_path); */
+/*   return !(err < 0); */
+/* } */
+
 void
 d4est_h5_write_dataset
 (
@@ -85,15 +112,35 @@ d4est_h5_write_dataset
   hid_t dataset_id = H5Dopen2(file_id, dataset_path, H5P_DEFAULT);
 
   /* Write the dataset. */
-  H5Dwrite(dataset_id, dataset_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataset);
-  /* H5Dread(dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataset); */
+  int err = H5Dwrite(dataset_id, dataset_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataset);
 
+  if (err < 0){
+    zlog_category_t *c_default = zlog_get_category("d4est_h5");
+    zlog_error(c_default, "Problem writing h5 file, filename = %s, dataset = %s.", file_name_prefix, dataset_name);
+    D4EST_ABORT("");
+  }
+
+  /* H5Dflush(dataset_id); */
+  
   /* Close the dataset. */
-  H5Dclose(dataset_id);
+  err = H5Dclose(dataset_id);
+
+  if (err < 0){
+    zlog_category_t *c_default = zlog_get_category("d4est_h5");
+    zlog_error(c_default, "Problem closing h5 dataset, filename = %s, dataset = %s.", file_name_prefix, dataset_name);
+    D4EST_ABORT("");
+  }
+  /* H5Dflush(file_id); */
 
   /* Close the file. */
-  H5Fclose(file_id);
+  err = H5Fclose(file_id);
 
+  if (err < 0){
+    zlog_category_t *c_default = zlog_get_category("d4est_h5");
+    zlog_error(c_default, "Problem closing h5 file, filename = %s, dataset = %s.", file_name_prefix, dataset_name);
+    D4EST_ABORT("");
+  }
+  
   free(file_name);
   free(dataset_path);
 }
@@ -108,6 +155,7 @@ d4est_h5_read_dataset
  void* dataset
 )
 {
+  zlog_category_t *c_default = zlog_get_category("d4est_h5");
   char* file_name;
   asprintf(&file_name,"%s_%d.h5", file_name_prefix, mpirank);
 
@@ -120,16 +168,38 @@ d4est_h5_read_dataset
   /* Open an existing dataset. */
   hid_t dataset_id = H5Dopen2(file_id, dataset_path, H5P_DEFAULT);
 
+  zlog_debug(c_default, "Opening file and dataset %s, %s", file_name, dataset_path);
+
   /* Write the dataset. */
   /* H5Dwrite(dataset_id, dataset_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataset); */
-  H5Dread(dataset_id, dataset_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataset);
+  int err =  H5Dread(dataset_id, dataset_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataset);
 
+  if (err < 0){
+    zlog_error(c_default, "Problem reading h5 file, filename = %s, dataset = %s.", file_name_prefix, dataset_name);
+    D4EST_ABORT("");
+  }
+  
+  /* H5Dflush(dataset_id); */
+  
   /* Close the dataset. */
-  H5Dclose(dataset_id);
+  err = H5Dclose(dataset_id);
 
+  if (err < 0){
+    zlog_error(c_default, "Problem closing h5 dataset, filename = %s, dataset = %s.", file_name_prefix, dataset_name);
+    D4EST_ABORT("");
+  }
+
+  /* H5Dflush(file_id); */
+  
   /* Close the file. */
-  H5Fclose(file_id);
+  err = H5Fclose(file_id);
 
+  if (err < 0){
+    zlog_error(c_default, "Problem closing h5 file, filename = %s, dataset = %s.", file_name_prefix, dataset_name);
+    D4EST_ABORT("");
+  }
+
+  
   free(file_name);
   free(dataset_path);
 }

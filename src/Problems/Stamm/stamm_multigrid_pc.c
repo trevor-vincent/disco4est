@@ -327,8 +327,6 @@ problem_init
       d4est_amr_step
         (
          p4est,
-         NULL,/* d4est_ghost, */
-         NULL,/* ghost_data, */
          d4est_ops,
          (level > 1) ? d4est_amr : d4est_amr_uniform,
          &prob_vecs.u,

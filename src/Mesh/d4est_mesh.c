@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include <stdio.h>
 #include <pXest.h>
 #include <d4est_mesh.h>
 #include <d4est_geometry.h>
@@ -48,6 +49,29 @@ int d4est_mesh_initial_extents_handler
     D4EST_ASSERT(pconfig->max_degree == -1);
     pconfig->max_degree = atoi(value);
     D4EST_ASSERT(atoi(value) > 0);
+  }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"checkpoint_number")) {
+    D4EST_ASSERT(pconfig->checkpoint_number == -1);
+    pconfig->checkpoint_number = atoi(value);
+    D4EST_ASSERT(atoi(value) > 0);
+  }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"initial_checkpoint_number")) {
+    D4EST_ASSERT(pconfig->initial_checkpoint_number == -1);
+    pconfig->initial_checkpoint_number = atoi(value);
+    D4EST_ASSERT(atoi(value) > 0);
+  }
+ else if (d4est_util_match_couple(section,"initial_mesh",name,"checkpoint_type")) {  
+    D4EST_ASSERT(pconfig->checkpoint_type == D4EST_CHKPT_NOT_SET);
+    if(d4est_util_match(value, "D4EST_CHKPT_HISTORY_H5")){
+      pconfig->checkpoint_type = D4EST_CHKPT_HISTORY_H5;
+    }
+    else if(d4est_util_match(value, "D4EST_CHKPT_P4EST_H5")){
+      pconfig->checkpoint_type = D4EST_CHKPT_P4EST_H5;
+    }
+    else {
+      printf("checkpoint_type = %s\n", value);
+      D4EST_ABORT("checkpoint_type is not set to a supported value\n");
+    }
   }
  else if (d4est_util_match_couple(section,"mesh_parameters",name,"face_h_type")) {
     D4EST_ASSERT(pconfig->face_h_type == FACE_H_EQ_NOT_SET);
@@ -116,7 +140,7 @@ int d4est_mesh_initial_extents_handler
 
 
 void
-d4est_mesh_set_initial_extents
+d4est_mesh_set_initial_extents_using_input_file_regions
 (
  d4est_element_data_t* elem_data,
  void* user_ctx
@@ -124,12 +148,37 @@ d4est_mesh_set_initial_extents
 {
   d4est_mesh_initial_extents_t* input = user_ctx;
   int region = elem_data->region;
+  elem_data->deg = input->deg[region];
+  elem_data->deg_quad = input->deg_quad_inc[region] +
+                            elem_data->deg;
+}
+ 
 
-  if (input->load_from_checkpoint == 0)
+void
+d4est_mesh_set_initial_extents
+(
+ d4est_element_data_t* elem_data,
+ void* user_ctx
+)
+{
+  d4est_mesh_initial_extents_t* input = user_ctx;
+
+  int region = elem_data->region;
+  if (input->load_from_checkpoint == 0){
     elem_data->deg = input->deg[region];
+  }
   else{
-    D4EST_ASSERT(input->checkpoint_deg_array != NULL);
-    elem_data->deg = input->checkpoint_deg_array[elem_data->id];
+    if (input->checkpoint_type == D4EST_CHKPT_P4EST_H5){
+      D4EST_ASSERT(input->checkpoint_deg_array != NULL);
+      elem_data->deg = input->checkpoint_deg_array[elem_data->id];
+    }
+    else if (input->checkpoint_type == D4EST_CHKPT_HISTORY_H5){
+      /* elem_data->deg already set */
+      /* do nothing */
+    }
+    else {
+      D4EST_ABORT("set_initial_extents ran into unsupported else branch");
+    }
   }  
   elem_data->deg_quad = input->deg_quad_inc[region] +
                             elem_data->deg;
@@ -187,6 +236,9 @@ d4est_mesh_initial_extents_parse
   initial_extents->deg_quad_inc = P4EST_ALLOC(int, initial_extents->number_of_regions);
   initial_extents->load_from_checkpoint = 0;
   initial_extents->checkpoint_prefix = NULL;
+  initial_extents->checkpoint_number = -1;
+  initial_extents->initial_checkpoint_number = -1;
+  initial_extents->checkpoint_type = D4EST_CHKPT_NOT_SET;
   initial_extents->volume_h_type = VOL_H_EQ_NOT_SET;
   initial_extents->face_h_type = FACE_H_EQ_NOT_SET;
   
@@ -214,10 +266,14 @@ d4est_mesh_initial_extents_parse
     for (int i = 0; i < initial_extents->number_of_regions; i++){
       D4EST_CHECK_INPUT("initial_mesh", initial_extents->deg[i], -1);
     }
-    
   }
   else {
     D4EST_CHECK_INPUT("initial_mesh", initial_extents->checkpoint_prefix, NULL);
+    D4EST_CHECK_INPUT("initial_mesh", initial_extents->checkpoint_type, D4EST_CHKPT_NOT_SET);
+    if (initial_extents->checkpoint_type == D4EST_CHKPT_HISTORY_H5){
+      D4EST_CHECK_INPUT("initial_mesh", initial_extents->checkpoint_number, -1);
+      D4EST_CHECK_INPUT("initial_mesh", initial_extents->initial_checkpoint_number, -1);
+    }
   }
 
   D4EST_CHECK_INPUT("mesh_parameters", initial_extents->volume_h_type, VOL_H_EQ_NOT_SET);

@@ -61,6 +61,8 @@ int main(int argc, char *argv[])
   d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] : "options.input", d4est_geom);
 
   p4est_t* p4est;
+  d4est_operators_t* d4est_ops = d4est_ops_init(initial_grid_input->max_degree);
+  
   if (initial_grid_input->load_from_checkpoint == 0){
     
     p4est = p4est_new_ext
@@ -78,8 +80,13 @@ int main(int argc, char *argv[])
     p4est_partition(p4est, 1, NULL);
     p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
   }
-  else {
-    p4est = d4est_checkpoint_load_mesh
+
+  else if (initial_grid_input->load_from_checkpoint == 1 &&
+           initial_grid_input->checkpoint_type == D4EST_CHKPT_P4EST_H5){
+
+    D4EST_ABORT("This type of checkpoint may not work anymore, so we abort");
+    
+    p4est = d4est_checkpoint_load_p4est_from_file
             (
              mpicomm,
              initial_grid_input->checkpoint_prefix,
@@ -95,16 +102,71 @@ int main(int argc, char *argv[])
                     );
     
     initial_grid_input->checkpoint_deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
-    d4est_h5_read_dataset(p4est->mpirank, initial_grid_input->checkpoint_prefix, "degree", H5T_NATIVE_INT, initial_grid_input->checkpoint_deg_array);
-
+    d4est_h5_read_dataset(
+                          p4est->mpirank,
+                          initial_grid_input->checkpoint_prefix,
+                          "degree",
+                          H5T_NATIVE_INT,
+                          initial_grid_input->checkpoint_deg_array
+                         );
     zlog_info(c_default, "Successfully read checkpoint degrees");
   }
+  else if (initial_grid_input->load_from_checkpoint == 1 &&
+           initial_grid_input->checkpoint_type == D4EST_CHKPT_HISTORY_H5){
+    
+    p4est = p4est_new_ext
+            (
+             mpicomm,
+             d4est_geom->p4est_conn,
+             initial_grid_input->min_quadrants,
+             initial_grid_input->min_level,
+             initial_grid_input->fill_uniform,
+             sizeof(d4est_element_data_t),
+             NULL,
+             NULL
+            );
+    
+    p4est_partition(p4est, 1, NULL);
+    p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
 
+    printf("initial_checkpoint_number = %d\n",initial_grid_input->initial_checkpoint_number);
+    printf("checkpoint_number = %d\n",initial_grid_input->checkpoint_number);
+
+    /* we need to zero this out for the initial update because 
+     * d4est_mesh_set_initial_extents needs to use the load_from_checkpoint == 0 branch
+     * in order to set up the initial grid */
+    d4est_mesh_update
+      (
+       p4est,
+       NULL,
+       d4est_ops,
+       d4est_geom,
+       NULL,
+       NULL,
+       initial_grid_input,
+       DO_NOT_INITIALIZE_GHOST,
+       DO_NOT_INITIALIZE_QUADRATURE_DATA,
+       DO_NOT_INITIALIZE_GEOMETRY_DATA,
+       DO_NOT_INITIALIZE_GEOMETRY_ALIASES,
+       d4est_mesh_set_initial_extents_using_input_file_regions,
+       (void*)initial_grid_input
+      );
+    
+    d4est_checkpoint_load_mesh_from_amr_history
+      (
+       mpicomm,
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       initial_grid_input
+      );   
+    
+  }
+  else {
+    zlog_error(c_default, "Checkpoint parameters not set or something eles is wrong");
+    D4EST_ABORT("");
+  }
   
-  /* p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE); */
-  /* d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t, */
-                                                   /* ghost->ghosts.elem_count); */
-   
   d4est_ghost_t* d4est_ghost = NULL;
 
   if (proc_rank == 0 && initial_grid_input->load_from_checkpoint == 0){
@@ -118,7 +180,7 @@ int main(int argc, char *argv[])
   sc_MPI_Barrier(mpicomm);
   
   /* start just-in-time dg-math */
-  d4est_operators_t* d4est_ops = d4est_ops_init(initial_grid_input->max_degree);
+
   if(proc_rank == 0)
     zlog_debug(c_default, "max_degree = %d", initial_grid_input->max_degree);
   d4est_mesh_data_t* d4est_factors = d4est_mesh_data_init(p4est);

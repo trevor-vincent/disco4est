@@ -24,6 +24,9 @@ typedef struct {
   int percentile;
   int inflation_size;
   double initial_pred;
+  int load_from_checkpoint;
+  char* checkpoint_prefix;
+  int checkpoint_number;
   
 } d4est_amr_smooth_pred_params_t;
 

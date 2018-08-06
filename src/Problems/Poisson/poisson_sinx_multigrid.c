@@ -302,8 +302,6 @@ problem_init
 
       d4est_amr_step(
         p4est,
-        NULL,
-        NULL,
         d4est_ops,
         d4est_amr,
         &prob_vecs.u,

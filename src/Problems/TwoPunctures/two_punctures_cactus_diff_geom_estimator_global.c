@@ -366,7 +366,14 @@ problem_init
       );
   }
   else {
-    d4est_h5_read_dataset(p4est->mpirank,initial_extents->checkpoint_prefix,"u",H5T_NATIVE_DOUBLE, prob_vecs.u);
+    d4est_checkpoint_read_dataset(p4est,
+                                  initial_extents->checkpoint_prefix,
+                                  "u",
+                                  H5T_NATIVE_DOUBLE,
+                                  prob_vecs.u,
+                                  initial_extents->checkpoint_number);
+                                  
+     /* d4est_h5_read_dataset(p4est->mpirank,initial_extents->checkpoint_prefix,"u",H5T_NATIVE_DOUBLE, prob_vecs.u); */
   }
   
   
@@ -604,8 +611,6 @@ problem_init
       d4est_amr_step
         (
          p4est,
-         NULL,
-         NULL,
          d4est_ops,
          d4est_amr,
          &prob_vecs.u,
@@ -707,7 +712,7 @@ problem_init
     if (!init_params.do_not_solve){
 
       newton_petsc_params_t newton_params;
-      newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_params);
+      newton_petsc_input(p4est, input_file, &newton_params);
 
       krylov_petsc_params_t krylov_params;
 
@@ -832,9 +837,12 @@ problem_init
        level,
        "checkpoint",
        p4est,
+       d4est_amr,
        d4est_factors,
        (const char * []){"u", NULL},
-       (double* []){prob_vecs.u}
+       (double* []){prob_vecs.u},
+       (const char * []){"predictor", NULL},
+       (double* []){smooth_pred_data->predictor,NULL}
       );
 
 

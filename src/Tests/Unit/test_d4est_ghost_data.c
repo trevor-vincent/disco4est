@@ -92,37 +92,18 @@ int main(int argc, char *argv[])
   d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      "test_d4est_ghost_data.input", d4est_geom);
 
   p4est_t* p4est;
-  if (initial_grid_input->load_from_checkpoint == 0){
-    p4est = p4est_new_ext
-    (
-     mpicomm,
-     d4est_geom->p4est_conn,
-     initial_grid_input->min_quadrants,
-     initial_grid_input->min_level,
-     initial_grid_input->fill_uniform,
-     sizeof(d4est_element_data_t),
-     NULL,
-     NULL
-    );
-  }
-  else {
-    p4est = d4est_checkpoint_load_mesh
-            (
-             mpicomm,
-             initial_grid_input->checkpoint_prefix,
-             &d4est_geom->p4est_conn
-            );
+  p4est = p4est_new_ext
+          (
+           mpicomm,
+           d4est_geom->p4est_conn,
+           initial_grid_input->min_quadrants,
+           initial_grid_input->min_level,
+           initial_grid_input->fill_uniform,
+           sizeof(d4est_element_data_t),
+           NULL,
+           NULL
+          );
 
-
-    p4est_reset_data(p4est,
-                     sizeof(d4est_element_data_t),
-                     NULL,
-                     NULL
-                    );
-    
-    initial_grid_input->checkpoint_deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
-    d4est_h5_read_dataset(p4est->mpirank, initial_grid_input->checkpoint_prefix, "degree", H5T_NATIVE_INT, initial_grid_input->checkpoint_deg_array);
-  }
 
   p4est_partition(p4est, 1, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
@@ -181,8 +162,6 @@ int main(int argc, char *argv[])
   d4est_amr_step
     (
      p4est,
-     NULL,
-     NULL,
      d4est_ops,
      d4est_amr_random,
      NULL,

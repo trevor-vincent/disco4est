@@ -162,7 +162,7 @@ d4est_amr_mark_elements
 
   d4est_amr->initial_log = D4EST_REALLOC
                      (
-                      d4est_amr->initial_log,
+                      d4est_amr->initial_log,  
                       int,
                       d4est_amr->initial_log_size
                      );
@@ -171,7 +171,7 @@ d4est_amr_mark_elements
                         (
                          d4est_amr->refinement_log,
                          int,
-                         d4est_amr->initial_log_size
+                         p4est->local_num_quadrants
                         );
 
   p4est_iterate(p4est,
@@ -421,6 +421,8 @@ d4est_amr_input
   }
 }
 
+
+
 d4est_amr_t*
 d4est_amr_init
 (
@@ -437,7 +439,7 @@ d4est_amr_init
   d4est_amr->balance_log = NULL;
   d4est_amr->refinement_log = NULL;
   d4est_amr->initial_log = NULL;
-  
+
   d4est_amr_input(input_file, d4est_amr);
   
   if (scheme->amr_scheme_type == AMR_SMOOTH_PRED) {
@@ -587,8 +589,6 @@ void
 d4est_amr_step
 (
  p4est_t* p4est,
- d4est_ghost_t** d4est_ghost,
- d4est_ghost_data_t** d4est_ghost_data,
  d4est_operators_t* d4est_ops,
  d4est_amr_t* d4est_amr,
  double** field,
@@ -598,7 +598,8 @@ d4est_amr_step
 {
   zlog_category_t *c_default = zlog_get_category("d4est_amr");
 
-  d4est_amr->max_degree = d4est_ops->max_degree;
+  if (d4est_ops != NULL)
+    d4est_amr->max_degree = d4est_ops->max_degree;
   d4est_amr->d4est_estimator_stats = stats;
   d4est_amr->d4est_estimator = d4est_estimator;
   
@@ -612,7 +613,7 @@ d4est_amr_step
     zlog_info(c_default, "Starting to mark elements");
 
   d4est_amr_mark_elements(p4est);
-
+  
   if (p4est->mpirank == 0)
     zlog_info(c_default, "Starting to refine elements");
 
@@ -639,7 +640,8 @@ d4est_amr_step
   
   p4est->user_pointer = backup;
 
-
+  if (p4est->mpirank == 0)
+    zlog_info(c_default, "New grid has %d elements", p4est->local_num_quadrants);
   /* d4est_ghost_destroy(*d4est_ghost); */
   /* *d4est_ghost = NULL; */
 
@@ -659,9 +661,11 @@ d4est_amr_destroy
  d4est_amr_t* d4est_amr
 )
 {
+  
   D4EST_FREE(d4est_amr->balance_log);
   D4EST_FREE(d4est_amr->refinement_log);
   D4EST_FREE(d4est_amr->initial_log);
-  d4est_amr->scheme->destroy(d4est_amr->scheme);
+  if (d4est_amr->scheme->destroy != NULL)
+    d4est_amr->scheme->destroy(d4est_amr->scheme);
   D4EST_FREE(d4est_amr);
 }

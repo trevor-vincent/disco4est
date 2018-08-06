@@ -1,0 +1,6 @@
+#ifndef D4EST_CHECKPOINT_TYPE_H
+#define D4EST_CHECKPOINT_TYPE_H 
+
+typedef enum {D4EST_CHKPT_HISTORY_H5, D4EST_CHKPT_P4EST_H5, D4EST_CHKPT_NOT_SET} d4est_checkpoint_type_t;
+
+#endif

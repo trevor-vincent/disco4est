@@ -657,13 +657,15 @@ void two_punctures_pc_setup_fcn
  d4est_krylov_pc_t* d4est_krylov_pc
 )
 {
+
+  zlog_category_t* c_default = zlog_get_category("two_punctures_pc_setup_fcn");
   d4est_krylov_pc_multigrid_data_t* d4est_krylov_pcmgdata = d4est_krylov_pc->pc_data;
   d4est_solver_multigrid_data_t* mg_data = d4est_krylov_pcmgdata->mg_data;
   krylov_ctx_t* ctx = d4est_krylov_pc->pc_ctx;
 
   if (ctx->p4est->mpirank == 0)
-    printf("[KRYLOV_PC_D4EST_SOLVER_MULTIGRID_SETUP_FCN] Initializing Matrix Operator\n");
-  
+    zlog_info(c_default, "Initializing Matrix Operator");
+
   d4est_solver_multigrid_matrix_setup_fofufofvlilj_operator
       (
        ctx->p4est,

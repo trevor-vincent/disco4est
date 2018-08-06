@@ -283,8 +283,6 @@ problem_init
 
       d4est_amr_step(
         p4est,
-        NULL,/* d4est_ghost, */
-        NULL,/* &d4est_ghost_data, */
         d4est_ops,
         d4est_amr,
         &prob_vecs.u,

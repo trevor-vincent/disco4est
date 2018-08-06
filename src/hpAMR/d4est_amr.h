@@ -76,7 +76,7 @@ typedef struct {
 
 /* This file was automatically generated.  Do not edit! */
 void d4est_amr_destroy(d4est_amr_t *d4est_amr);
-void d4est_amr_step(p4est_t *p4est,d4est_ghost_t **d4est_ghost,d4est_ghost_data_t **d4est_ghost_data,d4est_operators_t *d4est_ops,d4est_amr_t *d4est_amr,double **field,double *d4est_estimator,d4est_estimator_stats_t *stats);
+void d4est_amr_step(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_amr_t *d4est_amr,double **field,double *d4est_estimator,d4est_estimator_stats_t *stats);
 d4est_amr_t *d4est_amr_custom_init(p4est_t *p4est,int num_of_amr_steps,void(*d4est_amr_custom_mark_elements)(p4est_iter_volume_info_t *,void *),void *user);
 d4est_amr_t *d4est_amr_init_random_hp(p4est_t *p4est,int num_of_amr_steps);
 d4est_amr_t *d4est_amr_init_uniform_p(p4est_t *p4est,int num_of_amr_steps);

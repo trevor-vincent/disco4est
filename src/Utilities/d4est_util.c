@@ -31,7 +31,13 @@ d4est_util_secant_fcn(double x){
   return 1./cos(x);
 }
 
-
+/** 
+ * Add current working directory before dir
+ * 
+ * @param dir 
+ * 
+ * @return 
+ */
 char* d4est_util_add_cwd(const char* dir)
 {
   char* full_dir;

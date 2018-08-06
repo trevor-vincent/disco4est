@@ -32,6 +32,7 @@ inflation_size = 128
 percentile = 5
 amr_level_for_uniform_p = 4
 use_puncture_finder = 1
+initial_pred = 10000
 
 [flux]
 name = sipg
@@ -59,15 +60,6 @@ compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
-[d4est_vtk_geometry]
-name = cubed_sphere
-R0 = 10
-R1 = 20
-R2 = 1000
-compactify_outer_shell = 1
-compactify_inner_shell = 0
-DX_compute_method = analytic
-JAC_compute_method = numerical
 
 [d4est_solver_newton]
 atol = 1e-15
@@ -93,7 +85,7 @@ monitor = 1
 
 [d4est_vtk]
 filename = two_punctures
-geometry_section = d4est_vtk_geometry
+geometry_section = geometry
 output_type = ascii
 grid_type = dg
 write_tree = 1
@@ -101,6 +93,43 @@ write_level = 1
 write_rank = 1
 wrap_rank = 0
 write_deg = 1
+
+
+[d4est_vtk_compactified]
+filename = two_punctures_compactified
+geometry_section = compactified_geometry
+output_type = ascii
+grid_type = dg
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
+[d4est_vtk_compactified_corner]
+filename = two_punctures_compactified_corner
+geometry_section = compactified_geometry
+output_type = ascii
+grid_type = corner
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
+
+
+[d4est_vtk_corner]
+filename = two_punctures_corner
+geometry_section = geometry
+output_type = ascii
+grid_type = corner
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
 
 
 [quadrature]
@@ -147,7 +176,7 @@ vcycle_rtol = 1e-9;
 vcycle_atol = 0.;
 smoother_name = mg_smoother_cheby
 bottom_solver_name = mg_bottom_solver_cheby
-use_analyzer = 1
+use_analyzer = 0
 
 [mg_bottom_solver_cg]
 bottom_iter = 100;

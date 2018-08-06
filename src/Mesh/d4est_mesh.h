@@ -8,6 +8,7 @@
 #include <d4est_quadrature.h>
 #include <d4est_ghost.h>
 #include <d4est_ghost_data.h>
+#include <d4est_checkpoint_type.h>
 
 
 typedef enum {INITIALIZE_GHOST, DO_NOT_INITIALIZE_GHOST} d4est_mesh_ghost_init_option_t;
@@ -138,7 +139,10 @@ typedef struct {
   int load_from_checkpoint;
   int* checkpoint_deg_array;
   char* checkpoint_prefix;
-
+  int checkpoint_number;
+  int initial_checkpoint_number;
+  d4est_checkpoint_type_t checkpoint_type;
+  
   d4est_mesh_volume_h_t volume_h_type;
   d4est_mesh_face_h_t face_h_type;
   
@@ -193,6 +197,7 @@ d4est_mesh_initial_extents_t *d4est_mesh_initial_extents_parse(const char *input
 void d4est_mesh_initial_extents_destroy(d4est_mesh_initial_extents_t *initial_extents);
 void d4est_mesh_set_quadratures_after_amr(d4est_element_data_t *elem_data,void *user_ctx);
 void d4est_mesh_set_initial_extents(d4est_element_data_t *elem_data,void *user_ctx);
+void d4est_mesh_set_initial_extents_using_input_file_regions(d4est_element_data_t *elem_data,void *user_ctx);
 
 #endif
 

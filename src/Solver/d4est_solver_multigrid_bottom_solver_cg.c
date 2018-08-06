@@ -199,6 +199,7 @@ d4est_solver_multigrid_bottom_solver_cg_init
  const char* input_file
 )
 {
+  zlog_category_t* c_default = zlog_get_category("d4est_solver_multigrid_bottom_solver_cg");
   d4est_solver_multigrid_bottom_solver_t* bottom_solver = P4EST_ALLOC(d4est_solver_multigrid_bottom_solver_t, 1);
   d4est_solver_multigrid_bottom_solver_cg_t* bottom_data = P4EST_ALLOC(d4est_solver_multigrid_bottom_solver_cg_t, 1);
   
@@ -216,12 +217,11 @@ d4est_solver_multigrid_bottom_solver_cg_init
   D4EST_CHECK_INPUT("mg_bottom_solver_cg", bottom_data->bottom_imax, -1);
   D4EST_CHECK_INPUT("mg_bottom_solver_cg", bottom_data->bottom_print_residual_norm, -1);
   
-  if(p4est->mpirank == 0){
-    printf("[D4EST_INFO]: d4est_bottom_solver_cg parameters\n");
-    printf("[D4EST_INFO]: bottom imax = %d\n", bottom_data->bottom_imax);
-    printf("[D4EST_INFO]: bottom rtol = %.25f\n", bottom_data->bottom_rtol);
-    printf("[D4EST_INFO]: bottom atol = %.25f\n", bottom_data->bottom_atol);
-    printf("[D4EST_INFO]: bottom atol = %d\n", bottom_data->bottom_print_residual_norm);
+  if(p4est->mpirank == 0){    
+    zlog_info(c_default,"bottom imax = %d", bottom_data->bottom_imax);
+    zlog_info(c_default,"bottom rtol = %.25f", bottom_data->bottom_rtol);
+    zlog_info(c_default,"bottom atol = %.25f", bottom_data->bottom_atol);
+    zlog_info(c_default,"bottom atol = %d", bottom_data->bottom_print_residual_norm);
   }
 
   bottom_solver->user = bottom_data;

@@ -23,47 +23,47 @@ typedef struct {
 } corner_data_t;
 
 
-static void
-iter_edge_callback
-(
- p8est_iter_edge_info_t* info,
- void* user_data
-)
-{
-  int good_edge = -1;
-  p4est_t* p4est = info->p4est;
-  corner_data_t* edge_data = user_data;
+/* static void */
+/* iter_edge_callback */
+/* ( */
+/*  p8est_iter_edge_info_t* info, */
+/*  void* user_data */
+/* ) */
+/* { */
+/*   int good_edge = -1; */
+/*   p4est_t* p4est = info->p4est; */
+/*   corner_data_t* edge_data = user_data; */
 
-  for (int side = 0; side < info->sides.elem_count; side++){
-    p8est_iter_edge_side_t* edge_side
-      = sc_array_index(&info->sides,
-                       side);
-    d4est_element_data_t* ed = edge_side->quad->p.user_data;
-    printf("element id = %d, edge = %d, side = %d\n", ed->id, edge_side->edge, side);
+/*   for (int side = 0; side < info->sides.elem_count; side++){ */
+/*     p8est_iter_edge_side_t* edge_side */
+/*       = sc_array_index(&info->sides, */
+/*                        side); */
+/*     d4est_element_data_t* ed = edge_side->quad->p.user_data; */
+/*     printf("element id = %d, edge = %d, side = %d\n", ed->id, edge_side->edge, side); */
 
-    if (ed->id == edge_data->element &&
-        p4est->mpirank == edge_data->process &&
-        edge_side->edge == edge_data->edge){
+/*     if (ed->id == edge_data->element && */
+/*         p4est->mpirank == edge_data->process && */
+/*         edge_side->edge == edge_data->edge){ */
 
-      good_edge = side;
-      break;
-    }
-  }
+/*       good_edge = side; */
+/*       break; */
+/*     } */
+/*   } */
 
-  for (int side = 0; side < info->sides.elem_count; side++){
-    p8est_iter_edge_side_t* edge_side
-      = sc_array_index(&info->sides,
-                       side);
-    d4est_element_data_t* ed
-      = edge_side->quad->p.user_data;
+/*   for (int side = 0; side < info->sides.elem_count; side++){ */
+/*     p8est_iter_edge_side_t* edge_side */
+/*       = sc_array_index(&info->sides, */
+/*                        side); */
+/*     d4est_element_data_t* ed */
+/*       = edge_side->quad->p.user_data; */
 
-    if (side != good_edge && good_edge >= 0){
-      printf("edge = %d\n", edge_side->edge);
-      edge_data->is_edge[ed->id] = edge_side->edge;
-    }
-  }    
+/*     if (side != good_edge && good_edge >= 0){ */
+/*       printf("edge = %d\n", edge_side->edge); */
+/*       edge_data->is_edge[ed->id] = edge_side->edge; */
+/*     } */
+/*   }     */
 
-}
+/* } */
  
 
 static void

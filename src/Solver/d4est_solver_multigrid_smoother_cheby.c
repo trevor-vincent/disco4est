@@ -312,17 +312,15 @@ d4est_solver_multigrid_smoother_cheby_init
   
   
   if(p4est->mpirank == 0){
-
     zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid_smoother_cheby");
-    
-    zlog_info(c_default, " Smoother imax = %d", cheby_data->cheby_imax);
-    zlog_info(c_default, " Smoother eigs cg max = %d", cheby_data->cheby_eigs_cg_imax);
-    zlog_info(c_default, " Smoother eigs lmax_lmin_ratio = %f", cheby_data->cheby_eigs_lmax_lmin_ratio);
-    zlog_info(c_default, " Smoother eigs max multiplier = %.25f", cheby_data->cheby_eigs_max_multiplier);
-    zlog_info(c_default, " Smoother eigs reuse up vcycle = %d", cheby_data->cheby_eigs_reuse_fromdownvcycle);
-    zlog_info(c_default, " Smoother eigs reuse from last vcycle = %d", cheby_data->cheby_eigs_reuse_fromlastvcycle);
-    zlog_info(c_default, " Smoother print residual norm = %d", cheby_data->cheby_print_residual_norm);
-    zlog_info(c_default, " Smoother print eigs = %d", cheby_data->cheby_print_spectral_bound);
+    zlog_debug(c_default, " Smoother imax = %d", cheby_data->cheby_imax);
+    zlog_debug(c_default, " Smoother eigs cg max = %d", cheby_data->cheby_eigs_cg_imax);
+    zlog_debug(c_default, " Smoother eigs lmax_lmin_ratio = %f", cheby_data->cheby_eigs_lmax_lmin_ratio);
+    zlog_debug(c_default, " Smoother eigs max multiplier = %.25f", cheby_data->cheby_eigs_max_multiplier);
+    zlog_debug(c_default, " Smoother eigs reuse up vcycle = %d", cheby_data->cheby_eigs_reuse_fromdownvcycle);
+    zlog_debug(c_default, " Smoother eigs reuse from last vcycle = %d", cheby_data->cheby_eigs_reuse_fromlastvcycle);
+    zlog_debug(c_default, " Smoother print residual norm = %d", cheby_data->cheby_print_residual_norm);
+    zlog_debug(c_default, " Smoother print eigs = %d", cheby_data->cheby_print_spectral_bound);
   }
 
   smoother->user = cheby_data;

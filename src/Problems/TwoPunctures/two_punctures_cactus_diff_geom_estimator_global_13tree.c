@@ -352,6 +352,7 @@ problem_init
      &amr_marker
     );
 
+  int initial_level = 0;
   if (initial_extents->checkpoint_prefix == NULL){
     d4est_mesh_init_field
       (
@@ -366,7 +367,31 @@ problem_init
       );
   }
   else {
-    d4est_h5_read_dataset(p4est->mpirank,initial_extents->checkpoint_prefix,"u",H5T_NATIVE_DOUBLE, prob_vecs.u);
+
+
+    d4est_checkpoint_read_dataset
+      (
+       p4est,
+       initial_extents->checkpoint_prefix,
+       "u",
+       H5T_NATIVE_DOUBLE,
+       prob_vecs.u,
+       initial_extents->checkpoint_number
+      );
+
+
+    double sum = d4est_util_sum_array_dbl(prob_vecs.u, prob_vecs.local_nodes);
+
+    d4est_checkpoint_check_dataset(p4est,
+                           initial_extents->checkpoint_prefix,
+                           "u",
+                           H5T_NATIVE_DOUBLE,
+                           (void*)&sum,
+                           initial_extents->checkpoint_number
+                          );
+
+    initial_level = initial_extents->checkpoint_number + 1;
+/* d4est_h5_read_dataset(p4est->mpirank,initial_extents->checkpoint_prefix,"u",H5T_NATIVE_DOUBLE, prob_vecs.u); */
   }
   
   
@@ -429,7 +454,7 @@ problem_init
 
   d4est_norms_linear_fit_t* l2_linear_fit = d4est_norms_linear_fit_init();
   
-  for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
+  for (int level = initial_level; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
     d4est_field_type_t field_type = VOLUME_NODAL;
     d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
@@ -549,6 +574,48 @@ problem_init
          (double* []){estimator,error_l2},
          level
         );
+
+      d4est_vtk_save
+        (
+         p4est,
+         d4est_ops,
+         input_file,
+         "d4est_vtk_compactified",
+         (const char * []){"u","u_prev","error", NULL},
+         (double* []){prob_vecs.u, u_prev, error},
+         (const char * []){"estimator","error_l2",NULL},
+         (double* []){estimator,error_l2},
+         level
+        );
+
+
+
+      d4est_vtk_save
+        (
+         p4est,
+         d4est_ops,
+         input_file,
+         "d4est_vtk_compactified_corner",
+         (const char * []){"u","u_prev","error", NULL},
+         (double* []){prob_vecs.u, u_prev, error},
+         (const char * []){"estimator","error_l2",NULL},
+         (double* []){estimator,error_l2},
+         level
+        );
+      
+      d4est_vtk_save
+        (
+         p4est,
+         d4est_ops,
+         input_file,
+         "d4est_vtk_corner",
+         (const char * []){"u","u_prev","error", NULL},
+         (double* []){prob_vecs.u, u_prev, error},
+         (const char * []){"estimator","error_l2",NULL},
+         (double* []){estimator,error_l2},
+         level
+        );    
+      
     }
 
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
@@ -579,33 +646,11 @@ problem_init
     if (level != d4est_amr->num_of_amr_steps && level != 0){
 
       if (p4est->mpirank == 0)
-        printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level+1);
-
-      /*     d4est_amr_t* d4est_amr_normal = NULL; */
-      /*     d4est_amr_t* d4est_amr_p_refine = NULL; */
-      /*     if (init_params.use_puncture_finder == 1){ */
-      /*       d4est_amr_normal = d4est_amr_use_puncture_finder; */
-      /*       d4est_amr_p_refine = d4est_amr_p_refine_only_in_center_cube; */
-      /*     } */
-      /*     else if (init_params.use_puncture_finder == 2){ */
-      /*       d4est_amr_normal = d4est_amr_use_puncture_finder_and_prefine_outside_cube ; */
-      /*       d4est_amr_p_refine = d4est_amr_p_refine_everywhere; */
-      /*     } */
-      /*     else if (init_params.use_puncture_finder == 3){ */
-      /*       d4est_amr_normal = d4est_amr_use_puncture_finder; */
-      /*       d4est_amr_p_refine = d4est_amr_p_refine_everywhere; */
-      /*     } */
-      /*     else { */
-      /*       d4est_amr_normal = d4est_amr; */
-      /*       d4est_amr_p_refine = d4est_amr_p_refine_only_in_center_cube; */
-      /*     } */
-      
+        printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level);
 
       d4est_amr_step
         (
          p4est,
-         NULL,
-         NULL,
          d4est_ops,
          d4est_amr,
          &prob_vecs.u,
@@ -696,7 +741,7 @@ problem_init
     if (!init_params.do_not_solve){
 
       newton_petsc_params_t newton_params;
-      newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_params);
+      newton_petsc_input(p4est, input_file, &newton_params);
 
       krylov_petsc_params_t krylov_params;
 
@@ -819,32 +864,33 @@ problem_init
       DEBUG_PRINT_4ARR_DBL(dof, point100, point100_diff, point100_spec_diff,iterations+1);
     }
     iterations++;
-    
-    d4est_checkpoint_save
-      (
-       level,
-       "checkpoint",
-       p4est,
-       d4est_factors,
-       (const char * []){"u", NULL},
-       (double* []){prob_vecs.u}
-      );
 
+    if (level != d4est_amr->num_of_amr_steps && level != 0){
+      d4est_checkpoint_save
+        (
+         level,
+         "checkpoint",
+         p4est,
+         d4est_amr,
+         d4est_factors,
+         (const char * []){"u", NULL},
+         (double* []){prob_vecs.u, NULL},
+         (const char * []){"predictor", NULL},
+         (double* []){smooth_pred_data->predictor, NULL}
+        );
+    }
 
-      d4est_krylov_pc_multigrid_destroy(pc);
-      d4est_solver_multigrid_data_destroy(mg_data);
-      d4est_solver_multigrid_matrix_operator_destroy(user_callbacks);
+    d4est_krylov_pc_multigrid_destroy(pc);
+    d4est_solver_multigrid_data_destroy(mg_data);
+    d4est_solver_multigrid_matrix_operator_destroy(user_callbacks);
    
-      P4EST_FREE(error_l2);
-      P4EST_FREE(estimator);
-
+    P4EST_FREE(error_l2);
+    P4EST_FREE(estimator);
 
     if (d4est_ghost_data != NULL){
       d4est_ghost_data_destroy(d4est_ghost_data);
       d4est_ghost_data = NULL;
     } 
-
-      
   }
   
   printf("[D4EST_INFO]: Starting garbage collection...\n");

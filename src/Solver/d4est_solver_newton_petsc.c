@@ -83,7 +83,6 @@ newton_petsc_input
 (
  p4est_t* p4est,
  const char* input_file,
- const char* printf_prefix,
  newton_petsc_params_t* input
 )
 {
@@ -123,22 +122,23 @@ newton_petsc_input
   D4EST_CHECK_INPUT("newton_petsc", input->snes_view, -1);
   D4EST_CHECK_INPUT("newton_petsc", input->snes_monitor, -1);
 
+  zlog_category_t* c_default = zlog_get_category("d4est_solver_newton_petsc");
   if(p4est->mpirank == 0){
-    printf("%s: snes_type = %s\n",printf_prefix, input->snes_type);
-    printf("%s: snes_view = %d\n",printf_prefix, input->snes_view);
-    printf("%s: snes_monitor = %d\n",printf_prefix, input->snes_monitor);
-    printf("%s: snes_atol = %s\n",printf_prefix, input->snes_atol);
-    printf("%s: snes_rtol = %s\n",printf_prefix, input->snes_rtol);
-    printf("%s: snes_stol = %s\n",printf_prefix, input->snes_stol);
-    printf("%s: snes_maxit = %s\n",printf_prefix, input->snes_max_it);
-    printf("%s: snes_maxfuncs = %s\n",printf_prefix, input->snes_max_funcs);
-    printf("%s: snes_ksp_ew = %d\n",printf_prefix, input->snes_ksp_ew);
+    zlog_debug(c_default, "snes_type = %s", input->snes_type);
+    zlog_debug(c_default, "snes_view = %d", input->snes_view);
+    zlog_debug(c_default, "snes_monitor = %d", input->snes_monitor);
+    zlog_debug(c_default, "snes_atol = %s", input->snes_atol);
+    zlog_debug(c_default, "snes_rtol = %s", input->snes_rtol);
+    zlog_debug(c_default, "snes_stol = %s", input->snes_stol);
+    zlog_debug(c_default, "snes_maxit = %s", input->snes_max_it);
+    zlog_debug(c_default, "snes_maxfuncs = %s", input->snes_max_funcs);
+    zlog_debug(c_default, "snes_ksp_ew = %d", input->snes_ksp_ew);
     if(d4est_util_match(input->snes_type,"newtonls")){
-      printf("%s: snes_linesearch_order = %s\n",printf_prefix, input->snes_max_funcs);
-      printf("%s: snes_linesearch_monitor = %d\n",printf_prefix, input->snes_linesearch_monitor);
+      zlog_debug(c_default, "snes_linesearch_order = %s", input->snes_max_funcs);
+      zlog_debug(c_default, "snes_linesearch_monitor = %d", input->snes_linesearch_monitor);
     }
     if(d4est_util_match(input->snes_type,"newtontr")){
-      printf("%s: snes_trtol = %s\n",printf_prefix, input->snes_trtol);
+      zlog_debug(c_default, "snes_trtol = %s", input->snes_trtol);
     }
   } 
 }
@@ -347,6 +347,7 @@ newton_petsc_solve
  d4est_krylov_pc_t* d4est_krylov_pc
 )
 {
+  zlog_category_t* c_default = zlog_get_category("d4est_solver_newton_petsc");
   krylov_petsc_set_options_database_from_params(krylov_options);
   newton_petsc_set_options_database_from_params(newton_options);
   
@@ -423,11 +424,24 @@ newton_petsc_solve
 
   clock_t begin = clock();
 
+  
+  PetscReal res = 0.0;
+  SNESComputeFunction(snes, x, r);
+  VecNorm(r, NORM_2, &res);
+  if (p4est->mpirank == 0){
+    zlog_info(c_default, "Initial residual = %.25f", res);
+  }
+  
   SNESSolve(snes,NULL,x);
 
+  SNESComputeFunction(snes, x, r);
+  VecNorm(r, NORM_2, &res);
+  if (p4est->mpirank == 0){
+    zlog_info(c_default, "Final residual = %.25f", res);
+  }
+  
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-
 
   newton_petsc_info_t info;
   SNESGetIterationNumber(snes,&info.total_newton_iterations);
@@ -435,13 +449,25 @@ newton_petsc_solve
   SNESGetFunctionNorm(snes, &info.residual_norm);
     
   if (p4est->mpirank == 0){
-    printf("[NEWTON_PETSC]: Finished in %f seconds\n", time_spent); 
+    zlog_info(c_default, "Finished in %f seconds", time_spent);
   }
-    
+
   P4EST_FREE(u0);
   VecResetArray(x);
   VecDestroy(&x);//CHKERRQ(ierr);  
   VecDestroy(&r);//CHKERRQ(ierr);
+
+
+  /* Check Jacobian */
+  
+  /* Vec sol; */
+  /* double* sol_dbl; */
+  /* SNESGetSolution(snes,&sol); */
+  /* VecGetArray(sol, &sol_dbl); */
+  /* for (int i = 0; i < vecs->local_nodes; i++){ */
+    /* vecs->u[i] = sol_dbl[i]; */
+  /* } */
+  
   SNESDestroy(&snes);//CHKERRQ(ierr);
 
   return info;
