@@ -211,7 +211,7 @@ problem_init
     );
 
   d4est_amr_t* d4est_amr_uniform_p = d4est_amr_init_uniform_p(p4est,d4est_amr->num_of_amr_steps);
-  
+  int initial_level = 0;
   if (initial_extents->checkpoint_prefix == NULL){
     d4est_mesh_init_field
       (
@@ -226,7 +226,29 @@ problem_init
       );
   }
   else {
-    d4est_h5_read_dataset(p4est->mpirank,initial_extents->checkpoint_prefix,"u",H5T_NATIVE_DOUBLE, prob_vecs.u);
+
+    d4est_checkpoint_read_dataset
+      (
+       p4est,
+       initial_extents->checkpoint_prefix,
+       "u",
+       H5T_NATIVE_DOUBLE,
+       prob_vecs.u,
+       initial_extents->checkpoint_number
+      );
+
+
+    double sum = d4est_util_sum_array_dbl(prob_vecs.u, prob_vecs.local_nodes);
+
+    d4est_checkpoint_check_dataset(p4est,
+                           initial_extents->checkpoint_prefix,
+                           "u",
+                           H5T_NATIVE_DOUBLE,
+                           (void*)&sum,
+                           initial_extents->checkpoint_number
+                          );
+
+    initial_level = initial_extents->checkpoint_number + 1;
   }
 
   
@@ -268,7 +290,7 @@ problem_init
     zlog_info(c_default, "Initialization complete. Starting procedure with %d AMR steps.", d4est_amr->num_of_amr_steps);
   }
 
-  for (int level = 0; level < d4est_amr->num_of_amr_steps + 2; level++) {
+  for (int level = initial_level; level < d4est_amr->num_of_amr_steps + 2; ++level){
 
     d4est_field_type_t field_type = VOLUME_NODAL;
     d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
@@ -383,7 +405,7 @@ problem_init
     }
 
     // Perform the next AMR step
-    if (level > 0) {
+    if (level != 0){
 
       if (p4est->mpirank == 0)
         zlog_info(c_default, "Performing AMR level %d of %d...", level, d4est_amr->num_of_amr_steps);
@@ -541,18 +563,19 @@ problem_init
     }
     
     // Save checkpoint
+    if (level != 0){
     d4est_checkpoint_save(
       level,
       "checkpoint",
       p4est,
       d4est_amr,
       d4est_factors,
-      (const char * []){"u", NULL},
-      (double* []){prob_vecs.u},
-      (const char * []){"predictor", NULL},
-      (double* []){smooth_pred_data->predictor}
+      (const char * []){"u", "predictor", "multigrid_h_levels", NULL},
+      (hid_t []){H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_INT},
+      (int []){prob_vecs.local_nodes, p4est->local_num_quadrants, 1},
+      (void* []){prob_vecs.u, smooth_pred_data->predictor, &mg_data->num_of_levels}
     );
-
+    }
     zlog_info(c_default, "Saved checkpoint %d for process %d.", level, p4est->mpirank);
 
     d4est_krylov_pc_multigrid_destroy(pc);

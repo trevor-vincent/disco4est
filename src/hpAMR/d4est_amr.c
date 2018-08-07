@@ -29,12 +29,16 @@ d4est_amr_refine_callback
   
   /* h-refine */
   if (refinement_log[elem_data->id] < 0){
+    d4est_amr->has_there_been_h_refinements++;
     return 1;
   }
   /* p-refine, p-coarsen or do nothing */
   else {
     if (refinement_log[elem_data->id] > d4est_amr->max_degree){
       refinement_log[elem_data->id] = d4est_amr->max_degree;
+    }
+    if (refinement_log[elem_data->id] != elem_data->deg){
+      d4est_amr->has_there_been_p_refinements++;
     }
     elem_data->deg = refinement_log[elem_data->id];
     return 0;
@@ -605,7 +609,10 @@ d4est_amr_step
   
   void* backup = p4est->user_pointer;
   p4est->user_pointer = d4est_amr;
-    
+
+  d4est_amr->has_there_been_h_refinements = 0;
+  d4est_amr->has_there_been_p_refinements = 0;
+  
   if(d4est_amr->scheme->pre_refine_callback != NULL){
     d4est_amr->scheme->pre_refine_callback(p4est, d4est_amr);
   }

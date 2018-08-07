@@ -267,7 +267,7 @@ d4est_norms_write_headers
     while (norm_names[++i_norms] != NULL) {
       asprintf(&header, "%s %s",header, norm_names[i_norms]);
     }
-    zlog_info(c_norms_output, header);
+    zlog_info(c_norms_output, "%s", header);
     free(header);
   }
 }
@@ -417,7 +417,7 @@ d4est_norms_save
         );
       }
 
-       zlog_info(c_norms_output, output);
+      zlog_info(c_norms_output, "%s", output);
     }
     
   }

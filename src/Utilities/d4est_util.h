@@ -281,6 +281,7 @@ void d4est_util_print_matrix_int(int *mat,int n,int m,char message[],int print_r
 void d4est_util_print_matrix(double *restrict mat,int n,int m,char message[],int print_rank);
 void d4est_util_print_3d_matrix(double *restrict mat_3d,int n,int m,int l,char message[],int print_rank);
 void d4est_util_find_biggest_error(double *restrict a,double *restrict b,int N,double *biggest_err,int *biggest_id);
+int d4est_util_is_power_of(int number,int power_of);
 int d4est_util_compare_vecs(double *restrict a,double *restrict b,int N,double eps);
 int d4est_util_compare_double(double a,double b,double eps);
 int d4est_util_int_pow_int(int base,int exp);

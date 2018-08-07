@@ -1,9 +1,11 @@
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <d4est_databox.h>
 #include <d4est_element_data.h>
 #include <d4est_field.h>
 #include <d4est_util.h>
-#define _GNU_SOURCE
-#include <stdio.h>
 
 static
 int d4est_databox_free_fields_callback(const char *key, void *val, void *arg)

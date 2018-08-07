@@ -29,6 +29,7 @@ gamma_h = 10.0
 gamma_p = 0.1
 gamma_n = 1.
 sigma = .25
+initial_pred = 0
 
 [geometry]
 name = brick

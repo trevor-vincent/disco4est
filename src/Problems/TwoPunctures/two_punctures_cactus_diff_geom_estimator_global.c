@@ -832,18 +832,18 @@ problem_init
     }
     iterations++;
     
-    d4est_checkpoint_save
-      (
-       level,
-       "checkpoint",
-       p4est,
-       d4est_amr,
-       d4est_factors,
-       (const char * []){"u", NULL},
-       (double* []){prob_vecs.u},
-       (const char * []){"predictor", NULL},
-       (double* []){smooth_pred_data->predictor,NULL}
-      );
+    /* d4est_checkpoint_save */
+    /*   ( */
+    /*    level, */
+    /*    "checkpoint", */
+    /*    p4est, */
+    /*    d4est_amr, */
+    /*    d4est_factors, */
+    /*    (const char * []){"u", "predictor", "multigrid_h_levels", NULL}, */
+    /*    (hid_t []){H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_INT}, */
+    /*    (int []){prob_vecs.local_nodes, p4est->local_num_quadrants, 1}, */
+    /*    (void* []){prob_vecs.u, smooth_pred_data->predictor, &mg_data->num_of_levels} */
+    /*   ); */
 
 
       d4est_krylov_pc_multigrid_destroy(pc);

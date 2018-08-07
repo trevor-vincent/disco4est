@@ -210,6 +210,30 @@ d4est_util_compare_vecs(double * restrict  a, double * restrict b, int N, double
   return 1;
 }
 
+int /* will return power, with the example input below it would return 3, -1 if number is not a power of power_of */
+d4est_util_is_power_of
+(
+ int number, /* the number 8 for example  */
+ int power_of  /* the number 2 for example */
+)
+{
+  D4EST_ASSERT(power_of <= number || number == 1);
+  
+  int power = 0;
+  if (number == 0)
+    return -1;
+  while (number != 1)
+  {
+      if (number%power_of != 0)
+         return -1;
+      number = number/(power_of);
+      power++;
+  }
+  return power;
+}
+
+
+
 
 void
 d4est_util_find_biggest_error

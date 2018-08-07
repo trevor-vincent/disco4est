@@ -23,6 +23,7 @@ gamma_n = 1.
 inflation_size = 128
 percentile = 10
 amr_level_for_uniform_p = 8
+initial_pred = 0
 
 [flux]
 name = sipg

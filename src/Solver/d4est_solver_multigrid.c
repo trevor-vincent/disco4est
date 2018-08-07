@@ -51,6 +51,62 @@ d4est_solver_multigrid_get_p_coarsen_levels
   return global_max_degree - 1;
 }
 
+
+int
+d4est_solver_multigrid_get_h_coarsen_levels_post_initial
+(
+ p4est_t* p4est,
+ int num_of_levels_last,
+ int has_there_been_h_refinements
+)
+{
+  return num_of_levels_last + has_there_been_h_refinements;
+}
+
+
+int
+d4est_solver_multigrid_get_h_coarsen_levels_initial
+(
+ p4est_t* p4est,
+ d4est_mesh_initial_extents_t* initial_extents
+)
+{
+  zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid_get_h_coarsen_levels");
+  
+  int min_level = initial_extents->min_level;
+  int mpi_size = p4est->mpisize;
+  int num_trees = p4est->connectivity->num_trees;
+  int global_guess = num_trees*d4est_util_int_pow_int((P4EST_CHILDREN),min_level);
+
+  if (mpi_size == 1){
+    return min_level + 1;
+  }
+  
+  if (p4est->global_num_quadrants != global_guess){
+    zlog_error(c_default, "p4est->global_num_quadrants != global_guess");
+    zlog_error(c_default, "p4est->global_num_quadrants = %d", (int)p4est->global_num_quadrants);
+    zlog_error(c_default, "global_guess = %d", global_guess);
+    D4EST_ABORT("");
+  }
+  if (mpi_size % num_trees != 0){
+    zlog_error(c_default, "mpi_size = %d", mpi_size);
+    zlog_error(c_default, "num_trees = %d", num_trees);
+    zlog_error(c_default, "mpi_size mod num_trees != 0");
+    D4EST_ABORT("");
+  }  
+  if (((mpi_size/num_trees) % (P4EST_CHILDREN) != 0) && ((mpi_size/num_trees) != 1)){
+    zlog_error(c_default, "(mpi_size/num_trees) = %d", (mpi_size/num_trees));
+    zlog_error(c_default, "(P4EST_CHILDREN) = %d", (P4EST_CHILDREN));
+    zlog_error(c_default, "(mpi_size/num_trees) mod (P4EST_CHILDREN) != 0");
+  }
+  int power = d4est_util_is_power_of(mpi_size/num_trees, (P4EST_CHILDREN));
+
+  if (power == -1){
+    D4EST_ABORT("power == -1");    
+  }
+  return min_level - power + 1;
+}
+
 /** 
  * Calculates the min level and max level of the d4est_solver_multigrid
  * hiearchy across cores. I would not trust the minimum except
@@ -61,7 +117,7 @@ d4est_solver_multigrid_get_p_coarsen_levels
  * @param max_level 
  */
 int
-d4est_solver_multigrid_get_h_coarsen_levels
+d4est_solver_multigrid_get_h_coarsen_levels_old
 (
  p4est_t* p4est
 )
@@ -371,7 +427,7 @@ d4est_solver_multigrid_data_init
    d4est_solver_multigrid_data_t* mg_data = P4EST_ALLOC( d4est_solver_multigrid_data_t, 1);
 
   int d4est_solver_multigrid_min_level, d4est_solver_multigrid_max_level;
-  int num_of_h_coarsen_levels = d4est_solver_multigrid_get_h_coarsen_levels(p4est);  
+  int num_of_h_coarsen_levels = d4est_solver_multigrid_get_h_coarsen_levels_old(p4est);  
 
   D4EST_ASSERT(num_of_h_coarsen_levels >= 1);
   

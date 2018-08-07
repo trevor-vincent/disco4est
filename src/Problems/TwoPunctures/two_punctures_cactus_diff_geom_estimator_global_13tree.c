@@ -54,8 +54,6 @@ double solve_for_c
   return x - Rc;  
 }
 
-
-
 static
 double solve_for_c_outer
 (
@@ -96,7 +94,6 @@ get_inverted_outer_wedge_point(double R1, double R2, double Rc, int compactified
     D4EST_ABORT("get_inverted_outer_wedge_point not accepted yet");
   }
 }
-
 
 double
 get_inverted_inner_wedge_point(double R1, double R2, double Rc, int compactified){
@@ -143,6 +140,7 @@ typedef struct {
   int do_not_solve;
   int use_compactified_size_params;
   int use_error_l2_as_estimator;
+  int use_new_multigrid_level_guesser;
   int use_dirichlet;
   
 } two_punctures_init_params_t;
@@ -181,6 +179,10 @@ int two_punctures_init_params_handler
     D4EST_ASSERT(pconfig->use_error_l2_as_estimator == -1);
     pconfig->use_error_l2_as_estimator = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"problem",name,"use_new_multigrid_level_guesser")) {
+    D4EST_ASSERT(pconfig->use_new_multigrid_level_guesser == -1);
+    pconfig->use_new_multigrid_level_guesser = atoi(value);
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -200,6 +202,7 @@ two_punctures_init_params_input
   input.use_dirichlet = -1;
   input.use_compactified_size_params = -1;
   input.use_error_l2_as_estimator = -1;
+  input.use_new_multigrid_level_guesser = -1;
 
   if (ini_parse(input_file, two_punctures_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
@@ -209,6 +212,7 @@ two_punctures_init_params_input
   D4EST_CHECK_INPUT("problem", input.use_compactified_size_params, -1);
   D4EST_CHECK_INPUT("problem", input.use_error_l2_as_estimator, -1);
   D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
+  D4EST_CHECK_INPUT("problem", input.use_new_multigrid_level_guesser, -1);
   
   return input;
 }
@@ -300,10 +304,8 @@ problem_init
   bc_data_robin_for_res.robin_rhs = two_punctures_robin_bc_rhs_fcn;  
   
   if(init_params.use_dirichlet){
-
     flux_data_for_jac
       = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_jac);
-  
     flux_data_for_res
       = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_dirichlet_for_res);
   }
@@ -393,7 +395,9 @@ problem_init
     initial_level = initial_extents->checkpoint_number + 1;
 /* d4est_h5_read_dataset(p4est->mpirank,initial_extents->checkpoint_prefix,"u",H5T_NATIVE_DOUBLE, prob_vecs.u); */
   }
-  
+  /* keep track of mg_levels on the previous amr step 
+   * to calculate the mg_levels on the next amr step */
+  int num_of_mg_levels_last_step = -1;
   
   // Norm function contexts  
   d4est_norms_fcn_L2_ctx_t L2_norm_ctx;
@@ -726,6 +730,56 @@ problem_init
                                                       input_file
                                                      );
 
+
+
+      /* This new multigrid level guesser is more accurate than the last */
+      if(init_params.use_new_multigrid_level_guesser == 1){
+        if (level == 0){
+          mg_data->num_of_levels = d4est_solver_multigrid_get_h_coarsen_levels_initial
+                                   (
+                                    p4est,
+                                    initial_extents
+                                   );
+        }
+        else {
+          int has_there_been_h_refinements_local = (d4est_amr->has_there_been_h_refinements > 0);                    
+          int has_there_been_h_refinements_global = -1;
+          sc_allreduce
+            (
+             &has_there_been_h_refinements_local,
+             &has_there_been_h_refinements_global,
+             1,
+             sc_MPI_INT,
+             sc_MPI_MAX,
+             p4est->mpicomm
+          );
+
+          if (initial_extents->load_from_checkpoint == 1
+              &&
+              level == initial_extents->checkpoint_number)
+            {
+              d4est_checkpoint_read_dataset
+                (
+                 p4est,
+                 initial_extents->checkpoint_prefix,
+                 "multigrid_h_levels",
+                 H5T_NATIVE_DOUBLE,
+                 &num_of_mg_levels_last_step,
+                 initial_extents->checkpoint_number
+                );            
+            }
+
+          mg_data->num_of_levels = d4est_solver_multigrid_get_h_coarsen_levels_post_initial
+                                   (
+                                    p4est,
+                                    num_of_mg_levels_last_step,
+                                    has_there_been_h_refinements_global
+                                   );
+
+        }
+        num_of_mg_levels_last_step = mg_data->num_of_levels;
+      }      
+      
       d4est_solver_multigrid_user_callbacks_t* user_callbacks = d4est_solver_multigrid_matrix_operator_init(p4est, mg_data->num_of_levels);
 
       d4est_solver_multigrid_set_user_callbacks(
@@ -873,10 +927,10 @@ problem_init
          p4est,
          d4est_amr,
          d4est_factors,
-         (const char * []){"u", NULL},
-         (double* []){prob_vecs.u, NULL},
-         (const char * []){"predictor", NULL},
-         (double* []){smooth_pred_data->predictor, NULL}
+         (const char * []){"u", "predictor", "multigrid_h_levels", NULL},
+         (hid_t []){H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_INT},
+         (int []){prob_vecs.local_nodes, p4est->local_num_quadrants, 1},
+         (void* []){prob_vecs.u, smooth_pred_data->predictor, &mg_data->num_of_levels}
         );
     }
 

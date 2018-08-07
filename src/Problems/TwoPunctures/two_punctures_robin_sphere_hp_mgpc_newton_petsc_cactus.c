@@ -382,7 +382,7 @@ problem_init
                                                                      two_punctures_p_refine_everywhere, NULL);
 
   
-
+  int initial_level = 0;
   if (initial_extents->checkpoint_prefix == NULL){
     d4est_mesh_init_field
       (
@@ -397,7 +397,30 @@ problem_init
       );
   }
   else {
-    d4est_h5_read_dataset(p4est->mpirank,initial_extents->checkpoint_prefix,"u",H5T_NATIVE_DOUBLE, prob_vecs.u);
+
+
+    d4est_checkpoint_read_dataset
+      (
+       p4est,
+       initial_extents->checkpoint_prefix,
+       "u",
+       H5T_NATIVE_DOUBLE,
+       prob_vecs.u,
+       initial_extents->checkpoint_number
+      );
+
+
+    double sum = d4est_util_sum_array_dbl(prob_vecs.u, prob_vecs.local_nodes);
+
+    d4est_checkpoint_check_dataset(p4est,
+                           initial_extents->checkpoint_prefix,
+                           "u",
+                           H5T_NATIVE_DOUBLE,
+                           (void*)&sum,
+                           initial_extents->checkpoint_number
+                          );
+
+    initial_level = initial_extents->checkpoint_number + 1;
   }
   
   d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
@@ -449,7 +472,7 @@ problem_init
 
 
   
-  for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
+  for (int level = initial_level; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
     double* estimator = d4est_estimator_bi_compute
       (
@@ -758,17 +781,18 @@ problem_init
        DEBUG_PRINT_3ARR_DBL(dof, point100, point100_diff, iterations+1);
      }
      iterations++;
-    
-    d4est_checkpoint_save
-      (
-       level,
-       "checkpoint",
-       p4est,
-       d4est_factors,
-       (const char * []){"u", NULL},
-       (double* []){prob_vecs.u}
-      );
 
+     if (level != d4est_amr->num_of_amr_steps && level != 0){
+       d4est_checkpoint_save
+         (
+          level,
+          "checkpoint",
+          p4est,
+          d4est_factors,
+          (const char * []){"u", NULL},
+          (double* []){prob_vecs.u}
+         );
+     }
 
     d4est_krylov_pc_multigrid_destroy(pc);
     multigrid_logger_residual_destroy(logger);

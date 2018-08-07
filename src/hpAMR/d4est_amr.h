@@ -70,6 +70,10 @@ typedef struct {
   d4est_operators_t* d4est_ops;
   d4est_estimator_stats_t* d4est_estimator_stats;
   double* d4est_estimator;
+
+  /* useful for multigrid, internally set */
+  int has_there_been_h_refinements;
+  int has_there_been_p_refinements;
   
 } d4est_amr_t;
 

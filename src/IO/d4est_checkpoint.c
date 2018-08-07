@@ -13,12 +13,13 @@ d4est_checkpoint_save
  p4est_t* p4est,
  d4est_amr_t* d4est_amr,
  d4est_mesh_data_t* storage,
- const char ** dg_field_names,
- double ** dg_fields,
- const char ** element_field_names,
- double ** element_fields
+ const char ** field_names,
+ hid_t* field_data_types,
+ int* field_sizes,
+ void** fields
 )
 {
+  zlog_category_t* c_default = zlog_get_category("d4est_checkpoint");
   char* checkpoint_folder = d4est_util_add_cwd("Checkpoints");
   d4est_util_make_directory(checkpoint_folder,0);
   
@@ -57,44 +58,6 @@ d4est_checkpoint_save
   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "z", H5T_NATIVE_DOUBLE, &storage->xyz[num_dg_nodes*2]);
 #endif
 
-  int num_dg_fields = 0;
-  if (dg_field_names != NULL && dg_fields != NULL){
-    for (int i = 0; dg_field_names[i] != NULL; i++){
-      num_dg_fields++;
-    }
-  }
-  
-  for (int i = 0; i < num_dg_fields; i++){
-    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, dg_field_names[i], H5T_NATIVE_DOUBLE, num_dg_nodes);
-    d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, dg_field_names[i], H5T_NATIVE_DOUBLE, dg_fields[i]);
-    char* field_sum_name = NULL;
-    asprintf(&field_sum_name,"%s_sum",dg_field_names[i]);
-    double field_sum = d4est_util_sum_array_dbl(dg_fields[i], num_dg_nodes);
-    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, H5T_NATIVE_DOUBLE, 1);
-    d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, H5T_NATIVE_DOUBLE, &field_sum);
-    free(field_sum_name);
-  }
-
-  int num_element_fields = 0;
-  if (element_field_names != NULL && element_fields != NULL){
-    for (int i = 0; element_field_names[i] != NULL; i++){
-      num_element_fields++;
-    }
-  }
-
-  int num_element_nodes = p4est->local_num_quadrants;
-  for (int i = 0; i < num_element_fields; i++){
-    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, element_field_names[i], H5T_NATIVE_DOUBLE, num_element_nodes);
-    d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, element_field_names[i], H5T_NATIVE_DOUBLE, element_fields[i]);
-
-    char* field_sum_name = NULL;
-    asprintf(&field_sum_name,"%s_sum",element_field_names[i]);
-    double field_sum = d4est_util_sum_array_dbl(element_fields[i], p4est->local_num_quadrants);
-    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, H5T_NATIVE_DOUBLE, 1);
-    d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, H5T_NATIVE_DOUBLE, &field_sum);
-    free(field_sum_name);
-  }
-
   /* just in case the saved p4est file is written out wrong, which has been the case, we 
    * will save the refinement log, which can be used to restore the forest if the 
    * refinement log at each refinement level is saved (e.g. you checkpoint at each level)  */
@@ -111,17 +74,118 @@ d4est_checkpoint_save
   int checkmpi = p4est->mpisize;
   int checkquadrants = p4est->local_num_quadrants;
 
-    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "p4est_checksum", H5T_NATIVE_INT, 1);
+  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "p4est_checksum", H5T_NATIVE_INT, 1);
   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "p4est_checksum", H5T_NATIVE_INT, &checkp4est); 
-    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "degree_sum", H5T_NATIVE_INT, 1);
+  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "degree_sum", H5T_NATIVE_INT, 1);
   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "degree_sum", H5T_NATIVE_INT, &checkdeg); 
-    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "mpi_size", H5T_NATIVE_INT, 1);
+  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "mpi_size", H5T_NATIVE_INT, 1);
   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "mpi_size", H5T_NATIVE_INT, &checkmpi); 
-    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "quadrants", H5T_NATIVE_INT, 1);
+  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "quadrants", H5T_NATIVE_INT, 1);
   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "quadrants", H5T_NATIVE_INT, &checkquadrants); 
 
+  int num_fields = 0;
+  if (field_names != NULL && fields != NULL){
+    for (int i = 0; field_names[i] != NULL; i++){
+      num_fields++;
+    }
+  }
+
+  
+  for (int i = 0; i < num_fields; i++){
+    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_names[i], field_data_types[i], field_sizes[i]);
+    d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_names[i], field_data_types[i], fields[i]);
+
+    /* save field sums to do checks of field/file integrity */
+    if (field_sizes[i] > 0){
+      char* field_sum_name = NULL;
+      asprintf(&field_sum_name,"%s_sum",field_names[i]);
+      double field_sum = d4est_util_sum_array_dbl(fields[i], field_sizes[i]);
+      d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, field_data_types[i], 1);
+      /* d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, H5T_NATIVE_DOUBLE, &field_sum); */
+
+      if (field_data_types[i] == H5T_NATIVE_DOUBLE){
+        double field_sum = d4est_util_sum_array_dbl(fields[i], field_sizes[i]);
+        d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, field_data_types[i], &field_sum);
+      }
+      else if (field_data_types[i] == H5T_NATIVE_INT) {
+        int field_sum = d4est_util_sum_array_int(fields[i], field_sizes[i]);
+        d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, field_data_types[i], &field_sum);
+      }
+      else {
+        zlog_info(c_default, "not a supported hdf5 type");
+        D4EST_ABORT("");
+      }
+      free(field_sum_name);
+    }
+  }
   
   
+  /* int num_dg_fields = 0; */
+  /* if (dg_field_names != NULL && dg_fields != NULL){ */
+  /*   for (int i = 0; dg_field_names[i] != NULL; i++){ */
+  /*     num_dg_fields++; */
+  /*   } */
+  /* } */
+  
+  /* for (int i = 0; i < num_dg_fields; i++){ */
+  /*   d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, dg_field_names[i], H5T_NATIVE_DOUBLE, num_dg_nodes); */
+  /*   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, dg_field_names[i], H5T_NATIVE_DOUBLE, dg_fields[i]); */
+  /*   /\* save field sums to do checks of field/file integrity *\/ */
+  /*   char* field_sum_name = NULL; */
+  /*   asprintf(&field_sum_name,"%s_sum",dg_field_names[i]); */
+  /*   double field_sum = d4est_util_sum_array_dbl(dg_fields[i], num_dg_nodes); */
+  /*   d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, H5T_NATIVE_DOUBLE, 1); */
+  /*   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, H5T_NATIVE_DOUBLE, &field_sum); */
+  /*   free(field_sum_name); */
+  /* } */
+
+  /* int num_element_fields = 0; */
+  /* if (element_field_names != NULL && element_fields != NULL){ */
+  /*   for (int i = 0; element_field_names[i] != NULL; i++){ */
+  /*     num_element_fields++; */
+  /*   } */
+  /* } */
+
+  /* int num_element_nodes = p4est->local_num_quadrants; */
+  /* for (int i = 0; i < num_element_fields; i++){ */
+  /*   d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, element_field_names[i], element_field_types[i], num_element_nodes); */
+  /*   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, element_field_names[i], element_field_types[i], element_fields[i]); */
+
+  /*   /\* save field sums to do checks of field/file integrity *\/ */
+  /*   char* field_sum_name = NULL; */
+  /*   asprintf(&field_sum_name,"%s_sum",element_field_names[i]); */
+  /*   d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, element_field_types[i], 1); */
+
+  /*   if (element_field_types[i] == H5T_NATIVE_DOUBLE){ */
+  /*     double field_sum = d4est_util_sum_array_dbl(element_fields[i], p4est->local_num_quadrants); */
+  /*     d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, element_field_types[i], &field_sum); */
+  /*   } */
+  /*   else if (element_field_types[i] == H5T_NATIVE_INT) { */
+  /*     int field_sum = d4est_util_sum_array_int(element_fields[i], p4est->local_num_quadrants); */
+  /*   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, field_sum_name, element_field_types[i], &field_sum); */
+  /*   } */
+  /*   else { */
+  /*     zlog_info(c_default, "not a supported hdf5 type"); */
+  /*     D4EST_ABORT(""); */
+  /*   } */
+    
+  /*   free(field_sum_name); */
+  /* } */
+
+  /* int num_constant = 0; */
+  /* if (constant_names != NULL && constant != NULL){ */
+  /*   for (int i = 0; constant_names[i] != NULL; i++){ */
+  /*     num_constant++; */
+  /*   } */
+  /* } */
+
+  /* int num_constant_nodes = 1; */
+  /* for (int i = 0; i < num_constant; i++){ */
+  /*   d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, constant_names[i], constant_types[i], num_constant_nodes); */
+  /*   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, constant_names[i], constant_types[i], constant[i]); */
+  /* } */
+
+
   free(checkpoint_folder);
   free(checkpoint_folder_and_prefix);
   free(p4est_file_name);
