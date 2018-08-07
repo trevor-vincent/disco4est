@@ -104,6 +104,8 @@ d4est_solver_multigrid_get_h_coarsen_levels_initial
   if (power == -1){
     D4EST_ABORT("power == -1");    
   }
+
+  zlog_info(c_default, "number of levels = %d\n", min_level - power + 1);
   return min_level - power + 1;
 }
 
@@ -250,6 +252,7 @@ int d4est_solver_multigrid_input_handler
   else if (d4est_util_match_couple(section,"multigrid",name,"use_p_coarsen")) {
     D4EST_ASSERT(mg_data->use_p_coarsen == 0);
     mg_data->use_p_coarsen = atoi(value);
+    D4EST_ABORT("use_p_coarsen not working yet");
   }
   else if (d4est_util_match_couple(section,"multigrid",name,"use_power_method_debug")) {
     D4EST_ASSERT(mg_data->use_power_method_debug == 0);
@@ -294,6 +297,10 @@ int d4est_solver_multigrid_input_handler
   else if (d4est_util_match_couple(section,"multigrid",name,"vcycle_atol")) {
     D4EST_ASSERT(mg_data->vcycle_atol == -1);
     mg_data->vcycle_atol = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"multigrid",name,"num_of_levels")) {
+    D4EST_ASSERT(mg_data->num_of_levels == -1);
+    mg_data->num_of_levels = atof(value);
   }
   else if (d4est_util_match_couple(section,"multigrid",name,"smoother_name")) {
     D4EST_ASSERT(mg_data->smoother_name[0] == '*');
@@ -424,7 +431,7 @@ d4est_solver_multigrid_data_init
  const char* input_file
 )
 {
-   d4est_solver_multigrid_data_t* mg_data = P4EST_ALLOC( d4est_solver_multigrid_data_t, 1);
+  d4est_solver_multigrid_data_t* mg_data = P4EST_ALLOC( d4est_solver_multigrid_data_t, 1);
 
   int d4est_solver_multigrid_min_level, d4est_solver_multigrid_max_level;
   int num_of_h_coarsen_levels = d4est_solver_multigrid_get_h_coarsen_levels_old(p4est);  
