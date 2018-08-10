@@ -52,62 +52,64 @@ d4est_solver_multigrid_get_p_coarsen_levels
 }
 
 
-int
-d4est_solver_multigrid_get_h_coarsen_levels_post_initial
-(
- p4est_t* p4est,
- int num_of_levels_last,
- int has_there_been_h_refinements
-)
-{
-  return num_of_levels_last + has_there_been_h_refinements;
-}
+/* int */
+/* d4est_solver_multigrid_get_h_coarsen_levels_post_initial */
+/* ( */
+/*  p4est_t* p4est, */
+/*  int num_of_levels_last, */
+/*  int has_there_been_h_refinements */
+/* ) */
+/* { */
+/*   return num_of_levels_last + has_there_been_h_refinements; */
+/* } */
 
 
-int
-d4est_solver_multigrid_get_h_coarsen_levels_initial
-(
- p4est_t* p4est,
- d4est_mesh_initial_extents_t* initial_extents
-)
-{
-  zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid_get_h_coarsen_levels");
+/* int */
+/* d4est_solver_multigrid_get_h_coarsen_levels_initial */
+/* ( */
+/*  p4est_t* p4est, */
+/*  d4est_mesh_initial_extents_t* initial_extents */
+/* ) */
+/* { */
+/*   zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid"); */
   
-  int min_level = initial_extents->min_level;
-  int mpi_size = p4est->mpisize;
-  int num_trees = p4est->connectivity->num_trees;
-  int global_guess = num_trees*d4est_util_int_pow_int((P4EST_CHILDREN),min_level);
+/*   int min_level = initial_extents->min_level; */
+/*   int mpi_size = p4est->mpisize; */
+/*   int num_trees = p4est->connectivity->num_trees; */
+/*   int global_guess = num_trees*d4est_util_int_pow_int((P4EST_CHILDREN),min_level); */
 
-  if (mpi_size == 1){
-    return min_level + 1;
-  }
+/*   if (mpi_size == 1){ */
+/*     return min_level + 1; */
+/*   } */
   
-  if (p4est->global_num_quadrants != global_guess){
-    zlog_error(c_default, "p4est->global_num_quadrants != global_guess");
-    zlog_error(c_default, "p4est->global_num_quadrants = %d", (int)p4est->global_num_quadrants);
-    zlog_error(c_default, "global_guess = %d", global_guess);
-    D4EST_ABORT("");
-  }
-  if (mpi_size % num_trees != 0){
-    zlog_error(c_default, "mpi_size = %d", mpi_size);
-    zlog_error(c_default, "num_trees = %d", num_trees);
-    zlog_error(c_default, "mpi_size mod num_trees != 0");
-    D4EST_ABORT("");
-  }  
-  if (((mpi_size/num_trees) % (P4EST_CHILDREN) != 0) && ((mpi_size/num_trees) != 1)){
-    zlog_error(c_default, "(mpi_size/num_trees) = %d", (mpi_size/num_trees));
-    zlog_error(c_default, "(P4EST_CHILDREN) = %d", (P4EST_CHILDREN));
-    zlog_error(c_default, "(mpi_size/num_trees) mod (P4EST_CHILDREN) != 0");
-  }
-  int power = d4est_util_is_power_of(mpi_size/num_trees, (P4EST_CHILDREN));
+/*   if (p4est->global_num_quadrants != global_guess){ */
+/*     zlog_error(c_default, "p4est->global_num_quadrants != global_guess"); */
+/*     zlog_error(c_default, "p4est->global_num_quadrants = %d", (int)p4est->global_num_quadrants); */
+/*     zlog_error(c_default, "global_guess = %d", global_guess); */
+/*     D4EST_ABORT(""); */
+/*   } */
+/*   if (mpi_size % num_trees != 0){ */
+/*     zlog_error(c_default, "mpi_size = %d", mpi_size); */
+/*     zlog_error(c_default, "num_trees = %d", num_trees); */
+/*     zlog_error(c_default, "mpi_size mod num_trees != 0"); */
+/*     D4EST_ABORT(""); */
+/*   }   */
+/*   if (((mpi_size/num_trees) % (P4EST_CHILDREN) != 0) && ((mpi_size/num_trees) != 1)){ */
+/*     zlog_error(c_default, "(mpi_size/num_trees) = %d", (mpi_size/num_trees)); */
+/*     zlog_error(c_default, "(P4EST_CHILDREN) = %d", (P4EST_CHILDREN)); */
+/*     zlog_error(c_default, "(mpi_size/num_trees) mod (P4EST_CHILDREN) != 0"); */
+/*   } */
+/*   int power = d4est_util_is_power_of(mpi_size/num_trees, (P4EST_CHILDREN)); */
 
-  if (power == -1){
-    D4EST_ABORT("power == -1");    
-  }
+/*   if (power == -1){ */
+/*     D4EST_ABORT("power == -1");     */
+/*   } */
 
-  zlog_info(c_default, "number of levels = %d\n", min_level - power + 1);
-  return min_level - power + 1;
-}
+/*   if (p4est->mpirank == 0){ */
+/*     zlog_info(c_default, "number of levels = %d\n", min_level - power + 1); */
+/*   } */
+/*   return min_level - power + 1; */
+/* } */
 
 /** 
  * Calculates the min level and max level of the d4est_solver_multigrid
@@ -124,6 +126,7 @@ d4est_solver_multigrid_get_h_coarsen_levels_old
  p4est_t* p4est
 )
 {
+  zlog_category_t* c_default = zlog_get_category("d4est_solver_multigrid");
   int level;
   int min = P4EST_MAXLEVEL;
   int max = -1;
@@ -171,7 +174,28 @@ d4est_solver_multigrid_get_h_coarsen_levels_old
   }
   int max_level = global_reduce[1];
 
-  return max_level + 1;
+  /* return max_level + 1; */
+  int num_trees = p4est->connectivity->num_trees;
+  int mpi_size = p4est->mpisize;
+  int power = (mpi_size != 1) ? d4est_util_is_power_of(mpi_size/num_trees, (P4EST_CHILDREN)) : 0;
+
+  if (mpi_size != 1 && mpi_size % num_trees != 0){
+    if (p4est->mpirank == 0){
+      zlog_error(c_default, "mpi_size mod num_trees != 0");
+      zlog_error(c_default, "mpi_size = %d", mpi_size);
+      zlog_error(c_default, "num_trees = %d", num_trees);
+    }
+    D4EST_ABORT("");
+  }
+
+  if (p4est->mpirank == 0){
+    zlog_info(c_default, "max_level on this amr step: %d", max_level);
+    if (mpi_size != 1){
+      zlog_info(c_default, "mpi_size/num_trees = %d = %d^%d\n", (mpi_size/num_trees), (P4EST_CHILDREN),power);
+    }
+    zlog_info(c_default, "guess for h levels = %d\n", max_level + 1 - power);
+  }
+  return max_level + 1 - power;
 }
 
 static void
@@ -1289,6 +1313,6 @@ d4est_solver_multigrid_solve
   
   if (p4est->mpirank == 0) {
     double duration_seconds = ((double)(clock() - start)) / CLOCKS_PER_SEC;
-    zlog_info(c_default, "D4est_Solver_Multigrid solve completed in %.10f seconds.", duration_seconds);
+    zlog_info(c_default, "solve completed in %.10f seconds.", duration_seconds);
   }
 }

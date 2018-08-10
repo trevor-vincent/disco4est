@@ -89,12 +89,14 @@ iter_corner_callback
        corner_side->corner == corner_data->corner){
 
       printf("\n*** This is the selected corner ****\n");
+      printf("ed->id = %d\n", ed->id);
+      printf("corner = %d\n", corner_side->corner);
       printf("faces[0] = %d\n", corner_side->faces[0]);
       printf("faces[1] = %d\n", corner_side->faces[1]);
       printf("faces[2] = %d\n", corner_side->faces[2]);
       printf("edges[0] = %d\n", corner_side->edges[0]);
       printf("edges[1] = %d\n", corner_side->edges[1]);
-      printf("edges[2] = %d\n", corner_side->edges[2]);
+      printf("edges[2] = %d\n\n", corner_side->edges[2]);
       good_corner = side;
       break;
     }
@@ -108,16 +110,18 @@ iter_corner_callback
       = corner_side->quad->p.user_data;
 
     if (side != good_corner && good_corner >= 0){
-      printf("corner = %d\n", corner_side->corner);
+
       corner_data->is_corner[ed->id] = corner_side->corner;
 
       printf("\n**** This is a corner that touches selected ****\n");
+      printf("ed->id = %d\n", ed->id);
+      printf("corner = %d\n", corner_side->corner);
       printf("faces[0] = %d\n", corner_side->faces[0]);
       printf("faces[1] = %d\n", corner_side->faces[1]);
       printf("faces[2] = %d\n", corner_side->faces[2]);
       printf("edges[0] = %d\n", corner_side->edges[0]);
       printf("edges[1] = %d\n", corner_side->edges[1]);
-      printf("edges[2] = %d\n", corner_side->edges[2]);
+      printf("edges[2] = %d\n\n", corner_side->edges[2]);
       
     }
   }  
@@ -215,7 +219,7 @@ int main(int argc, char *argv[])
   
   /* start just-in-time dg-math */
   d4est_operators_t* d4est_ops = d4est_ops_init(20);
-  d4est_mesh_data_t* geometric_factors = d4est_mesh_data_init(p4est);
+  d4est_mesh_data_t* d4est_factors = d4est_mesh_data_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] :      "test_d4est_iterate_options.input", "quadrature");
   
 
@@ -226,7 +230,7 @@ int main(int argc, char *argv[])
                                          d4est_ops,
                                          d4est_geom,
                                          d4est_quad,
-                                         geometric_factors,
+                                         d4est_factors,
                                          initial_grid_input,
                                          INITIALIZE_GHOST,
                                          INITIALIZE_QUADRATURE_DATA,
@@ -262,7 +266,7 @@ int main(int argc, char *argv[])
   /*                  d4est_ops, */
   /*                  d4est_geom, */
   /*                  d4est_quad, */
-  /*                  geometric_factors, */
+  /*                  d4est_factors, */
   /*                  initial_grid_input, */
   /*                  INITIALIZE_GHOST, */
   /*                  INITIALIZE_QUADRATURE_DATA, */
@@ -298,7 +302,7 @@ int main(int argc, char *argv[])
      init_sinxyz,
      d4est_ops,
      d4est_geom,
-     geometric_factors,
+     d4est_factors,
      INIT_FIELD_ON_LOBATTO,
      NULL
     );
@@ -349,7 +353,7 @@ int main(int argc, char *argv[])
   P4EST_FREE(sinvec);
   /* d4est_amr_destroy(d4est_amr_random); */
   d4est_mesh_initial_extents_destroy(initial_grid_input);
-  d4est_mesh_data_destroy(geometric_factors);
+  d4est_mesh_data_destroy(d4est_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   
   if (d4est_ghost) {

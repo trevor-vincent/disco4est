@@ -24,8 +24,8 @@ d4est_solver_multigrid_logger_residual_update
   int v = mg_data->vcycle_num_finished;
   
   if((mg_data->mg_state == START || mg_data->mg_state == POST_RESIDUAL_UPDATE) && (p4est->mpirank == 0)){
-    zlog_category_t *c_default = zlog_get_category("d4est_d4est_solver_multigrid");
-    zlog_debug(c_default, "%d %.30f %f", v, sqrt(r2_i_global), sqrt(r2_i_global/old_r2_i_global));
+    zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid");
+    zlog_info(c_default, "%d %.30f %f", v, sqrt(r2_i_global), sqrt(r2_i_global/old_r2_i_global));
   }
   else {
     return;

@@ -733,52 +733,52 @@ problem_init
 
 
       /* This new multigrid level guesser is more accurate than the last */
-      if(init_params.use_new_multigrid_level_guesser == 1){
-        if (level == 0){
-          mg_data->num_of_levels = d4est_solver_multigrid_get_h_coarsen_levels_initial
-                                   (
-                                    p4est,
-                                    initial_extents
-                                   );
-        }
-        else {
-          int has_there_been_h_refinements_local = (d4est_amr->has_there_been_h_refinements > 0);                    
-          int has_there_been_h_refinements_global = -1;
-          sc_allreduce
-            (
-             &has_there_been_h_refinements_local,
-             &has_there_been_h_refinements_global,
-             1,
-             sc_MPI_INT,
-             sc_MPI_MAX,
-             p4est->mpicomm
-          );
+      /* if(init_params.use_new_multigrid_level_guesser == 1){ */
+      /*   if (level == 0){ */
+      /*     mg_data->num_of_levels = d4est_solver_multigrid_get_h_coarsen_levels_initial */
+      /*                              ( */
+      /*                               p4est, */
+      /*                               initial_extents */
+      /*                              ); */
+      /*   } */
+      /*   else { */
+      /*     int has_there_been_h_refinements_local = (d4est_amr->has_there_been_h_refinements > 0);                     */
+      /*     int has_there_been_h_refinements_global = -1; */
+      /*     sc_allreduce */
+      /*       ( */
+      /*        &has_there_been_h_refinements_local, */
+      /*        &has_there_been_h_refinements_global, */
+      /*        1, */
+      /*        sc_MPI_INT, */
+      /*        sc_MPI_MAX, */
+      /*        p4est->mpicomm */
+      /*     ); */
 
-          if (initial_extents->load_from_checkpoint == 1
-              &&
-              level == initial_extents->checkpoint_number)
-            {
-              d4est_checkpoint_read_dataset
-                (
-                 p4est,
-                 initial_extents->checkpoint_prefix,
-                 "multigrid_h_levels",
-                 H5T_NATIVE_DOUBLE,
-                 &num_of_mg_levels_last_step,
-                 initial_extents->checkpoint_number
-                );            
-            }
+      /*     if (initial_extents->load_from_checkpoint == 1 */
+      /*         && */
+      /*         level == initial_extents->checkpoint_number) */
+      /*       { */
+      /*         d4est_checkpoint_read_dataset */
+      /*           ( */
+      /*            p4est, */
+      /*            initial_extents->checkpoint_prefix, */
+      /*            "multigrid_h_levels", */
+      /*            H5T_NATIVE_DOUBLE, */
+      /*            &num_of_mg_levels_last_step, */
+      /*            initial_extents->checkpoint_number */
+      /*           );             */
+      /*       } */
 
-          mg_data->num_of_levels = d4est_solver_multigrid_get_h_coarsen_levels_post_initial
-                                   (
-                                    p4est,
-                                    num_of_mg_levels_last_step,
-                                    has_there_been_h_refinements_global
-                                   );
+      /*     mg_data->num_of_levels = d4est_solver_multigrid_get_h_coarsen_levels_post_initial */
+      /*                              ( */
+      /*                               p4est, */
+      /*                               num_of_mg_levels_last_step, */
+      /*                               has_there_been_h_refinements_global */
+      /*                              ); */
 
-        }
-        num_of_mg_levels_last_step = mg_data->num_of_levels;
-      }      
+      /*   } */
+      /*   num_of_mg_levels_last_step = mg_data->num_of_levels; */
+      /* }       */
       
       d4est_solver_multigrid_user_callbacks_t* user_callbacks = d4est_solver_multigrid_matrix_operator_init(p4est, mg_data->num_of_levels);
 

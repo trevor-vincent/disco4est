@@ -13,6 +13,35 @@
 #include <d4est_linalg.h>
 #include <d4est_ghost_data.h>
 
+static void
+d4est_mesh_data_get_string_from_face_h_type
+(
+ d4est_mesh_face_h_t h_calc,
+ char* string
+)
+{
+  if (h_calc == FACE_H_EQ_J_DIV_SJ_QUAD){
+    strcpy(string, "FACE_H_EQ_J_DIV_SJ_QUAD");
+  }
+  else if (h_calc == FACE_H_EQ_J_DIV_SJ_MIN_LOBATTO){
+    strcpy(string,"FACE_H_EQ_J_DIV_SJ_MIN_lOBATTO");
+  }
+  else if (h_calc == FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO){
+    strcpy(string,"FACE_H_EQ_J_DIV_SJ_MEAN_lOBATTO");
+  }
+  else if (h_calc == FACE_H_EQ_VOLUME_DIV_AREA){
+    strcpy(string,"FACE_H_EQ_VOLUME_DIV_AREA");
+  }
+  else if (h_calc == FACE_H_EQ_VOLUME_DIV_AREA){
+    strcpy(string,"FACE_H_EQ_FACE_DIAM");
+  }
+  else if (h_calc == FACE_H_EQ_TREE_H){
+    strcpy(string,"FACE_H_EQ_TREE_H");
+  }
+  else {
+    strcpy(string,"NOT_SET");
+  }
+}
 
 
 static
@@ -219,8 +248,8 @@ d4est_mesh_initial_extents_parse
  d4est_geometry_t* d4est_geom
 )
 {
+  zlog_category_t* c_default = zlog_get_category("d4est_mesh_initial_extents");
   sc_MPI_Comm mpicomm = sc_MPI_COMM_WORLD;
-
   int proc_size;
   int proc_rank;
   MPI_Comm_size(mpicomm, &proc_size);
@@ -248,7 +277,7 @@ d4est_mesh_initial_extents_parse
   }
  
   if (ini_parse(input_file, d4est_mesh_initial_extents_handler, initial_extents) < 0) {
-    printf("[D4EST_ERROR]: pXest input_file = %s\n", input_file);
+    zlog_error(c_default,"[D4EST_ERROR]: pXest input_file = %s\n", input_file);
     D4EST_ABORT("[D4EST_ERROR]: Can't load pXest input file");
   }
 
@@ -280,8 +309,12 @@ d4est_mesh_initial_extents_parse
   D4EST_CHECK_INPUT("mesh_parameters", initial_extents->max_degree, -1);
   D4EST_CHECK_INPUT("mesh_parameters", initial_extents->face_h_type, FACE_H_EQ_NOT_SET);
 
-  
 
+  char face_h_string [50];
+  d4est_mesh_data_get_string_from_face_h_type( initial_extents->face_h_type,&face_h_string[0]);
+  zlog_debug(c_default,"face_h = %s", face_h_string);
+             zlog_debug(c_default,"max_degree = %d", initial_extents->max_degree);
+            
   int trees = d4est_geom->p4est_conn->num_trees;
   
   if(
@@ -292,10 +325,11 @@ d4est_mesh_initial_extents_parse
      initial_extents->min_quadrants < proc_size
   ){
     if (proc_rank == 0){
-      printf("[D4EST_ERROR]: proc_size = %d\n", proc_size);
-      printf("[D4EST_ERROR]: min_level = %d\n", initial_extents->min_level);
-      printf("[D4EST_ERROR]: elements = %d\n",  trees*d4est_util_int_pow_int((P4EST_CHILDREN), initial_extents->min_level));
-      D4EST_ABORT("[D4EST_ERROR]: Starting p4est with elements < processes\n");
+      zlog_error(c_default,"proc_size = %d", proc_size);
+      zlog_error(c_default,"min_level = %d", initial_extents->min_level);
+      zlog_error(c_default,"elements = %d",  trees*d4est_util_int_pow_int((P4EST_CHILDREN), initial_extents->min_level));
+      zlog_error(c_default,"Starting p4est with elements < processes");
+      D4EST_ABORT("");
     }
   }
 
@@ -2986,35 +3020,6 @@ d4est_mesh_data_compute_volume_diam
 
 
 
-static void
-d4est_mesh_data_get_string_from_face_h_type
-(
- d4est_mesh_face_h_t h_calc,
- char* string
-)
-{
-  if (h_calc == FACE_H_EQ_J_DIV_SJ_QUAD){
-    strcpy(string, "FACE_H_EQ_J_DIV_SJ_QUAD");
-  }
-  else if (h_calc == FACE_H_EQ_J_DIV_SJ_MIN_LOBATTO){
-    strcpy(string,"FACE_H_EQ_J_DIV_SJ_MIN_lOBATTO");
-  }
-  else if (h_calc == FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO){
-    strcpy(string,"FACE_H_EQ_J_DIV_SJ_MEAN_lOBATTO");
-  }
-  else if (h_calc == FACE_H_EQ_VOLUME_DIV_AREA){
-    strcpy(string,"FACE_H_EQ_VOLUME_DIV_AREA");
-  }
-  else if (h_calc == FACE_H_EQ_VOLUME_DIV_AREA){
-    strcpy(string,"FACE_H_EQ_FACE_DIAM");
-  }
-  else if (h_calc == FACE_H_EQ_TREE_H){
-    strcpy(string,"FACE_H_EQ_TREE_H");
-  }
-  else {
-    strcpy(string,"NOT_SET");
-  }
-}
 
 
 void
