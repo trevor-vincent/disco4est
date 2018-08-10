@@ -7,7 +7,7 @@ disco4est (d4est) is a scalable hp-adaptive discontinuous Galerkin solver for co
 
 ## Prerequisites
 
-The dependencies are MPI, OpenBLAS, HDF5, PETSc, zlib and p4est. You will need at least MPI. If you do not have zlib, PETSc p4est, HDF5 or OpenBLAS, then these come bundled, so they will be installed automatically to the local build folder unless you specify otherwise.
+The dependencies are MPI, OpenBLAS, HDF5, PETSc, zlib, zlog and p4est. You will need at least MPI. If you do not have zlib, zlog, PETSc p4est, HDF5 or OpenBLAS, then these come bundled, so they will be installed automatically to the local build folder unless you specify otherwise.
 
 > On Mac OS X, you may simply install most dependencies through Homebrew:
 >
@@ -68,6 +68,9 @@ Configuration options are loaded from an `options.input` file residing in the sa
   - `num_of_amr_steps`
   - `max_degree`
 
+## Examples
+
+Very cool examples coming soon once the paper is out.
 
 ## Licenses
 
