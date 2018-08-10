@@ -121,7 +121,7 @@ d4est_solver_multigrid_get_p_coarsen_levels
  * @param max_level 
  */
 int
-d4est_solver_multigrid_get_h_coarsen_levels_old
+d4est_solver_multigrid_get_h_coarsen_levels
 (
  p4est_t* p4est
 )
@@ -458,7 +458,7 @@ d4est_solver_multigrid_data_init
   d4est_solver_multigrid_data_t* mg_data = P4EST_ALLOC( d4est_solver_multigrid_data_t, 1);
 
   int d4est_solver_multigrid_min_level, d4est_solver_multigrid_max_level;
-  int num_of_h_coarsen_levels = d4est_solver_multigrid_get_h_coarsen_levels_old(p4est);  
+  int num_of_h_coarsen_levels = d4est_solver_multigrid_get_h_coarsen_levels(p4est);  
 
   D4EST_ASSERT(num_of_h_coarsen_levels >= 1);
   
@@ -495,18 +495,25 @@ d4est_solver_multigrid_data_init
   if (ini_parse(input_file, d4est_solver_multigrid_input_handler, mg_data) < 0) {
     D4EST_ABORT("Can't load input file");
   }
-
+ 
   if (mg_data->use_p_coarsen == 1){
     mg_data->num_of_p_coarsen_levels = d4est_solver_multigrid_get_p_coarsen_levels(p4est);
     mg_data->num_of_levels += mg_data->num_of_p_coarsen_levels;
   }
-
+  
   D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_atol, -1);
   D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_rtol, -1);
   D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_imax, -1);
   D4EST_CHECK_INPUT("multigrid", mg_data->smoother_name[0], '*');
   D4EST_CHECK_INPUT("multigrid", mg_data->bottom_solver_name[0], '*');
 
+  mg_data->coarse_grid_refinement = P4EST_ALLOC
+    (
+     d4est_solver_multigrid_refine_data_t,
+     (mg_data->num_of_levels - 1) * p4est->local_num_quadrants
+    );
+
+  
   d4est_solver_multigrid_set_smoother(p4est, input_file, mg_data);
   d4est_solver_multigrid_set_bottom_solver(p4est, input_file, mg_data);
   
@@ -582,6 +589,7 @@ d4est_solver_multigrid_data_destroy( d4est_solver_multigrid_data_t* mg_data)
   d4est_solver_multigrid_destroy_smoother(mg_data);
   d4est_solver_multigrid_destroy_bottom_solver(mg_data);
   free(mg_data->input_file);
+  P4EST_FREE(mg_data->coarse_grid_refinement);
   P4EST_FREE(mg_data);
 }
 
@@ -636,16 +644,7 @@ d4est_solver_multigrid_vcycle
   
   total_elements_on_surrogate_multigrid += elements_on_level_of_surrogate_multigrid[toplevel];
   total_nodes_on_surrogate_multigrid += nodes_on_level_of_surrogate_multigrid[toplevel];
-
-
-  
-  /* FIXME: REALLOCATE AS WE COARSEN */
-  d4est_solver_multigrid_refine_data_t* coarse_grid_refinement = P4EST_ALLOC
-                                                    (
-                                                     d4est_solver_multigrid_refine_data_t,
-                                                     (toplevel-bottomlevel) * p4est->local_num_quadrants
-                                                    );
-  mg_data->coarse_grid_refinement = coarse_grid_refinement;
+ 
   
   /* initialize */
   mg_data->fine_nodes = total_nodes_on_multigrid;
@@ -734,14 +733,14 @@ d4est_solver_multigrid_vcycle
     /**********************************************************/
     /**********************************************************/
 
-  if (mg_data->print_state_info && p4est->mpirank == 0){
-    zlog_debug(c_default, "Level = %d", level);
-    zlog_debug(c_default, "State = %s", "DOWNV_PRE_SMOOTH");
-    zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
-    zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
-    zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
-    zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
-}
+    if (mg_data->print_state_info && p4est->mpirank == 0){
+      zlog_debug(c_default, "Level = %d", level);
+      zlog_debug(c_default, "State = %s", "DOWNV_PRE_SMOOTH");
+      zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
+      zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
+      zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
+      zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
+    }
     mg_data->mg_state = DOWNV_PRE_SMOOTH; d4est_solver_multigrid_update_components(p4est, level, &vecs_for_smooth);
     
     mg_data->smoother->smooth
@@ -753,14 +752,14 @@ d4est_solver_multigrid_vcycle
        fine_level
       );
     
-  if (mg_data->print_state_info && p4est->mpirank == 0){
-    zlog_debug(c_default, "Level = %d", level);
-    zlog_debug(c_default, "State = %s", "DOWNV_POST_SMOOTH");
-    zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
-    zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
-    zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
-    zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
-  }
+    if (mg_data->print_state_info && p4est->mpirank == 0){
+      zlog_debug(c_default, "Level = %d", level);
+      zlog_debug(c_default, "State = %s", "DOWNV_POST_SMOOTH");
+      zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
+      zlog_debug(c_default, "elements_on_surrogate_level = %d", elements_on_level_of_surrogate_multigrid[level]);
+      zlog_debug(c_default, "nodes_on_level = %d", nodes_on_level_of_multigrid[level]);
+      zlog_debug(c_default, "nodes_on_surrogate_level = %d", nodes_on_level_of_surrogate_multigrid[level]);
+    }
     mg_data->mg_state = DOWNV_POST_SMOOTH; d4est_solver_multigrid_update_components(p4est, level, &vecs_for_smooth);
 
 
@@ -1156,7 +1155,6 @@ d4est_solver_multigrid_vcycle
   P4EST_FREE(nodes_on_level_of_multigrid);
   P4EST_FREE(elements_on_level_of_surrogate_multigrid);
   P4EST_FREE(nodes_on_level_of_surrogate_multigrid);
-  P4EST_FREE(coarse_grid_refinement);
   P4EST_FREE(Ae_at0);
   P4EST_FREE(err_at0);
   P4EST_FREE(res_at0);
@@ -1247,6 +1245,11 @@ d4est_solver_multigrid_solve
   if (p4est->mpirank == 0) {
     start = clock();
     zlog_info(c_default, "Performing d4est_solver_multigrid solve...");
+  }
+
+  if (mg_data->num_of_levels < 2){
+    zlog_error(c_default, "number of levels < 2");
+    D4EST_ABORT("");
   }
   
   void* tmp_ptr = p4est->user_pointer;

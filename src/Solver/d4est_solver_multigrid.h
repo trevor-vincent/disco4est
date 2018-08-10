@@ -173,26 +173,25 @@ typedef struct {
 } d4est_solver_multigrid_element_data_updater_t;
 
 struct  d4est_solver_multigrid_data {
-
+ 
+  /* ******* REQUIRED/UNREQUIRED EXTERNAL PARAMETERS ******* */
   char* input_file;
-  
-  /* ******* REQUIRED EXTERNAL PARAMETERS ******* */
   /* ******* SET BY INPUT FILE ******** */
-  int vcycle_imax; /* max number of vcycles */
-  char smoother_name [50];
-  char bottom_solver_name [50];
-  double vcycle_rtol; /* residual tolerance for termination */
-  double vcycle_atol;
-  int use_profiler;
-  int use_analyzer;
-  int print_state_info;
-  int print_level_info;
-  int use_power_method_debug;
-  double power_atol;
-  double power_rtol;
-  double power_imax;
-  double power_imin;
-  int use_p_coarsen; /* p-d4est_solver_multigrid is untested */
+  int vcycle_imax; /* REQUIRED */ /* max number of vcycles */
+  char smoother_name [50]; /* REQUIRED */
+  char bottom_solver_name [50]; /* REQUIRED */
+  double vcycle_rtol; /* REQUIRED */
+  double vcycle_atol; /* REQUIRED */
+  int use_profiler; /* UNREQUIRED */
+  int use_analyzer; /* UNREQUIRED */
+  int print_state_info; /* UNREQUIRED */
+  int print_level_info; /* UNREQUIRED */
+  int use_power_method_debug; /* UNREQUIRED */
+  double power_atol; /* UNREQUIRED */
+  double power_rtol; /* UNREQUIRED */
+  double power_imax; /* UNREQUIRED */
+  double power_imin; /* UNREQUIRED */
+  int use_p_coarsen; /* UNREQUIRED */ /* p-d4est_solver_multigrid is untested and aborts atm */
     
   /* ******* INTERNAL PARAMETERS ******* */
   int num_of_levels;
@@ -203,27 +202,27 @@ struct  d4est_solver_multigrid_data {
   d4est_geometry_t* d4est_geom;
   d4est_quadrature_t* d4est_quad;
   
-  /* Helper strides */
+  /* INTERNAL - Helper strides */
   int stride;
   int temp_stride;
   int fine_stride;
   int coarse_stride;
 
-  /* Helper sizes */
+  /* INTERNAL - Helper sizes */
   int fine_nodes;
   int coarse_nodes;
 
-  /* Helper alias */
+  /* INTERNAL - Helper alias */
   double* intergrid_ptr;
 
-  /* Residuals and Vcycle Info */
+  /* INTERNAL - Residuals and Vcycle Info */
   double vcycle_r2_local_current;
   double vcycle_r2_global_current;
   double vcycle_r2_global_last;
   double vcycle_r2_global_stoptol;
   int vcycle_num_finished;
   
-  /* INTERNAL COMPONENTS */
+  /* INTERNAL - MG COMPONENTS */
   d4est_solver_multigrid_smoother_t* smoother;
   d4est_solver_multigrid_profiler_t* profiler;
   d4est_solver_multigrid_mesh_analyzer_t* analyzer;
@@ -232,7 +231,7 @@ struct  d4est_solver_multigrid_data {
   d4est_solver_multigrid_user_callbacks_t* user_callbacks;
   d4est_solver_multigrid_element_data_updater_t* elem_data_updater;
 
-  /* INTERNAL PARAMETERS FOR LOGGING*/
+  /* INTERNAL - PARAMETERS FOR LOGGING*/
   double* Ae_at0;
   double* err_at0;
   double* rres_at0;
@@ -242,13 +241,13 @@ struct  d4est_solver_multigrid_data {
   int* nodes_on_level_of_multigrid;
   int* nodes_on_level_of_surrogate_multigrid;
 
-  /* UPDATED BY EXTERNAL FUNCTIONS */
+  /* INTERNAL - UPDATED BY EXTERNAL FUNCTIONS */
   /* if d4est_solver_multigrid is being used as a preconditioner, keep track of linear operator updates, this is useful so that we don't need to recompute operator related
  * quantities every time we run a v-cycle, only when the linear operator is updated
  * (e.g. a new newton iteration) 
- * This is used in d4est_solver_multigrid_matrix_operator for example. */
+ * This is used in d4est_solver_multigrid_matrix_operator for example. 
+ */
   int linear_operator_updates;
-  
 };
 
 /* This file was automatically generated.  Do not edit! */
