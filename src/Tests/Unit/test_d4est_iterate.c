@@ -113,7 +113,49 @@ iter_corner_callback
 
       corner_data->is_corner[ed->id] = corner_side->corner;
 
+      p4est_iter_corner_side_t* good_side
+        = sc_array_index(&info->sides,
+                         good_corner);
+
       printf("\n**** This is a corner that touches selected ****\n");
+      
+      int found_face [] = {0,0,0};
+      int found_edge [] = {0,0,0};
+      for (int f = 0; f < 3; f++){
+        if ((good_side->faces[f] == corner_side->faces[f])){
+          found_face[f] = 1;
+        }
+      }
+      for (int e = 0; e < 3; e++){
+        if ((good_side->edges[e] == corner_side->edges[e])){
+          found_edge[e] = 1;          
+        }
+      }
+
+      int face_edge_sum = 0;
+      for (int ef = 0; ef < 3; ef++){
+        if (found_face[ef] == 1){
+          int face_id = p8est_corner_faces[corner_side->corner][ef];
+          printf("This side shares a face that touches the corner = %d\n", face_id);
+          face_edge_sum++;
+        }
+        if (found_edge[ef] == 1){
+          int edge_id = p8est_corner_edges[corner_side->corner][ef];
+          printf("This side shares an edge that touches the corner = %d\n", edge_id);
+          printf("The two faces that touch this edge are %d, %d\n",
+                 p8est_edge_faces[edge_id][0],p8est_edge_faces[edge_id][1]);
+          face_edge_sum++;
+        }
+      }
+
+      if (face_edge_sum == 0){
+        printf("This side only shares a corner\n");
+        printf("The three faces that share this corner are %d, %d, %d\n",
+               p8est_corner_faces[corner_side->corner][0],
+               p8est_corner_faces[corner_side->corner][1],
+               p8est_corner_faces[corner_side->corner][2]);
+      }
+
       printf("ed->id = %d\n", ed->id);
       printf("corner = %d\n", corner_side->corner);
       printf("faces[0] = %d\n", corner_side->faces[0]);
