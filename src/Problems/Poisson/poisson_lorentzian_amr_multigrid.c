@@ -13,6 +13,7 @@
 #include <d4est_geometry_cubed_sphere.h>
 #include <d4est_vtk.h>
 #include <d4est_norms.h>
+#include <d4est_checkpoint.h>
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
@@ -516,19 +517,61 @@ problem_init
       );
 
     
-    d4est_vtk_save
-      (
-       p4est,
-       d4est_ops,
-       input_file,
-       "d4est_vtk",
-       (const char * []){"u","u_analytic","error",  NULL},
-       (double* []){prob_vecs.u, u_analytic, error},
-       (const char * []){"estimator", "error_l2", NULL},
-       (double* []){estimator, error_l2, NULL},
-       level
-      );
+   d4est_vtk_save
+        (
+         p4est,
+         d4est_ops,
+         input_file,
+         "d4est_vtk",
+         (const char * []){"u","u_analytic","error", NULL},
+         (double* []){prob_vecs.u, u_analytic, error},
+         (const char * []){"estimator","error_l2",NULL},
+         (double* []){estimator,error_l2},
+         level
+        );
 
+      d4est_vtk_save
+        (
+         p4est,
+         d4est_ops,
+         input_file,
+         "d4est_vtk_compactified",
+         (const char * []){"u","u_analytic","error", NULL},
+         (double* []){prob_vecs.u, u_analytic, error},
+         (const char * []){"estimator","error_l2",NULL},
+         (double* []){estimator,error_l2},
+         level
+        );
+
+
+
+      d4est_vtk_save
+        (
+         p4est,
+         d4est_ops,
+         input_file,
+         "d4est_vtk_compactified_corner",
+         (const char * []){"u","u_analytic","error", NULL},
+         (double* []){prob_vecs.u, u_analytic, error},
+         (const char * []){"estimator","error_l2",NULL},
+         (double* []){estimator,error_l2},
+         level
+        );
+      
+      d4est_vtk_save
+        (
+         p4est,
+         d4est_ops,
+         input_file,
+         "d4est_vtk_corner",
+         (const char * []){"u","u_analytic","error", NULL},
+         (double* []){prob_vecs.u, u_analytic, error},
+         (const char * []){"estimator","error_l2",NULL},
+         (double* []){estimator,error_l2},
+         level
+        );    
+
+    
     P4EST_FREE(u_analytic);
     P4EST_FREE(error);
     P4EST_FREE(error_l2);
@@ -560,16 +603,13 @@ problem_init
         
     P4EST_FREE(stats);
     
-    if (level != d4est_amr->num_of_amr_steps){
-
-      if (p4est->mpirank == 0)
-        printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level+1);
+    if (level != d4est_amr->num_of_amr_steps && level != 0){
 
       d4est_amr_step
         (
          p4est,
          d4est_ops,
-         (level > 1) ? d4est_amr : d4est_amr_uniform,
+         d4est_amr,
          &prob_vecs.u,
          estimator,
          stats
@@ -814,8 +854,25 @@ problem_init
       DEBUG_PRINT_4ARR_DBL(dof, point100, point100_diff, point100_spec_diff,iterations+1);
     }
     iterations++;
-    
 
+    d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
+
+    
+    if (level != d4est_amr->num_of_amr_steps && level != 0){
+      d4est_checkpoint_save
+        (
+         level,
+         "checkpoint",
+         p4est,
+         d4est_amr,
+         d4est_factors,
+         (const char * []){"u", "predictor", "multigrid_h_levels", NULL},
+         (hid_t []){H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_INT},
+         (int []){prob_vecs.local_nodes, p4est->local_num_quadrants, 1},
+         (void* []){prob_vecs.u, smooth_pred_data->predictor, &mg_data->num_of_levels}
+        );
+    }
+    
     d4est_krylov_pc_multigrid_destroy(pc);
     
     /* d4est_solver_multigrid_logger_residual_destroy(logger); */

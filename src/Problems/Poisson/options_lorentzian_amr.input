@@ -83,11 +83,48 @@ rtol = 1e-15
 iter = 1000000000
 monitor = 1
 
+
 [d4est_vtk]
-filename = lorentzian
+filename = two_punctures
 geometry_section = geometry
 output_type = ascii
 grid_type = dg
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
+
+[d4est_vtk_compactified]
+filename = two_punctures_compactified
+geometry_section = compactified_geometry
+output_type = ascii
+grid_type = dg
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
+[d4est_vtk_compactified_corner]
+filename = two_punctures_compactified_corner
+geometry_section = compactified_geometry
+output_type = ascii
+grid_type = corner
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
+
+
+[d4est_vtk_corner]
+filename = two_punctures_corner
+geometry_section = geometry
+output_type = ascii
+grid_type = corner
 write_tree = 1
 write_level = 1
 write_rank = 1

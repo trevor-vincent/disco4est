@@ -177,17 +177,19 @@ d4est_solver_multigrid_get_h_coarsen_levels
   /* return max_level + 1; */
   int num_trees = p4est->connectivity->num_trees;
   int mpi_size = p4est->mpisize;
-  int power = (mpi_size != 1) ? d4est_util_is_power_of(mpi_size/num_trees, (P4EST_CHILDREN)) : 0;
 
-  if (mpi_size != 1 && mpi_size % num_trees != 0){
+  if (mpi_size > num_trees && mpi_size % num_trees != 0){
     if (p4est->mpirank == 0){
-      zlog_error(c_default, "mpi_size mod num_trees != 0");
+      zlog_error(c_default, "Please set starting conditinos such that mpi_size > num_trees && mpi_size mod num_trees == 0 OR mpi_size < num_trees && (mpi_size == 1 || mpi_size mod P4EST_CHILDREN == 0). This will give a proper multigrid hiearchy");
+      zlog_error(c_default, "P4EST_CHILDREN = %d", (P4EST_CHILDREN));
       zlog_error(c_default, "mpi_size = %d", mpi_size);
       zlog_error(c_default, "num_trees = %d", num_trees);
     }
     D4EST_ABORT("");
   }
 
+  int power = (mpi_size > num_trees) ? d4est_util_is_power_of(mpi_size/num_trees, (P4EST_CHILDREN)) : d4est_util_is_power_of(mpi_size, (P4EST_CHILDREN));
+  
   if (p4est->mpirank == 0){
     zlog_info(c_default, "max_level on this amr step: %d", max_level);
     if (mpi_size != 1){
@@ -455,6 +457,7 @@ d4est_solver_multigrid_data_init
  const char* input_file
 )
 {
+  zlog_category_t* c_default = zlog_get_category("d4est_solver_multigrid");
   d4est_solver_multigrid_data_t* mg_data = P4EST_ALLOC( d4est_solver_multigrid_data_t, 1);
 
   int d4est_solver_multigrid_min_level, d4est_solver_multigrid_max_level;
@@ -499,6 +502,11 @@ d4est_solver_multigrid_data_init
   if (mg_data->use_p_coarsen == 1){
     mg_data->num_of_p_coarsen_levels = d4est_solver_multigrid_get_p_coarsen_levels(p4est);
     mg_data->num_of_levels += mg_data->num_of_p_coarsen_levels;
+  }
+
+  if (mg_data->num_of_levels < 2){
+    zlog_error(c_default, "The code sees less than two multigrid levels, cannot run multigrid, try increasing min_level in initial_mesh\n");
+    D4EST_ABORT("");
   }
   
   D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_atol, -1);

@@ -550,22 +550,22 @@ problem_init
     }    
     
     d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
-    if (level != 0){
+    /* if (level != 0){ */
       /* DEBUG_PRINT_ARR_DBL(smooth_pred_data->predictor,p4est->local_num_quadrants); */
-      d4est_vtk_save
-        (
-         p4est,
-         d4est_ops,
-         input_file,
-         "d4est_vtk",
-         (const char * []){"u","u_prev","error", NULL},
-         (double* []){prob_vecs.u, u_prev, error},
-         (const char * []){"estimator",NULL},
-         (double* []){estimator},
-         level
-        );
-    }
-    else {
+    /*   d4est_vtk_save */
+    /*     ( */
+    /*      p4est, */
+    /*      d4est_ops, */
+    /*      input_file, */
+    /*      "d4est_vtk", */
+    /*      (const char * []){"u","u_prev","error", NULL}, */
+    /*      (double* []){prob_vecs.u, u_prev, error}, */
+    /*      (const char * []){"estimator",NULL}, */
+    /*      (double* []){estimator}, */
+    /*      level */
+    /*     ); */
+    /* } */
+    /* else { */
       d4est_vtk_save
         (
          p4est,
@@ -620,7 +620,7 @@ problem_init
          level
         );    
       
-    }
+    /* } */
 
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
@@ -648,9 +648,6 @@ problem_init
       );
     
     if (level != d4est_amr->num_of_amr_steps && level != 0){
-
-      if (p4est->mpirank == 0)
-        printf("[D4EST_INFO]: AMR REFINEMENT LEVEL %d\n", level);
 
       d4est_amr_step
         (

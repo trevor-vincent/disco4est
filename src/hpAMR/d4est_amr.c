@@ -649,17 +649,6 @@ d4est_amr_step
 
   if (p4est->mpirank == 0)
     zlog_info(c_default, "New grid has %d elements", p4est->local_num_quadrants);
-  /* d4est_ghost_destroy(*d4est_ghost); */
-  /* *d4est_ghost = NULL; */
-
-  /* *d4est_ghost = d4est_ghost_init(p4est); */
-  /* *d4est_ghost_data = NULL; */
-  /* p4est_ghost_destroy(*ghost); */
-  /* P4EST_FREE(*ghost_data); */
-  /* *ghost = NULL; */
-  /* *ghost_data = NULL; */
-  /* *ghost = p4est_ghost_new(p4est, P4EST_CONNECT_FACE); */
-  /* *ghost_data = P4EST_ALLOC(d4est_element_data_t, (*ghost)->ghosts.elem_count); */
 }
 
 void
