@@ -69,7 +69,7 @@ macro(petsc_build)
     PREFIX    ${CMAKE_BINARY_DIR}/third_party/petsc
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/petsc/
     CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/third_party/petsc &&
-    python configure
+    python2 configure
     ${petsc_config_args}
     ${blas_config_args}
     ${lapack_config_args}

@@ -1,4 +1,4 @@
-#ifndef TWO_PUNCTURES_FCNS_H
+ #ifndef TWO_PUNCTURES_FCNS_H
 #define TWO_PUNCTURES_FCNS_H 
 
 #include <d4est_util.h>
