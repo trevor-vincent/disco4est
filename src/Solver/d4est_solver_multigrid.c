@@ -197,6 +197,9 @@ d4est_solver_multigrid_get_h_coarsen_levels
     }
     zlog_info(c_default, "guess for h levels = %d\n", max_level + 1 - power);
   }
+
+
+  
   return max_level + 1 - power;
 }
 
@@ -502,11 +505,6 @@ d4est_solver_multigrid_data_init
   if (mg_data->use_p_coarsen == 1){
     mg_data->num_of_p_coarsen_levels = d4est_solver_multigrid_get_p_coarsen_levels(p4est);
     mg_data->num_of_levels += mg_data->num_of_p_coarsen_levels;
-  }
-
-  if (mg_data->num_of_levels < 2){
-    zlog_error(c_default, "The code sees less than two multigrid levels, cannot run multigrid, try increasing min_level in initial_mesh\n");
-    D4EST_ABORT("");
   }
   
   D4EST_CHECK_INPUT("multigrid", mg_data->vcycle_atol, -1);
@@ -1254,9 +1252,8 @@ d4est_solver_multigrid_solve
     start = clock();
     zlog_info(c_default, "Performing d4est_solver_multigrid solve...");
   }
-
   if (mg_data->num_of_levels < 2){
-    zlog_error(c_default, "number of levels < 2");
+    zlog_error(c_default, "The code sees less than two multigrid levels, cannot run multigrid, try increasing min_level in initial_mesh\n");
     D4EST_ABORT("");
   }
   
