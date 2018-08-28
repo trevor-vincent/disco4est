@@ -201,9 +201,7 @@ krylov_petsc_input
       zlog_debug(c_default, "ksp_chebyshev_esteig = %s", input->ksp_chebyshev_esteig);
       zlog_debug(c_default, "ksp_chebyshev_esteig_random = %d", input->ksp_chebyshev_esteig_random);
     }
-  }
-
-  
+  }  
 }
 
 static
@@ -232,15 +230,6 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   vecs_for_aij.u = (double*)px;
   vecs_for_aij.Au = py;
 
-
-  /* double residual = 0.; */
-  /* for (int i = 0; i < vecs_for_aij.local_nodes; i++){ */
-    /* double r_temp = vecs_for_aij.Au[i] - vecs_for_aij.rhs[i]; */
-    /* residual += r_temp*r_temp; */
-  /* } */
-  /* printf("residual = %.15f\n", sqrt(residual)); */
-
-  
   d4est_elliptic_eqns_apply_lhs
     (
      petsc_ctx->p4est,
@@ -254,20 +243,18 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
      petsc_ctx->d4est_factors
     );
 
-
-  /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_aij.u, vecs_for_aij.local_nodes); */
-  /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_aij.Au, vecs_for_aij.local_nodes); */
-  /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_aij.rhs, vecs_for_aij.local_nodes); */
-  /* d4est_mesh_data_printout(petsc_ctx->d4est_factors); */
-
-
-  /* residual = 0.; */
-  /* for (int i = 0; i < vecs_for_aij.local_nodes; i++){ */
-    /* double r_temp = vecs_for_aij.Au[i] - vecs_for_aij.rhs[i]; */
-    /* residual += r_temp*r_temp; */
-  /* } */
-  /* printf("residual = %.15f\n", sqrt(residual)); */
-
+  /* if (petsc_ctx->d4est_checkpointer != NULL){ */
+    /* int it; */
+    /* KSPGetIterationNumber(ksp,&it); */
+    /* d4est_checkpointer_krylov_solve_checkpoint */
+      /* ( */
+       /* petsc_ctx->p4est, */
+       /* petsc_ctx->d4est_factors, */
+       /* petsc_ctx->vecs, */
+       /* petsc_ctx->d4est_checkpointer, */
+       /* it */
+      /* ); */
+  /* }   */
   
   
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
@@ -289,6 +276,8 @@ krylov_petsc_solve
  d4est_mesh_data_t* d4est_factors,
  krylov_petsc_params_t* krylov_petsc_params,
  d4est_krylov_pc_t* d4est_krylov_pc
+ /* , */
+ /* d4est_checkpointer_t* d4est_checkpointer */
 )
 {
   zlog_category_t *c_default = zlog_get_category("krylov_petsc");

@@ -438,6 +438,7 @@ d4est_amr_init
   d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
   d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
 
+  d4est_amr->level = 0;
   d4est_amr->mpirank = p4est->mpirank;
   d4est_amr->scheme = scheme;
   d4est_amr->balance_log = NULL;
@@ -479,6 +480,7 @@ d4est_amr_init_uniform_h
   d4est_amr->balance_log = NULL;
   d4est_amr->refinement_log = NULL;
   d4est_amr->initial_log = NULL;
+  d4est_amr->level = 0;
   /* d4est_amr->max_degree = max_degree; */
   d4est_amr->num_of_amr_steps = num_of_amr_steps;
   scheme->amr_scheme_type = AMR_UNIFORM_H;
@@ -503,6 +505,7 @@ d4est_amr_init_uniform_p
   d4est_amr->balance_log = NULL;
   d4est_amr->refinement_log = NULL;
   d4est_amr->initial_log = NULL;
+  d4est_amr->level = 0;
   /* d4est_amr->max_degree = max_degree; */
   d4est_amr->num_of_amr_steps = num_of_amr_steps;
   scheme->amr_scheme_type = AMR_UNIFORM_P;
@@ -528,6 +531,7 @@ d4est_amr_init_random_hp
   d4est_amr->balance_log = NULL;
   d4est_amr->refinement_log = NULL;
   d4est_amr->initial_log = NULL;
+  d4est_amr->level = 0;
   /* d4est_amr->max_degree = max_degree; *\/ */
   d4est_amr->num_of_amr_steps = num_of_amr_steps;
   scheme->amr_scheme_type = AMR_RANDOM_HP;
@@ -536,58 +540,56 @@ d4est_amr_init_random_hp
   return d4est_amr;
 }
 
+/* static void */
+/* d4est_amr_custom_destroy(d4est_amr_scheme_t* scheme) */
+/* { */
+/*   P4EST_FREE(scheme); */
+/* } */
 
-
-static void
-d4est_amr_custom_destroy(d4est_amr_scheme_t* scheme)
-{
-  P4EST_FREE(scheme);
-}
-
-d4est_amr_t*
-d4est_amr_custom_init
-(
- p4est_t* p4est,
- /* int max_degree, */
- int num_of_amr_steps,
- void(*d4est_amr_custom_mark_elements)(p4est_iter_volume_info_t*,void*),
- void* user
-)
-{
-  d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
-  d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
+/* d4est_amr_t* */
+/* d4est_amr_custom_init */
+/* ( */
+/*  p4est_t* p4est, */
+/*  /\* int max_degree, *\/ */
+/*  int num_of_amr_steps, */
+/*  void(*d4est_amr_custom_mark_elements)(p4est_iter_volume_info_t*,void*), */
+/*  void* user */
+/* ) */
+/* { */
+/*   d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1); */
+/*   d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1); */
   
-  d4est_amr->scheme = scheme;
-  d4est_amr->balance_log = NULL;
-  d4est_amr->refinement_log = NULL;
-  d4est_amr->initial_log = NULL;
-  /* d4est_amr->max_degree = max_degree; */
-  d4est_amr->num_of_amr_steps = num_of_amr_steps;
+/*   d4est_amr->scheme = scheme; */
+/*   d4est_amr->balance_log = NULL; */
+/*   d4est_amr->refinement_log = NULL; */
+/*   d4est_amr->initial_log = NULL; */
+/*   /\* d4est_amr->max_degree = max_degree; *\/ */
+/*   d4est_amr->num_of_amr_steps = num_of_amr_steps; */
 
-  scheme->amr_scheme_type = AMR_CUSTOM;
-  scheme->pre_refine_callback
-    = NULL;
+/*   scheme->amr_scheme_type = AMR_CUSTOM; */
+/*   scheme->pre_refine_callback */
+/*     = NULL; */
   
-  scheme->balance_replace_callback_fcn_ptr
-    = NULL;
+/*   scheme->balance_replace_callback_fcn_ptr */
+/*     = NULL; */
 
-  scheme->refine_replace_callback_fcn_ptr
-    = NULL;
+/*   scheme->refine_replace_callback_fcn_ptr */
+/*     = NULL; */
 
-  scheme->amr_scheme_data
-    = user;
+/*   scheme->amr_scheme_data */
+/*     = user; */
 
-  scheme->post_balance_callback
-    = NULL;
+/*   scheme->post_balance_callback */
+/*     = NULL; */
 
-  scheme->mark_elements
-    = d4est_amr_custom_mark_elements;
+/*   scheme->mark_elements */
+/*     = d4est_amr_custom_mark_elements; */
   
-  scheme->destroy
-    = d4est_amr_custom_destroy;
+/*   scheme->destroy */
+/*     = d4est_amr_custom_destroy; */
   
-  return d4est_amr;
-}
+/*   return d4est_amr; */
+/* } */
  
 void
 d4est_amr_step
@@ -649,6 +651,9 @@ d4est_amr_step
 
   if (p4est->mpirank == 0)
     zlog_info(c_default, "New grid has %d elements", p4est->local_num_quadrants);
+
+
+  d4est_amr->level++;
 }
 
 void

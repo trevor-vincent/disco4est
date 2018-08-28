@@ -465,7 +465,10 @@ problem_init
        d4est_geom_compactified,
        d4est_factors_compactified,
        d4est_quad,
-       0
+       0,
+       0,
+       NULL,
+       -1
       );
     if (p4est->mpirank == 0){
       printf(" BEGIN PRINT BEFORE SORT\n");

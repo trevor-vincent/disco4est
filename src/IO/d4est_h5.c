@@ -168,7 +168,7 @@ d4est_h5_read_dataset
   /* Open an existing dataset. */
   hid_t dataset_id = H5Dopen2(file_id, dataset_path, H5P_DEFAULT);
 
-  zlog_debug(c_default, "Opening file and dataset %s, %s", file_name, dataset_path);
+  /* zlog_debug(c_default, "Opening file and dataset %s, %s", file_name, dataset_path); */
 
   /* Write the dataset. */
   /* H5Dwrite(dataset_id, dataset_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataset); */

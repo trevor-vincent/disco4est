@@ -404,6 +404,8 @@ problem_init
   d4est_geometry_t* d4est_geom_compactified = d4est_geometry_new(p4est->mpirank, input_file,"compactified_geometry", c_geom);
   d4est_mesh_data_t* d4est_factors_compactified = d4est_mesh_data_init(p4est);
 
+  zlog_category_t* zlog_points = zlog_get_category("d4est_points");
+  d4est_norms_linear_fit_t* point_3m_fit = d4est_norms_linear_fit_init(); 
 
 
   double point [4][30];
@@ -468,7 +470,10 @@ problem_init
        d4est_geom_compactified,
        d4est_factors_compactified,
        d4est_quad,
-       0
+       0,
+       1,
+       input_file,
+       level
       );
 
    d4est_amr_smooth_pred_params_t* sp_params = d4est_amr_smooth_pred_params_input
@@ -852,6 +857,21 @@ problem_init
       DEBUG_PRINT_4ARR_DBL(dof, point3, point3_diff, point3_spec_diff,iterations+1);
       DEBUG_PRINT_4ARR_DBL(dof, point10, point10_diff, point10_spec_diff,iterations+1);
       DEBUG_PRINT_4ARR_DBL(dof, point100, point100_diff, point100_spec_diff,iterations+1);
+
+      zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point0[iterations], point0_diff[iterations], point0_spec_diff[iterations]);
+      zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point3[iterations], point3_diff[iterations], point3_spec_diff[iterations]);
+      zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point10[iterations], point10_diff[iterations], point10_spec_diff[iterations]);
+      zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point100[iterations], point100_diff[iterations], point100_spec_diff[iterations]);
+    
+      d4est_norms_linear_fit_add_entry_and_fit
+        (
+         p4est,
+         point_3m_fit,
+         point3_spec_diff[iterations],
+         dof[iterations]
+        );
+      
+      
     }
     iterations++;
 
@@ -898,6 +918,11 @@ problem_init
   d4est_amr_destroy(d4est_amr_uniform);
   d4est_poisson_flux_destroy(flux_data_for_lhs);
   d4est_poisson_flux_destroy(flux_data_for_rhs);
+
+
+  d4est_norms_linear_fit_destroy(point_3m_fit);
+
+
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
   P4EST_FREE(prob_vecs.u);

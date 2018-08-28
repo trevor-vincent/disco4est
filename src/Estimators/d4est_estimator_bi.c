@@ -9,7 +9,7 @@
 #include <d4est_poisson_flux.h>
 #include <d4est_mortars.h>
 #include <d4est_poisson.h>
-
+#include <d4est_vtk.h>
 
 static void
 d4est_estimator_bi_dirichlet
@@ -47,23 +47,7 @@ d4est_estimator_bi_dirichlet
   D4EST_COPY_DIM_VEC(boundary_data->xyz_on_f_m_lobatto, xyz_on_f_m_lobatto); 
   double* Je2_prefactor = P4EST_ALLOC(double, face_nodes_m_quad);
   double* Je2 = P4EST_ALLOC(double, face_nodes_m_quad);
-  double* h_quad = boundary_data->h_quad;//P4EST_ALLOC(double, face_nodes_m_quad);
-  /* d4est_poisson_flux_sipg_calculate_h */
-  /*   ( */
-  /*    p4est, */
-  /*    &e_m, */
-  /*    f_m, */
-  /*    d4est_ops, */
-  /*    d4est_geom, */
-  /*    d4est_quad, */
-  /*    penalty_data->sipg_flux_h, */
-  /*    j_div_sj_quad, */
-  /*    h_quad, */
-  /*    1, */
-  /*    1, */
-  /*    &face_nodes_m_quad, */
-  /*    (penalty_data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *penalty_data->size_params */
-  /*   ); */
+  double* h_quad = boundary_data->h_quad;
   
   for (int i = 0; i < face_nodes_m_quad; i++){
     Je2_prefactor[i] = penalty_data->u_dirichlet_penalty_fcn
@@ -133,7 +117,11 @@ d4est_estimator_bi_dirichlet
 
     /* e_m->local_estimator += Je2MJe2; */
     estimator[e_m->id] += Je2MJe2;
-
+    /* printf("Je2MJe2 = %.25f\n", Je2MJe2); */
+    if (penalty_data->output_vtk){
+      penalty_data->estimator_vtk[7 + f_m][e_m->id] = Je2MJe2;
+      penalty_data->estimator_vtk[1 + f_m][e_m->id] = 0;
+    }
   }
 
 
@@ -174,9 +162,7 @@ d4est_estimator_bi_interface
   
   double* u_m_on_f_m_mortar_quad = interface_data->u_m_on_f_m_mortar_quad;
   double* sj_on_f_m_mortar_quad = interface_data->sj_on_f_m_mortar_quad;
-  /* double* j_div_sj_on_f_m_mortar_quad = interface_data->j_div_sj_on_f_m_mortar_quad; */
   double* u_p_on_f_p_mortar_quad = interface_data->u_p_on_f_p_mortar_quad;
-  /* double* j_div_sj_on_f_p_mortar_quad = interface_data->j_div_sj_on_f_p_mortar_quad; */
   
   double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* dudx_m_on_f_m_mortar_quad [(P4EST_DIM)];
@@ -200,44 +186,6 @@ d4est_estimator_bi_interface
   double* estimator = penalty_data->estimator;
   double* hm_mortar_quad = interface_data->hm_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
   double* hp_mortar_quad = interface_data->hp_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
-
-  /* d4est_poisson_flux_sipg_calculate_h */
-  /*   ( */
-  /*    p4est, */
-  /*    e_m, */
-  /*    f_m, */
-  /*    d4est_ops, */
-  /*    d4est_geom, */
-  /*    d4est_quad, */
-  /*    penalty_data->sipg_flux_h, */
-  /*    j_div_sj_on_f_m_mortar_quad, */
-  /*    hm_mortar_quad, */
-  /*    interface_data->faces_mortar, */
-  /*    faces_m, */
-  /*    nodes_mortar_quad, */
-  /*    (penalty_data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *penalty_data->size_params */
-  /*   ); */
-
-
- /*  d4est_element_data_t* e_p_oriented [(P4EST_HALF)]; */
- /* d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented); */
-  
- /*    d4est_poisson_flux_sipg_calculate_h */
- /*    ( */
- /*     p4est, */
- /*     &e_p_oriented[0], */
- /*     f_p, */
- /*     d4est_ops, */
- /*     d4est_geom, */
- /*     d4est_quad, */
- /*     penalty_data->sipg_flux_h, */
- /*     j_div_sj_on_f_p_mortar_quad, */
- /*     hp_mortar_quad, */
- /*     interface_data->faces_mortar, */
- /*     faces_p, */
- /*     nodes_mortar_quad, */
- /*     (penalty_data->size_params == NULL) ? d4est_mesh_get_size_parameters(d4est_factors) : *penalty_data->size_params */
- /*    ); */
 
   double* Je1_prefactor = P4EST_ALLOC(double, total_nodes_mortar_quad);
   double* Je1 = P4EST_ALLOC(double, total_nodes_mortar_quad);
@@ -271,10 +219,6 @@ d4est_estimator_bi_interface
     stride += nodes_mortar_quad[f];
   }
 
-  /* P4EST_FREE(hm_mortar_quad); */
-  /* P4EST_FREE(hp_mortar_quad);   */
-
-  /* calculate symmetric interior penalty flux */
   int k;
   int f;
   int ks;
@@ -321,14 +265,21 @@ d4est_estimator_bi_interface
 
       
       /* even if it's a ghost we can still add it to the ghosts estimator because we will not send it back! */
-
       if(faces_m == (P4EST_HALF)){
-        /* e_m[f]->local_estimator += Je2MJe2; */
         estimator[e_m[f]->id] += Je2MJe2;
+          /* printf("Je2MJe2 = %.25f\n", Je2MJe2); */
+        if (penalty_data->output_vtk){
+          penalty_data->estimator_vtk[7 + f_m][e_m[f]->id] = Je2MJe2;
+        }
       }
       else{
         /* e_m[0]->local_estimator += Je2MJe2; */
         estimator[e_m[0]->id] += Je2MJe2;
+        if (penalty_data->output_vtk){
+          /* printf("Je2MJe2 = %.25f\n", Je2MJe2); */
+          penalty_data->estimator_vtk[7 + f_m][e_m[0]->id] = Je2MJe2;
+        }
+        
       }
     }
     stride += nodes_mortar_quad[f];
@@ -356,12 +307,19 @@ d4est_estimator_bi_interface
    
     /* even if it's a ghost we can still add it to the ghosts estimator because we will not send it back! */
     if(faces_m == (P4EST_HALF)){
-      /* e_m[f]->local_estimator += Je1MJe1; */
       estimator[e_m[f]->id] += Je1MJe1;
+      /* printf("Je1MJe1 = %.25f\n", Je1MJe1); */
+        if (penalty_data->output_vtk){
+          penalty_data->estimator_vtk[1 + f_m][e_m[f]->id] = Je1MJe1;
+        }
+      
     }
     else{
-      /* e_m[0]->local_estimator += Je1MJe1; */
       estimator[e_m[0]->id] += Je1MJe1;
+      /* printf("Je1MJe1 = %.25f\n", Je1MJe1); */
+      if (penalty_data->output_vtk){
+        penalty_data->estimator_vtk[1 + f_m][e_m[0]->id] = Je1MJe1;
+      }
     }
     stride += nodes_mortar_quad[f];
   }
@@ -380,7 +338,7 @@ d4est_estimator_bi_compute
  p4est_t* p4est,
  d4est_elliptic_data_t* d4est_elliptic_data,
  d4est_elliptic_eqns_t* fcns,
- d4est_estimator_bi_penalty_data_t bi_penalty_data,
+ d4est_estimator_bi_penalty_data_t penalty_data,
  d4est_xyz_fcn_t u_bndry_fcn,
  d4est_ghost_t* d4est_ghost,
  d4est_ghost_data_t* d4est_ghost_data,
@@ -390,10 +348,22 @@ d4est_estimator_bi_compute
  d4est_geometry_t* d4est_geom_for_integrals,
  d4est_mesh_data_t* d4est_factors_for_integrals,
  d4est_quadrature_t* d4est_quad,
- /* diam_compute_option_t diam_opt, */
- int which_field
+ int which_field,
+ int output_vtk, /* output vtk volume data for each estimator term */
+ const char* input_file, /* for output_vtk */
+ int level /* for output vtk */
 )
 {
+  penalty_data.output_vtk = output_vtk;
+  if (penalty_data.output_vtk){
+    for (int i = 0; i < 13; i++){
+      penalty_data.estimator_vtk[i] = P4EST_ALLOC(double, p4est->local_num_quadrants);
+      for (int j = 0; j < p4est->local_num_quadrants; j++){
+        penalty_data.estimator_vtk[i][j] = -1.;
+      }
+    }
+  }
+  
   double* estimator = P4EST_ALLOC(double, p4est->local_num_quadrants);
   d4est_elliptic_eqns_build_residual
     (
@@ -417,12 +387,9 @@ d4est_estimator_bi_compute
      d4est_factors_for_integrals,
      d4est_elliptic_data->Au,
      d4est_elliptic_data->local_nodes,
-     /* STORE_LOCALLY, */
      NULL,
      estimator
     );
-
-
 
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
@@ -437,24 +404,16 @@ d4est_estimator_bi_compute
         int deg = ed->deg;
         int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),deg);
         double h = d4est_factors_for_integrals->diam_volume[ed->id];
-        /* d4est_estimator_get_diam(d4est_factors_for_integrals, ed, diam_opt); */
         estimator[ed->id] *= h*h/(deg*deg);
-        
-        /* d4est_util_copy_1st_to_2nd */
-        /*   ( */
-        /*    &(vecs->u[ed->nodal_stride]), */
-        /*    &(ed->u_elem)[0], */
-        /*    volume_nodes_lobatto */
-        /*   ); */
-       
+
+        if (penalty_data.output_vtk){
+          penalty_data.estimator_vtk[0][ed->id] = estimator[ed->id];
+        }       
       }
     }
   
-  
   d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data,d4est_elliptic_data->u);
   
-  /* p4est_ghost_exchange_data(p4est,ghost,ghost_data); */
-
   double* dudr_local [(P4EST_DIM)];
   D4EST_ALLOC_DIM_VEC(dudr_local,d4est_elliptic_data->local_nodes);
 
@@ -501,8 +460,8 @@ d4est_estimator_bi_compute
   flux_data.bc_type = BC_DIRICHLET;
   flux_data.bc_data = &bc_data;
 
-  bi_penalty_data.estimator = estimator;
-  flux_data.flux_data = &bi_penalty_data;
+  penalty_data.estimator = estimator;
+  flux_data.flux_data = &penalty_data;
   
   d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(&flux_data);
   
@@ -510,18 +469,49 @@ d4est_estimator_bi_compute
     (
      p4est,
      d4est_ghost,
-     /* ghost_data, */
      d4est_ops,
      d4est_geom_for_integrals,
      d4est_quad,
      d4est_factors_for_integrals,
      &flux_fcns
-     /* DO_NOT_EXCHANGE_GHOST_DATA */
     );
 
-  /* DEBUG_PRINT_ARR_DBL(estimator, p4est->local_num_quadrants); */
-  
+  if (penalty_data.output_vtk){
+#if ((P4EST_DIM)==3)
 
+    /* for (int i = 0; i < 13; i++){ */
+      /* for (int j = 0; j < p4est->local_num_quadrants; j++){ */
+        /* if (penalty_data.estimator_vtk[i][j] == -1.){ */
+          /* printf("estimator_vtk at %d %d is -1\n", i,j); */
+          /* D4EST_ABORT(""); */
+        /* } */
+      /* } */
+    /* } */
+
+    d4est_vtk_save
+      (
+       p4est,
+       d4est_ops,
+       input_file,
+       "d4est_vtk_estimator",
+       NULL,
+       NULL,
+       (const char * []){"Rterm","Je1term_f0","Je1term_f1","Je1term_f2","Je1term_f3","Je1term_f4","Je1term_f5", "Je2term_f0","Je2term_f1","Je2term_f2","Je2term_f3","Je2term_f4","Je2term_f5",NULL},
+       (double* []){penalty_data.estimator_vtk[0],penalty_data.estimator_vtk[1],penalty_data.estimator_vtk[2],penalty_data.estimator_vtk[3],penalty_data.estimator_vtk[4],penalty_data.estimator_vtk[5],penalty_data.estimator_vtk[6],penalty_data.estimator_vtk[7],penalty_data.estimator_vtk[8],penalty_data.estimator_vtk[9],penalty_data.estimator_vtk[10],penalty_data.estimator_vtk[11],penalty_data.estimator_vtk[12]},
+       level
+      );
+#else
+    D4EST_ABORT("Estimator vtk save only supported in 3d atm");
+#endif
+  }
+
+  if (penalty_data.output_vtk){
+    for (int i = 0; i < 13; i++){
+      P4EST_FREE(penalty_data.estimator_vtk[i]);
+    }
+  }
+
+  
   D4EST_FREE_DIM_VEC(dudr_local);  
   D4EST_FREE_DIM_VEC(dudr_ghost);  
   return estimator;

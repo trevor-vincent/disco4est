@@ -1,3 +1,4 @@
+
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <d4est_util.h>
@@ -425,8 +426,8 @@ problem_init
                               (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL}
     );
 
-
-  
+  zlog_category_t* zlog_points = zlog_get_category("d4est_points");
+  d4est_norms_linear_fit_t* point_3m_fit = d4est_norms_linear_fit_init(); 
   
   d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
@@ -450,6 +451,7 @@ problem_init
   point_spec_diff[2][0] = 0;
   point_spec_diff[3][0] = 0;
 
+  
   int iterations = 1;
 
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry_compactified");
@@ -517,7 +519,10 @@ problem_init
        d4est_geom_compactified,
        d4est_factors_compactified,
        d4est_quad,
-       0
+       0,
+       0,
+       NULL,
+       -1
       );
 
     d4est_amr_smooth_pred_params_t* sp_params = d4est_amr_smooth_pred_params_input
@@ -527,7 +532,6 @@ problem_init
 
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
     d4est_estimator_stats_compute(p4est, estimator, stats, sp_params->percentile, 1, 0);
-    /* d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_prev, error, prob_vecs.local_nodes); */
     d4est_linalg_vec_fabsdiff(prob_vecs.u, u_prev, error, prob_vecs.local_nodes);
     double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
     P4EST_FREE(sp_params);
@@ -550,49 +554,32 @@ problem_init
     }    
     
     d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
-    /* if (level != 0){ */
-      /* DEBUG_PRINT_ARR_DBL(smooth_pred_data->predictor,p4est->local_num_quadrants); */
-    /*   d4est_vtk_save */
-    /*     ( */
-    /*      p4est, */
-    /*      d4est_ops, */
-    /*      input_file, */
-    /*      "d4est_vtk", */
-    /*      (const char * []){"u","u_prev","error", NULL}, */
-    /*      (double* []){prob_vecs.u, u_prev, error}, */
-    /*      (const char * []){"estimator",NULL}, */
-    /*      (double* []){estimator}, */
-    /*      level */
-    /*     ); */
-    /* } */
-    /* else { */
-      d4est_vtk_save
-        (
-         p4est,
-         d4est_ops,
-         input_file,
-         "d4est_vtk",
-         (const char * []){"u","u_prev","error", NULL},
-         (double* []){prob_vecs.u, u_prev, error},
-         (const char * []){"estimator","error_l2",NULL},
-         (double* []){estimator,error_l2},
-         level
-        );
 
-      d4est_vtk_save
-        (
-         p4est,
-         d4est_ops,
-         input_file,
-         "d4est_vtk_compactified",
-         (const char * []){"u","u_prev","error", NULL},
-         (double* []){prob_vecs.u, u_prev, error},
-         (const char * []){"estimator","error_l2",NULL},
-         (double* []){estimator,error_l2},
-         level
-        );
+    d4est_vtk_save
+      (
+       p4est,
+       d4est_ops,
+       input_file,
+       "d4est_vtk",
+       (const char * []){"u","u_prev","error", NULL},
+       (double* []){prob_vecs.u, u_prev, error},
+       (const char * []){"estimator","error_l2",NULL},
+       (double* []){estimator,error_l2},
+       level
+      );
 
-
+    d4est_vtk_save
+      (
+       p4est,
+       d4est_ops,
+       input_file,
+       "d4est_vtk_compactified",
+       (const char * []){"u","u_prev","error", NULL},
+       (double* []){prob_vecs.u, u_prev, error},
+       (const char * []){"estimator","error_l2",NULL},
+       (double* []){estimator,error_l2},
+       level
+      );
 
       d4est_vtk_save
         (
@@ -620,7 +607,6 @@ problem_init
          level
         );    
       
-    /* } */
 
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
@@ -913,9 +899,23 @@ problem_init
       DEBUG_PRINT_4ARR_DBL(dof, point3, point3_diff, point3_spec_diff,iterations+1);
       DEBUG_PRINT_4ARR_DBL(dof, point10, point10_diff, point10_spec_diff,iterations+1);
       DEBUG_PRINT_4ARR_DBL(dof, point100, point100_diff, point100_spec_diff,iterations+1);
+
+    zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point0[iterations], point0_diff[iterations], point0_spec_diff[iterations]);
+    zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point3[iterations], point3_diff[iterations], point3_spec_diff[iterations]);
+    zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point10[iterations], point10_diff[iterations], point10_spec_diff[iterations]);
+    zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point100[iterations], point100_diff[iterations], point100_spec_diff[iterations]);
+    
+    d4est_norms_linear_fit_add_entry_and_fit
+      (
+       p4est,
+       point_3m_fit,
+       point3_spec_diff[iterations],
+       dof[iterations]
+      );
+      
     }
     iterations++;
-
+    
     if (level != d4est_amr->num_of_amr_steps && level != 0){
       d4est_checkpoint_save
         (
@@ -953,6 +953,8 @@ problem_init
   d4est_poisson_flux_destroy(flux_data_for_res);
   P4EST_FREE(error);
 
+  d4est_norms_linear_fit_destroy(point_3m_fit);
+  
   P4EST_FREE(u_prev);
   P4EST_FREE(prob_vecs.u);
   P4EST_FREE(prob_vecs.Au);

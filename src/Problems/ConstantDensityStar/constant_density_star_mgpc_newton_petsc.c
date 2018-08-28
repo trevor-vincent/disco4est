@@ -314,7 +314,10 @@ problem_init
       d4est_geom,
       d4est_factors,
       d4est_quad,
-      0
+      0,
+      0,
+      NULL,
+      -1
     );
 
 

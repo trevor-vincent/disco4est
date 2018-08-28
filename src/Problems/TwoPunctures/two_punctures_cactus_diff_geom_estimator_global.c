@@ -495,7 +495,10 @@ problem_init
        d4est_geom_compactified,
        d4est_factors_compactified,
        d4est_quad,
-       0
+       0,
+       0,
+       NULL,
+       -1
       );
 
     d4est_amr_smooth_pred_params_t* sp_params = d4est_amr_smooth_pred_params_input
@@ -504,8 +507,14 @@ problem_init
                                                 );
 
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
-    d4est_estimator_stats_compute(p4est, estimator, stats, sp_params->percentile, 1, 0);
-    /* d4est_linalg_vec_axpyeqz(-1., prob_vecs.u, u_prev, error, prob_vecs.local_nodes); */
+    d4est_estimator_stats_compute(
+                                  p4est,
+                                  estimator,
+                                  stats,
+                                  sp_params->percentile,
+                                  1,
+                                  0
+                                 );
     d4est_linalg_vec_fabsdiff(prob_vecs.u, u_prev, error, prob_vecs.local_nodes);
     double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
     P4EST_FREE(sp_params);

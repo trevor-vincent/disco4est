@@ -44,6 +44,27 @@ d4est_mesh_data_get_string_from_face_h_type
 }
 
 
+static void
+d4est_mesh_data_get_string_from_vol_h_type
+(
+ d4est_mesh_volume_h_t h_calc,
+ char* string
+)
+{
+  if (h_calc == VOL_H_EQ_DIAM){
+    strcpy(string, "VOL_H_EQ_DIAM");
+  }
+  else if (h_calc == VOL_H_EQ_CUBE_APPROX){
+    strcpy(string,"VOL_H_EQ_CUBE_APPROX");
+  }
+  else {
+    strcpy(string,"NOT_SET");
+  }
+}
+
+
+
+
 static
 int d4est_mesh_initial_extents_handler
 (
@@ -311,10 +332,14 @@ d4est_mesh_initial_extents_parse
 
 
   char face_h_string [50];
+  char vol_h_string [50];
   d4est_mesh_data_get_string_from_face_h_type( initial_extents->face_h_type,&face_h_string[0]);
-  zlog_debug(c_default,"face_h = %s", face_h_string);
-             zlog_debug(c_default,"max_degree = %d", initial_extents->max_degree);
-            
+  d4est_mesh_data_get_string_from_vol_h_type(initial_extents->volume_h_type, &vol_h_string[0]);
+  if(proc_rank == 0){
+    zlog_debug(c_default,"face_h = %s", face_h_string);
+    zlog_debug(c_default,"vol_h = %s", vol_h_string);
+    zlog_debug(c_default,"max_degree = %d", initial_extents->max_degree);
+  }
   int trees = d4est_geom->p4est_conn->num_trees;
   
   if(

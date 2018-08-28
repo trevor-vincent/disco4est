@@ -65,6 +65,7 @@ typedef struct {
   int* refinement_log;
   int* initial_log;
   int* balance_log;
+  int level;
 
   d4est_amr_scheme_t* scheme;
   d4est_operators_t* d4est_ops;

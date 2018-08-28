@@ -177,11 +177,13 @@ SET (
   )
 
 if(USE_TCMALLOC)
+  include(tcmalloc)
   SET (
     LIBS
     ${LIBS}
     ${TCMALLOC_LIBRARIES}
     stdc++
+    unwind
   )
 endif()
 
@@ -197,6 +199,10 @@ set_property(TARGET d8est APPEND_STRING PROPERTY
 target_link_libraries(d8est_test ${LIBS})
 set_property(TARGET d8est_test APPEND_STRING PROPERTY
   COMPILE_FLAGS "-DDIM=3 -DD4EST_TEST=1")
+
+set_property(TARGET d4est PROPERTY C_STANDARD 99)
+set_property(TARGET d8est PROPERTY C_STANDARD 99)
+set_property(TARGET d8est_test PROPERTY C_STANDARD 99)
 
 function(add_d4est_problem_3d exec src parent_dir)
   add_executable(${exec} src/driver.c ${CMAKE_SOURCE_DIR}/src/Problems/${parent_dir}/${src})

@@ -248,7 +248,10 @@ problem_init
        d4est_geom,
        d4est_factors,
        d4est_quad,
-       0
+       0,
+       0,
+       NULL,
+       -1
       );
 
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);

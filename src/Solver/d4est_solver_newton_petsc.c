@@ -220,7 +220,19 @@ PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
      petsc_ctx->d4est_quad,
      petsc_ctx->d4est_factors
     );
-  
+
+  /* if (petsc_ctx->d4est_checkpointer != NULL){ */
+    /* int it; */
+    /* SNESGetIterationNumber(snes,&it); */
+    /* d4est_checkpointer_newton_solve_checkpoint */
+      /* ( */
+       /* petsc_ctx->p4est, */
+       /* petsc_ctx->d4est_factors, */
+       /* petsc_ctx->vecs, */
+       /* petsc_ctx->d4est_checkpointer, */
+       /* it */
+      /* ); */
+  /* }   */
   VecRestoreArray(f,&ftemp);
   VecRestoreArrayRead(x,&xx);
   return 0;
@@ -345,6 +357,8 @@ newton_petsc_solve
  krylov_petsc_params_t* krylov_options,
  newton_petsc_params_t* newton_options,
  d4est_krylov_pc_t* d4est_krylov_pc
+ /* , */
+ /* d4est_checkpointer_t* d4est_checkpointer */
 )
 {
   zlog_category_t* c_default = zlog_get_category("d4est_solver_newton_petsc");
