@@ -500,7 +500,8 @@ problem_init
     (
      p4est,
      5,
-     estimator
+     estimator,
+     -1
     );
 
     

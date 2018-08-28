@@ -22,6 +22,28 @@ typedef struct {
   
 } corner_data_t;
 
+typedef struct {
+
+  int mpirank;
+  int tree;
+  int tree_id;
+  int id;
+  int stride;
+  int faces [3];
+  
+} schwarz_element_t;
+
+typedef struct {
+
+  int mpirank;
+  int tree;
+  int tree_id;
+  int id;
+  schwarz_element_t connections [27];
+
+} schwarz_element_connections_t;
+
+
 
 /* static void */
 /* iter_edge_callback */
