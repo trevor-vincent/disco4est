@@ -24,3 +24,6 @@
 	url = https://github.com/live-clones/hdf5.git
 	branch = master
 	ignore = dirty
+[submodule "third_party/gperftools"]
+	path = third_party/gperftools
+	url = https://github.com/gperftools/gperftools.git
