@@ -183,8 +183,15 @@ if(USE_TCMALLOC)
     ${LIBS}
     ${TCMALLOC_LIBRARIES}
     stdc++
-    unwind
-  )
+    )
+  find_package(Libunwind)
+  if(LIBUNWIND_FOUND)
+    SET (
+      LIBS
+      ${LIBS}
+      unwind
+      )
+  endif()
 endif()
 
 message("LIBS=${LIBS}")
@@ -325,6 +332,7 @@ add_d4est_bash_regression_test(d4est_test_cds.sh Regression d4est_test_constant_
 add_d4est_bash_regression_test(d4est_test_poisson_sinx.sh Regression d4est_test_poisson_sinx)
 # add_d4est_bash_regression_test(d4est_test_poisson_lorentzian.sh Regression d4est_test_poisson_lorentzian)
 add_d4est_bash_regression_test(d4est_test_twopunctures.sh Regression d4est_test_twopunctures)
+add_d4est_bash_regression_test(d4est_test_twopunctures_2.sh Regression d4est_test_twopunctures_2)
 add_d4est_bash_regression_test(d4est_test_mpi.sh Regression d4est_test_mpi)
 
 add_d4est_problem_2d(stamm_driver stamm_multigrid_pc.c Stamm)
