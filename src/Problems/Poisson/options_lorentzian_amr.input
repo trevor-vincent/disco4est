@@ -1,6 +1,6 @@
 [initial_mesh]
 min_quadrants = -1
-min_level = 0
+min_level = 1
 fill_uniform = 1
 region0_deg = 1
 region0_deg_quad_inc = 0
@@ -20,7 +20,7 @@ use_dirichlet = 1
 [amr]
 scheme = smooth_pred
 num_of_amr_steps = 15
-gamma_h = 
+gamma_h = 100000
 gamma_p = 0.1
 gamma_n = 1.
 percentile = 5
@@ -107,8 +107,21 @@ write_rank = 1
 wrap_rank = 0
 write_deg = 1
 
+
 [d4est_vtk_compactified_corner]
 filename = two_punctures_compactified_corner
+geometry_section = compactified_geometry
+output_type = ascii
+grid_type = corner
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
+
+[d4est_vtk_estimator]
+filename = estimator
 geometry_section = compactified_geometry
 output_type = ascii
 grid_type = corner
