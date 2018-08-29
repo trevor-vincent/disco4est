@@ -901,10 +901,10 @@ problem_init
       DEBUG_PRINT_4ARR_DBL(dof, point10, point10_diff, point10_spec_diff,iterations+1);
       DEBUG_PRINT_4ARR_DBL(dof, point100, point100_diff, point100_spec_diff,iterations+1);
 
-    zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point0[iterations], point0_diff[iterations], point0_spec_diff[iterations]);
-    zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point3[iterations], point3_diff[iterations], point3_spec_diff[iterations]);
-    zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point10[iterations], point10_diff[iterations], point10_spec_diff[iterations]);
-    zlog_info(zlog_points, "%f %.25f %25f %25f", dof[iterations], point100[iterations], point100_diff[iterations], point100_spec_diff[iterations]);
+    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point0[iterations], point0_diff[iterations], point0_spec_diff[iterations]);
+    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point3[iterations], point3_diff[iterations], point3_spec_diff[iterations]);
+    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point10[iterations], point10_diff[iterations], point10_spec_diff[iterations]);
+    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point100[iterations], point100_diff[iterations], point100_spec_diff[iterations]);
     
     d4est_norms_linear_fit_add_entry_and_fit
       (
