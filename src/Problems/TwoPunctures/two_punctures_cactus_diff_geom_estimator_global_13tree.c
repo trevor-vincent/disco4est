@@ -807,7 +807,8 @@ problem_init
          d4est_factors,
          &krylov_params,
          &newton_params,
-         (mg_data->num_of_levels <= 1) ? NULL : pc
+         (mg_data->num_of_levels <= 1) ? NULL : pc,
+         level
         );
     }
 

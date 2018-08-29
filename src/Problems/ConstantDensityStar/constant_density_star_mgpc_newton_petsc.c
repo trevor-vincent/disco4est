@@ -558,7 +558,7 @@ problem_init
         d4est_factors,
         &krylov_params,
         &newton_params,
-        pc//NULL//pc
+        pc,level//NULL//pc
       );
 
       if (p4est->mpirank == 0)

@@ -54,7 +54,7 @@ double solve_for_c
 
 static
 double solve_for_c_outer
-(
+ (
  double c,
  void* user
 )
@@ -749,7 +749,7 @@ problem_init
        d4est_quad,
        d4est_factors,
        &krylov_petsc_params,
-       pc
+       pc,level
       );
 
 

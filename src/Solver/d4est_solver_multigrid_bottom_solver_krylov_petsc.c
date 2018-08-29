@@ -26,7 +26,7 @@ d4est_solver_multigrid_bottom_solver_krylov_petsc
                      mg_data->d4est_quad,
                      updater->current_d4est_factors,
                      params,
-                     NULL);
+                     NULL,-1);
 }
 
 

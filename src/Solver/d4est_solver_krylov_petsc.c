@@ -6,6 +6,7 @@
 #include <d4est_solver_krylov_petsc.h>
 #include <petscsnes.h>
 #include <d4est_krylov_pc.h>
+#include <d4est_checkpoint.h>
 #include <ini.h>
 #include <time.h>
 
@@ -79,6 +80,12 @@ int krylov_petsc_input_handler
     pconfig->ksp_do_not_use_preconditioner = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
   }
+
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"checkpoint_every_n_krylov_its")) {
+    D4EST_ASSERT(pconfig->checkpoint_every_n_krylov_its == 0);
+    pconfig->checkpoint_every_n_krylov_its = atoi(value);
+  }
+  
   
   else {
     return 0;  /* unknown section/name, error */
@@ -163,6 +170,7 @@ krylov_petsc_input
   input->ksp_chebyshev_esteig_random = -1;
   input->ksp_monitor_singular_value = 0;
   input->ksp_do_not_use_preconditioner = 0;
+  input->checkpoint_every_n_krylov_its = 0;
   
   D4EST_ASSERT(sizeof(input->input_section) <= 50);
   snprintf (input->input_section, sizeof(input->input_section), "%s", input_section);
@@ -255,7 +263,30 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
        /* it */
       /* ); */
   /* }   */
-  
+
+  if (petsc_ctx->checkpoint_every_n_krylov_its > 0 && petsc_ctx->amr_level >= 0){
+    int it;
+    KSPGetIterationNumber(*(petsc_ctx->ksp),&it);
+    if ( (it - petsc_ctx->last_krylov_checkpoint_it) >= petsc_ctx->checkpoint_every_n_krylov_its ){
+      char* output = NULL;
+      asprintf(&output,"checkpoint_krylov_%d", it);
+      
+      d4est_checkpoint_save
+        (
+         petsc_ctx->amr_level,
+         output,
+         p4est,
+         NULL,
+         NULL,
+         (const char * []){"u", NULL},
+         (hid_t []){H5T_NATIVE_DOUBLE},
+         (int []){vecs_for_aij.local_nodes},
+         (void* []){vecs_for_aij.u}
+        );
+      petsc_ctx->last_krylov_checkpoint_it = it;
+      free(output);
+    }
+  }  
   
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecRestoreArray( y, &py ); CHKERRQ(ierr);
@@ -275,9 +306,8 @@ krylov_petsc_solve
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
  krylov_petsc_params_t* krylov_petsc_params,
- d4est_krylov_pc_t* d4est_krylov_pc
- /* , */
- /* d4est_checkpointer_t* d4est_checkpointer */
+ d4est_krylov_pc_t* d4est_krylov_pc,
+ int amr_level
 )
 {
   zlog_category_t *c_default = zlog_get_category("krylov_petsc");
@@ -306,6 +336,10 @@ krylov_petsc_solve
   petsc_ctx.d4est_geom = d4est_geom;
   petsc_ctx.d4est_quad = d4est_quad;
   petsc_ctx.d4est_factors = d4est_factors;
+  petsc_ctx.checkpoint_every_n_krylov_its = krylov_petsc_params->checkpoint_every_n_krylov_its;
+  petsc_ctx.last_krylov_checkpoint_it = 0;
+  petsc_ctx.amr_level = amr_level;
+
   petsc_ctx.ksp = &ksp;
 
   

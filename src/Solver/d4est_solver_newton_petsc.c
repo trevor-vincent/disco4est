@@ -1,9 +1,13 @@
+#define _GNU_SOURCE
+#include <stdio.h>
+
 #include <pXest.h>
 #include <d4est_linalg.h>
 #include <d4est_util.h>
 #include <d4est_elliptic_data.h>
 #include <d4est_solver_newton_petsc.h>
 #include <d4est_solver_krylov_petsc.h>
+#include <d4est_checkpoint.h>
 #include <petscsnes.h>
 #include <time.h>
 #include <ini.h>
@@ -71,6 +75,11 @@ int newton_petsc_input_handler
     pconfig->snes_ksp_ew = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
   }
+  
+  else if (d4est_util_match_couple(section,"newton_petsc",name,"checkpoint_every_n_newton_its")) {
+    D4EST_ASSERT(pconfig->checkpoint_every_n_newton_its == 0);
+    pconfig->checkpoint_every_n_newton_its = atoi(value);
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -99,7 +108,7 @@ newton_petsc_input
   input->snes_linesearch_monitor = -1;
   input->snes_converged_reason = -1;
   input->snes_ksp_ew = -1;
-
+  input->checkpoint_every_n_newton_its = 0;
 
   if (ini_parse(input_file, newton_petsc_input_handler, input) < 0) {
     D4EST_ABORT("Can't load input file");
@@ -221,18 +230,33 @@ PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
      petsc_ctx->d4est_factors
     );
 
-  /* if (petsc_ctx->d4est_checkpointer != NULL){ */
-    /* int it; */
-    /* SNESGetIterationNumber(snes,&it); */
-    /* d4est_checkpointer_newton_solve_checkpoint */
-      /* ( */
-       /* petsc_ctx->p4est, */
-       /* petsc_ctx->d4est_factors, */
-       /* petsc_ctx->vecs, */
-       /* petsc_ctx->d4est_checkpointer, */
-       /* it */
-      /* ); */
-  /* }   */
+  if (petsc_ctx->checkpoint_every_n_newton_its > 0){
+    int it;
+    SNESGetIterationNumber(snes,&it);
+    if ( (it - petsc_ctx->last_newton_checkpoint_it) >= petsc_ctx->checkpoint_every_n_newton_its ){
+      if (petsc_ctx->p4est->mpirank == 0){
+        zlog_category_t* c_default = zlog_get_category("d4est_solver_newton_petsc");  
+        zlog_info(c_default, "Saving checkpoint at newton iteration %d", it);
+      }
+      char* output = NULL;
+      asprintf(&output,"checkpoint_newton_%d", it);
+      
+      d4est_checkpoint_save
+        (
+         petsc_ctx->amr_level,
+         output,
+         petsc_ctx->p4est,
+         NULL,
+         NULL,
+         (const char * []){"u", NULL},
+         (hid_t []){H5T_NATIVE_DOUBLE},
+         (int []){vecs_for_res_build.local_nodes},
+         (void* []){vecs_for_res_build.u}
+        );
+      petsc_ctx->last_newton_checkpoint_it = it;
+      free(output);
+    }
+  }
   VecRestoreArray(f,&ftemp);
   VecRestoreArrayRead(x,&xx);
   return 0;
@@ -339,7 +363,6 @@ newton_petsc_set_options_database_from_params
     PetscOptionsClearValue(NULL,"-snes_trtol");
     PetscOptionsSetValue(NULL,"-snes_trtol", input->snes_trtol);
   }  
-  
 }
 
 newton_petsc_info_t
@@ -356,9 +379,8 @@ newton_petsc_solve
  d4est_mesh_data_t* d4est_factors,
  krylov_petsc_params_t* krylov_options,
  newton_petsc_params_t* newton_options,
- d4est_krylov_pc_t* d4est_krylov_pc
- /* , */
- /* d4est_checkpointer_t* d4est_checkpointer */
+ d4est_krylov_pc_t* d4est_krylov_pc,
+ int amr_level
 )
 {
   zlog_category_t* c_default = zlog_get_category("d4est_solver_newton_petsc");
@@ -384,6 +406,9 @@ newton_petsc_solve
   petsc_ctx.d4est_geom = d4est_geom;
   petsc_ctx.d4est_quad = d4est_quad;
   petsc_ctx.d4est_factors = d4est_factors;
+  petsc_ctx.checkpoint_every_n_newton_its = newton_options->checkpoint_every_n_newton_its;
+  petsc_ctx.last_newton_checkpoint_it = 0;
+  petsc_ctx.amr_level = amr_level;
   
   SNESSetFunction(snes,r,newton_petsc_get_residual,(void*)&petsc_ctx);//CHKERRQ(ierr);
   SNESGetKSP(snes,&ksp);

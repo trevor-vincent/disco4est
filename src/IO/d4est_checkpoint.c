@@ -37,9 +37,9 @@ d4est_checkpoint_save
   int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
   d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
   
-  p4est_save(p4est_file_name,
-             p4est,
-             0/* do not save element data */);
+  /* p4est_save(p4est_file_name, */
+             /* p4est, */
+             /* 0/\* do not save element data *\/); */
 
   int num_dg_nodes = 0;
   for (int i = 0; i < p4est->local_num_quadrants; i++){
@@ -48,26 +48,29 @@ d4est_checkpoint_save
   
   d4est_h5_create_file(p4est->mpirank, checkpoint_folder_and_prefix);
   d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "degree", H5T_NATIVE_INT, p4est->local_num_quadrants);
-  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "x", H5T_NATIVE_DOUBLE, num_dg_nodes);
-  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "y", H5T_NATIVE_DOUBLE, num_dg_nodes); 
   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "degree", H5T_NATIVE_INT, deg_array);
-  d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "x", H5T_NATIVE_DOUBLE, &storage->xyz[0]);
-  d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "y", H5T_NATIVE_DOUBLE, &storage->xyz[num_dg_nodes]);
-#if (P4EST_DIM)==3
-  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "z", H5T_NATIVE_DOUBLE, num_dg_nodes);
-  d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "z", H5T_NATIVE_DOUBLE, &storage->xyz[num_dg_nodes*2]);
-#endif
 
+  if (storage != NULL){
+    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "x", H5T_NATIVE_DOUBLE, num_dg_nodes);
+    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "y", H5T_NATIVE_DOUBLE, num_dg_nodes); 
+    d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "x", H5T_NATIVE_DOUBLE, &storage->xyz[0]);
+    d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "y", H5T_NATIVE_DOUBLE, &storage->xyz[num_dg_nodes]);
+#if (P4EST_DIM)==3
+    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "z", H5T_NATIVE_DOUBLE, num_dg_nodes);
+    d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "z", H5T_NATIVE_DOUBLE, &storage->xyz[num_dg_nodes*2]);
+#endif
+  }
   /* just in case the saved p4est file is written out wrong, which has been the case, we 
    * will save the refinement log, which can be used to restore the forest if the 
    * refinement log at each refinement level is saved (e.g. you checkpoint at each level)  */
-  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "refinement_log", H5T_NATIVE_INT, d4est_amr->initial_log_size);
-  d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "refinement_log", H5T_NATIVE_INT, d4est_amr->refinement_log); 
+  if (d4est_amr != NULL){
+    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "refinement_log", H5T_NATIVE_INT, d4est_amr->initial_log_size);
+    d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "refinement_log", H5T_NATIVE_INT, d4est_amr->refinement_log); 
 
-  int refinement_log_sum = d4est_util_sum_array_int(d4est_amr->refinement_log, d4est_amr->initial_log_size);
-  d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "refinement_log_sum", H5T_NATIVE_INT, 1);
-  d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "refinement_log_sum", H5T_NATIVE_INT, &refinement_log_sum); 
-  
+    int refinement_log_sum = d4est_util_sum_array_int(d4est_amr->refinement_log, d4est_amr->initial_log_size);
+    d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "refinement_log_sum", H5T_NATIVE_INT, 1);
+    d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "refinement_log_sum", H5T_NATIVE_INT, &refinement_log_sum); 
+  }
   /* useful to check that restored d4est mesh has not changed from checkpoint file */
   int checkdeg = d4est_mesh_get_local_degree_sum(p4est);
   int checkp4est = p4est_checksum(p4est);

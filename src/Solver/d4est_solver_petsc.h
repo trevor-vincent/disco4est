@@ -22,6 +22,12 @@ typedef struct {
   d4est_mesh_data_t* d4est_factors;
   /* d4est_checkpointer_t* d4est_checkpointer; */
   KSP* ksp;
+
+  int last_krylov_checkpoint_it;
+  int last_newton_checkpoint_it;
+  int checkpoint_every_n_krylov_its;
+  int checkpoint_every_n_newton_its;
+  int amr_level;
   
 } krylov_ctx_t;
 
