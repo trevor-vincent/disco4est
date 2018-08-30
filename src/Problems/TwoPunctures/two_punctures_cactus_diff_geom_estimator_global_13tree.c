@@ -467,9 +467,7 @@ problem_init
                                                                  *d4est_ghost,
                                                                  &field_type,
                                                                  1);
-    
     // Extract mesh data  
-
     d4est_mesh_data_realloc
       (
        p4est,
@@ -793,6 +791,30 @@ problem_init
       prob_vecs.field_types = &field_type;
       prob_vecs.num_of_fields = 1;
 
+      if (level == initial_level && initial_extents->load_newton_checkpoint == 1){
+
+        d4est_checkpoint_read_dataset
+          (
+           p4est,
+           initial_extents->newton_checkpoint_prefix,
+           "u",
+           H5T_NATIVE_DOUBLE,
+           prob_vecs.u,
+           level
+          );
+
+
+        double sum = d4est_util_sum_array_dbl(prob_vecs.u, prob_vecs.local_nodes);
+
+        d4est_checkpoint_check_dataset(p4est,
+                                       initial_extents->newton_checkpoint_prefix,
+                                       "u",
+                                       H5T_NATIVE_DOUBLE,
+                                       (void*)&sum,
+                                       level
+                                      );
+        
+      }
       
       newton_petsc_solve
         (
@@ -813,7 +835,6 @@ problem_init
     }
 
     d4est_mesh_interpolate_data_t data;
-
 
     double R0 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R0;
     double R1 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R1;

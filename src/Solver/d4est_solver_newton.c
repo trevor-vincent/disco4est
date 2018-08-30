@@ -46,7 +46,6 @@ int d4est_solver_newton_input_handler
   return 1;
 }
 
-
 d4est_solver_newton_params_t
 d4est_solver_newton_input
 (

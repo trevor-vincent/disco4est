@@ -141,6 +141,14 @@ typedef struct {
   char* checkpoint_prefix;
   int checkpoint_number;
   int initial_checkpoint_number;
+
+  int load_newton_checkpoint;
+  char* newton_checkpoint_prefix;
+
+  int load_krylov_checkpoint;
+  char* krylov_checkpoint_prefix;
+
+  
   d4est_checkpoint_type_t checkpoint_type;
   
   d4est_mesh_volume_h_t volume_h_type;

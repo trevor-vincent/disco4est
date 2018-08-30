@@ -91,10 +91,26 @@ int d4est_mesh_initial_extents_handler
     D4EST_ASSERT(pconfig->load_from_checkpoint == 0);
     pconfig->load_from_checkpoint = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"load_newton_checkpoint")) {
+    D4EST_ASSERT(pconfig->load_newton_checkpoint == 0);
+    pconfig->load_newton_checkpoint = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"load_krylov_checkpoint")) {
+    D4EST_ASSERT(pconfig->load_krylov_checkpoint == 0);
+    pconfig->load_krylov_checkpoint = atoi(value);
+  }  
   else if (d4est_util_match_couple(section,"initial_mesh",name,"checkpoint_prefix")) {
     D4EST_ASSERT(pconfig->checkpoint_prefix == NULL);
     asprintf(&pconfig->checkpoint_prefix,"%s", value);
   }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"newton_checkpoint_prefix")) {
+    D4EST_ASSERT(pconfig->newton_checkpoint_prefix == NULL);
+    asprintf(&pconfig->newton_checkpoint_prefix,"%s", value);
+  }
+  else if (d4est_util_match_couple(section,"initial_mesh",name,"krylov_checkpoint_prefix")) {
+    D4EST_ASSERT(pconfig->krylov_checkpoint_prefix == NULL);
+    asprintf(&pconfig->krylov_checkpoint_prefix,"%s", value);
+  }  
   else if (d4est_util_match_couple(section,"mesh_parameters",name,"max_degree")) {
     D4EST_ASSERT(pconfig->max_degree == -1);
     pconfig->max_degree = atoi(value);
@@ -256,6 +272,8 @@ d4est_mesh_initial_extents_destroy
   P4EST_FREE(initial_extents->deg);
   P4EST_FREE(initial_extents->deg_quad_inc);
   free(initial_extents->checkpoint_prefix);
+  free(initial_extents->newton_checkpoint_prefix);
+  free(initial_extents->krylov_checkpoint_prefix);
   P4EST_FREE(initial_extents);
 }
 
@@ -285,7 +303,11 @@ d4est_mesh_initial_extents_parse
   initial_extents->deg = P4EST_ALLOC(int, initial_extents->number_of_regions);
   initial_extents->deg_quad_inc = P4EST_ALLOC(int, initial_extents->number_of_regions);
   initial_extents->load_from_checkpoint = 0;
+  initial_extents->load_newton_checkpoint = 0;
+  initial_extents->load_krylov_checkpoint = 0;
   initial_extents->checkpoint_prefix = NULL;
+  initial_extents->newton_checkpoint_prefix = NULL;
+  initial_extents->krylov_checkpoint_prefix = NULL;
   initial_extents->checkpoint_number = -1;
   initial_extents->initial_checkpoint_number = -1;
   initial_extents->checkpoint_type = D4EST_CHKPT_NOT_SET;
