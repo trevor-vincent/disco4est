@@ -272,9 +272,9 @@ d4est_estimator_stats_compute_aux
         D4EST_ABORT("Don't call estimator stats if you're not computing anything");
       }
     }
-    /* for (int i = 0; i < local_size; i++){ */
 
-    /* } */
+
+  
 }
 
   /* void */

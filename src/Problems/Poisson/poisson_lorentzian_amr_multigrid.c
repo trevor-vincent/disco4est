@@ -54,7 +54,7 @@ double solve_for_c
 
 static
 double solve_for_c_outer
- (
+(
  double c,
  void* user
 )
@@ -137,7 +137,7 @@ amr_mark_element
   problem_ctx_t* ctx = user;
 
   double eta2_percentile = stats->estimator_at_percentile;
-    /* = d4est_estimator_stats_get_percentile(stats,params->percentile); */
+  /* = d4est_estimator_stats_get_percentile(stats,params->percentile); */
   
   return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
 }
@@ -252,9 +252,9 @@ problem_init
   
 
   poisson_lorentzian_init_params_t init_params = poisson_lorentzian_init_params_input
-                                            (
-                                             input_file
-                                            ); 
+                                                 (
+                                                  input_file
+                                                 ); 
 
   
   dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
@@ -371,36 +371,36 @@ problem_init
     );
 
 
-    // Norm function contexts
+  // Norm function contexts
     
-    d4est_norms_fcn_L2_ctx_t L2_norm_ctx;
-    L2_norm_ctx.p4est = p4est;
-    L2_norm_ctx.d4est_ops = d4est_ops;
-    L2_norm_ctx.d4est_geom = d4est_geom;
-    L2_norm_ctx.d4est_quad = d4est_quad;
-    L2_norm_ctx.d4est_factors = d4est_factors;
+  d4est_norms_fcn_L2_ctx_t L2_norm_ctx;
+  L2_norm_ctx.p4est = p4est;
+  L2_norm_ctx.d4est_ops = d4est_ops;
+  L2_norm_ctx.d4est_geom = d4est_geom;
+  L2_norm_ctx.d4est_quad = d4est_quad;
+  L2_norm_ctx.d4est_factors = d4est_factors;
     
-    d4est_norms_fcn_energy_ctx_t energy_norm_ctx;
-    energy_norm_ctx.p4est = p4est;
-    energy_norm_ctx.d4est_ops = d4est_ops;
-    energy_norm_ctx.d4est_geom = d4est_geom;
-    energy_norm_ctx.d4est_quad = d4est_quad;
-    energy_norm_ctx.d4est_factors = d4est_factors;
-    /* energy_norm_ctx.fit = NULL; */
-    // These are updated later
-    energy_norm_ctx.ghost = *d4est_ghost;
-    energy_norm_ctx.ghost_data = d4est_ghost_data;
-    energy_norm_ctx.energy_norm_data = NULL;
-    energy_norm_ctx.energy_estimator_sq_local = -1.;
-    energy_norm_ctx.which_field = 0;
+  d4est_norms_fcn_energy_ctx_t energy_norm_ctx;
+  energy_norm_ctx.p4est = p4est;
+  energy_norm_ctx.d4est_ops = d4est_ops;
+  energy_norm_ctx.d4est_geom = d4est_geom;
+  energy_norm_ctx.d4est_quad = d4est_quad;
+  energy_norm_ctx.d4est_factors = d4est_factors;
+  /* energy_norm_ctx.fit = NULL; */
+  // These are updated later
+  energy_norm_ctx.ghost = *d4est_ghost;
+  energy_norm_ctx.ghost_data = d4est_ghost_data;
+  energy_norm_ctx.energy_norm_data = NULL;
+  energy_norm_ctx.energy_estimator_sq_local = -1.;
+  energy_norm_ctx.which_field = 0;
 
-    if (p4est->mpirank == 0)
-      d4est_norms_write_headers(
-        (const char * []){"u", NULL},
-        (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL}
-      );
+  if (p4est->mpirank == 0)
+    d4est_norms_write_headers(
+                              (const char * []){"u", NULL},
+                              (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL}
+    );
 
-    zlog_category_t *c_geom = zlog_get_category("d4est_geometry_compactified");
+  zlog_category_t *c_geom = zlog_get_category("d4est_geometry_compactified");
   d4est_geometry_t* d4est_geom_compactified = d4est_geometry_new(p4est->mpirank, input_file,"compactified_geometry", c_geom);
   d4est_mesh_data_t* d4est_factors_compactified = d4est_mesh_data_init(p4est);
 
@@ -456,27 +456,27 @@ problem_init
       );
     
     double* estimator = d4est_estimator_bi_compute
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       penalty_data,
-       poisson_lorentzian_boundary_fcn,
-       *d4est_ghost,
-       d4est_ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_factors,
-       d4est_geom_compactified,
-       d4est_factors_compactified,
-       d4est_quad,
-       0,
-       1,
-       input_file,
-       level
-      );
+                        (
+                         p4est,
+                         &prob_vecs,
+                         &prob_fcns,
+                         penalty_data,
+                         poisson_lorentzian_boundary_fcn,
+                         *d4est_ghost,
+                         d4est_ghost_data,
+                         d4est_ops,
+                         d4est_geom,
+                         d4est_factors,
+                         d4est_geom_compactified,
+                         d4est_factors_compactified,
+                         d4est_quad,
+                         0,
+                         1,
+                         input_file,
+                         level
+                        );
 
-   d4est_amr_smooth_pred_params_t* sp_params = d4est_amr_smooth_pred_params_input
+    d4est_amr_smooth_pred_params_t* sp_params = d4est_amr_smooth_pred_params_input
                                                 (
                                                  input_file
                                                 );
@@ -485,7 +485,7 @@ problem_init
     d4est_estimator_stats_compute(p4est, estimator, stats, sp_params->percentile, 1, 0);
     d4est_estimator_stats_print(stats);
 
-   double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
+    double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
 
     
     
@@ -522,59 +522,59 @@ problem_init
       );
 
     
-   d4est_vtk_save
-        (
-         p4est,
-         d4est_ops,
-         input_file,
-         "d4est_vtk",
-         (const char * []){"u","u_analytic","error", NULL},
-         (double* []){prob_vecs.u, u_analytic, error},
-         (const char * []){"estimator","error_l2",NULL},
-         (double* []){estimator,error_l2},
-         level
-        );
+    d4est_vtk_save
+      (
+       p4est,
+       d4est_ops,
+       input_file,
+       "d4est_vtk",
+       (const char * []){"u","u_analytic","error", NULL},
+       (double* []){prob_vecs.u, u_analytic, error},
+       (const char * []){"estimator","error_l2",NULL},
+       (double* []){estimator,error_l2},
+       level
+      );
 
-      d4est_vtk_save
-        (
-         p4est,
-         d4est_ops,
-         input_file,
-         "d4est_vtk_compactified",
-         (const char * []){"u","u_analytic","error", NULL},
-         (double* []){prob_vecs.u, u_analytic, error},
-         (const char * []){"estimator","error_l2",NULL},
-         (double* []){estimator,error_l2},
-         level
-        );
+    d4est_vtk_save
+      (
+       p4est,
+       d4est_ops,
+       input_file,
+       "d4est_vtk_compactified",
+       (const char * []){"u","u_analytic","error", NULL},
+       (double* []){prob_vecs.u, u_analytic, error},
+       (const char * []){"estimator","error_l2",NULL},
+       (double* []){estimator,error_l2},
+       level
+      );
 
 
 
-      d4est_vtk_save
-        (
-         p4est,
-         d4est_ops,
-         input_file,
-         "d4est_vtk_compactified_corner",
-         (const char * []){"u","u_analytic","error", NULL},
-         (double* []){prob_vecs.u, u_analytic, error},
-         (const char * []){"estimator","error_l2",NULL},
-         (double* []){estimator,error_l2},
-         level
-        );
+    d4est_vtk_save
+      (
+       p4est,
+       d4est_ops,
+       input_file,
+       "d4est_vtk_compactified_corner",
+       (const char * []){"u","u_analytic","error", NULL},
+       (double* []){prob_vecs.u, u_analytic, error},
+       (const char * []){"estimator","error_l2",NULL},
+       (double* []){estimator,error_l2},
+       level
+      );
       
-      d4est_vtk_save
-        (
-         p4est,
-         d4est_ops,
-         input_file,
-         "d4est_vtk_corner",
-         (const char * []){"u","u_analytic","error", NULL},
-         (double* []){prob_vecs.u, u_analytic, error},
-         (const char * []){"estimator","error_l2",NULL},
-         (double* []){estimator,error_l2},
-         level
-        );    
+    d4est_vtk_save
+      (
+       p4est,
+       d4est_ops,
+       input_file,
+       "d4est_vtk_corner",
+       (const char * []){"u","u_analytic","error", NULL},
+       (double* []){prob_vecs.u, u_analytic, error},
+       (const char * []){"estimator","error_l2",NULL},
+       (double* []){estimator,error_l2},
+       level
+      );    
 
     
     P4EST_FREE(u_analytic);
@@ -593,20 +593,18 @@ problem_init
     energy_norm_ctx.ghost_data = d4est_ghost_data;
 
     d4est_norms_save(
-      p4est,
-      d4est_factors,
-      (const char * []){ "u", NULL },
-      (double * []){ prob_vecs.u },
-      (double * []){ NULL },
-      (d4est_xyz_fcn_t []){ poisson_lorentzian_analytic_solution },
-      (void * []){ &ctx },
-      (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
-      (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy, &d4est_norms_fcn_energy_estimator },
-      (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx },
-      NULL
+                     p4est,
+                     d4est_factors,
+                     (const char * []){ "u", NULL },
+                     (double * []){ prob_vecs.u },
+                     (double * []){ NULL },
+                     (d4est_xyz_fcn_t []){ poisson_lorentzian_analytic_solution },
+                     (void * []){ &ctx },
+                     (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
+                     (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy, &d4est_norms_fcn_energy_estimator },
+                     (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx },
+                     NULL
     );
-        
-    P4EST_FREE(stats);
     
     if (level != d4est_amr->num_of_amr_steps && level != 0){
 
@@ -622,38 +620,40 @@ problem_init
       
     }
 
+    
+    P4EST_FREE(stats);
 
 
-      d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
-                  (
-                   p4est,
-                   d4est_ghost,
-                   /* *ghost_data, */
-                   d4est_ops,
-                   d4est_geom,
-                   d4est_quad,
-                   d4est_factors,
-                   initial_extents,
-                   INITIALIZE_GHOST,
-                   INITIALIZE_QUADRATURE_DATA,
-                   INITIALIZE_GEOMETRY_DATA,
-                   INITIALIZE_GEOMETRY_ALIASES,
-                   d4est_mesh_set_quadratures_after_amr,
-                   initial_extents
-                  );
+    d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
+                                           (
+                                            p4est,
+                                            d4est_ghost,
+                                            /* *ghost_data, */
+                                            d4est_ops,
+                                            d4est_geom,
+                                            d4est_quad,
+                                            d4est_factors,
+                                            initial_extents,
+                                            INITIALIZE_GHOST,
+                                            INITIALIZE_QUADRATURE_DATA,
+                                            INITIALIZE_GEOMETRY_DATA,
+                                            INITIALIZE_GEOMETRY_ALIASES,
+                                            d4est_mesh_set_quadratures_after_amr,
+                                            initial_extents
+                                           );
 
-      prob_vecs.local_nodes = local_sizes.local_nodes;
+    prob_vecs.local_nodes = local_sizes.local_nodes;
       
-   if (d4est_ghost_data != NULL){
+    if (d4est_ghost_data != NULL){
       d4est_ghost_data_destroy(d4est_ghost_data);
       d4est_ghost_data = NULL;
     } 
     
 
-   d4est_ghost_data = d4est_ghost_data_init(p4est,
-                                            *d4est_ghost,
-                                            &field_type,
-                                            1);
+    d4est_ghost_data = d4est_ghost_data_init(p4est,
+                                             *d4est_ghost,
+                                             &field_type,
+                                             1);
    
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
     prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, prob_vecs.local_nodes);
@@ -677,7 +677,7 @@ problem_init
        0
       );
 
-   /* int min_level, max_level; */
+    /* int min_level, max_level; */
 
     /* d4est_solver_multigrid_get_level_range(p4est, &min_level, &max_level); */
     /* printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level); */
@@ -689,15 +689,15 @@ problem_init
     
 
     d4est_solver_multigrid_data_t* mg_data = d4est_solver_multigrid_data_init(
-      p4est,
-      d4est_ops,
-      d4est_geom,
-      d4est_quad,
-      d4est_ghost,
-      &d4est_ghost_data,
-      d4est_factors,
-      initial_extents,
-      input_file
+                                                                              p4est,
+                                                                              d4est_ops,
+                                                                              d4est_geom,
+                                                                              d4est_quad,
+                                                                              d4est_ghost,
+                                                                              &d4est_ghost_data,
+                                                                              d4est_factors,
+                                                                              initial_extents,
+                                                                              input_file
     );
 
 
@@ -705,26 +705,26 @@ problem_init
 
  
     /* d4est_solver_multigrid_logger_t* logger = d4est_solver_multigrid_logger_residual_init */
-                                 /* ( */
-                                 /* ); */
+    /* ( */
+    /* ); */
 
     /* d4est_solver_multigrid_element_data_updater_t* updater = d4est_solver_multigrid_element_data_updater_init */
-                                                /* ( */
-                                                 /* mg_data->num_of_levels, */
-                                                 /* ghost, */
-                                                 /* ghost_data, */
-                                                 /* d4est_factors, */
-                                                 /* problem_set_degrees_after_amr, */
-                                                 /* NULL */
-                                                /* ); */
+    /* ( */
+    /* mg_data->num_of_levels, */
+    /* ghost, */
+    /* ghost_data, */
+    /* d4est_factors, */
+    /* problem_set_degrees_after_amr, */
+    /* NULL */
+    /* ); */
 
     
 
     /* d4est_solver_multigrid_set_callbacks( */
-                            /* mg_data, */
-                            /* logger, */
-                            /* NULL, */
-                            /* updater */
+    /* mg_data, */
+    /* logger, */
+    /* NULL, */
+    /* updater */
     /* ); */
     
     d4est_krylov_pc_t* pc = d4est_krylov_pc_multigrid_create(mg_data, NULL);
@@ -842,7 +842,7 @@ problem_init
        sc_MPI_COMM_WORLD
       );
 
-     
+    
     if (p4est->mpirank == 0){
       for (int p = 0; p < 4; p++){
         point[p][iterations] = points_global[p];
@@ -858,10 +858,10 @@ problem_init
       DEBUG_PRINT_4ARR_DBL(dof, point10, point10_diff, point10_spec_diff,iterations+1);
       DEBUG_PRINT_4ARR_DBL(dof, point100, point100_diff, point100_spec_diff,iterations+1);
 
-    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point0[iterations], point0_diff[iterations], point0_spec_diff[iterations]);
-    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point3[iterations], point3_diff[iterations], point3_spec_diff[iterations]);
-    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point10[iterations], point10_diff[iterations], point10_spec_diff[iterations]);
-    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point100[iterations], point100_diff[iterations], point100_spec_diff[iterations]);
+      zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point0[iterations], point0_diff[iterations], point0_spec_diff[iterations]);
+      zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point3[iterations], point3_diff[iterations], point3_spec_diff[iterations]);
+      zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point10[iterations], point10_diff[iterations], point10_spec_diff[iterations]);
+      zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point100[iterations], point100_diff[iterations], point100_spec_diff[iterations]);
     
       d4est_norms_linear_fit_add_entry_and_fit
         (
