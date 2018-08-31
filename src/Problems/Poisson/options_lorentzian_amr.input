@@ -85,7 +85,7 @@ monitor = 1
 
 
 [d4est_vtk]
-filename = two_punctures
+filename = lorentzian
 geometry_section = geometry
 output_type = ascii
 grid_type = dg
@@ -97,7 +97,7 @@ write_deg = 1
 
 
 [d4est_vtk_compactified]
-filename = two_punctures_compactified
+filename = lorentzian_compactified
 geometry_section = compactified_geometry
 output_type = ascii
 grid_type = dg
@@ -109,7 +109,7 @@ write_deg = 1
 
 
 [d4est_vtk_compactified_corner]
-filename = two_punctures_compactified_corner
+filename = lorentzian_compactified_corner
 geometry_section = compactified_geometry
 output_type = ascii
 grid_type = corner
@@ -134,7 +134,7 @@ write_deg = 1
 
 
 [d4est_vtk_corner]
-filename = two_punctures_corner
+filename = lorentzian_corner
 geometry_section = geometry
 output_type = ascii
 grid_type = corner
