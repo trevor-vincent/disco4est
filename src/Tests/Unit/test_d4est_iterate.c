@@ -11,6 +11,29 @@
 #include <petscsnes.h>
 #include <zlog.h>
 
+
+typedef struct {
+
+  int mpirank;
+  int tree;
+  int tree_id;
+  int id;
+  int nodal_stride;
+  int faces [3];
+  
+  int is_central_element;
+  int shares_what; //0 = corner, 1 = edge, 2 = face
+  
+} schwarz_element_t;
+
+
+typedef struct {
+
+  schwarz_element_t connections [27];
+
+} schwarz_element_connections_t;
+
+
 typedef struct {
 
   double* is_corner;
@@ -19,31 +42,11 @@ typedef struct {
   int process;
   int corner;
   int edge;
+
+  schwarz_element_t connections [27];
+  int connections_found;
   
 } corner_data_t;
-
-typedef struct {
-
-  int mpirank;
-  int tree;
-  int tree_id;
-  int id;
-  int stride;
-  int faces [3];
-  
-} schwarz_element_t;
-
-typedef struct {
-
-  int mpirank;
-  int tree;
-  int tree_id;
-  int id;
-  schwarz_element_t connections [27];
-
-} schwarz_element_connections_t;
-
-
 
 /* static void */
 /* iter_edge_callback */
@@ -154,11 +157,16 @@ iter_corner_callback
         }
       }
 
+      int shares_face = 0;
+      int shares_edge = 0;
+      int shares_corner = 1;
+      
       int face_edge_sum = 0;
       for (int ef = 0; ef < 3; ef++){
         if (found_face[ef] == 1){
           int face_id = p8est_corner_faces[corner_side->corner][ef];
           printf("This side shares a face that touches the corner = %d\n", face_id);
+          shares_face++;
           face_edge_sum++;
         }
         if (found_edge[ef] == 1){
@@ -166,6 +174,11 @@ iter_corner_callback
           printf("This side shares an edge that touches the corner = %d\n", edge_id);
           printf("The two faces that touch this edge are %d, %d\n",
                  p8est_edge_faces[edge_id][0],p8est_edge_faces[edge_id][1]);
+
+          /* corner_data->connections[connections_found].id; */
+           
+            
+          shares_edge++;
           face_edge_sum++;
         }
       }
@@ -178,6 +191,16 @@ iter_corner_callback
                p8est_corner_faces[corner_side->corner][2]);
       }
 
+      d4est_element_data_t* ed = good_side->quad->p.user_data;      
+      corner_data->connections[corner_data->connections_found].id = ed->id;
+      corner_data->connections[corner_data->connections_found].is_central_element = 0;
+      corner_data->connections[corner_data->connections_found].mpirank = ed->mpi_rank;
+      corner_data->connections[corner_data->connections_found].tree = ed->tree;
+      corner_data->connections[corner_data->connections_found].nodal_stride = ed->nodal_stride;
+      corner_data->connections[corner_data->connections_found].shares_what = (shares_face > 0) ? 2 :
+                                                               ((shares_edge > 0) ? 1 : 0);
+      corner_data->connections_found++;
+        
       printf("ed->id = %d\n", ed->id);
       printf("corner = %d\n", corner_side->corner);
       printf("faces[0] = %d\n", corner_side->faces[0]);
@@ -378,11 +401,16 @@ int main(int argc, char *argv[])
   for (int i = 0; i < p4est->local_num_quadrants; i++){
     corner_data.is_corner[i] = -1;
   }
+
+  for (int i = 0; i < 27; i++){
+    corner_data.connections[i].id = -1;
+  }
   
   corner_data.element = 14;
   corner_data.process = 0;
   corner_data.corner = 6;
   corner_data.edge = 1;
+  corner_data.connections_found = 0;
 
   double* test = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
   
@@ -394,7 +422,19 @@ int main(int argc, char *argv[])
                  NULL,
                  iter_corner_callback);
 
+  for (int i = 0; i < 27; i++){
+    if(corner_data.connections[i].id != -1){
+      printf("***********\n");
+      printf("Element id = %d\n", corner_data.connections[i].id);
+      printf("Element tree = %d\n", corner_data.connections[i].tree);
+      printf("Faces 0 = %d\n", corner_data.connections[i].faces[0]);
+      printf("Faces 1 = %d\n", corner_data.connections[i].faces[1]);
+      printf("Faces 2 = %d\n", corner_data.connections[i].faces[2]);
+    }
+  }
 
+  
+  
   DEBUG_PRINT_ARR_DBL(corner_data.is_corner, p4est->local_num_quadrants);
 
   d4est_vtk_save

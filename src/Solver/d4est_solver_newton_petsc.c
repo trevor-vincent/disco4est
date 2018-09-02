@@ -200,6 +200,50 @@ PetscErrorCode newton_petsc_save_x0
 
 
 static
+PetscErrorCode newton_petsc_monitor(SNES snes,PetscInt it, PetscReal norm, void *ctx)
+{
+  krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
+  zlog_category_t* c_default = zlog_get_category("d4est_solver_newton_petsc");
+
+  int lit;
+  SNESGetLinearSolveIterations(snes,&lit);
+
+  if (petsc_ctx->p4est->mpirank == 0){
+    zlog_info(c_default, "AMR_IT SNES_IT KSP_IT SNES_NORM: %d %d %d %.25f", petsc_ctx->amr_level, it, lit, norm);
+  }
+  
+  if (petsc_ctx->checkpoint_every_n_newton_its > 0){
+    
+    if ( (it - petsc_ctx->last_newton_checkpoint_it) >= petsc_ctx->checkpoint_every_n_newton_its ){
+      if (petsc_ctx->p4est->mpirank == 0){
+        zlog_info(c_default, "Saving checkpoint at newton iteration %d", it);
+      }
+      char* output = NULL;
+      asprintf(&output,"checkpoint_newton_%d", it);
+
+
+      d4est_elliptic_data_t* vecs = petsc_ctx->vecs;
+      d4est_checkpoint_save
+        (
+         petsc_ctx->amr_level,
+         output,
+         petsc_ctx->p4est,
+         NULL,
+         NULL,
+         (const char * []){"u", NULL},
+         (hid_t []){H5T_NATIVE_DOUBLE},
+         (int []){vecs->local_nodes},
+         (void* []){vecs->u0}
+        );
+      
+      petsc_ctx->last_newton_checkpoint_it = it;
+      free(output);
+    }
+  }
+
+}
+
+static
 PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
 
   const double* xx;
@@ -230,33 +274,7 @@ PetscErrorCode newton_petsc_get_residual(SNES snes, Vec x, Vec f, void *ctx){
      petsc_ctx->d4est_factors
     );
 
-  if (petsc_ctx->checkpoint_every_n_newton_its > 0){
-    int it;
-    SNESGetIterationNumber(snes,&it);
-    if ( (it - petsc_ctx->last_newton_checkpoint_it) >= petsc_ctx->checkpoint_every_n_newton_its ){
-      if (petsc_ctx->p4est->mpirank == 0){
-        zlog_category_t* c_default = zlog_get_category("d4est_solver_newton_petsc");  
-        zlog_info(c_default, "Saving checkpoint at newton iteration %d", it);
-      }
-      char* output = NULL;
-      asprintf(&output,"checkpoint_newton_%d", it);
-      
-      d4est_checkpoint_save
-        (
-         petsc_ctx->amr_level,
-         output,
-         petsc_ctx->p4est,
-         NULL,
-         NULL,
-         (const char * []){"u", NULL},
-         (hid_t []){H5T_NATIVE_DOUBLE},
-         (int []){vecs_for_res_build.local_nodes},
-         (void* []){vecs_for_res_build.u}
-        );
-      petsc_ctx->last_newton_checkpoint_it = it;
-      free(output);
-    }
-  }
+
   VecRestoreArray(f,&ftemp);
   VecRestoreArrayRead(x,&xx);
   return 0;
@@ -470,7 +488,8 @@ newton_petsc_solve
   if (p4est->mpirank == 0){
     zlog_info(c_default, "Initial residual = %.25f", res);
   }
-  
+
+  SNESMonitorSet(snes, newton_petsc_monitor, &petsc_ctx, NULL);
   SNESSolve(snes,NULL,x);
 
   SNESComputeFunction(snes, x, r);
