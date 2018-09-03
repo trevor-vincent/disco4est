@@ -213,6 +213,42 @@ krylov_petsc_input
 }
 
 static
+PetscErrorCode krylov_petsc_monitor(KSP ksp,PetscInt it, PetscReal norm, void *ctx)
+{
+  krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
+  zlog_category_t* c_default = zlog_get_category("d4est_solver_krylov_petsc");
+
+  if (petsc_ctx->p4est->mpirank == 0){
+    zlog_info(c_default, "AMR_IT KSP_IT KSP_NORM: %d %d %.25f", petsc_ctx->amr_level, it, norm);
+  }  
+  if (petsc_ctx->checkpoint_every_n_krylov_its > 0 && petsc_ctx->amr_level >= 0){
+    int it;
+    KSPGetIterationNumber(*(petsc_ctx->ksp),&it);
+    if ( (it - petsc_ctx->last_krylov_checkpoint_it) >= petsc_ctx->checkpoint_every_n_krylov_its ){
+      char* output = NULL;
+      asprintf(&output,"checkpoint_krylov_%d", it);
+
+      d4est_elliptic_data_t* vecs = petsc_ctx->vecs;
+      d4est_checkpoint_save
+        (
+         petsc_ctx->amr_level,
+         output,
+         petsc_ctx->p4est,
+         NULL,
+         NULL,
+         (const char * []){"u", NULL},
+         (hid_t []){H5T_NATIVE_DOUBLE},
+         (int []){vecs->local_nodes},
+         (void* []){vecs->u}
+        );
+
+      petsc_ctx->last_krylov_checkpoint_it = it;
+      free(output);
+    }
+  }  
+}
+
+static
 PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
 {
   void           *ctx;
@@ -264,30 +300,7 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
       /* ); */
   /* }   */
 
-  if (petsc_ctx->checkpoint_every_n_krylov_its > 0 && petsc_ctx->amr_level >= 0){
-    int it;
-    KSPGetIterationNumber(*(petsc_ctx->ksp),&it);
-    if ( (it - petsc_ctx->last_krylov_checkpoint_it) >= petsc_ctx->checkpoint_every_n_krylov_its ){
-      char* output = NULL;
-      asprintf(&output,"checkpoint_krylov_%d", it);
-      
-      d4est_checkpoint_save
-        (
-         petsc_ctx->amr_level,
-         output,
-         p4est,
-         NULL,
-         NULL,
-         (const char * []){"u", NULL},
-         (hid_t []){H5T_NATIVE_DOUBLE},
-         (int []){vecs_for_aij.local_nodes},
-         (void* []){vecs_for_aij.u}
-        );
-      petsc_ctx->last_krylov_checkpoint_it = it;
-      free(output);
-    }
-  }  
-  
+
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecRestoreArray( y, &py ); CHKERRQ(ierr);
   return ierr;
@@ -397,7 +410,9 @@ krylov_petsc_solve
   KSPSetOperators(ksp,A,A);
   VecPlaceArray(b, rhs);
   VecPlaceArray(x, u);
+  KSPMonitorSet(ksp, krylov_petsc_monitor, &petsc_ctx, NULL);
 
+  
   KSPSolve(ksp,b,x);
   
   KSPGetIterationNumber(ksp, &(info.total_krylov_iterations));
