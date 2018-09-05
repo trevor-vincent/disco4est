@@ -159,6 +159,7 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
       P4EST_FREE(d4est_ops->hp_restrict_interp_1d_table[i][j]);
       P4EST_FREE(d4est_ops->p_prolong_1d_table[i][j]);
       P4EST_FREE(d4est_ops->p_restrict_1d_table[i][j]);
+      P4EST_FREE(d4est_ops->schwarz_restrictor_1d_table[i][j]);
       P4EST_FREE(d4est_ops->p_restrict_interp_1d_table[i][j]);
       P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_trans_1d_table[i][j]);
       P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_1d_table[i][j]);
@@ -170,6 +171,7 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
     P4EST_FREE(d4est_ops->hp_restrict_interp_1d_table[i]);
     P4EST_FREE(d4est_ops->p_prolong_1d_table[i]);
     P4EST_FREE(d4est_ops->p_restrict_1d_table[i]);
+    P4EST_FREE(d4est_ops->schwarz_restrictor_1d_table[i]);
     P4EST_FREE(d4est_ops->p_restrict_interp_1d_table[i]);
     P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_trans_1d_table[i]);
     P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_1d_table[i]);
@@ -180,6 +182,7 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
   P4EST_FREE(d4est_ops->hp_restrict_1d_table);
   P4EST_FREE(d4est_ops->hp_restrict_interp_1d_table);
   P4EST_FREE(d4est_ops->p_restrict_1d_table);
+  P4EST_FREE(d4est_ops->schwarz_restrictor_1d_table);
   P4EST_FREE(d4est_ops->p_restrict_interp_1d_table);
   P4EST_FREE(d4est_ops->p_prolong_1d_table);
   P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_trans_1d_table);
