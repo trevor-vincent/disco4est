@@ -37,6 +37,7 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
   d4est_ops->hp_restrict_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_ops->hp_restrict_interp_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_ops->p_restrict_1d_table = P4EST_ALLOC(double**, max_degree);
+  d4est_ops->schwarz_restrictor_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_ops->p_restrict_interp_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_ops->p_prolong_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_ops->hp_prolong_transpose_1d_table = P4EST_ALLOC(double**, max_degree);
@@ -50,7 +51,11 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
     d4est_ops->hp_prolong_transpose_1d_table[i] = P4EST_ALLOC(double*, max_degree);
     d4est_ops->hp_restrict_1d_table[i] = P4EST_ALLOC(double*, max_degree);
     d4est_ops->hp_restrict_interp_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+
     d4est_ops->p_restrict_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    d4est_ops->schwarz_restrictor_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+
+    
     d4est_ops->p_restrict_interp_1d_table[i] = P4EST_ALLOC(double*, max_degree);
     d4est_ops->p_prolong_1d_table[i] = P4EST_ALLOC(double*, max_degree);
     d4est_ops->p_prolong_transpose_1d_table[i] = P4EST_ALLOC(double*, max_degree);
@@ -87,6 +92,7 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
       d4est_ops->hp_restrict_1d_table[i][j] = NULL;
       d4est_ops->hp_restrict_interp_1d_table[i][j] = NULL;
       d4est_ops->p_restrict_1d_table[i][j] = NULL;
+      d4est_ops->schwarz_restrictor_1d_table[i][j] = NULL;
       d4est_ops->p_restrict_interp_1d_table[i][j] = NULL;
       d4est_ops->p_prolong_1d_table[i][j] = NULL;
       d4est_ops->lobatto_to_gauss_interp_trans_1d_table[i][j] = NULL;
@@ -1359,35 +1365,133 @@ double* d4est_operators_fetch_gauss_rst_nd(d4est_operators_t* d4est_ops, int dim
 }
 
 
-static void d4est_operators_build_schwarz_restrictor_1d
+
+void d4est_operators_build_schwarz_restrictor_1d
 (
  d4est_operators_t* d4est_ops,
  double* restrict restrictor_1d,
  int deg, //degree of element before restriction
- int restricted_size, //number of 1d nodes
- int which_face_1d
+ int restricted_deg //number of 1d nodes
+ /* int which_face_1d */
 )
 {
-  D4EST_ASSERT(restricted_size < deg + 1);
-  D4EST_ASSERT(which_face_1d == 0 || which_face_1d == 1);
-  
+  int restricted_size = restricted_deg + 1;
+  D4EST_ASSERT(restricted_size <= deg + 1 && restricted_size >= 1);
   int original_size = deg + 1;
+  /* double* restrictor_1d = d4est_operators_fetch_schwarz_restrictor_1d(d4est_ops, deg, restricted_size); */
 
-  memset(restrictor_1d, 0., sizeof(double) * original_size * restricted_size);
+  /* memset(restrictor_1d, 0., 2* sizeof(double) * original_size * restricted_size); */
 
+  
   for (int i = 0; i < restricted_size; i++){
-    if (which_face_1d == 0){
-      restrictor_1d[(deg+1)*(i) + i] = 1.;
-    }
-    else if (which_face_1d == 1){
-      restrictor_1d[(deg+1)*(i+1) - restricted_size + i] = 1.;
-    }
-    else {
-      D4EST_ABORT("which_face_1d should equal 0 or 1");
-    }
+    /* face == 0 */
+    restrictor_1d[(deg+1)*(i) + i] = 1.;
+    /* face == 1 */
+    restrictor_1d[original_size * restricted_size + (deg+1)*(i+1) - restricted_size + i] = 1.;
   }
-    
+
 }
+
+
+static double*
+d4est_operators_fetch_schwarz_restrictor_1d
+(
+ d4est_operators_t* d4est_ops,
+ int deg,
+ int restricted_deg
+)
+{
+  int size = 2 * (deg + 1) * (restricted_deg + 1);
+  return d4est_operators_2index_fetch
+    (
+     d4est_ops,
+     d4est_ops->schwarz_restrictor_1d_table,
+     deg,
+     restricted_deg,
+     size,
+     d4est_operators_build_schwarz_restrictor_1d
+    );
+
+}
+
+void d4est_operators_apply_schwarz_restrictor(d4est_operators_t* d4est_ops,
+                                               double * restrict  in,
+                                               int dim,
+                                               int face,
+                                               int deg,
+                                               int restricted_size,
+                                               double * restrict  out
+                                  ) {
+  
+  D4EST_ASSERT(face < 2 * (dim));
+  double* slicer_1d = d4est_operators_fetch_schwarz_restrictor_1d(d4est_ops, deg, restricted_size - 1);
+
+  int dir;  /* x <-> 0; y <-> 1; z <-> 2  */
+  int side; /* left <-> 0; right <-> 1 */
+
+  if (face == 0) {
+    dir = 0;
+    side = 0;
+  } else if (face == 1) {
+    dir = 0;
+    side = 1;
+  } else if (face == 2) {
+    dir = 1;
+    side = 0;
+  } else if (face == 3) {
+    dir = 1;
+    side = 1;
+  } else if (face == 4) {
+    dir = 2;
+    side = 0;
+  } else if (face == 5) {
+    dir = 2;
+    side = 1;
+  } else {
+    dir = -1;
+    side = -1;
+    D4EST_ABORT("ERROR 0: d4est_operators_lift_boundary_vec");
+  }
+
+  if (dim == 2){
+    if (dir == 0)
+      d4est_kron_IoMATx_SQR(out, &slicer_1d[side * (deg + 1)], in,
+                                 deg + 1);
+    else if (dir == 1)
+      d4est_kron_MAToIx_SQR(out, &slicer_1d[side * (deg + 1)], in,
+                                 deg + 1);
+    else
+      D4EST_ABORT("DIM == 2, so dir == 0,1");
+  }
+
+  else if (dim == 3){
+
+    if (dir == 0)
+      d4est_kron_IoIoMATx_SQR(out, &slicer_1d[side * (deg + 1)], in, deg + 1);
+    else if (dir == 1)
+      d4est_kron_IoMAToIx_SQR(out, &slicer_1d[side * (deg + 1)], in, deg + 1);
+    else if (dir == 2)
+      d4est_kron_MAToIoIx_SQR(out, &slicer_1d[side * (deg + 1)], in,
+                                   deg + 1);
+    else
+      D4EST_ABORT("DIM == 3 so DIR=0,1 or 2");
+  
+  }
+  else {
+    D4EST_ABORT("DIM must be 2 or 3");
+  }
+}
+
+/* static void d4est_operators_apply_schwarz_restrictor_1d */
+/* ( */
+/*  d4est_operators_t* d4est_ops, */
+ 
+/* ){ */
+
+
+/* } */
+
+
 
 static void d4est_operators_build_lift_1d(d4est_operators_t* d4est_ops, double * restrict  lift_1d, int deg) {
   memset(lift_1d, 0., sizeof(double) * 2 * (deg + 1));

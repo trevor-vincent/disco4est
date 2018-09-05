@@ -422,6 +422,9 @@ int main(int argc, char *argv[])
                  NULL,
                  iter_corner_callback);
 
+  /* double*  */
+
+  
   for (int i = 0; i < 27; i++){
     if(corner_data.connections[i].id != -1){
       printf("***********\n");

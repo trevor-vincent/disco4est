@@ -46,6 +46,8 @@ typedef struct {
   double*** p_prolong_transpose_1d_table;   
   double*** hp_restrict_interp_1d_table;
   double*** p_restrict_interp_1d_table;
+  double*** schwarz_restrictor_1d_table;
+  
   
 } d4est_operators_t;
 

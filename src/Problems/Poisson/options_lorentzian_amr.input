@@ -19,7 +19,7 @@ use_dirichlet = 1
 
 [amr]
 scheme = smooth_pred
-num_of_amr_steps = 15
+num_of_amr_steps = 2
 gamma_h = 100000
 gamma_p = 0.1
 gamma_n = 1.
@@ -166,22 +166,22 @@ ksp_type = fcg
 ksp_atol = 1e-15
 ksp_rtol = 1e-15
 ksp_max_it = 10000
-ksp_view = 1
-ksp_monitor = 1
-ksp_converged_reason = 1
+ksp_view = 0
+ksp_monitor = 0
+ksp_converged_reason = 0
 ksp_initial_guess_nonzero = 0
-ksp_monitor_singular_value = 1
+ksp_monitor_singular_value = 0
 
 [krylov_petsc_no_mg]
 ksp_type = fcg
 ksp_atol = 1e-15
 ksp_rtol = 1e-15
 ksp_max_it = 10000
-ksp_view = 1
-ksp_monitor = 1
-ksp_converged_reason = 1
+ksp_view = 0
+ksp_monitor = 0
+ksp_converged_reason = 0
 ksp_initial_guess_nonzero = 0
-ksp_monitor_singular_value = 1
+ksp_monitor_singular_value = 0
 
 [multigrid]
 vcycle_imax = 1;

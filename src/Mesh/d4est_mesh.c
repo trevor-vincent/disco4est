@@ -2170,6 +2170,58 @@ d4est_mesh_init_element_data
   return local_sizes;
 }
 
+
+void
+d4est_mesh_data_get_topological_coords
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ double* a,
+ double* b,
+ double* c //NULL if 2-D
+)
+{
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+ 
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq =  ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;        
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
+#if (P4EST_DIM)==3
+        mesh_object.q[2] = ed->q[2];
+#endif
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        d4est_rst_t rst_points_lobatto;
+        rst_points_lobatto.r = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, &mesh_object, QUAD_OBJECT_VOLUME, QUAD_INTEGRAND_UNKNOWN, ed->deg, 0);
+        rst_points_lobatto.s = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, &mesh_object, QUAD_OBJECT_VOLUME, QUAD_INTEGRAND_UNKNOWN, ed->deg, 1);
+        rst_points_lobatto.t = NULL;
+#if (P4EST_DIM)==3
+        rst_points_lobatto.t = d4est_quadrature_lobatto_get_rst(d4est_ops, NULL, NULL, &mesh_object, QUAD_OBJECT_VOLUME, QUAD_INTEGRAND_UNKNOWN, ed->deg, 2);
+#endif
+        
+        for (int i = 0; i < volume_nodes; i++){
+          a[ed->nodal_stride + i] = d4est_reference_rtox(rst_points_lobatto.r[i], (double)ed->q[0], (double)ed->dq)/(double)P4EST_ROOT_LEN;
+          b[ed->nodal_stride + i] = d4est_reference_rtox(rst_points_lobatto.s[i], (double)ed->q[1], (double)ed->dq)/(double)P4EST_ROOT_LEN;
+#if (P4EST_DIM)==3
+          c[ed->nodal_stride + i] = d4est_reference_rtox(rst_points_lobatto.t[i], (double)ed->q[2], (double)ed->dq)/(double)P4EST_ROOT_LEN;
+#endif
+        }
+        
+      }
+    }        
+}
+
 void
 d4est_mesh_data_compute
 (
@@ -3228,4 +3280,3 @@ d4est_mesh_apply_invM_on_field
   
 }
 
- 

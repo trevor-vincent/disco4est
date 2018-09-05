@@ -287,20 +287,6 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
      petsc_ctx->d4est_factors
     );
 
-  /* if (petsc_ctx->d4est_checkpointer != NULL){ */
-    /* int it; */
-    /* KSPGetIterationNumber(ksp,&it); */
-    /* d4est_checkpointer_krylov_solve_checkpoint */
-      /* ( */
-       /* petsc_ctx->p4est, */
-       /* petsc_ctx->d4est_factors, */
-       /* petsc_ctx->vecs, */
-       /* petsc_ctx->d4est_checkpointer, */
-       /* it */
-      /* ); */
-  /* }   */
-
-
   ierr = VecRestoreArrayRead( x, &px ); CHKERRQ(ierr);
   ierr = VecRestoreArray( y, &py ); CHKERRQ(ierr);
   return ierr;
@@ -323,7 +309,7 @@ krylov_petsc_solve
  int amr_level
 )
 {
-  zlog_category_t *c_default = zlog_get_category("krylov_petsc");
+  zlog_category_t *c_default = zlog_get_category("d4est_solver_krylov_petsc");
   clock_t start;
   if (p4est->mpirank == 0) {
     zlog_info(c_default, "Performing Krylov PETSc solve...");
