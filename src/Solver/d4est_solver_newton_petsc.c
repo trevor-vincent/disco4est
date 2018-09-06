@@ -202,25 +202,25 @@ PetscErrorCode newton_petsc_save_x0
 static
 PetscErrorCode newton_petsc_monitor(SNES snes,PetscInt it, PetscReal norm, void *ctx)
 {
-  krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
+ krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
   zlog_category_t* c_default = zlog_get_category("d4est_solver_newton_petsc");
 
   int lit;
   SNESGetLinearSolveIterations(snes,&lit);
 
   if (petsc_ctx->p4est->mpirank == 0){
-    zlog_info(c_default, "AMR_IT SNES_IT KSP_IT SNES_NORM: %d %d %d %.25f", petsc_ctx->amr_level, it, lit, norm);
+    zlog_info(c_default,"AMR_IT SNES_IT KSP_IT SNES_NORM: %d %d %d %.25f", petsc_ctx->amr_level, it, lit, norm);
   }
-  
+
   if (petsc_ctx->checkpoint_every_n_newton_its > 0){
-    
-    if ( (it - petsc_ctx->last_newton_checkpoint_it) >= petsc_ctx->checkpoint_every_n_newton_its ){
-      if (petsc_ctx->p4est->mpirank == 0){
-        zlog_info(c_default, "Saving checkpoint at newton iteration %d", it);
-      }
+
+     if ( (it - petsc_ctx->last_newton_checkpoint_it) >= petsc_ctx->checkpoint_every_n_newton_its ){
+
+       if (petsc_ctx->p4est->mpirank == 0){
+         printf("Saving checkpoint at newton iteration %d", it);
+       }
       char* output = NULL;
       asprintf(&output,"checkpoint_newton_%d", it);
-
 
       d4est_elliptic_data_t* vecs = petsc_ctx->vecs;
       d4est_checkpoint_save
@@ -235,12 +235,21 @@ PetscErrorCode newton_petsc_monitor(SNES snes,PetscInt it, PetscReal norm, void 
          (int []){vecs->local_nodes},
          (void* []){vecs->u0}
         );
-      
+
       petsc_ctx->last_newton_checkpoint_it = it;
       free(output);
     }
+    else {
+      if (petsc_ctx->p4est->mpirank == 0){
+        zlog_info(c_default, "No checkpoint at newton iteration %d", it);
+        zlog_info(c_default, "petsc_ctx->last_newton_checkpoint_it = %d", petsc_ctx->last_newton_checkpoint_it);
+        zlog_info(c_default,"petsc_ctx->checkpoint_every_n_newton_its = %d",petsc_ctx->checkpoint_every_n_newton_its);
+      }
+    }
+
   }
 
+  return 0;
 }
 
 static

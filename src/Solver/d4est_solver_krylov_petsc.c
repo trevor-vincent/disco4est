@@ -10,7 +10,6 @@
 #include <ini.h>
 #include <time.h>
 
-
 static
 int krylov_petsc_input_handler
 (
@@ -80,13 +79,10 @@ int krylov_petsc_input_handler
     pconfig->ksp_do_not_use_preconditioner = atoi(value);
     D4EST_ASSERT(atoi(value) == 0 || atoi(value) == 1);
   }
-
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"checkpoint_every_n_krylov_its")) {
     D4EST_ASSERT(pconfig->checkpoint_every_n_krylov_its == 0);
     pconfig->checkpoint_every_n_krylov_its = atoi(value);
   }
-  
-  
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -245,7 +241,16 @@ PetscErrorCode krylov_petsc_monitor(KSP ksp,PetscInt it, PetscReal norm, void *c
       petsc_ctx->last_krylov_checkpoint_it = it;
       free(output);
     }
-  }  
+    else {
+      if (petsc_ctx->p4est->mpirank == 0){
+        zlog_info(c_default, "No checkpoint at krylov iteration %d", it);
+        zlog_info(c_default, "petsc_ctx->last_krylov_checkpoint_it = %d", petsc_ctx->last_krylov_checkpoint_it);
+        zlog_info(c_default,"petsc_ctx->checkpoint_every_n_krylov_its = %d",petsc_ctx->checkpoint_every_n_krylov_its);
+      }
+    }
+  }
+
+  return 0;
 }
 
 static
