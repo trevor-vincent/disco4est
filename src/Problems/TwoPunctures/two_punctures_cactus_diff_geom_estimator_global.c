@@ -720,16 +720,16 @@ problem_init
     
     if (!init_params.do_not_solve){
 
-      newton_petsc_params_t newton_params;
-      newton_petsc_input(p4est, input_file, &newton_params);
+      d4est_solver_newton_petsc_params_t newton_params;
+      d4est_solver_newton_petsc_input(p4est, input_file, &newton_params);
 
-      krylov_petsc_params_t krylov_params;
+      d4est_solver_krylov_petsc_params_t krylov_params;
 
       if (mg_data->num_of_levels <= 1){
-        krylov_petsc_input(p4est, input_file, "krylov_petsc_no_mg", &krylov_params);
+        d4est_solver_krylov_petsc_input(p4est, input_file, "d4est_solver_krylov_petsc_no_mg", &krylov_params);
       }
       else {
-        krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_params);
+        d4est_solver_krylov_petsc_input(p4est, input_file, "d4est_solver_krylov_petsc", &krylov_params);
       }
 
       
@@ -737,7 +737,7 @@ problem_init
       prob_vecs.num_of_fields = 1;
 
       
-      newton_petsc_solve
+      d4est_solver_newton_petsc_solve
         (
          p4est,
          &prob_vecs,

@@ -73,7 +73,7 @@ monitor = 1
 rtol = 1e-15
 atol = 1e-15
 
-[krylov_petsc]
+[d4est_solver_krylov_petsc]
 ksp_type = fcg
 ksp_atol = 1e-15
 ksp_rtol = 1e-15
@@ -85,7 +85,7 @@ ksp_initial_guess_nonzero = 1
 ksp_monitor_singular_value = 1
 ksp_do_not_use_preconditioner = 0
 
-[newton_petsc]
+[d4est_solver_newton_petsc]
 snes_atol = 1e-15
 snes_rtol = 1e-50
 snes_stol = 1e-1

@@ -50,7 +50,7 @@ monitor = 1
 rtol = 1e-20
 atol = 1e-20
 
-[krylov_petsc]
+[d4est_solver_krylov_petsc]
 ksp_type = cg
 ksp_atol = 1e-15
 ksp_rtol = 1e-50

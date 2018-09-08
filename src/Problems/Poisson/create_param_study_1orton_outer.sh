@@ -65,7 +65,7 @@ write_deg = 1
 [quadrature]
 name = legendre
 
-[krylov_petsc]
+[d4est_solver_krylov_petsc]
 ksp_type = fcg
 ksp_atol = 5e-15
 ksp_rtol = 1e-20

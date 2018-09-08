@@ -18,8 +18,8 @@
 #include <d4est_element_data.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
-#include <newton_petsc.h>
-#include <krylov_petsc.h>
+#include <d4est_solver_newton_petsc.h>
+#include <d4est_solver_krylov_petsc.h>
 #include <multigrid.h>
 #include <d4est_krylov_pc_multigrid.h>
 #include <multigrid_logger_residual.h>
@@ -304,13 +304,13 @@ problem_init
     ctx.use_matrix_operator = 1;
     ctx.mg_data = mg_data;
 
-    newton_petsc_params_t newton_params;
-    newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_params);
+    d4est_solver_newton_petsc_params_t newton_params;
+    d4est_solver_newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_params);
 
-    krylov_petsc_params_t krylov_params;
-    krylov_petsc_input(p4est, input_file, "krylov_petsc", "[KRYLOV_PETSC]", &krylov_params);
+    d4est_solver_krylov_petsc_params_t krylov_params;
+    d4est_solver_krylov_petsc_input(p4est, input_file, "d4est_solver_krylov_petsc", "[KRYLOV_PETSC]", &krylov_params);
       
-      newton_petsc_solve
+      d4est_solver_newton_petsc_solve
         (
          p4est,
          &prob_vecs,

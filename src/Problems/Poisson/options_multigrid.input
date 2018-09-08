@@ -62,7 +62,7 @@ compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
 
-[krylov_petsc]
+[d4est_solver_krylov_petsc]
 ksp_type = fcg
 ksp_atol = 1e-15
 ksp_rtol = 1e-20

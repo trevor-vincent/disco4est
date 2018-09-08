@@ -25,8 +25,8 @@
 #include <multigrid_logger_residual.h>
 #include <multigrid_element_data_updater.h>
 #include <multigrid_matrix_operator.h>
-#include <krylov_petsc.h>
-#include <newton_petsc.h>
+#include <d4est_solver_krylov_petsc.h>
+#include <d4est_solver_newton_petsc.h>
 #include <d4est_util.h>
 #include <d4est_checkpoint.h>
 #include <d4est_h5.h>
@@ -539,16 +539,16 @@ problem_init
 
     if (!init_params.do_not_solve){
 
-      newton_petsc_params_t newton_params;
-      newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_params);
+      d4est_solver_newton_petsc_params_t newton_params;
+      d4est_solver_newton_petsc_input(p4est, input_file, "[NEWTON_PETSC]", &newton_params);
 
-      krylov_petsc_params_t krylov_params;
-      krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_params);
+      d4est_solver_krylov_petsc_params_t krylov_params;
+      d4est_solver_krylov_petsc_input(p4est, input_file, "d4est_solver_krylov_petsc", &krylov_params);
       
       if (p4est->mpirank == 0)
         zlog_info(c_default, "Performing Newton PETSc solve...");
         
-      newton_petsc_solve(
+      d4est_solver_newton_petsc_solve(
         p4est,
         &prob_vecs,
         &prob_fcns,

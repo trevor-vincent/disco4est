@@ -4,7 +4,7 @@
 #include <d4est_util.h>
 #include <ini.h>
 #include <d4est_krylov_pc.h>
-#include <krylov_petsc.h>
+#include <d4est_solver_krylov_petsc.h>
 #include <sc_reduce.h>
 #include <zlog.h>
 #include <d4est_solver_krylov.h>

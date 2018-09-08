@@ -86,7 +86,7 @@ write_deg = 1
 [quadrature]
 name = legendre
 
-[newton_petsc]
+[d4est_solver_newton_petsc]
 snes_atol = 1e-15
 snes_rtol = 1e-50
 snes_stol = 1e-1
@@ -100,7 +100,7 @@ snes_converged_reason = 1
 snes_view = 1
 snes_ksp_ew = 1
 
-[krylov_petsc]
+[d4est_solver_krylov_petsc]
 ksp_type = fcg
 ksp_atol = 1e-15
 ksp_rtol = 1e-5

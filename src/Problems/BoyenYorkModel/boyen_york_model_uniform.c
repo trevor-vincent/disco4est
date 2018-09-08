@@ -18,8 +18,8 @@
 #include <d4est_element_data.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
-#include <newton_petsc.h>
-#include <krylov_petsc.h>
+#include <d4est_solver_newton_petsc.h>
+#include <d4est_solver_krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
 #include "./boyen_york_model_fcns.h"

@@ -19,8 +19,8 @@
 #include <d4est_element_data.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
-#include <newton_petsc.h>
-#include <krylov_petsc.h>
+#include <d4est_solver_newton_petsc.h>
+#include <d4est_solver_krylov_petsc.h>
 #include <d4est_krylov_pc_multigrid.h>
 #include <multigrid_logger_residual.h>
 #include <multigrid_element_data_updater.h>

@@ -11,7 +11,7 @@
 #include <time.h>
 
 static
-int krylov_petsc_input_handler
+int d4est_solver_krylov_petsc_input_handler
 (
  void* user,
  const char* section,
@@ -19,7 +19,7 @@ int krylov_petsc_input_handler
  const char* value
 )
 {
-  krylov_petsc_params_t* pconfig = (krylov_petsc_params_t*)user;
+  d4est_solver_krylov_petsc_params_t* pconfig = (d4est_solver_krylov_petsc_params_t*)user;
   if (d4est_util_match_couple(section,pconfig->input_section,name,"ksp_atol")) {
     D4EST_ASSERT(pconfig->ksp_atol[0] == '*');
     snprintf (pconfig->ksp_atol, sizeof(pconfig->ksp_atol), "%s", value);
@@ -90,9 +90,9 @@ int krylov_petsc_input_handler
 }
 
 void
-krylov_petsc_set_options_database_from_params
+d4est_solver_krylov_petsc_set_options_database_from_params
 (
- krylov_petsc_params_t* input
+ d4est_solver_krylov_petsc_params_t* input
 )
 {
   if(input->ksp_monitor)
@@ -145,12 +145,12 @@ krylov_petsc_set_options_database_from_params
 }
 
 void
-krylov_petsc_input
+d4est_solver_krylov_petsc_input
 (
  p4est_t* p4est,
  const char* input_file,
  const char* input_section,
- krylov_petsc_params_t* input
+ d4est_solver_krylov_petsc_params_t* input
 )
 {
   input->ksp_view = -1;
@@ -170,7 +170,7 @@ krylov_petsc_input
   
   D4EST_ASSERT(sizeof(input->input_section) <= 50);
   snprintf (input->input_section, sizeof(input->input_section), "%s", input_section);
-  if (ini_parse(input_file, krylov_petsc_input_handler, input) < 0) {
+  if (ini_parse(input_file, d4est_solver_krylov_petsc_input_handler, input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
@@ -190,7 +190,7 @@ krylov_petsc_input
   }
     
   if(p4est->mpirank == 0){
-    zlog_category_t *c_default = zlog_get_category("krylov_petsc");
+    zlog_category_t *c_default = zlog_get_category("d4est_solver_krylov_petsc");
     zlog_debug(c_default, "ksp_type = %s", input->ksp_type);
     zlog_debug(c_default, "ksp_view = %d", input->ksp_view);
     zlog_debug(c_default, "ksp_monitor = %d", input->ksp_monitor);
@@ -209,7 +209,7 @@ krylov_petsc_input
 }
 
 static
-PetscErrorCode krylov_petsc_monitor(KSP ksp,PetscInt it, PetscReal norm, void *ctx)
+PetscErrorCode d4est_solver_krylov_petsc_monitor(KSP ksp,PetscInt it, PetscReal norm, void *ctx)
 {
   krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
   zlog_category_t* c_default = zlog_get_category("d4est_solver_krylov_petsc");
@@ -254,7 +254,7 @@ PetscErrorCode krylov_petsc_monitor(KSP ksp,PetscInt it, PetscReal norm, void *c
 }
 
 static
-PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
+PetscErrorCode d4est_solver_krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
 {
   void           *ctx;
   PetscErrorCode ierr;
@@ -297,8 +297,8 @@ PetscErrorCode krylov_petsc_apply_aij( Mat A, Vec x, Vec y )
   return ierr;
 }
 
-krylov_petsc_info_t
-krylov_petsc_solve
+d4est_solver_krylov_petsc_info_t
+d4est_solver_krylov_petsc_solve
 (
  p4est_t* p4est,
  d4est_elliptic_data_t* vecs,
@@ -309,7 +309,7 @@ krylov_petsc_solve
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- krylov_petsc_params_t* krylov_petsc_params,
+ d4est_solver_krylov_petsc_params_t* d4est_solver_krylov_petsc_params,
  d4est_krylov_pc_t* d4est_krylov_pc,
  int amr_level
 )
@@ -321,9 +321,9 @@ krylov_petsc_solve
     start = clock();
   }
 
-  krylov_petsc_set_options_database_from_params(krylov_petsc_params);
+  d4est_solver_krylov_petsc_set_options_database_from_params(d4est_solver_krylov_petsc_params);
 
-  krylov_petsc_info_t info;
+  d4est_solver_krylov_petsc_info_t info;
   KSP ksp;
   Vec x,b;
   PC             pc;
@@ -340,7 +340,7 @@ krylov_petsc_solve
   petsc_ctx.d4est_geom = d4est_geom;
   petsc_ctx.d4est_quad = d4est_quad;
   petsc_ctx.d4est_factors = d4est_factors;
-  petsc_ctx.checkpoint_every_n_krylov_its = krylov_petsc_params->checkpoint_every_n_krylov_its;
+  petsc_ctx.checkpoint_every_n_krylov_its = d4est_solver_krylov_petsc_params->checkpoint_every_n_krylov_its;
   petsc_ctx.last_krylov_checkpoint_it = 0;
   petsc_ctx.amr_level = amr_level;
 
@@ -363,12 +363,12 @@ krylov_petsc_solve
 
   
   KSPGetPC(ksp,&pc);
-  if (d4est_krylov_pc != NULL && krylov_petsc_params->ksp_do_not_use_preconditioner == 0) {
+  if (d4est_krylov_pc != NULL && d4est_solver_krylov_petsc_params->ksp_do_not_use_preconditioner == 0) {
     PCSetType(pc,PCSHELL);//CHKERRQ(ierr);
     d4est_krylov_pc->pc_ctx = &petsc_ctx;
-    PCShellSetApply(pc, krylov_petsc_pc_apply);//CHKERRQ(ierr);
+    PCShellSetApply(pc, d4est_solver_krylov_petsc_pc_apply);//CHKERRQ(ierr);
     if (d4est_krylov_pc->pc_setup != NULL){
-      PCShellSetSetUp(pc, krylov_petsc_pc_setup);
+      PCShellSetSetUp(pc, d4est_solver_krylov_petsc_pc_setup);
     }
     PCShellSetContext(pc, d4est_krylov_pc);//CHKERRQ(ierr);
   }
@@ -395,13 +395,13 @@ krylov_petsc_solve
      (void*)&petsc_ctx,
      &A
     );
-  MatShellSetOperation(A,MATOP_MULT,(void(*)())krylov_petsc_apply_aij);
+  MatShellSetOperation(A,MATOP_MULT,(void(*)())d4est_solver_krylov_petsc_apply_aij);
 
   /* Set Amat and Pmat, where Pmat is the matrix the Preconditioner needs */
   KSPSetOperators(ksp,A,A);
   VecPlaceArray(b, rhs);
   VecPlaceArray(x, u);
-  KSPMonitorSet(ksp, krylov_petsc_monitor, &petsc_ctx, NULL);
+  KSPMonitorSet(ksp, d4est_solver_krylov_petsc_monitor, &petsc_ctx, NULL);
 
   
   KSPSolve(ksp,b,x);

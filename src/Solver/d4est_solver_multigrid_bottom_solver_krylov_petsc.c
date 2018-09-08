@@ -14,9 +14,9 @@ d4est_solver_multigrid_bottom_solver_krylov_petsc
 
   d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
-  krylov_petsc_params_t* params = mg_data->bottom_solver->user;
+  d4est_solver_krylov_petsc_params_t* params = mg_data->bottom_solver->user;
 
-  krylov_petsc_solve(p4est,
+  d4est_solver_krylov_petsc_solve(p4est,
                      vecs,
                      fcns,
                      &updater->current_d4est_ghost,
@@ -42,9 +42,9 @@ d4est_solver_multigrid_bottom_solver_krylov_petsc_init
     zlog_info(c_default, "Initializing d4est_solver_multigrid bottom solver...");
 
   d4est_solver_multigrid_bottom_solver_t* bottom_solver = P4EST_ALLOC(d4est_solver_multigrid_bottom_solver_t, 1);
-  krylov_petsc_params_t* params = P4EST_ALLOC(krylov_petsc_params_t, 1);
+  d4est_solver_krylov_petsc_params_t* params = P4EST_ALLOC(d4est_solver_krylov_petsc_params_t, 1);
 
-  krylov_petsc_input
+  d4est_solver_krylov_petsc_input
     (
      p4est,
      input_file,

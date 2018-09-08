@@ -52,7 +52,7 @@ struct d4est_krylov_pc {
 
 static
 PetscErrorCode
-krylov_petsc_pc_setup
+d4est_solver_krylov_petsc_pc_setup
 (
  PC pc
 )
@@ -68,7 +68,7 @@ krylov_petsc_pc_setup
 
 static
 PetscErrorCode
-krylov_petsc_pc_apply(PC pc,Vec x,Vec y)
+d4est_solver_krylov_petsc_pc_apply(PC pc,Vec x,Vec y)
 {
   PetscErrorCode ierr;
   d4est_krylov_pc_t* kp;

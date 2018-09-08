@@ -20,7 +20,7 @@
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
 #include <d4est_solver_newton.h>
-#include <krylov_petsc.h>
+#include <d4est_solver_krylov_petsc.h>
 #include <d4est_util.h>
 #include <time.h>
 #include "constant_density_star_fcns.h"

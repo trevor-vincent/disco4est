@@ -19,8 +19,8 @@
 #include <d4est_element_data.h>
 #include <d4est_poisson.h>
 #include <d4est_poisson_flux_sipg.h>
-#include <newton_petsc.h>
-#include <krylov_petsc.h>
+#include <d4est_solver_newton_petsc.h>
+#include <d4est_solver_krylov_petsc.h>
 /* #include <d4est_krylov_pc_multigrid.h> */
 /* #include <multigrid_logger_residual.h> */
 /* #include <multigrid_element_data_updater.h> */
@@ -205,10 +205,10 @@ problem_init
 
   /*   // Krylov PETSc solve */
     
-  /*   /\* krylov_petsc_params_t krylov_petsc_params; *\/ */
-  /*   /\* krylov_petsc_input(p4est, input_file, "krylov_petsc", &krylov_petsc_params); *\/ */
+  /*   /\* d4est_solver_krylov_petsc_params_t d4est_solver_krylov_petsc_params; *\/ */
+  /*   /\* d4est_solver_krylov_petsc_input(p4est, input_file, "d4est_solver_krylov_petsc", &d4est_solver_krylov_petsc_params); *\/ */
     
-  /*   /\* krylov_petsc_solve( *\/ */
+  /*   /\* d4est_solver_krylov_petsc_solve( *\/ */
   /*   /\*   p4est, *\/ */
   /*   /\*   &prob_vecs, *\/ */
   /*   /\*   &prob_fcns, *\/ */
@@ -218,7 +218,7 @@ problem_init
   /*   /\*   d4est_geom, *\/ */
   /*   /\*   d4est_quad, *\/ */
   /*   /\*   d4est_factors, *\/ */
-  /*   /\*   &krylov_petsc_params, *\/ */
+  /*   /\*   &d4est_solver_krylov_petsc_params, *\/ */
   /*   /\*   pc *\/ */
   /*   /\* ); *\/ */
 
