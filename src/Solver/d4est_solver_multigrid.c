@@ -526,7 +526,7 @@ d4est_solver_multigrid_data_init
   if(p4est->mpirank == 0){
     zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid");
     zlog_debug(c_default, "D4est_Solver_Multigrid h_levels p_levels total_levels = [%d,%d,%d]", mg_data->num_of_levels - mg_data->num_of_p_coarsen_levels, mg_data->num_of_p_coarsen_levels, mg_data->num_of_levels);
-    zlog_debug(c_default, "D4est_Solver_Multigrid Parameters");
+    zlog_debug(c_default, "d4est_solver_multigrid parameters");
     zlog_debug(c_default, "vcycle imax = %d", mg_data->vcycle_imax);
     zlog_debug(c_default, "vcycle rtol = %.25f", mg_data->vcycle_rtol);
     zlog_debug(c_default, "vcycle atol = %.25f", mg_data->vcycle_atol);
