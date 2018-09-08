@@ -195,7 +195,7 @@ d4est_solver_multigrid_get_h_coarsen_levels
     if (mpi_size != 1){
       zlog_info(c_default, "mpi_size/num_trees = %d = %d^%d\n", (mpi_size/num_trees), (P4EST_CHILDREN),power);
     }
-    zlog_info(c_default, "guess for h levels = %d\n", max_level + 1 - power);
+    zlog_info(c_default, "guess for h levels = %d", max_level + 1 - power);
   }
 
 

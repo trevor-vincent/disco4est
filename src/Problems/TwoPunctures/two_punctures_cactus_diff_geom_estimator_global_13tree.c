@@ -813,7 +813,10 @@ problem_init
                                        (void*)&sum,
                                        level
                                       );
-        
+
+
+        zlog_category_t *c_tp = zlog_get_category("two_punctures");
+        zlog_info(c_tp, "Loading u from a newton checkpoint %s at level %d", initial_extents->newton_checkpoint_prefix, level);
       }
       
       d4est_solver_newton_petsc_solve

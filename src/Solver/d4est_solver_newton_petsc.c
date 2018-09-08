@@ -186,7 +186,6 @@ PetscErrorCode d4est_solver_newton_petsc_save_x0
   int i;
   for (i = 0; i < vecs->local_nodes; i++){
     vecs->u0[i] = px0[i];
-    /* printf("u0[%d] = %f\n",i, vecs->u0[i]); */
   }
     
   VecRestoreArrayRead
