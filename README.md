@@ -5,6 +5,10 @@
 </p>
 disco4est (d4est) is a scalable hp-adaptive discontinuous Galerkin solver for coupled non-linear elliptic partial differential equations on curved multi-block meshes.
 
+## Solver Details
+
+We use an in-house multigrid algorithm to precondition PETSc solvers. This multigrid algorithm can handle different smoothers (Chebyshev, Additive Schwarz... ) and different bottom solvers (p-multigrid, Krylov). We handle different topologies using the multi-block tree code p4est. We use the discontinuous Galerkin method to discretize the non-linear or linear elliptic PDEs.
+
 ## Prerequisites
 
 The dependencies are MPI, OpenBLAS, HDF5, PETSc, zlib, zlog and p4est. You will need at least MPI. If you do not have zlib, zlog, PETSc p4est, HDF5 or OpenBLAS, then these come bundled, so they will be installed automatically to the local build folder unless you specify otherwise.
