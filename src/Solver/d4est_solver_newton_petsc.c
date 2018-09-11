@@ -221,6 +221,11 @@ PetscErrorCode d4est_solver_newton_petsc_monitor(SNES snes,PetscInt it, PetscRea
       char* output = NULL;
       asprintf(&output,"checkpoint_newton_%d", it);
 
+      Vec x;
+      const double* sol;
+      SNESGetSolution(snes, &x);
+      VecGetArrayRead(x, &sol);
+      
       d4est_elliptic_data_t* vecs = petsc_ctx->vecs;
       d4est_checkpoint_save
         (
@@ -232,7 +237,7 @@ PetscErrorCode d4est_solver_newton_petsc_monitor(SNES snes,PetscInt it, PetscRea
          (const char * []){"u", NULL},
          (hid_t []){H5T_NATIVE_DOUBLE},
          (int []){vecs->local_nodes},
-         (void* []){vecs->u0}
+         (void* []){sol}
         );
 
       petsc_ctx->last_newton_checkpoint_it = it;

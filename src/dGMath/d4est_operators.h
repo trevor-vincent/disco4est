@@ -47,6 +47,7 @@ typedef struct {
   double*** hp_restrict_interp_1d_table;
   double*** p_restrict_interp_1d_table;
   double*** schwarz_restrictor_1d_table;
+  double*** schwarz_restrictor_transpose_1d_table;
   
   
 } d4est_operators_t;
@@ -62,6 +63,7 @@ typedef void (*d4est_operators_hp_prolong_fcn_t)(d4est_operators_t *, double *, 
 
 typedef void (*d4est_operators_p_prolong_fcn_t)(d4est_operators_t *, double *, int, int,
                                        int, double *);
+
 
 /* This file was automatically generated.  Do not edit! */
 double d4est_operators_interpolate_using_bary(d4est_operators_t *d4est_ops,double *restrict rst,double *restrict f,int dim,int deg);
@@ -82,6 +84,9 @@ void d4est_operators_build_p_prolong_1d_inverse(d4est_operators_t *d4est_ops,dou
 void d4est_operators_convert_nodal_to_modal(d4est_operators_t *d4est_ops,double *restrict in,int dim,int deg,double *restrict out);
 void d4est_operators_apply_slicer(d4est_operators_t *d4est_ops,double *restrict in,int dim,int face,int deg,double *restrict out);
 void d4est_operators_apply_lift(d4est_operators_t *d4est_ops,double *restrict in,int dim,int deg,int face,double *restrict out);
+void d4est_operators_apply_schwarz_restrictor(d4est_operators_t *d4est_ops,double *restrict in,int dim,int *faces,int deg,int restricted_size,int transpose,double *restrict out);
+void d4est_operators_build_schwarz_restrictor_transpose_1d(d4est_operators_t *d4est_ops,double *restrict restrictor_transpose_1d,int deg,int restricted_deg);
+void d4est_operators_build_schwarz_restrictor_1d(d4est_operators_t *d4est_ops,double *restrict restrictor_1d,int deg,int restricted_deg);
 double *d4est_operators_fetch_gauss_rst_nd(d4est_operators_t *d4est_ops,int dim,int deg,int dir);
 void d4est_operators_apply_dij(d4est_operators_t *d4est_ops,double *restrict in,int dim,int deg,int dir,double *restrict out);
 double *d4est_operators_fetch_lobatto_rst_nd(d4est_operators_t *d4est_ops,int dim,int deg,int dir);

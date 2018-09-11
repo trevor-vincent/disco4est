@@ -176,3 +176,44 @@ void d4est_reference_rtox_array(double* r, double xl, double h, double* x, int n
     x[i] = d4est_reference_rtox(r[i], xl, h);
   }
 }
+
+/** 
+ * Each face of a quad or oct has a direction (x,y,z = 0,1,2)
+ * in topological coordinates and an ordering based on whether it is left 
+ * or right (e.g. -x face = 0, x face = 1)
+ * 
+ * @param [in] face 
+ * @param [out] dir 
+ * @param [out] side 
+ */
+void d4est_reference_dir_and_side_of_face
+(
+ int face,
+ int* dir,
+ int* side
+)
+{
+  if (face == 0) {
+    *dir = 0;
+    *side = 0;
+  } else if (face == 1) {
+    *dir = 0;
+    *side = 1;
+  } else if (face == 2) {
+    *dir = 1;
+    *side = 0;
+  } else if (face == 3) {
+    *dir = 1;
+    *side = 1;
+  } else if (face == 4) {
+    *dir = 2;
+    *side = 0;
+  } else if (face == 5) {
+    *dir = 2;
+    *side = 1;
+  } else {
+    *dir = -1;
+    *side = -1;
+    D4EST_ABORT("ERROR 0: d4est_operators_lift_boundary_vec");
+  }
+}
