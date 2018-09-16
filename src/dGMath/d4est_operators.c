@@ -213,7 +213,7 @@ d4est_operators_1index_fetch
     return table[deg-1];
   }
   else {
-    table[deg-1] = P4EST_ALLOC(double, size);
+    table[deg-1] = P4EST_ALLOC_ZERO(double, size);
     double* op = table[deg-1];
     build_fcn(d4est_ops, op, deg);
     return op;
@@ -239,7 +239,7 @@ double* d4est_operators_2index_fetch
     return table[deg1-1][deg2-1];
   }
   else {
-    table[deg1-1][deg2-1] = P4EST_ALLOC(double, size);
+    table[deg1-1][deg2-1] = P4EST_ALLOC_ZERO(double, size);
     double* op = table[deg1-1][deg2-1];
     build_fcn(d4est_ops, op, deg1, deg2);
     return op;
@@ -1388,6 +1388,11 @@ void d4est_operators_build_schwarz_restrictor_1d
   int restricted_size = restricted_deg + 1;
   D4EST_ASSERT(restricted_size <= deg + 1 && restricted_size >= 1);
   int original_size = deg + 1;
+
+  /* for (int i = 0; i < restricted_size*original_size*2; i++){ */
+    /* restrictor_1d[i] = 0.; */
+  /* } */
+
   for (int i = 0; i < restricted_size; i++){
     /* face == 0 */
     restrictor_1d[(deg+1)*(i) + i] = 1.;
@@ -1396,7 +1401,7 @@ void d4est_operators_build_schwarz_restrictor_1d
   }
 }
 
-static double*
+double*
 d4est_operators_fetch_schwarz_restrictor_1d
 (
  d4est_operators_t* d4est_ops,
@@ -1423,18 +1428,23 @@ void d4est_operators_build_schwarz_restrictor_transpose_1d
  d4est_operators_t* d4est_ops,
  double* restrict restrictor_transpose_1d,
  int deg, //degree of element before restriction
- int restricted_deg //number of 1d nodes
+ int res_deg //number of 1d nodes
  /* int which_face_1d */
 )
 {
-  double* restrictor_1d = d4est_operators_fetch_schwarz_restrictor_1d(d4est_ops,deg,restricted_deg);
+  double* restrictor_1d = d4est_operators_fetch_schwarz_restrictor_1d(d4est_ops,deg,res_deg);
   d4est_linalg_mat_transpose_nonsqr(&restrictor_1d[0],
                                     &restrictor_transpose_1d[0],
-                                    restricted_deg + 1, deg + 1);
+                                    res_deg + 1, deg + 1);
 
+
+  d4est_linalg_mat_transpose_nonsqr(&restrictor_1d[(res_deg+1)*(deg+1)],
+                                    &restrictor_transpose_1d[(res_deg+1)*(deg+1)],
+                                    res_deg + 1, deg + 1);
+  
 }
 
-static double*
+double*
 d4est_operators_fetch_schwarz_restrictor_transpose_1d
 (
  d4est_operators_t* d4est_ops,
@@ -1455,108 +1465,101 @@ d4est_operators_fetch_schwarz_restrictor_transpose_1d
 }
 
 
-void d4est_operators_apply_schwarz_restrictor(d4est_operators_t* d4est_ops,
-                                              double * restrict  in,
-                                              int dim,
-                                              int* faces,
-                                              int deg,
-                                              int restricted_size,
-                                              int transpose,
-                                              double * restrict  out
-                                  ) {
-  
-  D4EST_ASSERT(transpose == 0 || transpose == 1);
-  
+void d4est_operators_apply_schwarz_restrictor
+(
+ d4est_operators_t* d4est_ops,
+ double *   in,
+ int dim,
+ int* faces,
+ int deg,
+ int restricted_size,
+ d4est_ops_transpose_t transpose,
+ double *   out
+)
+{  
+  D4EST_ASSERT(restricted_size > 0 && restricted_size <= deg + 1); 
   double* schwarz_1d = NULL;
   int nodes_in = -1;
   int nodes_out = -1;
 
-  if (transpose != 1){
+  /* printf("schwarz restrictor\n"); */
+  /* DEBUG_PRINT_ARR_DBL(in, d4est_lgl_get_nodes(dim, deg)); */
+  
+  if (transpose == D4OPS_NO_TRANSPOSE){
     nodes_in = deg + 1;
     nodes_out = restricted_size;
     schwarz_1d = d4est_operators_fetch_schwarz_restrictor_1d(d4est_ops, deg, restricted_size - 1);
   }
-  else {
+  else if (transpose == D4OPS_TRANSPOSE) {
     nodes_out = deg + 1;
     nodes_in = restricted_size;
     schwarz_1d = d4est_operators_fetch_schwarz_restrictor_transpose_1d(d4est_ops, deg, restricted_size - 1);
   }
+  else {
+    D4EST_ABORT("Transpose needs to be D4OPS_NO_TRANSPOSE or D4OPS_TRANSPOSE");
+  }
 
   /* This should be optimized out */               
-  double* eyes = P4EST_ALLOC(double, nodes_in*nodes_in);
-  for (int i = 0; i < nodes_in*nodes_in; i++) eyes[i] = 1.;
-  
+  double* eyes = P4EST_ALLOC_ZERO(double, nodes_in*nodes_in);
+  for (int i = 0; i < nodes_in; i++){
+      eyes[i*nodes_in + i] = 1.;
+  }
+
+  double op_rows [(P4EST_DIM)];
+  double op_cols [(P4EST_DIM)];
   double* operators [(P4EST_DIM)];
   
   int dir;  /* x <-> 0; y <-> 1; z <-> 2  */
   int side; /* left <-> 0; right <-> 1 */
   
   for (int i = 0; i < (P4EST_DIM); i++){
-    if (faces[i] == -1){
-      operators[i] = eyes;
-    }
-    else {
+    operators[i] = eyes;
+    op_rows[i] = nodes_in;
+    op_cols[i] = nodes_in;
+  }
+  for (int i = 0; i < (P4EST_DIM); i++){  
+    if (faces[i] != -1) {
       d4est_reference_dir_and_side_of_face(faces[i], &dir, &side);
       operators[dir] = &schwarz_1d[side * nodes_in * nodes_out];
+      /* printf("face, side, dir = %d, %d, %d\n", faces[i], side, dir); */
+      /* DEBUG_PRINT_ARR_DBL(schwarz_1d, 2 * nodes_in * nodes_out); */
+      op_rows[dir] = nodes_out;
+      op_cols[dir] = nodes_in;
     }
   }
 
+  /* for (int i = 0; i < (P4EST_DIM); i++){ */
+    /* operators[i] = eyes; */
+    /* op_rows[i] = nodes_in; */
+    /* op_cols[i] = nodes_in; */
+    /* d4est_util_print_matrix(operators[i], op_rows[i], op_cols[i], "i = 0,1,2",0); */
+  /* } */
+  
   if (dim == 2){
-    if (dir == 0){
       d4est_kron_A1A2x_nonsqr(out,
-                              operators[0],
                               operators[1],
+                              operators[0],
                               in,
-                              nodes_out,
-                              nodes_in,
-                              nodes_out,
-                              nodes_in
+                              op_rows[1],
+                              op_cols[1],
+                              op_rows[0],
+                              op_cols[0]
                              );
       
-    }
-    else if (dir == 1){
-      d4est_kron_A1A2x_nonsqr(out,
-                              operators[0],
-                              operators[1],
-                              in,
-                              nodes_out,
-                              nodes_in,
-                              nodes_out,
-                              nodes_in
-                             );
-    }
-    else
-      D4EST_ABORT("DIM == 2, so dir == 0,1");
   }
-
   else if (dim == 3){
-    if (dir == 0){
         d4est_kron_A1A2A3x_nonsqr(out,
-                                  operators[0],
-                                  operators[1],
                                   operators[2],
-                                  in,
-                                  nodes_out, nodes_in, nodes_out, nodes_in, nodes_out, nodes_in);
-    } 
-    else if (dir == 1){
-        d4est_kron_A1A2A3x_nonsqr(out,
-                                  operators[0],
                                   operators[1],
-                                  operators[2],
-                                  in,
-                                  nodes_out, nodes_in, nodes_out, nodes_in, nodes_out, nodes_in);
-    }
-    else if (dir == 2){
-        d4est_kron_A1A2A3x_nonsqr(out,
                                   operators[0],
-                                  operators[1],
-                                  operators[2],
                                   in,
-                                  nodes_out, nodes_in, nodes_out, nodes_in, nodes_out, nodes_in);
-    }
-    else{
-      D4EST_ABORT("DIM == 3 so DIR=0,1 or 2");
-    }
+                                  op_rows[2],
+                                  op_cols[2],
+                                  op_rows[1],
+                                  op_cols[1],
+                                  op_rows[0],
+                                  op_cols[0]
+                                 );
   }
   else {
     D4EST_ABORT("DIM must be 2 or 3");
@@ -2370,7 +2373,6 @@ double* d4est_operators_fetch_vtk_rst
     );
 }
 
-
 static void d4est_operators_build_dij_trans_1d(d4est_operators_t* d4est_ops, double * restrict  dij_trans_1d,
                                 int deg) {
 
@@ -2378,7 +2380,6 @@ static void d4est_operators_build_dij_trans_1d(d4est_operators_t* d4est_ops, dou
   /* double* Dr_1d_transpose = P4EST_ALLOC(double, (deg+1)*(deg+1)); */
   d4est_linalg_mat_transpose(Dr_1d, dij_trans_1d, (deg+1));
 }
-
 
 static double* d4est_operators_fetch_dij_trans_1d(d4est_operators_t* d4est_ops, int deg) {
   int size = (deg + 1) * (deg + 1);
@@ -2391,8 +2392,6 @@ static double* d4est_operators_fetch_dij_trans_1d(d4est_operators_t* d4est_ops, 
      d4est_operators_build_dij_trans_1d
     );     
 }
-
-
 
 void d4est_operators_apply_dij_transpose(d4est_operators_t* d4est_ops, double * restrict  in, int dim, int deg,
                       int dir, double * restrict  out) {
@@ -2579,6 +2578,5 @@ d4est_operators_interpolate_using_bary
     
   return sum_num/sum_den;  
 }
-
 
 

@@ -1068,6 +1068,7 @@ d4est_mesh_data_init()
   d4est_factors->drst_dxyz_p_mortar_quad_porder = NULL;
 
   d4est_factors->element_touches_boundary = NULL;
+  d4est_factors->element_data = NULL;
   d4est_factors->node_touches_boundary = NULL;
   d4est_factors->face_touches_element = NULL;
   d4est_factors->hm_mortar_quad = NULL;
@@ -1185,10 +1186,12 @@ d4est_mesh_data_realloc
 
   if (p4est->mpirank == 0){
     printf("[D4EST_INFO]: Reallocing storage for geometry data\n");
-  }  
+  }
+
+  
   int local_nodes = local_sizes.local_nodes;
   int local_nodes_quad = local_sizes.local_nodes_quad;
-
+  int ghost_elements = d4est_ghost->ghost->ghosts.elem_count;
   int vector_nodes = local_nodes*(P4EST_DIM);
   d4est_factors->xyz = P4EST_REALLOC(d4est_factors->xyz,double,vector_nodes);
   d4est_factors->xyz_quad = P4EST_REALLOC(d4est_factors->xyz_quad, double, (P4EST_DIM)*local_nodes_quad);
@@ -1217,7 +1220,11 @@ d4est_mesh_data_realloc
                                                       int,
                                                       p4est->local_num_quadrants);
 
+  d4est_factors->element_data = P4EST_REALLOC(d4est_factors->element_data,
+                                              d4est_element_data_t*,
+                                              (p4est->local_num_quadrants + ghost_elements));
 
+  
   d4est_factors->node_touches_boundary = P4EST_REALLOC(d4est_factors->node_touches_boundary,
                                                       int,
                                                       local_nodes);
@@ -1263,7 +1270,7 @@ d4est_mesh_data_realloc
                                                       local_vector_boundary_nodes_quad);
 
 
-  int ghost_elements = d4est_ghost->ghost->ghosts.elem_count;
+
   
   d4est_factors->j_div_sj_min = P4EST_REALLOC(d4est_factors->j_div_sj_min,
                                               double,
@@ -1323,6 +1330,7 @@ d4est_mesh_data_destroy
     P4EST_FREE(d4est_factors->drst_dxyz_p_mortar_quad_porder);
     P4EST_FREE(d4est_factors->hm_mortar_quad);
     P4EST_FREE(d4est_factors->element_touches_boundary);
+    P4EST_FREE(d4est_factors->element_data);
     P4EST_FREE(d4est_factors->node_touches_boundary);
     P4EST_FREE(d4est_factors->face_touches_element);
     P4EST_FREE(d4est_factors->hp_mortar_quad);
@@ -1542,6 +1550,7 @@ d4est_mesh_init_element_size_parameters_ghost
   for (int gid = 0; gid < d4est_ghost->ghost->ghosts.elem_count; gid++){
     d4est_element_data_t* ged = &d4est_ghost->ghost_elements[gid];
     ged->id = gid;
+    d4est_factors->element_data[p4est->local_num_quadrants + gid] = ged;
     d4est_mesh_init_element_size_parameters
       (
        p4est,
@@ -2122,7 +2131,6 @@ d4est_mesh_init_element_data
         /* elem_data->sqr_mortar_stride = sqr_mortar_stride; */
         elem_data->nodal_stride = nodal_stride;
         elem_data->quad_stride = quad_stride;
-
         elem_data->region = d4est_geom->get_region(d4est_geom, elem_data->q, elem_data->dq, elem_data->tree);
         
         /* user_fcn should set degree,
@@ -2143,7 +2151,7 @@ d4est_mesh_init_element_data
           printf("Element deg, deg_quad, max_degree = %d, %d, %d\n",elem_data->deg, elem_data->deg_quad, d4est_ops->max_degree);
           D4EST_ABORT("Aborting...");
         }
-        
+
         int nodes = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg);
         int nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), elem_data->deg_quad);
         int face_nodes = d4est_lgl_get_nodes((P4EST_DIM)-1, elem_data->deg);
@@ -2256,7 +2264,9 @@ d4est_mesh_data_compute
 #if (P4EST_DIM)==3
         mesh_object.q[2] = ed->q[2];
 #endif
-      
+
+        d4est_factors->element_data[ed->id] = ed;
+        
         d4est_rst_t rst_points_quad;
         rst_points_quad = d4est_quadrature_get_rst_points
                           (

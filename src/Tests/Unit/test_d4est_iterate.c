@@ -1,7 +1,7 @@
 #include <pXest.h>
-#include <problem.h>
 #include <d4est_geometry.h>
 #include <d4est_mesh.h>
+#include <d4est_operators.h>
 #include <d4est_amr.h>
 #include <d4est_amr_random.h>
 #include <d4est_vtk.h>
@@ -29,7 +29,7 @@ typedef struct {
 
 typedef struct {
 
-  schwarz_element_t connections [27];
+  schwarz_element_t connections [27*4];
 
 } schwarz_element_connections_t;
 
@@ -504,29 +504,60 @@ int main(int argc, char *argv[])
           }
         }
 
+        printf("ed->id = %d\n", ed->id);
+        printf("ed->nodal_stride = %d\n", ed->nodal_stride);
+        
         if (ed->id == schwarz_center){
           d4est_util_copy_1st_to_2nd(&ones[ed->nodal_stride],&restricted_ones[ed->nodal_stride],volume_nodes);
           d4est_util_copy_1st_to_2nd(&ones[ed->nodal_stride],&restricted_ones_transpose[ed->nodal_stride],volume_nodes);
         }
         else if (connection != -1){
+
+          /* printf("***********\n"); */
+          /* printf("Connection %d\n",connection); */
+          /* printf("Element id = %d\n", corner_data.connections[connection].id); */
+          /* printf("Element tree = %d\n", corner_data.connections[connection].tree); */
+          /* printf("Faces 0 = %d\n", corner_data.connections[connection].faces[0]); */
+          /* printf("Faces 1 = %d\n", corner_data.connections[connection].faces[1]); */
+          /* printf("Faces 2 = %d\n", corner_data.connections[connection].faces[2]); */
+          /* printf("P4EST_DIM = %d\n", (P4EST_DIM)); */
+
+          /* double *onesptr = &ones[ed->nodal_stride]; */
+          /* DEBUG_PRINT_ARR_DBL(onesptr, volume_nodes); */
+          
+          int faces [3];
+          faces[0] = corner_data.connections[connection].faces[0];
+          faces[1] = corner_data.connections[connection].faces[1];
+          faces[2] = corner_data.connections[connection].faces[2];
+
+          double* ones_vol = P4EST_ALLOC(double, volume_nodes);
+          for (int i = 0 ; i < volume_nodes; i++)
+            ones_vol[i] = 1;
+          
           d4est_operators_apply_schwarz_restrictor(d4est_ops,
-                                                   &ones[ed->nodal_stride],
-                                                   (P4EST_DIM),
-                                                   &corner_data.connections[connection].faces[0],
+                                                   ones_vol,
+                                                   3,
+                                                   &(faces[0]),
                                                    ed->deg,
-                                                   ed->deg + 1,
-                                                   0,
+                                                   (ed->deg == 1) ? ed->deg + 1 : ed->deg,
+                                                   D4OPS_NO_TRANSPOSE,
                                                    &restricted_ones[ed->nodal_stride]);
 
 
+          /* double *restrictedonesptr = &restricted_ones[ed->nodal_stride]; */
+ 
+          /* DEBUG_PRINT_ARR_DBL(restrictedonesptr, volume_nodes); */
+
+          
           d4est_operators_apply_schwarz_restrictor(d4est_ops,
                                                    &restricted_ones[ed->nodal_stride],
-                                                   (P4EST_DIM),
-                                                   &corner_data.connections[connection].faces[0],
+                                                   3,
+                                                   &(faces[0]),
                                                    ed->deg,
-                                                   ed->deg + 1,
-                                                   1,
+                                                   (ed->deg == 1) ? ed->deg + 1 : ed->deg,
+                                                   D4OPS_TRANSPOSE,
                                                    &restricted_ones_transpose[ed->nodal_stride]);
+
         }
         else{
           for (int i = 0; i< volume_nodes; i++){
@@ -538,6 +569,7 @@ int main(int argc, char *argv[])
       
     }
 
+  DEBUG_PRINT_ARR_DBL(restricted_ones_transpose, local_nodes);
   
   printf("This element is on bndry? = %d\n", d4est_factors->element_touches_boundary[corner_data.element]);  
   

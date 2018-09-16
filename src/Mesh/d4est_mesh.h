@@ -93,7 +93,8 @@ typedef struct {
 typedef struct {
   
   d4est_mesh_local_sizes_t local_sizes;
-
+  d4est_element_data_t** element_data;
+  
   int* element_touches_boundary;
   int* node_touches_boundary;
   int* face_touches_element;
@@ -121,7 +122,7 @@ typedef struct {
   double* diam_volume;
   double* area;
   double* volume;
-
+  
 } d4est_mesh_data_t;
 
 typedef struct {

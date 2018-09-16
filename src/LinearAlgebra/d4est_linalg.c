@@ -156,8 +156,6 @@ d4est_linalg_set_column_opt (double * restrict A, double * restrict column, int 
   }
 }
 
-
-
 void
 d4est_linalg_vec_scale (double alpha, double * restrict x, int N)
 {
