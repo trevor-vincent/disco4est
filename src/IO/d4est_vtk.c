@@ -116,6 +116,7 @@ static int
 d4est_vtk_write_binary (FILE * vtkfile, char *numeric_data,
                         size_t byte_length, d4est_vtk_output_type_t output_type)
 {
+  D4EST_ABORT("Binary currently has a bug in it, so use ascii output_type");
   if (output_type == D4EST_VTK_BINARY){
     return sc_vtk_write_binary (vtkfile, numeric_data, byte_length);
   }

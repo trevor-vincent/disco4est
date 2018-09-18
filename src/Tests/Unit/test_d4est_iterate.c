@@ -504,8 +504,8 @@ int main(int argc, char *argv[])
           }
         }
 
-        printf("ed->id = %d\n", ed->id);
-        printf("ed->nodal_stride = %d\n", ed->nodal_stride);
+        /* printf("ed->id = %d\n", ed->id); */
+        /* printf("ed->nodal_stride = %d\n", ed->nodal_stride); */
         
         if (ed->id == schwarz_center){
           d4est_util_copy_1st_to_2nd(&ones[ed->nodal_stride],&restricted_ones[ed->nodal_stride],volume_nodes);
@@ -513,13 +513,13 @@ int main(int argc, char *argv[])
         }
         else if (connection != -1){
 
-          /* printf("***********\n"); */
-          /* printf("Connection %d\n",connection); */
-          /* printf("Element id = %d\n", corner_data.connections[connection].id); */
-          /* printf("Element tree = %d\n", corner_data.connections[connection].tree); */
-          /* printf("Faces 0 = %d\n", corner_data.connections[connection].faces[0]); */
-          /* printf("Faces 1 = %d\n", corner_data.connections[connection].faces[1]); */
-          /* printf("Faces 2 = %d\n", corner_data.connections[connection].faces[2]); */
+          printf("***********\n");
+          printf("Connection %d\n",connection);
+          printf("Element id = %d\n", corner_data.connections[connection].id);
+          printf("Element tree = %d\n", corner_data.connections[connection].tree);
+          printf("Faces 0 = %d\n", corner_data.connections[connection].faces[0]);
+          printf("Faces 1 = %d\n", corner_data.connections[connection].faces[1]);
+          printf("Faces 2 = %d\n", corner_data.connections[connection].faces[2]);
           /* printf("P4EST_DIM = %d\n", (P4EST_DIM)); */
 
           /* double *onesptr = &ones[ed->nodal_stride]; */
@@ -539,14 +539,15 @@ int main(int argc, char *argv[])
                                                    3,
                                                    &(faces[0]),
                                                    ed->deg,
-                                                   (ed->deg == 1) ? ed->deg + 1 : ed->deg,
+                                                   ed->deg,/* (ed->deg == 1) ? ed->deg + 1 : ed->deg, */
                                                    D4OPS_NO_TRANSPOSE,
                                                    &restricted_ones[ed->nodal_stride]);
 
 
-          /* double *restrictedonesptr = &restricted_ones[ed->nodal_stride]; */
- 
-          /* DEBUG_PRINT_ARR_DBL(restrictedonesptr, volume_nodes); */
+          
+          double *restrictedonesptr = &restricted_ones[ed->nodal_stride];
+          int res_volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),ed->deg);
+          DEBUG_PRINT_ARR_DBL(restrictedonesptr, res_volume_nodes);
 
           
           d4est_operators_apply_schwarz_restrictor(d4est_ops,
@@ -554,9 +555,15 @@ int main(int argc, char *argv[])
                                                    3,
                                                    &(faces[0]),
                                                    ed->deg,
-                                                   (ed->deg == 1) ? ed->deg + 1 : ed->deg,
+                                                   ed->deg,
                                                    D4OPS_TRANSPOSE,
                                                    &restricted_ones_transpose[ed->nodal_stride]);
+
+
+
+          double *restrictedones_transposeptr = &restricted_ones_transpose[ed->nodal_stride];
+          DEBUG_PRINT_ARR_DBL(restrictedones_transposeptr, volume_nodes);
+          
 
         }
         else{
@@ -569,7 +576,7 @@ int main(int argc, char *argv[])
       
     }
 
-  DEBUG_PRINT_ARR_DBL(restricted_ones_transpose, local_nodes);
+  /* DEBUG_PRINT_ARR_DBL(restricted_ones_transpose, local_nodes); */
   
   printf("This element is on bndry? = %d\n", d4est_factors->element_touches_boundary[corner_data.element]);  
   
