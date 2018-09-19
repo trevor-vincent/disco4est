@@ -55,8 +55,10 @@ message(STATUS "Use petsc library: ${PETSC_LIBRARIES}")
 macro(petsc_build)
   if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
     set(petsc_config_args "--with-debugging=1")
-  else("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
+    MESSAGE ("*******PETSC DEBUGGING TURNED ON*******")
+  else()
     set(petsc_config_args "--with-debugging=0")
+    MESSAGE ("*******PETSC DEBUGGING TURNED OFF*******")
   endif("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
 
   set(blas_config_args

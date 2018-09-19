@@ -98,8 +98,10 @@ macro(p4est_build)
 
   if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
     set(p4est_config_args "--enable-debug")
+    MESSAGE ("*******P4EST DEBUGGING TURNED ON*******")
   else("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
     set(p4est_config_args "")
+    MESSAGE ("*******P4EST DEBUGGING TURNED OFF*******")
   endif("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
   ExternalProject_Add(p4est
     PREFIX    ${CMAKE_BINARY_DIR}/third_party/p4est
