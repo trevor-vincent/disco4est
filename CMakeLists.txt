@@ -144,9 +144,12 @@ SET (
 add_library(d8est ${SRCS} ${SRCS_3D_ONLY})
 add_library(d8est_test ${SRCS} ${SRCS_3D_ONLY})
 add_library(d4est ${SRCS} ${SRCS_2D_ONLY})
+add_library(d4est_test ${SRCS} ${SRCS_2D_ONLY})
+
 
 add_dependencies(d8est build_bundled_libs)
 add_dependencies(d8est_test build_bundled_libs)
+add_dependencies(d4est_test build_bundled_libs)
 add_dependencies(d4est build_bundled_libs)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
 add_custom_target(build_bundled_libs)
@@ -206,6 +209,11 @@ set_property(TARGET d8est APPEND_STRING PROPERTY
 target_link_libraries(d8est_test ${LIBS})
 set_property(TARGET d8est_test APPEND_STRING PROPERTY
   COMPILE_FLAGS "-DDIM=3 -DD4EST_TEST=1")
+
+target_link_libraries(d4est_test ${LIBS})
+set_property(TARGET d4est_test APPEND_STRING PROPERTY
+  COMPILE_FLAGS " -DDIM=2 -DD4EST_TEST=1")
+
 
 set_property(TARGET d4est PROPERTY C_STANDARD 99)
 set_property(TARGET d8est PROPERTY C_STANDARD 99)
@@ -281,7 +289,7 @@ endfunction()
 
 function(add_d4est_unit_test_2d exec src parent_dir test_name)
   add_executable(${exec} ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/${src})
-  target_link_libraries(${exec} d4est)
+  target_link_libraries(${exec} d4est_test)
   add_test(NAME ${test_name} COMMAND ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
   target_compile_definitions(${exec} PRIVATE DIM=2 D4EST_TEST=1)
   set_target_properties(${exec}
@@ -322,7 +330,7 @@ set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppr
 add_d4est_unit_test_3d(test_d4est_vtk test_d4est_vtk.c Unit test_d4est_vtk)
 # add_d4est_unit_test_3d(test_d4est_iterate_2 test_d4est_iterate_2.c Unit test_d4est_iterate_2)
 # add_d4est_unit_test_3d(test_d4est_iterate test_d4est_iterate.c Unit test_d4est_iterate)
-# add_d4est_unit_test_2d(test_d4est_iterate_2d test_d4est_iterate.c Unit test_d4est_iterate_2d)
+add_d4est_unit_test_2d(test_d4est_iterate_2d test_d4est_iterate.c Unit test_d4est_iterate_2d)
 
 add_d4est_unit_test_3d(test_d4est_operators test_d4est_operators.c Unit test_d4est_operators)
 add_d4est_unit_test_3d(test_d4est_kron test_d4est_kron.c Unit test_d4est_kron)

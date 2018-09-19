@@ -20,7 +20,7 @@ typedef struct {
   int id;
   int nodal_stride;
   int faces [3];
-  
+
   int is_central_element;
   int shares_what; //0 = corner, 1 = edge, 2 = face
   
@@ -118,8 +118,8 @@ iter_corner_callback
       printf("corner = %d\n", corner_side->corner);
       printf("faces[0] = %d\n", corner_side->faces[0]);
       printf("faces[1] = %d\n", corner_side->faces[1]);
-      printf("faces[2] = %d\n", corner_side->faces[2]);
 #if (P4EST_DIM)==3
+      printf("faces[2] = %d\n", corner_side->faces[2]);
       printf("edges[0] = %d\n", corner_side->edges[0]);
       printf("edges[1] = %d\n", corner_side->edges[1]);
       printf("edges[2] = %d\n\n", corner_side->edges[2]);
@@ -225,7 +225,7 @@ iter_corner_callback
 #endif
       }
 
-      if(do_not_save == 0){
+      /* if(do_not_save == 0){ */
         if (shares_face){
           corner_data->connections[corner_data->connections_found].faces[0] = face_id;
           corner_data->connections[corner_data->connections_found].faces[1] = -1;
@@ -257,24 +257,28 @@ iter_corner_callback
         corner_data->connections[corner_data->connections_found].nodal_stride = ed->nodal_stride;
         corner_data->connections[corner_data->connections_found].shares_what = (shares_face > 0) ? 2 :
                                                                                ((shares_edge > 0) ? 1 : 0);
-        corner_data->connections_found++;
-
-        if(corner_data->connections_found > 26){
-          D4EST_ABORT("Connections should not be > 26");
-        }
+ 
       
+      /* } */
+      
+      printf("ed->id = %d\n", corner_data->connections[corner_data->connections_found].id);
+      /* printf("corner = %d\n", corner_side->corner); */
+      printf("faces[0] = %d\n", corner_data->connections[corner_data->connections_found].faces[0]);
+      printf("faces[1] = %d\n", corner_data->connections[corner_data->connections_found].faces[1]);
+#if (P4EST_DIM)==3
+      printf("faces[2] = %d\n", corner_data->connections[corner_data->connections_found].faces[2]);
+      printf("edges[0] = %d\n", corner_data->connections[corner_data->connections_found].edges[0]);
+      printf("edges[1] = %d\n", corner_data->connections[corner_data->connections_found].edges[1]);
+      printf("edges[2] = %d\n\n", corner_data->connections[corner_data->connections_found].edges[2]);
+#endif
+
+
+      corner_data->connections_found++;
+
+      if(corner_data->connections_found > 26){
+        D4EST_ABORT("Connections should not be > 26");
       }
       
-      printf("ed->id = %d\n", ed->id);
-      printf("corner = %d\n", corner_side->corner);
-      printf("faces[0] = %d\n", corner_side->faces[0]);
-      printf("faces[1] = %d\n", corner_side->faces[1]);
-      printf("faces[2] = %d\n", corner_side->faces[2]);
-#if (P4EST_DIM)==3
-      printf("edges[0] = %d\n", corner_side->edges[0]);
-      printf("edges[1] = %d\n", corner_side->edges[1]);
-      printf("edges[2] = %d\n\n", corner_side->edges[2]);
-#endif 
     }
   }  
 }
@@ -394,28 +398,16 @@ int main(int argc, char *argv[])
 
   initial_grid_input->initial_nodes = local_sizes.local_nodes;
 
-
   int nodes = local_sizes.local_nodes;
   double* sinvec = P4EST_ALLOC(double, nodes);
   double* element_id = P4EST_ALLOC(double, p4est->local_num_quadrants);
 
-  int k = 0;
-  for (p4est_topidx_t tt = p4est->first_local_tree;
-       tt <= p4est->last_local_tree;
-       ++tt)
-    {
-      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-      sc_array_t* tquadrants = &tree->quadrants;
-      int Q = (p4est_locidx_t) tquadrants->elem_count;
-      for (int q = 0; q < Q; ++q, ++k) {
-        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
-        d4est_element_data_t* ed = quad->p.user_data;
-        element_id[k] = ed->id;
-        printf("ed->deg = %d\n",ed->deg);
-      }
-    }
-
-  
+  for (int i = 0; i < p4est->local_num_quadrants; i++){
+    d4est_element_data_t* ed = d4est_factors->element_data[i];
+    element_id[i] = ed->id;
+    /* printf("ed->deg from factors = %d\n", ed->deg); */
+  }
+    
   corner_data_t corner_data;
   corner_data.is_corner = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
   corner_data.is_edge = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
@@ -433,7 +425,7 @@ int main(int argc, char *argv[])
   
   corner_data.connections_found = 0;
 
-  int schwarz_center = 14;
+  int schwarz_center = 3 ;
   for (int i = 0; i < (P4EST_CHILDREN); i++){
     
     corner_data.element = schwarz_center;
@@ -473,6 +465,8 @@ int main(int argc, char *argv[])
     }
   }
 
+ 
+  
   int local_nodes = local_sizes.local_nodes;
   double* ones = P4EST_ALLOC_ZERO(double, local_nodes);
   for (int i = 0; i < local_nodes; i++){
@@ -597,7 +591,7 @@ int main(int argc, char *argv[])
           DEBUG_PRINT_3ARR_DBL(res_rst_lobatto[0], res_rst_lobatto[1], res_rst_lobatto[2], res_volume_nodes);
 #else
           DEBUG_PRINT_2ARR_DBL(res_rst_lobatto[0], res_rst_lobatto[1], volume_nodes);
-          DEBUG_PRINT_2ARR_DBL(res_rst_lobatto[0], res_rst_lobatto[1], res_volume_nodes);          
+          DEBUG_PRINT_2ARR_DBL(res_rst_lobatto[0], res_rst_lobatto[1], res_volume_nodes);
 #endif
           for (int i = 0; i < (P4EST_DIM); i++){
             P4EST_FREE(res_rst_lobatto[i]);
@@ -614,7 +608,7 @@ int main(int argc, char *argv[])
       
     }
 
-  printf("This element is on bndry? = %d\n", d4est_factors->element_touches_boundary[corner_data.element]);  
+  printf("This element is on bndry? = %d\n", d4est_factors->element_touches_boundary[corner_data.element]);
   
   d4est_vtk_save
     (
@@ -627,11 +621,11 @@ int main(int argc, char *argv[])
      (const char*[]){"is_corner", "element_id", NULL},
      (double**)((const double*[]){corner_data.is_corner, element_id, NULL}),
      -1
-    );  
+    );
 
-  P4EST_FREE(restricted_ones);  
-  P4EST_FREE(ones);  
-  P4EST_FREE(restricted_ones_transpose);  
+  P4EST_FREE(restricted_ones);
+  P4EST_FREE(ones);
+  P4EST_FREE(restricted_ones_transpose);
   P4EST_FREE(corner_data.is_corner);
   P4EST_FREE(corner_data.is_edge);
   P4EST_FREE(element_id);

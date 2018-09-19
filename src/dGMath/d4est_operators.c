@@ -1496,10 +1496,12 @@ void d4est_operators_apply_schwarz_restrictor
     D4EST_ABORT("Transpose needs to be D4OPS_NO_TRANSPOSE or D4OPS_TRANSPOSE");
   }
 
-  /* This should be optimized out */               
-  double* eyes = P4EST_ALLOC_ZERO(double, nodes_in*nodes_in);
-  for (int i = 0; i < nodes_in; i++){
-      eyes[i*nodes_in + i] = 1.;
+  /* This should be optimized out */
+
+  int degp1 = deg + 1;
+  double* eyes = P4EST_ALLOC_ZERO(double, (degp1)*(degp1));
+  for (int i = 0; i < (degp1); i++){
+    eyes[i*(degp1) + i] = 1.;
   }
 
   int op_rows [(P4EST_DIM)];
@@ -1511,8 +1513,8 @@ void d4est_operators_apply_schwarz_restrictor
   
   for (int i = 0; i < (P4EST_DIM); i++){
     operators[i] = eyes;
-    op_rows[i] = nodes_in;
-    op_cols[i] = nodes_in;
+    op_rows[i] = degp1;
+    op_cols[i] = degp1;
   }
 
 
