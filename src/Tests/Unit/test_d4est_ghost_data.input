@@ -30,7 +30,7 @@ max_degree = 10
 [d4est_vtk]
 filename = box
 geometry_section = geometry
-output_type = binary
+output_type = ascii
 grid_type = dg
 write_tree = 1
 write_level = 1
