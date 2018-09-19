@@ -520,42 +520,42 @@ d4est_estimator_bi_compute
     /* printf("first_local_tree = %d\n", p4est->first_local_tree); */
     /* printf("last_local_tree = %d\n", p4est->last_local_tree); */
     
-    zlog_category_t* c_default = zlog_get_category("d4est_estimator_bi");
+    /* zlog_category_t* c_default = zlog_get_category("d4est_estimator_bi"); */
     
-    for (p4est_topidx_t tt = p4est->first_local_tree;
-         tt <= p4est->last_local_tree;
-         ++tt)
-      {
-        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
-        sc_array_t* tquadrants = &tree->quadrants;
-        int QQ = (p4est_locidx_t) tquadrants->elem_count;
+    /* for (p4est_topidx_t tt = p4est->first_local_tree; */
+    /*      tt <= p4est->last_local_tree; */
+    /*      ++tt) */
+    /*   { */
+    /*     p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
+    /*     sc_array_t* tquadrants = &tree->quadrants; */
+    /*     int QQ = (p4est_locidx_t) tquadrants->elem_count; */
 
-        /* printf("tree = %d, qq = %d\n", tt, QQ); */
+    /*     /\* printf("tree = %d, qq = %d\n", tt, QQ); *\/ */
         
-        for (int qq = 0; qq < QQ; ++qq) {
-          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
-          d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+    /*     for (int qq = 0; qq < QQ; ++qq) { */
+    /*       p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq); */
+    /*       d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data); */
           
-          zlog_debug(c_default,"%d %d %d %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f\n",
-                 ed->tree,
-                 ed->id,
-                 d4est_factors_for_integrals->element_touches_boundary[ed->id],
-                 estimator[ed->id],
-                 penalty_data.estimator_vtk[0][ed->id],
-                 penalty_data.estimator_vtk[1][ed->id],
-                 penalty_data.estimator_vtk[2][ed->id],
-                 penalty_data.estimator_vtk[3][ed->id],
-                 penalty_data.estimator_vtk[4][ed->id],
-                 penalty_data.estimator_vtk[5][ed->id],
-                 penalty_data.estimator_vtk[6][ed->id],
-                 penalty_data.estimator_vtk[7][ed->id],
-                 penalty_data.estimator_vtk[8][ed->id],
-                 penalty_data.estimator_vtk[9][ed->id],
-                 penalty_data.estimator_vtk[10][ed->id],
-                 penalty_data.estimator_vtk[11][ed->id],
-                 penalty_data.estimator_vtk[12][ed->id]);
-        }
-      }
+    /*       zlog_debug(c_default,"%d %d %d %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f\n", */
+    /*              ed->tree, */
+    /*              ed->id, */
+    /*              d4est_factors_for_integrals->element_touches_boundary[ed->id], */
+    /*              estimator[ed->id], */
+    /*              penalty_data.estimator_vtk[0][ed->id], */
+    /*              penalty_data.estimator_vtk[1][ed->id], */
+    /*              penalty_data.estimator_vtk[2][ed->id], */
+    /*              penalty_data.estimator_vtk[3][ed->id], */
+    /*              penalty_data.estimator_vtk[4][ed->id], */
+    /*              penalty_data.estimator_vtk[5][ed->id], */
+    /*              penalty_data.estimator_vtk[6][ed->id], */
+    /*              penalty_data.estimator_vtk[7][ed->id], */
+    /*              penalty_data.estimator_vtk[8][ed->id], */
+    /*              penalty_data.estimator_vtk[9][ed->id], */
+    /*              penalty_data.estimator_vtk[10][ed->id], */
+    /*              penalty_data.estimator_vtk[11][ed->id], */
+    /*              penalty_data.estimator_vtk[12][ed->id]); */
+    /*     } */
+    /*   } */
     
     P4EST_FREE(a);
     P4EST_FREE(b);

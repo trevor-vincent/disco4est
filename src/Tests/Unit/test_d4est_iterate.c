@@ -29,7 +29,7 @@ typedef struct {
 
 typedef struct {
 
-  schwarz_element_t connections [27*4];
+  schwarz_element_t connections [108];
 
 } schwarz_element_connections_t;
 
@@ -43,7 +43,7 @@ typedef struct {
   int corner;
   int edge;
 
-  schwarz_element_t connections [27];
+  schwarz_element_t connections [108];
   int connections_found;
   
 } corner_data_t;
@@ -111,7 +111,7 @@ iter_corner_callback
 
     if (ed->id == corner_data->element &&
         p4est->mpirank == corner_data->process &&
-       corner_side->corner == corner_data->corner){
+        corner_side->corner == corner_data->corner){
 
       printf("\n*** This is the selected corner ****\n");
       printf("ed->id = %d\n", ed->id);
@@ -119,9 +119,11 @@ iter_corner_callback
       printf("faces[0] = %d\n", corner_side->faces[0]);
       printf("faces[1] = %d\n", corner_side->faces[1]);
       printf("faces[2] = %d\n", corner_side->faces[2]);
+#if (P4EST_DIM)==3
       printf("edges[0] = %d\n", corner_side->edges[0]);
       printf("edges[1] = %d\n", corner_side->edges[1]);
       printf("edges[2] = %d\n\n", corner_side->edges[2]);
+#endif
       good_corner = side;
       break;
     }
@@ -148,17 +150,20 @@ iter_corner_callback
       
       int found_face [] = {0,0,0};
       int found_edge [] = {0,0,0};
-      for (int f = 0; f < 3; f++){
+      for (int f = 0; f < (P4EST_DIM); f++){
         if ((good_side->faces[f] == corner_side->faces[f])){
           found_face[f] = 1;
         }
       }
-      for (int e = 0; e < 3; e++){
+
+#if (P4EST_DIM)==3         
+      for (int e = 0; e < (P4EST_DIM); e++){
         if ((good_side->edges[e] == corner_side->edges[e])){
           found_edge[e] = 1;          
         }
       }
-
+#endif
+      
       int shares_face = 0;
       int face_id;
       int shares_edge = 0;
@@ -166,25 +171,35 @@ iter_corner_callback
       int shares_corner = 1;
       int face_edge_sum = 0;
       
-      for (int ef = 0; ef < 3; ef++){
+      for (int ef = 0; ef < (P4EST_DIM); ef++){
         if (found_face[ef] == 1){
+#if (P4EST_DIM)==3
           face_id = p8est_corner_faces[corner_side->corner][ef];
+#else
+          face_id = p4est_corner_faces[corner_side->corner][ef];
+#endif
           printf("This side shares a face that touches the corner = %d\n", face_id);
           shares_face++;
           face_edge_sum++;
           break;
         }
+#if (P4EST_DIM)==3       
         if (found_edge[ef] == 1){
-          edge_id = p8est_corner_edges[corner_side->corner][ef];
           printf("This side shares an edge that touches the corner = %d\n", edge_id);
+   
+          edge_id = p8est_corner_edges[corner_side->corner][ef];
           printf("The two faces that touch this edge are %d, %d\n",
-                 p8est_edge_faces[edge_id][0],p8est_edge_faces[edge_id][1]);
+                 p8est_edge_faces[edge_id][0],p8est_edge_faces[edge_id][1]);          
+
+
 
           /* corner_data->connections[connections_found].id; */
           shares_edge++;
           face_edge_sum++;
         }
+#endif
       }
+
       
       d4est_element_data_t* ed = corner_side->quad->p.user_data; 
       int do_not_save = 0;
@@ -197,42 +212,56 @@ iter_corner_callback
  
       if (face_edge_sum == 0){
         printf("This side only shares a corner\n");
+#if (P4EST_DIM)==3   
         printf("The three faces that share this corner are %d, %d, %d\n",
                p8est_corner_faces[corner_side->corner][0],
                p8est_corner_faces[corner_side->corner][1],
                p8est_corner_faces[corner_side->corner][2]);
+#else
+        printf("The two faces that share this corner are %d, %d\n",
+               p4est_corner_faces[corner_side->corner][0],
+               p4est_corner_faces[corner_side->corner][1]);
+        /* p8est_corner_faces[corner_side->corner][2]);         */
+#endif
       }
 
       if(do_not_save == 0){
-      if (shares_face){
-        corner_data->connections[corner_data->connections_found].faces[0] = face_id;
-        corner_data->connections[corner_data->connections_found].faces[1] = -1;
-        corner_data->connections[corner_data->connections_found].faces[2] = -1;
-      }
-      else if (shares_edge){    
-        corner_data->connections[corner_data->connections_found].faces[0] = p8est_edge_faces[edge_id][0];
-        corner_data->connections[corner_data->connections_found].faces[1] = p8est_edge_faces[edge_id][1];
-        corner_data->connections[corner_data->connections_found].faces[2] = -1;
-      }
-      else {
-        corner_data->connections[corner_data->connections_found].faces[0] = p8est_corner_faces[corner_side->corner][0];
-        corner_data->connections[corner_data->connections_found].faces[1] = p8est_corner_faces[corner_side->corner][1];
-        corner_data->connections[corner_data->connections_found].faces[2] = p8est_corner_faces[corner_side->corner][2];
-      }
+        if (shares_face){
+          corner_data->connections[corner_data->connections_found].faces[0] = face_id;
+          corner_data->connections[corner_data->connections_found].faces[1] = -1;
+          corner_data->connections[corner_data->connections_found].faces[2] = -1;
+        }
+#if (P4EST_DIM)==3
+        else if (shares_edge){    
+          corner_data->connections[corner_data->connections_found].faces[0] = p8est_edge_faces[edge_id][0];
+          corner_data->connections[corner_data->connections_found].faces[1] = p8est_edge_faces[edge_id][1];
+          corner_data->connections[corner_data->connections_found].faces[2] = -1;
+        }
+#endif
+        else {
 
-    
-      corner_data->connections[corner_data->connections_found].id = ed->id;
-      corner_data->connections[corner_data->connections_found].is_central_element = 0;
-      corner_data->connections[corner_data->connections_found].mpirank = ed->mpi_rank;
-      corner_data->connections[corner_data->connections_found].tree = ed->tree;
-      corner_data->connections[corner_data->connections_found].nodal_stride = ed->nodal_stride;
-      corner_data->connections[corner_data->connections_found].shares_what = (shares_face > 0) ? 2 :
-                                                               ((shares_edge > 0) ? 1 : 0);
-      corner_data->connections_found++;
+#if (P4EST_DIM)==3
+          corner_data->connections[corner_data->connections_found].faces[0] = p8est_corner_faces[corner_side->corner][0];
+          corner_data->connections[corner_data->connections_found].faces[1] = p8est_corner_faces[corner_side->corner][1];
+          corner_data->connections[corner_data->connections_found].faces[2] = p8est_corner_faces[corner_side->corner][2];
+#else
+          corner_data->connections[corner_data->connections_found].faces[0] = p4est_corner_faces[corner_side->corner][0];
+          corner_data->connections[corner_data->connections_found].faces[1] = p4est_corner_faces[corner_side->corner][1];        
+#endif
+        }
 
-      if(corner_data->connections_found > 26){
-        D4EST_ABORT("Connections should not be > 26");
-      }
+        corner_data->connections[corner_data->connections_found].id = ed->id;
+        corner_data->connections[corner_data->connections_found].is_central_element = 0;
+        corner_data->connections[corner_data->connections_found].mpirank = ed->mpi_rank;
+        corner_data->connections[corner_data->connections_found].tree = ed->tree;
+        corner_data->connections[corner_data->connections_found].nodal_stride = ed->nodal_stride;
+        corner_data->connections[corner_data->connections_found].shares_what = (shares_face > 0) ? 2 :
+                                                                               ((shares_edge > 0) ? 1 : 0);
+        corner_data->connections_found++;
+
+        if(corner_data->connections_found > 26){
+          D4EST_ABORT("Connections should not be > 26");
+        }
       
       }
       
@@ -241,27 +270,28 @@ iter_corner_callback
       printf("faces[0] = %d\n", corner_side->faces[0]);
       printf("faces[1] = %d\n", corner_side->faces[1]);
       printf("faces[2] = %d\n", corner_side->faces[2]);
+#if (P4EST_DIM)==3
       printf("edges[0] = %d\n", corner_side->edges[0]);
       printf("edges[1] = %d\n", corner_side->edges[1]);
       printf("edges[2] = %d\n\n", corner_side->edges[2]);
-      
+#endif 
     }
   }  
 }
 
-static double
-init_sinxyz
-(
- double x,
- double y,
-#if (P4EST_DIM)==3
- double z,
-#endif
- void* user
-)
-{
-  return sin(M_PI*x)*sin(M_PI*y)*sin(M_PI*z);
-}
+/* static double */
+/* init_sinxyz */
+/* ( */
+/*  double x, */
+/*  double y, */
+/* #if (P4EST_DIM)==3 */
+/*  double z, */
+/* #endif */
+/*  void* user */
+/* ) */
+/* { */
+/*   return sin(M_PI*x)*sin(M_PI*y)*sin(M_PI*z); */
+/* } */
 
 int main(int argc, char *argv[])
 {
@@ -305,17 +335,17 @@ int main(int argc, char *argv[])
   d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      "test_d4est_iterate_options.input", d4est_geom);
 
   p4est_t* p4est;
-    p4est = p4est_new_ext
-    (
-     mpicomm,
-     d4est_geom->p4est_conn,
-     initial_grid_input->min_quadrants,
-     initial_grid_input->min_level,
-     initial_grid_input->fill_uniform,
-     sizeof(d4est_element_data_t),
-     NULL,
-     NULL
-    );
+  p4est = p4est_new_ext
+          (
+           mpicomm,
+           d4est_geom->p4est_conn,
+           initial_grid_input->min_quadrants,
+           initial_grid_input->min_level,
+           initial_grid_input->fill_uniform,
+           sizeof(d4est_element_data_t),
+           NULL,
+           NULL
+          );
   
 
   printf("num_quadrants = %d\n", p4est->local_num_quadrants);
@@ -364,39 +394,6 @@ int main(int argc, char *argv[])
 
   initial_grid_input->initial_nodes = local_sizes.local_nodes;
 
-  /* d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, 1); */
-
-  /* d4est_amr_step */
-  /*   ( */
-  /*    p4est, */
-  /*    NULL, */
-  /*    NULL, */
-  /*    d4est_ops, */
-  /*    d4est_amr_random, */
-  /*    NULL, */
-  /*    NULL, */
-  /*    NULL */
-  /*   ); */
-
-  /* p4est_partition(p4est, 1, NULL); */
-  /* p4est_balance (p4est, P4EST_CONNECT_FULL, NULL); */
-
-  /* local_sizes = d4est_mesh_update */
-  /*                 ( */
-  /*                  p4est, */
-  /*                  &d4est_ghost, */
-  /*                  d4est_ops, */
-  /*                  d4est_geom, */
-  /*                  d4est_quad, */
-  /*                  d4est_factors, */
-  /*                  initial_grid_input, */
-  /*                  INITIALIZE_GHOST, */
-  /*                  INITIALIZE_QUADRATURE_DATA, */
-  /*                  INITIALIZE_GEOMETRY_DATA, */
-  /*                  INITIALIZE_GEOMETRY_ALIASES, */
-  /*                  d4est_mesh_set_quadratures_after_amr, */
-  /*                  (void*)initial_grid_input */
-  /*                 ); */
 
   int nodes = local_sizes.local_nodes;
   double* sinvec = P4EST_ALLOC(double, nodes);
@@ -414,20 +411,10 @@ int main(int argc, char *argv[])
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data;
         element_id[k] = ed->id;
+        printf("ed->deg = %d\n",ed->deg);
       }
     }
-  
-  d4est_mesh_init_field
-    (
-     p4est,
-     sinvec,
-     init_sinxyz,
-     d4est_ops,
-     d4est_geom,
-     d4est_factors,
-     INIT_FIELD_ON_LOBATTO,
-     NULL
-    );
+
   
   corner_data_t corner_data;
   corner_data.is_corner = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
@@ -437,7 +424,7 @@ int main(int argc, char *argv[])
     corner_data.is_corner[i] = -1;
   }
 
-  for (int i = 0; i < 27; i++){
+  for (int i = 0; i < 27*4; i++){
     corner_data.connections[i].id = -1;
     corner_data.connections[i].faces[0] = -1;
     corner_data.connections[i].faces[1] = -1;
@@ -447,13 +434,13 @@ int main(int argc, char *argv[])
   corner_data.connections_found = 0;
 
   int schwarz_center = 14;
-  for (int i = 0; i < 8; i++){
+  for (int i = 0; i < (P4EST_CHILDREN); i++){
     
     corner_data.element = schwarz_center;
     corner_data.process = 0;
     corner_data.corner = i;
     corner_data.edge = -1;
-  
+#if (P4EST_DIM)==3
     p8est_iterate (p4est,
                    d4est_ghost->ghost,
                    &corner_data,
@@ -462,9 +449,19 @@ int main(int argc, char *argv[])
                    NULL,
                    iter_corner_callback);
 
+#else
+    p4est_iterate (p4est,
+                   d4est_ghost->ghost,
+                   &corner_data,
+                   NULL,
+                   /* NULL, */
+                   NULL,
+                   iter_corner_callback);
+#endif
+
   }
   
-  for (int i = 0; i < 27; i++){
+  for (int i = 0; i < corner_data.connections_found; i++){
     if(corner_data.connections[i].id != -1){
       printf("***********\n");
       printf("Connection %d\n",i);
@@ -504,15 +501,20 @@ int main(int argc, char *argv[])
           }
         }
 
-        /* printf("ed->id = %d\n", ed->id); */
-        /* printf("ed->nodal_stride = %d\n", ed->nodal_stride); */
-        
         if (ed->id == schwarz_center){
           d4est_util_copy_1st_to_2nd(&ones[ed->nodal_stride],&restricted_ones[ed->nodal_stride],volume_nodes);
           d4est_util_copy_1st_to_2nd(&ones[ed->nodal_stride],&restricted_ones_transpose[ed->nodal_stride],volume_nodes);
         }
         else if (connection != -1){
-
+          double* res_rst_lobatto [3];
+          double* res_rst_lobatto_trans [3];
+          double* rst_lobatto [3];
+          for (int i = 0; i < (P4EST_DIM); i++){
+            rst_lobatto[i] = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, (P4EST_DIM), ed->deg, i);
+            res_rst_lobatto[i] = P4EST_ALLOC(double, volume_nodes);
+            res_rst_lobatto_trans[i] = P4EST_ALLOC(double, volume_nodes);
+          }
+          
           printf("***********\n");
           printf("Connection %d\n",connection);
           printf("Element id = %d\n", corner_data.connections[connection].id);
@@ -536,7 +538,7 @@ int main(int argc, char *argv[])
           
           d4est_operators_apply_schwarz_restrictor(d4est_ops,
                                                    ones_vol,
-                                                   3,
+                                                   (P4EST_DIM),
                                                    &(faces[0]),
                                                    ed->deg,
                                                    ed->deg,/* (ed->deg == 1) ? ed->deg + 1 : ed->deg, */
@@ -552,7 +554,7 @@ int main(int argc, char *argv[])
           
           d4est_operators_apply_schwarz_restrictor(d4est_ops,
                                                    &restricted_ones[ed->nodal_stride],
-                                                   3,
+                                                   (P4EST_DIM),
                                                    &(faces[0]),
                                                    ed->deg,
                                                    ed->deg,
@@ -564,7 +566,43 @@ int main(int argc, char *argv[])
           double *restrictedones_transposeptr = &restricted_ones_transpose[ed->nodal_stride];
           DEBUG_PRINT_ARR_DBL(restrictedones_transposeptr, volume_nodes);
           
+          for (int i = 0; i < (P4EST_DIM); i++){
+            
 
+            d4est_operators_apply_schwarz_restrictor
+              (
+               d4est_ops,
+               rst_lobatto[i],
+               (P4EST_DIM),
+               &faces[0],
+               ed->deg,
+               ed->deg,
+               D4OPS_NO_TRANSPOSE,
+               res_rst_lobatto[i]
+              );
+          
+            d4est_operators_apply_schwarz_restrictor(d4est_ops,
+                                                     res_rst_lobatto[i],
+                                                     (P4EST_DIM),
+                                                     &(faces[0]),
+                                                     ed->deg,
+                                                     ed->deg,
+                                                     D4OPS_TRANSPOSE,
+                                                     res_rst_lobatto_trans[i]);
+          
+          }
+
+#if (P4EST_DIM)==3
+          DEBUG_PRINT_3ARR_DBL(res_rst_lobatto[0], res_rst_lobatto[1], res_rst_lobatto[2], volume_nodes);
+          DEBUG_PRINT_3ARR_DBL(res_rst_lobatto[0], res_rst_lobatto[1], res_rst_lobatto[2], res_volume_nodes);
+#else
+          DEBUG_PRINT_2ARR_DBL(res_rst_lobatto[0], res_rst_lobatto[1], volume_nodes);
+          DEBUG_PRINT_2ARR_DBL(res_rst_lobatto[0], res_rst_lobatto[1], res_volume_nodes);          
+#endif
+          for (int i = 0; i < (P4EST_DIM); i++){
+            P4EST_FREE(res_rst_lobatto[i]);
+            P4EST_FREE(res_rst_lobatto_trans[i]);
+          }
         }
         else{
           for (int i = 0; i< volume_nodes; i++){
@@ -576,8 +614,6 @@ int main(int argc, char *argv[])
       
     }
 
-  /* DEBUG_PRINT_ARR_DBL(restricted_ones_transpose, local_nodes); */
-  
   printf("This element is on bndry? = %d\n", d4est_factors->element_touches_boundary[corner_data.element]);  
   
   d4est_vtk_save

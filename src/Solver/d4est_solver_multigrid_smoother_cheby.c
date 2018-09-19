@@ -169,14 +169,7 @@ d4est_solver_multigrid_smoother_cheby_update
 )
 {
   d4est_solver_multigrid_data_t* mg_data = (d4est_solver_multigrid_data_t*) p4est->user_pointer;
-  d4est_solver_multigrid_smoother_cheby_t* cheby = mg_data->smoother->user;
-  
-  /* d4est_operators_t* d4est_ops = mg_data->d4est_ops; */
-  /* d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater; */
-  /* p4est_ghost_t* ghost = *(updater->ghost); */
-  /* void* ghost_data = *(updater->ghost_data); */
-  /* d4est_geometry_t* d4est_geom = updater->d4est_geom; */
-    
+  d4est_solver_multigrid_smoother_cheby_t* cheby = mg_data->smoother->user;  
   int vcycle = mg_data->vcycle_num_finished;
 
   if(mg_data->mg_state == PRE_V){

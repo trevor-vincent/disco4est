@@ -1454,7 +1454,7 @@ d4est_operators_fetch_schwarz_restrictor_transpose_1d
     (
      d4est_ops,
      d4est_ops->schwarz_restrictor_transpose_1d_table,
-     deg,
+     deg, 
      res_size,
      size,
      d4est_operators_build_schwarz_restrictor_transpose_1d
