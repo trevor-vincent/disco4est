@@ -27,7 +27,7 @@ typedef struct {
 } schwarz_element_t;
 
 
-typedef struct {
+typedef struct{
 
   schwarz_element_t connections [108];
 
@@ -267,17 +267,17 @@ iter_corner_callback
       printf("faces[1] = %d\n", corner_data->connections[corner_data->connections_found].faces[1]);
 #if (P4EST_DIM)==3
       printf("faces[2] = %d\n", corner_data->connections[corner_data->connections_found].faces[2]);
-      printf("edges[0] = %d\n", corner_data->connections[corner_data->connections_found].edges[0]);
-      printf("edges[1] = %d\n", corner_data->connections[corner_data->connections_found].edges[1]);
-      printf("edges[2] = %d\n\n", corner_data->connections[corner_data->connections_found].edges[2]);
+      /* printf("edges[0] = %d\n", corner_data->connections[corner_data->connections_found].edges[0]); */
+      /* printf("edges[1] = %d\n", corner_data->connections[corner_data->connections_found].edges[1]); */
+      /* printf("edges[2] = %d\n\n", corner_data->connections[corner_data->connections_found].edges[2]); */
 #endif
 
 
       corner_data->connections_found++;
 
-      if(corner_data->connections_found > 26){
-        D4EST_ABORT("Connections should not be > 26");
-      }
+      /* if(corner_data->connections_found > 26){ */
+        /* D4EST_ABORT("Connections should not be > 26"); */
+      /* } */
       
     }
   }  
@@ -396,6 +396,40 @@ int main(int argc, char *argv[])
                                          (void*)initial_grid_input
                                         );
 
+
+
+  /* /\* create amr scheme *\/ */
+  /* int* refinement_log = P4EST_ALLOC(int, p4est->local_num_quadrants); */
+  /* d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1); */
+  /* d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1); */
+  /* scheme->post_balance_callback = NULL; */
+  /* scheme->pre_refine_callback = NULL; */
+  /* scheme->refine_replace_callback_fcn_ptr = NULL; */
+  /* scheme->balance_replace_callback_fcn_ptr = NULL; */
+  /* scheme->mark_elements = d4est_checkpoint_load_mesh_from_amr_history_mark_elements; */
+  /* scheme->amr_scheme_data = refinement_log; */
+  /* scheme->destroy = NULL; */
+    
+  /* d4est_amr->mpirank = p4est->mpirank; */
+  /* d4est_amr->scheme = scheme; */
+  /* d4est_amr->balance_log = NULL; */
+  /* d4est_amr->refinement_log = NULL; */
+  /* d4est_amr->initial_log = NULL; */
+  /* d4est_amr->max_degree = 1000; */
+    
+  /* d4est_amr_step */
+  /*   ( */
+  /*    p4est, */
+  /*    NULL, */
+  /*    d4est_amr, */
+  /*    NULL, */
+  /*    NULL, */
+  /*    NULL */
+  /*   ); */
+
+
+
+  
   initial_grid_input->initial_nodes = local_sizes.local_nodes;
 
   int nodes = local_sizes.local_nodes;

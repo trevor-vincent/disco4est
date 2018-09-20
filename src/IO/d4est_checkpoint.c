@@ -362,7 +362,9 @@ d4est_checkpoint_load_mesh_from_amr_history
     if(!(p4est->local_num_quadrants == quadrants && p4est->mpisize == mpi_size)){
       D4EST_ABORT("!(p4est->local_num_quadrants == quadrants && p4est->mpisize == mpi_size)");
     }
-
+    P4EST_FREE(refinement_log);
+    P4EST_FREE(d4est_amr);
+    P4EST_FREE(scheme);
   }
 }
 
