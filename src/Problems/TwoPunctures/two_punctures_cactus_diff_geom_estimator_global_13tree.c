@@ -356,7 +356,7 @@ problem_init
     );
 
   int initial_level = 0;
-  if (initial_extents->checkpoint_prefix == NULL){
+  if (initial_extents->load_from_checkpoint == 0 || initial_extents->checkpoint_prefix == NULL){
     d4est_mesh_init_field
       (
        p4est,
@@ -462,7 +462,7 @@ problem_init
   
   for (int level = initial_level; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
-    d4est_field_type_t field_type = VOLUME_NODAL;
+    d4est_field_type_t field_type = NODAL;
     d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
                                                                  *d4est_ghost,
                                                                  &field_type,

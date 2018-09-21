@@ -287,7 +287,7 @@ problem_init
     NULL
   );
 
-  d4est_field_type_t field_type = VOLUME_NODAL;
+  d4est_field_type_t field_type = NODAL;
 
   
   /* d4est_poisson_build_rhs_with_strong_bc( */

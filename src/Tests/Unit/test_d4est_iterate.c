@@ -11,6 +11,23 @@
 #include <petscsnes.h>
 #include <zlog.h>
 
+static void 
+test_d4est_iterate_refine_only_one_element
+(
+ p4est_iter_volume_info_t* info,
+ void* user_data
+)
+{
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
+  int* element_to_refine = (int*) (d4est_amr->scheme->amr_scheme_data);
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
+  if (elem_data->id == *element_to_refine){
+    d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;
+  }
+  else {
+    d4est_amr->refinement_log[elem_data->id] = elem_data->deg;
+  }
+}
 
 typedef struct {
 
@@ -398,37 +415,59 @@ int main(int argc, char *argv[])
 
 
 
-  /* /\* create amr scheme *\/ */
-  /* int* refinement_log = P4EST_ALLOC(int, p4est->local_num_quadrants); */
-  /* d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1); */
-  /* d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1); */
-  /* scheme->post_balance_callback = NULL; */
-  /* scheme->pre_refine_callback = NULL; */
-  /* scheme->refine_replace_callback_fcn_ptr = NULL; */
-  /* scheme->balance_replace_callback_fcn_ptr = NULL; */
-  /* scheme->mark_elements = d4est_checkpoint_load_mesh_from_amr_history_mark_elements; */
-  /* scheme->amr_scheme_data = refinement_log; */
-  /* scheme->destroy = NULL; */
+  /* create amr scheme */
+  int* refinement_log = P4EST_ALLOC(int, p4est->local_num_quadrants);
+  int element_to_refine = 0;
+  d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
+  d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
+  scheme->post_balance_callback = NULL;
+  scheme->pre_refine_callback = NULL;
+  scheme->refine_replace_callback_fcn_ptr = NULL;
+  scheme->balance_replace_callback_fcn_ptr = NULL;
+  scheme->mark_elements = test_d4est_iterate_refine_only_one_element;
+  scheme->amr_scheme_data = &element_to_refine;
+  scheme->destroy = NULL;
     
-  /* d4est_amr->mpirank = p4est->mpirank; */
-  /* d4est_amr->scheme = scheme; */
-  /* d4est_amr->balance_log = NULL; */
-  /* d4est_amr->refinement_log = NULL; */
-  /* d4est_amr->initial_log = NULL; */
-  /* d4est_amr->max_degree = 1000; */
+  d4est_amr->mpirank = p4est->mpirank;
+  d4est_amr->scheme = scheme;
+  d4est_amr->balance_log = NULL;
+  d4est_amr->refinement_log = NULL;
+  d4est_amr->initial_log = NULL;
+  d4est_amr->max_degree = 1000;
     
-  /* d4est_amr_step */
-  /*   ( */
-  /*    p4est, */
-  /*    NULL, */
-  /*    d4est_amr, */
-  /*    NULL, */
-  /*    NULL, */
-  /*    NULL */
-  /*   ); */
+  d4est_amr_step
+    (
+     p4est,
+     NULL,
+     d4est_amr,
+     NULL,
+     NULL,
+     NULL
+    );
 
 
+  P4EST_FREE(refinement_log);
+  P4EST_FREE(d4est_amr);
+  P4EST_FREE(scheme);
 
+
+  local_sizes= d4est_mesh_update
+               (
+                p4est,
+                &d4est_ghost,
+                d4est_ops,
+                d4est_geom,
+                d4est_quad,
+                d4est_factors,
+                initial_grid_input,
+                INITIALIZE_GHOST,
+                INITIALIZE_QUADRATURE_DATA,
+                INITIALIZE_GEOMETRY_DATA,
+                INITIALIZE_GEOMETRY_ALIASES,
+                d4est_mesh_set_quadratures_after_amr,
+                (void*)initial_grid_input
+               );
+  
   
   initial_grid_input->initial_nodes = local_sizes.local_nodes;
 
@@ -459,7 +498,7 @@ int main(int argc, char *argv[])
   
   corner_data.connections_found = 0;
 
-  int schwarz_center = 3 ;
+  int schwarz_center = 10;
   for (int i = 0; i < (P4EST_CHILDREN); i++){
     
     corner_data.element = schwarz_center;

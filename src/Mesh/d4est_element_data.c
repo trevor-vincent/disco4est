@@ -279,7 +279,7 @@ d4est_element_data_get_size_of_field
 )
 {
   D4EST_FIELD_CHECK_TYPE(type);
-  if (type == VOLUME_NODAL){
+  if (type == NODAL){
     return d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
   }
   else if (type == VOLUME){
@@ -287,6 +287,9 @@ d4est_element_data_get_size_of_field
   }
   else if (type == FACE){
     return (P4EST_FACES);
+  }
+  else if (type == MORTAR){
+    return (P4EST_FACES)*(P4EST_HALF);
   }
   else {
     D4EST_ABORT("not a supported type");
@@ -300,7 +303,7 @@ int d4est_element_data_get_stride_for_field
 )
 {
   D4EST_FIELD_CHECK_TYPE(type);
-  if (type == VOLUME_NODAL){
+  if (type == NODAL){
     return ed->nodal_stride;
   }
   else if (type == VOLUME){
@@ -308,6 +311,9 @@ int d4est_element_data_get_stride_for_field
   }
   else if (type == FACE){
     return ed->id*(P4EST_FACES);
+  }
+  else if (type == MORTAR){
+    return ed->id*(P4EST_FACES)*(P4EST_HALF);
   }
   else {
     D4EST_ABORT("not a supported type");

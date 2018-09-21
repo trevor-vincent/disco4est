@@ -94,9 +94,14 @@ typedef struct {
   
   d4est_mesh_local_sizes_t local_sizes;
   d4est_element_data_t** element_data;
-  
+
+  /* array of 0 and 1 for whether this element touches boundary */
   int* element_touches_boundary;
+
+  /* array of 0 and 1 for whether this node touches boundary */
   int* node_touches_boundary;
+
+  /* array of 0 and 1 for whether this node touches boundary */
   int* face_touches_element;
   
   double* xyz;

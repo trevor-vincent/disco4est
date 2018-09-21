@@ -10,10 +10,18 @@
 
 typedef struct {
 
+  int owner_proc;
+  int this_proc_id;
+
+} global_element_info_t;
+
+typedef struct {
+
   /* identification */
   int id;
   int mpi_rank;
-  
+
+  /* TODO: remove these strides and int arrays and put in d4est_mesh_data */
   int sqr_nodal_stride;
   int nodal_stride;
   int quad_stride;
@@ -22,6 +30,11 @@ typedef struct {
   int mortar_quad_scalar_stride [P4EST_FACES];
   int mortar_quad_vector_stride [P4EST_FACES];
   int mortar_quad_matrix_stride [P4EST_FACES];
+
+  /* mainly for schwarz, stored in order of touching (+) tree
+   * needs to be reoriented into (-) tree if needed in (-) order */
+  int tree_that_touch_face [P4EST_FACES][P4EST_HALF];
+  int tree_quadid_that_touch_face [P4EST_FACES][P4EST_HALf];
   
   int region;
   int tree;

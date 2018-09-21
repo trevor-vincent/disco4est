@@ -954,8 +954,16 @@ d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback
  void* params
 )
 {
-  d4est_mesh_local_sizes_t* sizes = params;
+  d4est_mesh_local_sizes_t* sizes = params;  
 
+  
+  e-m->tree_that_touch_face [f_m][0] = e_m->tree;
+  e-m->tree_quadid_that_touch_face [f_m][0] = e_m->tree_quadid;
+  for (int i = 1; i < (P4EST_HALF); i++){
+    e_m->tree_that_touch_face [f_m][i] = -1;
+    e_m->tree_quadid_that_touch_face [f_m][i] = -1;
+  }
+   
   e_m->boundary_quad_vector_stride[f_m] = (P4EST_DIM)*sizes->local_boundary_nodes_quad;
   e_m->mortar_quad_scalar_stride[f_m] = sizes->local_mortar_nodes_quad;
   e_m->mortar_quad_vector_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM);
@@ -991,6 +999,20 @@ d4est_mesh_compute_mortar_quadrature_sizes_interface_callback
  void* params
 )
 {
+  e-m->tree_that_touch_face [f_m][0] = e_m->tree;
+  e-m->tree_quadid_that_touch_face [f_m][0] = e_m->tree_quadid;
+
+  for (int m = 0; m < faces_m; m++){
+    for (int i = 0; i < (P4EST_HALF); i++){
+      e_m[m]->tree_that_touch_face [f_m][i] = -1;
+      e_m[m]->tree_quadid_that_touch_face [f_m][i] = -1;
+    }
+    for (int i = 0; i < faces_p; i++){
+      e_m[m]->tree_that_touch_face [f_m][i] = e_p[i]->tree;
+      e_m[m]->tree_quadid_that_touch_face [f_m][i] = e_p[i]->tree_quadid;
+    }
+  }
+  
   d4est_mesh_local_sizes_t* sizes = params;
   d4est_element_data_t* e_p_oriented [(P4EST_HALF)];
   d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented);

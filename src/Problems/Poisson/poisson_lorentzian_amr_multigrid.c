@@ -346,7 +346,7 @@ problem_init
     );
     
 
-  d4est_field_type_t field_type = VOLUME_NODAL;
+  d4est_field_type_t field_type = NODAL;
   d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
                                                                *d4est_ghost,
                                                                &field_type,
