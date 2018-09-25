@@ -53,12 +53,12 @@ typedef struct{
 
 typedef struct {
 
-  double* is_corner;
-  double* is_edge;
+  /* double* is_corner; */
+  /* double* is_edge; */
   int element;
   int process;
-  int corner;
-  int edge;
+  /* int corner; */
+  /* int edge; */
 
   schwarz_element_t connections [108];
   int connections_found;
@@ -499,12 +499,12 @@ int main(int argc, char *argv[])
   corner_data.connections_found = 0;
 
   int schwarz_center = 10;
-  for (int i = 0; i < (P4EST_CHILDREN); i++){
+  /* for (int i = 0; i < (P4EST_CHILDREN); i++){ */
     
     corner_data.element = schwarz_center;
     corner_data.process = 0;
-    corner_data.corner = i;
-    corner_data.edge = -1;
+    /* corner_data.corner = i; */
+    /* corner_data.edge = -1; */
 #if (P4EST_DIM)==3
     p8est_iterate (p4est,
                    d4est_ghost->ghost,
@@ -524,7 +524,7 @@ int main(int argc, char *argv[])
                    iter_corner_callback);
 #endif
 
-  }
+  /* } */
   
   for (int i = 0; i < corner_data.connections_found; i++){
     if(corner_data.connections[i].id != -1){

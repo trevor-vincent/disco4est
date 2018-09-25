@@ -34,7 +34,7 @@ typedef struct {
   /* mainly for schwarz, stored in order of touching (+) tree
    * needs to be reoriented into (-) tree if needed in (-) order */
   int tree_that_touch_face [P4EST_FACES][P4EST_HALF];
-  int tree_quadid_that_touch_face [P4EST_FACES][P4EST_HALf];
+  int tree_quadid_that_touch_face [P4EST_FACES][P4EST_HALF];
   
   int region;
   int tree;

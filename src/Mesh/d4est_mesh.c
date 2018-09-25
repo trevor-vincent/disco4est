@@ -957,8 +957,8 @@ d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback
   d4est_mesh_local_sizes_t* sizes = params;  
 
   
-  e-m->tree_that_touch_face [f_m][0] = e_m->tree;
-  e-m->tree_quadid_that_touch_face [f_m][0] = e_m->tree_quadid;
+  e_m->tree_that_touch_face [f_m][0] = e_m->tree;
+  e_m->tree_quadid_that_touch_face [f_m][0] = e_m->tree_quadid;
   for (int i = 1; i < (P4EST_HALF); i++){
     e_m->tree_that_touch_face [f_m][i] = -1;
     e_m->tree_quadid_that_touch_face [f_m][i] = -1;
@@ -999,9 +999,6 @@ d4est_mesh_compute_mortar_quadrature_sizes_interface_callback
  void* params
 )
 {
-  e-m->tree_that_touch_face [f_m][0] = e_m->tree;
-  e-m->tree_quadid_that_touch_face [f_m][0] = e_m->tree_quadid;
-
   for (int m = 0; m < faces_m; m++){
     for (int i = 0; i < (P4EST_HALF); i++){
       e_m[m]->tree_that_touch_face [f_m][i] = -1;

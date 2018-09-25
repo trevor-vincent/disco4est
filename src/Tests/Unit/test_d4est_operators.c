@@ -739,29 +739,29 @@ int main(int argc, char *argv[])
 {
   d4est_operators_t* d4est_ops = d4est_ops_init(20);  
 
-  /* d4est_test_nodal_to_modal */
-    /* ( */
-     /* d4est_ops, */
-     /* 3, */
-     /* 3 */
-    /* ); */
+  d4est_test_nodal_to_modal
+    (
+     d4est_ops,
+     3,
+     3
+    );
   
   /* printf("mass 2d = \n"); */
-  /* d4est_test_operators_mass_nd */
-  /*   ( */
-  /*    d4est_ops, */
-  /*    2, */
-  /*    1 */
-  /*   ); */
+  d4est_test_operators_mass_nd
+    (
+     d4est_ops,
+     2,
+     1
+    );
   
   /* printf("mass 3d = \n"); */
 
-  /* d4est_test_operators_mass_nd */
-    /* ( */
-     /* d4est_ops, */
-     /* 3, */
-     /* 1 */
-    /* ); */
+  d4est_test_operators_mass_nd
+    (
+     d4est_ops,
+     3,
+     1
+    );
 
   d4est_test_operators_schwarz_nd
     (
@@ -769,10 +769,10 @@ int main(int argc, char *argv[])
      3
     );
 
-  /* d4est_test_operators_schwarz */
-    /* ( */
-     /* d4est_ops */
-    /* ); */
+  d4est_test_operators_schwarz
+    (
+     d4est_ops
+    );
   
   d4est_ops_destroy(d4est_ops);
   return 0;
