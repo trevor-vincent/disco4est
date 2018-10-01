@@ -1,8 +1,10 @@
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/trevor-vincent/d4est/blob/master/LICENSE.md)
 [![Build Status](https://travis-ci.org/trevor-vincent/d4est.svg?branch=master)](https://travis-ci.org/trevor-vincent/d4est)
 <p align="center">
-<img src="http://cita.utoronto.ca/~tvincent/logo.png" width="250">
+<img src="https://github.com/trevor-vincent/d4est/blob/master/support/Logo/logo.png" width="250">
 </p>
+[[|alt=octocat]]
+
 disco4est (d4est) is a scalable hp-adaptive discontinuous Galerkin solver for coupled non-linear elliptic partial differential equations on curved multi-block meshes.
 
 ## Solver Details
