@@ -1,6 +1,6 @@
 echo "Starting VTK Regression test"
 echo ${PWD}
-./test_d4est_vtk
+./d4est_test_vtk
 TEST=$(cmp --silent $old $new || echo "files are different")
 RES0=$(echo $TEST | grep -c different)
 
