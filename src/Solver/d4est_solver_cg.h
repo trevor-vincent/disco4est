@@ -7,7 +7,7 @@
 
 typedef struct {
 
-  char input_section [50]; /* useful when using cg in multiple contexts */
+  char input_section [50]; 
   
   int monitor;
   int iter;

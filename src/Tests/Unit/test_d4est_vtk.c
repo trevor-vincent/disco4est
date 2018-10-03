@@ -200,6 +200,8 @@ int main(int argc, char *argv[])
      (double**)((const double*[]){sinvec, NULL}),
      (const char*[]){"element_vol", NULL},
      (double**)((const double*[]){element_volume, NULL}),
+     NULL,
+     NULL,
      -1
     );
      

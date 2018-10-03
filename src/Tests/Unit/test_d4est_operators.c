@@ -763,16 +763,16 @@ int main(int argc, char *argv[])
      1
     );
 
-  d4est_test_operators_schwarz_nd
-    (
-     d4est_ops,
-     3
-    );
+  /* d4est_test_operators_schwarz_nd */
+  /*   ( */
+  /*    d4est_ops, */
+  /*    3 */
+  /*   ); */
 
-  d4est_test_operators_schwarz
-    (
-     d4est_ops
-    );
+  /* d4est_test_operators_schwarz */
+  /*   ( */
+  /*    d4est_ops */
+  /*   ); */
   
   d4est_ops_destroy(d4est_ops);
   return 0;

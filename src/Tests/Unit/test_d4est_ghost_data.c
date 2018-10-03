@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
   nodes = local_sizes.local_nodes;
   }
 
-  d4est_field_type_t field_type [2] = {VOLUME_NODAL,VOLUME_NODAL};
+  d4est_field_type_t field_type [2] = {NODAL,NODAL};
   d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
                                                                d4est_ghost,
                                                                &field_type[0],
@@ -235,6 +235,8 @@ int main(int argc, char *argv[])
      (double**)((const double*[]){vecs, &vecs[nodes], NULL}),
      (const char*[]){NULL},
      (double**)((const double*[]){NULL}),
+     NULL,
+     NULL,
      -1
     );
 

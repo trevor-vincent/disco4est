@@ -20,7 +20,7 @@ tridiag_gershgorin
 )
 {
   double diag, offdiag_sum;
-  if (i != 0 && i < local_nodes) {
+  if (i != 0 && i < local_nodes - 1) {
     diag = (1./a1 + b0/a0);
     offdiag_sum = fabs(sqrt(b1)/a1) + fabs(sqrt(b0)/a0);
   }
@@ -165,11 +165,10 @@ cg_eigs
   /* start working on d */
   vecs->u = d;
 
-  int i;
   double alpha_old, beta_old;
   double temp_max, temp_min;
 
-  for (i = 0; i < imax; i++){
+  for (int i = 0; i < imax; i++){
     
     d4est_elliptic_eqns_apply_lhs
       (

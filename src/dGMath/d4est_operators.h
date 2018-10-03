@@ -46,9 +46,6 @@ typedef struct {
   double*** p_prolong_transpose_1d_table;   
   double*** hp_restrict_interp_1d_table;
   double*** p_restrict_interp_1d_table;
-  double*** schwarz_restrictor_1d_table;
-  double*** schwarz_restrictor_transpose_1d_table;
-  
   
 } d4est_operators_t;
 
@@ -86,11 +83,6 @@ void d4est_operators_build_p_prolong_1d_inverse(d4est_operators_t *d4est_ops,dou
 void d4est_operators_convert_nodal_to_modal(d4est_operators_t *d4est_ops,double *restrict in,int dim,int deg,double *restrict out);
 void d4est_operators_apply_slicer(d4est_operators_t *d4est_ops,double *restrict in,int dim,int face,int deg,double *restrict out);
 void d4est_operators_apply_lift(d4est_operators_t *d4est_ops,double *restrict in,int dim,int deg,int face,double *restrict out);
-void d4est_operators_apply_schwarz_restrictor(d4est_operators_t *d4est_ops,double *in,int dim,int *faces,int deg,int restricted_size,d4est_ops_transpose_t transpose,double *out);
-double *d4est_operators_fetch_schwarz_restrictor_transpose_1d(d4est_operators_t *d4est_ops,int deg,int restricted_deg);
-void d4est_operators_build_schwarz_restrictor_transpose_1d(d4est_operators_t *d4est_ops,double *restrict restrictor_transpose_1d,int deg,int res_deg);
-double *d4est_operators_fetch_schwarz_restrictor_1d(d4est_operators_t *d4est_ops,int deg,int restricted_deg);
-void d4est_operators_build_schwarz_restrictor_1d(d4est_operators_t *d4est_ops,double *restrict restrictor_1d,int deg,int restricted_deg);
 double *d4est_operators_fetch_gauss_rst_nd(d4est_operators_t *d4est_ops,int dim,int deg,int dir);
 void d4est_operators_apply_dij(d4est_operators_t *d4est_ops,double *restrict in,int dim,int deg,int dir,double *restrict out);
 double *d4est_operators_fetch_lobatto_rst_nd(d4est_operators_t *d4est_ops,int dim,int deg,int dir);
@@ -128,7 +120,9 @@ double *d4est_operators_fetch_invvij_1d(d4est_operators_t *d4est_ops,int deg);
 double *d4est_operators_fetch_lobatto_nodes_1d(d4est_operators_t *d4est_ops,int deg);
 void d4est_operators_build_Vij_1d(d4est_operators_t *d4est_ops,double *restrict Vij_1d,int deg);
 double *d4est_operators_1index_2d_3d_fetch(d4est_operators_t *d4est_ops,int deg,int dim,int size,double **restrict table_2d,double **restrict table_3d,void(*build_fcn)(d4est_operators_t *,double *,int,int));
+double *d4est_operators_2index_fetch_with_ctx(d4est_operators_t *d4est_ops,double ***restrict table,int deg1,int deg2,int size,void(*build_fcn)(d4est_operators_t *,double *,int,int,void *),void *ctx);
 double *d4est_operators_2index_fetch(d4est_operators_t *d4est_ops,double ***restrict table,int deg1,int deg2,int size,void(*build_fcn)(d4est_operators_t *,double *,int,int));
+double *d4est_operators_1index_fetch_with_ctx(d4est_operators_t *d4est_ops,double **restrict table,int deg,int size,void(*build_fcn)(d4est_operators_t *,double *,int,void *),void *ctx);
 double *d4est_operators_1index_fetch(d4est_operators_t *d4est_ops,double **restrict table,int deg,int size,void(*build_fcn)(d4est_operators_t *,double *,int));
 void d4est_ops_destroy(d4est_operators_t *d4est_ops);
 d4est_operators_t *d4est_ops_init(int max_degree);

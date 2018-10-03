@@ -563,6 +563,8 @@ problem_init
        (double* []){prob_vecs.u, u_prev, error},
        (const char * []){"estimator","error_l2",NULL},
        (double* []){estimator,error_l2},
+       NULL,
+       NULL,
        level
       );
 
@@ -576,6 +578,8 @@ problem_init
        (double* []){prob_vecs.u, u_prev, error},
        (const char * []){"estimator","error_l2",NULL},
        (double* []){estimator,error_l2},
+       NULL,
+       NULL,
        level
       );
 
@@ -589,6 +593,8 @@ problem_init
          (double* []){prob_vecs.u, u_prev, error},
          (const char * []){"estimator","error_l2",NULL},
          (double* []){estimator,error_l2},
+         NULL,
+         NULL,
          level
         );
       
@@ -602,6 +608,8 @@ problem_init
          (double* []){prob_vecs.u, u_prev, error},
          (const char * []){"estimator","error_l2",NULL},
          (double* []){estimator,error_l2},
+         NULL,
+         NULL,
          level
         );    
       

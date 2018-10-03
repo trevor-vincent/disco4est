@@ -279,8 +279,6 @@ d4est_poisson_flux_sipg_dirichlet
   int face_nodes_m_lobatto = boundary_data->face_nodes_m_lobatto;
   int face_nodes_m_quad = boundary_data->face_nodes_m_quad;
   int volume_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM), e_m->deg);
-
-  D4EST_ASSERT(face_nodes_m_quad < 1000);
   
   double* term1_quad = P4EST_ALLOC(double, face_nodes_m_quad);
   double* VT_w_term1_lobatto = P4EST_ALLOC(double, face_nodes_m_lobatto);
@@ -425,11 +423,6 @@ d4est_poisson_flux_sipg_robin_aux
                            i
                           );
 
-    /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_quad[0], face_nodes_m_quad); */
-    /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_quad[1], face_nodes_m_quad); */
-    /* DEBUG_PRINT_ARR_DBL_SUM(xyz_on_f_m_quad[2], face_nodes_m_quad); */
-    /* printf("robin_coeff_quad = %f, robin_rhs_quad = %f\n", robin_coeff_quad, robin_rhs_quad); */
-    
     term1_quad[i] = sj_on_f_m_quad[i]
                     *(robin_coeff_quad*u_m_on_f_m_quad[i] - robin_rhs_quad);
     

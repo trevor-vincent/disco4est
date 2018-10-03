@@ -224,18 +224,13 @@ d4est_ghost_data_exchange
                           d4est_ghost_data->transfer_types[tn]
                          );
 
-
           double* field = &transfer_vecs[d4est_ghost_data->transfer_strides[tn]];
           D4EST_ASSERT(field != NULL);
           
           int stride = d4est_element_data_get_stride_for_field(&d4est_ghost->mirror_elements[mirr], d4est_ghost_data->transfer_types[tn]);
-
-          /* printf("transfer stride, num_vecs, stride, mem_size, d4est_ghost->mirror_elements[mirr]->deg = %d,%d,%d,%d,%d\n",d4est_ghost_data->transfer_strides[tn], d4est_ghost_data->num_vecs, stride, mem_size,d4est_ghost->mirror_elements[mirr]->deg); */
           
           memcpy (mem, &field[stride], mem_size);
           mem += mem_size;
-
-          /* printf("mem_size = %d on proc %d\n", mem_size, p4est->mpirank); */
         }
       }
       r = (sc_MPI_Request *) sc_array_push (&requests);

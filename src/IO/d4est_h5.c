@@ -120,8 +120,6 @@ d4est_h5_write_dataset
     D4EST_ABORT("");
   }
 
-  /* H5Dflush(dataset_id); */
-  
   /* Close the dataset. */
   err = H5Dclose(dataset_id);
 
@@ -130,7 +128,6 @@ d4est_h5_write_dataset
     zlog_error(c_default, "Problem closing h5 dataset, filename = %s, dataset = %s.", file_name_prefix, dataset_name);
     D4EST_ABORT("");
   }
-  /* H5Dflush(file_id); */
 
   /* Close the file. */
   err = H5Fclose(file_id);
@@ -168,8 +165,6 @@ d4est_h5_read_dataset
   /* Open an existing dataset. */
   hid_t dataset_id = H5Dopen2(file_id, dataset_path, H5P_DEFAULT);
 
-  /* zlog_debug(c_default, "Opening file and dataset %s, %s", file_name, dataset_path); */
-
   /* Write the dataset. */
   /* H5Dwrite(dataset_id, dataset_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataset); */
   int err =  H5Dread(dataset_id, dataset_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataset);
@@ -179,8 +174,6 @@ d4est_h5_read_dataset
     D4EST_ABORT("");
   }
   
-  /* H5Dflush(dataset_id); */
-  
   /* Close the dataset. */
   err = H5Dclose(dataset_id);
 
@@ -189,8 +182,6 @@ d4est_h5_read_dataset
     D4EST_ABORT("");
   }
 
-  /* H5Dflush(file_id); */
-  
   /* Close the file. */
   err = H5Fclose(file_id);
 

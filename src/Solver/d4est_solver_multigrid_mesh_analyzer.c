@@ -38,6 +38,8 @@ void d4est_solver_multigrid_mesh_analyzer_save_vtk
      (double* []){},
      (const char * []){NULL},
      (double* []){},
+     NULL,
+     NULL,
      "multigrid_mesh_analyzer",
      mesh_analyzer->stride
     );

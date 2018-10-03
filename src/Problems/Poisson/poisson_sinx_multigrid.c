@@ -270,6 +270,8 @@ problem_init
       (double* []){prob_vecs.u, u_analytic, error},
       (const char * []){"error_l2",NULL},
       (double* []){error_l2},
+      NULL,
+      NULL,
       level
     );
     

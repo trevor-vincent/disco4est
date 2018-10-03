@@ -2238,10 +2238,10 @@ d4est_mesh_data_get_topological_coords
 #endif
         
         for (int i = 0; i < volume_nodes; i++){
-          a[ed->nodal_stride + i] = d4est_reference_rtox(rst_points_lobatto.r[i], (double)ed->q[0], (double)ed->dq)/(double)P4EST_ROOT_LEN;
-          b[ed->nodal_stride + i] = d4est_reference_rtox(rst_points_lobatto.s[i], (double)ed->q[1], (double)ed->dq)/(double)P4EST_ROOT_LEN;
+          a[ed->nodal_stride + i] = d4est_reference_rtox(rst_points_lobatto.r[i], (double)ed->q[0], (double)ed->dq)/(double)(P4EST_ROOT_LEN);
+          b[ed->nodal_stride + i] = d4est_reference_rtox(rst_points_lobatto.s[i], (double)ed->q[1], (double)ed->dq)/(double)(P4EST_ROOT_LEN);
 #if (P4EST_DIM)==3
-          c[ed->nodal_stride + i] = d4est_reference_rtox(rst_points_lobatto.t[i], (double)ed->q[2], (double)ed->dq)/(double)P4EST_ROOT_LEN;
+          c[ed->nodal_stride + i] = d4est_reference_rtox(rst_points_lobatto.t[i], (double)ed->q[2], (double)ed->dq)/(double)(P4EST_ROOT_LEN);
 #endif
         }
         

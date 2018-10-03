@@ -532,6 +532,8 @@ problem_init
        (double* []){prob_vecs.u, u_analytic, error},
        (const char * []){"estimator","error_l2",NULL},
        (double* []){estimator,error_l2},
+       NULL,
+       NULL,
        level
       );
 
@@ -545,6 +547,8 @@ problem_init
        (double* []){prob_vecs.u, u_analytic, error},
        (const char * []){"estimator","error_l2",NULL},
        (double* []){estimator,error_l2},
+       NULL,
+       NULL,
        level
       );
 
@@ -560,6 +564,8 @@ problem_init
        (double* []){prob_vecs.u, u_analytic, error},
        (const char * []){"estimator","error_l2",NULL},
        (double* []){estimator,error_l2},
+       NULL,
+       NULL,
        level
       );
       
@@ -573,6 +579,8 @@ problem_init
        (double* []){prob_vecs.u, u_analytic, error},
        (const char * []){"estimator","error_l2",NULL},
        (double* []){estimator,error_l2},
+       NULL,
+       NULL,
        level
       );    
 
@@ -737,20 +745,20 @@ problem_init
     prob_vecs.num_of_fields = 1;
       
     
-    d4est_solver_krylov_petsc_solve
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       d4est_ghost,
-       &d4est_ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       &d4est_solver_krylov_petsc_params,
-       pc,level
-      );
+    /* d4est_solver_krylov_petsc_solve */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    &prob_fcns, */
+    /*    d4est_ghost, */
+    /*    &d4est_ghost_data, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_quad, */
+    /*    d4est_factors, */
+    /*    &d4est_solver_krylov_petsc_params, */
+    /*    pc,level */
+    /*   ); */
 
 
     d4est_mesh_interpolate_data_t data;

@@ -10,7 +10,7 @@ typedef struct {
   double* estimator;
 
   int output_vtk;
-  double* estimator_vtk [13]; /* residual term, je1 6 terms, je2 6 terms for every eleemnt */
+  double** estimator_vtk; /* residual term, je1 term, je2 term, je2 boundary term */
 
   penalty_calc_t u_penalty_fcn;
   penalty_calc_t u_dirichlet_penalty_fcn;

@@ -77,9 +77,29 @@ d4est_linalg_mat_multiply (double * restrict A, double * restrict B, double * re
           &zero, C, &dimN);
 }
 
+/** 
+ * Computes:
+ * beta = alpha*A*v + beta*b
+ * 
+ * @param alpha constant scalar
+ * @param A matrix with dimensions m x n
+ * @param v vector with dimensions n x 1
+ * @param beta constant scalar
+ * @param b vector with dimensions m x 1
+ * @param m 
+ * @param n 
+ */
 void
-d4est_linalg_matvec_plus_vec (double alpha, double * restrict A, double * restrict v, double beta,
-                        double * restrict b, int m, int n)
+d4est_linalg_matvec_plus_vec
+(
+ double alpha,
+ double * restrict A,
+ double * restrict v,
+ double beta,
+ double * restrict b,
+ int m,
+ int n
+)
 {
   char                ytran = 'T';
   int                 dimM = m;

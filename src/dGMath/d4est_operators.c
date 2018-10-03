@@ -37,8 +37,8 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
   d4est_ops->hp_restrict_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_ops->hp_restrict_interp_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_ops->p_restrict_1d_table = P4EST_ALLOC(double**, max_degree);
-  d4est_ops->schwarz_restrictor_1d_table = P4EST_ALLOC(double**, max_degree);
-  d4est_ops->schwarz_restrictor_transpose_1d_table = P4EST_ALLOC(double**, max_degree);
+  /* d4est_ops->schwarz_restrictor_1d_table = P4EST_ALLOC(double**, max_degree); */
+  /* d4est_ops->schwarz_restrictor_transpose_1d_table = P4EST_ALLOC(double**, max_degree); */
   d4est_ops->p_restrict_interp_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_ops->p_prolong_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_ops->hp_prolong_transpose_1d_table = P4EST_ALLOC(double**, max_degree);
@@ -54,8 +54,8 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
     d4est_ops->hp_restrict_interp_1d_table[i] = P4EST_ALLOC(double*, max_degree);
 
     d4est_ops->p_restrict_1d_table[i] = P4EST_ALLOC(double*, max_degree);
-    d4est_ops->schwarz_restrictor_1d_table[i] = P4EST_ALLOC(double*, max_degree);
-    d4est_ops->schwarz_restrictor_transpose_1d_table[i] = P4EST_ALLOC(double*, max_degree);
+    /* d4est_ops->schwarz_restrictor_1d_table[i] = P4EST_ALLOC(double*, max_degree); */
+    /* d4est_ops->schwarz_restrictor_transpose_1d_table[i] = P4EST_ALLOC(double*, max_degree); */
 
     
     d4est_ops->p_restrict_interp_1d_table[i] = P4EST_ALLOC(double*, max_degree);
@@ -94,8 +94,8 @@ d4est_operators_t* d4est_ops_init(int max_degree) {
       d4est_ops->hp_restrict_1d_table[i][j] = NULL;
       d4est_ops->hp_restrict_interp_1d_table[i][j] = NULL;
       d4est_ops->p_restrict_1d_table[i][j] = NULL;
-      d4est_ops->schwarz_restrictor_1d_table[i][j] = NULL;
-      d4est_ops->schwarz_restrictor_transpose_1d_table[i][j] = NULL;
+      /* d4est_ops->schwarz_restrictor_1d_table[i][j] = NULL; */
+      /* d4est_ops->schwarz_restrictor_transpose_1d_table[i][j] = NULL; */
       d4est_ops->p_restrict_interp_1d_table[i][j] = NULL;
       d4est_ops->p_prolong_1d_table[i][j] = NULL;
       d4est_ops->lobatto_to_gauss_interp_trans_1d_table[i][j] = NULL;
@@ -162,8 +162,6 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
       P4EST_FREE(d4est_ops->hp_restrict_interp_1d_table[i][j]);
       P4EST_FREE(d4est_ops->p_prolong_1d_table[i][j]);
       P4EST_FREE(d4est_ops->p_restrict_1d_table[i][j]);
-      P4EST_FREE(d4est_ops->schwarz_restrictor_1d_table[i][j]);
-      P4EST_FREE(d4est_ops->schwarz_restrictor_transpose_1d_table[i][j]);
       P4EST_FREE(d4est_ops->p_restrict_interp_1d_table[i][j]);
       P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_trans_1d_table[i][j]);
       P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_1d_table[i][j]);
@@ -175,8 +173,6 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
     P4EST_FREE(d4est_ops->hp_restrict_interp_1d_table[i]);
     P4EST_FREE(d4est_ops->p_prolong_1d_table[i]);
     P4EST_FREE(d4est_ops->p_restrict_1d_table[i]);
-    P4EST_FREE(d4est_ops->schwarz_restrictor_1d_table[i]);
-    P4EST_FREE(d4est_ops->schwarz_restrictor_transpose_1d_table[i]);
     P4EST_FREE(d4est_ops->p_restrict_interp_1d_table[i]);
     P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_trans_1d_table[i]);
     P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_1d_table[i]);
@@ -187,8 +183,7 @@ void d4est_ops_destroy(d4est_operators_t* d4est_ops) {
   P4EST_FREE(d4est_ops->hp_restrict_1d_table);
   P4EST_FREE(d4est_ops->hp_restrict_interp_1d_table);
   P4EST_FREE(d4est_ops->p_restrict_1d_table);
-  P4EST_FREE(d4est_ops->schwarz_restrictor_1d_table);
-  P4EST_FREE(d4est_ops->schwarz_restrictor_transpose_1d_table);
+
   P4EST_FREE(d4est_ops->p_restrict_interp_1d_table);
   P4EST_FREE(d4est_ops->p_prolong_1d_table);
   P4EST_FREE(d4est_ops->lobatto_to_gauss_interp_trans_1d_table);
@@ -220,6 +215,29 @@ d4est_operators_1index_fetch
   }
 }
 
+double*
+d4est_operators_1index_fetch_with_ctx
+(
+ d4est_operators_t* d4est_ops,
+ double** restrict table,
+ int deg,
+ int size,
+ void (*build_fcn)(d4est_operators_t*, double*, int, void*),
+ void* ctx
+)
+{
+  D4EST_ASSERT(deg < d4est_ops->max_degree && deg > 0);
+  if (table[deg-1] != NULL) {
+    return table[deg-1];
+  }
+  else {
+    table[deg-1] = P4EST_ALLOC_ZERO(double, size);
+    double* op = table[deg-1];
+    build_fcn(d4est_ops, op, deg, ctx);
+    return op;
+  }
+}
+
 double* d4est_operators_2index_fetch
 (
  d4est_operators_t* d4est_ops,
@@ -231,9 +249,9 @@ double* d4est_operators_2index_fetch
 )
 {
   D4EST_ASSERT(deg1 < d4est_ops->max_degree &&
-             deg2 < d4est_ops->max_degree &&
-             deg1 > 0 &&
-             deg2 > 0);
+               deg2 < d4est_ops->max_degree &&
+               deg1 > 0 &&
+               deg2 > 0);
   
   if (table[deg1-1][deg2-1] != NULL) {
     return table[deg1-1][deg2-1];
@@ -245,6 +263,35 @@ double* d4est_operators_2index_fetch
     return op;
   }
 }
+
+
+double* d4est_operators_2index_fetch_with_ctx
+(
+ d4est_operators_t* d4est_ops,
+ double*** restrict table,
+ int deg1,
+ int deg2,
+ int size,
+ void (*build_fcn)(d4est_operators_t*, double*, int, int, void*),
+ void* ctx
+)
+{
+  D4EST_ASSERT(deg1 < d4est_ops->max_degree &&
+               deg2 < d4est_ops->max_degree &&
+               deg1 > 0 &&
+               deg2 > 0);
+  
+  if (table[deg1-1][deg2-1] != NULL) {
+    return table[deg1-1][deg2-1];
+  }
+  else {
+    table[deg1-1][deg2-1] = P4EST_ALLOC_ZERO(double, size);
+    double* op = table[deg1-1][deg2-1];
+    build_fcn(d4est_ops, op, deg1, deg2, ctx);
+    return op;
+  }
+}
+
 
 
 double* d4est_operators_1index_2d_3d_fetch
@@ -1371,205 +1418,6 @@ double* d4est_operators_fetch_gauss_rst_nd(d4est_operators_t* d4est_ops, int dim
      d4est_operators_build_gauss_rst_nd
     );
    return &op[dir * d4est_lgl_get_nodes(dim, deg)];
-}
-
-
-
-
-void d4est_operators_build_schwarz_restrictor_1d
-(
- d4est_operators_t* d4est_ops,
- double* restrict restrictor_1d,
- int deg, //degree of element before restriction
- int restricted_size //number of 1d nodes
- /* int which_face_1d */
-)
-{
-  D4EST_ASSERT(restricted_size <= deg + 1 && restricted_size >= 1);
-  int original_size = deg + 1;
-
-  /* for (int i = 0; i < restricted_size*original_size*2; i++){ */
-    /* restrictor_1d[i] = 0.; */
-  /* } */
-
-  for (int i = 0; i < restricted_size; i++){
-    /* face == 0 */
-    restrictor_1d[(deg+1)*(i) + i] = 1.;
-    /* face == 1 */
-    restrictor_1d[original_size * restricted_size + (deg+1)*(i+1) - restricted_size + i] = 1.;
-  }
-}
-
-double*
-d4est_operators_fetch_schwarz_restrictor_1d
-(
- d4est_operators_t* d4est_ops,
- int deg,
- int restricted_size
-)
-{
-  int size = 2 * (deg + 1) * (restricted_size);
-  return d4est_operators_2index_fetch
-    (
-     d4est_ops,
-     d4est_ops->schwarz_restrictor_1d_table,
-     deg,
-     restricted_size,
-     size,
-     d4est_operators_build_schwarz_restrictor_1d
-    );
-}
-
-void d4est_operators_build_schwarz_restrictor_transpose_1d
-(
- d4est_operators_t* d4est_ops,
- double* restrict restrictor_transpose_1d,
- int deg, //degree of element before restriction
- int res_size //number of 1d nodes
- /* int which_face_1d */
-)
-{
-  double* restrictor_1d = d4est_operators_fetch_schwarz_restrictor_1d(d4est_ops,deg,res_size);
-  d4est_linalg_mat_transpose_nonsqr(&restrictor_1d[0],
-                                    &restrictor_transpose_1d[0],
-                                    res_size, deg + 1);
-
-
-  d4est_linalg_mat_transpose_nonsqr(&restrictor_1d[(res_size)*(deg+1)],
-                                    &restrictor_transpose_1d[(res_size)*(deg+1)],
-                                    res_size, deg + 1);
-  
-}
-
-double*
-d4est_operators_fetch_schwarz_restrictor_transpose_1d
-(
- d4est_operators_t* d4est_ops,
- int deg,
- int res_size
-)
-{
-  int size = 2 * (deg + 1) * (res_size);
-  return d4est_operators_2index_fetch
-    (
-     d4est_ops,
-     d4est_ops->schwarz_restrictor_transpose_1d_table,
-     deg, 
-     res_size,
-     size,
-     d4est_operators_build_schwarz_restrictor_transpose_1d
-    );
-}
-
-void d4est_operators_apply_schwarz_restrictor
-(
- d4est_operators_t* d4est_ops,
- double *   in,
- int dim,
- int* faces,
- int deg,
- int restricted_size,
- d4est_ops_transpose_t transpose,
- double *   out
-)
-{  
-  D4EST_ASSERT(restricted_size > 0 && restricted_size <= deg + 1); 
-  double* schwarz_1d = NULL;
-  int nodes_in = -1;
-  int nodes_out = -1;
-  
-  printf("\n**************\n");
-  printf("schwarz restrictor\n");
-  printf("transpose = %d\n", (int)transpose);
-
-  if (transpose == D4OPS_NO_TRANSPOSE){
-    nodes_in = deg + 1;
-    nodes_out = restricted_size;
-    schwarz_1d = d4est_operators_fetch_schwarz_restrictor_1d(d4est_ops, deg, restricted_size);
-  }
-  else if (transpose == D4OPS_TRANSPOSE) {
-    nodes_out = deg + 1;
-    nodes_in = restricted_size;
-    schwarz_1d = d4est_operators_fetch_schwarz_restrictor_transpose_1d(d4est_ops, deg, restricted_size);
-  }
-  else {
-    D4EST_ABORT("Transpose needs to be D4OPS_NO_TRANSPOSE or D4OPS_TRANSPOSE");
-  }
-
-  /* This should be optimized out */
-
-  int degp1 = deg + 1;
-  double* eyes = P4EST_ALLOC_ZERO(double, (degp1)*(degp1));
-  for (int i = 0; i < (degp1); i++){
-    eyes[i*(degp1) + i] = 1.;
-  }
-
-  int op_rows [(P4EST_DIM)];
-  int op_cols [(P4EST_DIM)];
-  double* operators [(P4EST_DIM)];
-  
-  int dir;  /* x <-> 0; y <-> 1; z <-> 2  */
-  int side; /* left <-> 0; right <-> 1 */
-  
-  for (int i = 0; i < (P4EST_DIM); i++){
-    operators[i] = eyes;
-    op_rows[i] = degp1;
-    op_cols[i] = degp1;
-  }
-
-
-  printf("nodes_in = %d\n", nodes_in);
-  printf("nodes_out = %d\n", nodes_out);
-  for (int i = 0; i < (P4EST_DIM); i++){  
-    if (faces[i] != -1) {
-      d4est_reference_dir_and_side_of_face(faces[i], &dir, &side);
-      operators[dir] = &schwarz_1d[side * nodes_in * nodes_out];
-      printf("face, side, dir = %d, %d, %d\n", faces[i], side, dir);
-      DEBUG_PRINT_ARR_DBL(schwarz_1d, 2 * nodes_in * nodes_out);
-      op_rows[dir] = nodes_out;
-      op_cols[dir] = nodes_in;
-    }
-  }
-
-  for (int i = 0; i < (P4EST_DIM); i++){
-    /* operators[i] = eyes; */
-    /* op_rows[i] = nodes_in; */
-    /* op_cols[i] = nodes_in; */
-    printf("op rows,cols = %d,%d\n", op_rows[i], op_cols[i]);
-    d4est_util_print_matrix(operators[i], op_rows[i], op_cols[i], "i = 0,1,2",0);
-  }
-  
-  if (dim == 2){
-      d4est_kron_A1A2x_nonsqr(out,
-                              operators[1],
-                              operators[0],
-                              in,
-                              op_rows[1],
-                              op_cols[1],
-                              op_rows[0],
-                              op_cols[0]
-                             );
-      
-  }
-  else if (dim == 3){
-        d4est_kron_A1A2A3x_nonsqr(out,
-                                  operators[2],
-                                  operators[1],
-                                  operators[0],
-                                  in,
-                                  op_rows[2],
-                                  op_cols[2],
-                                  op_rows[1],
-                                  op_cols[1],
-                                  op_rows[0],
-                                  op_cols[0]
-                                 );
-  }
-  else {
-    D4EST_ABORT("DIM must be 2 or 3");
-  }
-
-  P4EST_FREE(eyes);
 }
 
 static void d4est_operators_build_lift_1d(d4est_operators_t* d4est_ops, double * restrict  lift_1d, int deg) {

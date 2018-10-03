@@ -44,6 +44,10 @@ static const int    d4est_vtk_wrap_rank = 0;
 /* #define D4EST_VTK_FORMAT_STRING "binary */
 /* #endif /\* D4EST_VTK_BINARY *\/ */
 
+typedef enum {D4EST_VTK_INT, D4EST_VTK_FLOAT} d4est_vtk_storage_type_t;
+typedef enum {D4EST_VTK_DG_GRID, D4EST_VTK_CORNER_GRID, D4EST_VTK_GRID_NOT_SET} d4est_vtk_grid_type_t;
+typedef enum {D4EST_VTK_ASCII, D4EST_VTK_BINARY, D4EST_VTK_ZLIB_BINARY, D4EST_VTK_OUTPUT_NOT_SET} d4est_vtk_output_type_t;
+
 /** Opaque context type for writing VTK output with multiple function calls.
  *
  * This structure holds all the information needed for the p4est vtk context.
@@ -65,9 +69,6 @@ static const int    d4est_vtk_wrap_rank = 0;
  * d4est_vtk_write_footer.
  *
  */
-
-typedef enum {D4EST_VTK_DG_GRID, D4EST_VTK_CORNER_GRID, D4EST_VTK_GRID_NOT_SET} d4est_vtk_grid_type_t;
-typedef enum {D4EST_VTK_ASCII, D4EST_VTK_BINARY, D4EST_VTK_ZLIB_BINARY, D4EST_VTK_OUTPUT_NOT_SET} d4est_vtk_output_type_t;
 
 struct d4est_vtk_context
 {
@@ -131,7 +132,7 @@ d4est_vtk_write_binary (FILE * vtkfile, char *numeric_data,
   }
 }
 
-const char*
+static const char*
 d4est_vtk_get_format_string(d4est_vtk_output_type_t output_type){
   if (output_type == D4EST_VTK_ASCII){
     return "ascii";
@@ -268,7 +269,7 @@ d4est_vtk_input
 }
 
 
-d4est_vtk_context_t *
+static d4est_vtk_context_t *
 d4est_vtk_dg_context_new
 (
   p4est_t *p4est,
@@ -300,7 +301,7 @@ d4est_vtk_dg_context_new
 }
 
 
-void
+static void
 d4est_vtk_context_set_geom (d4est_vtk_context_t * cont,
                             d4est_geometry_t * geom)
 {
@@ -314,7 +315,7 @@ d4est_vtk_context_set_geom (d4est_vtk_context_t * cont,
   cont->geom = geom;
 }
 
-void
+static void
 d4est_vtk_context_set_deg_array (d4est_vtk_context_t * cont,
                                  int* deg_array)
 {
@@ -328,7 +329,7 @@ d4est_vtk_context_set_deg_array (d4est_vtk_context_t * cont,
   cont->deg_array = deg_array;
 }
 
-void
+static void
 d4est_vtk_context_set_scale (d4est_vtk_context_t * cont, double scale)
 {
 #ifdef D4EST_VTK_DEBUG
@@ -342,7 +343,7 @@ d4est_vtk_context_set_scale (d4est_vtk_context_t * cont, double scale)
   cont->scale = scale;
 }
 
-void
+static void
 d4est_vtk_context_set_continuous (d4est_vtk_context_t * cont, int continuous)
 {
 #ifdef D4EST_VTK_DEBUG
@@ -355,7 +356,7 @@ d4est_vtk_context_set_continuous (d4est_vtk_context_t * cont, int continuous)
   cont->continuous = continuous;
 }
 
-void
+static void
 d4est_vtk_context_destroy (d4est_vtk_context_t * context)
 {
 #ifdef D4EST_VTK_DEBUG
@@ -415,7 +416,7 @@ d4est_vtk_context_destroy (d4est_vtk_context_t * context)
   P4EST_FREE (context);
 }
 
-d4est_vtk_context_t *
+static d4est_vtk_context_t *
 d4est_vtk_write_header (d4est_vtk_context_t * cont,
                            d4est_operators_t* d4est_ops,
                            d4est_vtk_output_type_t output_type)
@@ -866,12 +867,13 @@ d4est_vtk_write_header (d4est_vtk_context_t * cont,
   return cont;
 }
 
-d4est_vtk_context_t *
+static d4est_vtk_context_t *
 d4est_vtk_write_cell_scalar
 (
  d4est_vtk_context_t * cont,
  const char *scalar_name,
- double* values,
+ void* values,
+ d4est_vtk_storage_type_t storage_type,
  d4est_vtk_output_type_t output_type
 )
 {
@@ -880,7 +882,9 @@ d4est_vtk_write_cell_scalar
   /* Write cell data. */
   fprintf (cont->vtufile, "        <DataArray type=\"%s\" Name=\"%s\""
            " format=\"%s\">\n",
-           D4EST_VTK_FLOAT_NAME, scalar_name, d4est_vtk_get_format_string(output_type));
+           (storage_type == D4EST_VTK_FLOAT) ? (D4EST_VTK_FLOAT_NAME) : "Int32",
+           scalar_name,
+           d4est_vtk_get_format_string(output_type));
 
   /* for (il = 0; il < Ncells; ++il) { */
   sc_array_t         *trees = cont->p4est->trees;
@@ -904,46 +908,55 @@ d4est_vtk_write_cell_scalar
     for (zz = 0; zz < num_quads; ++zz, ++sk, ++il) {
       int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
       for (int ec = 0; ec < num_cells_in_element; ec++, tc++){
+
+        if(storage_type == D4EST_VTK_FLOAT){
         fprintf (cont->vtufile,
 #ifdef D4EST_VTK_DOUBLES
                  "     %24.16e\n",
 #else
-                 "          %16.8e\n",
+                 /* "          %16.8e\n", */
 #endif
-                 values[il]);
+                 ((double*)values)[il]);
+        }
+        else {
+        fprintf (cont->vtufile,
+                 "     %d\n",
+                 ((int*)values)[il]);
+        }
       }
     }
   }
   }
   else {
-    D4EST_VTK_FLOAT_TYPE* float_data = P4EST_ALLOC (D4EST_VTK_FLOAT_TYPE, Ncells);
-  for (tc = 0, il = 0, sk = 1, jt = first_local_tree; jt <= last_local_tree; ++jt) {
-    tree = p4est_tree_array_index (trees, jt);
-    quadrants = &tree->quadrants;
-    num_quads = quadrants->elem_count;
-    for (zz = 0; zz < num_quads; ++zz, ++sk, ++il) {
-      int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
-      for (int ec = 0; ec < num_cells_in_element; ec++, tc++){
-      float_data[il] =
-        (D4EST_VTK_FLOAT_TYPE) values[il];
-    }
-    }
-  }
-    fprintf (cont->vtufile, "          ");
+    D4EST_ABORT("Currently, binary is not supported");
+    /* D4EST_VTK_FLOAT_TYPE* float_data = P4EST_ALLOC (D4EST_VTK_FLOAT_TYPE, Ncells); */
+  /* for (tc = 0, il = 0, sk = 1, jt = first_local_tree; jt <= last_local_tree; ++jt) { */
+    /* tree = p4est_tree_array_index (trees, jt); */
+    /* quadrants = &tree->quadrants; */
+    /* num_quads = quadrants->elem_count; */
+    /* for (zz = 0; zz < num_quads; ++zz, ++sk, ++il) { */
+      /* int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM)); */
+      /* for (int ec = 0; ec < num_cells_in_element; ec++, tc++){ */
+      /* float_data[il] = */
+        /* (D4EST_VTK_FLOAT_TYPE) (values)[il]; */
+    /* } */
+    /* } */
+  /* } */
+    /* fprintf (cont->vtufile, "          "); */
     /* TODO: Don't allocate the full size of the array, only allocate
    * the chunk that will be passed to zlib and do this a chunk
    * at a time.
    */
-    int retval = d4est_vtk_write_binary (cont->vtufile, (char *) float_data,
-                                     sizeof (*float_data) * Ncells, output_type);
-    fprintf (cont->vtufile, "\n");
+    /* int retval = d4est_vtk_write_binary (cont->vtufile, (char *) float_data, */
+                                     /* sizeof (*float_data) * Ncells, output_type); */
+    /* fprintf (cont->vtufile, "\n"); */
 
-    P4EST_FREE (float_data);
+    /* P4EST_FREE (float_data); */
 
-    if (retval) {
-      d4est_vtk_context_destroy (cont);
-      return NULL;
-    }
+    /* if (retval) { */
+      /* d4est_vtk_context_destroy (cont); */
+      /* return NULL; */
+    /* } */
   }
   fprintf (cont->vtufile, "        </DataArray>\n");
 
@@ -957,7 +970,7 @@ d4est_vtk_write_cell_scalar
 }
 
 
-int
+static int
 d4est_vtk_write_footer (d4est_vtk_context_t * cont)
 {
 #ifdef D4EST_VTK_DEBUG
@@ -1013,7 +1026,7 @@ d4est_vtk_write_footer (d4est_vtk_context_t * cont)
 }
 
 
-double*
+static double*
 d4est_vtk_convert_nodal_to_vtk(
                                p4est_t* p4est,
                                d4est_vtk_context_t* cont,
@@ -1070,7 +1083,7 @@ d4est_vtk_convert_nodal_to_vtk(
 
 
 
-d4est_vtk_context_t *
+static d4est_vtk_context_t *
 d4est_vtk_write_point_scalar (d4est_vtk_context_t * cont,
                               const char *scalar_name,
                               double * values,
@@ -1168,7 +1181,7 @@ d4est_vtk_write_point_scalar (d4est_vtk_context_t * cont,
 }
 
 
-d4est_vtk_context_t *
+static d4est_vtk_context_t *
 d4est_vtk_write_data
 (
  d4est_vtk_context_t * cont,
@@ -1267,7 +1280,7 @@ d4est_vtk_write_data
 }
 
 
-d4est_vtk_context_t *
+static d4est_vtk_context_t *
 d4est_vtk_write_element_data
 (
  d4est_vtk_context_t * cont,
@@ -1276,9 +1289,12 @@ d4est_vtk_write_element_data
  int write_rank,
  int wrap_rank,
  int write_deg,
- int num_element_fields,
- const char ** names,
- double ** values,
+ int num_element_float_fields,
+ const char ** float_names,
+ double ** float_values,
+ int num_element_int_fields,
+ const char ** int_names,
+ double ** int_values,
  d4est_vtk_output_type_t output_type
 )
 {
@@ -1289,7 +1305,7 @@ d4est_vtk_write_element_data
   /* This function needs to do nothing if there is no data. */
   if (!
       (write_tree || write_level || write_rank || wrap_rank || write_deg
-       || num_element_fields))
+       || num_element_int_fields || num_element_float_fields))
     return cont;
 
   const int           mpirank = cont->p4est->mpirank;
@@ -1318,8 +1334,8 @@ d4est_vtk_write_element_data
   /* Gather cell data. */
   scalar_strlen = 0;
   cell_scalars[0] = '\0';
-  for (i = 0; i < num_element_fields; ++all, ++i) {
-    name = names[all];
+  for (i = 0; i < num_element_float_fields; ++all, ++i) {
+    name = float_names[all];
     retval = snprintf (cell_scalars + scalar_strlen, BUFSIZ - scalar_strlen,
                        "%s%s", i == 0 ? "" : ",", name);
     SC_CHECK_ABORT (retval > 0,
@@ -1327,6 +1343,19 @@ d4est_vtk_write_element_data
     scalar_strlen += retval;
   }
 
+  all = 0;
+  for (i = 0; i < num_element_int_fields; ++all, ++i) {
+    name = int_names[all];
+    retval = snprintf (cell_scalars + scalar_strlen, BUFSIZ - scalar_strlen,
+                       "%s%s", ",", name);
+    SC_CHECK_ABORT (retval > 0,
+                    P4EST_STRING "_vtk: Error collecting cell scalars");
+    scalar_strlen += retval;
+  }
+
+
+
+  
   char                vtkCellDataString[BUFSIZ] = "";
   int                 printed = 0;
 
@@ -1350,7 +1379,7 @@ d4est_vtk_write_element_data
       snprintf (vtkCellDataString + printed, BUFSIZ - printed,
                 printed > 0 ? ",mpirank" : "mpirank");
 
-  if (num_element_fields)
+  if (num_element_float_fields + num_element_int_fields)
     printed +=
       snprintf (vtkCellDataString + printed, BUFSIZ - printed,
                 printed > 0 ? ",%s" : "%s", cell_scalars);
@@ -1384,31 +1413,32 @@ d4est_vtk_write_element_data
     fprintf (cont->vtufile, "\n");
     }
     else {
-    for (il = 0, jt = first_local_tree; jt <= last_local_tree; ++jt) {
-      tree = p4est_tree_array_index (trees, jt);
-      num_quads = tree->quadrants.elem_count;
-      for (zz = 0; zz < num_quads; ++zz, ++il) {
-        int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
-        for (int ec = 0; ec < num_cells_in_element; ec++){
-        locidx_data[il] = (p4est_locidx_t) jt;
-        }
-      }
-    }
-    fprintf (cont->vtufile, "          ");
-    retval = d4est_vtk_write_binary (cont->vtufile, (char *) locidx_data,
-                                     sizeof (*locidx_data) * Ncells, output_type);
-    fprintf (cont->vtufile, "\n");
-    if (retval) {
-      P4EST_LERROR (P4EST_STRING "_vtk: Error encoding types\n");
-      d4est_vtk_context_destroy (cont);
+      
+      /* for (il = 0, jt = first_local_tree; jt <= last_local_tree; ++jt) { */
+    /*   tree = p4est_tree_array_index (trees, jt); */
+    /*   num_quads = tree->quadrants.elem_count; */
+    /*   for (zz = 0; zz < num_quads; ++zz, ++il) { */
+    /*     int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM)); */
+    /*     for (int ec = 0; ec < num_cells_in_element; ec++){ */
+    /*     locidx_data[il] = (p4est_locidx_t) jt; */
+    /*     } */
+    /*   } */
+    /* } */
+    /* fprintf (cont->vtufile, "          "); */
+    /* retval = d4est_vtk_write_binary (cont->vtufile, (char *) locidx_data, */
+    /*                                  sizeof (*locidx_data) * Ncells, output_type); */
+    /* fprintf (cont->vtufile, "\n"); */
+    /* if (retval) { */
+    /*   P4EST_LERROR (P4EST_STRING "_vtk: Error encoding types\n"); */
+    /*   d4est_vtk_context_destroy (cont); */
 
-      P4EST_FREE (values);
-      P4EST_FREE (names);
-      P4EST_FREE (locidx_data);
-      P4EST_FREE (uint8_data);
+    /*   /\* P4EST_FREE (values); *\/ */
+    /*   /\* P4EST_FREE (names); *\/ */
+    /*   P4EST_FREE (locidx_data); */
+    /*   P4EST_FREE (uint8_data); */
 
-      return NULL;
-    }
+    /*   return NULL; */
+    /* } */
     }
     
     fprintf (cont->vtufile, "        </DataArray>\n");
@@ -1437,34 +1467,34 @@ d4est_vtk_write_element_data
     fprintf (cont->vtufile, "\n");
     }
     else {
-    for (il = 0, jt = first_local_tree; jt <= last_local_tree; ++jt) {
-      tree = p4est_tree_array_index (trees, jt);
-      quadrants = &tree->quadrants;
-      num_quads = quadrants->elem_count;
-      for (zz = 0; zz < num_quads; ++zz, ++il) {
-        quad = p4est_quadrant_array_index (quadrants, zz);
+    /* for (il = 0, jt = first_local_tree; jt <= last_local_tree; ++jt) { */
+      /* tree = p4est_tree_array_index (trees, jt); */
+    /*   quadrants = &tree->quadrants; */
+    /*   num_quads = quadrants->elem_count; */
+    /*   for (zz = 0; zz < num_quads; ++zz, ++il) { */
+    /*     quad = p4est_quadrant_array_index (quadrants, zz); */
 
-                int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
-        for (int ec = 0; ec < num_cells_in_element; ec++){
-        uint8_data[il] = (uint8_t) quad->level;
-        }
-      }
-    }
+    /*             int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM)); */
+    /*     for (int ec = 0; ec < num_cells_in_element; ec++){ */
+    /*     uint8_data[il] = (uint8_t) quad->level; */
+    /*     } */
+    /*   } */
+    /* } */
 
-    fprintf (cont->vtufile, "          ");
-    retval = d4est_vtk_write_binary (cont->vtufile, (char *) uint8_data,
-                                     sizeof (*uint8_data) * Ncells, output_type);
-    fprintf (cont->vtufile, "\n");
-    if (retval) {
-      P4EST_LERROR (P4EST_STRING "_vtk: Error encoding types\n");
-      d4est_vtk_context_destroy (cont);
+    /* fprintf (cont->vtufile, "          "); */
+    /* retval = d4est_vtk_write_binary (cont->vtufile, (char *) uint8_data, */
+    /*                                  sizeof (*uint8_data) * Ncells, output_type); */
+    /* fprintf (cont->vtufile, "\n"); */
+    /* if (retval) { */
+    /*   P4EST_LERROR (P4EST_STRING "_vtk: Error encoding types\n"); */
+    /*   d4est_vtk_context_destroy (cont); */
 
-      P4EST_FREE (values);
-      P4EST_FREE (names);
-      P4EST_FREE (locidx_data);
+    /*   P4EST_FREE (values); */
+    /*   P4EST_FREE (names); */
+    /*   P4EST_FREE (locidx_data); */
 
-      return NULL;
-    }
+    /*   return NULL; */
+    /* } */
 
     }
     fprintf (cont->vtufile, "        </DataArray>\n");
@@ -1491,35 +1521,35 @@ d4est_vtk_write_element_data
     fprintf (cont->vtufile, "\n");
     }
     else {
-    for (il = 0, jt = first_local_tree; jt <= last_local_tree; ++jt) {
-      tree = p4est_tree_array_index (trees, jt);
-      quadrants = &tree->quadrants;
-      num_quads = quadrants->elem_count;
-      for (zz = 0; zz < num_quads; ++zz, ++il) {
-        int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM));
-        for (int ec = 0; ec < num_cells_in_element; ec++){
-        uint8_data[il] = (uint8_t) cont->deg_array[il];
-        }
-      }
-    }
+    /* for (il = 0, jt = first_local_tree; jt <= last_local_tree; ++jt) { */
+    /*   tree = p4est_tree_array_index (trees, jt); */
+    /*   quadrants = &tree->quadrants; */
+    /*   num_quads = quadrants->elem_count; */
+    /*   for (zz = 0; zz < num_quads; ++zz, ++il) { */
+    /*     int num_cells_in_element = d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM)); */
+    /*     for (int ec = 0; ec < num_cells_in_element; ec++){ */
+    /*     uint8_data[il] = (uint8_t) cont->deg_array[il]; */
+    /*     } */
+    /*   } */
+    /* } */
 
-    fprintf (cont->vtufile, "          ");
-    retval = d4est_vtk_write_binary (cont->vtufile, (char *) uint8_data,
-                                     sizeof (*uint8_data) * Ncells, output_type);
-    fprintf (cont->vtufile, "\n");
+    /* fprintf (cont->vtufile, "          "); */
+    /* retval = d4est_vtk_write_binary (cont->vtufile, (char *) uint8_data, */
+    /*                                  sizeof (*uint8_data) * Ncells, output_type); */
+    /* fprintf (cont->vtufile, "\n"); */
 
-    P4EST_FREE (uint8_data);
+    /* P4EST_FREE (uint8_data); */
 
-    if (retval) {
-      P4EST_LERROR (P4EST_STRING "_vtk: Error encoding types\n");
-      d4est_vtk_context_destroy (cont);
+    /* if (retval) { */
+    /*   P4EST_LERROR (P4EST_STRING "_vtk: Error encoding types\n"); */
+    /*   d4est_vtk_context_destroy (cont); */
 
-      P4EST_FREE (values);
-      P4EST_FREE (names);
-      P4EST_FREE (locidx_data);
+    /*   P4EST_FREE (values); */
+    /*   P4EST_FREE (names); */
+    /*   P4EST_FREE (locidx_data); */
 
-      return NULL;
-    }
+    /*   return NULL; */
+    /* } */
     }
     fprintf (cont->vtufile, "        </DataArray>\n");
   }
@@ -1541,24 +1571,24 @@ d4est_vtk_write_element_data
     fprintf (cont->vtufile, "\n");
     }
     else {
-    for (il = 0; il < Ncells; ++il)
-      locidx_data[il] = (p4est_locidx_t) wrapped_rank;
+    /* for (il = 0; il < Ncells; ++il) */
+    /*   locidx_data[il] = (p4est_locidx_t) wrapped_rank; */
 
-    fprintf (cont->vtufile, "          ");
-    retval = d4est_vtk_write_binary (cont->vtufile, (char *) locidx_data,
-                                     sizeof (*locidx_data) * Ncells, output_type);
-    fprintf (cont->vtufile, "\n");
+    /* fprintf (cont->vtufile, "          "); */
+    /* retval = d4est_vtk_write_binary (cont->vtufile, (char *) locidx_data, */
+    /*                                  sizeof (*locidx_data) * Ncells, output_type); */
+    /* fprintf (cont->vtufile, "\n"); */
 
-    P4EST_FREE (locidx_data);
+    /* P4EST_FREE (locidx_data); */
 
-    if (retval) {
-      d4est_vtk_context_destroy (cont);
+    /* if (retval) { */
+    /*   d4est_vtk_context_destroy (cont); */
 
-      P4EST_FREE (values);
-      P4EST_FREE (names);
+    /*   P4EST_FREE (values); */
+    /*   P4EST_FREE (names); */
 
-      return NULL;
-    }
+    /*   return NULL; */
+    /* } */
     }
     
     fprintf (cont->vtufile, "        </DataArray>\n");
@@ -1572,12 +1602,21 @@ d4est_vtk_write_element_data
   }
 
   all = 0;
-  for (i = 0; i < num_element_fields; ++all, ++i) {
-    cont = d4est_vtk_write_cell_scalar (cont, names[all], values[all], output_type);
+  for (i = 0; i < num_element_float_fields; ++all, ++i) {
+    cont = d4est_vtk_write_cell_scalar (cont, float_names[all], float_values[all], D4EST_VTK_FLOAT, output_type);
     SC_CHECK_ABORT (cont != NULL,
                     P4EST_STRING "_vtk: Error writing cell scalars");
   }
 
+  all = 0;
+  for (i = 0; i < num_element_int_fields; ++all, ++i) {
+    cont = d4est_vtk_write_cell_scalar (cont, int_names[all], int_values[all], D4EST_VTK_INT, output_type);
+    SC_CHECK_ABORT (cont != NULL,
+                    P4EST_STRING "_vtk: Error writing cell scalars");
+  }
+  
+
+  
   fprintf (cont->vtufile, "      </CellData>\n");
 
   if (ferror (cont->vtufile)) {
@@ -1614,11 +1653,18 @@ d4est_vtk_write_element_data
                P4EST_VTK_LOCIDX, d4est_vtk_get_format_string(output_type));
 
     all = 0;
-    for (i = 0; i < num_element_fields; ++all, i++)
+    for (i = 0; i < num_element_float_fields; ++all, i++)
       fprintf (cont->pvtufile, "      "
                "<PDataArray type=\"%s\" Name=\"%s\" format=\"%s\"/>\n",
-               D4EST_VTK_FLOAT_NAME, names[all], d4est_vtk_get_format_string(output_type));
+               D4EST_VTK_FLOAT_NAME, float_names[all], d4est_vtk_get_format_string(output_type));
 
+    all = 0;
+    for (i = 0; i < num_element_int_fields; ++all, i++)
+      fprintf (cont->pvtufile, "      "
+               "<PDataArray type=\"%s\" Name=\"%s\" format=\"%s\"/>\n",
+               "Int32", int_names[all], d4est_vtk_get_format_string(output_type));
+
+    
     fprintf (cont->pvtufile, "    </PCellData>\n");
 
     if (ferror (cont->pvtufile)) {
@@ -1641,8 +1687,10 @@ d4est_vtk_save_aux
  const char* input_section,
  const char ** dg_field_names,
  double ** dg_fields,
- const char ** element_field_names,
- double ** element_fields,
+ const char ** element_float_field_names,
+ double ** element_float_fields,
+  const char ** element_int_field_names,
+ double ** element_int_fields,
  const char* folder,
  int sub_folder_number
 ){
@@ -1685,7 +1733,8 @@ d4est_vtk_save_aux
   }
 
   int num_dg_fields = 0;
-  int num_element_fields = 0;
+  int num_element_float_fields = 0;
+  int num_element_int_fields = 0;
 
   if (dg_field_names != NULL && dg_fields != NULL){
     for (int i = 0; dg_field_names[i] != NULL; i++){
@@ -1693,17 +1742,24 @@ d4est_vtk_save_aux
     }
   }
 
-  if (element_field_names != NULL && element_fields != NULL){
-    for (int i = 0; element_field_names[i] != NULL; i++){
-      num_element_fields++;
+  if (element_float_field_names != NULL && element_float_fields != NULL){
+    for (int i = 0; element_float_field_names[i] != NULL; i++){
+      num_element_float_fields++;
     }
   }
 
+
+  if (element_int_field_names != NULL && element_int_fields != NULL){
+    for (int i = 0; element_int_field_names[i] != NULL; i++){
+      num_element_int_fields++;
+    }
+  }
+  
   d4est_vtk_context_set_deg_array(cont, deg_array);
   cont = d4est_vtk_write_header(cont, d4est_ops, cont->output_type);
 
   cont = d4est_vtk_write_data(cont, num_dg_fields, dg_field_names, dg_fields, cont->grid_type, cont->output_type);
-  cont = d4est_vtk_write_element_data(cont, cont->write_tree, cont->write_level, cont->write_rank, cont->wrap_rank, cont->write_deg, num_element_fields, element_field_names, element_fields, cont->output_type);
+  cont = d4est_vtk_write_element_data(cont, cont->write_tree, cont->write_level, cont->write_rank, cont->wrap_rank, cont->write_deg, num_element_float_fields, element_float_field_names, element_float_fields, num_element_int_fields, element_int_field_names, element_int_fields, cont->output_type);
     
   d4est_vtk_write_footer(cont);
   d4est_geometry_destroy(geom_vtk);
@@ -1723,8 +1779,10 @@ d4est_vtk_save
  const char* input_section,
  const char ** dg_field_names,
  double ** dg_fields,
- const char ** element_field_names,
- double ** element_fields,
+ const char ** element_float_field_names,
+ double ** element_float_fields,
+ const char ** element_int_field_names,
+ double ** element_int_fields,
  int sub_folder_number
 )
 {
@@ -1736,8 +1794,10 @@ d4est_vtk_save
      input_section,
      dg_field_names,
      dg_fields,
-     element_field_names,
-     element_fields,
+     element_float_field_names,
+     element_float_fields,
+     element_int_field_names,
+     element_int_fields,
      "VTK",
      sub_folder_number
     );

@@ -19,253 +19,221 @@ d4est_solver_schwarz_corner_callback
  void* user_data
 )
 {
-  int good_corner = -1;
+  int core_side = -1;
   p4est_t* p4est = info->p4est;
-  d4est_solver_schwarz_center_data_t* center_data = user_data;
+  d4est_solver_schwarz_data_t* schwarz_data = user_data;
 
-  for (int side = 0; side < info->sides.elem_count; side++){
-    p4est_iter_corner_side_t* corner_side
+  for (int core = 0; core < info->sides.elem_count; core++){
+    
+    p4est_iter_corner_side_t* core_info
       = sc_array_index(&info->sides,
-                       side);
-    d4est_element_data_t* ed = corner_side->quad->p.user_data;
+                       core);
 
-    if (ed->id == center_data->element &&
-        /* p4est->mpirank == center_data->process */
-       )
-      {
-        good_corner = side;
-        break;
-      }
-  }
+    
+    d4est_element_data_t* ed_core = core_info->quad->p.user_data;
+    if (ed_core->mpirank != p4est->mpirank){ /* ghost elements cannot be core elements */
+      continue; 
+    }
 
-  for (int side = 0; side < info->sides.elem_count; side++){
+    d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomains[ed_core->id];
+    /* add core element to subdomain */
+    sub_data.element_datas[0].id = ed_core->id;
+    sub_data.element_datas[0].mpirank = ed_core->mpi_rank;
+    sub_data.element_datas[0].tree = ed_core->tree;
+    sub_data.element_datas[0].tree_quadid = ed_core->tree_quadid;
+    sub_data.element_datas[0].is_core = 1;
+    sub_data.element_datas[0].deg = ed_core->deg;
+    sub_data.element_datas[0].faces[0] = -1;
+    sub_data.element_datas[0].faces[1] = -1;
+    sub_data.element_datas[0].faces[2] = -1;
+    sub_data.element_datas[0].core_faces[0] = -1;
+    sub_data.element_datas[0].core_faces[1] = -1;
+    sub_data.element_datas[0].core_faces[2] = -1;    
+    sub_data.subdomain_total_element_size++;
+    
+    for (int side = 0; side < info->sides.elem_count; side++){
 
-    p4est_iter_corner_side_t* corner_side
-      = sc_array_index(&info->sides,
-                       side);
-    d4est_element_data_t* ed
-      = corner_side->quad->p.user_data;
-
-    if (side != good_corner && good_corner >= 0){
-
-      center_data->is_corner[ed->id] = corner_side->corner;
-
-      p4est_iter_corner_side_t* good_side
+      p4est_iter_corner_side_t* side_info
         = sc_array_index(&info->sides,
-                         good_corner);
+                         side);
+      d4est_element_data_t* ed
+        = side_info->quad->p.user_data;
 
-      int found_face [] = {0,0,0};
-      int found_edge [] = {0,0,0};
-      for (int f = 0; f < (P4EST_DIM); f++){
-        if ((good_side->faces[f] == corner_side->faces[f])){
-          found_face[f] = 1;
+      if (side != core){
+
+        int found_side_face [] = {0,0,0};
+        int found_side_edge [] = {0,0,0};
+        int found_core_face [] = {0,0,0};
+        int found_core_edge [] = {0,0,0};
+        
+        for (int f_side = 0; f_side < (P4EST_DIM); f_side++){
+          for (int f_core = 0; f_core < (P4EST_DIM); f_core++){
+          if ((core_info->faces[f_core] == side_info->faces[f_side])){
+            found_side_face[f_side] = 1;
+            found_core_face[f_core] = 1;
+          }
         }
-      }
 
 #if (P4EST_DIM)==3         
-      for (int e = 0; e < (P4EST_DIM); e++){
-        if ((good_side->edges[e] == corner_side->edges[e])){
-          found_edge[e] = 1;          
+        for (int e_side = 0; e_side < (P4EST_DIM); e_side++){
+          for (int e_core = 0; e_core < (P4EST_DIM); e_core++){
+          if ((core_info->edges[e_core] == side_info->edges[e_side])){
+            found_side_edge[e_side] = 1;          
+            found_core_edge[e_core] = 1;          
+          }
         }
-      }
 #endif
+
+        int side_face_id = -1;
+        int side_edge_id = -1;
+        int core_face_id = -1;
+        int core_edge_id = -1;
+        
+        int shares_face = 0;
+        int shares_edge = 0;
+        int shares_corner = 1;
+        int shares_face_or_edge = 0;
       
-      int shares_face = 0;
-      int face_id;
-      int shares_edge = 0;
-      int edge_id;
-      int shares_corner = 1;
-      int face_edge_sum = 0;
-      
-      for (int ef = 0; ef < (P4EST_DIM); ef++){
-        if (found_face[ef] == 1){
+        for (int ef = 0; ef < (P4EST_DIM); ef++){
+          if (found_side_face[ef] == 1){
 #if (P4EST_DIM)==3
-          face_id = p8est_corner_faces[corner_side->corner][ef];
+            side_face_id = p8est_corner_faces[side_info->corner][ef];
 #else
-          face_id = p4est_corner_faces[corner_side->corner][ef];
+            side_face_id = p4est_corner_faces[side_info->corner][ef];
 #endif
-          shares_face++;
-          face_edge_sum++;
-          break;
-        }
+            shares_face++;
+            shares_face_or_edge++;
+          }
+
+          if (found_core_face[ef] == 1){
+#if (P4EST_DIM)==3
+            core_face_id = p8est_corner_faces[core_info->corner][ef];
+#else
+            core_face_id = p4est_corner_faces[core_info->corner][ef];
+#endif
+          }
+          
 #if (P4EST_DIM)==3       
-        if (found_edge[ef] == 1){
-          edge_id = p8est_corner_edges[corner_side->corner][ef];
-          shares_edge++;
-          face_edge_sum++;
+          if (found_side_edge[ef] == 1){
+            side_edge_id = p8est_corner_edges[side_info->corner][ef];
+            shares_edge++;
+            shares_face_or_edge++;
+          }
+
+          if (found_core_edge[ef] == 1){
+            core_edge_id = p8est_corner_edges[core_info->corner][ef];
+          }
+#endif
+        }
+
+        d4est_element_data_t* ed_side = side_info->quad->p.user_data; 
+
+        if (shares_face){
+          sub_data->element_datas[sub_data->subdomain_total_element_size].faces[0] = side_face_id;
+          sub_data->element_datas[sub_data->subdomain_total_element_size].faces[1] = -1;
+          sub_data->element_datas[sub_data->subdomain_total_element_size].faces[2] = -1;
+
+          sub_data->element_datas[sub_data->subdomain_total_element_size].core_faces[0] = core_face_id;
+          sub_data->element_datas[sub_data->subdomain_total_element_size].core_faces[1] = -1;
+          sub_data->element_datas[sub_data->subdomain_total_element_size].core_faces[2] = -1;
+          
+        }
+#if (P4EST_DIM)==3
+        else if (shares_edge){    
+          sub_data->element_datas[sub_data->subdomain_total_element_size].faces[0] = p8est_edge_faces[side_edge_id][0];
+          sub_data->element_datas[sub_data->subdomain_total_element_size].faces[1] = p8est_edge_faces[side_edge_id][1];
+          sub_data->element_datas[sub_data->subdomain_total_element_size].faces[2] = -1;
+
+
+          sub_data->element_datas[sub_data->subdomain_total_element_size].core_faces[0] = p8est_edge_faces[core_edge_id][0];
+          sub_data->element_datas[sub_data->subdomain_total_element_size].core_faces[1] = p8est_edge_faces[core_edge_id][1];
+          sub_data->element_datas[sub_data->subdomain_total_element_size].core_faces[2] = -1;
+          
         }
 #endif
-      }
-
-      d4est_element_data_t* ed = corner_side->quad->p.user_data; 
-      int do_not_save = 0;
-      for (int i = 0; i < center_data->connections_found; i++){
-        if(center_data->connections[i].id == ed->id){
-          do_not_save = 1;
-        }
-      }
-
-      if (shares_face){
-        center_data->connections[center_data->connections_found].faces[0] = face_id;
-        center_data->connections[center_data->connections_found].faces[1] = -1;
-        center_data->connections[center_data->connections_found].faces[2] = -1;
-      }
-#if (P4EST_DIM)==3
-      else if (shares_edge){    
-        center_data->connections[center_data->connections_found].faces[0] = p8est_edge_faces[edge_id][0];
-        center_data->connections[center_data->connections_found].faces[1] = p8est_edge_faces[edge_id][1];
-        center_data->connections[center_data->connections_found].faces[2] = -1;
-      }
-#endif
-      else {
+        else {
 
 #if (P4EST_DIM)==3
-        center_data->connections[center_data->connections_found].faces[0] = p8est_corner_faces[corner_side->corner][0];
-        center_data->connections[center_data->connections_found].faces[1] = p8est_corner_faces[corner_side->corner][1];
-        center_data->connections[center_data->connections_found].faces[2] = p8est_corner_faces[corner_side->corner][2];
+          sub_data->element_datas[sub_data->subdomain_total_element_size].faces[0] = p8est_corner_faces[side_info->corner][0];
+          sub_data->element_datas[sub_data->subdomain_total_element_size].faces[1] = p8est_corner_faces[side_info->corner][1];
+          sub_data->element_datas[sub_data->subdomain_total_element_size].faces[2] = p8est_corner_faces[side_info->corner][2];
+
+          sub_data->element_datas[sub_data->subdomain_total_element_size].core_faces[0] = p8est_corner_faces[core_info->corner][0];
+          sub_data->element_datas[sub_data->subdomain_total_element_size].core_faces[1] = p8est_corner_faces[core_info->corner][1];
+          sub_data->element_datas[sub_data->subdomain_total_element_size].core_faces[2] = p8est_corner_faces[core_info->corner][2];
+
 #else
-        center_data->connections[center_data->connections_found].faces[0] = p4est_corner_faces[corner_side->corner][0];
-        center_data->connections[center_data->connections_found].faces[1] = p4est_corner_faces[corner_side->corner][1];        
-#endif
-      }
+          sub_data->element_datas[sub_data->subdomain_total_element_size].faces[0] = p4est_corner_faces[side_info->corner][0];
+          sub_data->element_datas[sub_data->subdomain_total_element_size].faces[1] = p4est_corner_faces[side_info->corner][1];
 
-      center_data->connections[center_data->connections_found].id = ed->id;
-      center_data->connections[center_data->connections_found].mpirank = ed->mpi_rank;
-      center_data->connections[center_data->connections_found].tree = ed->tree; 
-      center_data->connections_found++;      
+          sub_data->element_datas[sub_data->subdomain_total_element_size].core_faces[0] = p4est_corner_faces[core_info->corner][0];
+          sub_data->element_datas[sub_data->subdomain_total_element_size].core_faces[1] = p4est_corner_faces[core_info->corner][1];
+#endif
+        }
+        /* add side element to subdomain */
+        sub_data->element_datas[sub_data->subdomain_total_element_size].id = side_ed->id;
+        sub_data->element_datas[sub_data->subdomain_total_element_size].mpirank = side_ed->mpi_rank;
+        sub_data->element_datas[sub_data->subdomain_total_element_size].tree = side_ed->tree;
+        sub_data->element_datas[sub_data->subdomain_total_element_size].tree_quadid = side_ed->tree_quadid;
+        sub_data.element_datas[sub_data.subdomain_total_element_size].is_core = 0;
+        sub_data.element_datas[sub_data.subdomain_total_element_size].deg = side_ed->deg;
+        sub_data->subdomain_total_element_size++;      
+      }
     }
-  }  
+  }
 }
 
-
 void
-d4est_solver_schwarz_get_center_data
+d4est_solver_schwarz_init_subdomain_metadata
 (
  p4est_t* p4est,
- int element,
- d4est_solver_schwarz_subdomain_data_t* subdomain_data
+ d4est_ghost_t* d4est_ghost,
+ d4est_solver_schwarz_subdomain_data_t* schwarz_data
 )
 {
-#if (P4EST_DIM)==3
-  int max_connections = 57;
-#else
-  int max_connections = 13;
-#endif
-
-    corner_data_t corner_data;
-  corner_data.is_corner = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
-  corner_data.is_edge = P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
-
-  for (int i = 0; i < p4est->local_num_quadrants; i++){
-    corner_data.is_corner[i] = -1;
-  }
-
-  for (int i = 0; i < 27*4; i++){
-    corner_data.connections[i].id = -1;
-    corner_data.connections[i].faces[0] = -1;
-    corner_data.connections[i].faces[1] = -1;
-    corner_data.connections[i].faces[2] = -1;
-  }
-  
-  corner_data.connections_found = 0;
-
-  int schwarz_center = 10;
-  /* for (int i = 0; i < (P4EST_CHILDREN); i++){ */
     
-    corner_data.element = schwarz_center;
-    corner_data.process = 0;
-    /* corner_data.corner = i; */
-    /* corner_data.edge = -1; */
 #if (P4EST_DIM)==3
-    p8est_iterate (p4est,
-                   d4est_ghost->ghost,
-                   &corner_data,
-                   NULL,
-                   NULL,
-                   NULL,
-                   iter_corner_callback);
+  p8est_iterate (p4est,
+                 d4est_ghost->ghost,
+                 &schwarz_data,
+                 NULL,
+                 NULL,
+                 NULL,
+                 d4est_solver_schwarz_corner_callback);
 
 #else
-    p4est_iterate (p4est,
-                   d4est_ghost->ghost,
-                   &corner_data,
-                   NULL,
-                   /* NULL, */
-                   NULL,
-                   iter_corner_callback);
+  p4est_iterate (p4est,
+                 d4est_ghost->ghost,
+                 &schwarz_data,
+                 NULL,
+                 /* NULL, */
+                 NULL,
+                 d4est_solver_schwarz_corner_callback);
 #endif
-  
+
+  /* sort */
+  /* build strides and sizes */
 }
-
-void
-d4est_solver_schwarz_restrict_field
-(
- p4est_t* p4est,
- d4est_solver_schwarz_center_data_t* center_data, /* restricted field will have same sorting as center_data */
- d4est_factors_t* factors,
- double* field,
- double* restricted_field
-){
-  D4EST_ASSERT(p4est->mpisize == 1);
-  for (int i = 0; i < subdomain_size; i++){
-
-  }
-
-  
-}
-
-void
-d4est_solver_schwarz_restrict_transpose_field_single_core
-(
- p4est_t* p4est,
- d4est_solver_schwarz_center_data_t* center_data, /* restricted field needs to be sorted in same manner as center data */
- double* field,
- double* restricted_field
-)
-{
-  D4EST_ASSERT(p4est->mpisize == 1);
-}
-
-void
-d4est_solver_schwarz_apply_lhs_single_core
-(
-
-
-){
-  /* transpose restrict */
-  /* apply op */
-  /* restrict */
-}
-
-/* void */
-/* d4est_solver_schwarz_add_correction */
-/* ( */
-
-/* ) */
-/* { */
-/*   for (int i = 0; i < schwarz_data->num_subdomain; i++){ */
-/*     d4est_solver_schwarz_get_subdomain_data(p4est, i, &schwarz_data->subdomain_data[i]); */
-/*   } */
-/* } */
-
 
 d4est_solver_schwarz_data_t*
 d4est_solver_schwarz_init
 (
  p4est_t* p4est,
- int restricted_size,
- d4est_solver_schwarz_weight_type_t weight_type
+ int num_nodes_overlap
 )
 {
+  D4EST_ASSERT(num_nodes_overlap > 0);
   d4est_solver_schwarz_data_t* schwarz_data = P4EST_ALLOC(d4est_solver_schwarz_data_t, 1);
   schwarz_data->num_subdomains = p4est->local_num_quadrants;
   schwarz_data->subdomain_data = P4EST_ALLOC(d4est_solver_subdomain_data_t, schwarz_data->num_subdomains);
-  schwarz_data->weight_type = weight_type;
-
+  schwarz_data->num_nodes_overlap = num_nodes_overlap;
+  int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13; 
   /* fill subdomains */
   for (int i = 0; i < schwarz_data->num_subdomain; i++){
-    d4est_solver_schwarz_get_subdomain_data(p4est, i, &schwarz_data->subdomain_data[i]);
+    schwarz_data->subdomain_data.element_datas = P4EST_ALLOC(d4est_solver_schwarz_element_data_t, max_connections);
   }
+
+  d4est_solver_schwarz_init_subdomain_metadata(p4est, schwarz_data);
   
   return schwarz_data;
 }
@@ -276,6 +244,10 @@ d4est_solver_schwarz_destroy
  d4est_solver_schwarz_data_t* schwarz_data
 )
 {
-  
+  for (int i = 0; i < schwarz_data->num_subdomain; i++){
+    P4EST_FREE(schwarz_data->subdomain_data[i].element_datas);
+  }
+  P4EST_FREE(schwarz_data->subdomain_data);
+  P4EST_FREE(schwarz_data);
 }
 

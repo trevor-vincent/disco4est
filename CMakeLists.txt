@@ -328,11 +328,7 @@ set(CTEST_MEMORYCHECK_COMMAND /usr/bin/valgrind)
 set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/suppressions.txt" )
 
 add_d4est_unit_test_3d(test_d4est_vtk test_d4est_vtk.c Unit test_d4est_vtk)
-# add_d4est_unit_test_3d(test_d4est_iterate_2 test_d4est_iterate_2.c Unit test_d4est_iterate_2)
-add_d4est_unit_test_3d(test_d4est_iterate test_d4est_iterate.c Unit test_d4est_iterate)
-add_d4est_unit_test_2d(test_d4est_iterate_2d test_d4est_iterate.c Unit test_d4est_iterate_2d)
-
-add_d4est_unit_test_3d(test_d4est_operators test_d4est_operators.c Unit test_d4est_operators)
+add_d4est_unit_test_3d(d4est_test_cg_eigs d4est_test_cg_eigs.c Unit d4est_test_cg_eigs)
 add_d4est_unit_test_3d(test_d4est_kron test_d4est_kron.c Unit test_d4est_kron)
 add_d4est_unit_test_3d(test_d4est_linalg test_d4est_linalg.c Unit test_d4est_linalg)
 add_d4est_unit_test_3d(test_d4est_ghost_data test_d4est_ghost_data.c Unit test_d4est_ghost_data)
