@@ -5,7 +5,7 @@
 
 typedef struct {
 
-  int mpi_rank;
+  int mpirank;
     
   /* total nodes for this CPU */
   int local_nodes;

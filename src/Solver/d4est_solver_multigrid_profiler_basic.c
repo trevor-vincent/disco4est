@@ -14,7 +14,7 @@ d4est_solver_multigrid_profiler_basic_destroy
 
 static
 void
-d4est_solver_multigrid_profiler_basic_print(d4est_solver_multigrid_profiler_t* profiler, int mpi_rank)
+d4est_solver_multigrid_profiler_basic_print(d4est_solver_multigrid_profiler_t* profiler, int mpirank)
 {
   
  d4est_solver_multigrid_profiler_basic_data_t* profiler_data = profiler->user;
@@ -60,7 +60,7 @@ d4est_solver_multigrid_profiler_basic_print(d4est_solver_multigrid_profiler_t* p
 
 
  zlog_category_t *c_default = zlog_get_category("d4est_d4est_solver_multigrid_profiler");
- if (mpi_rank == 0){
+ if (mpirank == 0){
    zlog_info(c_default, "D4est_Solver_Multigrid_ profiler report");
    zlog_info(c_default, "*************************");
    zlog_info(c_default, "time_start_pre_v = %f, fraction = %f percent", times_global[0], 100*times_global[0]/times_global[9]);

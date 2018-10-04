@@ -130,6 +130,7 @@ SET (
   src/Solver/d4est_solver_multigrid_smoother_cheby.c
   src/Solver/d4est_solver_multigrid_smoother_krylov_petsc.c
   src/Solver/d4est_solver_cg_eigs.c
+  src/Solver/d4est_solver_schwarz.c
   # src/Solver/d4est_solver_jacobian_tester.c
   src/Solver/d4est_solver_full_matrix.c
   src/Solver/d4est_solver_matrix_symmetry.c

@@ -228,7 +228,7 @@ d4est_databox_get_field_type
 /* ) */
 /* { */
 /*   D4EST_ASSERT(dmd != NULL && dgd != NULL); */
-/*   if (ed->mpi_rank == dmd->mpi_rank){ */
+/*   if (ed->mpirank == dmd->mpirank){ */
 /*     d4est_databox_get_field_on_element(ed, name, type, field_on_local_mesh_if_available, dmd); */
 /*   } */
 /*   else { */
@@ -242,12 +242,12 @@ d4est_databox_get_field_type
 d4est_databox_t*
 d4est_databox_init
 (
- int mpi_rank,
+ int mpirank,
  int* loc_sizes
 )
 {
   d4est_databox_t* s = D4EST_ALLOC(d4est_databox_t, 1);
-  s->mpi_rank = mpi_rank;
+  s->mpirank = mpirank;
 
   for (int i = 0; i < D4EST_FIELD_TYPES; i++){
     s->field_sizes[i] = loc_sizes[i];
@@ -269,7 +269,7 @@ d4est_databox_destroy
                                    &d4est_databox_free_fields_callback, NULL);
 
   d4est_dictionary_clear(&s->fields);
-  s->mpi_rank = -1;
+  s->mpirank = -1;
   for (int i = 0; i < D4EST_FIELD_TYPES; i++){
     s->field_sizes[i] = -1;
   }

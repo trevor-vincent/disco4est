@@ -19,7 +19,7 @@ typedef struct {
 
   /* identification */
   int id;
-  int mpi_rank;
+  int mpirank;
 
   /* TODO: remove these strides and int arrays and put in d4est_mesh_data */
   int sqr_nodal_stride;

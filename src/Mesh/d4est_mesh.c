@@ -568,7 +568,7 @@ d4est_mesh_calculate_mortar_h
 
     for (int f = 0; f < num_faces_mortar; f++){
       int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
-      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
+      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpirank) ? 0 : p4est->local_num_quadrants;
       int element_index = element_id + stride;
       
       h[f] = size_params.j_div_sj_min[element_index*(P4EST_FACES) + face_side]; 
@@ -589,7 +589,7 @@ d4est_mesh_calculate_mortar_h
     for (int f = 0; f < num_faces_mortar; f++){
 
       int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
-      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
+      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpirank) ? 0 : p4est->local_num_quadrants;
       int element_index = element_id + stride;
       h[f] = size_params.j_div_sj_mean[element_index*(P4EST_FACES) + face_side]; 
     }
@@ -627,7 +627,7 @@ d4est_mesh_calculate_mortar_h
     double h [P4EST_HALF];    
     for (int f = 0; f < num_faces_mortar; f++){
       int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
-      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpi_rank) ? 0 : p4est->local_num_quadrants;
+      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpirank) ? 0 : p4est->local_num_quadrants;
       int element_index = element_id + stride;
 
       double volume = size_params.volume[element_index];
@@ -2144,7 +2144,7 @@ d4est_mesh_init_element_data
         elem_data->q[2] = quad->z;
 #endif
 
-        elem_data->mpi_rank = p4est->mpirank;
+        elem_data->mpirank = p4est->mpirank;
         elem_data->id = id_stride;
         elem_data->sqr_nodal_stride = sqr_nodal_stride;
         /* elem_data->sqr_mortar_stride = sqr_mortar_stride; */
@@ -3061,7 +3061,7 @@ d4est_mesh_is_it_a_ghost_element
  p4est_t* p4est,
  d4est_element_data_t* ed
 ){
-  return (p4est->mpirank != ed->mpi_rank);
+  return (p4est->mpirank != ed->mpirank);
 }
 
 double*

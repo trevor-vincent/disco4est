@@ -89,7 +89,7 @@ d4est_ghost_data_init
   for (int tn = 0; tn < num_vecs; tn++){
     for (int gid = 0; gid < d4est_ghost->ghost->ghosts.elem_count; gid++){
       d4est_element_data_t* ghost_elem_data = &d4est_ghost->ghost_elements[gid];
-      int ghost_rank = d4est_ghost->ghost_elements[gid].mpi_rank;
+      int ghost_rank = d4est_ghost->ghost_elements[gid].mpirank;
       int size = d4est_element_data_get_size_of_field
                  (
                   ghost_elem_data,

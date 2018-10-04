@@ -26,7 +26,7 @@ d4est_solver_schwarz_restrict_nodal_field_to_subdomains
       d4est_solver_schwarz_element_data_t ed = sub_data->element_data[j];
 
       double* field_ed = NULL;      
-      if (ed->mpi_rank == p4est->mpirank){
+      if (ed->mpirank == p4est->mpirank){
         field_ed = &field[d4est_factors->element_data[ed->id]->nodal_stride]
       }
       else {

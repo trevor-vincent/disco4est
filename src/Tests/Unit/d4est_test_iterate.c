@@ -269,7 +269,7 @@ iter_corner_callback
 
         corner_data->connections[corner_data->connections_found].id = ed->id;
         corner_data->connections[corner_data->connections_found].is_central_element = 0;
-        corner_data->connections[corner_data->connections_found].mpirank = ed->mpi_rank;
+        corner_data->connections[corner_data->connections_found].mpirank = ed->mpirank;
         corner_data->connections[corner_data->connections_found].tree = ed->tree;
         corner_data->connections[corner_data->connections_found].nodal_stride = ed->nodal_stride;
         corner_data->connections[corner_data->connections_found].shares_what = (shares_face > 0) ? 2 :

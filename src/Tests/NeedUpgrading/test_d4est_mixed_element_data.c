@@ -302,7 +302,7 @@ testd4est_mixed_element_data_print_node_vec
  p4est_t* p4est,
  double* nodal_vec,
  char* name_string,
- int mpi_rank,
+ int mpirank,
  int save_to_file,
  dgmath_jit_dbase_t* dgmath_jit_dbase
 )
@@ -316,7 +316,7 @@ testd4est_mixed_element_data_print_node_vec
   
   if(save_to_file == 1){
     char save_as [200];
-    sprintf(&save_as[0],"rank_%d_%s", mpi_rank, name_string);
+    sprintf(&save_as[0],"rank_%d_%s", mpirank, name_string);
     FILE* f = fopen(&save_as[0], "w");
     if (f == NULL){
       mpi_abort("Error opening file to write node vec!\n");
@@ -337,7 +337,7 @@ testd4est_mixed_element_data_print_node_vec
   }
   
   else {
-    printf("%d: %s = \n", mpi_rank, name_string);
+    printf("%d: %s = \n", mpirank, name_string);
     p4est_iterate(p4est,
                   NULL,
                   (void*)&pnv_user_data,
