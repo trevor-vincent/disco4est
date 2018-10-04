@@ -333,6 +333,9 @@ add_d4est_unit_test_3d(d4est_test_kron d4est_test_kron.c Unit d4est_test_kron)
 add_d4est_unit_test_3d(d4est_test_linalg d4est_test_linalg.c Unit d4est_test_linalg)
 add_d4est_unit_test_3d(d4est_test_ghost_data d4est_test_ghost_data.c Unit d4est_test_ghost_data)
 
+add_d4est_unit_test_3d(d4est_test_laplacian_symmetry d4est_test_laplacian_symmetry.c Unit d4est_test_laplacian_symmetry)
+
+
 add_d4est_bash_regression_test(d4est_test_stamm.sh Regression d4est_test_stamm)
 add_d4est_bash_regression_test(d4est_test_cds.sh Regression d4est_test_constant_density_star)
 add_d4est_bash_regression_test(d4est_test_poisson_sinx.sh Regression d4est_test_poisson_sinx)

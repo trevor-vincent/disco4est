@@ -7,7 +7,7 @@
 #include <sc_reduce.h>
 #include <sc_allgather.h>
 
-void
+int
 d4est_solver_matrix_symmetry
 (
  p4est_t* p4est,
@@ -19,7 +19,7 @@ d4est_solver_matrix_symmetry
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- int print,
+ d4est_solver_test_symmetry_print_option_t print,
  double sym_eps
 )
 {
@@ -102,4 +102,5 @@ d4est_solver_matrix_symmetry
   /* P4EST_FREE(Au_temp); */
   P4EST_FREE(a_mat);
   P4EST_FREE(a_mat_trans);
+  return compare;
 }
