@@ -1,4 +1,6 @@
 #include <pXest.h>
+#include <d4est_linalg.h>
+#include <d4est_kron.h>
 #include <d4est_solver_schwarz_operators.h>
 
 static
@@ -88,11 +90,11 @@ void d4est_solver_schwarz_operators_build_schwarz_weights_1d
   double overlap_size = rmax - rmin;
 
   for (int i = 0; i < restricted_size; i++){
-    schwarz_weights_1d[i] = poly_hat_weight_fcn(r - 2, overlap_size);/* left subdomain element*/
-    schwarz_weights_1d[restricted_size + i] = poly_hat_weight_fcn(r + 2, overlap_size);/* right subdomain element*/
+    schwarz_weights_1d[i] = poly_hat_weight_fcn(r[deg - i] - 2, overlap_size);/* left subdomain element*/
+    schwarz_weights_1d[restricted_size + i] = poly_hat_weight_fcn(r[i] + 2, overlap_size);/* right subdomain element*/
   }
   for (int i = 0; i < deg + 1; i++){
-    schwarz_weights_1d[2*restricted_size + i] = poly_hat_weight_fcn(r, overlap_size); /* core subdomain element*/
+    schwarz_weights_1d[2*restricted_size + i] = poly_hat_weight_fcn(r[i], overlap_size); /* core subdomain element*/
   }  
 }
 
@@ -153,7 +155,7 @@ d4est_solver_schwarz_operators_fetch_schwarz_restrictor_transpose_1d
      deg, 
      res_size,
      size,
-     d4est_operators_build_schwarz_restrictor_transpose_1d,
+     d4est_solver_schwarz_operators_build_schwarz_restrictor_transpose_1d,
      d4est_schwarz_ops
     );
 }
@@ -178,12 +180,12 @@ void d4est_operators_apply_schwarz_restrictor
   if (transpose == D4OPS_NO_TRANSPOSE){
     nodes_in = deg + 1;
     nodes_out = restricted_size;
-    schwarz_1d = d4est_operators_fetch_schwarz_restrictor_1d(d4est_schwarz_ops, deg, restricted_size);
+    schwarz_1d = d4est_solver_schwarz_operators_fetch_schwarz_restrictor_1d(d4est_schwarz_ops, deg, restricted_size);
   }
   else if (transpose == D4OPS_TRANSPOSE) {
     nodes_out = deg + 1;
     nodes_in = restricted_size;
-    schwarz_1d = d4est_operators_fetch_schwarz_restrictor_transpose_1d(d4est_schwarz_ops, deg, restricted_size);
+    schwarz_1d = d4est_solver_schwarz_operators_fetch_schwarz_restrictor_transpose_1d(d4est_schwarz_ops, deg, restricted_size);
   }
   else {
     D4EST_ABORT("Transpose needs to be D4OPS_NO_TRANSPOSE or D4OPS_TRANSPOSE");
@@ -292,7 +294,7 @@ void d4est_operators_apply_schwarz_weights
   int dir;  /* x <-> 0; y <-> 1; z <-> 2  */
   int side; /* left <-> 0; right <-> 1 */
 
-  double* weights_1d = d4est_solver_schwarz_operators_fetch_schwarz_weights(d4est_schwarz_ops, deg, restricted_size);
+  double* weights_1d = d4est_solver_schwarz_operators_fetch_schwarz_weights_1d(d4est_schwarz_ops, deg, restricted_size);
 
   /* populate with core weights if the core or 1's if not the core */
   for (int i = 0; i < dim; i++){
@@ -307,13 +309,13 @@ void d4est_operators_apply_schwarz_weights
       if (faces[i] != -1) {
         d4est_reference_dir_and_side_of_face(faces[i], &dir, &side);
         vecs[dir] = &weights_1d[side * restricted_size];
-        vec_rows[dir] = restricted_size;
+        vec_sizes[dir] = restricted_size;
       }
     }
   }
 
   if (dim == 1){
-    d4est_kron_vec1_dot_x(vecs[0], in, vec_sizes[0], out);
+    d4est_kron_vec_dot_x(vecs[0], in, vec_sizes[0], out);
   }
   else if (dim == 2){
     d4est_kron_vec1_o_vec2_dot_x(vecs[1], vecs[0], in, vec_sizes[1], vec_sizes[0], out);
@@ -343,12 +345,12 @@ d4est_solver_schwarz_operators_init
   d4est_schwarz_ops->schwarz_weights_1d_table = P4EST_ALLOC(double**, max_degree);
   d4est_schwarz_ops->schwarz_restrictor_transpose_1d_table = P4EST_ALLOC(double**, max_degree);
   
-  for (int i = 0; i < d4est_schwarz_ops->max_degree; i++){
+  for (int i = 0; i < d4est_schwarz_ops->d4est_ops->max_degree; i++){
     d4est_schwarz_ops->schwarz_restrictor_1d_table[i] = P4EST_ALLOC(double*, max_degree);
     d4est_schwarz_ops->schwarz_weights_1d_table[i] = P4EST_ALLOC(double*, max_degree);
     d4est_schwarz_ops->schwarz_restrictor_transpose_1d_table[i] = P4EST_ALLOC(double*, max_degree);
 
-    for (int j = 0; j < d4est_schwarz_ops->max_degree; j++){
+    for (int j = 0; j < d4est_schwarz_ops->d4est_ops->max_degree; j++){
       d4est_schwarz_ops->schwarz_restrictor_1d_table[i][j] = NULL;
       d4est_schwarz_ops->schwarz_weights_1d_table[i][j] = NULL;
       d4est_schwarz_ops->schwarz_restrictor_transpose_1d_table[i][j] = NULL;
@@ -365,8 +367,8 @@ d4est_solver_schwarz_operators_destroy
 )
 {
   d4est_schwarz_ops->d4est_ops = NULL;
-  for (int i = 0; i < max_degree; i++){
-    for(int j = 0; j < max_degree; j++){
+  for (int i = 0; i < d4est_schwarz_ops->d4est_ops->max_degree; i++){
+    for(int j = 0; j < d4est_schwarz_ops->d4est_ops->max_degree; j++){
       P4EST_FREE(d4est_schwarz_ops->schwarz_restrictor_1d_table[i][j]);
       P4EST_FREE(d4est_schwarz_ops->schwarz_weights_1d_table[i][j]);
       P4EST_FREE(d4est_schwarz_ops->schwarz_restrictor_transpose_1d_table[i][j]);
@@ -374,8 +376,9 @@ d4est_solver_schwarz_operators_destroy
     P4EST_FREE(d4est_schwarz_ops->schwarz_restrictor_1d_table[i]);
     P4EST_FREE(d4est_schwarz_ops->schwarz_weights_1d_table[i]);
     P4EST_FREE(d4est_schwarz_ops->schwarz_restrictor_transpose_1d_table[i]);
-    P4EST_FREE(d4est_schwarz_ops->schwarz_restrictor_1d_table);
-    P4EST_FREE(d4est_schwarz_ops->schwarz_weights_1d_table);
-    P4EST_FREE(d4est_schwarz_ops->schwarz_restrictor_transpose_1d_table);
   }
+  P4EST_FREE(d4est_schwarz_ops->schwarz_restrictor_1d_table);
+  P4EST_FREE(d4est_schwarz_ops->schwarz_weights_1d_table);
+  P4EST_FREE(d4est_schwarz_ops->schwarz_restrictor_transpose_1d_table);
+  
 }
