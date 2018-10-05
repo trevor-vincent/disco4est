@@ -2810,7 +2810,7 @@ d4est_mesh_compare_two_fields
  double eps
 )
 {
-  printf("%s -> \n", msg);
+  printf("%s\n", msg);
   int fail = 0;
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;

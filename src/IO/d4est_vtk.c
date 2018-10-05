@@ -1294,7 +1294,7 @@ d4est_vtk_write_element_data
  double ** float_values,
  int num_element_int_fields,
  const char ** int_names,
- double ** int_values,
+ int ** int_values,
  d4est_vtk_output_type_t output_type
 )
 {
@@ -1690,7 +1690,7 @@ d4est_vtk_save_aux
  const char ** element_float_field_names,
  double ** element_float_fields,
   const char ** element_int_field_names,
- double ** element_int_fields,
+ int ** element_int_fields,
  const char* folder,
  int sub_folder_number
 ){
@@ -1782,7 +1782,7 @@ d4est_vtk_save
  const char ** element_float_field_names,
  double ** element_float_fields,
  const char ** element_int_field_names,
- double ** element_int_fields,
+ int ** element_int_fields,
  int sub_folder_number
 )
 {

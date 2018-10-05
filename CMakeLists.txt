@@ -219,6 +219,7 @@ set_property(TARGET d4est_test APPEND_STRING PROPERTY
 set_property(TARGET d4est PROPERTY C_STANDARD 99)
 set_property(TARGET d8est PROPERTY C_STANDARD 99)
 set_property(TARGET d8est_test PROPERTY C_STANDARD 99)
+set_property(TARGET d4est_test PROPERTY C_STANDARD 99)
 
 function(add_d4est_problem_3d exec src parent_dir)
   add_executable(${exec} src/driver.c ${CMAKE_SOURCE_DIR}/src/Problems/${parent_dir}/${src})
@@ -269,6 +270,7 @@ function(add_d4est_unit_test_3d exec src parent_dir test_name)
   add_test(NAME ${test_name} COMMAND ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
   # target_compile_definitions(${exec} PRIVATE DIM=3)
   target_compile_definitions(${exec} PRIVATE DIM=3 D4EST_TEST=1)
+  # target_compile_definitions(${exec} PRIVATE --fprofile-arcs --ftest-coverage)
   set_target_properties(${exec}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/"
@@ -290,9 +292,18 @@ endfunction()
 
 function(add_d4est_unit_test_2d exec src parent_dir test_name)
   add_executable(${exec} ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/${src})
+
+  # SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+  # SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
   target_link_libraries(${exec} d4est_test)
   add_test(NAME ${test_name} COMMAND ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
   target_compile_definitions(${exec} PRIVATE DIM=2 D4EST_TEST=1)
+  # target_compile_definitions(${exec} PRIVATE --fprofile-arcs --ftest-coverage)
+
+
+  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+  
   set_target_properties(${exec}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/"
@@ -320,6 +331,11 @@ function(add_d4est_bash_regression_test exec parent_dir test_name)
     add_test(NAME ${test_name} COMMAND bash ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)  
 endfunction()
 
+# if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+#     find_program( CODECOV_GCOV gcov )
+#     add_definitions( -fprofile-arcs -ftest-coverage )
+#     link_libraries( gcov )
+# endif ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 
 ##
 ## Tests
@@ -335,6 +351,7 @@ add_d4est_unit_test_3d(d4est_test_linalg d4est_test_linalg.c Unit d4est_test_lin
 add_d4est_unit_test_3d(d4est_test_ghost_data d4est_test_ghost_data.c Unit d4est_test_ghost_data)
 
 add_d4est_unit_test_3d(d4est_test_laplacian_symmetry d4est_test_laplacian_symmetry.c Unit d4est_test_laplacian_symmetry)
+add_d4est_unit_test_3d(d4est_test_laplacian_consistency d4est_test_laplacian_consistency.c Unit d4est_test_laplacian_consistency)
 
 
 add_d4est_bash_regression_test(d4est_test_stamm.sh Regression d4est_test_stamm)

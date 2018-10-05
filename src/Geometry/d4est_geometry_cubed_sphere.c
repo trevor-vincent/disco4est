@@ -28,8 +28,12 @@ int d4est_geometry_cubed_sphere_get_number_of_regions
   else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_INNEROUTER_WEDGE){
     return 1;
   }
+  else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_WITH_SPHERE_HOLE){
+    return 1;
+  }
+  
   else {
-    D4EST_ABORT("Not supported yet");
+    D4EST_ABORT("Geometry not supported yet");
     return -1;
   }
 }
@@ -70,8 +74,11 @@ int d4est_geometry_cubed_sphere_get_region
   else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_INNEROUTER_WEDGE){
     return tree;
   }
+  else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_WITH_SPHERE_HOLE){
+    return 0;
+  }
   else {
-    D4EST_ABORT("Not supported yet");
+    D4EST_ABORT("Geometry not supported yet");
   }
 }
 

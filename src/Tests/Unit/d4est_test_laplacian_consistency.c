@@ -14,11 +14,12 @@
 #include <d4est_solver_matrix_symmetry.h>
 #include <d4est_util.h>
 #include <d4est_norms.h>
+#include <d4est_vtk.h>
 #include <limits.h>
 #include <zlog.h>
 
 
-#define D4EST_REAL_EPS 100*1e-5
+#define D4EST_REAL_EPS 100*1e-15
 #if (P4EST_DIM)==2
 #define TEST_DEG_INIT 2
 #else
@@ -27,7 +28,7 @@
 
 
 static void
-d4est_test_poisson_symmetry_apply_lhs
+d4est_test_apply_lhs
 (
  p4est_t* p4est,
  d4est_ghost_t* ghost,
@@ -45,6 +46,62 @@ d4est_test_poisson_symmetry_apply_lhs
 }
 
 
+double
+poly_vec_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+){
+
+#if (P4EST_DIM)==3
+  return x*x + y*y + z*z;
+#else
+  return x*x + y*y;
+#endif
+}
+
+
+double
+boundary_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void *user
+)
+{
+  return poly_vec_fcn(x,
+                      y,
+#if(P4EST_DIM)==3
+                      z,
+#endif
+                      user);
+}
+
+double
+neg_laplacian_poly_vec_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+){
+#if (P4EST_DIM)==3
+  return -6.;
+#else
+  return -4.;
+#endif
+}
+
+
 static void
 problem_set_degrees_amr
 (
@@ -56,29 +113,6 @@ problem_set_degrees_amr
 
 }
 
-
-static p4est_t*
-problem_build_p4est
-(
- sc_MPI_Comm mpicomm,
- p4est_connectivity_t* conn,
- p4est_locidx_t min_quadrants,
- int min_level,
- int fill_uniform
-)
-{
-  return p4est_new_ext
-    (
-     mpicomm,
-     conn,
-     min_quadrants,
-     min_level,
-     fill_uniform,
-     sizeof(d4est_element_data_t),
-     NULL,
-     NULL
-    );
-}
 
 
 int main(int argc, char *argv[])
@@ -117,16 +151,16 @@ int main(int argc, char *argv[])
 #endif
 
   if (proc_rank == 0)
-    printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry.input");
+    printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] :      "d4est_test_laplacian_consistency.input");
  
  
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
-                                                    (argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry.input",
+                                                    (argc == 2) ? argv[1] :      "d4est_test_laplacian_consistency.input",
                                                     "geometry",
                                                     c_geom);
 
-  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry.input", d4est_geom);
+  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      "d4est_test_laplacian_consistency.input", d4est_geom);
 
   p4est_t* p4est;
   p4est = p4est_new_ext
@@ -147,7 +181,6 @@ int main(int argc, char *argv[])
   
   d4est_ghost_t* d4est_ghost = d4est_ghost_init(p4est);
      
-
   if (proc_rank == 0){
     printf("[D4EST_INFO]: mpisize = %d\n", proc_size);
   }
@@ -164,9 +197,8 @@ int main(int argc, char *argv[])
   /* start just-in-time dg-math */
   d4est_operators_t* d4est_ops = d4est_ops_init(20);
   d4est_mesh_data_t* d4est_factors = d4est_mesh_data_init(p4est);
-  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry.input", "quadrature");
+  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] :      "d4est_test_laplacian_consistency.input", "quadrature");
   
-
 
   d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
                                          (
@@ -190,15 +222,14 @@ int main(int argc, char *argv[])
   p4est_partition(p4est, 1, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
 
+  int same2 = 0;
+  int same = 0;
+  
   /* d4est_amr_t* d4est_amr_random = d4est_amr_init_uniform_h(p4est, 7, 1); */
   int num_of_amr_steps = 1;
   d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, num_of_amr_steps);
 
-  int same = 0;
-  int same2 = 0;
-  int nodes = -1;
   for (int i = 0; i < num_of_amr_steps; i++){
-
     
     d4est_amr_step
       (
@@ -209,8 +240,6 @@ int main(int argc, char *argv[])
        NULL,
        NULL
       );
-
-    
 
     d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
                                            (
@@ -241,92 +270,222 @@ int main(int argc, char *argv[])
     printf("level = %d, elements = %d, nodes = %d\n", i, p4est->local_num_quadrants, local_nodes);
 
 
-    d4est_elliptic_data_t prob_vecs;
-    prob_vecs.Au = P4EST_ALLOC(double, local_nodes);
-    prob_vecs.u = P4EST_ALLOC(double, local_nodes);
-    /* prob_vecs.rhs = P4EST_ALLOC(double, local_nodes); */
-    prob_vecs.local_nodes = local_nodes;
+    /* d4est_elliptic_data_t prob_vecs; */
+    /* prob_vecs.Au = P4EST_ALLOC(double, local_nodes); */
+    /* prob_vecs.u = P4EST_ALLOC(double, local_nodes); */
+    /* /\* prob_vecs.rhs = P4EST_ALLOC(double, local_nodes); *\/ */
+    /* prob_vecs.local_nodes = local_nodes; */
   
 
-    prob_vecs.field_types = &field_type;
-    prob_vecs.num_of_fields = 1;
-    
+        
     dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
     /* / Setup boundary conditions */
     d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
-    bc_data_for_lhs.dirichlet_fcn = zero_fcn;
+    bc_data_for_lhs.dirichlet_fcn = poly_vec_fcn;
     bc_data_for_lhs.eval_method = eval_method;  
 
     
-    d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, "d4est_test_laplacian_symmetry.input", BC_DIRICHLET, &bc_data_for_lhs);
+    d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, "d4est_test_laplacian_consistency.input", BC_DIRICHLET, &bc_data_for_lhs);
 
 
     d4est_elliptic_eqns_t prob_fcns;
     prob_fcns.build_residual = NULL;
-    prob_fcns.apply_lhs = d4est_test_poisson_symmetry_apply_lhs;
+    prob_fcns.apply_lhs = d4est_test_apply_lhs;
     prob_fcns.user = flux_data_for_apply_lhs;
 
-    d4est_mesh_init_field(
-      p4est,
-      prob_vecs.u,
-      sinpix_fcn,
-      d4est_ops, // unnecessary?
-      d4est_geom, // unnecessary?
-      d4est_factors,
-      INIT_FIELD_ON_LOBATTO,
-      NULL
-    );
+    double* poly_vec = P4EST_ALLOC(double, local_nodes);
 
+
+    d4est_mesh_init_field(
+                          p4est,
+                          poly_vec,
+                          poly_vec_fcn,
+                          d4est_ops, // unnecessary?
+                          d4est_geom, // unnecessary?
+                          d4est_factors,
+                          INIT_FIELD_ON_LOBATTO,
+                          NULL
+    );
+    
+    double* Apoly_vec = P4EST_ALLOC(double, local_nodes);
+
+    double* Abc_poly_vec = P4EST_ALLOC(double, local_nodes);
+    double* Apoly_vec_compare = P4EST_ALLOC(double, local_nodes);
+    double* tmp = P4EST_ALLOC(double, local_nodes);
+    d4est_elliptic_data_t elliptic_data;
+    elliptic_data.u = poly_vec;
+    elliptic_data.Au = Apoly_vec;
+    elliptic_data.local_nodes = local_nodes;
+
+    elliptic_data.field_types = &field_type;
+    elliptic_data.num_of_fields = 1;
+
+    
     d4est_elliptic_eqns_apply_lhs
       (
        p4est,
        d4est_ghost,
        d4est_ghost_data,
        &prob_fcns,
-       &prob_vecs,
+       &elliptic_data,
        d4est_ops,
        d4est_geom,
        d4est_quad,
        d4est_factors
       );
 
-    printf("Au[2] = %.15f\n", prob_vecs.Au[2]);    
+    /* int local_nodes = local_nodes; */
+    double* f = P4EST_ALLOC(double, local_nodes);
 
-    same2 = fabs(prob_vecs.Au[2] - 0.34630989) < (D4EST_REAL_EPS);
+    /* d4est_mesh_init_field */
+    /*   ( */
+    /*    p4est, */
+    /*    f, */
+    /*    neg_laplacian_poly_vec_fcn, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    NULL */
+    /*   ); */
+
+
+    d4est_mesh_init_field
+      (
+       p4est,
+       f,
+       neg_laplacian_poly_vec_fcn,
+       d4est_ops, // unnecessary?
+       d4est_geom, // unnecessary?
+       d4est_factors,
+       INIT_FIELD_ON_LOBATTO,
+       NULL
+      );
+      
+    int* element_id = P4EST_ALLOC(int, p4est->local_num_quadrants);
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt)
+      {
+        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+        sc_array_t* tquadrants = &tree->quadrants;
+        int Q = (p4est_locidx_t) tquadrants->elem_count;
+        for (int q = 0; q < Q; ++q) {
+          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+          d4est_element_data_t* ed = quad->p.user_data;
+          d4est_quadrature_volume_t mesh_object;
+          mesh_object.dq = ed->dq;
+          mesh_object.tree = ed->tree;
+          mesh_object.element_id = ed->id;
+          mesh_object.q[0] = ed->q[0];
+          mesh_object.q[1] = ed->q[1];
+#if (P4EST_DIM)==3
+          mesh_object.q[2] = ed->q[2];
+#endif
+          element_id[ed->id] = ed->id;
+          
+          double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
+                                                                        ed);
+
+          /* printf("ed->deg = %d\n", ed->deg); */
+          D4EST_ASSERT(ed->deg >= 2);
+        
+          d4est_quadrature_apply_mass_matrix
+            (
+             d4est_ops,
+             d4est_geom,
+             d4est_quad,
+             &mesh_object,
+             QUAD_OBJECT_VOLUME,
+             QUAD_INTEGRAND_UNKNOWN,
+             &f[ed->nodal_stride],
+             ed->deg,
+             J_quad,
+             ed->deg_quad,
+             &Apoly_vec_compare[ed->nodal_stride]
+            );
+        }
+      }
+    P4EST_FREE(f);
+      
+
+    double biggest_err;
+    int biggest_id;
+    d4est_util_find_biggest_error(Apoly_vec, Apoly_vec_compare, local_nodes, &biggest_err, &biggest_id);
+    int element = d4est_mesh_debug_find_node(p4est, biggest_id);
+    printf("biggest_err, biggest_id, element = %.25f, %d, %d\n", biggest_err, biggest_id, element);
+    printf("Apoly_vec[i], Apoly_vec_compare[i] = %.25f, %.25f\n",
+           Apoly_vec[biggest_id], Apoly_vec_compare[biggest_id]);
+
+
     
-    same = d4est_solver_matrix_symmetry
-               (
-                p4est,
-                d4est_ghost,
-                d4est_ghost_data,
-                &prob_fcns,
-                &prob_vecs,
-                d4est_ops,
-                d4est_geom,
-                d4est_quad,
-                d4est_factors,
-                SYM_PRINT_UNEQUAL_PAIRS_AND_XYZ,
-                D4EST_REAL_EPS
-               );
-
-
-
+/* -0.0034181705065613010412207 */
+    same = fabs(-0.00341817050 - Apoly_vec[biggest_id]) < 100*(D4EST_REAL_EPS);
     
-    P4EST_FREE(prob_vecs.Au);
-    P4EST_FREE(prob_vecs.u);
-    /* P4EST_FREE(prob_vecs.rhs); */
+    same2 = d4est_mesh_compare_two_fields(p4est,
+                                          d4est_factors,
+                                          Apoly_vec,
+                                          Apoly_vec_compare,
+                                          "",
+                                          DISCARD_NOTHING,
+                                          PRINT_ON_ERROR,
+                                          D4EST_REAL_EPS
+                                         );
 
+
+    printf("Are the vecs the same? = %d\n", same2);
+    printf("Is the vec the same as last test? = %d\n", same);
+
+    double* error = P4EST_ALLOC(double, local_nodes);
+    d4est_mesh_compute_point_error
+      (
+       Apoly_vec,
+       Apoly_vec_compare,
+       error,
+       local_nodes
+      );
+
+    d4est_vtk_save
+    (
+     p4est,
+     d4est_ops,
+     "d4est_test_vtk_options.input",
+     "d4est_vtk",
+     (const char*[]){"Apoly_vec", "Apoly_vec_compare", "error", NULL},
+     (double**)((const double*[]){Apoly_vec, Apoly_vec_compare, error, NULL}),
+     NULL,
+     NULL,
+     (const char*[]){"element_id", NULL},
+     (int**)((const int*[]){element_id, NULL}),
+     -1
+    );
+      
+    /* d4est_output_vtk */
+    /*   (p4est, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    Apoly_vec, */
+    /*    Apoly_vec_compare, */
+    /*    error, */
+    /*    input_file, */
+    /*    "testd4est_poisson_2_cubed_sphere", */
+    /*    local_nodes, */
+    /*    level,0); */
+
+    P4EST_FREE(error);
+    P4EST_FREE(element_id);
+    P4EST_FREE(Apoly_vec);
+    P4EST_FREE(poly_vec);
+    P4EST_FREE(Abc_poly_vec);
+    P4EST_FREE(Apoly_vec_compare);
+    P4EST_FREE(tmp);
 
     if (d4est_ghost_data != NULL){
       d4est_ghost_data_destroy(d4est_ghost_data);
       d4est_ghost_data = NULL;
     } 
 
-  d4est_poisson_flux_destroy(flux_data_for_apply_lhs);
-    
-  }  
-
+    d4est_poisson_flux_destroy(flux_data_for_apply_lhs);
+  }
 
   d4est_ghost_destroy(d4est_ghost);
 
@@ -346,4 +505,3 @@ int main(int argc, char *argv[])
   else
     return 1;
 }
-/*  */
