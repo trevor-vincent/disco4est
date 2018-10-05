@@ -11,8 +11,7 @@ double quintic_poly
 static
 double phi_fcn
 (
- double r,
- d4est_solver_schwarz_weight_function_t weight_type
+ double r
 )
 {
   if (r < -1 || r > 1){
@@ -57,7 +56,7 @@ void d4est_solver_schwarz_operators_build_schwarz_restrictor_1d
 double*
 d4est_solver_schwarz_operators_fetch_schwarz_restrictor_1d
 (
- d4est_solver_schwarz_operators_t d4est_schwarz_ops,
+ d4est_solver_schwarz_operators_t* d4est_schwarz_ops,
  int deg,
  int restricted_size
 )

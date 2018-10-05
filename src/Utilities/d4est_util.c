@@ -428,8 +428,6 @@ double d4est_util_sum_array_dbl(double * restrict array, int N)
   return sum;
 }
 
-#include <stdlib.h>
-
 /* Comparison function. Receives two generic (void) pointers. */
 static int
 d4est_util_sort_double_callback(const void *p, const void *q)

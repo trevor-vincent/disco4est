@@ -432,6 +432,15 @@ int main(int argc, char *argv[])
                                          );
 
 
+    double u_sum = d4est_util_sum_array_dbl(poly_vec, local_nodes);
+    double Au_sum = d4est_util_sum_array_dbl(Apoly_vec, local_nodes);
+    double Au_compare_sum = d4est_util_sum_array_dbl(Apoly_vec_compare, local_nodes);
+
+    printf("local_nodes = %d\n", local_nodes);
+    printf("quadrants = %d\n", p4est->local_num_quadrants);
+    printf("u sum = %.25f\n", u_sum);
+    printf("Au sum = %.25f\n", Au_sum);
+    printf("Au compare sum = %.25f\n", Au_compare_sum);
     printf("Are the vecs the same? = %d\n", same2);
     printf("Is the vec the same as last test? = %d\n", same);
 
