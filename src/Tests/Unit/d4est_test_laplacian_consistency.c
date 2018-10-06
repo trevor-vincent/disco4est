@@ -419,7 +419,7 @@ int main(int argc, char *argv[])
 
     
 /* -0.0034181705065613010412207 */
-    same = fabs(-0.00341817050 - Apoly_vec[biggest_id]) < 100*(D4EST_REAL_EPS);
+    same = fabs(-0.00341817050 - Apoly_vec[33010]) < 100*(D4EST_REAL_EPS);
     
     same2 = d4est_mesh_compare_two_fields(p4est,
                                           d4est_factors,
