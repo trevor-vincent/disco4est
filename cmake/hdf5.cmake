@@ -44,7 +44,7 @@ message(STATUS "Use hdf5 library: ${HDF5_LIBRARIES}")
 
 macro(hdf5_build)
   ExternalProject_Add(hdf5
-    URL                 https://support.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.10.4.tar.gz
+    URL                 https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/hdf5-1.10.1.tar.gz
     PREFIX              ${CMAKE_BINARY_DIR}/third_party/hdf5
     CMAKE_ARGS
     -DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_BINARY_DIR}/third_party/hdf5/install
