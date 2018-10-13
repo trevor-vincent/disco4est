@@ -37,6 +37,33 @@ tridiag_gershgorin
 }
 
 
+
+static void
+tridiag_gershgorin_new
+(
+ int i,
+ int local_nodes,
+ double a0,
+ double b0,
+ double a1,
+ double b1,
+ double* max,
+ double* min
+)
+{
+  double diag, offdiag_sum;
+  if (i != 0) {
+    diag = (1./a1 + b0/a0);
+    offdiag_sum = fabs(sqrt(b0)/a0);
+  }
+  else {
+    diag = 1./a1;
+    offdiag_sum = sqrt(b1)/a1;
+  }
+  *max = diag + offdiag_sum;
+  *min = diag - offdiag_sum;
+}
+
 /* static void */
 /* tridiag_gershgorin_new */
 /* ( */
@@ -99,6 +126,7 @@ cg_eigs
  d4est_mesh_data_t* d4est_factors,
  int imax,
  int print_spectral_bound_iterations,
+ int use_new, /* the new gershgorin function is correct, the old one works but had a typo which makes the upper bound higher than it should be, set use_new = 1 to use the correct version*/
  double* spectral_bound
 )
 {
@@ -220,7 +248,12 @@ cg_eigs
     beta = delta_new/delta_old;
     d4est_linalg_vec_xpby(r, beta, d, local_nodes);
 
+    if(!use_new){
     tridiag_gershgorin(i, local_nodes, alpha_old, beta_old, alpha, beta, &temp_max, &temp_min);
+    }
+    else {
+    tridiag_gershgorin_new(i, local_nodes, alpha_old, beta_old, alpha, beta, &temp_max, &temp_min);
+    }
 
     if (i > 0){
       *spectral_bound = d4est_util_max( *spectral_bound, temp_max );  

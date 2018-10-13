@@ -15,7 +15,7 @@ constant_density_star_robin_coeff_sphere_fcn
  double z,
 #endif
  void* user,
- d4est_poisson_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_flux_boundary_data_t* boundary_data,
  int mortar_node
 )
 {
@@ -32,7 +32,7 @@ constant_density_star_robin_bc_rhs_for_jac_fcn
  double z,
 #endif
  void* user,
- d4est_poisson_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_flux_boundary_data_t* boundary_data,
  int mortar_node
 )
 {
@@ -48,7 +48,7 @@ constant_density_star_robin_bc_rhs_for_res_fcn
  double z,
 #endif
  void* user,
- d4est_poisson_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_flux_boundary_data_t* boundary_data,
  int mortar_node
 )
 {
@@ -79,8 +79,8 @@ typedef struct {
   int use_matrix_operator;
   d4est_solver_multigrid_data_t* mg_data;
   constant_density_star_params_t* constant_density_star_params;
-  d4est_poisson_flux_data_t* flux_data_for_jac;
-  d4est_poisson_flux_data_t* flux_data_for_res;
+  d4est_laplacian_flux_data_t* flux_data_for_jac;
+  d4est_laplacian_flux_data_t* flux_data_for_res;
   d4est_amr_smooth_pred_params_t* smooth_pred_params;
   
 } problem_ctx_t;
@@ -450,9 +450,9 @@ constant_density_star_build_residual
 )
 {
   problem_ctx_t* ctx = user;
-  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_res;
+  d4est_laplacian_flux_data_t* flux_data = ctx->flux_data_for_res;
   
-  d4est_poisson_apply_aij(p4est,
+  d4est_laplacian_apply_aij(p4est,
                           d4est_ghost,
                           d4est_ghost_data,
                           prob_vecs,
@@ -615,10 +615,10 @@ void constant_density_star_apply_jac
 )
 {
   problem_ctx_t* ctx = user;
-  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_jac;
+  d4est_laplacian_flux_data_t* flux_data = ctx->flux_data_for_jac;
 
   
-  d4est_poisson_apply_aij(p4est,
+  d4est_laplacian_apply_aij(p4est,
                           d4est_ghost,
                           d4est_ghost_data,
                           prob_vecs,

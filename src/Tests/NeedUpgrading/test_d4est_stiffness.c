@@ -9,8 +9,8 @@
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
 #include <d4est_util.h>
 #include <limits.h>
 #include <zlog.h>
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
   
-  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, input_file, poly_vec_fcn, NULL, get_deg_mortar_quad, &deg_data);
+  d4est_laplacian_flux_data_t* flux_data_with_bc = d4est_laplacian_flux_new(p4est, input_file, poly_vec_fcn, NULL, get_deg_mortar_quad, &deg_data);
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
       elliptic_data.Au = Apoly_vec;
       elliptic_data.local_nodes = local_nodes;
 
-      d4est_poisson_flux_init_element_data
+      d4est_laplacian_flux_init_element_data
         (
          p4est,
          d4est_ops,
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
          elliptic_data.Au
         );
       
-      d4est_poisson_apply_stiffness_matrix
+      d4est_laplacian_apply_stiffness_matrix
         (
          p4est,
          d4est_ops,
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
 
       d4est_util_fill_array(Apoly_vec, 0., local_nodes);
 
-      d4est_poisson_apply_mortar_matrices
+      d4est_laplacian_apply_mortar_matrices
         (
          p4est,
          ghost,
@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
         rhs_last_node_error[i] = fabs(rhs_last_node[i] - rhs_last_node[i-1]);
       }
 
-      d4est_poisson_apply_aij(p4est,ghost, ghost_data, &elliptic_data, flux_data_with_bc, d4est_ops, d4est_geom, d4est_quad);
+      d4est_laplacian_apply_aij(p4est,ghost, ghost_data, &elliptic_data, flux_data_with_bc, d4est_ops, d4est_geom, d4est_quad);
       double* cons_error = P4EST_ALLOC(double, local_nodes);
       d4est_linalg_vec_axpyeqz(-1., Apoly_vec, Apoly_vec_compare, cons_error, local_nodes);
       double l2_cons_err = d4est_mesh_compute_l2_norm_sqr(p4est,d4est_ops, d4est_geom, d4est_quad, cons_error, local_nodes, DO_NOT_STORE_LOCALLY);
@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
-  d4est_poisson_flux_destroy(flux_data_with_bc);
+  d4est_laplacian_flux_destroy(flux_data_with_bc);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);

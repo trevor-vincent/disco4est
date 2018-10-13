@@ -18,8 +18,8 @@
 #include <ini.h>
 #include <d4est_element_data.h>
 #include <d4est_estimator_stats.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux_sipg.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux_sipg.h>
 #include <d4est_solver_newton.h>
 #include <d4est_solver_multigrid.h>
 #include <d4est_krylov_pc_multigrid.h>
@@ -272,44 +272,44 @@ problem_init
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
  
-  d4est_poisson_dirichlet_bc_t bc_data_for_bi;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_bi;
   bc_data_for_bi.dirichlet_fcn = zero_fcn;
   bc_data_for_bi.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
-  d4est_poisson_flux_data_t* flux_data_for_bi
-    = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_bi);
+  d4est_laplacian_flux_data_t* flux_data_for_bi
+    = d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_bi);
 
   
-  d4est_poisson_flux_data_t* flux_data_for_jac = NULL;
-  d4est_poisson_flux_data_t* flux_data_for_res = NULL;
+  d4est_laplacian_flux_data_t* flux_data_for_jac = NULL;
+  d4est_laplacian_flux_data_t* flux_data_for_res = NULL;
 
-  d4est_poisson_dirichlet_bc_t bc_data_dirichlet_for_jac;
+  d4est_laplacian_dirichlet_bc_t bc_data_dirichlet_for_jac;
   bc_data_dirichlet_for_jac.dirichlet_fcn = zero_fcn;
   bc_data_dirichlet_for_jac.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
-  d4est_poisson_dirichlet_bc_t bc_data_dirichlet_for_res;
+  d4est_laplacian_dirichlet_bc_t bc_data_dirichlet_for_res;
   bc_data_dirichlet_for_res.dirichlet_fcn = zero_fcn;
   bc_data_dirichlet_for_res.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
-  d4est_poisson_robin_bc_t bc_data_robin_for_jac;
+  d4est_laplacian_robin_bc_t bc_data_robin_for_jac;
   bc_data_robin_for_jac.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
   bc_data_robin_for_jac.robin_rhs = two_punctures_robin_bc_rhs_fcn;
 
-  d4est_poisson_robin_bc_t bc_data_robin_for_res;
+  d4est_laplacian_robin_bc_t bc_data_robin_for_res;
   bc_data_robin_for_res.robin_coeff = two_punctures_robin_coeff_sphere_fcn;
   bc_data_robin_for_res.robin_rhs = two_punctures_robin_bc_rhs_fcn;  
   
   if(init_params.use_dirichlet){
 
     flux_data_for_jac
-      = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_jac);
+      = d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_jac);
   
     flux_data_for_res
-      = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_dirichlet_for_res);
+      = d4est_laplacian_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_dirichlet_for_res);
   }
   else {  
-    flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, BC_ROBIN, &bc_data_robin_for_jac);
-    flux_data_for_res = d4est_poisson_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_robin_for_res);
+    flux_data_for_jac = d4est_laplacian_flux_new(p4est, input_file, BC_ROBIN, &bc_data_robin_for_jac);
+    flux_data_for_res = d4est_laplacian_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_robin_for_res);
   }
   
   problem_ctx_t ctx;
@@ -331,7 +331,7 @@ problem_init
   double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
   double* u_prev = P4EST_ALLOC(double, prob_vecs.local_nodes);
   
-  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_jac->flux_data;
+  d4est_laplacian_flux_sipg_params_t* sipg_params = flux_data_for_jac->flux_data;
   
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
@@ -514,8 +514,8 @@ problem_init
   d4est_geometry_destroy(d4est_geom_compactified);
   d4est_amr_destroy(d4est_amr);
   d4est_norms_linear_fit_destroy(l2_linear_fit);
-  d4est_poisson_flux_destroy(flux_data_for_jac);
-  d4est_poisson_flux_destroy(flux_data_for_res);
+  d4est_laplacian_flux_destroy(flux_data_for_jac);
+  d4est_laplacian_flux_destroy(flux_data_for_res);
   P4EST_FREE(error);
 
   P4EST_FREE(u_prev);

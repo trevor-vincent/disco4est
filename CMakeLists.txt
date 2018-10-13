@@ -83,9 +83,9 @@ SET (
   src/dGMath/d4est_ip_energy_norm.c
   src/dGMath/d4est_lgl.c
   src/dGMath/d4est_reference.c
-  src/dGMath/d4est_poisson.c
-  src/dGMath/d4est_poisson_flux.c
-  src/dGMath/d4est_poisson_flux_sipg.c
+  src/dGMath/d4est_laplacian.c
+  src/dGMath/d4est_laplacian_flux.c
+  src/dGMath/d4est_laplacian_flux_sipg.c
   src/Geometry/d4est_geometry_brick.c
   src/Geometry/d4est_geometry.c
   src/Estimators/d4est_estimator_stats.c
@@ -132,6 +132,7 @@ SET (
   src/Solver/d4est_solver_cg_eigs.c
   src/Solver/d4est_solver_schwarz.c
   src/Solver/d4est_solver_schwarz_operators.c
+  # src/Solver/d4est_solver_schwarz_helpers.c
   # src/Solver/d4est_solver_jacobian_tester.c
   src/Solver/d4est_solver_full_matrix.c
   src/Solver/d4est_solver_matrix_symmetry.c

@@ -9,8 +9,8 @@
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
 #include <d4est_util.h>
 #include <d4est_norms.h>
 #include <limits.h>
@@ -144,9 +144,9 @@ int main(int argc, char *argv[])
   p4est_init(NULL, SC_LP_ERROR);
 
 #if (P4EST_DIM)==3
-  const char* input_file = "testd4est_poisson_consistency_curved_3d.input";
+  const char* input_file = "testd4est_laplacian_consistency_curved_3d.input";
 #else
-  const char* input_file = "testd4est_poisson_consistency_curved_2d.input";
+  const char* input_file = "testd4est_laplacian_consistency_curved_2d.input";
 #endif
   
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
@@ -171,8 +171,8 @@ int main(int argc, char *argv[])
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
   
-  d4est_poisson_flux_data_t* flux_data_with_homog_bc = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, input_file, poly_vec_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data_with_homog_bc = d4est_laplacian_flux_new(p4est, input_file, zero_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data_with_bc = d4est_laplacian_flux_new(p4est, input_file, poly_vec_fcn, NULL);
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
       elliptic_data.Au = Apoly_vec;
       elliptic_data.local_nodes = local_nodes;
   
-      d4est_poisson_apply_aij
+      d4est_laplacian_apply_aij
         (
          p4est,
          ghost,
@@ -360,7 +360,7 @@ int main(int argc, char *argv[])
          Apoly_vec_compare,
          error,
          input_file,
-         "testd4est_poisson_2_cubed_sphere",
+         "testd4est_laplacian_2_cubed_sphere",
          local_nodes,
          level,0);
 
@@ -396,8 +396,8 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
-  d4est_poisson_flux_destroy(flux_data_with_homog_bc);
-  d4est_poisson_flux_destroy(flux_data_with_bc);
+  d4est_laplacian_flux_destroy(flux_data_with_homog_bc);
+  d4est_laplacian_flux_destroy(flux_data_with_bc);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);

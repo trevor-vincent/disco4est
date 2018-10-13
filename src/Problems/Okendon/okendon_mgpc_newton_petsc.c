@@ -16,8 +16,8 @@
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux_sipg.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux_sipg.h>
 #include <d4est_solver_newton_petsc.h>
 #include <d4est_solver_krylov_petsc.h>
 #include <multigrid.h>
@@ -60,17 +60,17 @@ problem_init
   int initial_nodes = initial_extents->initial_nodes;
 
   
-  d4est_poisson_dirichlet_bc_t bc_data_for_jac;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_jac;
   bc_data_for_jac.dirichlet_fcn = zero_fcn;
   bc_data_for_jac.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
   
-  d4est_poisson_dirichlet_bc_t bc_data_for_res;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_res;
   bc_data_for_res.dirichlet_fcn = okendon_boundary_fcn;
   bc_data_for_res.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
-  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, problem_set_mortar_degree, NULL);
+  d4est_laplacian_flux_data_t* flux_data_for_jac = d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, problem_set_mortar_degree, NULL);
   
-  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_for_res, problem_set_mortar_degree, NULL);
+  d4est_laplacian_flux_data_t* flux_data_for_res = d4est_laplacian_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_for_res, problem_set_mortar_degree, NULL);
 
   problem_ctx_t ctx;
   ctx.flux_data_for_jac = flux_data_for_jac;
@@ -91,7 +91,7 @@ problem_init
   prob_vecs.u = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.local_nodes = initial_nodes;
 
-   d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_jac->flux_data;
+   d4est_laplacian_flux_sipg_params_t* sipg_params = flux_data_for_jac->flux_data;
   
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
@@ -336,7 +336,7 @@ problem_init
 
   d4est_amr_destroy(d4est_amr);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
-  d4est_poisson_flux_destroy(flux_data_for_jac);
-  d4est_poisson_flux_destroy(flux_data_for_res);
+  d4est_laplacian_flux_destroy(flux_data_for_jac);
+  d4est_laplacian_flux_destroy(flux_data_for_res);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
 }

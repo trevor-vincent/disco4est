@@ -3,8 +3,8 @@
 
 #include <d4est_util.h>
 #include <d4est_element_data.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
 #include <multigrid.h>
 #include <multigrid_matrix_operator.h>
 
@@ -24,8 +24,8 @@ typedef struct {
   int use_matrix_operator;
   d4est_solver_multigrid_data_t* mg_data;
   two_punctures_params_t* two_punctures_params;
-  d4est_poisson_flux_data_t* flux_data_for_jac;
-  d4est_poisson_flux_data_t* flux_data_for_res;
+  d4est_laplacian_flux_data_t* flux_data_for_jac;
+  d4est_laplacian_flux_data_t* flux_data_for_res;
   
 } problem_ctx_t;
 
@@ -443,9 +443,9 @@ void two_punctures_apply_jac
 {
   problem_ctx_t* ctx = user;
   two_punctures_params_t* params = ctx->two_punctures_params;
-  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_jac;
+  d4est_laplacian_flux_data_t* flux_data = ctx->flux_data_for_jac;
   D4EST_ASSERT(params->num_punctures > 0);
-  d4est_poisson_apply_aij(p4est,
+  d4est_laplacian_apply_aij(p4est,
                           ghost,
                           ghost_data,
                           prob_vecs,
@@ -584,9 +584,9 @@ two_punctures_build_residual
 {
   problem_ctx_t* ctx = user;
   two_punctures_params_t* params = ctx->two_punctures_params;
-  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_res;
+  d4est_laplacian_flux_data_t* flux_data = ctx->flux_data_for_res;
   
-  d4est_poisson_apply_aij(p4est,
+  d4est_laplacian_apply_aij(p4est,
                           ghost,
                           ghost_data,
                           prob_vecs,
@@ -618,7 +618,7 @@ two_punctures_robin_coeff_brick_fcn
  double z,
 #endif
  void* user,
- d4est_poisson_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_flux_boundary_data_t* boundary_data,
  int mortar_node
 )
 {
@@ -646,7 +646,7 @@ two_punctures_robin_coeff_sphere_fcn
  double z,
 #endif
  void* user,
- d4est_poisson_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_flux_boundary_data_t* boundary_data,
  int mortar_node
 )
 {
@@ -665,7 +665,7 @@ two_punctures_robin_bc_rhs_fcn
  double z,
 #endif
  void* user,
- d4est_poisson_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_flux_boundary_data_t* boundary_data,
  int mortar_node
 )
 {

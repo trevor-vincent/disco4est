@@ -45,6 +45,10 @@ d4est_solver_multigrid_bottom_solver_cheby_input_handler
     D4EST_ASSERT(pconfig->cheby_print_spectral_bound_iterations == 0);
     pconfig->cheby_print_spectral_bound_iterations = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"cheby_use_new_cg_eigs")) {
+    D4EST_ASSERT(pconfig->cheby_use_new_cg_eigs == 0);
+    pconfig->cheby_use_new_cg_eigs = atoi(value);
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -79,6 +83,7 @@ d4est_solver_multigrid_bottom_solver_cheby
      updater->current_d4est_factors,
      cheby->cheby_eigs_cg_imax,
      cheby->cheby_print_spectral_bound_iterations,
+     cheby->cheby_use_new_cg_eigs,
      &cheby->eig
     );
 
@@ -139,6 +144,7 @@ d4est_solver_multigrid_bottom_solver_cheby_init
   cheby_data->cheby_print_residual_norm = 0;
   cheby_data->cheby_print_spectral_bound = 0;
   cheby_data->cheby_print_spectral_bound_iterations = 0;
+  cheby_data->cheby_use_new_cg_eigs = 0;
   
   if (ini_parse(input_file, d4est_solver_multigrid_bottom_solver_cheby_input_handler, cheby_data) < 0) {
     D4EST_ABORT("Can't load input file");
@@ -160,6 +166,7 @@ d4est_solver_multigrid_bottom_solver_cheby_init
     zlog_debug(c_default,"Cheby print residual norm = %d", cheby_data->cheby_print_residual_norm);
     zlog_debug(c_default,"Cheby print spectral bound = %d", cheby_data->cheby_print_spectral_bound);
     zlog_debug(c_default,"Cheby print spectral bound iterations = %d", cheby_data->cheby_print_spectral_bound_iterations);
+    zlog_debug(c_default, " Smoother use new cg eigs scheme = %d", cheby_data->cheby_use_new_cg_eigs);
   }
 
   bottom_solver->user = cheby_data;

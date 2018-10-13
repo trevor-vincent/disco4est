@@ -16,8 +16,8 @@
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux_sipg.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux_sipg.h>
 #include <d4est_solver_newton_petsc.h>
 #include <d4est_solver_krylov_petsc.h>
 #include <d4est_util.h>
@@ -121,8 +121,8 @@ problem_init
   
   d4est_mesh_data_t* geometric_factors = d4est_mesh_geometry_storage_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature");
-  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_for_residual = d4est_poisson_flux_new(p4est, input_file, boyen_york_model_boundary_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data_for_jac = d4est_laplacian_flux_new(p4est, input_file, zero_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data_for_residual = d4est_laplacian_flux_new(p4est, input_file, boyen_york_model_boundary_fcn, NULL);
   
   d4est_elliptic_eqns_t prob_fcns;
   prob_fcns.build_residual = boyen_york_model_build_residual;
@@ -140,8 +140,8 @@ problem_init
   prob_vecs.u = NULL;
   prob_vecs.local_nodes = 0;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params_for_jac = flux_data_for_jac->user;
-  d4est_poisson_flux_sipg_params_t* sipg_params_for_residual = flux_data_for_residual->user;
+  d4est_laplacian_flux_sipg_params_t* sipg_params_for_jac = flux_data_for_jac->user;
+  d4est_laplacian_flux_sipg_params_t* sipg_params_for_residual = flux_data_for_residual->user;
   sipg_params_for_jac->user = &boyen_york_model_input;
   sipg_params_for_residual->user = &boyen_york_model_input;
   
@@ -273,7 +273,7 @@ problem_init
 
   d4est_amr_destroy(d4est_amr);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
-  d4est_poisson_flux_destroy(flux_data_for_jac);
-  d4est_poisson_flux_destroy(flux_data_for_residual);
+  d4est_laplacian_flux_destroy(flux_data_for_jac);
+  d4est_laplacian_flux_destroy(flux_data_for_residual);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
 }

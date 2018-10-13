@@ -17,8 +17,8 @@
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux_sipg.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux_sipg.h>
 #include <d4est_solver_newton_petsc.h>
 #include <d4est_solver_krylov_petsc.h>
 /* #include <d4est_krylov_pc_multigrid.h> */
@@ -52,17 +52,17 @@ problem_init
   dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
   
   // Setup boundary conditions
-  d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_lhs;
   bc_data_for_lhs.dirichlet_fcn = zero_fcn;
   bc_data_for_lhs.eval_method = eval_method;
   
-  d4est_poisson_dirichlet_bc_t bc_data_for_rhs;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_rhs;
   bc_data_for_rhs.dirichlet_fcn = poisson_sinx_boundary_fcn;
   bc_data_for_rhs.eval_method = eval_method;
   
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs);
+  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs);
   
-  d4est_poisson_flux_data_t* flux_data_for_build_rhs = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_rhs);
+  d4est_laplacian_flux_data_t* flux_data_for_build_rhs = d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_rhs);
 
   problem_ctx_t ctx;
   ctx.flux_data_for_apply_lhs = flux_data_for_apply_lhs;
@@ -81,7 +81,7 @@ problem_init
   prob_vecs.rhs = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.local_nodes = initial_nodes;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
+  d4est_laplacian_flux_sipg_params_t* sipg_params = flux_data_for_apply_lhs->flux_data;
   
   
   // Setup norm function contexts
@@ -123,7 +123,7 @@ problem_init
     NULL
   );
     
-  d4est_poisson_build_rhs_with_strong_bc(
+  d4est_laplacian_build_rhs_with_strong_bc(
     p4est,
     *ghost,
     *ghost_data,
@@ -349,7 +349,7 @@ problem_init
   /*   prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, prob_vecs.local_nodes); */
     
     
-  /*   d4est_poisson_build_rhs_with_strong_bc( */
+  /*   d4est_laplacian_build_rhs_with_strong_bc( */
   /*     p4est, */
   /*     *ghost, */
   /*     *ghost_data, */
@@ -370,8 +370,8 @@ problem_init
     zlog_info(c_default, "Finishing up. Starting garbage collection...");
     
   d4est_amr_destroy(d4est_amr);
-  d4est_poisson_flux_destroy(flux_data_for_apply_lhs);
-  d4est_poisson_flux_destroy(flux_data_for_build_rhs);
+  d4est_laplacian_flux_destroy(flux_data_for_apply_lhs);
+  d4est_laplacian_flux_destroy(flux_data_for_build_rhs);
   P4EST_FREE(prob_vecs.u);
   P4EST_FREE(prob_vecs.Au);
   P4EST_FREE(prob_vecs.rhs);

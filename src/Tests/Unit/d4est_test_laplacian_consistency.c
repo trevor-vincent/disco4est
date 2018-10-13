@@ -9,8 +9,8 @@
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
 #include <d4est_solver_matrix_symmetry.h>
 #include <d4est_util.h>
 #include <d4est_norms.h>
@@ -41,8 +41,8 @@ d4est_test_apply_lhs
  void* user
 )
 {
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs = user;  
-  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_data_for_apply_lhs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, 0);
+  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = user;  
+  d4est_laplacian_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_data_for_apply_lhs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, 0);
 }
 
 
@@ -281,12 +281,12 @@ int main(int argc, char *argv[])
     dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
     /* / Setup boundary conditions */
-    d4est_poisson_dirichlet_bc_t bc_data_for_lhs;
+    d4est_laplacian_dirichlet_bc_t bc_data_for_lhs;
     bc_data_for_lhs.dirichlet_fcn = poly_vec_fcn;
     bc_data_for_lhs.eval_method = eval_method;  
 
     
-    d4est_poisson_flux_data_t* flux_data_for_apply_lhs = d4est_poisson_flux_new(p4est, "d4est_test_laplacian_consistency.input", BC_DIRICHLET, &bc_data_for_lhs);
+    d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, "d4est_test_laplacian_consistency.input", BC_DIRICHLET, &bc_data_for_lhs);
 
 
     d4est_elliptic_eqns_t prob_fcns;
@@ -476,7 +476,7 @@ int main(int argc, char *argv[])
     /*    Apoly_vec_compare, */
     /*    error, */
     /*    input_file, */
-    /*    "testd4est_poisson_2_cubed_sphere", */
+    /*    "testd4est_laplacian_2_cubed_sphere", */
     /*    local_nodes, */
     /*    level,0); */
 
@@ -493,7 +493,7 @@ int main(int argc, char *argv[])
       d4est_ghost_data = NULL;
     } 
 
-    d4est_poisson_flux_destroy(flux_data_for_apply_lhs);
+    d4est_laplacian_flux_destroy(flux_data_for_apply_lhs);
   }
 
   d4est_ghost_destroy(d4est_ghost);

@@ -6,9 +6,9 @@
 #include <d4est_linalg.h>
 #include <d4est_mesh.h>
 #include <d4est_estimator_bi.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian_flux.h>
 #include <d4est_mortars.h>
-#include <d4est_poisson.h>
+#include <d4est_laplacian.h>
 #include <d4est_vtk.h>
 
 static void
@@ -22,12 +22,12 @@ d4est_estimator_bi_dirichlet
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- d4est_poisson_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_flux_boundary_data_t* boundary_data,
  void* boundary_condition_fcn_data,
  void* flux_parameter_data
 )
 { 
-  d4est_poisson_dirichlet_bc_t* bc_data = boundary_condition_fcn_data;
+  d4est_laplacian_dirichlet_bc_t* bc_data = boundary_condition_fcn_data;
   d4est_estimator_bi_penalty_data_t* penalty_data = flux_parameter_data;
   double* estimator = penalty_data->estimator;
   d4est_quadrature_mortar_t* face_object = boundary_data->face_object;
@@ -149,7 +149,7 @@ d4est_estimator_bi_interface
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- d4est_poisson_flux_interface_data_t* interface_data,
+ d4est_laplacian_flux_interface_data_t* interface_data,
  void* params
 )
 {
@@ -419,7 +419,7 @@ d4est_estimator_bi_compute
   double* dudr_ghost [(P4EST_DIM)];
   D4EST_ALLOC_DIM_VEC(dudr_ghost, ghost_nodes);
   
-  d4est_poisson_compute_dudr
+  d4est_laplacian_compute_dudr
     (
      p4est,
      d4est_ghost,
@@ -435,7 +435,7 @@ d4est_estimator_bi_compute
      which_field
     );
   
-  d4est_poisson_flux_data_t flux_data;
+  d4est_laplacian_flux_data_t flux_data;
   flux_data.interface_fcn = d4est_estimator_bi_interface;
   flux_data.boundary_fcn = d4est_estimator_bi_dirichlet;
   
@@ -451,7 +451,7 @@ d4est_estimator_bi_compute
     flux_data.dudr_ghost[i] = dudr_ghost[i];
   }
   
-  d4est_poisson_dirichlet_bc_t bc_data;
+  d4est_laplacian_dirichlet_bc_t bc_data;
   bc_data.dirichlet_fcn = u_bndry_fcn;
   bc_data.user = NULL;
 
@@ -461,7 +461,7 @@ d4est_estimator_bi_compute
   penalty_data.estimator = estimator;
   flux_data.flux_data = &penalty_data;
   
-  d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(&flux_data);
+  d4est_mortars_fcn_ptrs_t flux_fcns = d4est_laplacian_flux_fetch_fcns(&flux_data);
   
   d4est_mortars_compute_flux_on_local_elements
     (

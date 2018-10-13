@@ -380,8 +380,8 @@ d4est_mesh_initial_extents_parse
     }
   }
 
-  /* printf("%s: d4est_poisson_flux_sipg_params_h_calc = %s\n", printf_prefix, h_eq); */
-  /* d4est_poisson_flux_sipg_params_get_string_from_h_calc (input->sipg_flux_h,h_eq); */
+  /* printf("%s: d4est_laplacian_flux_sipg_params_h_calc = %s\n", printf_prefix, h_eq); */
+  /* d4est_laplacian_flux_sipg_params_get_string_from_h_calc (input->sipg_flux_h,h_eq); */
   
   return initial_extents;
 }

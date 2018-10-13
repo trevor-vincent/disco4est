@@ -2,7 +2,7 @@
 #include <d4est_quadrature.h>
 #include <d4est_element_data.h>
 #include <d4est_quadrature_legendre.h>
-#include <d4est_poisson_flux_sipg.h>
+#include <d4est_laplacian_flux_sipg.h>
 #include <d4est_geometry.h>
 #include <d4est_mesh.h>
 #include <d4est_geometry_brick.h>
@@ -10,8 +10,8 @@
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
 #include <d4est_geometry_brick.h>
 #include <d4est_util.h>
 #include <limits.h>

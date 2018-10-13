@@ -13,7 +13,8 @@ typedef struct {
   int cheby_print_residual_norm;
   int cheby_print_spectral_bound;
   int cheby_print_spectral_bound_iterations;
-
+  int cheby_use_new_cg_eigs;
+  
 } d4est_solver_multigrid_bottom_solver_cheby_t;
 
 /* This file was automatically generated.  Do not edit! */

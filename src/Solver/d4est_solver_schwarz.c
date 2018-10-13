@@ -33,7 +33,6 @@ d4est_solver_schwarz_corner_callback
     p4est_iter_corner_side_t* core_info
       = sc_array_index(&info->sides,
                        core);
-
     
     d4est_element_data_t* ed_core = core_info->quad->p.user_data;
     if (ed_core->mpirank != p4est->mpirank){ /* ghost elements cannot be core elements */

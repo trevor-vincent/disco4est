@@ -9,8 +9,8 @@
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
 #include <d4est_solver_test_symmetry.h>
 #include <d4est_util.h>
 #include <d4est_norms.h>
@@ -88,7 +88,7 @@ neg_laplacian_poly_vec_fcn
 
 
 static void
-testd4est_poisson_symmetry_apply_lhs
+testd4est_laplacian_symmetry_apply_lhs
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -100,8 +100,8 @@ testd4est_poisson_symmetry_apply_lhs
  void* user
 )
 {
-  d4est_poisson_flux_data_t* flux_fcn_data = user;
-  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad);
+  d4est_laplacian_flux_data_t* flux_fcn_data = user;
+  d4est_laplacian_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad);
 }
 
 
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(mpicomm, &proc_rank);
   p4est_init(NULL, SC_LP_ERROR);
 
-  const char* input_file = "testd4est_poisson_symmetry.input";
+  const char* input_file = "testd4est_laplacian_symmetry.input";
   
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
   d4est_quad->quad_type = QUAD_TYPE_GAUSS_LEGENDRE;
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
-  d4est_poisson_flux_data_t* flux_data = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data = d4est_laplacian_flux_new(p4est, input_file, zero_fcn, NULL);
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 
 
   d4est_elliptic_eqns_t elliptic_eqns;
-  elliptic_eqns.apply_lhs = testd4est_poisson_symmetry_apply_lhs;
+  elliptic_eqns.apply_lhs = testd4est_laplacian_symmetry_apply_lhs;
   elliptic_eqns.user = flux_data;
 
   
@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
-  d4est_poisson_flux_destroy(flux_data);
+  d4est_laplacian_flux_destroy(flux_data);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);

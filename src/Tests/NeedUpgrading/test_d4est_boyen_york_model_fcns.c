@@ -9,9 +9,9 @@
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux.h>
-#include <d4est_poisson_flux_sipg.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
+#include <d4est_laplacian_flux_sipg.h>
 #include <d4est_util.h>
 #include <ini.h>
 #include <limits.h>
@@ -114,14 +114,14 @@ int main(int argc, char *argv[])
   
   boyen_york_model_params_t boyen_york_model_input = boyen_york_model_params(input_file);
   
-  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_for_residual = d4est_poisson_flux_new(p4est, input_file, boyen_york_model_boundary_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data_for_jac = d4est_laplacian_flux_new(p4est, input_file, zero_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data_for_residual = d4est_laplacian_flux_new(p4est, input_file, boyen_york_model_boundary_fcn, NULL);
 
   boyen_york_model_input.flux_data_for_jac = flux_data_for_jac;
   boyen_york_model_input.flux_data_for_residual = flux_data_for_residual;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params_for_jac = flux_data_for_jac->user;
-  d4est_poisson_flux_sipg_params_t* sipg_params_for_residual = flux_data_for_residual->user;
+  d4est_laplacian_flux_sipg_params_t* sipg_params_for_jac = flux_data_for_jac->user;
+  d4est_laplacian_flux_sipg_params_t* sipg_params_for_residual = flux_data_for_residual->user;
   sipg_params_for_jac->user = &boyen_york_model_input;
   sipg_params_for_residual->user = &boyen_york_model_input;
   
@@ -228,8 +228,8 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
-  d4est_poisson_flux_destroy(flux_data_for_jac);
-  d4est_poisson_flux_destroy(flux_data_for_residual);
+  d4est_laplacian_flux_destroy(flux_data_for_jac);
+  d4est_laplacian_flux_destroy(flux_data_for_residual);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);

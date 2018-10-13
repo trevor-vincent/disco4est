@@ -22,6 +22,13 @@ typedef struct {
   
 } d4est_field_t;
 
+typedef enum {
+
+              FIELD_ZEROED,
+              FIELD_NOT_ZERORED
+} d4est_field_init_type_t;
+
+
 #define D4EST_FIELD_CHECK_TYPE(a) do {                  \
     D4EST_ASSERT(a >= 0 && a < D4EST_FIELD_TYPES);      \
   } while(0)

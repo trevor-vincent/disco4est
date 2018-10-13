@@ -9,8 +9,8 @@
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
 #include <d4est_util.h>
 #include <limits.h>
 
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
   d4est_geom->DX_compute_method = GEOM_COMPUTE_ANALYTIC;
   d4est_geom->JAC_compute_method = GEOM_COMPUTE_NUMERICAL;
 
-  d4est_geometry_brick_new(proc_rank, "testd4est_poisson_1_brick.input", "geometry", "[Geometry]:", d4est_geom);
+  d4est_geometry_brick_new(proc_rank, "testd4est_laplacian_1_brick.input", "geometry", "[Geometry]:", d4est_geom);
     
   p4est_t* p4est = problem_build_p4est
                    (
@@ -266,8 +266,8 @@ int main(int argc, char *argv[])
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
   
-  d4est_poisson_flux_data_t* flux_data_with_homog_bc = d4est_poisson_flux_new(p4est, "testd4est_poisson_1_brick.input", zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, "testd4est_poisson_1_brick.input", poly_vec_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data_with_homog_bc = d4est_laplacian_flux_new(p4est, "testd4est_laplacian_1_brick.input", zero_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data_with_bc = d4est_laplacian_flux_new(p4est, "testd4est_laplacian_1_brick.input", poly_vec_fcn, NULL);
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
 
   d4est_amr_t* d4est_amr = d4est_amr_init(
                                           p4est,
-                                          "testd4est_poisson_1_brick.input",
+                                          "testd4est_laplacian_1_brick.input",
                                           NULL
   );
 
@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
       elliptic_data.Au = Apoly_vec;
       elliptic_data.local_nodes = local_nodes;
   
-      d4est_poisson_apply_aij
+      d4est_laplacian_apply_aij
         (
          p4est,
          ghost,
@@ -477,8 +477,8 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
-  d4est_poisson_flux_destroy(flux_data_with_homog_bc);
-  d4est_poisson_flux_destroy(flux_data_with_bc);
+  d4est_laplacian_flux_destroy(flux_data_with_homog_bc);
+  d4est_laplacian_flux_destroy(flux_data_with_bc);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);

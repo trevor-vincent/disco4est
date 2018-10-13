@@ -8,9 +8,9 @@
 #include <d4est_mesh.h>
 #include <d4est_estimator_bi.h>
 #include <d4est_gradient.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian_flux.h>
 #include <d4est_mortars.h>
-#include <d4est_poisson.h>
+#include <d4est_laplacian.h>
 
 static void
 d4est_ip_energy_norm_boundary
@@ -23,7 +23,7 @@ d4est_ip_energy_norm_boundary
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- d4est_poisson_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_flux_boundary_data_t* boundary_data,
  void* bc_params,
  void* params
 )
@@ -50,7 +50,7 @@ d4est_ip_energy_norm_boundary
 
   double* h_quad = boundary_data->h_quad;
                    //P4EST_ALLOC(double, face_nodes_m_quad);
-  /* d4est_poisson_flux_sipg_calculate_h */
+  /* d4est_laplacian_flux_sipg_calculate_h */
   /*   ( */
   /*    p4est, */
   /*    &e_m, */
@@ -124,7 +124,7 @@ d4est_ip_energy_norm_interface
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- d4est_poisson_flux_interface_data_t* interface_data,
+ d4est_laplacian_flux_interface_data_t* interface_data,
  void* params
 )
 {
@@ -169,7 +169,7 @@ d4est_ip_energy_norm_interface
   double* hm_mortar_quad = interface_data->hm_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
   double* hp_mortar_quad = interface_data->hp_mortar_quad;//P4EST_ALLOC(double,
   
-  /* d4est_poisson_flux_sipg_calculate_h */
+  /* d4est_laplacian_flux_sipg_calculate_h */
   /*   ( */
   /*    p4est, */
   /*    e_m, */
@@ -190,7 +190,7 @@ d4est_ip_energy_norm_interface
  /*  d4est_element_data_t* e_p_oriented [(P4EST_HALF)]; */
  /* d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented); */
   
- /*    d4est_poisson_flux_sipg_calculate_h */
+ /*    d4est_laplacian_flux_sipg_calculate_h */
  /*    ( */
  /*     p4est, */
  /*     &e_p_oriented[0], */
@@ -377,7 +377,7 @@ d4est_ip_energy_norm_compute
   double* dudr_ghost [(P4EST_DIM)];
   D4EST_ALLOC_DIM_VEC(dudr_ghost, ghost_nodes);
   
-  d4est_poisson_compute_dudr
+  d4est_laplacian_compute_dudr
     (
      p4est,
      d4est_ghost,
@@ -394,7 +394,7 @@ d4est_ip_energy_norm_compute
     );
   
   
-  d4est_poisson_flux_data_t flux_data;
+  d4est_laplacian_flux_data_t flux_data;
   flux_data.interface_fcn = d4est_ip_energy_norm_interface;
   flux_data.boundary_fcn = d4est_ip_energy_norm_boundary;
   flux_data.bc_type = BC_NOT_SET;
@@ -412,7 +412,7 @@ d4est_ip_energy_norm_compute
   }
   
   
-  d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(&flux_data);
+  d4est_mortars_fcn_ptrs_t flux_fcns = d4est_laplacian_flux_fetch_fcns(&flux_data);
   
   d4est_mortars_compute_flux_on_local_elements
     (

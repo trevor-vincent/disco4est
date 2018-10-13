@@ -16,8 +16,8 @@
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux_sipg.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux_sipg.h>
 #include <d4est_solver_newton_petsc.h>
 #include <d4est_solver_krylov_petsc.h>
 #include <d4est_util.h>
@@ -117,20 +117,20 @@ problem_init
 {
   okendon_params_t okendon_input = okendon_params_init(input_file);
 
-  d4est_poisson_flux_data_t* flux_data_for_jac = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_for_residual = d4est_poisson_flux_new(p4est, input_file, okendon_boundary_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data_for_jac = d4est_laplacian_flux_new(p4est, input_file, zero_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data_for_residual = d4est_laplacian_flux_new(p4est, input_file, okendon_boundary_fcn, NULL);
 
-  d4est_poisson_dirichlet_bc_t bc_data_for_jac;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_jac;
   bc_data_for_jac.dirichlet_fcn = zero_fcn;
   bc_data_for_jac.eval_method = eval_method;
   
-  d4est_poisson_dirichlet_bc_t bc_data_for_res;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_res;
   bc_data_for_res.dirichlet_fcn = okendon_boundary_fcn;
   bc_data_for_res.eval_method = eval_method;
 
-  d4est_poisson_flux_data_t* flux_data_for_apply_jac = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, problem_set_mortar_degree, NULL);
+  d4est_laplacian_flux_data_t* flux_data_for_apply_jac = d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, problem_set_mortar_degree, NULL);
   
-  d4est_poisson_flux_data_t* flux_data_for_build_res = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_for_res, problem_set_mortar_degree, NULL);
+  d4est_laplacian_flux_data_t* flux_data_for_build_res = d4est_laplacian_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_for_res, problem_set_mortar_degree, NULL);
 
   problem_ctx_t ctx;
   ctx.flux_data_for_apply_lhs = flux_data_for_apply_lhs;
@@ -158,8 +158,8 @@ problem_init
   prob_vecs.u = NULL;
   prob_vecs.local_nodes = 0;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params_for_jac = flux_data_for_jac->user;
-  d4est_poisson_flux_sipg_params_t* sipg_params_for_residual = flux_data_for_residual->user;
+  d4est_laplacian_flux_sipg_params_t* sipg_params_for_jac = flux_data_for_jac->user;
+  d4est_laplacian_flux_sipg_params_t* sipg_params_for_residual = flux_data_for_residual->user;
   sipg_params_for_jac->user = &okendon_input;
   sipg_params_for_residual->user = &okendon_input;
   
@@ -291,7 +291,7 @@ problem_init
 
   d4est_amr_destroy(d4est_amr);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
-  d4est_poisson_flux_destroy(flux_data_for_jac);
-  d4est_poisson_flux_destroy(flux_data_for_residual);
+  d4est_laplacian_flux_destroy(flux_data_for_jac);
+  d4est_laplacian_flux_destroy(flux_data_for_residual);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
 }

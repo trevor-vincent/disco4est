@@ -1,7 +1,22 @@
+
 #ifndef D4EST_SOLVER_SCHWARZ_H
 #define D4EST_SOLVER_SCHWARZ_H 
 
 #include <pXest.h>
+
+typedef struct {
+
+  int process_p;
+  int id_p; /* either local id on process that holds m side or ghost id on process that holds m side otherwise -1 */
+  int face_p;
+  int tree_p;
+  int quadid_p;
+  int is_hanging;
+  p4est_qcoord_t q [(P4EST_DIM)];
+  p4est_qcoord_t dq;
+
+  
+} d4est_schwarz_plus_face_info_t;
 
 typedef struct {
 
@@ -22,7 +37,7 @@ typedef struct {
   
   /* gives local or ghost element that touches a face or -1 if it's a 2nd-layer ghost or no face, gives same id as element if boundary 
    * the id is between 0 and local_num_quadrants + ghost_num_quadrants - 1*/
-  int elements_that_touch_face[(P4EST_FACES)][(P4EST_HALF)];
+  d4est_schwarz_plus_face_info_t elements_that_touch_face[(P4EST_FACES)][(P4EST_HALF)];
 
   int nodal_size; 
   int nodal_stride; /* stride into just the nodal field on this subdomain, it is not a stride into a local nodal field and is not a stride into a field over all subdomains, i.e. it is zero on the first node of the first element of the containing subdomain*/

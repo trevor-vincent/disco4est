@@ -5,7 +5,7 @@
 #include <ip_flux.h>
 
 typedef struct{
-  d4est_poisson_flux_sipg_params_t* ip_flux_params;
+  d4est_laplacian_flux_sipg_params_t* ip_flux_params;
   double dg_norm_face_term;
 }
 curved_dg_norm_params_t;

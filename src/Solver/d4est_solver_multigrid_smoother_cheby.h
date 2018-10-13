@@ -20,7 +20,8 @@ typedef struct {
   int cheby_print_residual_norm;
   int cheby_print_spectral_bound;
   int cheby_print_spectral_bound_iterations;
-
+  int cheby_use_new_cg_eigs;
+  
 } d4est_solver_multigrid_smoother_cheby_t;
 
 d4est_solver_multigrid_smoother_t *d4est_solver_multigrid_smoother_cheby_init(p4est_t *p4est,int num_of_levels,const char *input_file);

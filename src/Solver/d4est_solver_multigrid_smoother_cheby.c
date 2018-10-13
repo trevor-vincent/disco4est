@@ -52,6 +52,11 @@ d4est_solver_multigrid_smoother_cheby_input_handler
     D4EST_ASSERT(pconfig->cheby_print_spectral_bound_iterations == 0);
     pconfig->cheby_print_spectral_bound_iterations = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"cheby_use_new_cg_eigs")) {
+    D4EST_ASSERT(pconfig->cheby_use_new_cg_eigs == 0);
+    pconfig->cheby_use_new_cg_eigs = atoi(value);
+  }
+  
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -61,7 +66,6 @@ d4est_solver_multigrid_smoother_cheby_input_handler
 void
 d4est_solver_multigrid_smoother_cheby_destroy(d4est_solver_multigrid_smoother_t* smoother)
 {
-
   d4est_solver_multigrid_smoother_cheby_t* cheby = smoother->user;
   P4EST_FREE(cheby->eigs);
   P4EST_FREE(cheby);
@@ -229,7 +233,8 @@ d4est_solver_multigrid_smoother_cheby
          mg_data->d4est_quad,
          updater->current_d4est_factors,
          cheby->cheby_eigs_cg_imax,
-         cheby->cheby_print_spectral_bound_iterations, 
+         cheby->cheby_print_spectral_bound_iterations,
+         cheby->cheby_use_new_cg_eigs,
          &cheby->eigs[level]
         );
 
@@ -284,6 +289,7 @@ d4est_solver_multigrid_smoother_cheby_init
   cheby_data->cheby_print_residual_norm = 0;
   cheby_data->cheby_print_spectral_bound = 0;
   cheby_data->cheby_print_spectral_bound_iterations = 0;
+  cheby_data->cheby_use_new_cg_eigs = 0;
 
   /* set internally */
   cheby_data->mpirank = p4est->mpirank;
@@ -299,6 +305,7 @@ d4est_solver_multigrid_smoother_cheby_init
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_max_multiplier, -1);
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_reuse_fromdownvcycle, -1);
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_reuse_fromlastvcycle, -1);
+  /* D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_use_new_cg_eigs, -1); */
   /* D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_residual_norm, -1); */
   /* D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_spectral_bound, -1); */
   /* D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_spectral_bound_iterations, -1); */
@@ -314,6 +321,7 @@ d4est_solver_multigrid_smoother_cheby_init
     zlog_debug(c_default, " Smoother eigs reuse from last vcycle = %d", cheby_data->cheby_eigs_reuse_fromlastvcycle);
     zlog_debug(c_default, " Smoother print residual norm = %d", cheby_data->cheby_print_residual_norm);
     zlog_debug(c_default, " Smoother print eigs = %d", cheby_data->cheby_print_spectral_bound);
+    zlog_debug(c_default, " Smoother use new cg eigs scheme = %d", cheby_data->cheby_use_new_cg_eigs);
   }
 
   smoother->user = cheby_data;

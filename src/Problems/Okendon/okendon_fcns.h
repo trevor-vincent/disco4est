@@ -4,8 +4,8 @@
 #include <d4est_util.h>
 #include <d4est_element_data.h>
 #include <d4est_amr_smooth_pred.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
 #include <multigrid.h>
 #include <multigrid_matrix_operator.h>
 
@@ -20,8 +20,8 @@ typedef struct {
   int use_matrix_operator;
   d4est_solver_multigrid_data_t* mg_data;
   okendon_params_t* okendon_params;
-  d4est_poisson_flux_data_t* flux_data_for_jac;
-  d4est_poisson_flux_data_t* flux_data_for_res;
+  d4est_laplacian_flux_data_t* flux_data_for_jac;
+  d4est_laplacian_flux_data_t* flux_data_for_res;
   
 } problem_ctx_t;
 
@@ -267,8 +267,8 @@ void okendon_apply_jac
 {
   problem_ctx_t* ctx = user;
   okendon_params_t* params = ctx->okendon_params;
-  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_jac;
-  d4est_poisson_apply_aij(p4est,
+  d4est_laplacian_flux_data_t* flux_data = ctx->flux_data_for_jac;
+  d4est_laplacian_apply_aij(p4est,
                           ghost,
                           ghost_data,
                           prob_vecs,
@@ -340,9 +340,9 @@ okendon_build_residual
 {
   problem_ctx_t* ctx = user;
   okendon_params_t* params = ctx->okendon_params;
-  d4est_poisson_flux_data_t* flux_data = ctx->flux_data_for_res;
+  d4est_laplacian_flux_data_t* flux_data = ctx->flux_data_for_res;
   
-  d4est_poisson_apply_aij(p4est,
+  d4est_laplacian_apply_aij(p4est,
                           ghost,
                           ghost_data,
                           prob_vecs,

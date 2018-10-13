@@ -4,7 +4,7 @@
 #include <pXest.h>
 #include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
-#include <d4est_poisson_flux_sipg.h>
+#include <d4est_laplacian_flux_sipg.h>
 
 typedef struct {
   

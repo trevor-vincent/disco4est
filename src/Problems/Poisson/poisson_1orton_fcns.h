@@ -8,8 +8,8 @@
 typedef struct {
 
   int n;
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs;
-  d4est_poisson_flux_data_t* flux_data_for_build_rhs;
+  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs;
+  d4est_laplacian_flux_data_t* flux_data_for_build_rhs;
 
 } problem_ctx_t;
 
@@ -23,7 +23,7 @@ poisson_1orton_robin_coeff_fcn
  double z,
 #endif
  void* user,
- d4est_poisson_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_flux_boundary_data_t* boundary_data,
  int mortar_node
 )
 {
@@ -41,7 +41,7 @@ poisson_1orton_robin_bc_rhs_fcn
  double z,
 #endif
  void* user,
- d4est_poisson_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_flux_boundary_data_t* boundary_data,
  int mortar_node
 )
 {
@@ -151,8 +151,8 @@ poisson_1orton_apply_lhs
 )
 {
   problem_ctx_t* ctx = user;
-  d4est_poisson_flux_data_t* flux_fcn_data = ctx->flux_data_for_apply_lhs;
-  d4est_poisson_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad, d4est_factors);
+  d4est_laplacian_flux_data_t* flux_fcn_data = ctx->flux_data_for_apply_lhs;
+  d4est_laplacian_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad, d4est_factors);
 }
 
 

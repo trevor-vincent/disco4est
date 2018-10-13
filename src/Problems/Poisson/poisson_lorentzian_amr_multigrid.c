@@ -17,8 +17,8 @@
 #include <d4est_mesh.h>
 #include <ini.h>
 #include <d4est_element_data.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux_sipg.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux_sipg.h>
 #include <d4est_solver_newton_petsc.h>
 #include <d4est_solver_krylov_petsc.h>
 #include <d4est_util.h>
@@ -261,31 +261,31 @@ problem_init
   
   // Setup boundary conditions
 
-  d4est_poisson_robin_bc_t bc_data_robin_for_lhs;
+  d4est_laplacian_robin_bc_t bc_data_robin_for_lhs;
   bc_data_robin_for_lhs.robin_coeff = poisson_lorentzian_robin_coeff_fcn;
   bc_data_robin_for_lhs.robin_rhs = poisson_lorentzian_robin_bc_rhs_fcn;
   
-  d4est_poisson_dirichlet_bc_t bc_data_dirichlet_for_lhs;
+  d4est_laplacian_dirichlet_bc_t bc_data_dirichlet_for_lhs;
   bc_data_dirichlet_for_lhs.dirichlet_fcn = zero_fcn;
   bc_data_dirichlet_for_lhs.eval_method = eval_method;
   
-  d4est_poisson_dirichlet_bc_t bc_data_dirichlet_for_rhs;
+  d4est_laplacian_dirichlet_bc_t bc_data_dirichlet_for_rhs;
   bc_data_dirichlet_for_rhs.dirichlet_fcn = poisson_lorentzian_boundary_fcn;
   bc_data_dirichlet_for_rhs.eval_method = eval_method;
   
-  d4est_poisson_flux_data_t* flux_data_for_lhs = NULL; //d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, 
-  d4est_poisson_flux_data_t* flux_data_for_rhs = NULL; //d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
+  d4est_laplacian_flux_data_t* flux_data_for_lhs = NULL; //d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, 
+  d4est_laplacian_flux_data_t* flux_data_for_rhs = NULL; //d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
 
   if(init_params.use_dirichlet){
     flux_data_for_lhs
-      = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_lhs);
+      = d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_lhs);
   
     flux_data_for_rhs
-      = d4est_poisson_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
+      = d4est_laplacian_flux_new(p4est, input_file,  BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
   }
   else {  
-    flux_data_for_lhs = d4est_poisson_flux_new(p4est, input_file, BC_ROBIN, &bc_data_robin_for_lhs);
-    flux_data_for_rhs = d4est_poisson_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_robin_for_lhs);
+    flux_data_for_lhs = d4est_laplacian_flux_new(p4est, input_file, BC_ROBIN, &bc_data_robin_for_lhs);
+    flux_data_for_rhs = d4est_laplacian_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_robin_for_lhs);
   }
   
 
@@ -309,7 +309,7 @@ problem_init
   prob_vecs.rhs = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.local_nodes = initial_nodes;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_lhs->flux_data;
+  d4est_laplacian_flux_sipg_params_t* sipg_params = flux_data_for_lhs->flux_data;
   
   d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
@@ -352,7 +352,7 @@ problem_init
                                                                &field_type,
                                                                1);
   
-  d4est_poisson_build_rhs_with_strong_bc
+  d4est_laplacian_build_rhs_with_strong_bc
     (
      p4est,
      *d4est_ghost,
@@ -667,7 +667,7 @@ problem_init
     prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, prob_vecs.local_nodes);
     
     
-    d4est_poisson_build_rhs_with_strong_bc
+    d4est_laplacian_build_rhs_with_strong_bc
       (
        p4est,
        *d4est_ghost,
@@ -924,8 +924,8 @@ problem_init
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
   d4est_amr_destroy(d4est_amr_uniform);
-  d4est_poisson_flux_destroy(flux_data_for_lhs);
-  d4est_poisson_flux_destroy(flux_data_for_rhs);
+  d4est_laplacian_flux_destroy(flux_data_for_lhs);
+  d4est_laplacian_flux_destroy(flux_data_for_rhs);
 
 
   d4est_norms_linear_fit_destroy(point_3m_fit);

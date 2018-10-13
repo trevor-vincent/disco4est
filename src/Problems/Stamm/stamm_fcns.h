@@ -16,8 +16,8 @@ typedef struct {
 
 typedef struct {
 
-  d4est_poisson_flux_data_t* flux_data_for_apply_lhs;
-  d4est_poisson_flux_data_t* flux_data_for_build_rhs;
+  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs;
+  d4est_laplacian_flux_data_t* flux_data_for_build_rhs;
   stamm_params_t* stamm_params;
 
 } problem_ctx_t;
@@ -225,8 +225,8 @@ stamm_apply_lhs
 {
   problem_ctx_t* ctx = user;
   stamm_params_t* params = ctx->stamm_params;
-  d4est_poisson_flux_data_t* flux_fcn_data = ctx->flux_data_for_apply_lhs;
-  d4est_poisson_apply_aij(p4est, d4est_ghost, d4est_ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad,d4est_factors,0);
+  d4est_laplacian_flux_data_t* flux_fcn_data = ctx->flux_data_for_apply_lhs;
+  d4est_laplacian_apply_aij(p4est, d4est_ghost, d4est_ghost_data, prob_vecs, flux_fcn_data, d4est_ops, d4est_geom, d4est_quad,d4est_factors,0);
 
   /* DEBUG_PRINT_ARR_DBL_SUM(prob_vecs->Au, prob_vecs->local_nodes); */
   

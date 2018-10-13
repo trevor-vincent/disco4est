@@ -6,8 +6,8 @@ typedef struct {
   double a;
   double P;
   double E;
-  d4est_poisson_flux_data_t* flux_data_for_residual;
-  d4est_poisson_flux_data_t* flux_data_for_jac;
+  d4est_laplacian_flux_data_t* flux_data_for_residual;
+  d4est_laplacian_flux_data_t* flux_data_for_jac;
   
 } boyen_york_model_params_t;
 
@@ -177,9 +177,9 @@ void boyen_york_model_apply_jac
 )
 {
   boyen_york_model_params_t* params = user;
-  d4est_poisson_flux_data_t* flux_data = params->flux_data_for_jac;
+  d4est_laplacian_flux_data_t* flux_data = params->flux_data_for_jac;
   
-  d4est_poisson_apply_aij(p4est,
+  d4est_laplacian_apply_aij(p4est,
                           ghost,
                           ghost_data,
                           prob_vecs,
@@ -253,11 +253,11 @@ boyen_york_model_build_residual
 
 
   double* Abc= P4EST_ALLOC(double, prob_vecs->local_nodes);
-  d4est_poisson_build_rhs_with_strong_bc(p4est, ghost, ghost_data, d4est_ops, d4est_geom, d4est_quad, prob_vecs, params->flux_data_for_residual, Abc, zero_fcn, NULL);
+  d4est_laplacian_build_rhs_with_strong_bc(p4est, ghost, ghost_data, d4est_ops, d4est_geom, d4est_quad, prob_vecs, params->flux_data_for_residual, Abc, zero_fcn, NULL);
 
 
 
-  d4est_poisson_apply_aij(p4est,
+  d4est_laplacian_apply_aij(p4est,
                           ghost,
                           ghost_data,
                           prob_vecs,

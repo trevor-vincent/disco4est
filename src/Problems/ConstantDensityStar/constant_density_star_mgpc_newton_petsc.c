@@ -17,8 +17,8 @@
 #include <ini.h>
 #include <d4est_element_data.h>
 #include <d4est_estimator_stats.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux_sipg.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux_sipg.h>
 #include <d4est_solver_newton.h>
 #include <d4est_solver_multigrid.h>
 #include <d4est_krylov_pc_multigrid.h>
@@ -156,19 +156,19 @@ problem_init
 
   constant_density_star_params_t constant_density_star_params = constant_density_star_input(input_file);
   
-  d4est_poisson_dirichlet_bc_t bc_data_for_jac;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_jac;
   bc_data_for_jac.dirichlet_fcn = zero_fcn;
   bc_data_for_jac.user = &constant_density_star_params;
   bc_data_for_jac.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
   
-  d4est_poisson_dirichlet_bc_t bc_data_for_res;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_res;
   bc_data_for_res.dirichlet_fcn = constant_density_star_boundary_fcn;
   bc_data_for_res.user = &constant_density_star_params;
   bc_data_for_res.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
                                           
-  d4est_poisson_flux_data_t* flux_data_for_jac =
-    d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac);
-  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_res);
+  d4est_laplacian_flux_data_t* flux_data_for_jac =
+    d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac);
+  d4est_laplacian_flux_data_t* flux_data_for_res = d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_res);
 
   problem_ctx_t ctx;
   ctx.constant_density_star_params = &constant_density_star_params;
@@ -186,7 +186,7 @@ problem_init
   prob_vecs.u = P4EST_ALLOC(double, initial_nodes);
   prob_vecs.local_nodes = initial_nodes;
 
-  d4est_poisson_flux_sipg_params_t* sipg_params = flux_data_for_jac->flux_data;
+  d4est_laplacian_flux_sipg_params_t* sipg_params = flux_data_for_jac->flux_data;
 
  
   d4est_estimator_bi_penalty_data_t penalty_data;
@@ -602,8 +602,8 @@ problem_init
   printf("[D4EST_INFO]: Starting garbage collection...\n");
   d4est_amr_destroy(d4est_amr);
   d4est_amr_destroy(d4est_amr_uniform_p);
-  d4est_poisson_flux_destroy(flux_data_for_jac);
-  d4est_poisson_flux_destroy(flux_data_for_res);
+  d4est_laplacian_flux_destroy(flux_data_for_jac);
+  d4est_laplacian_flux_destroy(flux_data_for_res);
   /* d4est_norms_destroy_energy_norm_fit(fit); */
   P4EST_FREE(prob_vecs.u);
   P4EST_FREE(prob_vecs.Au);

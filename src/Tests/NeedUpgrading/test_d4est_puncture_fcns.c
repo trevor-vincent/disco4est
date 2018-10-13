@@ -9,8 +9,8 @@
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
 #include <d4est_elliptic_eqns.h>
 #include <d4est_solver_jacobian_tester.h>
 #include <d4est_util.h>
@@ -196,16 +196,16 @@ int main(int argc, char *argv[])
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
 
-  d4est_poisson_dirichlet_bc_t bc_data_for_jac;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_jac;
   bc_data_for_jac.dirichlet_fcn = zero_fcn;
 
-  d4est_poisson_dirichlet_bc_t bc_data_for_res;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_res;
   bc_data_for_res.dirichlet_fcn = boundary_fcn;
 
   
-  d4est_poisson_flux_data_t* flux_data_for_jac =
-    d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, get_deg_mortar_quad, &deg_data);
-  d4est_poisson_flux_data_t* flux_data_for_res = d4est_poisson_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_res, get_deg_mortar_quad, &deg_data);
+  d4est_laplacian_flux_data_t* flux_data_for_jac =
+    d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_jac, get_deg_mortar_quad, &deg_data);
+  d4est_laplacian_flux_data_t* flux_data_for_res = d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_res, get_deg_mortar_quad, &deg_data);
   
   problem_ctx_t ctx;
   ctx.flux_data_for_res = flux_data_for_res;
@@ -359,8 +359,8 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
-  d4est_poisson_flux_destroy(flux_data_for_jac);
-  d4est_poisson_flux_destroy(flux_data_for_res);
+  d4est_laplacian_flux_destroy(flux_data_for_jac);
+  d4est_laplacian_flux_destroy(flux_data_for_res);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);

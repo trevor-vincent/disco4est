@@ -2,7 +2,7 @@
 #include <d4est_quadrature.h>
 #include <d4est_element_data.h>
 #include <d4est_quadrature_legendre.h>
-#include <d4est_poisson_flux_sipg.h>
+#include <d4est_laplacian_flux_sipg.h>
 #include <d4est_geometry.h>
 #include <d4est_mesh.h>
 #include <d4est_geometry_brick.h>
@@ -10,8 +10,8 @@
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
-#include <d4est_poisson.h>
-#include <d4est_poisson_flux.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
 #include <d4est_util.h>
 #include <limits.h>
 #include <zlog.h>
@@ -26,9 +26,9 @@ typedef struct {
   double boundary_term_2_err;
   double boundary_term_1_err;
   double interface_term_1_err;
-  d4est_poisson_flux_sipg_params_t* sipg_params;
+  d4est_laplacian_flux_sipg_params_t* sipg_params;
   
-} testd4est_poisson_2_brick_data_t;
+} testd4est_laplacian_2_brick_data_t;
 
 static void
 problem_set_degrees_init
@@ -122,7 +122,7 @@ problem_build_p4est
 }
 
 static double
-testd4est_poisson_2_brick_dirichlet_term3
+testd4est_laplacian_2_brick_dirichlet_term3
 (
  int deg,
  int face,
@@ -182,7 +182,7 @@ testd4est_poisson_2_brick_dirichlet_term3
 }
 
 static double
-testd4est_poisson_2_brick_dirichlet_term1
+testd4est_laplacian_2_brick_dirichlet_term1
 (
  int deg,
  int face,
@@ -244,7 +244,7 @@ testd4est_poisson_2_brick_dirichlet_term1
 
 
 static double
-testd4est_poisson_2_brick_dirichlet_term2
+testd4est_laplacian_2_brick_dirichlet_term2
 (
  int deg,
  int face,
@@ -304,7 +304,7 @@ testd4est_poisson_2_brick_dirichlet_term2
 }
 
 static void
-testd4est_poisson_2_brick_interface_old_style
+testd4est_laplacian_2_brick_interface_old_style
 (
  d4est_element_data_t** e_m,
  int faces_m,
@@ -319,7 +319,7 @@ testd4est_poisson_2_brick_interface_old_style
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_poisson_flux_interface_data_t* mortar_data,
+ d4est_laplacian_flux_interface_data_t* mortar_data,
  void* params
 )
 {
@@ -440,7 +440,7 @@ testd4est_poisson_2_brick_interface_old_style
 
 
 static void
-testd4est_poisson_2_brick_dirichlet
+testd4est_laplacian_2_brick_dirichlet
 (
  d4est_element_data_t* e_m,
  int f_m,
@@ -449,11 +449,11 @@ testd4est_poisson_2_brick_dirichlet
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_poisson_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_flux_boundary_data_t* boundary_data,
  void* params
 )
 {
-  testd4est_poisson_2_brick_data_t* data = params;
+  testd4est_laplacian_2_brick_data_t* data = params;
   
   int face_nodes_m_lobatto = boundary_data->face_nodes_m_lobatto;
   int face_nodes_m_quad = boundary_data->face_nodes_m_quad;
@@ -477,7 +477,7 @@ testd4est_poisson_2_brick_dirichlet
   double* u_at_bndry_lobatto = P4EST_ALLOC(double, face_nodes_m_lobatto);
   double* u_at_bndry_lobatto_to_quad = P4EST_ALLOC(double, face_nodes_m_quad);
   
-  d4est_poisson_flux_sipg_dirichlet_aux
+  d4est_laplacian_flux_sipg_dirichlet_aux
     (
      e_m,
      f_m,
@@ -507,12 +507,12 @@ testd4est_poisson_2_brick_dirichlet
   double* lifted_VT_w_term1_lobatto_check = P4EST_ALLOC(double, volume_nodes_m_lobatto);
   double* DT_lifted_VT_w_term2_lobatto_check = P4EST_ALLOC(double, volume_nodes_m_lobatto);
  
-  d4est_poisson_flux_sipg_params_t* ip_flux_params = (d4est_poisson_flux_sipg_params_t*) data->sipg_params;
+  d4est_laplacian_flux_sipg_params_t* ip_flux_params = (d4est_laplacian_flux_sipg_params_t*) data->sipg_params;
   double sipg_kronbichler_flux_penalty_prefactor = ip_flux_params->sipg_penalty_prefactor;
 
   /* int volume_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM), e_m->deg); */
   for (int i = 0; i < volume_nodes_m_lobatto; i++){
-    lifted_VT_w_term3_lobatto_check[i] = testd4est_poisson_2_brick_dirichlet_term3
+    lifted_VT_w_term3_lobatto_check[i] = testd4est_laplacian_2_brick_dirichlet_term3
                                          (
                                           e_m->deg,
                                           f_m,
@@ -529,7 +529,7 @@ testd4est_poisson_2_brick_dirichlet
 
   /* printf("e_m->id, f_m = %d, %d\n", e_m->id, f_m);   */
   for (int i = 0; i < volume_nodes_m_lobatto; i++){
-    lifted_VT_w_term1_lobatto_check[i] = testd4est_poisson_2_brick_dirichlet_term1
+    lifted_VT_w_term1_lobatto_check[i] = testd4est_laplacian_2_brick_dirichlet_term1
                                          (
                                           e_m->deg,
                                           f_m,
@@ -549,7 +549,7 @@ testd4est_poisson_2_brick_dirichlet
   
   /* printf(" DT_lifted_VT_w_term2_lobatto_check, DT_lifted_VT_w_term2_lobatto = \n"); */
   for (int i = 0; i < volume_nodes_m_lobatto; i++){
-    DT_lifted_VT_w_term2_lobatto_check[i] = testd4est_poisson_2_brick_dirichlet_term2
+    DT_lifted_VT_w_term2_lobatto_check[i] = testd4est_laplacian_2_brick_dirichlet_term2
                                          (
                                           e_m->deg,
                                           f_m,
@@ -595,7 +595,7 @@ testd4est_poisson_2_brick_dirichlet
 }
 
 void
-testd4est_poisson_2_brick_on_interfaces
+testd4est_laplacian_2_brick_on_interfaces
 (
  p4est_t* p4est,
  p4est_ghost_t* ghost,
@@ -607,27 +607,27 @@ testd4est_poisson_2_brick_on_interfaces
  double err_tol
 )
 {
-  d4est_poisson_flux_data_t* d4est_poisson_flux_data = P4EST_ALLOC(d4est_poisson_flux_data_t,1);
-  testd4est_poisson_2_brick_data_t* data = P4EST_ALLOC(testd4est_poisson_2_brick_data_t, 1);
+  d4est_laplacian_flux_data_t* d4est_laplacian_flux_data = P4EST_ALLOC(d4est_laplacian_flux_data_t,1);
+  testd4est_laplacian_2_brick_data_t* data = P4EST_ALLOC(testd4est_laplacian_2_brick_data_t, 1);
   data->boundary_term_3_err = 0.;
   data->boundary_term_2_err = 0.;
   data->boundary_term_1_err = 0.;
   data->interface_term_1_err = 0.;
 
-  d4est_poisson_flux_sipg_params_t* d4est_poisson_flux_sipg_params = P4EST_ALLOC(d4est_poisson_flux_sipg_params_t, 1);
-  d4est_poisson_flux_sipg_params_input(p4est, "flux", "testd4est_poisson_2_brick.input", d4est_poisson_flux_sipg_params);
+  d4est_laplacian_flux_sipg_params_t* d4est_laplacian_flux_sipg_params = P4EST_ALLOC(d4est_laplacian_flux_sipg_params_t, 1);
+  d4est_laplacian_flux_sipg_params_input(p4est, "flux", "testd4est_laplacian_2_brick.input", d4est_laplacian_flux_sipg_params);
 
-  data->sipg_params = d4est_poisson_flux_sipg_params;
+  data->sipg_params = d4est_laplacian_flux_sipg_params;
   
-  d4est_poisson_flux_data->user = data;
-  d4est_poisson_flux_data->interface_fcn = testd4est_poisson_2_brick_interface_old_style;
-  d4est_poisson_flux_data->boundary_fcn = NULL;
-  d4est_poisson_flux_data->boundary_condition = zero_fcn;
-  d4est_poisson_flux_data->destroy = NULL;
+  d4est_laplacian_flux_data->user = data;
+  d4est_laplacian_flux_data->interface_fcn = testd4est_laplacian_2_brick_interface_old_style;
+  d4est_laplacian_flux_data->boundary_fcn = NULL;
+  d4est_laplacian_flux_data->boundary_condition = zero_fcn;
+  d4est_laplacian_flux_data->destroy = NULL;
 
-  d4est_poisson_flux_init_element_data(p4est, d4est_ops, prob_vecs->u, prob_vecs->Au);
+  d4est_laplacian_flux_init_element_data(p4est, d4est_ops, prob_vecs->u, prob_vecs->Au);
   
-  d4est_mortars_fcn_ptrs_t flux_fcns = d4est_poisson_flux_fetch_fcns(d4est_poisson_flux_data);
+  d4est_mortars_fcn_ptrs_t flux_fcns = d4est_laplacian_flux_fetch_fcns(d4est_laplacian_flux_data);
   d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
@@ -646,8 +646,8 @@ testd4est_poisson_2_brick_on_interfaces
   printf("data->interface_term_1_err = %.25f\n", data->interface_term_1_err);
   int err = (data->boundary_term_3_err < err_tol);
   
-  P4EST_FREE(d4est_poisson_flux_data);
-  P4EST_FREE(d4est_poisson_flux_sipg_params);
+  P4EST_FREE(d4est_laplacian_flux_data);
+  P4EST_FREE(d4est_laplacian_flux_sipg_params);
   P4EST_FREE(data);
   D4EST_ASSERT(err);
 }
@@ -666,7 +666,7 @@ int main(int argc, char *argv[])
   
 
   /*  */
-  const char* input_file = "testd4est_poisson_4_cubed_sphere.input";
+  const char* input_file = "testd4est_laplacian_4_cubed_sphere.input";
   
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
@@ -691,8 +691,8 @@ int main(int argc, char *argv[])
   d4est_quadrature_legendre_new(d4est_quad, d4est_geom,"");
 
   
-  d4est_poisson_flux_data_t* flux_data = d4est_poisson_flux_new(p4est, input_file, zero_fcn, NULL);
-  d4est_poisson_flux_data_t* flux_data_with_bc = d4est_poisson_flux_new(p4est, input_file, poly_vec_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data = d4est_laplacian_flux_new(p4est, input_file, zero_fcn, NULL);
+  d4est_laplacian_flux_data_t* flux_data_with_bc = d4est_laplacian_flux_new(p4est, input_file, poly_vec_fcn, NULL);
       
   p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FACE);
   d4est_element_data_t* ghost_data = P4EST_ALLOC (d4est_element_data_t,
@@ -765,7 +765,7 @@ int main(int argc, char *argv[])
       elliptic_data.Au = Apoly_vec;
       elliptic_data.local_nodes = local_nodes;
 
-      testd4est_poisson_2_brick_on_interfaces
+      testd4est_laplacian_2_brick_on_interfaces
         (
          p4est,
          ghost,
@@ -803,8 +803,8 @@ int main(int argc, char *argv[])
     ghost_data = NULL;
   }
     
-  d4est_poisson_flux_destroy(flux_data);
-  d4est_poisson_flux_destroy(flux_data_with_bc);
+  d4est_laplacian_flux_destroy(flux_data);
+  d4est_laplacian_flux_destroy(flux_data_with_bc);
   d4est_mesh_geometry_storage_destroy(geometric_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
   d4est_amr_destroy(d4est_amr);
