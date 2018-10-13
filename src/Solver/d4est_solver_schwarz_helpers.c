@@ -99,7 +99,32 @@ d4est_solver_schwarz_restrict_nodal_field_to_subdomains
   }
 }
 
-
+inline
+void d4est_solver_schwarz_restrict_transpose_restricted_field_over_single_subdomain
+(
+ d4est_solver_schwarz_data_t* schwarz_data,
+ d4est_solver_schwarz_operators_t* schwarz_ops,
+ double* restricted_field,
+ double* transpose_restricted_field,
+ int subdomain
+)
+{
+    d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[subdomain];
+    for (int j = 0; j < sub_data.num_elements; j++){
+      d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j]; 
+      d4est_operators_apply_schwarz_restrictor
+        (
+         schwarz_ops,
+         &restricted_field_over_subdomains[ed.restricted_nodal_stride],
+         (P4EST_DIM),
+         &(ed.faces[0]),
+         ed.deg,
+         schwarz_data->num_nodes_overlap,
+         D4OPS_TRANSPOSE,
+         &field_over_subdomains[ed.nodal_stride]
+        );
+    }
+}
 /** 
  * 
  * 
@@ -118,8 +143,7 @@ d4est_solver_schwarz_restrict_transpose_restricted_field_over_subdomains
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
     d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[i];
     for (int j = 0; j < sub_data.num_elements; j++){
-      d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j];
-      
+      d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j]; 
       d4est_operators_apply_schwarz_restrictor
         (
          schwarz_ops,
@@ -218,7 +242,7 @@ d4est_solver_schwarz_cg_solve_single_core
   double alpha_old = -1;
   double beta_old = -1;
 
-  double* Ax = D4EST_TEST_ALLOC(double, nodes); 
+  /* double* Ax = D4EST_TEST_ALLOC(double, nodes);  */
   double* d = D4EST_TEST_ALLOC(double, nodes); 
   double* r = D4EST_TEST_ALLOC(double, nodes);
 
@@ -226,27 +250,26 @@ d4est_solver_schwarz_cg_solve_single_core
 
   int sub_res_nodal_stride = schwarz_data->sub_data[subdomain].restricted_nodal_stride;
   
-   d4est_solver_schwarz_apply_lhs_single_core
-      (
-       schwarz_data,
-       schwarz_ops,
-       elliptic_fcns,
-       elliptic_data_for_cg,
-       u_restricted_field_over_subdomains,
-       Au_restricted_field_over_subdomains,
-       subdomain
-      )
+  d4est_solver_schwarz_apply_lhs_single_core
+    (
+     schwarz_data,
+     schwarz_ops,
+     elliptic_fcns,
+     elliptic_data_for_cg,
+     u_restricted_field_over_subdomains,
+     Au_restricted_field_over_subdomains,
+     subdomain
+    )
   
-  
+          
   d4est_util_copy_1st_to_2nd(Ax, r, nodes);
   d4est_linalg_vec_xpby(b, -1., r, nodes);
   d4est_util_copy_1st_to_2nd(r, d, nodes);
   delta_new = d4est_linalg_vec_dot(r,r,nodes);
-
+  
   for (int i = 0; i < iter; i++){
 
-    /* apply_mat(A, d, Ax, nodes); */
-
+    /* apply_mat(A, d, Ax, nodes); */    
     d4est_solver_schwarz_apply_lhs_single_core
       (
        schwarz_data,
@@ -345,6 +368,7 @@ d4est_solver_schwarz_compute_and_add_correction
 }
 
 
+
 /** 
  * Take a single subdomain field on a certain process
  * and turn it into a global nodal field (e.g. the parts
@@ -352,19 +376,28 @@ d4est_solver_schwarz_compute_and_add_correction
  * processes). This is useful for visualization.
  * This uses communication.
  * 
+ * @param p4est 
+ * @param d4est_factors 
+ * @param schwarz_data 
+ * @param [in] field_on_subdomain restricted field only on a single subdomain
+ * @param [out] field 
+ * @param mpirank mpirank of core id of subdomain, may be different from p4est mpirank if using multiple cores 
+ * @param sub_id id of subdomain
+ * @param local_nodes number of nodes for the output field
+ * @param is_it_zeroed is the output field zeroed, this is needed because elements not in this subdomain should have zero fields 
  */
 void
-d4est_solver_schwarz_convert_subdomain_field_to_global_nodal_field
+d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
 (
  p4est_t* p4est,
  d4est_mesh_data_t* d4est_factors,
  d4est_solver_schwarz_data_t* schwarz_data,
- double* field_over_subdomains, /* not restricted */
+ double* field_on_subdomain, 
  double* field,
- int mpirank, /* mpirank of core id of subdomain, may be different from p4est mpirank if using multiple cores */
+ int mpirank,
  int sub_id,
  int local_nodes,
- d4est_field_init_type_t is_it_zeroed
+ d4est_field_init_type_t is_it_zeroed 
 )
 {
   /* transfer subdomains if multi-process */
@@ -374,6 +407,18 @@ d4est_solver_schwarz_convert_subdomain_field_to_global_nodal_field
       field[i] = 0.;
     }
   }
+
+  
+
+d4est_solver_schwarz_restrict_transpose_restricted_field_over_single_subdomain
+(
+ d4est_solver_schwarz_data_t* schwarz_data,
+ d4est_solver_schwarz_operators_t* schwarz_ops,
+ field_on_subdomain,
+ double* transpose_restricted_field,
+ sub_id
+);
+  
   /* Don't need to check if p4est->mpirank == mpirank in this case */
   if (p4est->mpisize == 1){    
     d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[sub_id];
@@ -381,7 +426,7 @@ d4est_solver_schwarz_convert_subdomain_field_to_global_nodal_field
       d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j];
       int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed.deg);
       int local_nodal_stride = d4est_factors->element_data[ed.id]->nodal_stride;
-      int sub_nodal_stride = sub_data.nodal_stride + ed.nodal_stride;
+      int sub_nodal_stride = ed.nodal_stride;
 
       d4est_util_copy_1st_to_2nd(&field_over_subdomains[sub_nodal_stride],
                                     &field[local_nodal_stride],
@@ -392,7 +437,7 @@ d4est_solver_schwarz_convert_subdomain_field_to_global_nodal_field
   else {
     /* TRANSER STUFF HERE BEFORE IF */
     if (p4est->mpirank == mpirank){
-      /* GO THROUGH LOCAL SUBDOMAINS AND COPY DATA */
+      /* GO THROUGH LOCAL SUBDOMAINS AND COPY DATA IF NEEDED */
     }
     else {
       /* GO THROUGH GHOST SUBDOMAIN DATA AND COPY DATA */
@@ -430,12 +475,12 @@ void d4est_solver_schwarz_apply_lhs_single_core
   d4est_elliptic_data_t elliptic_data_for_schwarz;
   
   /* for (int i = 0; i < schwarz_data->num_subdomains; i++){ */
-    d4est_solver_schwarz_convert_subdomain_field_to_global_nodal_field
+    d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
       (
        p4est,
        d4est_factors,
        schwarz_data,
-       u_restricted_field_over_subdomains,
+       &u_restricted_field_over_subdomains[],
        field,
        p4est->mpirank,
        subdomain,
@@ -478,16 +523,6 @@ void d4est_solver_schwarz_apply_lhs_single_core
        Au_restricted_field_over_subdomains,
        subdomain
       );
-
-    /* d4est_solver_schwarz_zero_field_over_subdomain_single_core */
-    /*   ( */
-    /*    p4est, */
-    /*    schwarz_data, */
-    /*    schwarz_ops, */
-    /*    field */
-    /*   ); */
-
-  /* } */
 
   P4EST_FREE(field);
   P4EST_FREE(A_field);
