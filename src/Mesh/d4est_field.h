@@ -25,7 +25,7 @@ typedef struct {
 typedef enum {
 
               FIELD_ZEROED,
-              FIELD_NOT_ZERORED
+              FIELD_NOT_ZEROED
 } d4est_field_init_type_t;
 
 
