@@ -132,7 +132,7 @@ SET (
   src/Solver/d4est_solver_cg_eigs.c
   src/Solver/d4est_solver_schwarz.c
   src/Solver/d4est_solver_schwarz_operators.c
-  # src/Solver/d4est_solver_schwarz_helpers.c
+  src/Solver/d4est_solver_schwarz_helpers.c
   # src/Solver/d4est_solver_jacobian_tester.c
   src/Solver/d4est_solver_full_matrix.c
   src/Solver/d4est_solver_matrix_symmetry.c
@@ -351,6 +351,7 @@ add_d4est_unit_test_3d(d4est_test_cg_eigs d4est_test_cg_eigs.c Unit d4est_test_c
 add_d4est_unit_test_3d(d4est_test_kron d4est_test_kron.c Unit d4est_test_kron)
 add_d4est_unit_test_3d(d4est_test_linalg d4est_test_linalg.c Unit d4est_test_linalg)
 add_d4est_unit_test_3d(d4est_test_ghost_data d4est_test_ghost_data.c Unit d4est_test_ghost_data)
+add_d4est_unit_test_3d(d4est_test_schwarz_operators d4est_test_schwarz_operators.c Unit d4est_test_schwarz_operators)
 
 add_d4est_unit_test_3d(d4est_test_laplacian_symmetry d4est_test_laplacian_symmetry.c Unit d4est_test_laplacian_symmetry)
 add_d4est_unit_test_3d(d4est_test_laplacian_consistency d4est_test_laplacian_consistency.c Unit d4est_test_laplacian_consistency)

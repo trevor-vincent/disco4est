@@ -454,7 +454,9 @@ problem_init
        initial_extents->face_h_type,
        initial_extents->volume_h_type
       );
-    
+
+    double* estimator_vtk = P4EST_ALLOC(double, 4*p4est->local_num_quadrants);
+    double* estimator_vtk_per_face = P4EST_ALLOC(double, 18*p4est->local_num_quadrants);
     double* estimator = d4est_estimator_bi_compute
                         (
                          p4est,
@@ -471,10 +473,21 @@ problem_init
                          d4est_factors_compactified,
                          d4est_quad,
                          0,
-                         1,
-                         input_file,
-                         level
+                         estimator_vtk,
+                         estimator_vtk_per_face
                         );
+
+    /* for (int i = 0; i < p4est->local_num_quadrants; i++){ */
+    /*   printf("%d %.15f %.15f %.15f %.15f %15f\n", i, */
+    /*          estimator[i], */
+    /*          estimator_vtk[i], */
+    /*          estimator_vtk[i + p4est->local_num_quadrants], */
+    /*          estimator_vtk[i + 2*p4est->local_num_quadrants], */
+    /*          estimator_vtk[i + 3*p4est->local_num_quadrants] */
+    /*         ); */
+
+    /* } */
+    
 
     d4est_amr_smooth_pred_params_t* sp_params = d4est_amr_smooth_pred_params_input
                                                 (
@@ -521,6 +534,18 @@ problem_init
        error_l2
       );
 
+    double* a = P4EST_ALLOC(double, prob_vecs.local_nodes);
+    double* b = P4EST_ALLOC(double, prob_vecs.local_nodes);
+    double* c = P4EST_ALLOC(double, prob_vecs.local_nodes);
+
+    d4est_mesh_data_get_topological_coords
+      (
+       p4est,
+       d4est_ops,
+       a,
+       b,
+       c
+      );
     
     d4est_vtk_save
       (
@@ -528,10 +553,48 @@ problem_init
        d4est_ops,
        input_file,
        "d4est_vtk",
-       (const char * []){"u","u_analytic","error", NULL},
-       (double* []){prob_vecs.u, u_analytic, error},
-       (const char * []){"estimator","error_l2",NULL},
-       (double* []){estimator,error_l2},
+       (const char * []){"u","u_analytic","error","a","b","c", NULL},
+       (double* []){prob_vecs.u, u_analytic, error,a,b,c},
+       (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
+                           "estimator_Je1_face0",
+                           "estimator_Je1_face1",
+                           "estimator_Je1_face2",
+                           "estimator_Je1_face3",
+                           "estimator_Je1_face4",
+                           "estimator_Je1_face5",
+                           "estimator_Je2_face0",
+                           "estimator_Je2_face1",
+                           "estimator_Je2_face2",
+                           "estimator_Je2_face3",
+                           "estimator_Je2_face4",
+                           "estimator_Je2_face5",
+                           "estimator_Je3_face0",
+                           "estimator_Je3_face1",
+                           "estimator_Je3_face2",
+                           "estimator_Je3_face3",
+                           "estimator_Je3_face4",
+                           "estimator_Je3_face5",
+                           NULL},
+       (double* []){estimator,error_l2,&estimator_vtk[0], &estimator_vtk[1*p4est->local_num_quadrants],&estimator_vtk[2*p4est->local_num_quadrants],&estimator_vtk[3*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[0*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[1*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[2*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[3*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[4*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[5*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[6*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[7*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[8*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[9*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[10*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[11*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[12*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[13*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[14*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[15*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[16*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[17*p4est->local_num_quadrants]
+                      },
        NULL,
        NULL,
        level
@@ -543,27 +606,101 @@ problem_init
        d4est_ops,
        input_file,
        "d4est_vtk_compactified",
-       (const char * []){"u","u_analytic","error", NULL},
-       (double* []){prob_vecs.u, u_analytic, error},
-       (const char * []){"estimator","error_l2",NULL},
-       (double* []){estimator,error_l2},
+       (const char * []){"u","u_analytic","error","a","b","c", NULL},
+       (double* []){prob_vecs.u, u_analytic, error,a,b,c},
+       (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
+                           "estimator_Je1_face0",
+                           "estimator_Je1_face1",
+                           "estimator_Je1_face2",
+                           "estimator_Je1_face3",
+                           "estimator_Je1_face4",
+                           "estimator_Je1_face5",
+                           "estimator_Je2_face0",
+                           "estimator_Je2_face1",
+                           "estimator_Je2_face2",
+                           "estimator_Je2_face3",
+                           "estimator_Je2_face4",
+                           "estimator_Je2_face5",
+                           "estimator_Je3_face0",
+                           "estimator_Je3_face1",
+                           "estimator_Je3_face2",
+                           "estimator_Je3_face3",
+                           "estimator_Je3_face4",
+                           "estimator_Je3_face5",
+                           NULL},
+       (double* []){estimator,error_l2,&estimator_vtk[0], &estimator_vtk[1*p4est->local_num_quadrants],&estimator_vtk[2*p4est->local_num_quadrants],&estimator_vtk[3*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[0*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[1*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[2*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[3*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[4*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[5*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[6*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[7*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[8*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[9*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[10*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[11*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[12*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[13*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[14*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[15*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[16*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[17*p4est->local_num_quadrants]
+                      },
        NULL,
        NULL,
        level
       );
-
-
 
     d4est_vtk_save
       (
        p4est,
        d4est_ops,
        input_file,
-       "d4est_vtk_compactified_corner",
-       (const char * []){"u","u_analytic","error", NULL},
-       (double* []){prob_vecs.u, u_analytic, error},
-       (const char * []){"estimator","error_l2",NULL},
-       (double* []){estimator,error_l2},
+"d4est_vtk_compactified_corner",
+       (const char * []){"u","u_analytic","error","a","b","c", NULL},
+       (double* []){prob_vecs.u, u_analytic, error,a,b,c},
+       (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
+                           "estimator_Je1_face0",
+                           "estimator_Je1_face1",
+                           "estimator_Je1_face2",
+                           "estimator_Je1_face3",
+                           "estimator_Je1_face4",
+                           "estimator_Je1_face5",
+                           "estimator_Je2_face0",
+                           "estimator_Je2_face1",
+                           "estimator_Je2_face2",
+                           "estimator_Je2_face3",
+                           "estimator_Je2_face4",
+                           "estimator_Je2_face5",
+                           "estimator_Je3_face0",
+                           "estimator_Je3_face1",
+                           "estimator_Je3_face2",
+                           "estimator_Je3_face3",
+                           "estimator_Je3_face4",
+                           "estimator_Je3_face5",
+                           NULL},
+       (double* []){estimator,error_l2,&estimator_vtk[0], &estimator_vtk[1*p4est->local_num_quadrants],&estimator_vtk[2*p4est->local_num_quadrants],&estimator_vtk[3*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[0*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[1*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[2*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[3*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[4*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[5*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[6*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[7*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[8*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[9*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[10*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[11*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[12*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[13*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[14*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[15*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[16*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[17*p4est->local_num_quadrants]
+                      },
        NULL,
        NULL,
        level
@@ -575,10 +712,48 @@ problem_init
        d4est_ops,
        input_file,
        "d4est_vtk_corner",
-       (const char * []){"u","u_analytic","error", NULL},
-       (double* []){prob_vecs.u, u_analytic, error},
-       (const char * []){"estimator","error_l2",NULL},
-       (double* []){estimator,error_l2},
+       (const char * []){"u","u_analytic","error","a","b","c", NULL},
+       (double* []){prob_vecs.u, u_analytic, error,a,b,c},
+       (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
+                           "estimator_Je1_face0",
+                           "estimator_Je1_face1",
+                           "estimator_Je1_face2",
+                           "estimator_Je1_face3",
+                           "estimator_Je1_face4",
+                           "estimator_Je1_face5",
+                           "estimator_Je2_face0",
+                           "estimator_Je2_face1",
+                           "estimator_Je2_face2",
+                           "estimator_Je2_face3",
+                           "estimator_Je2_face4",
+                           "estimator_Je2_face5",
+                           "estimator_Je3_face0",
+                           "estimator_Je3_face1",
+                           "estimator_Je3_face2",
+                           "estimator_Je3_face3",
+                           "estimator_Je3_face4",
+                           "estimator_Je3_face5",
+                           NULL},
+       (double* []){estimator,error_l2,&estimator_vtk[0], &estimator_vtk[1*p4est->local_num_quadrants],&estimator_vtk[2*p4est->local_num_quadrants],&estimator_vtk[3*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[0*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[1*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[2*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[3*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[4*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[5*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[6*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[7*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[8*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[9*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[10*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[11*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[12*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[13*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[14*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[15*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[16*p4est->local_num_quadrants],
+                      &estimator_vtk_per_face[17*p4est->local_num_quadrants]
+                      },
        NULL,
        NULL,
        level
@@ -588,6 +763,9 @@ problem_init
     P4EST_FREE(u_analytic);
     P4EST_FREE(error);
     P4EST_FREE(error_l2);
+    P4EST_FREE(a);
+    P4EST_FREE(b);
+    P4EST_FREE(c);
 
 
     d4est_ip_energy_norm_data_t ip_norm_data;
@@ -684,18 +862,7 @@ problem_init
        &ctx,
        0
       );
-
-    /* int min_level, max_level; */
-
-    /* d4est_solver_multigrid_get_level_range(p4est, &min_level, &max_level); */
-    /* printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level); */
-
-    /* need to do a reduce on min,max_level before supporting multiple proc */
-    /* mpi_assert(proc_size == 1); */
-    /* int num_of_levels = max_level + 1; */
     
-    
-
     d4est_solver_multigrid_data_t* mg_data = d4est_solver_multigrid_data_init(
                                                                               p4est,
                                                                               d4est_ops,
@@ -708,32 +875,6 @@ problem_init
                                                                               input_file
     );
 
-
-
-
- 
-    /* d4est_solver_multigrid_logger_t* logger = d4est_solver_multigrid_logger_residual_init */
-    /* ( */
-    /* ); */
-
-    /* d4est_solver_multigrid_element_data_updater_t* updater = d4est_solver_multigrid_element_data_updater_init */
-    /* ( */
-    /* mg_data->num_of_levels, */
-    /* ghost, */
-    /* ghost_data, */
-    /* d4est_factors, */
-    /* problem_set_degrees_after_amr, */
-    /* NULL */
-    /* ); */
-
-    
-
-    /* d4est_solver_multigrid_set_callbacks( */
-    /* mg_data, */
-    /* logger, */
-    /* NULL, */
-    /* updater */
-    /* ); */
     
     d4est_krylov_pc_t* pc = d4est_krylov_pc_multigrid_create(mg_data, NULL);
     
@@ -745,20 +886,20 @@ problem_init
     prob_vecs.num_of_fields = 1;
       
     
-    /* d4est_solver_krylov_petsc_solve */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs, */
-    /*    &prob_fcns, */
-    /*    d4est_ghost, */
-    /*    &d4est_ghost_data, */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    d4est_quad, */
-    /*    d4est_factors, */
-    /*    &d4est_solver_krylov_petsc_params, */
-    /*    pc,level */
-    /*   ); */
+    d4est_solver_krylov_petsc_solve
+      (
+       p4est,
+       &prob_vecs,
+       &prob_fcns,
+       d4est_ghost,
+       &d4est_ghost_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       &d4est_solver_krylov_petsc_params,
+       pc,level
+      );
 
 
     d4est_mesh_interpolate_data_t data;
@@ -902,16 +1043,10 @@ problem_init
     }
     
     d4est_krylov_pc_multigrid_destroy(pc);
-    
-    /* d4est_solver_multigrid_logger_residual_destroy(logger); */
-    /* d4est_solver_multigrid_element_data_updater_destroy(updater, mg_data->num_of_levels); */
     d4est_solver_multigrid_data_destroy(mg_data);
-
-
+    P4EST_FREE(estimator_vtk);
+    P4EST_FREE(estimator_vtk_per_face);
     P4EST_FREE(estimator);
-
-
-    
   }
 
   if (d4est_ghost_data != NULL){
@@ -926,10 +1061,7 @@ problem_init
   d4est_amr_destroy(d4est_amr_uniform);
   d4est_laplacian_flux_destroy(flux_data_for_lhs);
   d4est_laplacian_flux_destroy(flux_data_for_rhs);
-
-
   d4est_norms_linear_fit_destroy(point_3m_fit);
-
 
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);

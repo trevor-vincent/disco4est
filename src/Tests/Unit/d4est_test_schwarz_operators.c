@@ -12,7 +12,7 @@
 static void
 d4est_test_operators_schwarz_nd
 (
- d4est_operators_t* d4est_ops,
+ d4est_solver_schwarz_operators_t* schwarz_ops,
  int dim
 )
 {
@@ -21,7 +21,7 @@ d4est_test_operators_schwarz_nd
   
   double* rst_lobatto [3];
   for (int i = 0; i < dim; i++){
-    rst_lobatto[i] = d4est_operators_fetch_lobatto_rst_nd(d4est_ops, dim, deg, i);  
+    rst_lobatto[i] = d4est_operators_fetch_lobatto_rst_nd(schwarz_ops->d4est_ops, dim, deg, i);  
   }
 
   int volume_nodes = d4est_lgl_get_nodes((dim), deg);
@@ -58,9 +58,9 @@ d4est_test_operators_schwarz_nd
     }
     res_rst_lobatto[i] = P4EST_ALLOC(double, volume_nodes);
 
-    d4est_operators_apply_schwarz_restrictor
+    d4est_solver_schwarz_operators_apply_schwarz_restrictor
       (
-       d4est_ops,
+       schwarz_ops,
        rst_lobatto[i],
        dim,
        &faces[0],
@@ -71,9 +71,9 @@ d4est_test_operators_schwarz_nd
       );
   }
   
-  d4est_operators_apply_schwarz_restrictor
+  d4est_solver_schwarz_operators_apply_schwarz_restrictor
     (
-     d4est_ops,
+     schwarz_ops,
      frst,
      dim,
      &faces[0],
@@ -93,9 +93,9 @@ d4est_test_operators_schwarz_nd
     }
   }
 
-  d4est_operators_apply_schwarz_restrictor
+  d4est_solver_schwarz_operators_apply_schwarz_restrictor
     (
-     d4est_ops,
+     schwarz_ops,
      res_frst,
      dim,
      &faces[0],
@@ -126,7 +126,7 @@ d4est_test_operators_schwarz_nd
 static void
 d4est_test_operators_schwarz
 (
- d4est_operators_t* d4est_ops
+ d4est_solver_schwarz_operators_t* schwarz_ops
 ){
 
 
@@ -136,7 +136,7 @@ d4est_test_operators_schwarz
   int nodes_res = res_deg + 1;
   int nodes_deg = deg + 1;
   
-  double* x = d4est_operators_fetch_lobatto_nodes_1d(d4est_ops, deg);
+  double* x = d4est_operators_fetch_lobatto_nodes_1d(schwarz_ops->d4est_ops, deg);
   double* fx = P4EST_ALLOC(double, deg + 1);
 
   double* res_x_side0 = P4EST_ALLOC(double, res_deg + 1);
@@ -154,16 +154,16 @@ d4est_test_operators_schwarz
     fx[i] = exp(x[i]);
   }
   
-  double* schwarz_1d = d4est_operators_fetch_schwarz_restrictor_1d
+  double* schwarz_1d = d4est_solver_schwarz_operators_fetch_schwarz_restrictor_1d
                        (
-                        d4est_ops,
+                        schwarz_ops,
                         deg,
                         res_deg
                        );
   
-  double* schwarz_1d_trans = d4est_operators_fetch_schwarz_restrictor_transpose_1d
+  double* schwarz_1d_trans = d4est_solver_schwarz_operators_fetch_schwarz_restrictor_transpose_1d
                              (
-                              d4est_ops,
+                              schwarz_ops,
                               deg,
                               res_deg
                              );
@@ -210,13 +210,13 @@ int main(int argc, char *argv[])
   
   d4est_test_operators_schwarz_nd
     (
-     d4est_ops,
+     d4est_schwarz_ops,
      3
     );
 
   d4est_test_operators_schwarz
     (
-     d4est_ops
+     d4est_schwarz_ops
     );
 
   d4est_solver_schwarz_operators_destroy(d4est_schwarz_ops);
@@ -224,5 +224,3 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-
-zz

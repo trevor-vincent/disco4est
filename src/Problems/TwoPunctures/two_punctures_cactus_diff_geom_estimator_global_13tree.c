@@ -518,9 +518,8 @@ problem_init
        d4est_factors_compactified,
        d4est_quad,
        0,
-       0,
        NULL,
-       -1
+       NULL
       );
 
     d4est_amr_smooth_pred_params_t* sp_params = d4est_amr_smooth_pred_params_input

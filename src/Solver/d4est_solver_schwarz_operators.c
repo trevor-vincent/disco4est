@@ -160,7 +160,7 @@ d4est_solver_schwarz_operators_fetch_schwarz_restrictor_transpose_1d
     );
 }
 
-void d4est_operators_apply_schwarz_restrictor
+void d4est_solver_schwarz_operators_apply_schwarz_restrictor
 (
  d4est_solver_schwarz_operators_t* d4est_schwarz_ops,
  double *   in,
@@ -268,7 +268,7 @@ void d4est_operators_apply_schwarz_restrictor
  * @param restricted_size 
  * @param out 
  */
-void d4est_operators_apply_schwarz_weights
+void d4est_solver_schwarz_operators_apply_schwarz_weights
 (
  d4est_solver_schwarz_operators_t* d4est_schwarz_ops,
  double *   in,
