@@ -366,7 +366,7 @@ d4est_solver_schwarz_operators_destroy
  d4est_solver_schwarz_operators_t* d4est_schwarz_ops
 )
 {
-  d4est_schwarz_ops->d4est_ops = NULL;
+
   for (int i = 0; i < d4est_schwarz_ops->d4est_ops->max_degree; i++){
     for(int j = 0; j < d4est_schwarz_ops->d4est_ops->max_degree; j++){
       P4EST_FREE(d4est_schwarz_ops->schwarz_restrictor_1d_table[i][j]);
@@ -380,5 +380,6 @@ d4est_solver_schwarz_operators_destroy
   P4EST_FREE(d4est_schwarz_ops->schwarz_restrictor_1d_table);
   P4EST_FREE(d4est_schwarz_ops->schwarz_weights_1d_table);
   P4EST_FREE(d4est_schwarz_ops->schwarz_restrictor_transpose_1d_table);
-  
+  d4est_schwarz_ops->d4est_ops = NULL;
+  P4EST_FREE(d4est_schwarz_ops);
 }

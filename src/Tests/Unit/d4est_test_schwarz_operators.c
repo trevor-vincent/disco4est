@@ -158,14 +158,14 @@ d4est_test_operators_schwarz
                        (
                         schwarz_ops,
                         deg,
-                        res_deg
+                        res_deg + 1
                        );
   
   double* schwarz_1d_trans = d4est_solver_schwarz_operators_fetch_schwarz_restrictor_transpose_1d
                              (
                               schwarz_ops,
                               deg,
-                              res_deg
+                              res_deg + 1
                              );
 
 
@@ -188,7 +188,6 @@ d4est_test_operators_schwarz
     D4EST_ASSERT(res_fx_side0_trans[i] == 0. || fabs(exp(res_x_side0_trans[i]) - res_fx_side0_trans[i]) < 1e-14);
     D4EST_ASSERT(res_fx_side1_trans[i] == 0. || fabs(exp(res_x_side1_trans[i]) - res_fx_side1_trans[i]) < 1e-14);
   }
-  
   P4EST_FREE(fx);
   P4EST_FREE(res_x_side0);
   P4EST_FREE(res_fx_side0);

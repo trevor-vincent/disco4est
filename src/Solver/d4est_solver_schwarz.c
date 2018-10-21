@@ -188,7 +188,7 @@ d4est_solver_schwarz_corner_callback
       }
     }
 
-void
+static void
 d4est_solver_schwarz_init_subdomain_metadata
 (
  p4est_t* p4est,
@@ -200,7 +200,7 @@ d4est_solver_schwarz_init_subdomain_metadata
 #if (P4EST_DIM)==3
   p8est_iterate (p4est,
                  d4est_ghost->ghost,
-                 &schwarz_data,
+                 schwarz_data,
                  NULL,
                  NULL,
                  NULL,
@@ -209,7 +209,7 @@ d4est_solver_schwarz_init_subdomain_metadata
 #else
   p4est_iterate (p4est,
                  d4est_ghost->ghost,
-                 &schwarz_data,
+                 schwarz_data,
                  NULL,
                  /* NULL, */
                  NULL,
@@ -219,6 +219,98 @@ d4est_solver_schwarz_init_subdomain_metadata
   /* sort */
   /* build strides and sizes */
 }
+
+static int
+d4est_solver_schwarz_sort_callback(const void *p,
+                                   const void *q)
+
+{
+  int ret;
+  d4est_solver_schwarz_element_data_t x = *(const d4est_solver_schwarz_element_data_t *)p;
+  d4est_solver_schwarz_element_data_t y = *(const d4est_solver_schwarz_element_data_t *)q;
+
+  /* Avoid return x - y, which can cause undefined behaviour
+       because of signed integer overflow. */
+
+  if (x.tree < y.tree)
+    ret = -1;
+  else if (x.tree == y.tree){
+    if (x.tree_quadid == y.tree_quadid)
+      return 0;
+    else if (x.tree_quadid < y.tree_quadid)
+      return -1;
+    else
+      return 1;
+  }
+  else
+    ret = 1;
+
+  return ret;
+}
+
+
+static void
+d4est_solver_schwarz_sort_elements
+(
+ d4est_solver_schwarz_data_t* schwarz_data
+)
+{  
+  for (int i = 0; i < schwarz_data->num_subdomains; i++){
+    d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[i];
+      qsort(sub_data.element_data, sub_data.num_elements,
+            sizeof(d4est_solver_schwarz_element_data_t),d4est_solver_schwarz_sort_callback);
+  }
+}
+
+static void
+d4est_solver_schwarz_compute_strides_and_sizes
+(
+ d4est_solver_schwarz_data_t* schwarz_data
+)
+{
+  int sub_nodal_stride = 0;
+  int sub_restricted_nodal_stride = 0;
+
+  for (int i = 0; i < schwarz_data->num_subdomains; i++){
+    d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[i];
+
+    sub_data.restricted_nodal_size = 0;
+    sub_data.nodal_size = 0;
+    sub_data.nodal_stride = sub_nodal_stride;
+    sub_data.restricted_nodal_stride = sub_restricted_nodal_stride;
+
+    int element_nodal_stride = 0;
+    int element_restricted_nodal_stride = 0;
+
+    for (int j = 0; j < sub_data.num_elements; j++){
+      d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j];
+      int res_volume_nodes = 1;
+      for (int k = 0; k < (P4EST_DIM); k++){
+        if (ed.faces[k] != -1){
+          res_volume_nodes *= schwarz_data->num_nodes_overlap;
+        }
+        else {
+          res_volume_nodes *= (ed.deg + 1);
+        }
+      }
+
+      ed.nodal_size = d4est_lgl_get_nodes((P4EST_DIM), ed.deg);
+      ed.nodal_stride = element_nodal_stride;
+      ed.restricted_nodal_size = res_volume_nodes;
+      ed.restricted_nodal_stride = element_restricted_nodal_stride;
+
+      element_nodal_stride += ed.nodal_size;
+      element_restricted_nodal_stride += ed.restricted_nodal_size;
+      sub_data.nodal_size += ed.nodal_size;
+      sub_data.restricted_nodal_size += ed.restricted_nodal_size;      
+    }
+
+    sub_nodal_stride += sub_data.nodal_size;
+    sub_restricted_nodal_stride += sub_data.restricted_nodal_size;
+  }
+
+}
+
 
 d4est_solver_schwarz_data_t*
 d4est_solver_schwarz_init
@@ -236,11 +328,13 @@ d4est_solver_schwarz_init
   int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13; 
   /* fill subdomains */
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    schwarz_data->subdomain_data->element_data = P4EST_ALLOC(d4est_solver_schwarz_element_data_t, max_connections);
+    schwarz_data->subdomain_data[i].element_data = P4EST_ALLOC(d4est_solver_schwarz_element_data_t, max_connections);
   }
 
   d4est_solver_schwarz_init_subdomain_metadata(p4est, d4est_ghost, schwarz_data);
-  
+  d4est_solver_schwarz_sort_elements(schwarz_data);
+  d4est_solver_schwarz_compute_strides_and_sizes(schwarz_data);
+
   return schwarz_data;
 }
 

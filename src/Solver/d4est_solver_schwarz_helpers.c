@@ -53,7 +53,7 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
          ghost_data
         );
     }
-    d4est_operators_apply_schwarz_restrictor
+    d4est_solver_schwarz_operators_apply_schwarz_restrictor
       (
        schwarz_ops,
        field_ed,
@@ -112,7 +112,7 @@ d4est_solver_schwarz_convert_field_over_subdomain_to_restricted_field_over_subdo
   d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[subdomain];
   for (int i = 0; i < sub_data.num_elements; i++){
     d4est_solver_schwarz_element_data_t ed = sub_data.element_data[i];
-    d4est_operators_apply_schwarz_restrictor
+    d4est_solver_schwarz_operators_apply_schwarz_restrictor
       (
        schwarz_ops,
        &field_over_subdomains[ed.nodal_stride],
@@ -164,7 +164,7 @@ void d4est_solver_schwarz_apply_restrict_transpose_to_restricted_field_over_subd
     d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[subdomain];
     for (int j = 0; j < sub_data.num_elements; j++){
       d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j]; 
-      d4est_operators_apply_schwarz_restrictor
+      d4est_solver_schwarz_operators_apply_schwarz_restrictor
         (
          schwarz_ops,
          &restricted_field_over_subdomain[ed.restricted_nodal_stride],
@@ -303,7 +303,7 @@ void d4est_solver_schwarz_apply_weights_over_all_subdomains
       double* in = &du_restricted_field_over_subdomains[sub_data.restricted_nodal_stride + ed.restricted_nodal_stride];
       double* out = &weighted_du_restricted_field_over_subdomains[sub_data.restricted_nodal_stride + ed.restricted_nodal_stride];
                     
-      d4est_operators_apply_schwarz_weights(
+      d4est_solver_schwarz_operators_apply_schwarz_weights(
                                             schwarz_ops,
                                             in,
                                             (P4EST_DIM),

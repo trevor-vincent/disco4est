@@ -43,8 +43,6 @@ typedef struct {
   int nodal_stride; /* stride into just the nodal field on this subdomain, it is not a stride into a local nodal field and is not a stride into a field over all subdomains, i.e. it is zero on the first node of the first element of the containing subdomain*/
   int restricted_nodal_size; 
   int restricted_nodal_stride; /* stride into just the restricted nodal field on this subdomain, it is not a stride into a local nodal field and is not a stride into a restricted field over all subdomains, i.e. it is zero on the first node of the first element of the containing subdomain*/
-
-  int element_data_id;
   
 } d4est_solver_schwarz_element_data_t;
 
@@ -53,7 +51,7 @@ typedef struct {
   int mpirank;
   int subdomain_id;
   int core_id; /* id stride in element_data for core */
-  d4est_solver_schwarz_element_data_t* element_data;
+  d4est_solver_schwarz_element_data_t*  element_data;
   
   int num_elements;
   int restricted_nodal_size;
@@ -76,10 +74,8 @@ typedef struct {
   
 } d4est_solver_schwarz_data_t;
 
-
 /* This file was automatically generated.  Do not edit! */
 void d4est_solver_schwarz_destroy(d4est_solver_schwarz_data_t *schwarz_data);
 d4est_solver_schwarz_data_t *d4est_solver_schwarz_init(p4est_t *p4est,d4est_ghost_t *d4est_ghost,int num_nodes_overlap);
-void d4est_solver_schwarz_init_subdomain_metadata(p4est_t *p4est,d4est_ghost_t *d4est_ghost,d4est_solver_schwarz_data_t *schwarz_data);
 
 #endif
