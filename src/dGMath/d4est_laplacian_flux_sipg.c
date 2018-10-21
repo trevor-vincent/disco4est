@@ -908,17 +908,17 @@ d4est_laplacian_flux_sipg_interface
   for (int f = 0; f < faces_m; f++){
     int volume_nodes_m = d4est_lgl_get_nodes((P4EST_DIM), e_m[f]->deg);
     if (e_m_is_ghost[f] == 0){    
-      printf("Element = %d\n", e_m[f]->id);
+      /* printf("Element = %d\n", e_m[f]->id); */
       for (int i = 0; i < volume_nodes_m; i++){
-        printf("term 2\n");
+        /* printf("term 2\n"); */
         for (int d = 0; d < (P4EST_DIM); d++){
           mortar_data->Au_m[f][i] +=  DT_lifted_proj_VT_w_term2_mortar_lobatto[d][i + stride];
         }
-        printf("term 3\n");
+        /* printf("term 3\n"); */
         mortar_data->Au_m[f][i] += lifted_proj_VT_w_term3_mortar_lobatto[i + stride];
-        printf("term 1\n");
+        /* printf("term 1\n"); */
         mortar_data->Au_m[f][i] += lifted_proj_VT_w_term1_mortar_lobatto[i + stride];
-        printf("mortar_data->Au_m[%d][%d] = %.15f\n", f,i, mortar_data->Au_m[f][i]);
+        /* printf("mortar_data->Au_m[%d][%d] = %.15f\n", f,i, mortar_data->Au_m[f][i]); */
       }
     }
     stride += volume_nodes_m;
