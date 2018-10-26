@@ -1802,3 +1802,46 @@ d4est_vtk_save
      sub_folder_number
     );
 }
+
+/* /\**  */
+/*  * This helper array is useful when */
+/*  * you want to plot a bunch of things */
+/*  * calculated in a for loop */
+/*  *  */
+/*  * @param p4est  */
+/*  * @param type  */
+/*  * @param num_entries  */
+/*  * @param name_size  */
+/*  *  */
+/*  * @return  */
+/*  *\/ */
+/* d4est_vtk_helper_array_t* */
+/* d4est_vtk_helper_array_init */
+/* ( */
+/*  p4est_t* p4est, */
+/*  d4est_builtin_t type, */
+/*  int num_entries, */
+/*  int name_size */
+/* ) */
+/* { */
+  
+/* } */
+
+/* d4est_vtk_helper_array_add */
+/* ( */
+/*  d4est_builtin_t type, */
+/*  void* field, */
+/*  char* name */
+/* ) */
+/* { */
+
+
+/* } */
+
+/* d4est_vtk_helper_array_destroy */
+/* ( */
+/*  d4est_vtk_helper_array_t* array */
+/* ) */
+/* { */
+
+/* } */

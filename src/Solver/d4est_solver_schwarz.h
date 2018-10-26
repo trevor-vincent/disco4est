@@ -75,6 +75,7 @@ typedef struct {
 } d4est_solver_schwarz_data_t;
 
 /* This file was automatically generated.  Do not edit! */
+void d4est_solver_schwarz_print(p4est_t *p4est,d4est_solver_schwarz_data_t *schwarz_data);
 void d4est_solver_schwarz_destroy(d4est_solver_schwarz_data_t *schwarz_data);
 d4est_solver_schwarz_data_t *d4est_solver_schwarz_init(p4est_t *p4est,d4est_ghost_t *d4est_ghost,int num_nodes_overlap);
 

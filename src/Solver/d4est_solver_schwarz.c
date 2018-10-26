@@ -39,32 +39,49 @@ d4est_solver_schwarz_corner_callback
       continue; 
     }
 
-    d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[ed_core->id];
+    d4est_solver_schwarz_subdomain_data_t* sub_data = &schwarz_data->subdomain_data[ed_core->id];
+
     /* add core element to subdomain */
-    sub_data.element_data[0].id = ed_core->id;
-    sub_data.element_data[0].mpirank = ed_core->mpirank;
-    sub_data.element_data[0].tree = ed_core->tree;
-    sub_data.element_data[0].tree_quadid = ed_core->tree_quadid;
-    sub_data.element_data[0].is_core = 1;
-    sub_data.element_data[0].deg = ed_core->deg;
-    sub_data.element_data[0].faces[0] = -1;
-    sub_data.element_data[0].faces[1] = -1;
-    sub_data.element_data[0].faces[2] = -1;
-    sub_data.element_data[0].core_faces[0] = -1;
-    sub_data.element_data[0].core_faces[1] = -1;
-    sub_data.element_data[0].core_faces[2] = -1;    
-    sub_data.num_elements++;
+    if(sub_data->num_elements == 0){
+      sub_data->num_elements++;
+      sub_data->element_data[0].id = ed_core->id;
+      sub_data->element_data[0].mpirank = ed_core->mpirank;
+      sub_data->element_data[0].tree = ed_core->tree;
+      sub_data->element_data[0].tree_quadid = ed_core->tree_quadid;
+      sub_data->element_data[0].is_core = 1;
+      sub_data->element_data[0].deg = ed_core->deg;
+      sub_data->element_data[0].faces[0] = -1;
+      sub_data->element_data[0].faces[1] = -1;
+      sub_data->element_data[0].faces[2] = -1;
+      sub_data->element_data[0].core_faces[0] = -1;
+      sub_data->element_data[0].core_faces[1] = -1;
+      sub_data->element_data[0].core_faces[2] = -1;    
+    }
+
+    /* printf("ed_core->id = %d\n", ed_core->id); */
+    /* printf("ed_core->deg = %d\n", ed_core->deg); */
     
     for (int side = 0; side < info->sides.elem_count; side++){
 
-      p4est_iter_corner_side_t* side_info
-        = sc_array_index(&info->sides,
-                         side);
-      d4est_element_data_t* ed
-        = side_info->quad->p.user_data;
-
       if (side != core){
 
+        p4est_iter_corner_side_t* side_info
+          = sc_array_index(&info->sides,
+                           side);
+        d4est_element_data_t* ed_side = side_info->quad->p.user_data; 
+
+        int found = 0;
+        for (int i = 0; i < sub_data->num_elements; i++){
+          /* already added this element */
+          if (sub_data->element_data[i].id == ed_side->id){
+            found = 1;
+            break;
+          }
+        }
+        if (found == 1){
+          continue;
+        }
+        
         int found_side_face [] = {0,0,0};
         int found_side_edge [] = {0,0,0};
         int found_core_face [] = {0,0,0};
@@ -79,114 +96,113 @@ d4est_solver_schwarz_corner_callback
           }
         }
 #if (P4EST_DIM)==3         
-          for (int e_side = 0; e_side < (P4EST_DIM); e_side++){
-            for (int e_core = 0; e_core < (P4EST_DIM); e_core++){
-              if ((core_info->edges[e_core] == side_info->edges[e_side])){
-                found_side_edge[e_side] = 1;          
-                found_core_edge[e_core] = 1;          
-              }
+        for (int e_side = 0; e_side < (P4EST_DIM); e_side++){
+          for (int e_core = 0; e_core < (P4EST_DIM); e_core++){
+            if ((core_info->edges[e_core] == side_info->edges[e_side])){
+              found_side_edge[e_side] = 1;          
+              found_core_edge[e_core] = 1;          
             }
-          }
-#endif
-
-            int side_face_id = -1;
-            int side_edge_id = -1;
-            int core_face_id = -1;
-            int core_edge_id = -1;
-        
-            int shares_face = 0;
-            int shares_edge = 0;
-            int shares_corner = 1;
-            int shares_face_or_edge = 0;
-      
-            for (int ef = 0; ef < (P4EST_DIM); ef++){
-              if (found_side_face[ef] == 1){
-#if (P4EST_DIM)==3
-                side_face_id = p8est_corner_faces[side_info->corner][ef];
-#else
-                side_face_id = p4est_corner_faces[side_info->corner][ef];
-#endif
-                shares_face++;
-                shares_face_or_edge++;
-              }
-
-              if (found_core_face[ef] == 1){
-#if (P4EST_DIM)==3
-                core_face_id = p8est_corner_faces[core_info->corner][ef];
-#else
-                core_face_id = p4est_corner_faces[core_info->corner][ef];
-#endif
-              }
-          
-#if (P4EST_DIM)==3       
-              if (found_side_edge[ef] == 1){
-                side_edge_id = p8est_corner_edges[side_info->corner][ef];
-                shares_edge++;
-                shares_face_or_edge++;
-              }
-
-              if (found_core_edge[ef] == 1){
-                core_edge_id = p8est_corner_edges[core_info->corner][ef];
-              }
-#endif
-            }
-
-            d4est_element_data_t* ed_side = side_info->quad->p.user_data; 
-
-            if (shares_face){
-              sub_data.element_data[sub_data.num_elements].faces[0] = side_face_id;
-              sub_data.element_data[sub_data.num_elements].faces[1] = -1;
-              sub_data.element_data[sub_data.num_elements].faces[2] = -1;
-
-              sub_data.element_data[sub_data.num_elements].core_faces[0] = core_face_id;
-              sub_data.element_data[sub_data.num_elements].core_faces[1] = -1;
-              sub_data.element_data[sub_data.num_elements].core_faces[2] = -1;
-          
-            }
-#if (P4EST_DIM)==3
-            else if (shares_edge){    
-              sub_data.element_data[sub_data.num_elements].faces[0] = p8est_edge_faces[side_edge_id][0];
-              sub_data.element_data[sub_data.num_elements].faces[1] = p8est_edge_faces[side_edge_id][1];
-              sub_data.element_data[sub_data.num_elements].faces[2] = -1;
-
-
-              sub_data.element_data[sub_data.num_elements].core_faces[0] = p8est_edge_faces[core_edge_id][0];
-              sub_data.element_data[sub_data.num_elements].core_faces[1] = p8est_edge_faces[core_edge_id][1];
-              sub_data.element_data[sub_data.num_elements].core_faces[2] = -1;
-          
-            }
-#endif
-            else {
-
-#if (P4EST_DIM)==3
-              sub_data.element_data[sub_data.num_elements].faces[0] = p8est_corner_faces[side_info->corner][0];
-              sub_data.element_data[sub_data.num_elements].faces[1] = p8est_corner_faces[side_info->corner][1];
-              sub_data.element_data[sub_data.num_elements].faces[2] = p8est_corner_faces[side_info->corner][2];
-
-              sub_data.element_data[sub_data.num_elements].core_faces[0] = p8est_corner_faces[core_info->corner][0];
-              sub_data.element_data[sub_data.num_elements].core_faces[1] = p8est_corner_faces[core_info->corner][1];
-              sub_data.element_data[sub_data.num_elements].core_faces[2] = p8est_corner_faces[core_info->corner][2];
-
-#else
-              sub_data.element_data[sub_data.num_elements].faces[0] = p4est_corner_faces[side_info->corner][0];
-              sub_data.element_data[sub_data.num_elements].faces[1] = p4est_corner_faces[side_info->corner][1];
-
-              sub_data.element_data[sub_data.num_elements].core_faces[0] = p4est_corner_faces[core_info->corner][0];
-              sub_data.element_data[sub_data.num_elements].core_faces[1] = p4est_corner_faces[core_info->corner][1];
-#endif
-            }
-            /* add side element to subdomain */
-            sub_data.element_data[sub_data.num_elements].id = ed_side->id;
-            sub_data.element_data[sub_data.num_elements].mpirank = ed_side->mpirank;
-            sub_data.element_data[sub_data.num_elements].tree = ed_side->tree;
-            sub_data.element_data[sub_data.num_elements].tree_quadid = ed_side->tree_quadid;
-            sub_data.element_data[sub_data.num_elements].is_core = 0;
-            sub_data.element_data[sub_data.num_elements].deg = ed_side->deg;
-            sub_data.num_elements++;      
           }
         }
+#endif
+
+        int side_face_id = -1;
+        int side_edge_id = -1;
+        int core_face_id = -1;
+        int core_edge_id = -1;
+        
+        int shares_face = 0;
+        int shares_edge = 0;
+        int shares_corner = 1;
+        int shares_face_or_edge = 0;
+      
+        for (int ef = 0; ef < (P4EST_DIM); ef++){
+          if (found_side_face[ef] == 1){
+#if (P4EST_DIM)==3
+            side_face_id = p8est_corner_faces[side_info->corner][ef];
+#else
+            side_face_id = p4est_corner_faces[side_info->corner][ef];
+#endif
+            shares_face++;
+            shares_face_or_edge++;
+          }
+
+          if (found_core_face[ef] == 1){
+#if (P4EST_DIM)==3
+            core_face_id = p8est_corner_faces[core_info->corner][ef];
+#else
+            core_face_id = p4est_corner_faces[core_info->corner][ef];
+#endif
+          }
+          
+#if (P4EST_DIM)==3       
+          if (found_side_edge[ef] == 1){
+            side_edge_id = p8est_corner_edges[side_info->corner][ef];
+            shares_edge++;
+            shares_face_or_edge++;
+          }
+
+          if (found_core_edge[ef] == 1){
+            core_edge_id = p8est_corner_edges[core_info->corner][ef];
+          }
+#endif
+        }
+
+        /* d4est_element_data_t* ed_side = side_info->quad->p.user_data;  */
+        sub_data->num_elements++;      
+        if (shares_face){
+          sub_data->element_data[sub_data->num_elements - 1].faces[0] = side_face_id;
+          sub_data->element_data[sub_data->num_elements - 1].faces[1] = -1;
+          sub_data->element_data[sub_data->num_elements - 1].faces[2] = -1;
+
+          sub_data->element_data[sub_data->num_elements - 1].core_faces[0] = core_face_id;
+          sub_data->element_data[sub_data->num_elements - 1].core_faces[1] = -1;
+          sub_data->element_data[sub_data->num_elements - 1].core_faces[2] = -1;
+          
+        }
+#if (P4EST_DIM)==3
+        else if (shares_edge){    
+          sub_data->element_data[sub_data->num_elements - 1].faces[0] = p8est_edge_faces[side_edge_id][0];
+          sub_data->element_data[sub_data->num_elements - 1].faces[1] = p8est_edge_faces[side_edge_id][1];
+          sub_data->element_data[sub_data->num_elements - 1].faces[2] = -1;
+
+
+          sub_data->element_data[sub_data->num_elements - 1].core_faces[0] = p8est_edge_faces[core_edge_id][0];
+          sub_data->element_data[sub_data->num_elements - 1].core_faces[1] = p8est_edge_faces[core_edge_id][1];
+          sub_data->element_data[sub_data->num_elements - 1].core_faces[2] = -1;
+          
+        }
+#endif
+        else {
+
+#if (P4EST_DIM)==3
+          sub_data->element_data[sub_data->num_elements - 1].faces[0] = p8est_corner_faces[side_info->corner][0];
+          sub_data->element_data[sub_data->num_elements - 1].faces[1] = p8est_corner_faces[side_info->corner][1];
+          sub_data->element_data[sub_data->num_elements - 1].faces[2] = p8est_corner_faces[side_info->corner][2];
+
+          sub_data->element_data[sub_data->num_elements - 1].core_faces[0] = p8est_corner_faces[core_info->corner][0];
+          sub_data->element_data[sub_data->num_elements - 1].core_faces[1] = p8est_corner_faces[core_info->corner][1];
+          sub_data->element_data[sub_data->num_elements - 1].core_faces[2] = p8est_corner_faces[core_info->corner][2];
+
+#else
+          sub_data->element_data[sub_data->num_elements - 1].faces[0] = p4est_corner_faces[side_info->corner][0];
+          sub_data->element_data[sub_data->num_elements - 1].faces[1] = p4est_corner_faces[side_info->corner][1];
+
+          sub_data->element_data[sub_data->num_elements - 1].core_faces[0] = p4est_corner_faces[core_info->corner][0];
+          sub_data->element_data[sub_data->num_elements - 1].core_faces[1] = p4est_corner_faces[core_info->corner][1];
+#endif
+        }
+        /* add side element to subdomain */
+        sub_data->element_data[sub_data->num_elements - 1].id = ed_side->id;
+        sub_data->element_data[sub_data->num_elements - 1].mpirank = ed_side->mpirank;
+        sub_data->element_data[sub_data->num_elements - 1].tree = ed_side->tree;
+        sub_data->element_data[sub_data->num_elements - 1].tree_quadid = ed_side->tree_quadid;
+        sub_data->element_data[sub_data->num_elements - 1].is_core = 0;
+        sub_data->element_data[sub_data->num_elements - 1].deg = ed_side->deg;
       }
     }
+  }
+}
 
 static void
 d4est_solver_schwarz_init_subdomain_metadata
@@ -257,8 +273,8 @@ d4est_solver_schwarz_sort_elements
 {  
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
     d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[i];
-      qsort(sub_data.element_data, sub_data.num_elements,
-            sizeof(d4est_solver_schwarz_element_data_t),d4est_solver_schwarz_sort_callback);
+    qsort(sub_data.element_data, sub_data.num_elements,
+          sizeof(d4est_solver_schwarz_element_data_t),d4est_solver_schwarz_sort_callback);
   }
 }
 
@@ -272,41 +288,48 @@ d4est_solver_schwarz_compute_strides_and_sizes
   int sub_restricted_nodal_stride = 0;
 
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[i];
+    d4est_solver_schwarz_subdomain_data_t* sub_data = &schwarz_data->subdomain_data[i];
 
-    sub_data.restricted_nodal_size = 0;
-    sub_data.nodal_size = 0;
-    sub_data.nodal_stride = sub_nodal_stride;
-    sub_data.restricted_nodal_stride = sub_restricted_nodal_stride;
+    sub_data->restricted_nodal_size = 0;
+    sub_data->nodal_size = 0;
+    sub_data->nodal_stride = sub_nodal_stride;
+    sub_data->restricted_nodal_stride = sub_restricted_nodal_stride;
 
     int element_nodal_stride = 0;
     int element_restricted_nodal_stride = 0;
 
-    for (int j = 0; j < sub_data.num_elements; j++){
-      d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j];
+    /* printf("sub_data->num_elements = %d\n", sub_data->num_elements); */
+    
+    for (int j = 0; j < sub_data->num_elements; j++){
+      d4est_solver_schwarz_element_data_t* ed = &sub_data->element_data[j];
       int res_volume_nodes = 1;
       for (int k = 0; k < (P4EST_DIM); k++){
-        if (ed.faces[k] != -1){
+        if (ed->faces[k] != -1){
           res_volume_nodes *= schwarz_data->num_nodes_overlap;
         }
         else {
-          res_volume_nodes *= (ed.deg + 1);
+          res_volume_nodes *= (ed->deg + 1);
         }
       }
+      /* printf("res_volume_nodes = %d\n", res_volume_nodes); */
+      ed->nodal_size = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+      ed->nodal_stride = element_nodal_stride;
+      ed->restricted_nodal_size = res_volume_nodes;
+      ed->restricted_nodal_stride = element_restricted_nodal_stride;
 
-      ed.nodal_size = d4est_lgl_get_nodes((P4EST_DIM), ed.deg);
-      ed.nodal_stride = element_nodal_stride;
-      ed.restricted_nodal_size = res_volume_nodes;
-      ed.restricted_nodal_stride = element_restricted_nodal_stride;
+      /* printf("ed->nodal_size = %d\n", ed->nodal_size); */
+      
+      element_nodal_stride += ed->nodal_size;
+      element_restricted_nodal_stride += ed->restricted_nodal_size;
+      sub_data->nodal_size += ed->nodal_size;
+      sub_data->restricted_nodal_size += ed->restricted_nodal_size;
 
-      element_nodal_stride += ed.nodal_size;
-      element_restricted_nodal_stride += ed.restricted_nodal_size;
-      sub_data.nodal_size += ed.nodal_size;
-      sub_data.restricted_nodal_size += ed.restricted_nodal_size;      
+      /* printf("ed->restricted_nodal_size = %d\n", ed->restricted_nodal_size); */
+      /* printf("sub_data->restricted_nodal_size = %d\n", sub_data->restricted_nodal_size); */
     }
 
-    sub_nodal_stride += sub_data.nodal_size;
-    sub_restricted_nodal_stride += sub_data.restricted_nodal_size;
+    sub_nodal_stride += sub_data->nodal_size;
+    sub_restricted_nodal_stride += sub_data->restricted_nodal_size;
   }
 
 }
@@ -332,7 +355,7 @@ d4est_solver_schwarz_init
   }
 
   d4est_solver_schwarz_init_subdomain_metadata(p4est, d4est_ghost, schwarz_data);
-  d4est_solver_schwarz_sort_elements(schwarz_data);
+  /* d4est_solver_schwarz_sort_elements(schwarz_data); */
   d4est_solver_schwarz_compute_strides_and_sizes(schwarz_data);
 
   return schwarz_data;
@@ -353,3 +376,51 @@ d4est_solver_schwarz_destroy
 
 
 
+
+void
+d4est_solver_schwarz_print
+(
+ p4est_t* p4est,
+ d4est_solver_schwarz_data_t* schwarz_data
+)
+{
+  
+  printf("Schwarz data on proc %d\n", p4est->mpirank);
+  printf("***********************\n");
+  printf("num subdomains = %d\n", schwarz_data->num_subdomains);
+  printf("num_nodes_overlap = %d\n", schwarz_data->num_nodes_overlap);
+  printf("nodal_size = %d\n", schwarz_data->nodal_size);
+  printf("restricted_nodal_size = %d\n", schwarz_data->restricted_nodal_size);
+  for (int i = 0; i < schwarz_data->num_subdomains; i++){
+    d4est_solver_schwarz_subdomain_data_t* sub_data = &schwarz_data->subdomain_data[i];
+    printf("\n");
+    printf("Subdomain %d info\n", i);
+    printf("********************************\n");
+    printf("num_elements = %d\n",sub_data->num_elements);
+    printf("restricted_nodal_size = %d\n", sub_data->restricted_nodal_size);
+    printf("nodal_size = %d\n", sub_data->nodal_size);
+    printf("restricted_nodal_stride = %d\n", sub_data->restricted_nodal_stride);
+    printf("nodal_stride = %d\n", sub_data->nodal_stride);
+    for (int j = 0; j < sub_data->num_elements; j++){
+      d4est_solver_schwarz_element_data_t* ed = &sub_data->element_data[j];
+      printf("Element %d info\n", j);
+      printf("*****************\n");
+      printf("mpirank = %d\n", ed->mpirank);
+      printf("local mesh id = %d\n", ed->id);
+      printf("tree = %d\n", ed->tree);
+      printf("tree_quadid = %d\n", ed->tree_quadid);
+      printf("deg = %d\n", ed->deg);
+      printf("nodal_size = %d\n", ed->nodal_size);
+      printf("nodal_stride = %d\n", ed->nodal_stride);
+      printf("restricted_nodal_stride = %d\n", ed->restricted_nodal_stride);
+      printf("restricted_nodal_size = %d\n", ed->restricted_nodal_size);
+      printf("is_core = %d\n", ed->is_core);
+      printf("faces[0] = %d\n", ed->faces[0]);
+      printf("faces[1] = %d\n", ed->faces[1]);
+      printf("faces[2] = %d\n", ed->faces[2]);
+      printf("core_faces[0] = %d\n", ed->core_faces[0]);
+      printf("core_faces[1] = %d\n", ed->core_faces[1]);
+      printf("core_faces[2] = %d\n", ed->core_faces[2]);     
+    }
+  }
+}

@@ -778,7 +778,7 @@ problem_init
       d4est_krylov_pc_t* pc = d4est_krylov_pc_multigrid_create(mg_data, two_punctures_pc_setup_fcn);
       ctx.use_matrix_operator = 1;
       ctx.mg_data = mg_data;
-
+      zlog_category_t *c_tp = zlog_get_category("two_punctures");
     
     if (!init_params.do_not_solve){
 
@@ -798,6 +798,17 @@ problem_init
       prob_vecs.field_types = &field_type;
       prob_vecs.num_of_fields = 1;
 
+      if (initial_extents->load_newton_checkpoint == 1){
+        if (level == initial_level)
+          zlog_info(c_tp,"Loading from newton checkpoint if level %d == initial_level %d",
+                 level, initial_level);
+        else
+          zlog_info(c_tp,"We will not load from newton checkpoint because level %d != initial_level %d"
+                 ,level, initial_level);
+      }
+      else
+        zlog_info(c_tp,"We will not load from newton checkpoint");
+      
       if (level == initial_level && initial_extents->load_newton_checkpoint == 1){
 
         d4est_checkpoint_read_dataset
@@ -822,7 +833,7 @@ problem_init
                                       );
 
 
-        zlog_category_t *c_tp = zlog_get_category("two_punctures");
+
         zlog_info(c_tp, "Loading u from a newton checkpoint %s at level %d", initial_extents->newton_checkpoint_prefix, level);
       }
       

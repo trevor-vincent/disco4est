@@ -33,6 +33,7 @@ double poly_hat_weight_fcn
 )
 {
   double d0 = overlap_size;
+  D4EST_ASSERT(overlap_size >= 0);
   return .5*(phi_fcn((r+1)/d0) + phi_fcn((r-1)/d0));
 }
 
@@ -86,9 +87,9 @@ void d4est_solver_schwarz_operators_build_schwarz_weights_1d
   double* r = d4est_operators_fetch_lobatto_nodes_1d(d4est_ops,
                                                      deg);
   double rmax = 1.;
-  double rmin = 1. - r[deg + 1 - restricted_size - 1];
+  double rmin = r[deg + 1 - restricted_size];
   double overlap_size = rmax - rmin;
-
+  
   for (int i = 0; i < restricted_size; i++){
     schwarz_weights_1d[i] = poly_hat_weight_fcn(r[deg - i] - 2, overlap_size);/* left subdomain element*/
     schwarz_weights_1d[restricted_size + i] = poly_hat_weight_fcn(r[i] + 2, overlap_size);/* right subdomain element*/

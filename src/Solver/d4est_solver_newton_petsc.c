@@ -216,7 +216,7 @@ PetscErrorCode d4est_solver_newton_petsc_monitor(SNES snes,PetscInt it, PetscRea
      if ( (it - petsc_ctx->last_newton_checkpoint_it) >= petsc_ctx->checkpoint_every_n_newton_its ){
 
        if (petsc_ctx->p4est->mpirank == 0){
-         printf("Saving checkpoint at newton iteration %d", it);
+         zlog_info(c_default, "Saving checkpoint at newton iteration %d", it);
        }
       char* output = NULL;
       asprintf(&output,"checkpoint_newton_%d", it);

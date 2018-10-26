@@ -9,6 +9,7 @@
 #include <d4est_checkpoint.h>
 #include <d4est_element_data.h>
 #include <d4est_solver_schwarz.h>
+#include <d4est_solver_schwarz_helpers.h>
 #include <petscsnes.h>
 #include <zlog.h>
 
@@ -195,26 +196,143 @@ int main(int argc, char *argv[])
                                 d4est_ghost,
                                 num_nodes_overlap
                                );
-  d4est_vtk_save
+
+
+  d4est_solver_schwarz_operators_t* schwarz_ops
+    = d4est_solver_schwarz_operators_init
+    (d4est_ops);
+
+  d4est_solver_schwarz_print
+    (
+     p4est,
+     schwarz_data
+    );
+  
+  char** dbl_subdomain_names = P4EST_ALLOC(char*, 2*p4est->local_num_quadrants + 1);
+  double** dbl_subdomains = P4EST_ALLOC(double*, 2*p4est->local_num_quadrants + 1);
+  char** int_subdomain_names = P4EST_ALLOC(char*, p4est->local_num_quadrants + 1);
+  int** int_subdomains = P4EST_ALLOC(int*, p4est->local_num_quadrants + 1);
+  
+  for (int i = 0; i < p4est->local_num_quadrants; i++){
+    
+    dbl_subdomain_names[i] = P4EST_ALLOC(char, 25);
+    dbl_subdomain_names[i + p4est->local_num_quadrants] = P4EST_ALLOC(char, 25);
+    int_subdomain_names[i] = P4EST_ALLOC(char, 25);
+
+    dbl_subdomains[i] = P4EST_ALLOC(double, local_sizes.local_nodes);
+    dbl_subdomains[i + p4est->local_num_quadrants] = P4EST_ALLOC(double, local_sizes.local_nodes);
+    int_subdomains[i] = P4EST_ALLOC(int, p4est->local_num_quadrants);
+
+    d4est_solver_schwarz_visualize_subdomain_helper_single_core
+      (
+       p4est,
+       d4est_factors,
+       schwarz_data,
+       schwarz_ops,
+       i,
+       int_subdomains[i],
+       dbl_subdomains[i],
+       dbl_subdomains[i + p4est->local_num_quadrants]
+      );
+
+
+    
+    sprintf(dbl_subdomain_names[i], "d_sub_%d", i);
+    sprintf(int_subdomain_names[i], "i_d_sub_%d", i);
+    sprintf(dbl_subdomain_names[i + p4est->local_num_quadrants], "w_d_sub_%d", i);
+
+    double* weights = dbl_subdomains[i + p4est->local_num_quadrants];
+    DEBUG_PRINT_ARR_DBL(weights, local_sizes.local_nodes);
+                        
+    
+    printf("%s %s %s\n",
+           dbl_subdomain_names[i],
+           dbl_subdomain_names[i + p4est->local_num_quadrants],
+           int_subdomain_names[i]
+          );
+           
+  }
+  
+  dbl_subdomain_names[2*p4est->local_num_quadrants] = NULL;
+  dbl_subdomains[2*p4est->local_num_quadrants] = NULL;
+  int_subdomain_names[p4est->local_num_quadrants] = NULL;
+  int_subdomains[p4est->local_num_quadrants] = NULL;
+
+    d4est_vtk_save
     (
      p4est,
      d4est_ops,
      "d4est_test_schwarz_metadata.input",
      "d4est_vtk",
+     (const char**)dbl_subdomain_names,
+     dbl_subdomains,
      NULL,
      NULL,
-     NULL,
-     NULL,
-     (const char*[]){NULL},
-     (int**)((const int*[]){NULL}),
+     (const char**)int_subdomain_names,
+     int_subdomains,
      -1
     );
 
+
+  for (int i = 0; i < p4est->local_num_quadrants; i++){
+    P4EST_FREE(dbl_subdomain_names[i]);
+    P4EST_FREE(dbl_subdomain_names[i + p4est->local_num_quadrants]);
+    P4EST_FREE(int_subdomain_names[i]);
+    P4EST_FREE(dbl_subdomains[i]);
+    P4EST_FREE(dbl_subdomains[i + p4est->local_num_quadrants]);
+    P4EST_FREE(int_subdomains[i]);
+  }
+  P4EST_FREE(dbl_subdomain_names);
+  P4EST_FREE(int_subdomain_names);
+  P4EST_FREE(dbl_subdomains);
+  P4EST_FREE(int_subdomains);
+
+  
+  /* double* sub_7_dbl = P4EST_ALLOC(double, local_sizes.local_nodes); */
+  /* double* weighted_sub_7_dbl = P4EST_ALLOC(double, local_sizes.local_nodes); */
+  /* int* sub_7_int = P4EST_ALLOC(int, p4est->local_num_quadrants); */
+  
+  /* d4est_solver_schwarz_visualize_subdomain_helper_single_core */
+  /*   ( */
+  /*    p4est, */
+  /*    d4est_factors, */
+  /*    schwarz_data, */
+  /*    schwarz_ops, */
+  /*    7, */
+  /*    sub_7_int, */
+  /*    sub_7_dbl, */
+  /*    weighted_sub_7_dbl */
+  /*   ); */
+  
+  /* d4est_vtk_save */
+  /*   ( */
+  /*    p4est, */
+  /*    d4est_ops, */
+  /*    "d4est_test_schwarz_metadata.input", */
+  /*    "d4est_vtk", */
+  /*    (const char * []){"sub_7", "weighted_sub_7", NULL}, */
+  /*    (double* []){sub_7_dbl, weighted_sub_7_dbl,NULL}, */
+  /*    NULL, */
+  /*    NULL, */
+  /*    (const char * []){"sub_7_elements", NULL}, */
+  /*    (int* []){sub_7_int,NULL}, */
+  /*    -1 */
+  /*   ); */
+
+  /* P4EST_FREE(sub_7_dbl); */
+  /* P4EST_FREE(weighted_sub_7_dbl); */
+  /* P4EST_FREE(sub_7_int); */
+  
   d4est_solver_schwarz_destroy
     (
      schwarz_data
     );
 
+  d4est_solver_schwarz_operators_destroy
+    (
+     schwarz_ops
+    );
+  
   d4est_mesh_initial_extents_destroy(initial_grid_input);
   d4est_mesh_data_destroy(d4est_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);

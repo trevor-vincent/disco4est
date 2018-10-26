@@ -138,15 +138,7 @@ void
       }
     }
 
-  /* DEBUG_PRINT_ARR_DBL_SUM(Au_eq_0, local_nodes); */
-  /* DEBUG_PRINT_ARR_DBL_SUM(rhs, local_nodes); */
-
-  /* for (int i = 0; i < local_nodes; i++){ */
-    /* Au_eq_0[i] = 0.; */
-  /* } */
-  
   d4est_linalg_vec_axpy(-1., Au_eq_0, rhs, local_nodes);
-  /* DEBUG_PRINT_ARR_DBL_SUM(rhs, local_nodes); */
   P4EST_FREE(u_eq_0);
   P4EST_FREE(Au_eq_0);
   P4EST_FREE(f);

@@ -285,33 +285,56 @@ d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
   
 }
 
+void d4est_solver_schwarz_apply_weights_over_subdomain
+(
+ d4est_solver_schwarz_data_t* schwarz_data,
+ d4est_solver_schwarz_operators_t* schwarz_ops,
+ d4est_solver_schwarz_subdomain_data_t sub_data,
+ double* restricted_field_over_subdomain,
+ double* weighted_restricted_field_over_subdomain
+)
+{
+  for (int j = 0; j < sub_data.num_elements; j++){
+    d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j];
+
+    double* in = &restricted_field_over_subdomain[ed.restricted_nodal_stride];
+    double* out = &weighted_restricted_field_over_subdomain[ed.restricted_nodal_stride];
+                    
+    d4est_solver_schwarz_operators_apply_schwarz_weights
+      (
+       schwarz_ops,
+       in,
+       (P4EST_DIM),
+       &ed.core_faces[0],
+       ed.deg,
+       schwarz_data->num_nodes_overlap,
+       out
+      );
+  }
+}
 
 void d4est_solver_schwarz_apply_weights_over_all_subdomains
 (
  d4est_solver_schwarz_data_t* schwarz_data,
  d4est_solver_schwarz_operators_t* schwarz_ops,
- double* du_restricted_field_over_subdomains,
- double* weighted_du_restricted_field_over_subdomains
+ double* restricted_field_over_subdomains,
+ double* weighted_restricted_field_over_subdomains
 )
 {
 
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
     d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[i];
-    for (int j = 0; j < sub_data.num_elements; j++){
-      d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j];
-
-      double* in = &du_restricted_field_over_subdomains[sub_data.restricted_nodal_stride + ed.restricted_nodal_stride];
-      double* out = &weighted_du_restricted_field_over_subdomains[sub_data.restricted_nodal_stride + ed.restricted_nodal_stride];
-                    
-      d4est_solver_schwarz_operators_apply_schwarz_weights(
-                                            schwarz_ops,
-                                            in,
-                                            (P4EST_DIM),
-                                            &ed.core_faces[0],
-                                            ed.deg,
-                                            schwarz_data->num_nodes_overlap,
-                                            out);
-    }
+    double* in = &restricted_field_over_subdomains[sub_data.restricted_nodal_stride];
+    double* out = &weighted_restricted_field_over_subdomains
+                  [sub_data.restricted_nodal_stride];
+    d4est_solver_schwarz_apply_weights_over_subdomain
+      (
+       schwarz_data,
+       schwarz_ops,
+       sub_data,
+       in,
+       out
+      );
   }
 }
 
@@ -433,33 +456,10 @@ void d4est_solver_schwarz_apply_lhs_single_core
        d4est_factors
       );
 
-
     for (int i = 0; i < local_nodes; i++){
       zeroed_u_field_over_mesh[i] = 0.;
       zeroed_Au_field_over_mesh[i] = 0.;
     }
-    /* zero for next use for a subdomain */
-    /* d4est_solver_schwarz_zero_field_over_subdomain_single_core */
-      /* ( */
-       /* p4est, */
-       /* schwarz_data, */
-       /* schwarz_ops, */
-       /* d4est_factors, */
-       /* sub_data, */
-       /* zeroed_u_field_over_mesh */
-      /* ); */
-
-    /* zero for next use for a subdomain */
-    /* d4est_solver_schwarz_zero_field_over_subdomain_single_core */
-      /* ( */
-       /* p4est, */
-       /* schwarz_data, */
-       /* schwarz_ops, */
-       /* d4est_factors, */
-       /* sub_data, */
-       /* zeroed_Au_field_over_mesh */
-      /* ); */
-    
     
     d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
       (
@@ -477,6 +477,83 @@ void d4est_solver_schwarz_apply_lhs_single_core
     
   P4EST_FREE(zeroed_u_field_over_mesh);
   P4EST_FREE(zeroed_Au_field_over_mesh);
+}
+
+double
+d4est_solver_schwarz_visualize_subdomain_helper_single_core
+(
+ p4est_t* p4est,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_solver_schwarz_data_t* schwarz_data,
+ d4est_solver_schwarz_operators_t* schwarz_ops,
+ int subdomain,
+ int* which_elements,
+ double* subdomain_field_for_viz,
+ double* weighted_subdomain_field_for_viz
+)
+{
+  d4est_solver_schwarz_subdomain_data_t sub_data
+    = schwarz_data->subdomain_data[subdomain];
+  double* restricted_subdomain_field = P4EST_ALLOC(double, sub_data.restricted_nodal_size);
+  double* weighted_restricted_subdomain_field = P4EST_ALLOC(double, sub_data.restricted_nodal_size);
+  for (int i = 0; i < sub_data.restricted_nodal_size;i++){
+    restricted_subdomain_field[i] = 1.;
+  }
+  int local_nodes = d4est_factors->local_sizes.local_nodes;
+
+  d4est_solver_schwarz_apply_weights_over_subdomain
+    (
+     schwarz_data,
+     schwarz_ops,
+     sub_data,
+     restricted_subdomain_field,
+     weighted_restricted_subdomain_field
+    );  
+
+  d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
+    (
+     p4est,
+     d4est_factors,
+     schwarz_data,
+     schwarz_ops,
+     restricted_subdomain_field,
+     subdomain_field_for_viz,
+     p4est->mpirank,
+     subdomain,
+     local_nodes,
+     FIELD_NOT_ZEROED
+    );
+
+
+  /* printf("sub_data.restricted_nodal_size = %d\n", sub_data.restricted_nodal_size); */
+  
+  /* DEBUG_PRINT_ARR_DBL(restricted_subdomain_field, sub_data.restricted_nodal_size); */
+
+  /* DEBUG_PRINT_ARR_DBL(subdomain_field_for_viz, local_nodes); */
+  
+d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
+    (
+     p4est,
+     d4est_factors,
+     schwarz_data,
+     schwarz_ops,
+     weighted_restricted_subdomain_field,
+     weighted_subdomain_field_for_viz,
+     p4est->mpirank,
+     subdomain,
+     local_nodes,
+     FIELD_NOT_ZEROED
+    );
+    
+  for (int i = 0; i < p4est->local_num_quadrants; i++){
+    which_elements[i] = 0;
+  }
+  for (int j = 0; j < sub_data.num_elements; j++){
+    d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j];
+    which_elements[ed.id] = 1;
+  }
+  P4EST_FREE(restricted_subdomain_field);
+  P4EST_FREE(weighted_restricted_subdomain_field);
 }
 
 double

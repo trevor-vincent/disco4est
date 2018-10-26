@@ -124,6 +124,28 @@ d4est_test_operators_schwarz_nd
 }
 
 static void
+d4est_test_operators_schwarz_weights
+(
+ d4est_solver_schwarz_operators_t* schwarz_ops
+)
+{
+  int deg = 2;
+  int restricted_size = 2;
+  
+  double* schwarz_weights_1d =
+    d4est_solver_schwarz_operators_fetch_schwarz_weights_1d
+    (
+     schwarz_ops,
+     deg,
+     restricted_size
+    );
+
+  int size = (deg + 1) + 2*restricted_size;
+  DEBUG_PRINT_ARR_DBL(schwarz_weights_1d, size);
+}
+
+
+static void
 d4est_test_operators_schwarz
 (
  d4est_solver_schwarz_operators_t* schwarz_ops
@@ -218,6 +240,11 @@ int main(int argc, char *argv[])
      d4est_schwarz_ops
     );
 
+  d4est_test_operators_schwarz_weights
+    (
+     d4est_schwarz_ops
+    );
+  
   d4est_solver_schwarz_operators_destroy(d4est_schwarz_ops);
   d4est_ops_destroy(d4est_ops);
   return 0;
