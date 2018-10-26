@@ -885,9 +885,6 @@ static void
 
   }
 
-/* #ifdef D4EST_H_EQ_J_DIV_SJ_QUAD */
-  /* P4EST_FREE(j_div_sj_on_f_p_mortar_quad); */
-/* #endif */
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_p_on_f_p);
   P4EST_FREE(tmp);  
