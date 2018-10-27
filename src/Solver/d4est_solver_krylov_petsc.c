@@ -213,9 +213,11 @@ PetscErrorCode d4est_solver_krylov_petsc_monitor(KSP ksp,PetscInt it, PetscReal 
 {
   krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
   zlog_category_t* c_default = zlog_get_category("d4est_solver_krylov_petsc");
+  zlog_category_t* its_output = zlog_get_category("d4est_solver_iteration_info");
 
   if (petsc_ctx->p4est->mpirank == 0){
-    zlog_info(c_default, "AMR_IT KSP_IT KSP_NORM: %d %d %.25f", petsc_ctx->amr_level, it, norm);
+    double duration_seconds = ((double)(clock() - petsc_ctx->time_start)) / CLOCKS_PER_SEC;
+    zlog_info(its_output, "AMR_IT KSP_IT KSP_NORM TIME: %d %d %.25f %f", petsc_ctx->amr_level, it, norm, duration_seconds);
   }  
   if (petsc_ctx->checkpoint_every_n_krylov_its > 0 && petsc_ctx->amr_level >= 0){
     int it;
@@ -315,10 +317,9 @@ d4est_solver_krylov_petsc_solve
 )
 {
   zlog_category_t *c_default = zlog_get_category("d4est_solver_krylov_petsc");
-  clock_t start;
+  clock_t start = clock();
   if (p4est->mpirank == 0) {
     zlog_info(c_default, "Performing Krylov PETSc solve...");
-    start = clock();
   }
 
   d4est_solver_krylov_petsc_set_options_database_from_params(d4est_solver_krylov_petsc_params);
@@ -343,6 +344,7 @@ d4est_solver_krylov_petsc_solve
   petsc_ctx.checkpoint_every_n_krylov_its = d4est_solver_krylov_petsc_params->checkpoint_every_n_krylov_its;
   petsc_ctx.last_krylov_checkpoint_it = 0;
   petsc_ctx.amr_level = amr_level;
+  petsc_ctx.time_start = start;
 
   petsc_ctx.ksp = &ksp;
 

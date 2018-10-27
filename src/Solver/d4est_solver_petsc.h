@@ -20,7 +20,6 @@ typedef struct {
   d4est_geometry_t* d4est_geom;
   d4est_quadrature_t* d4est_quad;
   d4est_mesh_data_t* d4est_factors;
-  /* d4est_checkpointer_t* d4est_checkpointer; */
   KSP* ksp;
 
   int last_krylov_checkpoint_it;
@@ -28,6 +27,8 @@ typedef struct {
   int checkpoint_every_n_krylov_its;
   int checkpoint_every_n_newton_its;
   int amr_level;
+
+  clock_t time_start; /* time at which krylov solver or newton solver (if nonlinear eqn)  started */
   
 } krylov_ctx_t;
 

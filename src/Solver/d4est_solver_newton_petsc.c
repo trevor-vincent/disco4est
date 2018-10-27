@@ -203,12 +203,14 @@ PetscErrorCode d4est_solver_newton_petsc_monitor(SNES snes,PetscInt it, PetscRea
 {
  krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
   zlog_category_t* c_default = zlog_get_category("d4est_solver_newton_petsc");
+  zlog_category_t* its_output = zlog_get_category("d4est_solver_iteration_info");
 
   int lit;
   SNESGetLinearSolveIterations(snes,&lit);
 
   if (petsc_ctx->p4est->mpirank == 0){
-    zlog_info(c_default,"AMR_IT SNES_IT KSP_IT SNES_NORM: %d %d %d %.25f", petsc_ctx->amr_level, it, lit, norm);
+    double duration_seconds = ((double)(clock() - petsc_ctx->time_start)) / CLOCKS_PER_SEC;
+    zlog_info(its_output,"AMR_IT SNES_IT KSP_IT SNES_NORM: %d %d %d %.25f %f", petsc_ctx->amr_level, it, lit, norm, duration_seconds);
   }
 
   if (petsc_ctx->checkpoint_every_n_newton_its > 0){
@@ -415,6 +417,7 @@ d4est_solver_newton_petsc_solve
 )
 {
   zlog_category_t* c_default = zlog_get_category("d4est_solver_newton_petsc");
+  clock_t start = clock();
   d4est_solver_krylov_petsc_set_options_database_from_params(krylov_options);
   d4est_solver_newton_petsc_set_options_database_from_params(newton_options);
   
@@ -440,7 +443,7 @@ d4est_solver_newton_petsc_solve
   petsc_ctx.checkpoint_every_n_newton_its = newton_options->checkpoint_every_n_newton_its;
   petsc_ctx.last_newton_checkpoint_it = 0;
   petsc_ctx.amr_level = amr_level;
-  
+  petsc_ctx.time_start = start;
   SNESSetFunction(snes,r,d4est_solver_newton_petsc_get_residual,(void*)&petsc_ctx);//CHKERRQ(ierr);
   SNESGetKSP(snes,&ksp);
   petsc_ctx.ksp = &ksp;
@@ -491,10 +494,7 @@ d4est_solver_newton_petsc_solve
   MatShellSetOperation(J,MATOP_MULT,(void(*)())d4est_solver_newton_petsc_apply_jacobian);
   SNESSetJacobian(snes,J,J,d4est_solver_newton_petsc_save_x0,(void*)&petsc_ctx);
   VecPlaceArray(x, vecs->u);
-
-  clock_t begin = clock();
-
-  
+ 
   PetscReal res = 0.0;
   SNESComputeFunction(snes, x, r);
   VecNorm(r, NORM_2, &res);
@@ -512,7 +512,7 @@ d4est_solver_newton_petsc_solve
   }
   
   clock_t end = clock();
-  double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+  double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
 
   d4est_solver_newton_petsc_info_t info;
   SNESGetIterationNumber(snes,&info.total_newton_iterations);
