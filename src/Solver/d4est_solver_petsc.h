@@ -8,6 +8,7 @@
 #include <d4est_quadrature.h>
 #include <d4est_geometry.h>
 #include <petscsnes.h>
+#include <time.h>
 
 typedef struct {
 

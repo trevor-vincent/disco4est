@@ -192,6 +192,8 @@ d4est_solver_schwarz_corner_callback
           sub_data->element_data[sub_data->num_elements - 1].core_faces[1] = p4est_corner_faces[core_info->corner][1];
 #endif
         }
+
+        D4EST_ASSERT(sub_data->num_elements <= (((P4EST_DIM) ==3) ? 57 : 13));
         /* add side element to subdomain */
         sub_data->element_data[sub_data->num_elements - 1].id = ed_side->id;
         sub_data->element_data[sub_data->num_elements - 1].mpirank = ed_side->mpirank;
@@ -330,6 +332,8 @@ d4est_solver_schwarz_compute_strides_and_sizes
 
     sub_nodal_stride += sub_data->nodal_size;
     sub_restricted_nodal_stride += sub_data->restricted_nodal_size;
+    schwarz_data->restricted_nodal_size += sub_data->restricted_nodal_size;
+    schwarz_data->nodal_size += sub_data->nodal_size;
   }
 
 }
@@ -345,12 +349,15 @@ d4est_solver_schwarz_init
 {
   D4EST_ASSERT(num_nodes_overlap > 0);
   d4est_solver_schwarz_data_t* schwarz_data = P4EST_ALLOC(d4est_solver_schwarz_data_t, 1);
+  schwarz_data->restricted_nodal_size = 0;
+  schwarz_data->nodal_size = 0;
   schwarz_data->num_subdomains = p4est->local_num_quadrants;
   schwarz_data->subdomain_data = P4EST_ALLOC(d4est_solver_schwarz_subdomain_data_t, schwarz_data->num_subdomains);
   schwarz_data->num_nodes_overlap = num_nodes_overlap;
   int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13; 
   /* fill subdomains */
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
+    schwarz_data->subdomain_data[i].num_elements = 0;
     schwarz_data->subdomain_data[i].element_data = P4EST_ALLOC(d4est_solver_schwarz_element_data_t, max_connections);
   }
 

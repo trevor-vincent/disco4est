@@ -307,13 +307,7 @@ d4est_laplacian_apply_aij
  int which_field
 )
 {
-  /* d4est_laplacian_flux_init_element_data */
-  /*   ( */
-  /*    p4est, */
-  /*    d4est_ops, */
-  /*    d4est_elliptic_data->u, */
-  /*    d4est_elliptic_data->Au */
-  /*   ); */
+  /* printf("Apply aij\n"); */
   
   d4est_laplacian_apply_stiffness_matrix
     (
@@ -327,12 +321,7 @@ d4est_laplacian_apply_aij
      d4est_elliptic_data->local_nodes,
      which_field
     );
-
-
-  
   d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data,d4est_elliptic_data->u);
-  
-  /* p4est_ghost_exchange_data(p4est,ghost,ghost_data); */
 
   double* dudr_local [(P4EST_DIM)];
   D4EST_ALLOC_DIM_VEC(dudr_local,d4est_elliptic_data->local_nodes);

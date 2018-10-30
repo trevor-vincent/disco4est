@@ -39,7 +39,7 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
   d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[subdomain];
   for (int j = 0; j < sub_data.num_elements; j++){
     d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j];
-
+    /* printf("ed.restricted_nodal-stride = %d\n", ed.restricted_nodal_stride); */
     double* field_ed = NULL;      
     if (ed.mpirank == p4est->mpirank){
       field_ed = &field[d4est_factors->element_data[ed.id]->nodal_stride];
@@ -83,6 +83,7 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains
 {
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
     d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[i];
+    /* printf("sub_data.restricted_nodal-stride = %d\n", sub_data.restricted_nodal_stride); */
     d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
       (
        p4est,
@@ -418,8 +419,11 @@ void d4est_solver_schwarz_apply_lhs_single_core
   d4est_elliptic_data_t elliptic_data_for_schwarz;
 
   d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[subdomain];
-      
-  /* for (int i = 0; i < schwarz_data->num_subdomains; i++){ */
+
+  for (int i = 0; i < local_nodes; i++){    
+    zeroed_Au_field_over_mesh[i] = 0.;
+  }
+  
   d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
     (
      p4est,
@@ -456,11 +460,6 @@ void d4est_solver_schwarz_apply_lhs_single_core
        d4est_factors
       );
 
-    for (int i = 0; i < local_nodes; i++){
-      zeroed_u_field_over_mesh[i] = 0.;
-      zeroed_Au_field_over_mesh[i] = 0.;
-    }
-    
     d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
       (
        p4est,
@@ -474,9 +473,13 @@ void d4est_solver_schwarz_apply_lhs_single_core
        &Au_restricted_field_over_subdomains[sub_data.restricted_nodal_stride],
        subdomain
       );
-    
-  P4EST_FREE(zeroed_u_field_over_mesh);
-  P4EST_FREE(zeroed_Au_field_over_mesh);
+
+
+    for (int i = 0; i < local_nodes; i++){
+      zeroed_u_field_over_mesh[i] = 0.;
+      zeroed_Au_field_over_mesh[i] = 0.;
+    }
+        
 }
 
 double
@@ -573,11 +576,14 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
  double* rhs_restricted_field_over_subdomain,
  double* zeroed_u_field_over_mesh,
  double* zeroed_Au_field_over_mesh,
- int nodes,
  int iter,
+ double atol,
+ double rtol,
  int subdomain
 )
 {
+  int nodes = schwarz_data->subdomain_data[subdomain].restricted_nodal_size;
+  
   double delta_new, delta_old, temp_max, temp_min, d_dot_Ad;
   double spectral_bound = -1;
   double alpha = -1.;
@@ -612,8 +618,9 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
   d4est_linalg_vec_xpby(rhs_restricted_field_over_subdomain, -1., r, nodes);
   d4est_util_copy_1st_to_2nd(r, d, nodes);
   delta_new = d4est_linalg_vec_dot(r,r,nodes);
+  double delta_0 = delta_new;
   
-  for (int i = 0; i < iter; i++){
+  for (int i = 0; i < iter && (delta_new > atol*atol + delta_0 * rtol*rtol); i++){
 
     d4est_solver_schwarz_apply_lhs_single_core
       (
@@ -671,7 +678,10 @@ d4est_solver_schwarz_compute_and_add_correction
  d4est_elliptic_eqns_t* elliptic_eqns,
  d4est_elliptic_data_t* elliptic_data,
  double* u,
- double* r
+ double* r,
+ double iter,
+ double atol,
+ double rtol
 )
 {
 
@@ -715,8 +725,9 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
        restricted_r,
        zeroed_u_field_over_mesh,
        zeroed_Au_field_over_mesh,
-       sub_data.restricted_nodal_size,
-       100,
+       iter,
+       atol,
+       rtol,
        i
       );
 

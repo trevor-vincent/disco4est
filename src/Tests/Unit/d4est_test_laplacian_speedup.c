@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
   int same = 0;
   
   /* d4est_amr_t* d4est_amr_random = d4est_amr_init_uniform_h(p4est, 7, 1); */
-  int num_of_amr_steps = 1;
+  int num_of_amr_steps = 2;
   d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, num_of_amr_steps);
 
   for (int i = 0; i < num_of_amr_steps; i++){
@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
        NULL,
        NULL
       );
-
+    
     d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
                                            (
                                             p4est,
@@ -321,6 +321,10 @@ int main(int argc, char *argv[])
     elliptic_data.field_types = &field_type;
     elliptic_data.num_of_fields = 1;
 
+    srand(102321);
+    for (int i = 0; i < local_sizes.local_nodes; i++){
+      poly_vec[i] += (double)rand() / (double)RAND_MAX;
+    }
     
     d4est_elliptic_eqns_apply_lhs
       (
