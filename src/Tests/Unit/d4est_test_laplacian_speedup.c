@@ -263,12 +263,12 @@ int main(int argc, char *argv[])
   int same = 0;
   
   /* d4est_amr_t* d4est_amr_random = d4est_amr_init_uniform_h(p4est, 7, 1); */
-  int num_of_amr_steps = 1;
+  int num_of_amr_steps = 2;
   d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, num_of_amr_steps);
 
   for (int i = 0; i < num_of_amr_steps; i++){
 
-    int add_amr_in_one_element = 1;
+    int add_amr_in_one_element = 0;
     if (add_amr_in_one_element){
       int* refinement_log = P4EST_ALLOC(int, p4est->local_num_quadrants);
       int element_to_refine = 0;
@@ -323,7 +323,6 @@ int main(int argc, char *argv[])
       initial_grid_input->initial_nodes = local_sizes.local_nodes;
     }
     else {
-    
       d4est_amr_step
         (
          p4est,
@@ -410,8 +409,8 @@ int main(int argc, char *argv[])
                           NULL
     );
     
-    double* Apoly_vec = P4EST_ALLOC(double, local_nodes);
-    double* Apoly_vec_with_opt = P4EST_ALLOC(double, local_nodes);
+    double* Apoly_vec = P4EST_ALLOC_ZERO(double, local_nodes);
+    double* Apoly_vec_with_opt = P4EST_ALLOC_ZERO(double, local_nodes);
 
     double* Abc_poly_vec = P4EST_ALLOC(double, local_nodes);
     double* Apoly_vec_compare = P4EST_ALLOC(double, local_nodes);
@@ -470,18 +469,19 @@ int main(int argc, char *argv[])
       int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
       int bad_element = 0;
       for (int j = 0; j < volume_nodes; j++){
-        if(fabs(Apoly_vec[ed->nodal_stride + j] - Apoly_vec_with_opt[ed->nodal_stride + j]) > 1e-13){
-          bad_element = 1;
+        if((fabs(Apoly_vec[ed->nodal_stride + j] - Apoly_vec_with_opt[ed->nodal_stride + j]) > 1e-13)){
           printf("ed id %d, %d, Apoly_vec[j], Apoly_vec_with_opt[j], err = %.15f, %.15f, %.15f\n",ed->id, i,Apoly_vec[ed->nodal_stride + j],Apoly_vec_with_opt[ed->nodal_stride + j]);
+          bad_element = 1;
         }
       }
       if(bad_element == 1){
-        printf("ed->deg = %d", ed->deg);
+        printf("ed->deg = %d\n", ed->deg);
         double*vec_opt = &Apoly_vec_with_opt[ed->nodal_stride];
         DEBUG_PRINT_ARR_DBL(vec_opt, volume_nodes);
+        D4EST_ABORT("ABORTING BAD ELEMENT");
       }
     }
-    /*  */    
+
     double u_sum = d4est_util_sum_array_dbl(poly_vec, local_nodes);
     double Au_sum = d4est_util_sum_array_dbl(Apoly_vec, local_nodes);
     double Au_sum_with_opt = d4est_util_sum_array_dbl(Apoly_vec_with_opt, local_nodes);

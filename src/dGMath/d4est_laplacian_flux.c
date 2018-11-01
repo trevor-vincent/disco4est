@@ -764,7 +764,6 @@ static void
       oriented_face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad_porder[b]);
     }
 
-
     for (int d = 0; d < (P4EST_DIM); d++){
       d4est_operators_reorient_face_data
         (
@@ -778,7 +777,6 @@ static void
          &dudx_p_on_f_p_mortar_quad[d][face_mortar_stride]
         );
     }
-
 
 /* #ifdef D4EST_H_EQ_J_DIV_SJ_QUAD */
 /*     d4est_operators_reorient_face_data */

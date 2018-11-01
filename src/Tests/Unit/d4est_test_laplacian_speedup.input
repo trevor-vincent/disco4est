@@ -3,11 +3,11 @@ min_quadrants = -1
 min_level = 0
 fill_uniform = 1
 region0_deg = 1
-region0_deg_quad_inc = 0
-region1_deg = 1
-region1_deg_quad_inc = 0
+region0_deg_quad_inc = 1
+region1_deg = 2
+region1_deg_quad_inc = 2
 region2_deg = 1
-region2_deg_quad_inc = 0
+region2_deg_quad_inc = 1
 
 [flux]
 name = sipg

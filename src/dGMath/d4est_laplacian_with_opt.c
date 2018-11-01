@@ -286,9 +286,6 @@ d4est_laplacian_with_opt_apply_mortar_matrices
     );
 }
 
-
-
-
 void
 d4est_laplacian_with_opt_apply_aij
 (

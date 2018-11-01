@@ -647,6 +647,8 @@ d4est_laplacian_flux_sipg_interface_aux
   /* P4EST_FREE(hm_mortar_quad); */
   /* P4EST_FREE(hp_mortar_quad); */
 
+  double* sj_n_du [(P4EST_DIM)];
+  D4EST_ALLOC_DIM_VEC(sj_n_du, total_nodes_mortar_quad);
   
   stride = 0;
   int stride_lobatto = 0;
@@ -659,8 +661,16 @@ d4est_laplacian_flux_sipg_interface_aux
         term1_mortar_quad[ks] += -1.*n_on_f_m_mortar_quad[d][ks]*sj_on_f_m_mortar_quad[ks]
                                  *.5*(dudx_p_on_f_p_mortar_quad[d][ks] + dudx_m_on_f_m_mortar_quad[d][ks]);
       }
+      
       /* printf("term1_mortar_quad[%d] = %.15f\n", ks, term1_mortar_quad[ks]); */
-        
+
+    for (int d = 0; d < (P4EST_DIM); d++){
+        sj_n_du[d][ks] = sj_on_f_m_mortar_quad[ks]
+                         *n_on_f_m_mortar_quad[d][ks]
+                         *(u_m_on_f_m_mortar_quad[ks] - u_p_on_f_p_mortar_quad[ks]);
+          
+      }
+      
       for (int l = 0; l < (P4EST_DIM); l++){
         term2_mortar_quad[l][ks] = 0.;
         for (int d = 0; d < (P4EST_DIM); d++){
@@ -676,6 +686,9 @@ d4est_laplacian_flux_sipg_interface_aux
       term3_mortar_quad[ks] = sj_on_f_m_mortar_quad[ks]*sigma[ks]*(u_m_on_f_m_mortar_quad[ks] - u_p_on_f_p_mortar_quad[ks]);
       /* printf("term3_mortar_quad[%d] = %.15f\n", ks, term3_mortar_quad[ks]); */
     }
+
+
+    
 
     d4est_quadrature_apply_galerkin_integral
       (
@@ -730,6 +743,16 @@ d4est_laplacian_flux_sipg_interface_aux
     stride += nodes_mortar_quad[f];
     stride_lobatto += nodes_mortar_lobatto[f];
   }
+
+
+    /* if (e_m[0]->id == 11 && f_m == 1){ */
+      /* printf("orientation = %d\n", orientation); */
+      /* DEBUG_PRINT_ARR_DBL(sj_n_du[0], total_nodes_mortar_quad); */
+      /* DEBUG_PRINT_ARR_DBL(sj_n_du[1], total_nodes_mortar_quad); */
+      /* DEBUG_PRINT_ARR_DBL(sj_n_du[2], total_nodes_mortar_quad); */
+    /* } */
+
+    D4EST_FREE_DIM_VEC(sj_n_du);
   
 
   for (int d = 0; d < (P4EST_DIM); d++){
@@ -745,6 +768,20 @@ d4est_laplacian_flux_sipg_interface_aux
       );
   }
 
+  /* if(e_m[0]->id == 8 && f_m == 2){ */
+  /* if(e_m[0]->id == 11 && f_m == 1){ */
+  /*   /\* printf("with_opt\n"); *\/ */
+  /*   printf("total_side_nodes_p_lobatto = %d\n", total_side_nodes_m_lobatto); */
+    /* printf("f_m = %d\n", f_m); */
+  /*   DEBUG_PRINT_ARR_DBL(VT_w_term2_mortar_lobatto[0], total_nodes_mortar_lobatto); */
+  /*   DEBUG_PRINT_ARR_DBL(VT_w_term2_mortar_lobatto[1], total_nodes_mortar_lobatto); */
+  /*   DEBUG_PRINT_ARR_DBL(VT_w_term2_mortar_lobatto[2], total_nodes_mortar_lobatto); */
+    
+    /* DEBUG_PRINT_ARR_DBL(proj_VT_w_term2_mortar_lobatto[0], total_side_nodes_m_lobatto); */
+    /* DEBUG_PRINT_ARR_DBL(proj_VT_w_term2_mortar_lobatto[1], total_side_nodes_m_lobatto); */
+    /* DEBUG_PRINT_ARR_DBL(proj_VT_w_term2_mortar_lobatto[2], total_side_nodes_m_lobatto); */
+  /* } */
+  
   d4est_mortars_project_mass_mortar_onto_side
     (
      d4est_ops,
@@ -919,10 +956,10 @@ d4est_laplacian_flux_sipg_interface
         }
 
         /* printf("term 3\n"); */
-        /* mortar_data->Au_m[f][i] += lifted_proj_VT_w_term3_mortar_lobatto[i + stride]; */
+        mortar_data->Au_m[f][i] += lifted_proj_VT_w_term3_mortar_lobatto[i + stride];
 
         /* printf("term 1\n"); */
-        /* mortar_data->Au_m[f][i] += lifted_proj_VT_w_term1_mortar_lobatto[i + stride]; */
+        mortar_data->Au_m[f][i] += lifted_proj_VT_w_term1_mortar_lobatto[i + stride];
         /* if(e_m[0]->tree != e_p[0]->tree) */
           /* printf("mortar_data->Au_m[%d][%d] = %.15f\n", f,i, mortar_data->Au_m[f][i]); */
       }

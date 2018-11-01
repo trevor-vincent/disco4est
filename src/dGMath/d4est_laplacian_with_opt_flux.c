@@ -444,13 +444,15 @@ may need to all be reoriented so we may not want to skip, because this routine w
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_porder, total_nodes_mortar_quad);
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_quad_porder, total_nodes_mortar_quad);
   D4EST_ALLOC_DIM_VEC(dudx_p_on_f_p_mortar_quad_porder, total_nodes_mortar_quad);
-  D4EST_ALLOC_DIM_VEC(dudx_p_on_f_p_mortar_quad, total_nodes_mortar_quad);
+  if (orientation != 0){
+    D4EST_ALLOC_DIM_VEC(dudx_p_on_f_p_mortar_quad, total_nodes_mortar_quad);
+  }
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m, total_side_nodes_m_lobatto);
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m_mortar, total_nodes_mortar_quad);
   D4EST_ALLOC_DIM_VEC(dudr_m_on_f_m_mortar_quad, total_nodes_mortar_quad);
   D4EST_ALLOC_DIM_VEC(dudx_m_on_f_m_mortar_quad, total_nodes_mortar_quad);
 
-  
+   /* dudx_p_on_f_p_mortar_quad */
   stride = 0;
   for (int i = 0; i < faces_m; i++){
 
@@ -497,9 +499,10 @@ may need to all be reoriented so we may not want to skip, because this routine w
        (P4EST_DIM),
        f_p,
        e_p_oriented[i]->deg,
-       tmp
+       (orientation != 0) ? tmp : &u_p_on_f_p[stride]
       );
-    
+
+    if (orientation != 0){
     d4est_operators_reorient_face_data
       (
        d4est_ops,
@@ -511,7 +514,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
        f_p,
        &u_p_on_f_p[stride]
       );
-    
+    }    
     stride += face_nodes_p_lobatto[i];
   }
 
@@ -715,19 +718,17 @@ may need to all be reoriented so we may not want to skip, because this routine w
       }
     }    
   }
-  
+
+  if (orientation != 0){
   int face_mortar_stride = 0;
   for (int face = 0; face < faces_mortar; face++){
     int face_p = face;
     if (faces_mortar == (P4EST_HALF))
       face_p = d4est_reference_reorient_face_order((P4EST_DIM)-1, f_m, f_p, orientation, face);
-
     int oriented_face_mortar_stride = 0;
     for (int b = 0; b < face_p; b++){
       oriented_face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad_porder[b]);
     }
-
-
     for (int d = 0; d < (P4EST_DIM); d++){
       d4est_operators_reorient_face_data
         (
@@ -741,25 +742,14 @@ may need to all be reoriented so we may not want to skip, because this routine w
          &dudx_p_on_f_p_mortar_quad[d][face_mortar_stride]
         );
     }
-
-
-/* #ifdef D4EST_H_EQ_J_DIV_SJ_QUAD */
-/*     d4est_operators_reorient_face_data */
-/*         ( */
-/*          d4est_ops, */
-/*          &j_div_sj_on_f_p_mortar_quad_porder[oriented_face_mortar_stride], */
-/*          (P4EST_DIM)-1, */
-/*          deg_mortar_quad[face], */
-/*          orientation, */
-/*          f_m, */
-/*          f_p, */
-/*          &j_div_sj_on_f_p_mortar_quad[face_mortar_stride] */
-/*         ); */
-/* #endif   */  
-    
     face_mortar_stride += d4est_lgl_get_nodes((P4EST_DIM)-1, deg_mortar_quad[face]);
   }
-
+  }
+  else {
+    for (int d = 0; d < (P4EST_DIM); d++){
+      dudx_p_on_f_p_mortar_quad[d] = dudx_p_on_f_p_mortar_quad_porder[d];
+    }
+  }
   /* We interpolated a derivative up to the mortar, but this is a different reference space, so we need
  another dr/dx factor */
   
@@ -883,7 +873,9 @@ may need to all be reoriented so we may not want to skip, because this routine w
   D4EST_FREE_DIM_VEC(dudr_p_on_f_p_mortar_porder);
   D4EST_FREE_DIM_VEC(dudr_p_on_f_p_mortar_quad_porder);
   D4EST_FREE_DIM_VEC(dudx_p_on_f_p_mortar_quad_porder);
-  D4EST_FREE_DIM_VEC(dudx_p_on_f_p_mortar_quad);
+  if (orientation != 0){
+    D4EST_FREE_DIM_VEC(dudx_p_on_f_p_mortar_quad);
+  }
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m);
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m_mortar);
   D4EST_FREE_DIM_VEC(dudr_m_on_f_m_mortar_quad);

@@ -689,36 +689,53 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
     stride_lobatto += nodes_mortar_lobatto[f];
   }
 
+  /* if(e_p[0]->id == 8 && f_p == 2){ */
+  /*   printf("with_opt\n"); */
+  /*   printf("orientation = %d\n", orientation); */
+  /*   DEBUG_PRINT_ARR_DBL(sj_n_du[0], total_nodes_mortar_quad); */
+  /*   DEBUG_PRINT_ARR_DBL(sj_n_du[1], total_nodes_mortar_quad); */
+  /*   DEBUG_PRINT_ARR_DBL(sj_n_du[2], total_nodes_mortar_quad); */
+  /* }       */
+  
   int is_it_tree_boundary = (e_m[0]->tree != e_p[0]->tree);
-
   double* term2_mortar_quad_p_porder [P4EST_DIM];
   double* VT_w_term2_mortar_lobatto_porder [P4EST_DIM];
-  if(is_it_tree_boundary){
-    
+  if(is_it_tree_boundary){    
     double* sj_n_du_porder[(P4EST_DIM)];
     for (int d = 0; d < (P4EST_DIM); d++){
       term2_mortar_quad_p_porder[d] = P4EST_ALLOC(double, total_nodes_mortar_quad);
       VT_w_term2_mortar_lobatto_porder[d] = P4EST_ALLOC(double, total_nodes_mortar_quad);
-      sj_n_du_porder[d] = d4est_mortars_with_opt_reorient_if_needed
-                          (
-                           d4est_ops,
-                           e_p,
-                           e_m,
-                           orientation,
-                           f_p,
-                           f_m,
-                           sj_n_du[d],
-                           deg_mortar_quad_porder,
-                           deg_mortar_quad,
-                           total_nodes_mortar_quad,
-                           faces_p
-                          );
+      if (orientation != 0){
+        sj_n_du_porder[d] = d4est_mortars_with_opt_reorient_if_needed
+                            (
+                             d4est_ops,
+                             e_p,
+                             e_m,
+                             orientation,
+                             f_p,
+                             f_m,
+                             sj_n_du[d],
+                             deg_mortar_quad_porder,
+                             deg_mortar_quad,
+                             total_nodes_mortar_quad,
+                             faces_mortar
+                            );
+      }
+      else {
+        sj_n_du_porder[d] = sj_n_du[d];
+      }
     }
-    for (int i = 0; i < faces_p; i++){
-      printf("e_p[%d] id = %d, face = %d\n", i, e_p[i]->id, f_p);
-    }
+    /* for (int i = 0; i < faces_p; i++){ */
+    /*   printf("e_p[%d] id = %d, face = %d, e_m[0] id = %d\n", i, e_p[i]->id, f_p, e_m[0]->id); */
+    /* } */
 
-    /* if (e_p[0] == 8){ */
+    /* if (e_p[0]->id == 11 && f_p == 1){ */
+    /*   printf("e_m[0]->id = %d, faces_m =%d\n", e_m[0]->id, faces_m); */
+    /*   printf("orientation = %d\n", orientation); */
+    /*   DEBUG_PRINT_ARR_DBL(sj_n_du[0], total_nodes_mortar_quad); */
+    /*   DEBUG_PRINT_ARR_DBL(sj_n_du[1], total_nodes_mortar_quad); */
+    /*   DEBUG_PRINT_ARR_DBL(sj_n_du[2], total_nodes_mortar_quad); */
+      
     /*   DEBUG_PRINT_ARR_DBL(sj_n_du_porder[0], total_nodes_mortar_quad); */
     /*   DEBUG_PRINT_ARR_DBL(sj_n_du_porder[1], total_nodes_mortar_quad); */
     /*   DEBUG_PRINT_ARR_DBL(sj_n_du_porder[2], total_nodes_mortar_quad); */
@@ -759,7 +776,9 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
 
     for (int d = 0; d < (P4EST_DIM); d++){
       P4EST_FREE(term2_mortar_quad_p_porder[d]);
-      P4EST_FREE(sj_n_du_porder[d]);
+      if (orientation != 0){
+        P4EST_FREE(sj_n_du_porder[d]);
+      }
     }
     
   }
@@ -787,6 +806,28 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
        (is_it_tree_boundary) ? mortar_data->deg_p_lobatto_porder : deg_p_lobatto
       );
   }
+
+  /* if(e_p[0]->id == 8 && f_p == 2){ */
+  /* if(e_p[0]->id == 11 && f_p == 1){ */
+  /*   printf("with_opt\n"); */
+  /*   printf("f_p = %d\n", f_p); */
+  /*   printf("is_it_tree_boundary = %d\n", is_it_tree_boundary); */
+  /*   printf("orientation = %d\n", orientation); */
+  /*   /\* printf("with_opt\n"); *\/ */
+  /*   printf("total_side_nodes_p_lobatto = %d\n", total_side_nodes_p_lobatto); */
+
+  /*   DEBUG_PRINT_ARR_DBL(VT_w_term2_mortar_lobatto[0], total_nodes_mortar_lobatto); */
+  /*   DEBUG_PRINT_ARR_DBL(VT_w_term2_mortar_lobatto[1], total_nodes_mortar_lobatto); */
+  /*   DEBUG_PRINT_ARR_DBL(VT_w_term2_mortar_lobatto[2], total_nodes_mortar_lobatto); */
+
+  /*   DEBUG_PRINT_ARR_DBL(proj_VT_w_term2_mortar_lobatto_p[0], total_side_nodes_p_lobatto); */
+  /*   DEBUG_PRINT_ARR_DBL(proj_VT_w_term2_mortar_lobatto_p[1], total_side_nodes_p_lobatto); */
+  /*   DEBUG_PRINT_ARR_DBL(proj_VT_w_term2_mortar_lobatto_p[2], total_side_nodes_p_lobatto); */
+
+    
+  /* } */
+  
+  
 
   if (is_it_tree_boundary){
     for (int d = 0; d < (P4EST_DIM); d++){
@@ -1152,9 +1193,9 @@ d4est_laplacian_with_opt_flux_sipg_interface
           mortar_data->Au_m[f][i] +=  DT_lifted_proj_VT_w_term2_mortar_lobatto_m[d][i + stride];
         }
 
-        /* mortar_data->Au_m[f][i] += lifted_proj_VT_w_term3_mortar_lobatto_m[i + stride]; */
+        mortar_data->Au_m[f][i] += lifted_proj_VT_w_term3_mortar_lobatto_m[i + stride];
 
-        /* mortar_data->Au_m[f][i] += lifted_proj_VT_w_term1_mortar_lobatto_m[i + stride]; */
+        mortar_data->Au_m[f][i] += lifted_proj_VT_w_term1_mortar_lobatto_m[i + stride];
         /* if(e_m[0]->tree != e_p[0]->tree) */
         /* printf("mortar_data->Au_m[%d][%d] = %.15f\n", f, i, mortar_data->Au_m[f][i]); */
       }
@@ -1176,11 +1217,11 @@ d4est_laplacian_with_opt_flux_sipg_interface
 
         /* printf("term 3\n"); */
         /* need negative here because normal sign switches */
-        /* mortar_data->Au_p[f][i] -= lifted_proj_VT_w_term3_mortar_lobatto_p[i + stride]; */
+        mortar_data->Au_p[f][i] -= lifted_proj_VT_w_term3_mortar_lobatto_p[i + stride];
 
         /* printf("term 1\n"); */
         /* need negative here because normal sign switches */
-        /* mortar_data->Au_p[f][i] -= lifted_proj_VT_w_term1_mortar_lobatto_p[i + stride]; */
+        mortar_data->Au_p[f][i] -= lifted_proj_VT_w_term1_mortar_lobatto_p[i + stride];
         /* if(e_m[0]->tree != e_p[0]->tree) */
         /* printf("mortar_data->Au_p[%d][%d] = %.15f\n", f, i, mortar_data->Au_p[f][i]); */
       }

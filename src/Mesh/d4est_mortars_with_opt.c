@@ -887,7 +887,8 @@ d4est_mortars_with_opt_reorient_if_needed
  int faces
 )
 {
-  if (e_m[0]->tree == e_p[0]->tree)
+  if (e_m[0]->tree == e_p[0]->tree
+      || orientation == 0)
     return NULL;
 
   double* field_morder = P4EST_ALLOC(double, total_nodes);
