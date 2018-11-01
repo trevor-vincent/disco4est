@@ -1,6 +1,7 @@
 #ifndef D4EST_MORTARS_H
 #define D4EST_MORTARS_H 
 
+#include <pXest.h>
 #include <d4est_operators.h>
 #include <d4est_geometry.h>
 #include <d4est_quadrature.h>
@@ -72,6 +73,7 @@ typedef struct {
 
 
 /* This file was automatically generated.  Do not edit! */
+double *d4est_mortars_reorient_if_needed(d4est_operators_t *d4est_ops,d4est_element_data_t **e_m,d4est_element_data_t **e_p,int orientation,int f_m,int f_p,double *field_porder,int *deg_morder,int *deg_porder,int total_nodes,int faces);
 int d4est_mortars_compute_flux_on_local_elements(p4est_t *p4est,d4est_ghost_t *d4est_ghost,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mortars_fcn_ptrs_t *fcn_ptrs);
 void d4est_mortars_compute_flux_on_local_elements_aux(p4est_iter_face_info_t *info,void *user_data);
 void d4est_mortars_project_side_onto_mortar_space(d4est_operators_t *d4est_ops,double *in_side,int faces_side,int *deg_side,double *out_mortar,int faces_mortar,int *deg_mortar);

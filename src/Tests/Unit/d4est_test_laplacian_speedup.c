@@ -9,15 +9,15 @@
 #include <d4est_linalg.h>
 #include <d4est_mortars.h>
 #include <d4est_amr.h>
+#include <d4est_laplacian_with_opt.h>
 #include <d4est_laplacian.h>
-#include <d4est_laplacian_flux.h>
 #include <d4est_solver_matrix_symmetry.h>
 #include <d4est_util.h>
 #include <d4est_norms.h>
 #include <d4est_vtk.h>
 #include <limits.h>
 #include <zlog.h>
-
+#include <time.h>
 
 #define D4EST_REAL_EPS 100*1e-15
 #if (P4EST_DIM)==2
@@ -26,6 +26,23 @@
 #define TEST_DEG_INIT 2
 #endif
 
+static void 
+d4est_test_iterate_refine_only_one_element
+(
+ p4est_iter_volume_info_t* info,
+ void* user_data
+)
+{
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
+  int* element_to_refine = (int*) (d4est_amr->scheme->amr_scheme_data);
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
+  if (elem_data->id == *element_to_refine){
+    d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;
+  }
+  else {
+    d4est_amr->refinement_log[elem_data->id] = elem_data->deg;
+  }
+}
 
 static void
 d4est_test_apply_lhs
@@ -41,9 +58,29 @@ d4est_test_apply_lhs
  void* user
 )
 {
-  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = user;  
+  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = user;
   d4est_laplacian_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_data_for_apply_lhs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, 0);
 }
+
+
+static void
+d4est_test_apply_lhs_with_opt
+(
+ p4est_t* p4est,
+ d4est_ghost_t* ghost,
+ d4est_ghost_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ void* user
+)
+{
+  d4est_laplacian_with_opt_flux_data_t* flux_data_for_apply_lhs = user;  
+  d4est_laplacian_with_opt_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_data_for_apply_lhs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, 0);
+}
+
 
 
 double
@@ -226,21 +263,77 @@ int main(int argc, char *argv[])
   int same = 0;
   
   /* d4est_amr_t* d4est_amr_random = d4est_amr_init_uniform_h(p4est, 7, 1); */
-  int num_of_amr_steps = 2;
+  int num_of_amr_steps = 1;
   d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, num_of_amr_steps);
 
   for (int i = 0; i < num_of_amr_steps; i++){
+
+    int add_amr_in_one_element = 1;
+    if (add_amr_in_one_element){
+      int* refinement_log = P4EST_ALLOC(int, p4est->local_num_quadrants);
+      int element_to_refine = 0;
+      d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
+      d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
+      scheme->post_balance_callback = NULL;
+      scheme->pre_refine_callback = NULL;
+      scheme->refine_replace_callback_fcn_ptr = NULL;
+      scheme->balance_replace_callback_fcn_ptr = NULL;
+      scheme->mark_elements = d4est_test_iterate_refine_only_one_element;
+      scheme->amr_scheme_data = &element_to_refine;
+      scheme->destroy = NULL;
     
-    d4est_amr_step
-      (
-       p4est,
-       d4est_ops,
-       d4est_amr_random,
-       NULL,
-       NULL,
-       NULL
-      );
+      d4est_amr->mpirank = p4est->mpirank;
+      d4est_amr->scheme = scheme;
+      d4est_amr->balance_log = NULL;
+      d4est_amr->refinement_log = NULL;
+      d4est_amr->initial_log = NULL;
+      d4est_amr->max_degree = 1000;
     
+      d4est_amr_step
+        (
+         p4est,
+         NULL,
+         d4est_amr,
+         NULL,
+         NULL,
+         NULL
+        );
+
+      P4EST_FREE(refinement_log);
+      P4EST_FREE(d4est_amr);
+      P4EST_FREE(scheme);
+
+      local_sizes = d4est_mesh_update
+                    (
+                     p4est,
+                     &d4est_ghost,
+                     d4est_ops,
+                     d4est_geom,
+                     d4est_quad,
+                     d4est_factors,
+                     initial_grid_input,
+                     INITIALIZE_GHOST,
+                     INITIALIZE_QUADRATURE_DATA,
+                     INITIALIZE_GEOMETRY_DATA,
+                     INITIALIZE_GEOMETRY_ALIASES,
+                     d4est_mesh_set_quadratures_after_amr,
+                     (void*)initial_grid_input
+                    );
+  
+      initial_grid_input->initial_nodes = local_sizes.local_nodes;
+    }
+    else {
+    
+      d4est_amr_step
+        (
+         p4est,
+         d4est_ops,
+         d4est_amr_random,
+         NULL,
+         NULL,
+         NULL
+        );
+    }    
     d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
                                            (
                                             p4est,
@@ -287,6 +380,7 @@ int main(int argc, char *argv[])
 
     
     d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, "d4est_test_laplacian_speedup.input", BC_DIRICHLET, &bc_data_for_lhs);
+    d4est_laplacian_with_opt_flux_data_t* flux_data_for_apply_lhs_with_opt = d4est_laplacian_with_opt_flux_new(p4est, "d4est_test_laplacian_speedup.input", BC_DIRICHLET, &bc_data_for_lhs);
 
 
     d4est_elliptic_eqns_t prob_fcns;
@@ -294,6 +388,14 @@ int main(int argc, char *argv[])
     prob_fcns.apply_lhs = d4est_test_apply_lhs;
     prob_fcns.user = flux_data_for_apply_lhs;
 
+
+    d4est_elliptic_eqns_t prob_fcns_with_opt;
+    prob_fcns_with_opt.build_residual = NULL;
+    prob_fcns_with_opt.apply_lhs = d4est_test_apply_lhs_with_opt;
+    prob_fcns_with_opt.user = flux_data_for_apply_lhs_with_opt;
+
+
+    
     double* poly_vec = P4EST_ALLOC(double, local_nodes);
 
 
@@ -309,6 +411,7 @@ int main(int argc, char *argv[])
     );
     
     double* Apoly_vec = P4EST_ALLOC(double, local_nodes);
+    double* Apoly_vec_with_opt = P4EST_ALLOC(double, local_nodes);
 
     double* Abc_poly_vec = P4EST_ALLOC(double, local_nodes);
     double* Apoly_vec_compare = P4EST_ALLOC(double, local_nodes);
@@ -325,7 +428,8 @@ int main(int argc, char *argv[])
     for (int i = 0; i < local_sizes.local_nodes; i++){
       poly_vec[i] += (double)rand() / (double)RAND_MAX;
     }
-    
+
+    clock_t start = clock();
     d4est_elliptic_eqns_apply_lhs
       (
        p4est,
@@ -338,17 +442,58 @@ int main(int argc, char *argv[])
        d4est_quad,
        d4est_factors
       );
+    clock_t end = clock();
+    double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
 
+    elliptic_data.Au = Apoly_vec_with_opt;
+    start = clock();
+    d4est_elliptic_eqns_apply_lhs
+      (
+       p4est,
+       d4est_ghost,
+       d4est_ghost_data,
+       &prob_fcns_with_opt,
+       &elliptic_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors
+      );
+    end = clock();    
+    double time_spent_2 = (double)(end - start) / CLOCKS_PER_SEC;    
 
+    printf("**********DONE**********\n");
+    printf("before and after opt times = %f, %f\n", time_spent, time_spent_2);
+
+    for (int i = 0; i < p4est->local_num_quadrants; i++){
+      d4est_element_data_t* ed = d4est_factors->element_data[i];
+      int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+      int bad_element = 0;
+      for (int j = 0; j < volume_nodes; j++){
+        if(fabs(Apoly_vec[ed->nodal_stride + j] - Apoly_vec_with_opt[ed->nodal_stride + j]) > 1e-13){
+          bad_element = 1;
+          printf("ed id %d, %d, Apoly_vec[j], Apoly_vec_with_opt[j], err = %.15f, %.15f, %.15f\n",ed->id, i,Apoly_vec[ed->nodal_stride + j],Apoly_vec_with_opt[ed->nodal_stride + j]);
+        }
+      }
+      if(bad_element == 1){
+        printf("ed->deg = %d", ed->deg);
+        double*vec_opt = &Apoly_vec_with_opt[ed->nodal_stride];
+        DEBUG_PRINT_ARR_DBL(vec_opt, volume_nodes);
+      }
+    }
+    /*  */    
     double u_sum = d4est_util_sum_array_dbl(poly_vec, local_nodes);
     double Au_sum = d4est_util_sum_array_dbl(Apoly_vec, local_nodes);
+    double Au_sum_with_opt = d4est_util_sum_array_dbl(Apoly_vec_with_opt, local_nodes);
 
     printf("local_nodes = %d\n", local_nodes);
     printf("quadrants = %d\n", p4est->local_num_quadrants);
     printf("u sum = %.25f\n", u_sum);
     printf("Au sum = %.25f\n", Au_sum);
+    printf("Au sum with opt = %.25f\n", Au_sum_with_opt);
 
     P4EST_FREE(Apoly_vec);
+    P4EST_FREE(Apoly_vec_with_opt);
     P4EST_FREE(poly_vec);
     P4EST_FREE(Abc_poly_vec);
     P4EST_FREE(Apoly_vec_compare);
@@ -360,6 +505,7 @@ int main(int argc, char *argv[])
     } 
 
     d4est_laplacian_flux_destroy(flux_data_for_apply_lhs);
+    d4est_laplacian_with_opt_flux_destroy(flux_data_for_apply_lhs_with_opt);
   }
 
   d4est_ghost_destroy(d4est_ghost);

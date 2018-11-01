@@ -124,13 +124,21 @@ d4est_test_operators_schwarz_nd
 }
 
 static void
-d4est_test_operators_schwarz_weights
+d4est_test_operators_schwarz_weights_aux
 (
- d4est_solver_schwarz_operators_t* schwarz_ops
+ d4est_solver_schwarz_operators_t* schwarz_ops,
+ int deg,
+ int restricted_size
 )
 {
-  int deg = 2;
-  int restricted_size = 2;
+  double* r = d4est_operators_fetch_lobatto_nodes_1d(schwarz_ops->d4est_ops,
+                                                     deg);
+  double rmax = 1.;
+  double rmin = r[deg + 1 - restricted_size];
+  double overlap_size = rmax - rmin;
+  
+  printf("*********************\n");
+  printf("deg, restricted_size, overlap_size = %d, %d, %.15f\n", deg, restricted_size, overlap_size);
   
   double* schwarz_weights_1d =
     d4est_solver_schwarz_operators_fetch_schwarz_weights_1d
@@ -140,8 +148,36 @@ d4est_test_operators_schwarz_weights
      restricted_size
     );
 
-  int size = (deg + 1) + 2*restricted_size;
-  DEBUG_PRINT_ARR_DBL(schwarz_weights_1d, size);
+  for (int i = 0; i < restricted_size; i++){
+    printf("%.15f %.15f\n", r[i + deg + 1 - restricted_size] - 2.,schwarz_weights_1d[i]);
+  }
+
+  for (int i = 0; i < deg + 1; i++){
+    printf("%.15f %.15f\n", r[i], schwarz_weights_1d[i + 2*restricted_size]);
+  }
+  
+  for (int i = 0; i < restricted_size; i++){
+    printf("%.15f %.15f\n", r[i] + 2., schwarz_weights_1d[i + restricted_size]);
+  }
+
+  printf("*********************\n");
+
+}
+
+static void
+d4est_test_operators_schwarz_weights
+(
+ d4est_solver_schwarz_operators_t* schwarz_ops
+)
+{
+  d4est_test_operators_schwarz_weights_aux(schwarz_ops, 2,2);
+  d4est_test_operators_schwarz_weights_aux(schwarz_ops, 3,2);
+  d4est_test_operators_schwarz_weights_aux(schwarz_ops, 4,2);
+  d4est_test_operators_schwarz_weights_aux(schwarz_ops, 5,2);
+  d4est_test_operators_schwarz_weights_aux(schwarz_ops, 6,2);
+  d4est_test_operators_schwarz_weights_aux(schwarz_ops, 6,3);
+  d4est_test_operators_schwarz_weights_aux(schwarz_ops, 6,4);
+ 
 }
 
 
@@ -153,7 +189,7 @@ d4est_test_operators_schwarz
 
 
   int deg = 3;
-  int res_deg = 3;
+  int res_deg = 2;
 
   int nodes_res = res_deg + 1;
   int nodes_deg = deg + 1;
@@ -229,11 +265,11 @@ int main(int argc, char *argv[])
   d4est_solver_schwarz_operators_t* d4est_schwarz_ops =
     d4est_solver_schwarz_operators_init(d4est_ops);
   
-  d4est_test_operators_schwarz_nd
-    (
-     d4est_schwarz_ops,
-     3
-    );
+  /* d4est_test_operators_schwarz_nd */
+  /*   ( */
+  /*    d4est_schwarz_ops, */
+  /*    3 */
+  /*   ); */
 
   d4est_test_operators_schwarz
     (

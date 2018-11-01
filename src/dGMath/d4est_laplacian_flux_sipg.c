@@ -919,10 +919,10 @@ d4est_laplacian_flux_sipg_interface
         }
 
         /* printf("term 3\n"); */
-        mortar_data->Au_m[f][i] += lifted_proj_VT_w_term3_mortar_lobatto[i + stride];
+        /* mortar_data->Au_m[f][i] += lifted_proj_VT_w_term3_mortar_lobatto[i + stride]; */
 
         /* printf("term 1\n"); */
-        mortar_data->Au_m[f][i] += lifted_proj_VT_w_term1_mortar_lobatto[i + stride];
+        /* mortar_data->Au_m[f][i] += lifted_proj_VT_w_term1_mortar_lobatto[i + stride]; */
         /* if(e_m[0]->tree != e_p[0]->tree) */
           /* printf("mortar_data->Au_m[%d][%d] = %.15f\n", f,i, mortar_data->Au_m[f][i]); */
       }

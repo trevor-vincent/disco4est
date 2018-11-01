@@ -18,9 +18,11 @@ double phi_fcn
 {
   if (r < -1 || r > 1){
     /* signum(r) */
+    /* printf("r, phi = %.15f\n", r, (r > 0) - (r < 0)); */
     return (r > 0) - (r < 0); 
   }
   else {
+    /* printf("r, phi = %.15f\n", r, quintic_poly(r)); */
     return quintic_poly(r);
   }
 }
@@ -34,7 +36,7 @@ double poly_hat_weight_fcn
 {
   double d0 = overlap_size;
   D4EST_ASSERT(overlap_size >= 0);
-  return .5*(phi_fcn((r+1)/d0) + phi_fcn((r-1)/d0));
+  return .5*(phi_fcn((r+1)/d0) - phi_fcn((r-1)/d0));
 }
 
 void d4est_solver_schwarz_operators_build_schwarz_restrictor_1d
@@ -89,9 +91,12 @@ void d4est_solver_schwarz_operators_build_schwarz_weights_1d
   double rmax = 1.;
   double rmin = r[deg + 1 - restricted_size];
   double overlap_size = rmax - rmin;
+
+  //printf("overlap_size = %.15f\n", overlap_size);
+  //DEBUG_PRINT_ARR_DBL(r, deg+1);
   
   for (int i = 0; i < restricted_size; i++){
-    schwarz_weights_1d[i] = poly_hat_weight_fcn(r[deg - i] - 2, overlap_size);/* left subdomain element*/
+    schwarz_weights_1d[i] = poly_hat_weight_fcn(r[i + deg + 1 - restricted_size] - 2, overlap_size);/* left subdomain element*/
     schwarz_weights_1d[restricted_size + i] = poly_hat_weight_fcn(r[i] + 2, overlap_size);/* right subdomain element*/
   }
   for (int i = 0; i < deg + 1; i++){
@@ -297,9 +302,15 @@ void d4est_solver_schwarz_operators_apply_schwarz_weights
 
   double* weights_1d = d4est_solver_schwarz_operators_fetch_schwarz_weights_1d(d4est_schwarz_ops, deg, restricted_size);
 
+  int face_sum = 0;
+  for (int i = 0; i < (P4EST_DIM); i++){
+    face_sum += faces[i];
+  }
+  
+
   /* populate with core weights if the core or 1's if not the core */
   for (int i = 0; i < dim; i++){
-    vecs[i] = (faces == NULL) ? &weights_1d[2*restricted_size] : eyes;
+    vecs[i] = (face_sum == (P4EST_DIM)*(-1)) ? &weights_1d[2*restricted_size] : eyes;
     vec_sizes[i] = degp1;
   }
 

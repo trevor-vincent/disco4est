@@ -4,16 +4,26 @@
 #include <d4est_operators.h>
 #include <d4est_element_data.h>
 #include <d4est_linalg.h>
-#include <d4est_laplacian_flux_with_opt.h>
-#include <d4est_laplacian_flux_with_opt_sipg.h>
-#include <d4est_mortars.h>
+#include <d4est_laplacian_with_opt.h>
+#include <d4est_laplacian_with_opt_flux_sipg.h>
+#include <d4est_mortars_with_opt.h>
 #include <d4est_quadrature_compactified.h>
 #include <d4est_elliptic_data.h>
 #include <d4est_quadrature_lobatto.h>
 
 
+int
+d4est_laplacian_with_opt_get_degree_mortar_quad
+(
+ d4est_element_data_t* ed,
+ void* user
+){
+  return ed->deg_quad;
+}
+
+
 static void
-d4est_laplacian_flux_with_opt_boundary
+d4est_laplacian_with_opt_flux_boundary
 (
  p4est_t* p4est,
  d4est_element_data_t* e_m,
@@ -26,7 +36,7 @@ d4est_laplacian_flux_with_opt_boundary
  void* params
 )
 {
-  d4est_laplacian_flux_with_opt_data_t* d4est_laplacian_flux_with_opt_params = params;
+  d4est_laplacian_with_opt_flux_data_t* d4est_laplacian_with_opt_flux_params = params;
   int face_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg);
   int deg_quad = e_m->deg_quad;
   int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, deg_quad);
@@ -79,7 +89,7 @@ d4est_laplacian_flux_with_opt_boundary
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &d4est_laplacian_flux_with_opt_params->dudr_local[d][e_m->nodal_stride],
+       &d4est_laplacian_with_opt_flux_params->dudr_local[d][e_m->nodal_stride],
        (P4EST_DIM),
        f_m,
        e_m->deg,
@@ -104,7 +114,7 @@ d4est_laplacian_flux_with_opt_boundary
   d4est_operators_apply_slicer
     (
      d4est_ops,
-     &d4est_laplacian_flux_with_opt_params->u[e_m->nodal_stride],
+     &d4est_laplacian_with_opt_flux_params->u[e_m->nodal_stride],
      (P4EST_DIM),
      f_m,
      e_m->deg,
@@ -142,7 +152,7 @@ d4est_laplacian_flux_with_opt_boundary
     deg_quad
     );
   
-  d4est_laplacian_flux_with_opt_boundary_data_t boundary_data;
+  d4est_laplacian_with_opt_flux_boundary_data_t boundary_data;
   boundary_data.deg_mortar_quad = deg_quad;
   boundary_data.face_object = &face_object;
   boundary_data.face_nodes_m_lobatto = face_nodes_m_lobatto;
@@ -153,12 +163,12 @@ d4est_laplacian_flux_with_opt_boundary
   boundary_data.h_quad = h_quad;
   boundary_data.Au_m =  d4est_mesh_get_field_on_element
                          (
-                          d4est_laplacian_flux_with_opt_params->p4est,
+                          d4est_laplacian_with_opt_flux_params->p4est,
                           e_m,
                           NULL,
-                          d4est_laplacian_flux_with_opt_params->Au,
-                          d4est_laplacian_flux_with_opt_params->local_nodes,
-                          d4est_laplacian_flux_with_opt_params->which_field
+                          d4est_laplacian_with_opt_flux_params->Au,
+                          d4est_laplacian_with_opt_flux_params->local_nodes,
+                          d4est_laplacian_with_opt_flux_params->which_field
                          );
   
   D4EST_COPY_DBYD_MAT(drst_dxyz_quad, boundary_data.drst_dxyz_quad);
@@ -167,8 +177,8 @@ d4est_laplacian_flux_with_opt_boundary
   D4EST_COPY_DIM_VEC(xyz_on_f_m_quad, boundary_data.xyz_on_f_m_quad);
   D4EST_COPY_DIM_VEC(xyz_on_f_m_lobatto, boundary_data.xyz_on_f_m_lobatto);
 
-  if (d4est_laplacian_flux_with_opt_params->boundary_fcn != NULL){
-    d4est_laplacian_flux_with_opt_params->boundary_fcn
+  if (d4est_laplacian_with_opt_flux_params->boundary_fcn != NULL){
+    d4est_laplacian_with_opt_flux_params->boundary_fcn
       (
        p4est,
        e_m,
@@ -179,8 +189,8 @@ d4est_laplacian_flux_with_opt_boundary
        d4est_quad,
        d4est_factors,
        &boundary_data,
-       d4est_laplacian_flux_with_opt_params->bc_data,
-       d4est_laplacian_flux_with_opt_params->flux_data
+       d4est_laplacian_with_opt_flux_params->bc_data,
+       d4est_laplacian_with_opt_flux_params->flux_data
       );
   }
   
@@ -194,7 +204,7 @@ d4est_laplacian_flux_with_opt_boundary
 }
 
 static void
- d4est_laplacian_flux_with_opt_interface
+ d4est_laplacian_with_opt_flux_interface
 (
  p4est_t* p4est,
  d4est_element_data_t** e_m,
@@ -215,20 +225,20 @@ static void
  void* params
 )
 {
-  d4est_laplacian_flux_with_opt_data_t* d4est_laplacian_flux_with_opt_params = params;
+  d4est_laplacian_with_opt_flux_data_t* d4est_laplacian_with_opt_flux_params = params;
 
   /* if flux is symmetric we definitely don't need to recompute p-side data,
 and perhaps in general we should always set skip_p_side = 1, but p-side data
 may need to all be reoriented so we may not want to skip, because this routine will take care of the reorientation at the cost of more work */
-  if(d4est_laplacian_flux_with_opt_params->skip_p_side == 1
+  if(d4est_laplacian_with_opt_flux_params->skip_p_side == 1
      &&
      mortar_side_id_m != 0
      &&
-     mortar_side_id_p == d4est_laplacian_flux_with_opt_params->last_mortar_side_id_m){
+     mortar_side_id_p == d4est_laplacian_with_opt_flux_params->last_mortar_side_id_m){
     return;
   }
   
-  d4est_laplacian_flux_with_opt_params->last_mortar_side_id_m = mortar_side_id_m;
+  d4est_laplacian_with_opt_flux_params->last_mortar_side_id_m = mortar_side_id_m;
 
   int stride;
   int deg_p_lobatto [(P4EST_HALF)];
@@ -257,7 +267,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
   int total_side_nodes_m_quad = 0;
   for (int i = 0; i < faces_m; i++){
     deg_m_lobatto[i] = e_m[i]->deg;
-    deg_m_quad[i] = e_m[i]->deg_quad;/* d4est_laplacian_flux_with_opt_params->get_deg_mortar_quad(e_m[i], d4est_laplacian_flux_with_opt_params->get_deg_mortar_quad_ctx); */
+    deg_m_quad[i] = e_m[i]->deg_quad;/* d4est_laplacian_with_opt_flux_params->get_deg_mortar_quad(e_m[i], d4est_laplacian_with_opt_flux_params->get_deg_mortar_quad_ctx); */
     
     face_nodes_m_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
     face_nodes_m_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_m_quad[i]);
@@ -272,7 +282,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
   for (int i = 0; i < faces_p; i++){
     deg_p_lobatto[i] = e_p_oriented[i]->deg;
     deg_p_quad[i] = e_p_oriented[i]->deg_quad;
-    //d4est_laplacian_flux_with_opt_params->get_deg_mortar_quad(e_p_oriented[i], d4est_laplacian_flux_with_opt_params->get_deg_mortar_quad_ctx);
+    //d4est_laplacian_with_opt_flux_params->get_deg_mortar_quad(e_p_oriented[i], d4est_laplacian_with_opt_flux_params->get_deg_mortar_quad_ctx);
     deg_p_lobatto_porder[i] = e_p[i]->deg;
 
     face_nodes_p_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
@@ -335,7 +345,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
   d4est_quadrature_mortar_t mortar_face_object_forder [(P4EST_HALF)];
   d4est_quadrature_mortar_t mortar_face_object_porder [(P4EST_HALF)];
   
-  d4est_mortars_compute_qcoords_on_mortar
+  d4est_mortars_with_opt_compute_qcoords_on_mortar
     (
      e_m[0]->tree,
      e_m[0]->q,
@@ -347,7 +357,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
      &mortar_dq_forder
     );
 
-  d4est_mortars_compute_qcoords_on_mortar
+  d4est_mortars_with_opt_compute_qcoords_on_mortar
     (
      e_p[0]->tree,
      e_p[0]->q,
@@ -446,12 +456,12 @@ may need to all be reoriented so we may not want to skip, because this routine w
 
     double* u_m = d4est_mesh_get_field_on_element
                   (
-                   d4est_laplacian_flux_with_opt_params->p4est,
+                   d4est_laplacian_with_opt_flux_params->p4est,
                    e_m[i],
-                   d4est_laplacian_flux_with_opt_params->d4est_ghost_data,
-                   d4est_laplacian_flux_with_opt_params->u,
-                   d4est_laplacian_flux_with_opt_params->local_nodes,
-                   d4est_laplacian_flux_with_opt_params->which_field);
+                   d4est_laplacian_with_opt_flux_params->d4est_ghost_data,
+                   d4est_laplacian_with_opt_flux_params->u,
+                   d4est_laplacian_with_opt_flux_params->local_nodes,
+                   d4est_laplacian_with_opt_flux_params->which_field);
     
     d4est_operators_apply_slicer
       (
@@ -472,12 +482,12 @@ may need to all be reoriented so we may not want to skip, because this routine w
 
     double* u_p = d4est_mesh_get_field_on_element
                   (
-                   d4est_laplacian_flux_with_opt_params->p4est,
+                   d4est_laplacian_with_opt_flux_params->p4est,
                    e_p_oriented[i],
-                   d4est_laplacian_flux_with_opt_params->d4est_ghost_data,
-                   d4est_laplacian_flux_with_opt_params->u,
-                   d4est_laplacian_flux_with_opt_params->local_nodes,
-                   d4est_laplacian_flux_with_opt_params->which_field);
+                   d4est_laplacian_with_opt_flux_params->d4est_ghost_data,
+                   d4est_laplacian_with_opt_flux_params->u,
+                   d4est_laplacian_with_opt_flux_params->local_nodes,
+                   d4est_laplacian_with_opt_flux_params->which_field);
     
     d4est_operators_apply_slicer
       (
@@ -507,7 +517,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
 
 
   /* project (-)-side u trace vector onto mortar space */
-  d4est_mortars_project_side_onto_mortar_space
+  d4est_mortars_with_opt_project_side_onto_mortar_space
     (
      d4est_ops,
      u_m_on_f_m,
@@ -519,7 +529,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
     );
 
   /* project (+)-side u trace vector onto mortar space */
-  d4est_mortars_project_side_onto_mortar_space
+  d4est_mortars_with_opt_project_side_onto_mortar_space
     (
      d4est_ops,
      u_p_on_f_p,
@@ -570,13 +580,13 @@ may need to all be reoriented so we may not want to skip, because this routine w
   for (int d = 0; d < (P4EST_DIM); d++){
     stride = 0;
     for (int f = 0; f < faces_m; f++){    
-      int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_laplacian_flux_with_opt_params->p4est,e_m[f]);
+      int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_laplacian_with_opt_flux_params->p4est,e_m[f]);
       double* dudr_m [(P4EST_DIM)];
       if (is_it_ghost){
-        D4EST_COPY_DIM_VEC(d4est_laplacian_flux_with_opt_params->dudr_ghost, dudr_m);
+        D4EST_COPY_DIM_VEC(d4est_laplacian_with_opt_flux_params->dudr_ghost, dudr_m);
       }
       else{
-        D4EST_COPY_DIM_VEC(d4est_laplacian_flux_with_opt_params->dudr_local, dudr_m);
+        D4EST_COPY_DIM_VEC(d4est_laplacian_with_opt_flux_params->dudr_local, dudr_m);
       };
 
       d4est_operators_apply_slicer
@@ -594,14 +604,14 @@ may need to all be reoriented so we may not want to skip, because this routine w
     stride = 0;
     for (int f = 0; f < faces_p; f++){
 
-      int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_laplacian_flux_with_opt_params->p4est,e_p[f]);
+      int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_laplacian_with_opt_flux_params->p4est,e_p[f]);
       double* dudr_p [(P4EST_DIM)];
 
       if (is_it_ghost){
-        D4EST_COPY_DIM_VEC(d4est_laplacian_flux_with_opt_params->dudr_ghost, dudr_p);
+        D4EST_COPY_DIM_VEC(d4est_laplacian_with_opt_flux_params->dudr_ghost, dudr_p);
       }
       else{
-        D4EST_COPY_DIM_VEC(d4est_laplacian_flux_with_opt_params->dudr_local, dudr_p);
+        D4EST_COPY_DIM_VEC(d4est_laplacian_with_opt_flux_params->dudr_local, dudr_p);
       }
       
       d4est_operators_apply_slicer
@@ -616,7 +626,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
       stride += d4est_lgl_get_nodes((P4EST_DIM)-1, e_p[f]->deg);
     }
 
-    d4est_mortars_project_side_onto_mortar_space
+    d4est_mortars_with_opt_project_side_onto_mortar_space
       (
        d4est_ops,
        dudr_p_on_f_p_porder[d],
@@ -627,7 +637,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
        deg_mortar_quad_porder
       );
 
-    d4est_mortars_project_side_onto_mortar_space
+    d4est_mortars_with_opt_project_side_onto_mortar_space
       (
        d4est_ops,
        dudr_m_on_f_m[d],
@@ -763,7 +773,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
       d4est_linalg_vec_scale(.5, dudx_p_on_f_p_mortar_quad[d], total_nodes_mortar_quad);
   }
   
-  d4est_laplacian_flux_with_opt_interface_data_t interface_data;
+  d4est_laplacian_with_opt_flux_interface_data_t interface_data;
   interface_data.mortar_face_object = mortar_face_object_forder;
   interface_data.mortar_face_object_porder = mortar_face_object_porder;
   interface_data.total_side_nodes_m_lobatto = total_side_nodes_m_lobatto;
@@ -796,34 +806,34 @@ may need to all be reoriented so we may not want to skip, because this routine w
   
 
   for (int i = 0; i < faces_m; i++){
-    int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_laplacian_flux_with_opt_params->p4est,e_m[i]);
+    int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_laplacian_with_opt_flux_params->p4est,e_m[i]);
     interface_data.Au_m[i] = (is_it_ghost)
                               ? NULL
                               : d4est_mesh_get_field_on_element
                               (
-                               d4est_laplacian_flux_with_opt_params->p4est,
+                               d4est_laplacian_with_opt_flux_params->p4est,
                                e_m[i],
                                NULL,
-                               d4est_laplacian_flux_with_opt_params->Au,
-                               d4est_laplacian_flux_with_opt_params->local_nodes,
-                               d4est_laplacian_flux_with_opt_params->which_field
+                               d4est_laplacian_with_opt_flux_params->Au,
+                               d4est_laplacian_with_opt_flux_params->local_nodes,
+                               d4est_laplacian_with_opt_flux_params->which_field
                               );
   }
 
 
 
   for (int i = 0; i < faces_p; i++){
-    int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_laplacian_flux_with_opt_params->p4est,e_p[i]);
+    int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_laplacian_with_opt_flux_params->p4est,e_p[i]);
     interface_data.Au_p[i] = (is_it_ghost)
                               ? NULL
                               : d4est_mesh_get_field_on_element
                               (
-                               d4est_laplacian_flux_with_opt_params->p4est,
+                               d4est_laplacian_with_opt_flux_params->p4est,
                                e_p[i],
                                NULL,
-                               d4est_laplacian_flux_with_opt_params->Au,
-                               d4est_laplacian_flux_with_opt_params->local_nodes,
-                               d4est_laplacian_flux_with_opt_params->which_field
+                               d4est_laplacian_with_opt_flux_params->Au,
+                               d4est_laplacian_with_opt_flux_params->local_nodes,
+                               d4est_laplacian_with_opt_flux_params->which_field
                               );
   }
 
@@ -834,8 +844,8 @@ may need to all be reoriented so we may not want to skip, because this routine w
   D4EST_COPY_DIM_VEC(dudx_p_on_f_p_mortar_quad,interface_data.dudx_p_on_f_p_mortar_quad);
   D4EST_COPY_DIM_VEC(n_on_f_m_mortar_quad,interface_data.n_on_f_m_mortar_quad);
 
-  if (d4est_laplacian_flux_with_opt_params->interface_fcn != NULL){
-  d4est_laplacian_flux_with_opt_params->interface_fcn
+  if (d4est_laplacian_with_opt_flux_params->interface_fcn != NULL){
+  d4est_laplacian_with_opt_flux_params->interface_fcn
     (
      p4est,
      e_m,
@@ -854,7 +864,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
      d4est_quad,
      d4est_factors,
      &interface_data,
-     d4est_laplacian_flux_with_opt_params->flux_data
+     d4est_laplacian_with_opt_flux_params->flux_data
     );
 
   }
@@ -881,7 +891,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
 }
 
 static
-int d4est_laplacian_flux_with_opt_input_handler
+int d4est_laplacian_with_opt_flux_input_handler
 (
  void* user,
  const char* section,
@@ -889,7 +899,7 @@ int d4est_laplacian_flux_with_opt_input_handler
  const char* value
 )
 {
-  d4est_laplacian_flux_with_opt_data_t* pconfig = (d4est_laplacian_flux_with_opt_data_t*)user;
+  d4est_laplacian_with_opt_flux_data_t* pconfig = (d4est_laplacian_with_opt_flux_data_t*)user;
   if (d4est_util_match_couple(section,"flux",name,"name")) {
     D4EST_ASSERT(pconfig->flux_type == FLUX_NOT_SET);
     if (d4est_util_match(value,"sipg")){
@@ -906,37 +916,37 @@ int d4est_laplacian_flux_with_opt_input_handler
 }
 
 static void
-d4est_laplacian_flux_with_opt_input
+d4est_laplacian_with_opt_flux_input
 (
  const char* input_file,
- d4est_laplacian_flux_with_opt_data_t* input
+ d4est_laplacian_with_opt_flux_data_t* input
 )
 {
   input->flux_type = FLUX_NOT_SET;
   
-  if (ini_parse(input_file, d4est_laplacian_flux_with_opt_input_handler, input) < 0) {
+  if (ini_parse(input_file, d4est_laplacian_with_opt_flux_input_handler, input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("flux", input->flux_type, FLUX_NOT_SET); 
 }
 
-d4est_mortars_fcn_ptrs_t
-d4est_laplacian_flux_with_opt_fetch_fcns
+d4est_mortars_with_opt_fcn_ptrs_t
+d4est_laplacian_with_opt_flux_fetch_fcns
 (
- d4est_laplacian_flux_with_opt_data_t* data
+ d4est_laplacian_with_opt_flux_data_t* data
 )
 {
-  d4est_mortars_fcn_ptrs_t flux_fcns;
-  flux_fcns.flux_interface_fcn = d4est_laplacian_flux_with_opt_interface;
-  flux_fcns.flux_boundary_fcn = d4est_laplacian_flux_with_opt_boundary;
+  d4est_mortars_with_opt_fcn_ptrs_t flux_fcns;
+  flux_fcns.flux_interface_fcn = d4est_laplacian_with_opt_flux_interface;
+  flux_fcns.flux_boundary_fcn = d4est_laplacian_with_opt_flux_boundary;
   flux_fcns.user_ctx = (void*)data;
   return flux_fcns;
 }
 
 
-d4est_laplacian_flux_with_opt_data_t*
-d4est_laplacian_flux_with_opt_new
+d4est_laplacian_with_opt_flux_data_t*
+d4est_laplacian_with_opt_flux_new
 (
  p4est_t* p4est,
  const char* input_file,
@@ -944,8 +954,8 @@ d4est_laplacian_flux_with_opt_new
  void* bc_data
 )
 {
-  d4est_laplacian_flux_with_opt_data_t* data = P4EST_ALLOC(d4est_laplacian_flux_with_opt_data_t, 1);
-  d4est_laplacian_flux_with_opt_input(input_file, data);
+  d4est_laplacian_with_opt_flux_data_t* data = P4EST_ALLOC(d4est_laplacian_with_opt_flux_data_t, 1);
+  d4est_laplacian_with_opt_flux_input(input_file, data);
 
   data->bc_type = bc_type;
   data->bc_data = bc_data;
@@ -953,11 +963,11 @@ d4est_laplacian_flux_with_opt_new
   /* internal, can be deprecated eventually when this feature is determined useless */
   /* only useful when you want the quadrature points on the mortar to be a different size than
      the quadrature points in the volume */
-  data->get_deg_mortar_quad = d4est_laplacian_get_degree_mortar_quad;
+  data->get_deg_mortar_quad = d4est_laplacian_with_opt_get_degree_mortar_quad;
   data->get_deg_mortar_quad_ctx = NULL;
   
   if (data->flux_type == FLUX_SIPG) {
-    d4est_laplacian_flux_with_opt_sipg_params_new(p4est, "[SIPG_FLUX]", input_file, data);
+    d4est_laplacian_with_opt_flux_sipg_params_new(p4est, "[SIPG_FLUX]", input_file, data);
   }
   else {
     D4EST_ABORT("[D4EST_ERROR]: this flux is currently not supported");
@@ -968,9 +978,9 @@ d4est_laplacian_flux_with_opt_new
 
 
 void
-d4est_laplacian_flux_with_opt_destroy
+d4est_laplacian_with_opt_flux_destroy
 (
- d4est_laplacian_flux_with_opt_data_t* data
+ d4est_laplacian_with_opt_flux_data_t* data
 )
 {
   if (data->destroy != NULL)

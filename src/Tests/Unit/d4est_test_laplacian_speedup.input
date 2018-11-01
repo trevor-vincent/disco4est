@@ -1,6 +1,6 @@
 [initial_mesh]
 min_quadrants = -1
-min_level = 1
+min_level = 0
 fill_uniform = 1
 region0_deg = 1
 region0_deg_quad_inc = 0
@@ -9,13 +9,11 @@ region1_deg_quad_inc = 0
 region2_deg = 1
 region2_deg_quad_inc = 0
 
-
 [flux]
 name = sipg
 sipg_penalty_prefactor = 1.1
 sipg_flux_h = H_EQ_J_DIV_SJ_MIN_LOBATTO
 sipg_penalty_fcn = maxp_sqr_over_minh
-
 
 [mesh_parameters]
 face_h_type = FACE_H_EQ_J_DIV_SJ_QUAD
@@ -40,26 +38,26 @@ write_deg = 1
 ; DX_compute_method = analytic
 ; JAC_compute_method = numerical
 
-; [geometry]
-; name = cubed_sphere_outer_wedge
-; R0 = 1
-; R1 = 2
-; R2 = 3
-; compactify_outer_shell = 0
-; compactify_inner_shell = 0
-; DX_compute_method = analytic
-; JAC_compute_method = numerical
-
 [geometry]
-name = brick
-X0 = 0.0
-X1 = 1.0
-Y0 = 0.0
-Y1 = 1.0
-Z0 = 0.0
-Z1 = 1.0
+name = cubed_sphere
+R0 = 1
+R1 = 2
+R2 = 3
+compactify_outer_shell = 0
+compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
+
+; [geometry]
+; name = brick
+; X0 = 0.0
+; X1 = 1.0
+; Y0 = 0.0
+; Y1 = 1.0
+; Z0 = 0.0
+; Z1 = 1.0
+; DX_compute_method = analytic
+; JAC_compute_method = numerical
 
 
 [quadrature]

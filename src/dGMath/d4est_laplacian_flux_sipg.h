@@ -1,5 +1,5 @@
-#ifndef D4EST_POISSON_SIPG_FLUX_H
-#define D4EST_POISSON_SIPG_FLUX_H 
+#ifndef D4EST_POISSON_SIPG_FLUX_WITH_OPT_H
+#define D4EST_POISSON_SIPG_FLUX_WITH_OPT_H 
 
 #include <pXest.h>
 #include <d4est_mortars.h>

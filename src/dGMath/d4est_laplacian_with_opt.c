@@ -3,17 +3,17 @@
 #include <d4est_elliptic_data.h>
 #include <d4est_operators.h>
 #include <d4est_linalg.h>
-#include <d4est_laplacian.h>
-#include <d4est_laplacian_flux.h>
+#include <d4est_laplacian_with_opt.h>
+#include <d4est_laplacian_with_opt_flux.h>
 #include <d4est_xyz_functions.h>
 #include <d4est_quadrature.h>
-#include <d4est_mortars.h>
+#include <d4est_mortars_with_opt.h>
 #include <d4est_elliptic_eqns.h>
 #include <d4est_mesh.h>
 #include <d4est_util.h>
 
 void
- d4est_laplacian_build_rhs_with_strong_bc
+ d4est_laplacian_with_opt_build_rhs_with_strong_bc
 (
  p4est_t* p4est,
  d4est_ghost_t* ghost,
@@ -23,7 +23,7 @@ void
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
  d4est_elliptic_data_t* prob_vecs,
- d4est_laplacian_flux_data_t* flux_fcn_data_for_build_rhs,
+ d4est_laplacian_with_opt_flux_data_t* flux_fcn_data_for_build_rhs,
  double * restrict  rhs,
  d4est_xyz_fcn_t problem_rhs_fcn,
  d4est_mesh_init_field_option_t init_option,
@@ -42,10 +42,7 @@ void
   elliptic_data_for_rhs.Au = Au_eq_0; 
 
   
-  d4est_laplacian_apply_aij(p4est, ghost, ghost_data, &elliptic_data_for_rhs, flux_fcn_data_for_build_rhs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, which_field); 
-
-  
-
+  d4est_laplacian_with_opt_apply_aij(p4est, ghost, ghost_data, &elliptic_data_for_rhs, flux_fcn_data_for_build_rhs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, which_field); 
 
 
   double* f = NULL;
@@ -145,7 +142,7 @@ void
 }
 
 void
-d4est_laplacian_apply_stiffness_matrix
+d4est_laplacian_with_opt_apply_stiffness_matrix
 (
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
@@ -212,7 +209,7 @@ d4est_laplacian_apply_stiffness_matrix
 }
 
 void
-d4est_laplacian_compute_dudr
+d4est_laplacian_with_opt_compute_dudr
 (
  p4est_t* p4est,
  d4est_ghost_t* d4est_ghost,
@@ -260,22 +257,22 @@ d4est_laplacian_compute_dudr
 
 
 void
-d4est_laplacian_apply_mortar_matrices
+d4est_laplacian_with_opt_apply_mortar_matrices
 (
  p4est_t* p4est,
  d4est_ghost_t* ghost,
  /* d4est_ghost_data_t* ghost_data, */
- d4est_laplacian_flux_data_t* flux_fcn_data,
+ d4est_laplacian_with_opt_flux_data_t* flux_fcn_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors
 )
 {
-  d4est_mortars_fcn_ptrs_t flux_fcns = d4est_laplacian_flux_fetch_fcns(flux_fcn_data);
+  d4est_mortars_with_opt_fcn_ptrs_t flux_fcns = d4est_laplacian_with_opt_flux_fetch_fcns(flux_fcn_data);
 
   
-  d4est_mortars_compute_flux_on_local_elements
+  d4est_mortars_with_opt_compute_flux_on_local_elements
     (
      p4est,
      ghost,
@@ -293,13 +290,13 @@ d4est_laplacian_apply_mortar_matrices
 
 
 void
-d4est_laplacian_apply_aij
+d4est_laplacian_with_opt_apply_aij
 (
  p4est_t* p4est,
  d4est_ghost_t* d4est_ghost,
  d4est_ghost_data_t* d4est_ghost_data,
  d4est_elliptic_data_t* d4est_elliptic_data,
- d4est_laplacian_flux_data_t* flux_fcn_data,
+ d4est_laplacian_with_opt_flux_data_t* flux_fcn_data,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
@@ -309,7 +306,7 @@ d4est_laplacian_apply_aij
 {
   /* printf("Apply aij\n"); */
   
-  d4est_laplacian_apply_stiffness_matrix
+  d4est_laplacian_with_opt_apply_stiffness_matrix
     (
      p4est,
      d4est_ops,
@@ -330,7 +327,7 @@ d4est_laplacian_apply_aij
   double* dudr_ghost [(P4EST_DIM)];
   D4EST_ALLOC_DIM_VEC(dudr_ghost, ghost_nodes);
   
-  d4est_laplacian_compute_dudr
+  d4est_laplacian_with_opt_compute_dudr
     (
      p4est,
      d4est_ghost,
@@ -358,7 +355,7 @@ d4est_laplacian_apply_aij
     flux_fcn_data->dudr_ghost[i] = dudr_ghost[i];
   }
 
-  d4est_laplacian_apply_mortar_matrices
+  d4est_laplacian_with_opt_apply_mortar_matrices
     (
      p4est,
      d4est_ghost,

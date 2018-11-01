@@ -10,12 +10,61 @@
 #include <d4est_amr_random.h>
 #include <d4est_vtk.h>
 #include <d4est_h5.h>
+#include <d4est_util.h>
 #include <d4est_checkpoint.h>
 #include <d4est_element_data.h>
 #include <petscsnes.h>
 #include <d4est_solver_schwarz.h>
 #include <zlog.h>
+#include <ini.h>
 
+static
+int d4est_solver_schwarz_input_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_solver_schwarz_data_t* pconfig = (d4est_solver_schwarz_data_t*)user;
+  if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"num_nodes_overlap")) {
+    D4EST_ASSERT(pconfig->num_nodes_overlap == -1);
+    pconfig->num_nodes_overlap = atoi(value);
+  } 
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+
+
+void
+d4est_solver_schwarz_input
+(
+ p4est_t* p4est,
+ const char* input_file,
+ d4est_solver_schwarz_data_t* schwarz_data
+)
+{
+  zlog_category_t* c_default = zlog_get_category("d4est_solver_schwarz");
+  schwarz_data->num_nodes_overlap = -1;
+  if (
+      ini_parse(input_file,
+                d4est_solver_schwarz_input_handler,
+                schwarz_data) < 0
+  ) {
+    D4EST_ABORT("Can't load input file");
+  }
+  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->num_nodes_overlap, -1);
+  
+  if (schwarz_data->num_nodes_overlap <= 0){
+    D4EST_ABORT("num_nodes_overlap <= 0");
+  }
+  
+  zlog_info(c_default, "num_nodes_overlap = %d\n", schwarz_data->num_nodes_overlap);
+}
 
 static void
 d4est_solver_schwarz_corner_callback
@@ -105,12 +154,10 @@ d4est_solver_schwarz_corner_callback
           }
         }
 #endif
-
         int side_face_id = -1;
         int side_edge_id = -1;
         int core_face_id = -1;
-        int core_edge_id = -1;
-        
+        int core_edge_id = -1;        
         int shares_face = 0;
         int shares_edge = 0;
         int shares_corner = 1;
@@ -344,17 +391,29 @@ d4est_solver_schwarz_init
 (
  p4est_t* p4est,
  d4est_ghost_t* d4est_ghost,
- int num_nodes_overlap
+ const char* input_file
+ /* int num_nodes_overlap */
 )
 {
-  D4EST_ASSERT(num_nodes_overlap > 0);
+
   d4est_solver_schwarz_data_t* schwarz_data = P4EST_ALLOC(d4est_solver_schwarz_data_t, 1);
   schwarz_data->restricted_nodal_size = 0;
   schwarz_data->nodal_size = 0;
   schwarz_data->num_subdomains = p4est->local_num_quadrants;
   schwarz_data->subdomain_data = P4EST_ALLOC(d4est_solver_schwarz_subdomain_data_t, schwarz_data->num_subdomains);
-  schwarz_data->num_nodes_overlap = num_nodes_overlap;
+
+  d4est_solver_schwarz_input
+    (
+     p4est,
+     input_file,
+     schwarz_data
+    );
+  
+  /* schwarz_data->num_nodes_overlap = num_nodes_overlap; */
   int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13; 
+
+  
+
   /* fill subdomains */
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
     schwarz_data->subdomain_data[i].num_elements = 0;
@@ -380,9 +439,6 @@ d4est_solver_schwarz_destroy
   P4EST_FREE(schwarz_data->subdomain_data);
   P4EST_FREE(schwarz_data);
 }
-
-
-
 
 void
 d4est_solver_schwarz_print
@@ -431,3 +487,8 @@ d4est_solver_schwarz_print
     }
   }
 }
+/* This file was automatically generated.  Do not edit! */
+void d4est_solver_schwarz_print(p4est_t *p4est,d4est_solver_schwarz_data_t *schwarz_data);
+void d4est_solver_schwarz_destroy(d4est_solver_schwarz_data_t *schwarz_data);
+d4est_solver_schwarz_data_t *d4est_solver_schwarz_init(p4est_t *p4est,d4est_ghost_t *d4est_ghost,const char *input_file);
+void d4est_solver_schwarz_input(p4est_t *p4est,const char *input_file,d4est_solver_schwarz_data_t *schwarz_data);
