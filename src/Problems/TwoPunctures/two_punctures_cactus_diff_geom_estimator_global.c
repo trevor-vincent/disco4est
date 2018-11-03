@@ -487,6 +487,7 @@ problem_init
        &prob_fcns,
        penalty_data,
        zero_fcn,
+       NULL,
        *d4est_ghost,
        d4est_ghost_data,
        d4est_ops,

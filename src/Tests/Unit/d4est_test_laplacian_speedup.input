@@ -1,6 +1,6 @@
 [initial_mesh]
 min_quadrants = -1
-min_level = 0
+min_level = 1
 fill_uniform = 1
 region0_deg = 1
 region0_deg_quad_inc = 1
