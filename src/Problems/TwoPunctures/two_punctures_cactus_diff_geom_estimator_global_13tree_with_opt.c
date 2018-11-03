@@ -419,11 +419,11 @@ problem_init
   energy_norm_ctx.energy_norm_data = NULL;
   energy_norm_ctx.energy_estimator_sq_local = -1.;
 
-  if (p4est->mpirank == 0)
-    d4est_norms_write_headers(
-                              (const char * []){"u", NULL},
-                              (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL}
-    );
+  /* if (p4est->mpirank == 0) */
+  /*   d4est_norms_write_headers( */
+  /*                             (const char * []){"u", NULL}, */
+  /*                             (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL} */
+  /*   ); */
 
   zlog_category_t* zlog_points = zlog_get_category("d4est_points");
   d4est_norms_linear_fit_t* point_3m_fit = d4est_norms_linear_fit_init(); 
