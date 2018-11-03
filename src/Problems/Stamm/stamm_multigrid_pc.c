@@ -240,6 +240,7 @@ problem_init
        &prob_fcns,
        penalty_data,
        stamm_boundary_fcn,
+       NULL,
        *d4est_ghost,
        d4est_ghost_data,
        d4est_ops,

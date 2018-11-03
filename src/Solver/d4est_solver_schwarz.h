@@ -52,7 +52,7 @@ typedef struct {
   int subdomain_id;
   int core_id; /* id stride in element_data for core */
   d4est_solver_schwarz_element_data_t*  element_data;
-  
+  int core_deg;
   int num_elements;
   int restricted_nodal_size;
   int restricted_nodal_stride;

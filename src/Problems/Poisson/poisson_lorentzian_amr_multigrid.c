@@ -258,7 +258,10 @@ problem_init
 
   
   dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
-  
+
+
+  lorentzian_params_t lorentzian_params;
+  lorentzian_params.R_surface = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R2;
   // Setup boundary conditions
 
   d4est_laplacian_robin_bc_t bc_data_robin_for_lhs;
@@ -268,10 +271,12 @@ problem_init
   d4est_laplacian_dirichlet_bc_t bc_data_dirichlet_for_lhs;
   bc_data_dirichlet_for_lhs.dirichlet_fcn = zero_fcn;
   bc_data_dirichlet_for_lhs.eval_method = eval_method;
+  bc_data_dirichlet_for_lhs.user = &lorentzian_params;
   
   d4est_laplacian_dirichlet_bc_t bc_data_dirichlet_for_rhs;
   bc_data_dirichlet_for_rhs.dirichlet_fcn = poisson_lorentzian_boundary_fcn;
   bc_data_dirichlet_for_rhs.eval_method = eval_method;
+  bc_data_dirichlet_for_rhs.user = &lorentzian_params;
   
   d4est_laplacian_flux_data_t* flux_data_for_lhs = NULL; //d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, 
   d4est_laplacian_flux_data_t* flux_data_for_rhs = NULL; //d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
@@ -464,6 +469,7 @@ problem_init
                          &prob_fcns,
                          penalty_data,
                          poisson_lorentzian_boundary_fcn,
+                         &lorentzian_params,
                          *d4est_ghost,
                          d4est_ghost_data,
                          d4est_ops,

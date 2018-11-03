@@ -58,12 +58,16 @@ d4est_estimator_bi_dirichlet
                         h_quad[i],
                         penalty_data->penalty_prefactor
                        );
+
   }
 
   /* P4EST_FREE(h_quad); */
 
   double* u_at_bndry_lobatto = P4EST_ALLOC(double, face_nodes_m_lobatto);
   double* u_at_bndry_lobatto_to_quad = P4EST_ALLOC(double, face_nodes_m_quad);
+  double* u_m_on_f_m_min_u_at_bndry_quad = P4EST_ALLOC(double, face_nodes_m_quad);
+
+
   
   for (int i = 0; i < face_nodes_m_lobatto; i++){
     u_at_bndry_lobatto[i] = bc_data->dirichlet_fcn
@@ -73,7 +77,7 @@ d4est_estimator_bi_dirichlet
 #if (P4EST_DIM)==3
                              boundary_data->xyz_on_f_m_lobatto[2][i],
 #endif
-                             penalty_data->user
+                             bc_data->user
                             );
   }
 
@@ -92,12 +96,21 @@ d4est_estimator_bi_dirichlet
      deg_mortar_quad
     );
 
-  
+
+  for(int i = 0; i < face_nodes_m_quad; i++){
+    u_m_on_f_m_min_u_at_bndry_quad[i] = u_m_on_f_m_quad[i] - u_at_bndry_lobatto_to_quad[i];
+  }
+
+  /* printf("\nElement = %d\n", e_m->id); */
+  /* DEBUG_PRINT_ARR_DBL(u_at_bndry_lobatto, face_nodes_m_lobatto); */
+  /* DEBUG_PRINT_4ARR_DBL(Je2_prefactor, u_m_on_f_m_quad, u_at_bndry_lobatto_to_quad, u_m_on_f_m_min_u_at_bndry_quad, face_nodes_m_quad); */
+
   for (int dim = 0; dim < (P4EST_DIM); dim++){
 
     for(int i = 0; i < face_nodes_m_quad; i++){
-      double u_m_on_f_m_min_u_at_bndry_quad = u_m_on_f_m_quad[i] - u_at_bndry_lobatto_to_quad[i];    
-      Je2[i] = n_on_f_m_quad[dim][i]*Je2_prefactor[i]*(u_m_on_f_m_min_u_at_bndry_quad);
+      /* double u_m_on_f_m_min_u_at_bndry_quad = u_m_on_f_m_quad[i] - u_at_bndry_lobatto_to_quad[i];     */
+      Je2[i] = n_on_f_m_quad[dim][i]*Je2_prefactor[i]*(u_m_on_f_m_min_u_at_bndry_quad[i]);
+
     }
     
     double Je2MJe2 = d4est_quadrature_innerproduct
@@ -117,7 +130,7 @@ d4est_estimator_bi_dirichlet
 
     /* e_m->local_estimator += Je2MJe2; */
     estimator[e_m->id] += Je2MJe2;
-    /* printf("Je2MJe2 = %.25f\n", Je2MJe2); */
+    /* printf("dim %d, Je2MJe2 = %.25f\n", dim, Je2MJe2); */
     if (penalty_data->estimator_vtk != NULL){
       penalty_data->estimator_vtk[3*p4est->local_num_quadrants + e_m->id] += Je2MJe2;
       penalty_data->estimator_vtk_per_face[(f_m + 2*(P4EST_FACES))*(p4est->local_num_quadrants) + e_m->id] += Je2MJe2;
@@ -128,6 +141,7 @@ d4est_estimator_bi_dirichlet
 
   P4EST_FREE(u_at_bndry_lobatto);
   P4EST_FREE(u_at_bndry_lobatto_to_quad);
+  P4EST_FREE(u_m_on_f_m_min_u_at_bndry_quad);
   P4EST_FREE(Je2_prefactor);
   P4EST_FREE(Je2);
 }
@@ -340,6 +354,7 @@ d4est_estimator_bi_compute
  d4est_elliptic_eqns_t* fcns,
  d4est_estimator_bi_penalty_data_t penalty_data,
  d4est_xyz_fcn_t u_bndry_fcn,
+ void* bndry_ctx,
  d4est_ghost_t* d4est_ghost,
  d4est_ghost_data_t* d4est_ghost_data,
  d4est_operators_t* d4est_ops,
@@ -468,7 +483,7 @@ d4est_estimator_bi_compute
   
   d4est_laplacian_dirichlet_bc_t bc_data;
   bc_data.dirichlet_fcn = u_bndry_fcn;
-  bc_data.user = NULL;
+  bc_data.user = bndry_ctx;
 
   flux_data.bc_type = BC_DIRICHLET;
   flux_data.bc_data = &bc_data;

@@ -7,6 +7,12 @@
 
 typedef struct {
 
+  double R_surface;
+
+} lorentzian_params_t;
+
+typedef struct {
+
   d4est_laplacian_flux_data_t* flux_data_for_apply_lhs;
   d4est_laplacian_flux_data_t* flux_data_for_build_rhs;
 
@@ -87,15 +93,14 @@ poisson_lorentzian_boundary_fcn
  void* user
 )
 {
-  return poisson_lorentzian_analytic_solution
-    (
-     x,
-     y,
-#if (P4EST_DIM)==3
-     z,
-#endif
-     user
-    );
+
+  lorentzian_params_t* params = user;
+  double R = params->R_surface;
+  double one_p_R2 = (1. + R*R);
+  double den = sqrt(one_p_R2*one_p_R2*one_p_R2*one_p_R2*one_p_R2);
+  /* printf("R = %.15f\n", R); */
+  /* printf("3./pow((1. + R*R),2.5) = %.15f\n", 3./den); */
+  return 3./den;
 }
 
 

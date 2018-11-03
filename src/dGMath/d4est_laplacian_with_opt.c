@@ -13,7 +13,7 @@
 #include <d4est_util.h>
 
 void
- d4est_laplacian_with_opt_build_rhs_with_strong_bc
+d4est_laplacian_with_opt_build_rhs_with_strong_bc
 (
  p4est_t* p4est,
  d4est_ghost_t* ghost,

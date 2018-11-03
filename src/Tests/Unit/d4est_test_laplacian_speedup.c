@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
   /* d4est_amr_t* d4est_amr_random = d4est_amr_init_uniform_h(p4est, 7, 1); */
   int num_of_amr_steps = 2;
   d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, num_of_amr_steps);
-
+  int bad_element = 0;
   for (int i = 0; i < num_of_amr_steps; i++){
 
     int add_amr_in_one_element = 0;
@@ -467,7 +467,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < p4est->local_num_quadrants; i++){
       d4est_element_data_t* ed = d4est_factors->element_data[i];
       int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
-      int bad_element = 0;
+
       for (int j = 0; j < volume_nodes; j++){
         if((fabs(Apoly_vec[ed->nodal_stride + j] - Apoly_vec_with_opt[ed->nodal_stride + j]) > 1e-13)){
           printf("ed id %d, %d, Apoly_vec[j], Apoly_vec_with_opt[j], err = %.15f, %.15f, %.15f\n",ed->id, i,Apoly_vec[ed->nodal_stride + j],Apoly_vec_with_opt[ed->nodal_stride + j]);
@@ -518,8 +518,8 @@ int main(int argc, char *argv[])
   d4est_geometry_destroy(d4est_geom);
   
   PetscFinalize();
-  if (same && same2)
-    return 0;
-  else
-    return 1;
+  /* if (same && same2) */
+  return bad_element;
+  /* else */
+    /* return 1; */
 }

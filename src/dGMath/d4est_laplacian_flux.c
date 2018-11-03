@@ -551,9 +551,6 @@ static void
   
   /* For each component of the vector */
   for (int d = 0; d < (P4EST_DIM); d++){
-
-
-      
     
     stride = 0;
     for (int f = 0; f < faces_m; f++){    

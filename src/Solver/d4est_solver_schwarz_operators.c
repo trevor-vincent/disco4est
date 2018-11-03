@@ -166,6 +166,8 @@ d4est_solver_schwarz_operators_fetch_schwarz_restrictor_transpose_1d
     );
 }
 
+
+
 void d4est_solver_schwarz_operators_apply_schwarz_restrictor
 (
  d4est_solver_schwarz_operators_t* d4est_schwarz_ops,
@@ -259,6 +261,58 @@ void d4est_solver_schwarz_operators_apply_schwarz_restrictor
   P4EST_FREE(eyes);
 }
 
+/* only works for *full* subdomains, not ones that touch boundary, and certainly not ones overlapping
+a tree boundary */
+void
+d4est_solver_schwarz_operators_apply_schwarz_weights_test
+(
+ d4est_solver_schwarz_operators_t* d4est_schwarz_ops,
+ double *   in, /* this should be the full restricted subdomain field, not just the restricted field on an element like in non-test version */
+ int dim,
+ int deg,
+ int restricted_size,
+ double *   out
+)
+{
+
+  int size = restricted_size*2 + deg + 1;
+  double* weights_1d = d4est_solver_schwarz_operators_fetch_schwarz_weights_1d(d4est_schwarz_ops, deg, restricted_size);
+  double* weights_1d_rearranged = P4EST_ALLOC(double, size);
+
+  printf("size = %d\n", size);
+  
+  for(int i = 0; i < restricted_size; i++){
+    weights_1d_rearranged[i] = weights_1d[i];
+  }
+
+  for(int i = 0; i < deg + 1; i++){
+    weights_1d_rearranged[restricted_size + i] = weights_1d[2*restricted_size + i];
+  } 
+  
+  for(int i = 0; i < restricted_size; i++){
+    weights_1d_rearranged[i + deg + 1 + restricted_size] = weights_1d[i + restricted_size];
+  }
+
+
+  DEBUG_PRINT_ARR_DBL(weights_1d_rearranged, size);
+  
+  if (dim == 1){
+    d4est_kron_vec_dot_x(weights_1d_rearranged, in, size, out);
+  }
+  else if (dim == 2){
+    d4est_kron_vec1_o_vec2_dot_x(weights_1d_rearranged, weights_1d_rearranged, in, size, size, out);
+  }
+  else if (dim == 3){
+    d4est_kron_vec1_o_vec2_o_vec3_dot_x(weights_1d_rearranged, weights_1d_rearranged, weights_1d_rearranged, in, size, size, size, out);
+  }
+  else {
+    D4EST_ABORT("DIM must be 2 or 3");
+  }
+ 
+  
+  P4EST_FREE(weights_1d_rearranged);
+}
+ 
 
 /** 
  * Apply the weight function to a subdomain side element field.
@@ -289,10 +343,10 @@ void d4est_solver_schwarz_operators_apply_schwarz_weights
 
   /* This should be optimized out */
   int degp1 = deg + 1;
-  double* eyes = P4EST_ALLOC_ZERO(double, (degp1));
-  for (int i = 0; i < (degp1); i++){
-    eyes[i] = 1.;
-  }
+  /* double* eyes = P4EST_ALLOC_ZERO(double, (degp1)); */
+  /* for (int i = 0; i < (degp1); i++){ */
+  /*   eyes[i] = 1.; */
+  /* } */
 
   int vec_sizes [3];
   double* vecs [3];
@@ -303,14 +357,15 @@ void d4est_solver_schwarz_operators_apply_schwarz_weights
   double* weights_1d = d4est_solver_schwarz_operators_fetch_schwarz_weights_1d(d4est_schwarz_ops, deg, restricted_size);
 
   int face_sum = 0;
-  for (int i = 0; i < (P4EST_DIM); i++){
+  for (int i = 0; i < dim; i++){
     face_sum += faces[i];
   }
   
 
   /* populate with core weights if the core or 1's if not the core */
   for (int i = 0; i < dim; i++){
-    vecs[i] = (face_sum == (P4EST_DIM)*(-1)) ? &weights_1d[2*restricted_size] : eyes;
+    /* vecs[i] = (face_sum == dim*(-1)) ? &weights_1d[2*restricted_size] : eyes; */
+    vecs[i] = &weights_1d[2*restricted_size];
     vec_sizes[i] = degp1;
   }
 
@@ -339,7 +394,7 @@ void d4est_solver_schwarz_operators_apply_schwarz_weights
     D4EST_ABORT("DIM must be 2 or 3");
   }
 
-  P4EST_FREE(eyes);
+  /* P4EST_FREE(eyes); */
 }
 
 

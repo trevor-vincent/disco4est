@@ -306,6 +306,7 @@ problem_init
       &prob_fcns,
       penalty_data,
       constant_density_star_boundary_fcn,
+      &constant_density_star_params,
       *d4est_ghost,
       d4est_ghost_data,
       d4est_ops,

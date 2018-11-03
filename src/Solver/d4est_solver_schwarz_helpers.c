@@ -407,8 +407,8 @@ void d4est_solver_schwarz_apply_lhs_single_core
  d4est_mesh_data_t* d4est_factors,
  d4est_elliptic_eqns_t* elliptic_eqns,
  d4est_elliptic_data_t* elliptic_data,
- double* u_restricted_field_over_subdomains,
- double* Au_restricted_field_over_subdomains,
+ double* u_restricted_field_over_subdomain,
+ double* Au_restricted_field_over_subdomain,
  double* zeroed_u_field_over_mesh,
  double* zeroed_Au_field_over_mesh,
  int subdomain
@@ -422,6 +422,7 @@ void d4est_solver_schwarz_apply_lhs_single_core
 
   for (int i = 0; i < local_nodes; i++){    
     zeroed_Au_field_over_mesh[i] = 0.;
+    zeroed_u_field_over_mesh[i] = 0.;
   }
   
   d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
@@ -430,7 +431,7 @@ void d4est_solver_schwarz_apply_lhs_single_core
      d4est_factors,
      schwarz_data,
      schwarz_ops,
-     &u_restricted_field_over_subdomains[sub_data.restricted_nodal_stride],
+     u_restricted_field_over_subdomain,
      zeroed_u_field_over_mesh,
      p4est->mpirank,
      subdomain,
@@ -470,7 +471,7 @@ void d4est_solver_schwarz_apply_lhs_single_core
        schwarz_ops,
        elliptic_data_for_schwarz.Au,
        0,
-       &Au_restricted_field_over_subdomains[sub_data.restricted_nodal_stride],
+       Au_restricted_field_over_subdomain,
        subdomain
       );
 
@@ -493,17 +494,20 @@ d4est_solver_schwarz_visualize_subdomain_helper_single_core
  int* which_elements,
  double* subdomain_field_for_viz,
  double* weighted_subdomain_field_for_viz
+ /* double* weighted_subdomain_field_for_viz_test */
 )
 {
   d4est_solver_schwarz_subdomain_data_t sub_data
     = schwarz_data->subdomain_data[subdomain];
   double* restricted_subdomain_field = P4EST_ALLOC(double, sub_data.restricted_nodal_size);
   double* weighted_restricted_subdomain_field = P4EST_ALLOC(double, sub_data.restricted_nodal_size);
+  /* double* weighted_restricted_subdomain_field_test = P4EST_ALLOC(double, sub_data.restricted_nodal_size); */
   for (int i = 0; i < sub_data.restricted_nodal_size;i++){
     restricted_subdomain_field[i] = 1.;
   }
   int local_nodes = d4est_factors->local_sizes.local_nodes;
 
+  
   d4est_solver_schwarz_apply_weights_over_subdomain
     (
      schwarz_data,
@@ -511,8 +515,8 @@ d4est_solver_schwarz_visualize_subdomain_helper_single_core
      sub_data,
      restricted_subdomain_field,
      weighted_restricted_subdomain_field
-    );  
-
+    );
+  
   d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
     (
      p4est,
@@ -526,15 +530,8 @@ d4est_solver_schwarz_visualize_subdomain_helper_single_core
      local_nodes,
      FIELD_NOT_ZEROED
     );
-
-
-  /* printf("sub_data.restricted_nodal_size = %d\n", sub_data.restricted_nodal_size); */
   
-  /* DEBUG_PRINT_ARR_DBL(restricted_subdomain_field, sub_data.restricted_nodal_size); */
-
-  /* DEBUG_PRINT_ARR_DBL(subdomain_field_for_viz, local_nodes); */
-  
-d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
+  d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
     (
      p4est,
      d4est_factors,
@@ -547,6 +544,52 @@ d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
      local_nodes,
      FIELD_NOT_ZEROED
     );
+
+
+
+  /* if (subdomain == 6){ */
+
+  /*   double* weights = P4EST_ALLOC(double, sub_data.restricted_nodal_size); */
+  /*   double* ones = P4EST_ALLOC(double, sub_data.restricted_nodal_size); */
+
+  /*   for (int i = 0; i < sub_data.restricted_nodal_size; i++){ */
+  /*     ones[i] = 1.; */
+  /*   } */
+    
+  /*   d4est_solver_schwarz_operators_apply_schwarz_weights_test */
+  /*     ( */
+  /*      schwarz_ops, */
+  /*      ones, */
+  /*      (P4EST_DIM), */
+  /*      sub_data.core_deg, */
+  /*      schwarz_data->num_nodes_overlap, */
+  /*      weights */
+  /*     ); */
+    
+  /*   DEBUG_PRINT_2ARR_DBL(weights, weighted_restricted_subdomain_field, sub_data.restricted_nodal_size); */
+  /*   double* x = &d4est_factors->xyz[0]; */
+  /*   double* y = &d4est_factors->xyz[local_nodes]; */
+  /*   DEBUG_PRINT_3ARR_DBL(x, y, weighted_subdomain_field_for_viz, local_nodes); */
+
+  /*   P4EST_FREE(weights); */
+  /*   P4EST_FREE(ones); */
+  /* } */
+
+  
+  /* d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field */
+  /*   ( */
+  /*    p4est, */
+  /*    d4est_factors, */
+  /*    schwarz_data, */
+  /*    schwarz_ops, */
+  /*    weighted_restricted_subdomain_field_test, */
+  /*    weighted_subdomain_field_for_viz_test, */
+  /*    p4est->mpirank, */
+  /*    subdomain, */
+  /*    local_nodes, */
+  /*    FIELD_NOT_ZEROED */
+  /*   ); */
+  
     
   for (int i = 0; i < p4est->local_num_quadrants; i++){
     which_elements[i] = 0;
@@ -557,6 +600,7 @@ d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
   }
   P4EST_FREE(restricted_subdomain_field);
   P4EST_FREE(weighted_restricted_subdomain_field);
+  /* P4EST_FREE(weighted_restricted_subdomain_field_test); */
 }
 
 double
@@ -591,6 +635,8 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
   double alpha_old = -1;
   double beta_old = -1;
 
+  /* printf("nodes = %d\n", nodes); */
+  
   double* d = P4EST_ALLOC(double, nodes); 
   double* Ad = P4EST_ALLOC(double, nodes); 
   double* r = P4EST_ALLOC(double, nodes);
@@ -651,16 +697,16 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
 
     delta_old = delta_new;
     delta_new = d4est_linalg_vec_dot(r, r, nodes);
-    
+    printf("delta_new = %.15f\n", delta_new);
     beta_old = beta;
     beta = delta_new/delta_old;
     d4est_linalg_vec_xpby(r, beta, d, nodes);    
     
   }
   
-  free(Ad);
-  free(d);
-  free(r);
+  P4EST_FREE(Ad);
+  P4EST_FREE(d);
+  P4EST_FREE(r);
   return spectral_bound;
 }
 
@@ -730,8 +776,6 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
        rtol,
        i
       );
-
-
   }
   
   d4est_solver_schwarz_compute_correction

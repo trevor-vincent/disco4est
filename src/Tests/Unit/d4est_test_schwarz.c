@@ -16,6 +16,27 @@
 #include <zlog.h>
 
 
+
+static void
+d4est_test_build_residual
+(
+ p4est_t* p4est,
+ d4est_ghost_t* ghost,
+ d4est_ghost_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ void* user
+)
+{
+  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = user;  
+  d4est_laplacian_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_data_for_apply_lhs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, 0);
+  d4est_linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
+}
+
+
 static void
 d4est_test_apply_lhs
 (
@@ -319,15 +340,16 @@ int main(int argc, char *argv[])
   d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, (argc == 2) ? argv[1] : default_input_file, BC_DIRICHLET, &bc_data_for_lhs);
 
   d4est_elliptic_eqns_t prob_fcns;
-  prob_fcns.build_residual = NULL;
+  prob_fcns.build_residual = d4est_test_build_residual;
   prob_fcns.apply_lhs = d4est_test_apply_lhs;
   prob_fcns.user = flux_data_for_apply_lhs;
 
     
-  double* u = P4EST_ALLOC(double, local_sizes.local_nodes);
-  double* Au = P4EST_ALLOC(double, local_sizes.local_nodes);
+  double* u = P4EST_ALLOC_ZERO(double, local_sizes.local_nodes);
+  double* Au = P4EST_ALLOC_ZERO(double, local_sizes.local_nodes);
   double* rhs = P4EST_ALLOC(double, local_sizes.local_nodes);
   double* f = P4EST_ALLOC(double, local_sizes.local_nodes);
+  double* r = P4EST_ALLOC(double, local_sizes.local_nodes);
 
   d4est_elliptic_data_t elliptic_data;
   elliptic_data.u = u;
@@ -363,7 +385,16 @@ int main(int argc, char *argv[])
   double* rhs_over_subdomains = P4EST_ALLOC(double,
                                             schwarz_data->restricted_nodal_size);
 
-    
+
+
+  double* zeroed_u = P4EST_ALLOC(double, local_sizes.local_nodes);
+  double* zeroed_Au = P4EST_ALLOC(double, local_sizes.local_nodes);
+  double* error = P4EST_ALLOC(double, local_sizes.local_nodes);
+
+  double* sol_over_subdomains = P4EST_ALLOC_ZERO(double,
+                                            schwarz_data->restricted_nodal_size);
+
+  
   d4est_laplacian_build_rhs_with_strong_bc
     (
      p4est,
@@ -408,10 +439,98 @@ int main(int argc, char *argv[])
      -1,
      u_over_subdomains
     );
+
+
+
+  /* for (int i = 0; i < schwarz_data->num_subdomains; i++){ */
+
+  /*   printf("stride = %d\n", schwarz_data->subdomain_data[i].restricted_nodal_stride); */
+    
+  /*   d4est_solver_schwarz_cg_solve_subdomain_single_core */
+  /*     ( */
+  /*      p4est, */
+  /*      d4est_geom, */
+  /*      d4est_quad, */
+  /*      d4est_factors, */
+  /*      d4est_ghost, */
+  /*      d4est_ghost_data, */
+  /*      schwarz_data, */
+  /*      schwarz_ops, */
+  /*      &elliptic_data, */
+  /*      &prob_fcns, */
+  /*      &sol_over_subdomains[schwarz_data->subdomain_data[i].restricted_nodal_stride], */
+  /*      &rhs_over_subdomains[schwarz_data->subdomain_data[i].restricted_nodal_stride], */
+  /*      zeroed_u, */
+  /*      zeroed_Au, */
+  /*      1000, */
+  /*      1e-15, */
+  /*      1e-15, */
+  /*      i */
+  /*     ); */
+  /* } */
+
+  /* DEBUG_PRINT_2ARR_DBL(rhs_over_subdomains, sol_over_subdomains, schwarz_data->restricted_nodal_size); */
+  
+  for (int i = 0; i < 10; i++){
+
+    elliptic_data.u = zeroed_u;
+    elliptic_data.Au = r;
+    elliptic_data.rhs = rhs;
+    
+    d4est_elliptic_eqns_build_residual
+      (
+       p4est,
+       d4est_ghost,
+       d4est_ghost_data,
+       &prob_fcns,
+       &elliptic_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors
+    );
+
+    double r2 = d4est_linalg_vec_dot(r, r, local_sizes.local_nodes);  
+    printf("r2 = %.15f\n", r2);
+    
+    d4est_solver_schwarz_compute_and_add_correction
+      (
+       p4est,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       d4est_ghost,
+       d4est_ghost_data,
+       schwarz_data,
+       schwarz_ops,
+       &prob_fcns,
+       &elliptic_data,
+       zeroed_u,
+       r,
+       1000,
+       1e-15,
+       1e-15
+      );
+
+    d4est_util_compute_error_array(zeroed_u, u, error, local_sizes.local_nodes);
+    double l2 = d4est_mesh_compute_l2_norm_sqr
+                (
+                 p4est,
+                 d4est_ops,
+                 d4est_geom,
+                 d4est_quad,
+                 d4est_factors,
+                 error,
+                 local_sizes.local_nodes,
+                 NULL,
+                 NULL);
+    printf("l2 norm = %.15f\n", l2);
+    
+  }  
   
   
-  char** dbl_subdomain_names = P4EST_ALLOC(char*, 4*p4est->local_num_quadrants + 3);
-  double** dbl_subdomains = P4EST_ALLOC(double*, 4*p4est->local_num_quadrants + 3);
+  char** dbl_subdomain_names = P4EST_ALLOC(char*, 5*p4est->local_num_quadrants + 3);
+  double** dbl_subdomains = P4EST_ALLOC(double*, 5*p4est->local_num_quadrants + 3);
   char** int_subdomain_names = P4EST_ALLOC(char*, p4est->local_num_quadrants + 1);
   int** int_subdomains = P4EST_ALLOC(int*, p4est->local_num_quadrants + 1);
 
@@ -480,7 +599,9 @@ int main(int argc, char *argv[])
     dbl_subdomains[i + 2*p4est->local_num_quadrants] = P4EST_ALLOC(double, local_sizes.local_nodes);
     dbl_subdomain_names[i + 3*p4est->local_num_quadrants] = P4EST_ALLOC(char, 25);
     dbl_subdomains[i + 3*p4est->local_num_quadrants] = P4EST_ALLOC(double, local_sizes.local_nodes);
-      
+    dbl_subdomain_names[i + 4*p4est->local_num_quadrants] = P4EST_ALLOC(char, 25);
+    dbl_subdomains[i + 4*p4est->local_num_quadrants] = P4EST_ALLOC(double, local_sizes.local_nodes);
+    
     d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
       (
        p4est,
@@ -512,6 +633,32 @@ int main(int argc, char *argv[])
       );
     
     sprintf(dbl_subdomain_names[i + 3*p4est->local_num_quadrants], "rhs_sub_%d", i);
+
+
+    
+    d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
+      (
+       p4est,
+       d4est_factors,
+       schwarz_data,
+       schwarz_ops,
+       &sol_over_subdomains[sub_data->restricted_nodal_stride],
+       dbl_subdomains[4*p4est->local_num_quadrants + i],
+       p4est->mpirank,
+       i,
+       local_sizes.local_nodes,
+       FIELD_NOT_ZEROED
+      );
+    
+    sprintf(dbl_subdomain_names[i + 4*p4est->local_num_quadrants], "sol_sub_%d", i);
+
+    printf("%s %s %s\n",
+           dbl_subdomain_names[i + 2*p4est->local_num_quadrants],
+           dbl_subdomain_names[i + 3*p4est->local_num_quadrants],
+           dbl_subdomain_names[i + 4*p4est->local_num_quadrants]
+          );
+
+    
   }     
   
   /* END COLLECT DATA TO VISUALIZE SOLUTION DATA */
@@ -520,15 +667,15 @@ int main(int argc, char *argv[])
   /* END COLLECT DATA TO VISUALIZE SOLUTION DATA */
   /* END COLLECT DATA TO VISUALIZE SOLUTION DATA */
 
-  dbl_subdomains[4*p4est->local_num_quadrants] = u;
-  dbl_subdomains[4*p4est->local_num_quadrants + 1] = rhs;
-  dbl_subdomain_names[4*p4est->local_num_quadrants] = P4EST_ALLOC(char, 25);
-  dbl_subdomain_names[4*p4est->local_num_quadrants + 1] = P4EST_ALLOC(char, 25);
-  sprintf(dbl_subdomain_names[4*p4est->local_num_quadrants], "u");
-  sprintf(dbl_subdomain_names[4*p4est->local_num_quadrants + 1], "rhs");
+  dbl_subdomains[5*p4est->local_num_quadrants] = u;
+  dbl_subdomains[5*p4est->local_num_quadrants + 1] = rhs;
+  dbl_subdomain_names[5*p4est->local_num_quadrants] = P4EST_ALLOC(char, 24);
+  dbl_subdomain_names[5*p4est->local_num_quadrants + 1] = P4EST_ALLOC(char, 24);
+  sprintf(dbl_subdomain_names[5*p4est->local_num_quadrants], "u");
+  sprintf(dbl_subdomain_names[5*p4est->local_num_quadrants + 1], "rhs");
   
-  dbl_subdomain_names[4*p4est->local_num_quadrants + 2] = NULL;
-  dbl_subdomains[4*p4est->local_num_quadrants + 2] = NULL;
+  dbl_subdomain_names[5*p4est->local_num_quadrants + 2] = NULL;
+  dbl_subdomains[5*p4est->local_num_quadrants + 2] = NULL;
   int_subdomain_names[p4est->local_num_quadrants] = NULL;
   int_subdomains[p4est->local_num_quadrants] = NULL;
 
@@ -554,20 +701,25 @@ int main(int argc, char *argv[])
     
   P4EST_FREE(u);
   P4EST_FREE(Au);
+  P4EST_FREE(error);
   P4EST_FREE(rhs);
   P4EST_FREE(f);
-
-  /* BEGIN END ELLIPTIC DATA */
-  /* BEGIN END ELLIPTIC DATA */
-  /* BEGIN END ELLIPTIC DATA */
-  /* BEGIN END ELLIPTIC DATA */
+  P4EST_FREE(zeroed_u);
+  P4EST_FREE(zeroed_Au);
+  P4EST_FREE(r);
     
 
-  /* BEGIN FREE SUBDOMAIN DATA */
-  /* BEGIN FREE SUBDOMAIN DATA */
-  /* BEGIN FREE SUBDOMAIN DATA */
-  /* BEGIN FREE SUBDOMAIN DATA */
+  /* BEGIN END ELLIPTIC DATA */
+  /* BEGIN END ELLIPTIC DATA */
+  /* BEGIN END ELLIPTIC DATA */
+  /* BEGIN END ELLIPTIC DATA */
 
+  /* BEGIN FREE SUBDOMAIN DATA */
+  /* BEGIN FREE SUBDOMAIN DATA */
+  /* BEGIN FREE SUBDOMAIN DATA */
+  /* BEGIN FREE SUBDOMAIN DATA */
+  
+  P4EST_FREE(sol_over_subdomains);
   P4EST_FREE(u_over_subdomains);
   P4EST_FREE(rhs_over_subdomains);
 
@@ -590,17 +742,19 @@ int main(int argc, char *argv[])
     P4EST_FREE(dbl_subdomain_names[i + p4est->local_num_quadrants]);
     P4EST_FREE(dbl_subdomain_names[i + 2*p4est->local_num_quadrants]);
     P4EST_FREE(dbl_subdomain_names[i + 3*p4est->local_num_quadrants]);
+    P4EST_FREE(dbl_subdomain_names[i + 4*p4est->local_num_quadrants]);
 
     P4EST_FREE(dbl_subdomains[i]);
     P4EST_FREE(dbl_subdomains[i + p4est->local_num_quadrants]);
     P4EST_FREE(dbl_subdomains[i + 2*p4est->local_num_quadrants]);
     P4EST_FREE(dbl_subdomains[i + 3*p4est->local_num_quadrants]);
+    P4EST_FREE(dbl_subdomains[i + 4*p4est->local_num_quadrants]);
 
     P4EST_FREE(int_subdomain_names[i]);
     P4EST_FREE(int_subdomains[i]);
   }
-  P4EST_FREE(dbl_subdomain_names[4*p4est->local_num_quadrants]);
-  P4EST_FREE(dbl_subdomain_names[1 + 4*p4est->local_num_quadrants]);
+  P4EST_FREE(dbl_subdomain_names[5*p4est->local_num_quadrants]);
+  P4EST_FREE(dbl_subdomain_names[1 + 5*p4est->local_num_quadrants]);
     
   P4EST_FREE(dbl_subdomain_names);
   P4EST_FREE(int_subdomain_names);

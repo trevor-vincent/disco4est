@@ -308,8 +308,15 @@ function(add_d4est_unit_test_2d exec src parent_dir test_name)
   # target_compile_definitions(${exec} PRIVATE --fprofile-arcs --ftest-coverage)
 
 
-  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
-  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+  # SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+  # SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+
+  #hopefully allows for this optimization
+  include(CheckCXXCompilerFlag)
+  CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
+  if(COMPILER_SUPPORTS_MARCH_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+  endif()
   
   set_target_properties(${exec}
     PROPERTIES
@@ -351,11 +358,11 @@ enable_testing()
 set(CTEST_MEMORYCHECK_COMMAND /usr/bin/valgrind)
 set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/suppressions.txt" )
 
-# add_d4est_unit_test_3d(d4est_test_vtk d4est_test_vtk.c Unit d4est_test_vtk)
-# add_d4est_unit_test_3d(d4est_test_cg_eigs d4est_test_cg_eigs.c Unit d4est_test_cg_eigs)
-# add_d4est_unit_test_3d(d4est_test_kron d4est_test_kron.c Unit d4est_test_kron)
-# add_d4est_unit_test_3d(d4est_test_linalg d4est_test_linalg.c Unit d4est_test_linalg)
-# add_d4est_unit_test_3d(d4est_test_ghost_data d4est_test_ghost_data.c Unit d4est_test_ghost_data)
+add_d4est_unit_test_3d(d4est_test_vtk d4est_test_vtk.c Unit d4est_test_vtk)
+add_d4est_unit_test_3d(d4est_test_cg_eigs d4est_test_cg_eigs.c Unit d4est_test_cg_eigs)
+add_d4est_unit_test_3d(d4est_test_kron d4est_test_kron.c Unit d4est_test_kron)
+add_d4est_unit_test_3d(d4est_test_linalg d4est_test_linalg.c Unit d4est_test_linalg)
+add_d4est_unit_test_3d(d4est_test_ghost_data d4est_test_ghost_data.c Unit d4est_test_ghost_data)
 add_d4est_unit_test_3d(d4est_test_schwarz_operators d4est_test_schwarz_operators.c Unit d4est_test_schwarz_operators)
 
 # add_d4est_unit_test_3d(d4est_test_schwarz_subdomain_solve d4est_test_schwarz_subdomain_solve.c Unit d4est_test_schwarz_subdomain_solve)
@@ -366,26 +373,26 @@ add_d4est_unit_test_2d(d4est_test_schwarz d4est_test_schwarz.c Unit d4est_test_s
 # add_d4est_unit_test_3d(d4est_test_schwarz_singlecore_solve d4est_test_schwarz_singlecore_solve.c Unit d4est_test_schwarz_singlecore_solve)
 # add_d4est_unit_test_3d(d4est_test_schwarz_metadata_cubed_sphere d4est_test_schwarz_metadata_cubed_sphere.c Unit d4est_test_schwarz_metadata_cubed_sphere)
 
-# add_d4est_unit_test_3d(d4est_test_laplacian_symmetry d4est_test_laplacian_symmetry.c Unit d4est_test_laplacian_symmetry)
-# add_d4est_unit_test_3d(d4est_test_laplacian_consistency d4est_test_laplacian_consistency.c Unit d4est_test_laplacian_consistency)
+add_d4est_unit_test_3d(d4est_test_laplacian_symmetry d4est_test_laplacian_symmetry.c Unit d4est_test_laplacian_symmetry)
+add_d4est_unit_test_3d(d4est_test_laplacian_consistency d4est_test_laplacian_consistency.c Unit d4est_test_laplacian_consistency)
 add_d4est_unit_test_3d(d4est_test_laplacian_speedup d4est_test_laplacian_speedup.c Unit d4est_test_laplacian_speedup)
 # add_d4est_unit_test_2d(d4est_test_laplacian_speedup_2d d4est_test_laplacian_speedup.c Unit d4est_test_laplacian_speedup_2d)
 
-# add_d4est_bash_regression_test(d4est_test_stamm.sh Regression d4est_test_stamm)
-# add_d4est_bash_regression_test(d4est_test_cds.sh Regression d4est_test_constant_density_star)
+add_d4est_bash_regression_test(d4est_test_stamm.sh Regression d4est_test_stamm)
+add_d4est_bash_regression_test(d4est_test_cds.sh Regression d4est_test_constant_density_star)
 
-# add_d4est_bash_regression_test(d4est_test_poisson_sinx.sh Regression d4est_test_poisson_sinx)
-# add_d4est_bash_regression_test(d4est_test_twopunctures.sh Regression d4est_test_twopunctures)
-# add_d4est_bash_regression_test(d4est_test_twopunctures_2.sh Regression d4est_test_twopunctures_2)
-# add_d4est_bash_regression_test(d4est_test_mpi.sh Regression d4est_test_mpi)
+add_d4est_bash_regression_test(d4est_test_poisson_sinx.sh Regression d4est_test_poisson_sinx)
+add_d4est_bash_regression_test(d4est_test_twopunctures.sh Regression d4est_test_twopunctures)
+add_d4est_bash_regression_test(d4est_test_twopunctures_2.sh Regression d4est_test_twopunctures_2)
+add_d4est_bash_regression_test(d4est_test_mpi.sh Regression d4est_test_mpi)
 
-# add_d4est_problem_2d(stamm_driver stamm_multigrid_pc.c Stamm)
-# add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c Poisson)
-# add_d4est_problem_3d(poisson_sinx_multigrid_driver poisson_sinx_multigrid.c Poisson)
+add_d4est_problem_2d(stamm_driver stamm_multigrid_pc.c Stamm)
+add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c Poisson)
+add_d4est_problem_3d(poisson_sinx_multigrid_driver poisson_sinx_multigrid.c Poisson)
 # add_d4est_problem_3d(poisson_lorentzian_multigrid_driver poisson_lorentzian_multigrid.c Poisson)
 
 add_d4est_problem_3d(poisson_lorentzian_amr_multigrid_driver poisson_lorentzian_amr_multigrid.c Poisson)
-# add_d4est_problem_3d(constant_density_star_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
+add_d4est_problem_3d(constant_density_star_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
 # add_d4est_problem_3d(two_punctures_robin_diff_geom_estimator_global_driver two_punctures_cactus_diff_geom_estimator_global.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_diff_geom_estimator_global_13tree_driver two_punctures_cactus_diff_geom_estimator_global_13tree.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_diff_geom_estimator_global_13tree_with_opt_driver two_punctures_cactus_diff_geom_estimator_global_13tree_with_opt.c TwoPunctures)

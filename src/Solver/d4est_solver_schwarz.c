@@ -93,6 +93,8 @@ d4est_solver_schwarz_corner_callback
     /* add core element to subdomain */
     if(sub_data->num_elements == 0){
       sub_data->num_elements++;
+      sub_data->core_deg = ed_core->deg;
+      sub_data->core_id = ed_core->id;
       sub_data->element_data[0].id = ed_core->id;
       sub_data->element_data[0].mpirank = ed_core->mpirank;
       sub_data->element_data[0].tree = ed_core->tree;
@@ -360,7 +362,6 @@ d4est_solver_schwarz_compute_strides_and_sizes
           res_volume_nodes *= (ed->deg + 1);
         }
       }
-      /* printf("res_volume_nodes = %d\n", res_volume_nodes); */
       ed->nodal_size = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
       ed->nodal_stride = element_nodal_stride;
       ed->restricted_nodal_size = res_volume_nodes;
@@ -421,7 +422,7 @@ d4est_solver_schwarz_init
   }
 
   d4est_solver_schwarz_init_subdomain_metadata(p4est, d4est_ghost, schwarz_data);
-  /* d4est_solver_schwarz_sort_elements(schwarz_data); */
+  d4est_solver_schwarz_sort_elements(schwarz_data);
   d4est_solver_schwarz_compute_strides_and_sizes(schwarz_data);
 
   return schwarz_data;
