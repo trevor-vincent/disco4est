@@ -82,13 +82,15 @@ BY_Aijofxyz (double x, double y, double z, double Aij[3][3], void* user)
 
   r2_plus = (x - params->par_b) * (x - params->par_b) + y * y + z * z;
   r2_minus = (x + params->par_b) * (x + params->par_b) + y * y + z * z;
-  r2_plus = sqrt (pow (r2_plus, 2) + pow (params->TP_epsilon, 4));
-  r2_minus = sqrt (pow (r2_minus, 2) + pow (params->TP_epsilon, 4));
-
-  if (r2_plus < pow(params->TP_Tiny,2))
-    r2_plus = pow(params->TP_Tiny,2);
-  if (r2_minus < pow(params->TP_Tiny,2))
-    r2_minus = pow(params->TP_Tiny,2);
+  
+  /* r2_plus = sqrt (pow (r2_plus, 2) + pow (params->TP_epsilon, 4)); */
+  /* r2_minus = sqrt (pow (r2_minus, 2) + pow (params->TP_epsilon, 4)); */
+  /* r2_plus = sqrt(r2_plus*r2_plus + params->TP_epsilon*params->TP_epsilon*params->TP_epsilon*params->TP_epsilon); */
+  /* r2_minus = sqrt(r2_minus*r2_minus + params->TP_epsilon*params->TP_epsilon*params->TP_epsilon*params->TP_epsilon); */  
+  /* if (r2_plus < params->TP_Tiny*params->TP_Tiny) */
+    /* r2_plus = params->TP_Tiny*params->TP_Tiny; */
+  /* if (r2_minus < pow(params->TP_Tiny,2)) */
+    /* r2_minus = pow(params->TP_Tiny,2); */
   
   r_plus = sqrt (r2_plus);
   r_minus = sqrt (r2_minus);

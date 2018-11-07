@@ -466,11 +466,14 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < p4est->local_num_quadrants; i++){
       d4est_element_data_t* ed = d4est_factors->element_data[i];
+
       int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
 
       for (int j = 0; j < volume_nodes; j++){
         if((fabs(Apoly_vec[ed->nodal_stride + j] - Apoly_vec_with_opt[ed->nodal_stride + j]) > 1e-13)){
-          printf("ed id %d, %d, Apoly_vec[j], Apoly_vec_with_opt[j], err = %.15f, %.15f, %.15f\n",ed->id, i,Apoly_vec[ed->nodal_stride + j],Apoly_vec_with_opt[ed->nodal_stride + j]);
+          int on_bndry = d4est_factors->node_touches_boundary[ed->nodal_stride + j];
+          
+          printf("ed id %d, on_bndy %d, %d, Apoly_vec[j], Apoly_vec_with_opt[j], err = %.15f, %.15f, %.15f\n",ed->id, on_bndry, i,Apoly_vec[ed->nodal_stride + j],Apoly_vec_with_opt[ed->nodal_stride + j]);
           bad_element = 1;
         }
       }

@@ -37,7 +37,7 @@ d4est_laplacian_with_opt_flux_sipg_dirichlet_aux
  double * restrict  lifted_VT_w_term3_lobatto,
  double * restrict  sigma,
  double * restrict  u_at_bndry_lobatto,
- double * restrict  u_at_bndry_lobatto_to_quad
+ double * restrict  u_m_on_f_m_min_u_at_bndry_quad
 ){
   d4est_laplacian_with_opt_dirichlet_bc_t* bc_data = boundary_condition_fcn_data;
   
@@ -81,6 +81,8 @@ d4est_laplacian_with_opt_flux_sipg_dirichlet_aux
 
   }
 
+  if (bc_data->dirichlet_fcn != zero_fcn){
+    
   for (int i = 0; i < face_nodes_m_lobatto; i++){
     u_at_bndry_lobatto[i] = bc_data->dirichlet_fcn
                             (
@@ -103,19 +105,22 @@ d4est_laplacian_with_opt_flux_sipg_dirichlet_aux
      QUAD_INTEGRAND_UNKNOWN,
      u_at_bndry_lobatto,
      e_m->deg,
-     u_at_bndry_lobatto_to_quad,
+     u_m_on_f_m_min_u_at_bndry_quad,
      deg_mortar_quad
     );
-  
 
-  double u_m_on_f_m_min_u_at_bndry_quad;  
-  for(int i = 0; i < face_nodes_m_quad; i++){
 
-    if (bc_data->eval_method == EVAL_BNDRY_FCN_ON_LOBATTO){
-       u_m_on_f_m_min_u_at_bndry_quad = u_m_on_f_m_quad[i] - u_at_bndry_lobatto_to_quad[i];
+  }  
+
+   if (bc_data->eval_method == EVAL_BNDRY_FCN_ON_LOBATTO && bc_data->dirichlet_fcn != zero_fcn){
+      
+     for (int i = 0; i < face_nodes_m_quad; i++){
+       u_m_on_f_m_min_u_at_bndry_quad[i] =  -u_m_on_f_m_min_u_at_bndry_quad[i] + u_m_on_f_m_quad[i];
+     } 
     }
-    else if (bc_data->eval_method == EVAL_BNDRY_FCN_ON_QUAD){
-      u_m_on_f_m_min_u_at_bndry_quad
+    else if (bc_data->eval_method == EVAL_BNDRY_FCN_ON_QUAD && bc_data->dirichlet_fcn != zero_fcn){
+     for (int i = 0; i < face_nodes_m_quad; i++){
+      u_m_on_f_m_min_u_at_bndry_quad[i]
         = u_m_on_f_m_quad[i] - bc_data->dirichlet_fcn
                             (
                              boundary_data->xyz_on_f_m_quad[0][i],
@@ -125,30 +130,61 @@ d4est_laplacian_with_opt_flux_sipg_dirichlet_aux
 #endif
                              bc_params->user
                             );
+     }
+    }
+    else if (bc_data->dirichlet_fcn == zero_fcn){
+
+      for(int i = 0; i < face_nodes_m_quad; i++){
+
+        term1_quad[i] = 0.;
+        for (int d = 0; d < (P4EST_DIM); d++){
+          term1_quad[i] += -1.*n_on_f_m_quad[d][i]*sj_on_f_m_quad[i]
+                           *(dudx_m_on_f_m_quad[d][i]);
+        }
+        for (int l = 0; l < (P4EST_DIM); l++){
+          term2_quad[l][i] = 0.;
+          for (int d = 0; d < (P4EST_DIM); d++){
+            term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i]
+                                *n_on_f_m_quad[d][i]
+                                *sj_on_f_m_quad[i]
+                                *2.*u_m_on_f_m_quad[i];        
+          }
+        }
+        term3_quad[i] = sj_on_f_m_quad[i]
+                        *sigma[i]
+                        *u_m_on_f_m_quad[i];
+    
+      }
+  
     }
     else {
-      D4EST_ABORT("eval method for dirichlet bc should be set\n");
+      D4EST_ABORT("Not a supported boundary sipg option");
     }
 
-    term1_quad[i] = 0.;
-    for (int d = 0; d < (P4EST_DIM); d++){
-      term1_quad[i] += -1.*n_on_f_m_quad[d][i]*sj_on_f_m_quad[i]
-                       *(dudx_m_on_f_m_quad[d][i]);
-    }
-    for (int l = 0; l < (P4EST_DIM); l++){
-      term2_quad[l][i] = 0.;
-      for (int d = 0; d < (P4EST_DIM); d++){
-        term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i]
-                            *n_on_f_m_quad[d][i]
-                            *sj_on_f_m_quad[i]
-                            *2.*u_m_on_f_m_min_u_at_bndry_quad;        
-      }
-    }
-    term3_quad[i] = sj_on_f_m_quad[i]
-                    *sigma[i]
-                    *u_m_on_f_m_min_u_at_bndry_quad;
+   if (bc_data->dirichlet_fcn != zero_fcn){
+     for(int i = 0; i < face_nodes_m_quad; i++){
+
+ 
+       term1_quad[i] = 0.;
+       for (int d = 0; d < (P4EST_DIM); d++){
+         term1_quad[i] += -1.*n_on_f_m_quad[d][i]*sj_on_f_m_quad[i]
+                          *(dudx_m_on_f_m_quad[d][i]);
+       }
+       for (int l = 0; l < (P4EST_DIM); l++){
+         term2_quad[l][i] = 0.;
+         for (int d = 0; d < (P4EST_DIM); d++){
+           term2_quad[l][i] += -.5*drst_dxyz_quad[l][d][i]
+                               *n_on_f_m_quad[d][i]
+                               *sj_on_f_m_quad[i]
+                               *2.*u_m_on_f_m_min_u_at_bndry_quad[i];        
+         }
+       }
+       term3_quad[i] = sj_on_f_m_quad[i]
+                       *sigma[i]
+                       *u_m_on_f_m_min_u_at_bndry_quad[i];
     
-  }
+     }
+   }
   
   d4est_quadrature_apply_galerkin_integral
     (
@@ -783,59 +819,39 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
     
   }
 
+  int m_side_matches_mortar = mortar_data->m_side_matches_mortar;
+  int p_side_matches_mortar = mortar_data->p_side_matches_mortar;
+  
   for (int d = 0; d < (P4EST_DIM); d++){
-    d4est_mortars_with_opt_project_mass_mortar_onto_side
-      (
-       d4est_ops,
-       VT_w_term2_mortar_lobatto[d],
-       faces_mortar,
-       deg_mortar_lobatto,
-       proj_VT_w_term2_mortar_lobatto_m[d],
-       faces_m,
-       deg_m_lobatto
-      );
 
-    d4est_mortars_with_opt_project_mass_mortar_onto_side
-      (
-       d4est_ops,
-       (is_it_tree_boundary) ? VT_w_term2_mortar_lobatto_porder[d] : VT_w_term2_mortar_lobatto[d], //VT_w_term2_mortar_lobatto[d],
-       faces_mortar,
-       (is_it_tree_boundary) ? deg_mortar_lobatto_porder : deg_mortar_lobatto,
-       proj_VT_w_term2_mortar_lobatto_p[d],
-       faces_p,
-       (is_it_tree_boundary) ? mortar_data->deg_p_lobatto_porder : deg_p_lobatto
-      );
+      if (!m_side_matches_mortar){
+        d4est_mortars_with_opt_project_mass_mortar_onto_side
+          (
+           d4est_ops,
+           VT_w_term2_mortar_lobatto[d],
+           faces_mortar,
+           deg_mortar_lobatto,
+           proj_VT_w_term2_mortar_lobatto_m[d],
+           faces_m,
+           deg_m_lobatto
+          );
+      }
+      if (!p_side_matches_mortar){
+        d4est_mortars_with_opt_project_mass_mortar_onto_side
+          (
+           d4est_ops,
+           (is_it_tree_boundary) ? VT_w_term2_mortar_lobatto_porder[d] : VT_w_term2_mortar_lobatto[d], //VT_w_term2_mortar_lobatto[d],
+           faces_mortar,
+           (is_it_tree_boundary) ? deg_mortar_lobatto_porder : deg_mortar_lobatto,
+           proj_VT_w_term2_mortar_lobatto_p[d],
+           faces_p,
+           (is_it_tree_boundary) ? mortar_data->deg_p_lobatto_porder : deg_p_lobatto
+          );
+      }
   }
 
-  /* if(e_p[0]->id == 8 && f_p == 2){ */
-  /* if(e_p[0]->id == 11 && f_p == 1){ */
-  /*   printf("with_opt\n"); */
-  /*   printf("f_p = %d\n", f_p); */
-  /*   printf("is_it_tree_boundary = %d\n", is_it_tree_boundary); */
-  /*   printf("orientation = %d\n", orientation); */
-  /*   /\* printf("with_opt\n"); *\/ */
-  /*   printf("total_side_nodes_p_lobatto = %d\n", total_side_nodes_p_lobatto); */
 
-  /*   DEBUG_PRINT_ARR_DBL(VT_w_term2_mortar_lobatto[0], total_nodes_mortar_lobatto); */
-  /*   DEBUG_PRINT_ARR_DBL(VT_w_term2_mortar_lobatto[1], total_nodes_mortar_lobatto); */
-  /*   DEBUG_PRINT_ARR_DBL(VT_w_term2_mortar_lobatto[2], total_nodes_mortar_lobatto); */
-
-  /*   DEBUG_PRINT_ARR_DBL(proj_VT_w_term2_mortar_lobatto_p[0], total_side_nodes_p_lobatto); */
-  /*   DEBUG_PRINT_ARR_DBL(proj_VT_w_term2_mortar_lobatto_p[1], total_side_nodes_p_lobatto); */
-  /*   DEBUG_PRINT_ARR_DBL(proj_VT_w_term2_mortar_lobatto_p[2], total_side_nodes_p_lobatto); */
-
-    
-  /* } */
-  
-  
-
-  if (is_it_tree_boundary){
-    for (int d = 0; d < (P4EST_DIM); d++){
-      P4EST_FREE(VT_w_term2_mortar_lobatto_porder[d]);
-    }
-  }
-  D4EST_FREE_DIM_VEC(sj_n_du);
-  
+  if (!m_side_matches_mortar){
   d4est_mortars_with_opt_project_mass_mortar_onto_side
     (
      d4est_ops,
@@ -846,7 +862,8 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
      faces_m,
      deg_m_lobatto
     );
-
+  }
+  if (!p_side_matches_mortar){
  d4est_mortars_with_opt_project_mass_mortar_onto_side
     (
      d4est_ops,
@@ -857,29 +874,32 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
      faces_p,
      deg_p_lobatto
     );
+  }
 
-  d4est_mortars_with_opt_project_mass_mortar_onto_side
-    (
-     d4est_ops,
-     VT_w_term3_mortar_lobatto,
-     faces_mortar,
-     deg_mortar_lobatto,
-     proj_VT_w_term3_mortar_lobatto_m,
-     faces_m,
-     deg_m_lobatto
-    );
-
-  d4est_mortars_with_opt_project_mass_mortar_onto_side
-    (
-     d4est_ops,
-     VT_w_term3_mortar_lobatto,
-     faces_mortar,
-     deg_mortar_lobatto,
-     proj_VT_w_term3_mortar_lobatto_p,
-     faces_p,
-     deg_p_lobatto /* in the order of (-) side, so this will work */
-    );
-
+  if (!m_side_matches_mortar){
+    d4est_mortars_with_opt_project_mass_mortar_onto_side
+      (
+       d4est_ops,
+       VT_w_term3_mortar_lobatto,
+       faces_mortar,
+       deg_mortar_lobatto,
+       proj_VT_w_term3_mortar_lobatto_m,
+       faces_m,
+       deg_m_lobatto
+      );
+  }
+  if (!p_side_matches_mortar){
+    d4est_mortars_with_opt_project_mass_mortar_onto_side
+      (
+       d4est_ops,
+       VT_w_term3_mortar_lobatto,
+       faces_mortar,
+       deg_mortar_lobatto,
+       proj_VT_w_term3_mortar_lobatto_p,
+       faces_p,
+       deg_p_lobatto /* in the order of (-) side, so this will work */
+      );
+  }
 
   int volume_stride = 0;
   stride = 0;
@@ -889,7 +909,7 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
 
       d4est_operators_apply_lift(
                                  d4est_ops,
-                                 &proj_VT_w_term1_mortar_lobatto_m[stride],
+                                 (m_side_matches_mortar) ? &VT_w_term1_mortar_lobatto[stride] :&proj_VT_w_term1_mortar_lobatto_m[stride],
                                  (P4EST_DIM),
                                  e_m[f]->deg,
                                  f_m,
@@ -899,7 +919,7 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
       for (int d = 0; d < (P4EST_DIM); d++){
         d4est_operators_apply_lift(
                                    d4est_ops,
-                                   &proj_VT_w_term2_mortar_lobatto_m[d][stride],
+                                   (m_side_matches_mortar) ? &VT_w_term2_mortar_lobatto[d][stride] : &proj_VT_w_term2_mortar_lobatto_m[d][stride],
                                    (P4EST_DIM),
                                    e_m[f]->deg,
                                    f_m,
@@ -923,7 +943,7 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
         
       d4est_operators_apply_lift(
                                  d4est_ops,
-                                 &proj_VT_w_term3_mortar_lobatto_m[stride],
+                                 (m_side_matches_mortar) ? &VT_w_term3_mortar_lobatto[stride] :&proj_VT_w_term3_mortar_lobatto_m[stride],
                                  (P4EST_DIM),
                                  e_m[f]->deg,
                                  f_m,
@@ -952,6 +972,7 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
     int face_nodes_p = d4est_lgl_get_nodes((P4EST_DIM)-1, e_p[f]->deg);
     if (e_p_is_ghost[f] == 0){
 
+      double* temp_b4_proj_VT = (p_side_matches_mortar) ? VT_w_term1_mortar_lobatto : proj_VT_w_term1_mortar_lobatto_p;
       double* temp_proj_VT = d4est_mortars_with_opt_reorient_if_needed
                              (
                               d4est_ops,
@@ -960,7 +981,7 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
                               orientation,
                               f_p,
                               f_m,
-                              proj_VT_w_term1_mortar_lobatto_p,
+                              temp_b4_proj_VT,
                               deg_p_lobatto_porder,
                               deg_p_lobatto,
                               total_side_nodes_p_lobatto,
@@ -969,7 +990,7 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
       
       d4est_operators_apply_lift(
                                  d4est_ops,
-                                 (temp_proj_VT == NULL) ? &proj_VT_w_term1_mortar_lobatto_p[stride] : &temp_proj_VT[stride],
+                                 (temp_proj_VT == NULL) ? &temp_b4_proj_VT[stride] : &temp_proj_VT[stride],
                                  (P4EST_DIM),
                                  e_p[f]->deg,
                                  f_p,
@@ -979,25 +1000,14 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
         P4EST_FREE(temp_proj_VT);
       for (int d = 0; d < (P4EST_DIM); d++){
 
-        /* temp_proj_VT = d4est_mortars_with_opt_reorient_if_needed */
-        /*                ( */
-        /*                 d4est_ops, */
-        /*                 e_p, */
-        /*                 e_m, */
-        /*                 orientation, */
-        /*                 f_p, */
-        /*                 f_m, */
-        /*                 proj_VT_w_term2_mortar_lobatto_p[d], */
-        /*                 deg_p_lobatto_porder, */
-        /*                 deg_p_lobatto, */
-        /*                 total_side_nodes_p_lobatto, */
-        /*                 faces_p */
-        /*                ); */
         /* term 2 does not need to be reoriented because it was reoriented then calculated */
+
+
+        double* temp_term2 = (is_it_tree_boundary) ? VT_w_term2_mortar_lobatto_porder[d] : VT_w_term2_mortar_lobatto[d];
+        
         d4est_operators_apply_lift(
                                    d4est_ops,
-                                   /* (temp_proj_VT == NULL) ? &proj_VT_w_term2_mortar_lobatto_p[d][stride] : &temp_proj_VT[stride], */
-                                   &proj_VT_w_term2_mortar_lobatto_p[d][stride],
+                                   (p_side_matches_mortar) ? &temp_term2[stride] : &proj_VT_w_term2_mortar_lobatto_p[d][stride],
                                    (P4EST_DIM),
                                    e_p[f]->deg,
                                    f_p,
@@ -1010,16 +1020,13 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
                                             d,
                                             &DT_lifted_proj_VT_w_term2_mortar_lobatto_p[d][volume_stride]
                                            );
-
         
         if (faces_p != faces_mortar){
             d4est_linalg_vec_scale(.5, &DT_lifted_proj_VT_w_term2_mortar_lobatto_p[d][volume_stride], volume_nodes_p);
         }
-
-        /* if(temp_proj_VT != NULL) */
-          /* P4EST_FREE(temp_proj_VT); */
       }
       
+      temp_b4_proj_VT = (p_side_matches_mortar) ? VT_w_term3_mortar_lobatto :  proj_VT_w_term3_mortar_lobatto_p;
       temp_proj_VT = d4est_mortars_with_opt_reorient_if_needed
                      (
                       d4est_ops,
@@ -1028,7 +1035,7 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
                       orientation,
                       f_p,
                       f_m,
-                      proj_VT_w_term3_mortar_lobatto_p,
+                      temp_b4_proj_VT,
                       deg_p_lobatto_porder,
                       deg_p_lobatto,
                       total_side_nodes_p_lobatto,
@@ -1037,7 +1044,7 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
       
       d4est_operators_apply_lift(
                                  d4est_ops,
-                                 (temp_proj_VT == NULL) ? &proj_VT_w_term3_mortar_lobatto_p[stride] : &temp_proj_VT[stride],
+                                 (temp_proj_VT == NULL) ? &temp_b4_proj_VT[stride] : &temp_proj_VT[stride],
                                  (P4EST_DIM),
                                  e_p[f]->deg,
                                  f_p,
@@ -1053,6 +1060,12 @@ d4est_laplacian_with_opt_flux_sipg_interface_aux
 
 
 
+  if (is_it_tree_boundary){
+    for (int d = 0; d < (P4EST_DIM); d++){
+      P4EST_FREE(VT_w_term2_mortar_lobatto_porder[d]);
+    }
+  }
+  D4EST_FREE_DIM_VEC(sj_n_du);
 
   
   P4EST_FREE(ones_mortar_quad);

@@ -261,7 +261,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
 
   d4est_element_data_t* e_m_oriented [(P4EST_HALF)];
   d4est_element_data_reorient_f_p_elements_to_f_m_order(e_m, (P4EST_DIM)-1, f_p, f_m, orientation, faces_m, e_m_oriented);
-  
+
   /* calculate degs and nodes of each face of (-) side */
   int total_side_nodes_m_lobatto = 0;
   int total_side_nodes_m_quad = 0;
@@ -295,21 +295,21 @@ may need to all be reoriented so we may not want to skip, because this routine w
   /* calculate degs and nodes of the mortar faces */
   int total_nodes_mortar_quad = 0;
   int total_nodes_mortar_lobatto = 0;
-  for (int i = 0; i < faces_m; i++)
+  for (int i = 0; i < faces_m; i++){
     for (int j = 0; j < faces_p; j++){
       /* find max degree for each face pair of the two sides*/
       deg_mortar_quad[i+j] = d4est_util_max_int(deg_m_quad[i],
                                           deg_p_quad[j]);
-      deg_mortar_lobatto[i+j] = d4est_util_max_int( e_m[i]->deg,
-                                              e_p_oriented[j]->deg );      
+      deg_mortar_lobatto[i+j] = deg_mortar_quad[i+j];
       nodes_mortar_quad[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad[i+j] );     
       nodes_mortar_lobatto[i+j] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_lobatto[i+j] );     
       total_nodes_mortar_quad += nodes_mortar_quad[i+j];
       total_nodes_mortar_lobatto += nodes_mortar_lobatto[i+j];
 
     }
+  }
 
-
+  
   /* for (int i = 0; i < faces_p; i++) */
   /*   for (int j = 0; j < faces_,; j++){ */
   /*     /\* find max degree for each face pair of the two sides*\/ */
@@ -337,6 +337,27 @@ may need to all be reoriented so we may not want to skip, because this routine w
     nodes_mortar_quad_porder[inew] = nodes_mortar_quad[i];
     nodes_mortar_lobatto_porder[inew] = nodes_mortar_lobatto[i];
   }
+  
+  int m_side_quad_min_lob_sum = 0;
+  int p_side_quad_min_lob_sum = 0;
+  
+  if (faces_m == faces_mortar){
+    for (int i = 0; i < faces_mortar; i++){
+      m_side_quad_min_lob_sum += deg_mortar_quad[i] - deg_m_lobatto[i];
+    }
+  }
+
+  if (faces_p == faces_mortar){
+    for (int i = 0; i < faces_mortar; i++){
+      p_side_quad_min_lob_sum += deg_mortar_quad_porder[i] - deg_p_lobatto_porder[i];
+    }
+  }
+
+  
+  int m_side_matches_mortar = (faces_m == faces_mortar) && (m_side_quad_min_lob_sum == 0);
+  int p_side_matches_mortar = (faces_p == faces_mortar) && (p_side_quad_min_lob_sum == 0);
+
+
 
   p4est_qcoord_t mortar_q0_forder [(P4EST_HALF)][(P4EST_DIM)];
   p4est_qcoord_t mortar_dq_forder;
@@ -519,6 +540,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
   }
 
 
+  if (!m_side_matches_mortar){
   /* project (-)-side u trace vector onto mortar space */
   d4est_mortars_with_opt_project_side_onto_mortar_space
     (
@@ -530,7 +552,9 @@ may need to all be reoriented so we may not want to skip, because this routine w
      faces_mortar,
      deg_mortar_quad
     );
-
+  }
+  
+  if (!p_side_matches_mortar){
   /* project (+)-side u trace vector onto mortar space */
   d4est_mortars_with_opt_project_side_onto_mortar_space
     (
@@ -542,7 +566,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
      faces_mortar,
      deg_mortar_quad
     );
-
+  }
   
   stride = 0;
   for (int f = 0; f < faces_mortar; f++){
@@ -555,7 +579,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
        &mortar_face_object_forder,
        QUAD_OBJECT_MORTAR,
        QUAD_INTEGRAND_UNKNOWN,
-       &u_m_on_f_m_mortar[stride],
+       (m_side_matches_mortar) ? &u_m_on_f_m[stride] : &u_m_on_f_m_mortar[stride],
        deg_mortar_quad[f],
        &u_m_on_f_m_mortar_quad[stride],
        deg_mortar_quad[f]
@@ -569,7 +593,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
        &mortar_face_object_forder,
        QUAD_OBJECT_MORTAR,
        QUAD_INTEGRAND_UNKNOWN,
-       &u_p_on_f_p_mortar[stride],
+       (p_side_matches_mortar) ? &u_p_on_f_p[stride] : &u_p_on_f_p_mortar[stride],
        deg_mortar_quad[f],
        &u_p_on_f_p_mortar_quad[stride],
        deg_mortar_quad[f]
@@ -629,6 +653,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
       stride += d4est_lgl_get_nodes((P4EST_DIM)-1, e_p[f]->deg);
     }
 
+    if (!p_side_matches_mortar){
     d4est_mortars_with_opt_project_side_onto_mortar_space
       (
        d4est_ops,
@@ -639,18 +664,21 @@ may need to all be reoriented so we may not want to skip, because this routine w
        faces_mortar,
        deg_mortar_quad_porder
       );
+    }
 
-    d4est_mortars_with_opt_project_side_onto_mortar_space
-      (
-       d4est_ops,
-       dudr_m_on_f_m[d],
-       faces_m,
-       deg_m_lobatto,
-       dudr_m_on_f_m_mortar[d],
-       faces_mortar,
-       deg_mortar_quad
-      );
-
+    if (!m_side_matches_mortar){
+      d4est_mortars_with_opt_project_side_onto_mortar_space
+        (
+         d4est_ops,
+         dudr_m_on_f_m[d],
+         faces_m,
+         deg_m_lobatto,
+         dudr_m_on_f_m_mortar[d],
+         faces_mortar,
+         deg_mortar_quad
+        );
+    }
+    
     stride = 0;
     for (int f = 0; f < faces_mortar; f++){
 
@@ -662,7 +690,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
          &mortar_face_object_forder,
          QUAD_OBJECT_MORTAR,
          QUAD_INTEGRAND_UNKNOWN,
-         &dudr_m_on_f_m_mortar[d][stride],
+         (m_side_matches_mortar) ? &dudr_m_on_f_m[d][stride] : &dudr_m_on_f_m_mortar[d][stride],
          deg_mortar_quad[f],
          &dudr_m_on_f_m_mortar_quad[d][stride],
          deg_mortar_quad[f]
@@ -682,7 +710,7 @@ may need to all be reoriented so we may not want to skip, because this routine w
          &mortar_face_object_porder,
          QUAD_OBJECT_MORTAR,
          QUAD_INTEGRAND_UNKNOWN,
-         &dudr_p_on_f_p_mortar_porder[d][stride],
+         (p_side_matches_mortar) ? &dudr_p_on_f_p_porder[d][stride] : &dudr_p_on_f_p_mortar_porder[d][stride],
          deg_mortar_quad_porder[f],
          &dudr_p_on_f_p_mortar_quad_porder[d][stride],
          deg_mortar_quad_porder[f]
@@ -793,6 +821,8 @@ may need to all be reoriented so we may not want to skip, because this routine w
   interface_data.face_nodes_m_lobatto = face_nodes_m_lobatto;
   interface_data.deg_p_lobatto = deg_p_lobatto;
   interface_data.face_nodes_p_lobatto = face_nodes_p_lobatto;
+  interface_data.p_side_matches_mortar = p_side_matches_mortar;
+  interface_data.m_side_matches_mortar = m_side_matches_mortar;
   
 
   for (int i = 0; i < faces_m; i++){

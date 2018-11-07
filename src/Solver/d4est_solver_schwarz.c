@@ -488,8 +488,3 @@ d4est_solver_schwarz_print
     }
   }
 }
-/* This file was automatically generated.  Do not edit! */
-void d4est_solver_schwarz_print(p4est_t *p4est,d4est_solver_schwarz_data_t *schwarz_data);
-void d4est_solver_schwarz_destroy(d4est_solver_schwarz_data_t *schwarz_data);
-d4est_solver_schwarz_data_t *d4est_solver_schwarz_init(p4est_t *p4est,d4est_ghost_t *d4est_ghost,const char *input_file);
-void d4est_solver_schwarz_input(p4est_t *p4est,const char *input_file,d4est_solver_schwarz_data_t *schwarz_data);

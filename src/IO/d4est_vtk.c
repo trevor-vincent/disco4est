@@ -1803,45 +1803,249 @@ d4est_vtk_save
     );
 }
 
-/* /\**  */
-/*  * This helper array is useful when */
-/*  * you want to plot a bunch of things */
-/*  * calculated in a for loop */
-/*  *  */
-/*  * @param p4est  */
-/*  * @param type  */
-/*  * @param num_entries  */
-/*  * @param name_size  */
-/*  *  */
-/*  * @return  */
-/*  *\/ */
-/* d4est_vtk_helper_array_t* */
-/* d4est_vtk_helper_array_init */
-/* ( */
-/*  p4est_t* p4est, */
-/*  d4est_builtin_t type, */
-/*  int num_entries, */
-/*  int name_size */
-/* ) */
-/* { */
+
+/**
+ * This helper array is useful when
+ * you want to plot a bunch of things
+ * calculated in a for loop
+ *
+ * @param p4est
+ * @param type
+ * @param num_entries
+ * @param name_size
+ *
+ * @return
+ */
+d4est_vtk_helper_array_t*
+d4est_vtk_helper_array_init
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ int local_nodes,
+ int name_size,
+ int max_num_fields
+)
+{
+  d4est_vtk_helper_array_t* array = P4EST_ALLOC(d4est_vtk_helper_array_t, 1);
+
+  array->p4est = p4est;
+  array->d4est_ops = d4est_ops;
+  array->nodal_dbl_fields = P4EST_ALLOC(double*, max_num_fields);
+  array->nodal_dbl_fields_names = P4EST_ALLOC(char*, max_num_fields);
+  array->nodal_dbl_did_we_alloc = P4EST_ALLOC_ZERO(int, max_num_fields);
   
-/* } */
+  array->cell_dbl_fields = P4EST_ALLOC(double*, max_num_fields);
+  array->cell_dbl_fields_names = P4EST_ALLOC(char*, max_num_fields);
+  array->cell_dbl_did_we_alloc = P4EST_ALLOC_ZERO(int, max_num_fields);
+  
+  array->cell_int_fields = P4EST_ALLOC(int*, max_num_fields);
+  array->cell_int_fields_names = P4EST_ALLOC(char*, max_num_fields);
+  array->cell_int_did_we_alloc = P4EST_ALLOC_ZERO(int, max_num_fields);
+  
+  for (int i = 0; i < max_num_fields; i++){
+    array->nodal_dbl_fields[i] = NULL;
+    array->nodal_dbl_fields_names[i] = NULL;
 
-/* d4est_vtk_helper_array_add */
-/* ( */
-/*  d4est_builtin_t type, */
-/*  void* field, */
-/*  char* name */
-/* ) */
-/* { */
+    array->cell_dbl_fields[i] = NULL;
+    array->cell_dbl_fields_names[i] = NULL;
+    
+    array->cell_int_fields[i] = NULL;
+    array->cell_int_fields_names[i] = NULL;
+  }
+  
+  array->local_nodes = local_nodes;
+  array->local_elements = p4est->local_num_quadrants;
+  array->name_size = name_size;
+  array->max_num_fields = max_num_fields;
+  array->num_nodal_dbl_fields = 0;
+  array->num_cell_dbl_fields = 0;
+  array->num_cell_int_fields = 0;
+  return array;
+}
+
+void
+d4est_vtk_helper_array_add_nodal_dbl_field
+(
+ d4est_vtk_helper_array_t* array,
+ const char* prefix,
+ int suffix_id, /* set suffix_id < 0 if you don't want a suffix_id (>0) attached to the end of the prefix */
+ double* field
+)
+{
+  if(array->num_nodal_dbl_fields >= array->max_num_fields){
+    D4EST_ABORT("num_nodal_dbl_fields >= max_num_fields");
+  }
+
+  array->nodal_dbl_fields_names[array->num_nodal_dbl_fields]
+    = P4EST_ALLOC(char, array->name_size);
+
+  
+  if (suffix_id >= 0){
+    sprintf(array->nodal_dbl_fields_names[array->num_nodal_dbl_fields], "%s_%d", prefix, suffix_id);
+  }
+  else {
+    sprintf(array->nodal_dbl_fields_names[array->num_nodal_dbl_fields], "%s", prefix);
+  }
+
+  array->nodal_dbl_fields[array->num_nodal_dbl_fields] = field;
+  array->nodal_dbl_did_we_alloc[array->num_nodal_dbl_fields] = 0;
+  array->num_nodal_dbl_fields += 1;
+}
+
+double*
+d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
+(
+ d4est_vtk_helper_array_t* array,
+ const char* prefix,
+ int suffix_id /* set suffix_id < 0 if you don't want a suffix_id (>0) attached to the end of the prefix */
+)
+{
+  if(array->num_nodal_dbl_fields >= array->max_num_fields){
+    D4EST_ABORT("num_nodal_dbl_fields >= max_num_fields");
+  }
+
+  array->nodal_dbl_fields_names[array->num_nodal_dbl_fields]
+    = P4EST_ALLOC(char, array->name_size);
+
+  if (suffix_id >= 0){
+    sprintf(array->nodal_dbl_fields_names[array->num_nodal_dbl_fields], "%s_%d", prefix, suffix_id);
+  }
+  else {
+    sprintf(array->nodal_dbl_fields_names[array->num_nodal_dbl_fields], "%s", prefix);
+  }
+  
+  array->nodal_dbl_fields[array->num_nodal_dbl_fields] = P4EST_ALLOC_ZERO(double, array->local_nodes);
+
+  double* field = array->nodal_dbl_fields[array->num_nodal_dbl_fields];
+  array->nodal_dbl_did_we_alloc[array->num_nodal_dbl_fields] = 1;
+  array->num_nodal_dbl_fields += 1;
+
+  return field;
+}
 
 
-/* } */
+double*
+d4est_vtk_helper_array_alloc_and_add_cell_dbl_field
+(
+ d4est_vtk_helper_array_t* array,
+ const char* prefix,
+ int suffix_id /* set suffix_id < 0 if you don't want a suffix_id (>0) attached to the end of the prefix */
+)
+{
+  if(array->num_cell_dbl_fields >= array->max_num_fields){
+    D4EST_ABORT("num_cell_dbl_fields >= max_num_fields");
+  }
 
-/* d4est_vtk_helper_array_destroy */
-/* ( */
-/*  d4est_vtk_helper_array_t* array */
-/* ) */
-/* { */
+  array->cell_dbl_fields_names[array->num_cell_dbl_fields]
+    = P4EST_ALLOC(char, array->name_size);
 
-/* } */
+  if (suffix_id >= 0){
+    sprintf(array->cell_dbl_fields_names[array->num_cell_dbl_fields], "%s_%d", prefix, suffix_id);
+  }
+  else {
+    sprintf(array->cell_dbl_fields_names[array->num_cell_dbl_fields], "%s", prefix);
+  }
+  
+  array->cell_dbl_fields[array->num_cell_dbl_fields] = P4EST_ALLOC_ZERO(double, array->local_elements);
+
+  double* field = array->cell_dbl_fields[array->num_cell_dbl_fields];
+  array->cell_dbl_did_we_alloc[array->num_cell_dbl_fields] = 1;
+  array->num_cell_dbl_fields += 1;
+
+  return field;
+}
+
+int*
+d4est_vtk_helper_array_alloc_and_add_cell_int_field
+(
+ d4est_vtk_helper_array_t* array,
+ const char* prefix,
+ int suffix_id /* -1 if you don't want an id attached to the end of the prefix */
+)
+{
+  if(array->num_cell_int_fields >= array->max_num_fields){
+    D4EST_ABORT("num_cell_int_fields >= max_num_fields");
+  }
+
+  array->cell_int_fields_names[array->num_cell_int_fields]
+    = P4EST_ALLOC(char, array->name_size);
+
+  if (suffix_id >= 0){
+    sprintf(array->cell_int_fields_names[array->num_cell_int_fields], "%s_%d", prefix, suffix_id);
+  }
+  else {
+    sprintf(array->cell_int_fields_names[array->num_cell_int_fields], "%s", prefix);
+  }
+  
+  array->cell_int_fields[array->num_cell_int_fields] = P4EST_ALLOC_ZERO(int, array->local_elements);
+
+  int* field = array->cell_int_fields[array->num_cell_int_fields];
+  array->cell_int_did_we_alloc[array->num_cell_int_fields] = 1;
+  array->num_cell_int_fields += 1;
+
+  return field;
+}
+
+void
+d4est_vtk_save_helper_array
+(
+ d4est_vtk_helper_array_t* array,
+ char* input_file
+)
+{
+  d4est_vtk_save
+    (
+     array->p4est,
+     array->d4est_ops,
+     input_file,
+     "d4est_vtk",
+     (const char**)array->nodal_dbl_fields_names,
+     array->nodal_dbl_fields,
+     (const char**)array->cell_dbl_fields_names,
+     array->cell_dbl_fields,
+     (const char**)array->cell_int_fields_names,
+     array->cell_int_fields,
+     -1
+    );
+}
+
+void
+d4est_vtk_helper_array_destroy
+(
+ d4est_vtk_helper_array_t* array
+)
+{
+  
+  for (int i = 0; i < array->max_num_fields; i++){
+    if (array->nodal_dbl_fields[i] != NULL && array->nodal_dbl_did_we_alloc[i] == 1){
+      P4EST_FREE(array->nodal_dbl_fields[i]);
+    }
+    if (array->cell_dbl_fields[i] != NULL && array->cell_dbl_did_we_alloc[i] == 1){
+      P4EST_FREE(array->cell_dbl_fields[i]);
+    }
+    if (array->cell_int_fields[i] != NULL && array->cell_int_did_we_alloc[i] == 1){
+      P4EST_FREE(array->cell_int_fields[i]);
+    }
+    
+    if (array->nodal_dbl_fields_names[i] != NULL){
+      P4EST_FREE(array->nodal_dbl_fields_names[i]);
+    }
+    if (array->cell_dbl_fields_names[i] != NULL){
+      P4EST_FREE(array->cell_dbl_fields_names[i]);
+    }
+    if (array->cell_int_fields_names[i] != NULL){
+      P4EST_FREE(array->cell_int_fields_names[i]);
+    }
+  }
+  
+  P4EST_FREE(array->nodal_dbl_did_we_alloc);
+  P4EST_FREE(array->cell_dbl_did_we_alloc);
+  P4EST_FREE(array->cell_int_did_we_alloc);
+  P4EST_FREE(array->nodal_dbl_fields);
+  P4EST_FREE(array->cell_dbl_fields);
+  P4EST_FREE(array->cell_int_fields);
+  P4EST_FREE(array->nodal_dbl_fields_names);
+  P4EST_FREE(array->cell_dbl_fields_names);
+  P4EST_FREE(array->cell_int_fields_names);
+  P4EST_FREE(array);
+}

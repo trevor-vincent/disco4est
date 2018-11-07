@@ -50,6 +50,9 @@ typedef struct {
   int* deg_p_lobatto;
   int* deg_p_lobatto_porder;
 
+  int m_side_matches_mortar;
+  int p_side_matches_mortar;
+  
 } d4est_laplacian_with_opt_flux_interface_data_t;
 
 
