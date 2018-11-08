@@ -93,11 +93,10 @@ poisson_lorentzian_boundary_fcn
  void* user
 )
 {
-
   lorentzian_params_t* params = user;
   double R = params->R_surface;
   double one_p_R2 = (1. + R*R);
-  double den = sqrt(one_p_R2*one_p_R2*one_p_R2*one_p_R2*one_p_R2);
+  double den = sqrt(one_p_R2);
   /* printf("R = %.15f\n", R); */
   /* printf("3./pow((1. + R*R),2.5) = %.15f\n", 3./den); */
   return 1./den;
