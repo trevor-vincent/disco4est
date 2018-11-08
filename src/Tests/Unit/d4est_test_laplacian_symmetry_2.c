@@ -117,16 +117,16 @@ int main(int argc, char *argv[])
 #endif
 
   if (proc_rank == 0)
-    printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry.input");
+    printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry_2.input");
  
  
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
-                                                    (argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry.input",
+                                                    (argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry_2.input",
                                                     "geometry",
                                                     c_geom);
 
-  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry.input", d4est_geom);
+  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry_2.input", d4est_geom);
 
   p4est_t* p4est;
   p4est = p4est_new_ext
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
   /* start just-in-time dg-math */
   d4est_operators_t* d4est_ops = d4est_ops_init(20);
   d4est_mesh_data_t* d4est_factors = d4est_mesh_data_init(p4est);
-  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry.input", "quadrature");
+  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] :      "d4est_test_laplacian_symmetry_2.input", "quadrature");
   
 
 
@@ -190,7 +190,6 @@ int main(int argc, char *argv[])
   p4est_partition(p4est, 1, NULL);
   p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
 
-  /* d4est_amr_t* d4est_amr_random = d4est_amr_init_uniform_h(p4est, 7, 1); */
   int num_of_amr_steps = 1;
   d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, num_of_amr_steps);
 
@@ -200,16 +199,15 @@ int main(int argc, char *argv[])
   for (int i = 0; i < num_of_amr_steps; i++){
 
     
-    d4est_amr_step
-      (
-       p4est,
-       d4est_ops,
-       d4est_amr_random,
-       NULL,
-       NULL,
-       NULL
-      );
-
+    /* d4est_amr_step */
+    /*   ( */
+    /*    p4est, */
+    /*    d4est_ops, */
+    /*    d4est_amr_random, */
+    /*    NULL, */
+    /*    NULL, */
+    /*    NULL */
+    /*   ); */
     
 
     d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
@@ -259,7 +257,7 @@ int main(int argc, char *argv[])
     bc_data_for_lhs.eval_method = eval_method;  
 
     
-    d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, "d4est_test_laplacian_symmetry.input", BC_DIRICHLET, &bc_data_for_lhs);
+    d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, "d4est_test_laplacian_symmetry_2.input", BC_DIRICHLET, &bc_data_for_lhs);
 
 
     d4est_elliptic_eqns_t prob_fcns;

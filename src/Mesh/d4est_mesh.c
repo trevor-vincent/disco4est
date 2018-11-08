@@ -277,9 +277,6 @@ d4est_mesh_initial_extents_destroy
   P4EST_FREE(initial_extents);
 }
 
-
-
-
 d4est_mesh_initial_extents_t*
 d4est_mesh_initial_extents_parse
 (

@@ -5,6 +5,7 @@
 #include <d4est_element_data.h>
 #include <d4est_amr_smooth_pred.h>
 #include <d4est_laplacian.h>
+#include <d4est_mesh.h>
 #include <d4est_laplacian_flux.h>
 #include <d4est_solver_multigrid.h>
 #include <d4est_solver_multigrid_matrix_operator.h>
@@ -20,6 +21,8 @@ typedef struct {
   double par_P_minus [3];
   double par_m_plus;
   double par_m_minus;
+
+  d4est_mesh_data_t* d4est_factors;
   
 } two_punctures_params_t;
 
