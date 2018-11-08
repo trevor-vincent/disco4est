@@ -25,6 +25,7 @@
 #include <d4est_solver_multigrid_logger_residual.h>
 #include <d4est_solver_multigrid_element_data_updater.h>
 #include <d4est_solver_multigrid.h>
+#include <d4est_checkpoint.h>
 #include <d4est_util.h>
 #include <time.h>
 #include <zlog.h>
@@ -283,16 +284,43 @@ problem_init
     d4est_amr->scheme->amr_scheme_type == AMR_UNIFORM_P
   );
 
-  d4est_mesh_init_field(
-    p4est,
-    prob_vecs.u,
-    poisson_lorentzian_initial_guess,
-    d4est_ops,
-    d4est_geom,
-    d4est_factors,
-    INIT_FIELD_ON_LOBATTO,
-    NULL
-  );
+  int initial_level = 0;
+  if (initial_extents->load_from_checkpoint == 0 || initial_extents->checkpoint_prefix == NULL){
+    d4est_mesh_init_field
+      (
+       p4est,
+       prob_vecs.u,
+       poisson_lorentzian_initial_guess,
+       d4est_ops,
+       d4est_geom,
+       d4est_factors,
+       INIT_FIELD_ON_LOBATTO,
+       NULL
+      );
+  }
+  else {
+
+    d4est_checkpoint_read_dataset
+      (
+       p4est,
+       initial_extents->checkpoint_prefix,
+       "u",
+       H5T_NATIVE_DOUBLE,
+       prob_vecs.u,
+       initial_extents->checkpoint_number
+      );
+
+    double sum = d4est_util_sum_array_dbl(prob_vecs.u, prob_vecs.local_nodes);
+    d4est_checkpoint_check_dataset(p4est,
+                           initial_extents->checkpoint_prefix,
+                           "u",
+                           H5T_NATIVE_DOUBLE,
+                           (void*)&sum,
+                           initial_extents->checkpoint_number
+                          );
+
+    initial_level = initial_extents->checkpoint_number + 1;
+  }
 
   d4est_field_type_t field_type = NODAL;
 
@@ -339,7 +367,7 @@ problem_init
   int iterations = 1;
 
   
-  for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; level++) {
+  for (int level = initial_level; level < d4est_amr->num_of_amr_steps + 1; level++) {
 
 
     d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
@@ -788,6 +816,21 @@ problem_init
       
     prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
     prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, prob_vecs.local_nodes);
+
+    if (level != d4est_amr->num_of_amr_steps && level != 0){
+      d4est_checkpoint_save
+        (
+         level,
+         "checkpoint",
+         p4est,
+         d4est_amr,
+         d4est_factors,
+         (const char * []){"u", "multigrid_h_levels", NULL},
+         (hid_t []){H5T_NATIVE_DOUBLE, H5T_NATIVE_INT},
+         (int []){prob_vecs.local_nodes, 1},
+         (void* []){prob_vecs.u, &mg_data->num_of_levels}
+        );
+    }
     
     d4est_krylov_pc_multigrid_destroy(pc);
     d4est_solver_multigrid_data_destroy(mg_data);

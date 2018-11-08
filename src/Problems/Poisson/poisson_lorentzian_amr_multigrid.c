@@ -338,17 +338,44 @@ problem_init
 
   d4est_amr_t* d4est_amr_uniform = d4est_amr_init_uniform_h(p4est, d4est_amr->num_of_amr_steps);
 
-  d4est_mesh_init_field
-    (
-     p4est,
-     prob_vecs.u,
-     poisson_lorentzian_initial_guess,
-     d4est_ops,
-     d4est_geom,
-     d4est_factors,
-     INIT_FIELD_ON_LOBATTO,
-     NULL
-    );
+  int initial_level = 0;
+  if (initial_extents->load_from_checkpoint == 0 || initial_extents->checkpoint_prefix == NULL){
+    d4est_mesh_init_field
+      (
+       p4est,
+       prob_vecs.u,
+       poisson_lorentzian_initial_guess,
+       d4est_ops,
+       d4est_geom,
+       d4est_factors,
+       INIT_FIELD_ON_LOBATTO,
+       NULL
+      );
+  }
+  else {
+
+    d4est_checkpoint_read_dataset
+      (
+       p4est,
+       initial_extents->checkpoint_prefix,
+       "u",
+       H5T_NATIVE_DOUBLE,
+       prob_vecs.u,
+       initial_extents->checkpoint_number
+      );
+
+    double sum = d4est_util_sum_array_dbl(prob_vecs.u, prob_vecs.local_nodes);
+    d4est_checkpoint_check_dataset(p4est,
+                           initial_extents->checkpoint_prefix,
+                           "u",
+                           H5T_NATIVE_DOUBLE,
+                           (void*)&sum,
+                           initial_extents->checkpoint_number
+                          );
+
+    initial_level = initial_extents->checkpoint_number + 1;
+  }
+  
     
 
   d4est_field_type_t field_type = NODAL;
@@ -435,7 +462,7 @@ problem_init
 
   int iterations = 1;
     
-  for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
+  for (int level = initial_level; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
 
 
