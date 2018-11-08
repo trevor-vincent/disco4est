@@ -196,7 +196,7 @@ problem_init
 
   
   dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
-  
+
   // Setup boundary conditions
 
  

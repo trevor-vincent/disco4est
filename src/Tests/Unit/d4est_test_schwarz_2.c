@@ -496,15 +496,12 @@ int main(int argc, char *argv[])
   
   for (int i = 0; i < 10; i++){
 
-
-
     double* pre_solve_Au = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
       (
        helper_array,
        "pre_solve_Au",
        i
-      );
-    
+      );    
     
     elliptic_data.u = sol;
     elliptic_data.Au = pre_solve_Au;
@@ -563,7 +560,9 @@ int main(int argc, char *argv[])
                                ,local_sizes.local_nodes);
     d4est_util_copy_1st_to_2nd(r, pre_solve_r
                                ,local_sizes.local_nodes);
-    
+
+
+    printf("Solving\n");
     d4est_solver_schwarz_compute_and_add_correction
       (
        p4est,
@@ -579,10 +578,10 @@ int main(int argc, char *argv[])
        sol,
        r,
        1000,
-       1e-50,
-       1e-50,
-       helper_array,
-       i
+       1e-15,
+       1e-15,
+       NULL,//helper_array,
+       -1//i
       );
 
 

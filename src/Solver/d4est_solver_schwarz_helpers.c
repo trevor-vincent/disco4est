@@ -421,10 +421,10 @@ void d4est_solver_schwarz_apply_lhs_single_core
 
   d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[subdomain];
 
-  for (int i = 0; i < local_nodes; i++){    
-    zeroed_Au_field_over_mesh[i] = 0.;
-    zeroed_u_field_over_mesh[i] = 0.;
-  }
+  /* for (int i = 0; i < local_nodes; i++){     */
+    /* zeroed_Au_field_over_mesh[i] = 0.; */
+    /* zeroed_u_field_over_mesh[i] = 0.; */
+  /* } */
   
   d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
     (
@@ -437,7 +437,7 @@ void d4est_solver_schwarz_apply_lhs_single_core
      p4est->mpirank,
      subdomain,
      local_nodes,
-     FIELD_ZEROED
+     FIELD_NOT_ZEROED
     );
 
     d4est_elliptic_data_copy_ptrs
@@ -488,10 +488,10 @@ void d4est_solver_schwarz_apply_lhs_single_core
       );
 
 
-    for (int i = 0; i < local_nodes; i++){
-      zeroed_u_field_over_mesh[i] = 0.;
-      zeroed_Au_field_over_mesh[i] = 0.;
-    }
+    /* for (int i = 0; i < local_nodes; i++){ */
+      /* zeroed_u_field_over_mesh[i] = 0.; */
+      /* zeroed_Au_field_over_mesh[i] = 0.; */
+    /* } */
         
 }
 
@@ -638,6 +638,8 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
  int subdomain
 )
 {
+
+  printf("SOLVE FOR SUBDOMAIN %d\n", subdomain);
   int nodes = schwarz_data->subdomain_data[subdomain].restricted_nodal_size;
   
   double delta_new, delta_old, temp_max, temp_min, d_dot_Ad;
@@ -679,6 +681,7 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
   delta_new = d4est_linalg_vec_dot(r,r,nodes);
   double delta_0 = delta_new;
   
+  
   for (int i = 0; i < iter && (delta_new > atol*atol + delta_0 * rtol*rtol); i++){
 
     d4est_solver_schwarz_apply_lhs_single_core
@@ -711,7 +714,8 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
 
     delta_old = delta_new;
     delta_new = d4est_linalg_vec_dot(r, r, nodes);
-    /* printf("delta_new = %.15f\n", delta_new); */
+    /* printf("delta_new = %.25f %.25f %d\n", sqrt(delta_new), sqrt(atol*atol + delta_0 * rtol*rtol), (delta_new > atol*atol + delta_0 * rtol*rtol)); */
+    /* printf("rtol, atol = %.25f %.25f\n", rtol, atol); */
     beta_old = beta;
     beta = delta_new/delta_old;
     d4est_linalg_vec_xpby(r, beta, d, nodes);    
