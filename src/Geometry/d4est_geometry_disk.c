@@ -14,6 +14,43 @@ secant_fcn(double x){
 
 
 static
+int d4est_geometry_disk_get_number_of_regions
+(
+ d4est_geometry_t* d4est_geom
+){
+  if (d4est_geom->geom_type == GEOM_DISK_5TREE){
+    return 2;
+  }  
+  else {
+    D4EST_ABORT("Geometry not supported yet");
+    return -1;
+  }
+}
+
+static
+int d4est_geometry_disk_get_region
+(
+ d4est_geometry_t* d4est_geom,
+ p4est_qcoord_t q [(P4EST_DIM)],
+ p4est_qcoord_t dq,
+ int tree
+){
+  if (d4est_geom->geom_type == GEOM_DISK_5TREE){
+    if (tree != 2) {  
+      return 0;
+    }
+    else {           
+      return 1; /* center square */
+    }
+  }
+  else {
+    D4EST_ABORT("Geometry not supported yet");
+  }
+}
+
+
+
+static
 int d4est_geometry_disk_input_handler
 (
  void* user,
@@ -316,6 +353,10 @@ d4est_geometry_5treedisk_new
   d4est_geom->X = d4est_geometry_5treedisk_X;
   d4est_geom->DX = NULL;
   d4est_geom->JAC = NULL;
+
+  d4est_geom->get_number_of_regions = d4est_geometry_disk_get_number_of_regions;
+  d4est_geom->get_region = d4est_geometry_disk_get_region;
+  
   
   if (mpirank == 0){
     zlog_debug(c_default, "NAME = 5treedisk");

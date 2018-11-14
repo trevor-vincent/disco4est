@@ -18,14 +18,7 @@
 #include <limits.h>
 #include <zlog.h>
 
-
 #define D4EST_REAL_EPS 100*1e-15
-#if (P4EST_DIM)==2
-#define TEST_DEG_INIT 2
-#else
-#define TEST_DEG_INIT 2
-#endif
-
 
 static void
 d4est_test_apply_lhs
@@ -508,7 +501,6 @@ int main(int argc, char *argv[])
   d4est_geometry_destroy(d4est_geom);
   
   PetscFinalize();
-  /* sc_finalize (); */
   if (same && same2)
     return 0;
   else

@@ -297,6 +297,7 @@ void d4est_util_zero_array(double *restrict v,int N);
 void d4est_util_fill_array(double *restrict v,double val,int N);
 void d4est_util_make_directory(const char *dir,int add_cwd_to_dir);
 char *d4est_util_add_cwd(const char *dir);
+double d4est_util_cosecant_fcn(double x);
 double d4est_util_secant_fcn(double x);
 
 #endif

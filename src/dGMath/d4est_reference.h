@@ -14,6 +14,7 @@ typedef struct {
 } d4est_rst_t;
 
 /* This file was automatically generated.  Do not edit! */
+int d4est_reference_get_mirrored_face(int face);
 void d4est_reference_dir_and_side_of_face(int face,int *dir,int *side);
 void d4est_reference_rtox_array(double *r,double xl,double h,double *x,int nodes);
 double d4est_reference_rtox(double r,double xl,double h);

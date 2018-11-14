@@ -5,7 +5,7 @@
 #include <problem.h>
 #include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
-#include <d4est_estimator_bi.h>
+#include <d4est_estimator_bi_new.h>
 #include <d4est_solver_cg.h>
 #include <d4est_amr.h>
 #include <d4est_amr_smooth_pred.h>
@@ -27,6 +27,7 @@
 #include <d4est_solver_multigrid_logger_residual.h>
 #include <d4est_krylov_pc_multigrid.h>
 #include <d4est_solver_multigrid_element_data_updater.h>
+#include <d4est_hessian.h>
 #include "poisson_lorentzian_fcns.h"
 
 
@@ -316,9 +317,9 @@ problem_init
 
   d4est_laplacian_flux_sipg_params_t* sipg_params = flux_data_for_lhs->flux_data;
   
-  d4est_estimator_bi_penalty_data_t penalty_data;
+  d4est_estimator_bi_new_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
-  penalty_data.size_params = NULL;
+  /* penalty_data.size_params = NULL; */
   penalty_data.u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
   penalty_data.gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
@@ -489,11 +490,47 @@ problem_init
 
     double* estimator_vtk = P4EST_ALLOC(double, 4*p4est->local_num_quadrants);
     double* estimator_vtk_per_face = P4EST_ALLOC(double, 18*p4est->local_num_quadrants);
-    double* estimator = d4est_estimator_bi_compute
+
+    double* residual_pointwise_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
+    double* f_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
+
+    d4est_hessian_compute_hessian_trace_of_field_on_quadrature_points
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       HESSIAN_ANALYTICAL,
+       prob_vecs.u,
+       residual_pointwise_quad
+      );
+    d4est_mesh_init_field
+      (
+       p4est,
+       f_quad,
+       poisson_lorentzian_rhs_fcn,
+       d4est_ops,
+       d4est_geom,
+       d4est_factors,
+       INIT_FIELD_ON_LOBATTO,
+       NULL
+      );
+
+    
+    for (int qnode = 0; qnode < d4est_factors->local_sizes.local_nodes_quad; qnode++){
+
+      residual_pointwise_quad[qnode] =
+        f_quad[qnode] - residual_pointwise_quad[qnode];
+      
+    }
+
+    
+    double* estimator = d4est_estimator_bi_new_compute
                         (
                          p4est,
                          &prob_vecs,
-                         &prob_fcns,
+                         residual_pointwise_quad,
                          penalty_data,
                          poisson_lorentzian_boundary_fcn,
                          &lorentzian_params,
@@ -510,6 +547,11 @@ problem_init
                          estimator_vtk_per_face
                         );
 
+    
+    P4EST_FREE(residual_pointwise_quad);
+    P4EST_FREE(f_quad);
+
+    
     /* for (int i = 0; i < p4est->local_num_quadrants; i++){ */
     /*   printf("%d %.15f %.15f %.15f %.15f %15f\n", i, */
     /*          estimator[i], */

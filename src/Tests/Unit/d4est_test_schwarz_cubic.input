@@ -1,0 +1,48 @@
+[initial_mesh]
+min_quadrants = -1
+min_level = 1
+fill_uniform = 1
+region0_deg = 4
+region0_deg_quad_inc = 0
+region1_deg = 4
+region1_deg_quad_inc = 0
+region2_deg = 4
+region2_deg_quad_inc = 0
+
+[mesh_parameters]
+face_h_type = FACE_H_EQ_J_DIV_SJ_QUAD
+volume_h_type = VOL_H_EQ_DIAM
+max_degree = 10
+
+[flux]
+name = sipg
+sipg_penalty_prefactor = 2
+sipg_penalty_fcn = maxp_sqr_over_minh
+
+[d4est_solver_schwarz]
+num_nodes_overlap = 2
+
+[d4est_vtk]
+filename = d4est_test_schwarz
+geometry_section = geometry
+output_type = ascii
+grid_type = dg
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
+[geometry]
+name = brick
+X0 = 0.0
+X1 = 1.0
+Y0 = 0.0
+Y1 = 1.0
+Z0 = 0.0
+Z1 = 1.0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[quadrature]
+name = legendre

@@ -134,6 +134,7 @@ d4est_geometry_new(int mpirank,
   d4est_geom->JAC_compute_method = input.JAC_compute_method;
   d4est_geom->get_number_of_regions = NULL;
   d4est_geom->get_region = NULL;
+  d4est_geom->D2X = NULL;
   
 #if (P4EST_DIM)==3
   if (d4est_util_match(input.name,"cubed_sphere")) {
@@ -455,67 +456,59 @@ d4est_geometry_compute_dxyz_drst
     );
 }
 
-/* void */
-/* d4est_geometry_compute_dxyz_drst_isoparametric */
-/* ( */
-/*  p4est_topidx_t which_tree, */
-/*  p4est_qcoord_t q0 [(P4EST_DIM)], */
-/*  p4est_qcoord_t dq, */
-/*  int deg, */
-/*  int deg_quad, */
-/*  d4est_quadrature_t* d4est_quad, */
-/*  d4est_geometry_t* d4est_geom, */
-/*  d4est_operators_t* d4est_ops, */
-/*  double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)] */
-/* ) */
-/* { */
-/*   double* xyz [(P4EST_DIM)]; */
-/*   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg); */
-/*   for (int i = 0; i < (P4EST_DIM); i++){ */
-/*     xyz[i] = P4EST_ALLOC(double, volume_nodes); */
-/*   } */
 
-/*   double rst [(P4EST_DIM)]; */
-/*   double xyz_i [(P4EST_DIM)]; */
-/*   double dxyz_drst_i [(P4EST_DIM)][(P4EST_DIM)]; */
-/*   double abc [(P4EST_DIM)]; */
 
-/*   d4est_rst_t rst_points */
-/*     = d4est_operators_get_rst_points(d4est_ops, deg, (P4EST_DIM), QUAD_LOBATTO); */
-  
-/*   for (int i = 0; i < volume_nodes; i++){ */
-/*     rst[0] = rst_points.r[i]; */
-/*     rst[1] = rst_points.s[i]; */
-/* #if (P4EST_DIM)==3 */
-/*     rst[2] = rst_points.t[i]; */
-/* #endif */
+void
+d4est_geometry_compute_dxyz_drst_numerically
+(
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_rst_t lobatto_rst_points,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [(P4EST_DIM)],
+ p4est_qcoord_t dq,
+ int deg,
+ double* dxyz_drst [(P4EST_DIM)][(P4EST_DIM)]
+)
+{
 
-/*     d4est_geom->X(d4est_geom, which_tree, q0, dq, rst, COORDS_INTEG_RST, xyz_i); */
+  double* xyz [(P4EST_DIM)];
+  int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM),deg);
+  for (int i = 0; i < (P4EST_DIM); i++){
+    xyz[i] = P4EST_ALLOC(double, volume_nodes);
+  }
+
+  double rst [(P4EST_DIM)];
+  double xyz_i [(P4EST_DIM)];
+  double dxyz_drst_i [(P4EST_DIM)][(P4EST_DIM)];
+  double abc [(P4EST_DIM)];
+
+  for (int i = 0; i < volume_nodes; i++){
+    rst[0] = lobatto_rst_points.r[i];
+    rst[1] = lobatto_rst_points.s[i];
+#if (P4EST_DIM)==3
+    rst[2] = lobatto_rst_points.t[i];
+#endif
+
+    d4est_geom->X(d4est_geom, which_tree, q0, dq, rst, COORDS_INTEG_RST, xyz_i);
       
-/*     for (int d = 0; d < (P4EST_DIM); d++){ */
-/*       xyz[d][i] = xyz_i[d]; */
-/*     } */
-/*   } */
+    for (int d = 0; d < (P4EST_DIM); d++){
+      xyz[d][i] = xyz_i[d];
+    }
+  }
 
-/*   double* tmp = P4EST_ALLOC(double, volume_nodes); */
-/*   for (int d = 0; d < (P4EST_DIM); d++){ */
-/*     for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
-/*       d4est_operators_apply_dij(d4est_ops, &xyz[d][0], (P4EST_DIM), deg, d1, &dxyz_drst[d][d1][0]); */
-/*     } */
-/*   } */
-
-/*   for (int d = 0; d < (P4EST_DIM); d++){ */
-/*     for (int d1 = 0; d1 < (P4EST_DIM); d1++){ */
-/*       d4est_operators_interp_lobatto_to_gauss(d4est_ops, &dxyz_drst[d][d1][0], deg, deg, tmp, (P4EST_DIM)); */
-/*       d4est_util_copy_1st_to_2nd(tmp, &dxyz_drst[d][d1][0], volume_nodes); */
-/*     } */
-/*   } */
+  double* tmp = P4EST_ALLOC(double, volume_nodes);
+  for (int d = 0; d < (P4EST_DIM); d++){
+    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+      d4est_operators_apply_dij(d4est_ops, &xyz[d][0], (P4EST_DIM), deg, d1, &dxyz_drst[d][d1][0]);
+    }
+  }
   
-/*   P4EST_FREE(tmp); */
-/*   for (int i = 0; i < (P4EST_DIM); i++){ */
-/*     P4EST_FREE(xyz[i]); */
-/*   } */
-/* } */
+  P4EST_FREE(tmp);
+  for (int i = 0; i < (P4EST_DIM); i++){
+    P4EST_FREE(xyz[i]);
+  }
+}
 
 void
 d4est_geometry_compute_dxyz_drst_face_analytic
@@ -1537,5 +1530,3 @@ d4est_geometry_compute_bounds
     }
   }
 }
-
-

@@ -27,6 +27,6 @@ void d4est_geometry_cubed_sphere_7tree_new(int mpirank,const char *input_file,co
 void d4est_geometry_cubed_sphere_new(int mpirank,const char *input_file,const char *input_section,zlog_category_t *c_default,d4est_geometry_t *d4est_geom);
 void d4est_geometry_cubed_sphere_X_aux_rotate(int which_tree,double xyz_top[(P4EST_DIM)],double xyz[(P4EST_DIM)]);
 void d4est_geometry_cubed_sphere_DX_aux_rotate(int which_tree,double dxyz_drst_top[(P4EST_DIM)][(P4EST_DIM)],double dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
-
+void d4est_geometry_cubed_sphere_D2X_aux_rotate(int which_tree,double d2xyz_drstdrst_top[(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)],double d2xyz_drstdrst[(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)]);
 
 #endif

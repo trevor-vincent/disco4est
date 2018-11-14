@@ -495,14 +495,15 @@ d4est_geometry_cubed_sphere_with_sphere_hole_X(
   }
 }
 static void
-d4est_geometry_cubed_sphere_7tree_X(
-                              d4est_geometry_t * geom,
-                              p4est_topidx_t which_tree,
-                              p4est_qcoord_t q0 [3],
-                              p4est_qcoord_t dq,
-                              const double coords[3],
-                              coords_type_t coords_type,
-                              double xyz[3]
+d4est_geometry_cubed_sphere_7tree_X
+(
+ d4est_geometry_t * geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [3],
+ p4est_qcoord_t dq,
+ const double coords[3],
+ coords_type_t coords_type,
+ double xyz[3]
 )
 {
   d4est_geometry_cubed_sphere_attr_t* sphere = geom->user;
@@ -576,14 +577,264 @@ d4est_geometry_cubed_sphere_7tree_X(
   }
 }
 
+
+
+
 static void
-d4est_geometry_cubed_sphere_inner_shell_block_DX(d4est_geometry_t* d4est_geom,
-                                                 p4est_topidx_t which_tree,
-                                                 p4est_qcoord_t q0 [3],
-                                                 p4est_qcoord_t dq,
-                                                 const double rst[3], /* [-1,1]^3 */
-                                                 double dxyz_drst[3][3]
-                                                )
+d4est_geometry_cubed_sphere_inner_shell_block_D2X
+(
+ d4est_geometry_t* d4est_geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [3],
+ p4est_qcoord_t dq,
+ const double rst[3], /* [-1,1]^3 */
+ double d2xyz_drstdrst[3][3][3]
+)
+{
+  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
+  double R0 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R0;
+
+  /* Element integration weight x-coordinates in [-1,1]^3 space of the element*/
+  double r = rst[0];
+  double s = rst[1];
+  double t = rst[2];
+
+  /* topological coordinates of element corners */
+  double amin = q0[0];
+  double amax = q0[0] + dq;
+  double bmin = q0[1];
+  double bmax = q0[1] + dq;
+  double cmin = q0[2];
+  double cmax = q0[2] + dq;
+
+  /* transform element corners to [0,1]^3 topological space */
+  amin /= (double)P4EST_ROOT_LEN;
+  amax /= (double)P4EST_ROOT_LEN;
+  bmin /= (double)P4EST_ROOT_LEN;
+  bmax /= (double)P4EST_ROOT_LEN;
+  cmin /= (double)P4EST_ROOT_LEN;
+  cmax /= (double)P4EST_ROOT_LEN;
+
+  /* transform element corners to [-1,1]^2 x [1,2] topological space */
+  amin = 2.*amin - 1.;
+  amax = 2.*amax - 1.;
+  bmin = 2.*bmin - 1.;
+  bmax = 2.*bmax - 1.;
+  cmin = cmin + 1.;
+  cmax = cmax + 1.;
+
+  d2xyz_drstdrst[0][0][0] = (pow(amax - amin,2)*M_PI*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(3*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)) + 16*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/2.)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 8*M_PI*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 16*M_PI*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*M_PI*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2)))/(2048.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[0][0][1] = ((amax - amin)*(bmax - bmin)*M_PI*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(3*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)) + 8*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(2048.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[0][0][2] = ((amax - amin)*(cmax - cmin)*(3*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 2*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-2*(-5 + cmax + cmin + cmax*t - cmin*t) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 16*M_PI*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*M_PI*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 8*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/2.)*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 16*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-4 + M_PI*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2) - 32*(R0 - R1)*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/2.)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2)))/(512.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[0][1][0] = (pow(amax - amin,2)*pow(M_PI,2)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(-24*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_cosecant_fcn((M_PI*(amax + amin + amax*r - amin*r))/4.),4)*pow(sin((M_PI*(amax + amin + amax*r - amin*r))/8.),6) + pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 2*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(256.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[0][1][1] = ((amax - amin)*(bmax - bmin)*M_PI*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(3*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)) + 8*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(2048.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[0][1][2] = ((amax - amin)*(cmax - cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(3*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 4*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(bmax + bmin + bmax*s - bmin*s - 2*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(512.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[0][2][0] = (pow(amax - amin,2)*pow(M_PI,2)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(-24*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_cosecant_fcn((M_PI*(amax + amin + amax*r - amin*r))/4.),4)*pow(sin((M_PI*(amax + amin + amax*r - amin*r))/8.),6) + pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 2*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(256.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[0][2][1] = (-3*(amax - amin)*(bmax - bmin)*pow(M_PI,2)*pow(-2 + cmax + cmin + cmax*t - cmin*t,2)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(64.*sqrt(2)*pow(-2*(-5 + cmax + cmin + cmax*t - cmin*t) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2),2.5));
+
+  d2xyz_drstdrst[0][2][2] = ((amax - amin)*(cmax - cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-3*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 4*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 4*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(128.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[1][0][0] = ((amax - amin)*(bmax - bmin)*M_PI*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(3*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)) + 8*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(2048.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[1][0][1] = (pow(bmax - bmin,2)*pow(M_PI,2)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(-24*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_cosecant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.),4)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),6) + pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 2*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(256.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[1][0][2] = ((bmax - bmin)*(cmax - cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(3*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 4*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(512.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[1][1][0] = ((amax - amin)*(bmax - bmin)*M_PI*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(3*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)) + 8*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(2048.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[1][1][1] = (pow(bmax - bmin,2)*M_PI*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(3*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)) + 16*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/2.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 8*M_PI*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 16*M_PI*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*M_PI*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2)))/(2048.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[1][1][2] = ((bmax - bmin)*(cmax - cmin)*(3*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 2*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(bmax + bmin + bmax*s - bmin*s - 2*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(-2*(-5 + cmax + cmin + cmax*t - cmin*t) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 16*M_PI*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*M_PI*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 8*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/2.)*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 16*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-4 + M_PI*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2) - 32*(R0 - R1)*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/2.)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2)))/(512.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[1][2][0] = (-3*(amax - amin)*(bmax - bmin)*pow(M_PI,2)*pow(-2 + cmax + cmin + cmax*t - cmin*t,2)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(64.*sqrt(2)*pow(-2*(-5 + cmax + cmin + cmax*t - cmin*t) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2),2.5));
+
+  d2xyz_drstdrst[1][2][1] = (pow(bmax - bmin,2)*pow(M_PI,2)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(-24*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_cosecant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.),4)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),6) + pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 2*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(256.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[1][2][2] = ((bmax - bmin)*(cmax - cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(-3*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 4*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 4*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(128.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[2][0][0] = ((amax - amin)*(cmax - cmin)*(3*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 2*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-2*(-5 + cmax + cmin + cmax*t - cmin*t) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + (-2 + cmax + cmin + cmax*t - cmin*t)*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 16*M_PI*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*M_PI*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 8*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/2.)*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 16*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-4 + M_PI*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2) - 32*(R0 - R1)*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2))/2.)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2)))/(512.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[2][0][1] = ((bmax - bmin)*(cmax - cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(3*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 4*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(512.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[2][0][2] = (pow(cmax - cmin,2)*(3*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*pow(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2),2) + 8*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 32*(R0 - R1)*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 32*(R0 - R1)*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2)))/(128.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+
+  d2xyz_drstdrst[2][1][0] = ((amax - amin)*(cmax - cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(3*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t))*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - 4*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(bmax + bmin + bmax*s - bmin*s - 2*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.)))/(512.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2.5));
+}
+
+static void
+d4est_geometry_cubed_sphere_outer_shell_block_D2X
+(
+ d4est_geometry_t* d4est_geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [3],
+ p4est_qcoord_t dq,
+ const double rst[3], /* [-1,1]^3 */
+ double d2xyz_drstdrst[3][3][3]
+)
+{
+  int compactify_outer_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_outer_shell;
+  double R1 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R1;
+  double R2 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R2;
+
+  /* Element integration weight x-coordinates in [-1,1]^3 space of the element*/
+  double r = rst[0];
+  double s = rst[1];
+  double t = rst[2];
+
+  /* topological coordinates of element corners */
+  double amin = q0[0];
+  double amax = q0[0] + dq;
+  double bmin = q0[1];
+  double bmax = q0[1] + dq;
+  double cmin = q0[2];
+  double cmax = q0[2] + dq;
+
+  /* transform element corners to [0,1]^3 topological space */
+  amin /= (double)P4EST_ROOT_LEN;
+  amax /= (double)P4EST_ROOT_LEN;
+  bmin /= (double)P4EST_ROOT_LEN;
+  bmax /= (double)P4EST_ROOT_LEN;
+  cmin /= (double)P4EST_ROOT_LEN;
+  cmax /= (double)P4EST_ROOT_LEN;
+
+  /* transform element corners to [-1,1]^2 x [1,2] topological space */
+  amin = 2.*amin - 1.;
+  amax = 2.*amax - 1.;
+  bmin = 2.*bmin - 1.;
+  bmax = 2.*bmax - 1.;
+  cmin = cmin + 1.;
+  cmax = cmax + 1.;
+
+  if (!compactify_outer_shell){
+    d2xyz_drstdrst[0][0][0] = (pow(amax - amin,2)*pow(M_PI,2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),4)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),4)*(cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) - cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(128.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][0][1] = ((amax - amin)*(bmax - bmin)*pow(M_PI,2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) - 2*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2))*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(128.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][0][2] = -((amax - amin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[0][1][0] = -(pow(amax - amin,2)*pow(M_PI,2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),4)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(-3 + cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) + 2*cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(256.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][1][1] = ((amax - amin)*(bmax - bmin)*pow(M_PI,2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(1 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) - 2*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/(128.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][1][2] = ((amax - amin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[0][2][0] = -(pow(amax - amin,2)*pow(M_PI,2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),4)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(-3 + cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) + 2*cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/(256.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][2][1] = (3*(amax - amin)*(bmax - bmin)*pow(M_PI,2)*(-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(128.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][2][2] = ((amax - amin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[1][0][0] = ((amax - amin)*(bmax - bmin)*pow(M_PI,2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) - 2*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2))*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(128.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][0][1] = -(pow(bmax - bmin,2)*pow(M_PI,2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),4)*(-3 + cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) + 2*cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(256.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][0][2] = ((bmax - bmin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[1][1][0] = ((amax - amin)*(bmax - bmin)*pow(M_PI,2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(1 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) - 2*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/(128.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][1][1] = (pow(bmax - bmin,2)*pow(M_PI,2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*(-cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) + cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*(2 + cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.)))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),4)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),4)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(256.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][1][2] = -((bmax - bmin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[1][2][0] = (3*(amax - amin)*(bmax - bmin)*pow(M_PI,2)*(-(R1*(-4 + cmax + cmin + cmax*t - cmin*t)) + R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(128.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][2][1] = -(pow(bmax - bmin,2)*pow(M_PI,2)*(R1*(-4 + cmax + cmin + cmax*t - cmin*t) - R2*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),4)*(-3 + cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) + 2*cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/(256.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][2][2] = ((bmax - bmin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][0][0] = -((amax - amin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][0][1] = ((bmax - bmin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][0][2] = 0;
+
+    d2xyz_drstdrst[2][1][0] = ((amax - amin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][1][1] = -((bmax - bmin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][1][2] = 0;
+
+    d2xyz_drstdrst[2][2][0] = ((amax - amin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][2][1] = ((bmax - bmin)*(cmax - cmin)*M_PI*(R1 - R2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(16.*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][2][2] = 0;
+  }
+  else {
+    d2xyz_drstdrst[0][0][0] = -(pow(amax - amin,2)*pow(M_PI,2)*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),4)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),4)*(cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) - cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(32.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][0][1] = -((amax - amin)*(bmax - bmin)*pow(M_PI,2)*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) - 2*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2))*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(32.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][0][2] = -((amax - amin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[0][1][0] = (pow(amax - amin,2)*pow(M_PI,2)*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),4)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(-3 + cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) + 2*cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(64.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][1][1] = -((amax - amin)*(bmax - bmin)*pow(M_PI,2)*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(1 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) - 2*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/(32.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][1][2] = ((amax - amin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[0][2][0] = (pow(amax - amin,2)*pow(M_PI,2)*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),4)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(-3 + cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) + 2*cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/(64.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][2][1] = (3*(amax - amin)*(bmax - bmin)*pow(M_PI,2)*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(32.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[0][2][2] = ((amax - amin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[1][0][0] = -((amax - amin)*(bmax - bmin)*pow(M_PI,2)*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) - 2*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2))*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(32.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][0][1] = (pow(bmax - bmin,2)*pow(M_PI,2)*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),4)*(-3 + cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) + 2*cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(64.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][0][2] = ((bmax - bmin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[1][1][0] = -((amax - amin)*(bmax - bmin)*pow(M_PI,2)*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(1 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) - 2*pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/(32.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][1][1] = -(pow(bmax - bmin,2)*pow(M_PI,2)*R1*R2*(-cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) + cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*(2 + cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.)))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),4)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),4)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(64.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][1][2] = -((bmax - bmin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[1][2][0] = (3*(amax - amin)*(bmax - bmin)*pow(M_PI,2)*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(32.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][2][1] = (pow(bmax - bmin,2)*pow(M_PI,2)*R1*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),4)*(-3 + cos((M_PI*(bmax + bmin + bmax*s - bmin*s))/4.) + 2*cos((M_PI*(amax + amin + amax*r - amin*r))/4.)*pow(sin((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/(64.*(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t))*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),2.5));
+
+    d2xyz_drstdrst[1][2][2] = ((bmax - bmin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][0][0] = -((amax - amin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][0][1] = ((bmax - bmin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][0][2] = (4*pow(cmax - cmin,2)*R1*pow(R1 - R2,2)*R2*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(pow(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t),3)*sqrt(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    d2xyz_drstdrst[2][1][0] = ((amax - amin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][1][1] = -((bmax - bmin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][1][2] = (4*pow(cmax - cmin,2)*R1*pow(R1 - R2,2)*R2*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(pow(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t),3)*sqrt(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+
+    d2xyz_drstdrst[2][2][0] = ((amax - amin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][2][1] = ((bmax - bmin)*(cmax - cmin)*M_PI*R1*(R1 - R2)*R2*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/(4.*pow(R2*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - cmin*t),2)*pow(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2),1.5));
+
+    d2xyz_drstdrst[2][2][2] = (4*pow(cmax - cmin,2)*R1*pow(R1 - R2,2)*R2)/(pow(-(R2*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - cmin*t),3)*sqrt(pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2) + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2)));
+  }
+
+}
+
+static void
+d4est_geometry_cubed_sphere_inner_shell_block_DX
+(
+ d4est_geometry_t* d4est_geom,
+ p4est_topidx_t which_tree,
+ p4est_qcoord_t q0 [3],
+ p4est_qcoord_t dq,
+ const double rst[3], /* [-1,1]^3 */
+ double dxyz_drst[3][3]
+)
 {
   int compactify_inner_shell = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->compactify_inner_shell;
   double R0 = (( d4est_geometry_cubed_sphere_attr_t*)(d4est_geom->user))->R0;
@@ -1178,6 +1429,94 @@ d4est_geometry_cubed_sphere_innerouter_shell_DX(d4est_geometry_t* d4est_geom,
 }
 
 void
+d4est_geometry_cubed_sphere_D2X_aux_rotate
+(
+ int which_tree,
+ double d2xyz_drstdrst_top [(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)],
+ double d2xyz_drstdrst[(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)]
+)
+{
+  switch (which_tree % 6) {
+  case 0:                      /* front */
+    /* xyz[0][d] = +q * x; */
+    /* xyz[1][d] = -q; */
+    /* xyz[2][d] = +q * y; */
+    for (int d = 0; d < (P4EST_DIM); d++){
+      for (int e = 0; e < (P4EST_DIM); e++){
+      d2xyz_drstdrst[0][d][e] = d2xyz_drstdrst_top[0][d][e];
+      d2xyz_drstdrst[1][d][e] = -d2xyz_drstdrst_top[2][d][e];
+      d2xyz_drstdrst[2][d][e] = d2xyz_drstdrst_top[1][d][e];
+    }
+    }
+    break;
+ case 1:                      /* top */
+   /* xyz[0][d][e] = +q * x; */
+   /* xyz[1][d][e] = +q * y; */
+   /* xyz[2][d][e] = +q; */
+    for (int d = 0; d < (P4EST_DIM); d++){
+      for (int e = 0; e < (P4EST_DIM); e++){
+     d2xyz_drstdrst[0][d][e] = d2xyz_drstdrst_top[0][d][e];
+     d2xyz_drstdrst[1][d][e] = d2xyz_drstdrst_top[1][d][e];
+     d2xyz_drstdrst[2][d][e] = d2xyz_drstdrst_top[2][d][e];
+      }
+   }
+   break;
+  case 2:                      /* back */
+    /* xyz[0][d][e] = +q * x; */
+    /* xyz[1][d][e] = +q; */
+    /* xyz[2][d][e] = -q * y; */
+    for (int d = 0; d < (P4EST_DIM); d++){
+      for (int e = 0; e < (P4EST_DIM); e++){
+      d2xyz_drstdrst[0][d][e] = d2xyz_drstdrst_top[0][d][e];
+      d2xyz_drstdrst[1][d][e] = d2xyz_drstdrst_top[2][d][e];
+      d2xyz_drstdrst[2][d][e] = -d2xyz_drstdrst_top[1][d][e];
+    }
+    }
+    break;
+  case 3:                      /* right */
+    /* xyz[0][d][e] = +q; */
+    /* xyz[1][d][e] = -q * x; */
+    /* xyz[2][d][e] = -q * y; */
+    for (int d = 0; d < (P4EST_DIM); d++){
+      for (int e = 0; e < (P4EST_DIM); e++){
+      d2xyz_drstdrst[0][d][e] = d2xyz_drstdrst_top[2][d][e];
+      d2xyz_drstdrst[1][d][e] = -d2xyz_drstdrst_top[0][d][e];
+      d2xyz_drstdrst[2][d][e] = -d2xyz_drstdrst_top[1][d][e];
+    }
+    }
+    break;
+  case 4:                      /* bottom */
+    /* xyz[0][d][e] = -q * y; */
+    /* xyz[1][d][e] = -q * x; */
+    /* xyz[2][d][e] = -q; */
+    for (int d = 0; d < (P4EST_DIM); d++){
+      for (int e = 0; e < (P4EST_DIM); e++){
+      d2xyz_drstdrst[0][d][e] = -d2xyz_drstdrst_top[1][d][e];
+      d2xyz_drstdrst[1][d][e] = -d2xyz_drstdrst_top[0][d][e];
+      d2xyz_drstdrst[2][d][e] = -d2xyz_drstdrst_top[2][d][e];
+    }
+    }
+    break;
+  case 5:                      /* left */
+    /* xyz[0][d][e] = -q; */
+    /* xyz[1][d][e] = -q * x; */
+    /* xyz[2][d][e] = +q * y; */
+    for (int d = 0; d < (P4EST_DIM); d++){
+      for (int e = 0; e < (P4EST_DIM); e++){
+        d2xyz_drstdrst[0][d][e] = -d2xyz_drstdrst_top[2][d][e];
+        d2xyz_drstdrst[1][d][e] = -d2xyz_drstdrst_top[0][d][e];
+        d2xyz_drstdrst[2][d][e] = d2xyz_drstdrst_top[1][d][e];
+      }
+   }
+   break;
+  default:
+    SC_ABORT_NOT_REACHED();
+  }
+}
+
+
+
+void
 d4est_geometry_cubed_sphere_DX_aux_rotate
 (
  int which_tree,
@@ -1251,8 +1590,6 @@ d4est_geometry_cubed_sphere_DX_aux_rotate
     SC_ABORT_NOT_REACHED();
   }
 }
-
-
 
 void
 d4est_geometry_cubed_sphere_X_aux_rotate
@@ -1329,6 +1666,55 @@ d4est_geometry_cubed_sphere_X_aux_rotate
   }
 }
 
+
+
+
+static void
+d4est_geometry_cubed_sphere_D2X(d4est_geometry_t* d4est_geom,
+                                p4est_topidx_t which_tree,
+                                p4est_qcoord_t q0 [(P4EST_DIM)],
+                                p4est_qcoord_t dq,
+                                const double rst[(P4EST_DIM)], /* [-1,1]^3 */
+                                double d2xyz_drstdrst[(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)]
+                               )
+{
+  double d2xyz_drstdrst_temp [(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)];
+
+  if (which_tree < 6){
+    d4est_geometry_cubed_sphere_outer_shell_block_D2X(d4est_geom,
+                                                     which_tree,
+                                                     q0,
+                                                     dq,
+                                                     rst,
+                                                     d2xyz_drstdrst_temp);
+  }
+  else if (which_tree < 12){
+    d4est_geometry_cubed_sphere_inner_shell_block_D2X(d4est_geom,
+                                                     which_tree,
+                                                     q0,
+                                                     dq,
+                                                     rst,
+                                                     d2xyz_drstdrst_temp);
+  }
+  else {
+    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+        for (int d3 = 0; d3 < (P4EST_DIM); d3++){
+          d2xyz_drstdrst[d1][d2][d3] = 0.;
+        }
+      }
+    }
+    return;
+  }
+
+  d4est_geometry_cubed_sphere_D2X_aux_rotate
+    (
+     which_tree,
+     d2xyz_drstdrst_temp,
+     d2xyz_drstdrst
+    );
+  
+}
 
 
 
@@ -1667,6 +2053,7 @@ d4est_geometry_cubed_sphere_new
   d4est_geom->user = sphere_attrs;
   d4est_geom->X = d4est_geometry_cubed_sphere_X;
   d4est_geom->DX = d4est_geometry_cubed_sphere_DX;
+  d4est_geom->D2X = d4est_geometry_cubed_sphere_D2X;
   d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   d4est_geom->p4est_conn = conn;
@@ -1873,7 +2260,7 @@ d4est_geometry_cubed_sphere_with_sphere_hole_new
   d4est_geom->JAC = NULL;
   d4est_geom->destroy = d4est_geometry_cubed_sphere_destroy;
   d4est_geom->get_number_of_regions = d4est_geometry_cubed_sphere_get_number_of_regions;
-  d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;
+  d4est_geom->get_region = d4est_geometry_cubed_sphere_get_region;  
   
   if (mpirank == 0){
     zlog_debug(c_default, "NAME = cubed sphere with sphere hole");
@@ -1884,4 +2271,3 @@ d4est_geometry_cubed_sphere_with_sphere_hole_new
     zlog_debug(c_default, "compactify_inner_shell = %d", sphere_attrs->compactify_inner_shell);
   }
 }
-

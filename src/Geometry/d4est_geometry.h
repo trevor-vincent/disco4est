@@ -77,6 +77,15 @@ typedef void        (*d4est_geometry_MAT_t) (d4est_geometry_t*,
                                             double [(P4EST_DIM)][(P4EST_DIM)]
                                             );
 
+typedef void        (*d4est_geometry_3DMAT_t) (d4est_geometry_t*,
+                                            p4est_topidx_t ,
+                                            p4est_qcoord_t [(P4EST_DIM)],
+                                            p4est_qcoord_t,
+                                            const double [(P4EST_DIM)],
+                                            double [(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)]
+                                            );
+
+
 typedef void        (*d4est_geometry_SCA_t) (d4est_geometry_t*,
                                             p4est_topidx_t ,
                                             p4est_qcoord_t [(P4EST_DIM)],
@@ -102,6 +111,7 @@ struct d4est_geometry {
   d4est_geometry_SCA_t JAC;
   d4est_geometry_VEC_t X;
   d4est_geometry_MAT_t DX;
+  d4est_geometry_3DMAT_t D2X;
 
   int(*get_number_of_regions)(d4est_geometry_t*);
   int(*get_region)(d4est_geometry_t*, p4est_qcoord_t [(P4EST_DIM)], p4est_qcoord_t, int);
@@ -110,7 +120,6 @@ struct d4est_geometry {
   void* user;
   
 };
-
 /* This file was automatically generated.  Do not edit! */
 double d4est_geometry_compute_bounds(double *xyz[(P4EST_DIM)],int deg,double xi[(P4EST_DIM)],double xf[(P4EST_DIM)]);
 double d4est_geometry_compute_lebesgue_measure(d4est_operators_t *d4est_ops,int deg_GL,double *jac_GL);
@@ -124,6 +133,7 @@ void d4est_geometry_compute_jacobian(double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]
 void d4est_geometry_compute_xyz_face_analytic(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_rst_t rst_points,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int which_tree,int face,int deg,double *xyz[(P4EST_DIM)]);
 void d4est_geometry_get_face_info(int f,d4est_geometry_face_info_t *face_info);
 void d4est_geometry_compute_dxyz_drst_face_analytic(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_rst_t rst_points,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int which_tree,int face,int deg,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
+void d4est_geometry_compute_dxyz_drst_numerically(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_rst_t lobatto_rst_points,p4est_topidx_t which_tree,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int deg,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
 void d4est_geometry_compute_dxyz_drst(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_rst_t rst_points,p4est_topidx_t which_tree,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int deg,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
 void d4est_geometry_compute_dxyz_drst_analytic(d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_rst_t rst_points,p4est_topidx_t which_tree,p4est_qcoord_t q0[(P4EST_DIM)],p4est_qcoord_t dq,int deg,double *dxyz_drst[(P4EST_DIM)][(P4EST_DIM)]);
 void d4est_geometry_quadtree_to_vertex(p4est_connectivity_t *connectivity,p4est_topidx_t which_tree,const double abc[3],double xyz[3]);

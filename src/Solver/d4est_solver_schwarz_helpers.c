@@ -39,7 +39,6 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
   d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[subdomain];
   for (int j = 0; j < sub_data.num_elements; j++){
     d4est_solver_schwarz_element_data_t ed = sub_data.element_data[j];
-    /* printf("ed.restricted_nodal-stride = %d\n", ed.restricted_nodal_stride); */
     double* field_ed = NULL;      
     if (ed.mpirank == p4est->mpirank){
       field_ed = &field[d4est_factors->element_data[ed.id]->nodal_stride];
@@ -83,7 +82,6 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains
 {
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
     d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[i];
-    /* printf("sub_data.restricted_nodal-stride = %d\n", sub_data.restricted_nodal_stride); */
     d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
       (
        p4est,
@@ -282,8 +280,7 @@ d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
     else {
       /* GO THROUGH GHOST SUBDOMAIN DATA AND COPY DATA */
     }
-  }
-  
+  }  
 }
 
 void d4est_solver_schwarz_apply_weights_over_subdomain
@@ -322,7 +319,6 @@ void d4est_solver_schwarz_apply_weights_over_all_subdomains
  double* weighted_restricted_field_over_subdomains
 )
 {
-
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
     d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[i];
     double* in = &restricted_field_over_subdomains[sub_data.restricted_nodal_stride];
@@ -360,7 +356,6 @@ d4est_solver_schwarz_zero_field_over_subdomain_single_core
       field[local_nodal_stride + i] = 0.;
     }
   }
-
 }
 
 void
@@ -420,11 +415,6 @@ void d4est_solver_schwarz_apply_lhs_single_core
   d4est_elliptic_data_t elliptic_data_for_schwarz;
 
   d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[subdomain];
-
-  /* for (int i = 0; i < local_nodes; i++){     */
-    /* zeroed_Au_field_over_mesh[i] = 0.; */
-    /* zeroed_u_field_over_mesh[i] = 0.; */
-  /* } */
   
   d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
     (
@@ -486,13 +476,6 @@ void d4est_solver_schwarz_apply_lhs_single_core
        Au_restricted_field_over_subdomain,
        subdomain
       );
-
-
-    /* for (int i = 0; i < local_nodes; i++){ */
-      /* zeroed_u_field_over_mesh[i] = 0.; */
-      /* zeroed_Au_field_over_mesh[i] = 0.; */
-    /* } */
-        
 }
 
 double

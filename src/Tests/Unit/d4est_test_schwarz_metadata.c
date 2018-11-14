@@ -8,6 +8,8 @@
 #include <d4est_h5.h>
 #include <d4est_checkpoint.h>
 #include <d4est_element_data.h>
+#include <d4est_laplacian.h>
+#include <d4est_laplacian_flux.h>
 #include <d4est_solver_schwarz.h>
 #include <d4est_solver_schwarz_helpers.h>
 #include <petscsnes.h>
@@ -30,7 +32,6 @@ d4est_test_iterate_refine_only_one_element
     d4est_amr->refinement_log[elem_data->id] = elem_data->deg;
   }
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -62,16 +63,18 @@ int main(int argc, char *argv[])
     printf("[D4EST_INFO]: DIM = 2\n");
 #endif
 
+  const char* default_input_file = "d4est_test_schwarz_metadata.input";
+  
   if (proc_rank == 0)
-    printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] :      "d4est_test_schwarz_metadata_3d.input");
+    printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] : default_input_file);
  
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
-                                                    (argc == 2) ? argv[1] :      "d4est_test_schwarz_metadata_3d.input",
+                                                    (argc == 2) ? argv[1] : default_input_file,
                                                     "geometry",
                                                     c_geom);
 
-  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      "d4est_test_schwarz_metadata_3d.input", d4est_geom);
+  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      (argc == 2) ? argv[1] : default_input_file, d4est_geom);
 
   p4est_t* p4est;
   p4est = p4est_new_ext
@@ -88,12 +91,9 @@ int main(int argc, char *argv[])
   
 
   printf("num_quadrants = %d\n", p4est->local_num_quadrants);
-
   p4est_partition(p4est, 1, NULL);
-  p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
-  
-  d4est_ghost_t* d4est_ghost = NULL;
-   
+  p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);  
+  d4est_ghost_t* d4est_ghost = NULL;   
 
   if (proc_rank == 0){
     printf("[D4EST_INFO]: mpisize = %d\n", proc_size);
@@ -111,9 +111,14 @@ int main(int argc, char *argv[])
   /* start just-in-time dg-math */
   d4est_operators_t* d4est_ops = d4est_ops_init(20);
   d4est_mesh_data_t* d4est_factors = d4est_mesh_data_init(p4est);
-  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] :      "d4est_test_schwarz_metadata_3d.input", "quadrature");
-  
+  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : default_input_file, "quadrature");
 
+  /* BEGIN AMR AND MESH STUFF */
+  /* BEGIN AMR AND MESH STUFF */
+  /* BEGIN AMR AND MESH STUFF */
+  /* BEGIN AMR AND MESH STUFF */
+  /* BEGIN AMR AND MESH STUFF */
+  
   d4est_mesh_local_sizes_t local_sizes= d4est_mesh_update
                                         (
                                          p4est,
@@ -189,13 +194,25 @@ int main(int argc, char *argv[])
     initial_grid_input->initial_nodes = local_sizes.local_nodes;
   }
 
-  int num_nodes_overlap = 2;
+  d4est_field_type_t field_type = NODAL;
+  d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
+                                                               d4est_ghost,
+                                                               &field_type,
+                                                               1);
+
+  
+  /* END AMR AND MESH STUFF */
+  /* END AMR AND MESH STUFF */
+  /* END AMR AND MESH STUFF */
+  /* END AMR AND MESH STUFF */
+  /* END AMR AND MESH STUFF */
+  
   d4est_solver_schwarz_data_t* schwarz_data
     = d4est_solver_schwarz_init(
                                 p4est,
                                 d4est_ghost,
-                                num_nodes_overlap
-                               );
+                                (argc == 2) ? argv[1] : default_input_file
+    );
 
 
   d4est_solver_schwarz_operators_t* schwarz_ops
@@ -207,22 +224,43 @@ int main(int argc, char *argv[])
      p4est,
      schwarz_data
     );
-  
-  char** dbl_subdomain_names = P4EST_ALLOC(char*, 2*p4est->local_num_quadrants + 1);
-  double** dbl_subdomains = P4EST_ALLOC(double*, 2*p4est->local_num_quadrants + 1);
-  char** int_subdomain_names = P4EST_ALLOC(char*, p4est->local_num_quadrants + 1);
-  int** int_subdomains = P4EST_ALLOC(int*, p4est->local_num_quadrants + 1);
+
+
+  d4est_vtk_helper_array_t* helper_array = d4est_vtk_helper_array_init
+    (
+     p4est,
+     d4est_ops,
+     local_sizes.local_nodes,
+     25,
+     500
+    );
   
   for (int i = 0; i < p4est->local_num_quadrants; i++){
+
+    d4est_solver_schwarz_subdomain_data_t* sub_data = &schwarz_data->subdomain_data[i];
+
+
+    double* d_sub = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
+      (
+       helper_array,
+       "d_sub",
+       i
+      );
+       
+    double* w_d_sub = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
+      (
+       helper_array,
+       "w_d_sub",
+       i
+      );
+
+      int* i_sub = d4est_vtk_helper_array_alloc_and_add_cell_int_field
+      (
+       helper_array,
+       "i_sub",
+       i
+      );
     
-    dbl_subdomain_names[i] = P4EST_ALLOC(char, 25);
-    dbl_subdomain_names[i + p4est->local_num_quadrants] = P4EST_ALLOC(char, 25);
-    int_subdomain_names[i] = P4EST_ALLOC(char, 25);
-
-    dbl_subdomains[i] = P4EST_ALLOC(double, local_sizes.local_nodes);
-    dbl_subdomains[i + p4est->local_num_quadrants] = P4EST_ALLOC(double, local_sizes.local_nodes);
-    int_subdomains[i] = P4EST_ALLOC(int, p4est->local_num_quadrants);
-
     d4est_solver_schwarz_visualize_subdomain_helper_single_core
       (
        p4est,
@@ -230,62 +268,29 @@ int main(int argc, char *argv[])
        schwarz_data,
        schwarz_ops,
        i,
-       int_subdomains[i],
-       dbl_subdomains[i],
-       dbl_subdomains[i + p4est->local_num_quadrants]
-      );
-
-
-    
-    sprintf(dbl_subdomain_names[i], "d_sub_%d", i);
-    sprintf(int_subdomain_names[i], "i_d_sub_%d", i);
-    sprintf(dbl_subdomain_names[i + p4est->local_num_quadrants], "w_d_sub_%d", i);
-
-    double* weights = dbl_subdomains[i + p4est->local_num_quadrants];
-    /* DEBUG_PRINT_ARR_DBL(weights, local_sizes.local_nodes); */
-                        
-    
-    printf("%s %s %s\n",
-           dbl_subdomain_names[i],
-           dbl_subdomain_names[i + p4est->local_num_quadrants],
-           int_subdomain_names[i]
-          );
-           
+       i_sub,
+       d_sub,
+       w_d_sub
+      );    
   }
-  
-  dbl_subdomain_names[2*p4est->local_num_quadrants] = NULL;
-  dbl_subdomains[2*p4est->local_num_quadrants] = NULL;
-  int_subdomain_names[p4est->local_num_quadrants] = NULL;
-  int_subdomains[p4est->local_num_quadrants] = NULL;
 
-    d4est_vtk_save
+  d4est_vtk_save_helper_array
     (
-     p4est,
-     d4est_ops,
-     ((P4EST_DIM) == 3) ? "d4est_test_schwarz_metadata_3d.input" : "d4est_test_schwarz_metadata_2d.input",
-     "d4est_vtk",
-     (const char**)dbl_subdomain_names,
-     dbl_subdomains,
-     NULL,
-     NULL,
-     (const char**)int_subdomain_names,
-     int_subdomains,
-     -1
+     helper_array,
+     (argc == 2) ? argv[1] : (char*)default_input_file
     );
 
 
-  for (int i = 0; i < p4est->local_num_quadrants; i++){
-    P4EST_FREE(dbl_subdomain_names[i]);
-    P4EST_FREE(dbl_subdomain_names[i + p4est->local_num_quadrants]);
-    P4EST_FREE(int_subdomain_names[i]);
-    P4EST_FREE(dbl_subdomains[i]);
-    P4EST_FREE(dbl_subdomains[i + p4est->local_num_quadrants]);
-    P4EST_FREE(int_subdomains[i]);
-  }
-  P4EST_FREE(dbl_subdomain_names);
-  P4EST_FREE(int_subdomain_names);
-  P4EST_FREE(dbl_subdomains);
-  P4EST_FREE(int_subdomains);
+  d4est_vtk_helper_array_destroy
+    (
+     helper_array
+    );
+
+   
+  if (d4est_ghost_data != NULL){
+    d4est_ghost_data_destroy(d4est_ghost_data);
+    d4est_ghost_data = NULL;
+  } 
   
   d4est_solver_schwarz_destroy
     (
@@ -304,7 +309,10 @@ int main(int argc, char *argv[])
   if (d4est_ghost) {
     d4est_ghost_destroy(d4est_ghost);
   }
-    
+
+  /* d4est_laplacian_flux_destroy(flux_data_for_apply_lhs); */
+  /* d4est_laplacian_flux_destroy(flux_data_for_residual); */
+  
   d4est_ops_destroy(d4est_ops);
   p4est_destroy(p4est);
   d4est_geometry_destroy(d4est_geom);

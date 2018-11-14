@@ -951,14 +951,14 @@ d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback
  void* params
 )
 {
-  d4est_mesh_local_sizes_t* sizes = params;  
-
+  d4est_mesh_local_sizes_t* sizes = params;    
+  e_m->p_tree_that_touch_face [f_m][0] = e_m->tree;
+  e_m->p_tree_quadid_that_touch_face [f_m][0] = e_m->tree_quadid;
+  e_m->p_face_that_touch_face [f_m] = f_m;
   
-  e_m->tree_that_touch_face [f_m][0] = e_m->tree;
-  e_m->tree_quadid_that_touch_face [f_m][0] = e_m->tree_quadid;
   for (int i = 1; i < (P4EST_HALF); i++){
-    e_m->tree_that_touch_face [f_m][i] = -1;
-    e_m->tree_quadid_that_touch_face [f_m][i] = -1;
+    e_m->p_tree_that_touch_face [f_m][i] = -1;
+    e_m->p_tree_quadid_that_touch_face [f_m][i] = -1;
   }
    
   e_m->boundary_quad_vector_stride[f_m] = (P4EST_DIM)*sizes->local_boundary_nodes_quad;
@@ -997,13 +997,15 @@ d4est_mesh_compute_mortar_quadrature_sizes_interface_callback
 )
 {
   for (int m = 0; m < faces_m; m++){
+      e_m[m]->p_face_that_touch_face [f_m] = f_p;
     for (int i = 0; i < (P4EST_HALF); i++){
-      e_m[m]->tree_that_touch_face [f_m][i] = -1;
-      e_m[m]->tree_quadid_that_touch_face [f_m][i] = -1;
+      e_m[m]->p_tree_that_touch_face [f_m][i] = -1;
+      e_m[m]->p_tree_quadid_that_touch_face [f_m][i] = -1;
     }
+    
     for (int i = 0; i < faces_p; i++){
-      e_m[m]->tree_that_touch_face [f_m][i] = e_p[i]->tree;
-      e_m[m]->tree_quadid_that_touch_face [f_m][i] = e_p[i]->tree_quadid;
+      e_m[m]->p_tree_that_touch_face [f_m][i] = e_p[i]->tree;
+      e_m[m]->p_tree_quadid_that_touch_face [f_m][i] = e_p[i]->tree_quadid;
     }
   }
   
@@ -1437,20 +1439,39 @@ d4est_mesh_init_element_size_parameters
                                                                                     ed->deg,
                                                                                     volume_h_type
                                                                                    );
-  
-  d4est_geometry_compute_dxyz_drst
-    (
-     d4est_ops,
-     d4est_geom,
-     rst_points_lobatto,
-     ed->tree,
-     ed->q,
-     ed->dq,
-     ed->deg,
-     dxyz_drst_lobatto
-    );
 
-    
+
+  if (d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC){
+    d4est_geometry_compute_dxyz_drst
+      (
+       d4est_ops,
+       d4est_geom,
+       rst_points_lobatto,
+       ed->tree,
+       ed->q,
+       ed->dq,
+       ed->deg,
+       dxyz_drst_lobatto
+      );
+  }
+  else if (d4est_geom->DX_compute_method == GEOM_COMPUTE_NUMERICAL){
+    d4est_geometry_compute_dxyz_drst_numerically
+      (
+       d4est_ops,
+       d4est_geom,
+       rst_points_lobatto,
+       ed->tree,
+       ed->q,
+       ed->dq,
+       ed->deg,
+       dxyz_drst_lobatto
+      );
+  }
+  else {
+    D4EST_ABORT("DX must be ANALYTIC OR NUMERICAL");
+  }
+
+  
   d4est_geometry_compute_jacobian
     (
      dxyz_drst_lobatto,
@@ -1818,6 +1839,8 @@ d4est_mesh_compute_jacobian_on_lgl_grid
                                                                 elem_data->deg, 2);
 #endif
 
+
+        if (d4est_geom->DX_compute_method == GEOM_COMPUTE_ANALYTIC){
         d4est_geometry_compute_dxyz_drst
           (
            d4est_ops,
@@ -1829,7 +1852,23 @@ d4est_mesh_compute_jacobian_on_lgl_grid
            elem_data->deg,
            xyz_rst
           );
-
+        }
+        else if (d4est_geom->DX_compute_method == GEOM_COMPUTE_NUMERICAL){
+          d4est_geometry_compute_dxyz_drst_numerically
+            (
+             d4est_ops,
+             d4est_geom,
+             rst_points_lobatto,
+             elem_data->tree,
+             elem_data->q,
+             elem_data->dq,
+             elem_data->deg,
+             xyz_rst
+            );
+        }
+        else {
+          D4EST_ABORT("DX must be ANALYTIC OR NUMERICAL");
+        }
 
         d4est_geometry_compute_jacobian
           (
@@ -2345,8 +2384,6 @@ d4est_mesh_data_compute
               for (int d1 = 0; d1 < (P4EST_DIM); d1++){
                 d4est_operators_apply_dij(d4est_ops, &(md_on_e.xyz[d][0]), (P4EST_DIM), ed->deg, d1, tmp);
                 d4est_quadrature_interpolate(d4est_ops, d4est_quad, d4est_geom, &mesh_object, QUAD_OBJECT_VOLUME, QUAD_INTEGRAND_UNKNOWN, tmp, ed->deg, &(md_on_e.xyz_rst_quad[d][d1][0]), ed->deg_quad);
-                /* double *dxyz_print = &ed->xyz_rst_quad[d][d1][0]; */
-                /* DEBUG_PRINT_ARR_DBL(dxyz_print, volume_nodes_quad); */
               }
             }
             P4EST_FREE(tmp);

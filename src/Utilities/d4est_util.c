@@ -31,6 +31,13 @@ d4est_util_secant_fcn(double x){
   return 1./cos(x);
 }
 
+
+double
+d4est_util_cosecant_fcn(double x){
+  return 1./sin(x);
+}
+
+
 /** 
  * Add current working directory before dir
  * 

@@ -86,6 +86,7 @@ SET (
   src/dGMath/d4est_laplacian.c
   src/dGMath/d4est_laplacian_flux.c
   src/dGMath/d4est_laplacian_flux_sipg.c
+  src/dGMath/d4est_hessian.c
   src/Mesh/d4est_mortars_with_opt.c
   # src/Mesh/d4est_mortars_aux.c
   src/dGMath/d4est_laplacian_with_opt.c
@@ -95,6 +96,8 @@ SET (
   src/Geometry/d4est_geometry.c
   src/Estimators/d4est_estimator_stats.c
   src/Estimators/d4est_estimator_bi.c
+  src/Estimators/d4est_estimator_bi_new.c
+
   # src/Estimators/d4est_estimator_residual.c
   src/hpAMR/d4est_amr.c
   src/hpAMR/d4est_amr_uniform.c
@@ -364,25 +367,18 @@ add_d4est_unit_test_3d(d4est_test_kron d4est_test_kron.c Unit d4est_test_kron)
 add_d4est_unit_test_3d(d4est_test_linalg d4est_test_linalg.c Unit d4est_test_linalg)
 add_d4est_unit_test_3d(d4est_test_ghost_data d4est_test_ghost_data.c Unit d4est_test_ghost_data)
 add_d4est_unit_test_3d(d4est_test_schwarz_operators d4est_test_schwarz_operators.c Unit d4est_test_schwarz_operators)
-
-# add_d4est_unit_test_3d(d4est_test_schwarz_subdomain_solve d4est_test_schwarz_subdomain_solve.c Unit d4est_test_schwarz_subdomain_solve)
-# add_d4est_unit_test_2d(d4est_test_schwarz_metadata_2d d4est_test_schwarz_metadata.c Unit d4est_test_schwarz_metadata_2d)
-# add_d4est_unit_test_3d(d4est_test_schwarz_metadata d4est_test_schwarz_metadata.c Unit d4est_test_schwarz_metadata)
-add_d4est_unit_test_2d(d4est_test_schwarz d4est_test_schwarz.c Unit d4est_test_schwarz)
-add_d4est_unit_test_2d(d4est_test_schwarz_2 d4est_test_schwarz_2.c Unit d4est_test_schwarz_2)
-add_d4est_unit_test_3d(d4est_test_schwarz_2_3d d4est_test_schwarz_2.c Unit d4est_test_schwarz_2_3d)
-add_d4est_unit_test_2d(d4est_test_schwarz_3 d4est_test_schwarz_3.c Unit d4est_test_schwarz_3)
-add_d4est_unit_test_3d(d4est_test_schwarz_cubed_sphere d4est_test_schwarz_cubed_sphere.c Unit d4est_test_schwarz_cubed_sphere)
-
-# add_d4est_unit_test_3d(d4est_test_schwarz_singlecore_Au d4est_test_schwarz_singlecore_Au.c Unit d4est_test_schwarz_singlecore_Au)
-# add_d4est_unit_test_3d(d4est_test_schwarz_singlecore_solve d4est_test_schwarz_singlecore_solve.c Unit d4est_test_schwarz_singlecore_solve)
-# add_d4est_unit_test_3d(d4est_test_schwarz_metadata_cubed_sphere d4est_test_schwarz_metadata_cubed_sphere.c Unit d4est_test_schwarz_metadata_cubed_sphere)
+add_d4est_unit_test_3d(d4est_test_schwarz_cubic_3d d4est_test_schwarz_cubic.c Unit d4est_test_schwarz_cubic_3d)
+add_d4est_unit_test_2d(d4est_test_schwarz_cubic_2d d4est_test_schwarz_cubic.c Unit d4est_test_schwarz_cubic_2d)
+add_d4est_unit_test_3d(d4est_test_schwarz_metadata_3d d4est_test_schwarz_metadata.c Unit d4est_test_schwarz_metadata_3d)
+add_d4est_unit_test_2d(d4est_test_schwarz_metadata_2d d4est_test_schwarz_metadata.c Unit d4est_test_schwarz_metadata_2d)
 
 add_d4est_unit_test_3d(d4est_test_laplacian_symmetry d4est_test_laplacian_symmetry.c Unit d4est_test_laplacian_symmetry)
-
-
 add_d4est_unit_test_2d(d4est_test_laplacian_symmetry_2d d4est_test_laplacian_symmetry_2.c Unit d4est_test_laplacian_symmetry_2d)
 
+add_d4est_unit_test_2d(d4est_test_schwarz_disk d4est_test_schwarz_disk.c Unit d4est_test_schwarz_disk)
+
+
+add_d4est_unit_test_3d(d4est_test_schwarz_cubed_sphere d4est_test_schwarz_cubed_sphere.c Unit d4est_test_schwarz_cubed_sphere)
 
 
 add_d4est_unit_test_3d(d4est_test_laplacian_consistency d4est_test_laplacian_consistency.c Unit d4est_test_laplacian_consistency)

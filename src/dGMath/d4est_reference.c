@@ -217,3 +217,33 @@ void d4est_reference_dir_and_side_of_face
     D4EST_ABORT("ERROR 0: d4est_operators_lift_boundary_vec");
   }
 }
+
+
+int d4est_reference_get_mirrored_face
+(
+ int face
+)
+{
+  if (face == 0){
+    return 1;
+  }
+  else if (face == 1){
+    return 0;
+  }
+  else if (face == 2){
+    return 3;
+  }
+  else if (face == 3){
+    return 2;
+  }
+  else if (face == 4){
+    return 5;
+  }
+  else if (face == 5){
+    return 4;
+  }
+  else {
+    D4EST_ABORT("face must be between 0 and 5");
+    return -1;
+  }
+}

@@ -239,7 +239,7 @@ PetscErrorCode d4est_solver_newton_petsc_monitor(SNES snes,PetscInt it, PetscRea
          (const char * []){"u", NULL},
          (hid_t []){H5T_NATIVE_DOUBLE},
          (int []){vecs->local_nodes},
-         (void* []){sol}
+         (void* []){(void*)sol}
         );
 
       petsc_ctx->last_newton_checkpoint_it = it;

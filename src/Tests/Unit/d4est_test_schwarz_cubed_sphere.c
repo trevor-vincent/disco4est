@@ -1,6 +1,5 @@
 #include <pXest.h>
 #include <d4est_geometry.h>
-#include <d4est_geometry_cubed_sphere.h>
 #include <d4est_mesh.h>
 #include <d4est_operators.h>
 #include <d4est_amr.h>
@@ -15,8 +14,110 @@
 #include <d4est_solver_schwarz_helpers.h>
 #include <petscsnes.h>
 #include <zlog.h>
-#include "../Problems/Poisson/poisson_lorentzian_fcns.h"
 
+static void
+d4est_test_build_residual
+(
+ p4est_t* p4est,
+ d4est_ghost_t* ghost,
+ d4est_ghost_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ void* user
+)
+{
+  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = user;  
+  d4est_laplacian_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_data_for_apply_lhs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, 0);
+  d4est_linalg_vec_xpby(prob_vecs->rhs, -1., prob_vecs->Au, prob_vecs->local_nodes);
+}
+
+static void
+d4est_test_apply_lhs
+(
+ p4est_t* p4est,
+ d4est_ghost_t* ghost,
+ d4est_ghost_data_t* ghost_data,
+ d4est_elliptic_data_t* prob_vecs,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ void* user
+)
+{
+  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = user;  
+  d4est_laplacian_apply_aij(p4est, ghost, ghost_data, prob_vecs, flux_data_for_apply_lhs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, 0);
+}
+
+double
+poly_vec_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+){
+  return exp(x + y + z)*(x*x + y*y + z*z - 1.);
+}
+
+double
+boundary_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void *user
+)
+{
+  return poly_vec_fcn(x,
+                      y,
+#if(P4EST_DIM)==3
+                      z,
+#endif
+                      user);
+}
+
+double
+neg_laplacian_poly_vec_fcn
+(
+ double x,
+ double y,
+#if (P4EST_DIM)==3
+ double z,
+#endif
+ void* user
+){
+  /* return -4.; */
+  /* double pi = 3.1415926535897932384626433832795; */
+  /* return 4*pi*(-cos(pi*(x*x + y*y)) + pi*(x*x + y*y)*sin(pi*(x*x + y*y))); */
+  return -1.*exp(x + y + z)* (3. + x *(4. + 3.* x) + y* (4. + 3.* y) + z* (4. + 3. * z));
+  /* return -2*exp(x + y)*(x*(2. + x) + 1. + y*(2.+y)); */
+}
+
+static void 
+d4est_test_iterate_refine_only_one_element
+(
+ p4est_iter_volume_info_t* info,
+ void* user_data
+)
+{
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
+  int* element_to_refine = (int*) (d4est_amr->scheme->amr_scheme_data);
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
+  if (elem_data->id == *element_to_refine){
+    d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;
+  }
+  else {
+    d4est_amr->refinement_log[elem_data->id] = elem_data->deg;
+  }
+}
 
 int main(int argc, char *argv[])
 {
@@ -75,12 +176,9 @@ int main(int argc, char *argv[])
   
 
   printf("num_quadrants = %d\n", p4est->local_num_quadrants);
-
   p4est_partition(p4est, 1, NULL);
-  p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
-  
-  d4est_ghost_t* d4est_ghost = NULL;
-   
+  p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);  
+  d4est_ghost_t* d4est_ghost = NULL;   
 
   if (proc_rank == 0){
     printf("[D4EST_INFO]: mpisize = %d\n", proc_size);
@@ -126,60 +224,60 @@ int main(int argc, char *argv[])
 
 
   /* create amr scheme */
-  /* int add_amr_in_one_element = 0; */
-  /* if (add_amr_in_one_element){ */
-  /*   int* refinement_log = P4EST_ALLOC(int, p4est->local_num_quadrants); */
-  /*   int element_to_refine = 0; */
-  /*   d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1); */
-  /*   d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1); */
-  /*   scheme->post_balance_callback = NULL; */
-  /*   scheme->pre_refine_callback = NULL; */
-  /*   scheme->refine_replace_callback_fcn_ptr = NULL; */
-  /*   scheme->balance_replace_callback_fcn_ptr = NULL; */
-  /*   scheme->mark_elements = d4est_test_iterate_refine_only_one_element; */
-  /*   scheme->amr_scheme_data = &element_to_refine; */
-  /*   scheme->destroy = NULL; */
+  int add_amr_in_one_element = 0;
+  if (add_amr_in_one_element){
+    int* refinement_log = P4EST_ALLOC(int, p4est->local_num_quadrants);
+    int element_to_refine = 0;
+    d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
+    d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
+    scheme->post_balance_callback = NULL;
+    scheme->pre_refine_callback = NULL;
+    scheme->refine_replace_callback_fcn_ptr = NULL;
+    scheme->balance_replace_callback_fcn_ptr = NULL;
+    scheme->mark_elements = d4est_test_iterate_refine_only_one_element;
+    scheme->amr_scheme_data = &element_to_refine;
+    scheme->destroy = NULL;
     
-  /*   d4est_amr->mpirank = p4est->mpirank; */
-  /*   d4est_amr->scheme = scheme; */
-  /*   d4est_amr->balance_log = NULL; */
-  /*   d4est_amr->refinement_log = NULL; */
-  /*   d4est_amr->initial_log = NULL; */
-  /*   d4est_amr->max_degree = 1000; */
+    d4est_amr->mpirank = p4est->mpirank;
+    d4est_amr->scheme = scheme;
+    d4est_amr->balance_log = NULL;
+    d4est_amr->refinement_log = NULL;
+    d4est_amr->initial_log = NULL;
+    d4est_amr->max_degree = 1000;
     
-  /*   d4est_amr_step */
-  /*     ( */
-  /*      p4est, */
-  /*      NULL, */
-  /*      d4est_amr, */
-  /*      NULL, */
-  /*      NULL, */
-  /*      NULL */
-  /*     ); */
+    d4est_amr_step
+      (
+       p4est,
+       NULL,
+       d4est_amr,
+       NULL,
+       NULL,
+       NULL
+      );
 
-  /*   P4EST_FREE(refinement_log); */
-  /*   P4EST_FREE(d4est_amr); */
-  /*   P4EST_FREE(scheme); */
+    P4EST_FREE(refinement_log);
+    P4EST_FREE(d4est_amr);
+    P4EST_FREE(scheme);
 
-  /*   local_sizes = d4est_mesh_update */
-  /*                 ( */
-  /*                  p4est, */
-  /*                  &d4est_ghost, */
-  /*                  d4est_ops, */
-  /*                  d4est_geom, */
-  /*                  d4est_quad, */
-  /*                  d4est_factors, */
-  /*                  initial_grid_input, */
-  /*                  INITIALIZE_GHOST, */
-  /*                  INITIALIZE_QUADRATURE_DATA, */
-  /*                  INITIALIZE_GEOMETRY_DATA, */
-  /*                  INITIALIZE_GEOMETRY_ALIASES, */
-  /*                  d4est_mesh_set_quadratures_after_amr, */
-  /*                  (void*)initial_grid_input */
-  /*                 ); */
+    local_sizes = d4est_mesh_update
+                  (
+                   p4est,
+                   &d4est_ghost,
+                   d4est_ops,
+                   d4est_geom,
+                   d4est_quad,
+                   d4est_factors,
+                   initial_grid_input,
+                   INITIALIZE_GHOST,
+                   INITIALIZE_QUADRATURE_DATA,
+                   INITIALIZE_GEOMETRY_DATA,
+                   INITIALIZE_GEOMETRY_ALIASES,
+                   d4est_mesh_set_quadratures_after_amr,
+                   (void*)initial_grid_input
+                  );
   
-  /*   initial_grid_input->initial_nodes = local_sizes.local_nodes; */
-  /* } */
+    initial_grid_input->initial_nodes = local_sizes.local_nodes;
+  }
 
   d4est_field_type_t field_type = NODAL;
   d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
@@ -220,38 +318,29 @@ int main(int argc, char *argv[])
   
   dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
-  lorentzian_params_t lorentzian_params;
-  lorentzian_params.R_surface = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R2;
+  d4est_laplacian_dirichlet_bc_t bc_data_for_residual;
+  bc_data_for_residual.dirichlet_fcn = poly_vec_fcn;
+  bc_data_for_residual.eval_method = eval_method;  
 
-  d4est_laplacian_dirichlet_bc_t bc_data_dirichlet_for_lhs;
-  bc_data_dirichlet_for_lhs.dirichlet_fcn = zero_fcn;
-  bc_data_dirichlet_for_lhs.eval_method = eval_method;
-  bc_data_dirichlet_for_lhs.user = &lorentzian_params;
-  
-  d4est_laplacian_dirichlet_bc_t bc_data_dirichlet_for_rhs;
-  bc_data_dirichlet_for_rhs.dirichlet_fcn = poisson_lorentzian_boundary_fcn;
-  bc_data_dirichlet_for_rhs.eval_method = eval_method;
-  bc_data_dirichlet_for_rhs.user = &lorentzian_params;
-  
-  d4est_laplacian_flux_data_t* flux_data_for_lhs = NULL; 
-  d4est_laplacian_flux_data_t* flux_data_for_rhs = NULL;
-  
-    flux_data_for_lhs
-      = d4est_laplacian_flux_new(p4est, (argc == 2) ? argv[1] : default_input_file, BC_DIRICHLET, &bc_data_dirichlet_for_lhs);
-  
-    flux_data_for_rhs
-      = d4est_laplacian_flux_new(p4est, (argc == 2) ? argv[1] : default_input_file,  BC_DIRICHLET, &bc_data_dirichlet_for_rhs);
+  d4est_laplacian_dirichlet_bc_t bc_data_for_lhs;
+  bc_data_for_lhs.dirichlet_fcn = zero_fcn;
+  bc_data_for_lhs.eval_method = eval_method;  
+    
+  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, (argc == 2) ? argv[1] : default_input_file, BC_DIRICHLET, &bc_data_for_lhs);
+
+  d4est_laplacian_flux_data_t* flux_data_for_residual = d4est_laplacian_flux_new(p4est, (argc == 2) ? argv[1] : default_input_file, BC_DIRICHLET, &bc_data_for_residual);
+
+  d4est_elliptic_eqns_t prob_fcns_for_lhs;
+  prob_fcns_for_lhs.build_residual = d4est_test_build_residual;
+  prob_fcns_for_lhs.apply_lhs = d4est_test_apply_lhs;
+  prob_fcns_for_lhs.user = flux_data_for_apply_lhs;
+
+  d4est_elliptic_eqns_t prob_fcns_for_residual;
+  prob_fcns_for_residual.build_residual = d4est_test_build_residual;
+  prob_fcns_for_residual.apply_lhs = d4est_test_apply_lhs;
+  prob_fcns_for_residual.user = flux_data_for_residual;
 
     
-  problem_ctx_t ctx;
-  ctx.flux_data_for_apply_lhs = flux_data_for_lhs;
-  ctx.flux_data_for_build_rhs = flux_data_for_rhs;
-                           
-  d4est_elliptic_eqns_t prob_fcns;
-  prob_fcns.build_residual = poisson_lorentzian_build_residual;
-  prob_fcns.apply_lhs = poisson_lorentzian_apply_lhs;
-  prob_fcns.user = &ctx;
-  
   double* u = P4EST_ALLOC_ZERO(double, local_sizes.local_nodes);
   double* Au = P4EST_ALLOC_ZERO(double, local_sizes.local_nodes);
   double* rhs = P4EST_ALLOC(double, local_sizes.local_nodes);
@@ -271,12 +360,13 @@ int main(int argc, char *argv[])
   /* END SETUP EQUATIONS AND DATA */
   /* END SETUP EQUATIONS AND DATA */
   /* END SETUP EQUATIONS AND DATA */  
+
     
   d4est_mesh_init_field
     (
      p4est,
      u,
-     poisson_lorentzian_analytic_solution,
+     poly_vec_fcn,
      d4est_ops, // unnecessary?
      d4est_geom, // unnecessary?
      d4est_factors,
@@ -311,11 +401,11 @@ int main(int argc, char *argv[])
      d4est_quad,
      d4est_factors,
      &elliptic_data,
-     flux_data_for_rhs,
-     elliptic_data.rhs,
-     poisson_lorentzian_rhs_fcn,
+     flux_data_for_residual,
+     rhs,
+     neg_laplacian_poly_vec_fcn,
      INIT_FIELD_ON_LOBATTO,
-     &ctx,
+     NULL,
      0
     );
 
@@ -345,6 +435,8 @@ int main(int argc, char *argv[])
      -1,
      u_over_subdomains
     );
+
+
 
   /* for (int i = 0; i < schwarz_data->num_subdomains; i++){ */
 
@@ -384,38 +476,37 @@ int main(int argc, char *argv[])
      500
     );
   
-
+  int iterations = 20;
   double* sol = P4EST_ALLOC_ZERO(double, local_sizes.local_nodes);
   
-  for (int i = 0; i < 2; i++){
+  for (int i = 0; i < iterations; i++){
 
-    /* double* pre_solve_Au = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field */
-    /*   ( */
-    /*    helper_array, */
-    /*    "pre_solve_Au", */
-    /*    i */
-    /*   );     */
+    double* pre_solve_Au = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
+      (
+       helper_array,
+       "pre_solve_Au",
+       i
+      );    
     
     elliptic_data.u = sol;
-    /* elliptic_data.Au = pre_solve_Au; */
-    elliptic_data.Au = r;
+    elliptic_data.Au = pre_solve_Au;
     elliptic_data.rhs = rhs;
 
 
-    /* d4est_elliptic_eqns_apply_lhs */
-    /*   ( */
-    /*    p4est, */
-    /*    d4est_ghost, */
-    /*    d4est_ghost_data, */
-    /*    &prob_fcns, */
-    /*    &elliptic_data, */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    d4est_quad, */
-    /*    d4est_factors */
-    /* ); */
+    d4est_elliptic_eqns_apply_lhs
+      (
+       p4est,
+       d4est_ghost,
+       d4est_ghost_data,
+       &prob_fcns_for_lhs,
+       &elliptic_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors
+    );
 
-
+    elliptic_data.Au = r;
     
     /* if (i == 0){ */
     d4est_elliptic_eqns_build_residual
@@ -423,7 +514,7 @@ int main(int argc, char *argv[])
        p4est,
        d4est_ghost,
        d4est_ghost_data,
-       &prob_fcns,
+       &prob_fcns_for_lhs,
        &elliptic_data,
        d4est_ops,
        d4est_geom,
@@ -467,7 +558,7 @@ int main(int argc, char *argv[])
        d4est_ghost_data,
        schwarz_data,
        schwarz_ops,
-       &prob_fcns,
+       &prob_fcns_for_lhs,
        &elliptic_data,
        sol,
        r,
@@ -568,28 +659,20 @@ int main(int argc, char *argv[])
     d4est_solver_schwarz_subdomain_data_t* sub_data = &schwarz_data->subdomain_data[i];
 
     double* u_sub = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
-      (
-       helper_array,
-       "u_sub",
-       i
-      );
+                    (
+                     helper_array,
+                     "u_sub",
+                     i
+                    );
       
-       double* rhs_sub = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
-      (
-       helper_array,
-       "rhs_sub",
-       i
-      );
-
-      
-      /*  double* sol_sub = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field */
-      /* ( */
-      /*  helper_array, */
-      /*  "sol_sub", */
-      /*  i */
-      /* ); */
+    double* rhs_sub = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
+                      (
+                       helper_array,
+                       "rhs_sub",
+                       i
+                      );
        
-       d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
+    d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
       (
        p4est,
        d4est_factors,
@@ -720,8 +803,8 @@ int main(int argc, char *argv[])
     d4est_ghost_destroy(d4est_ghost);
   }
 
-  d4est_laplacian_flux_destroy(flux_data_for_lhs);
-  d4est_laplacian_flux_destroy(flux_data_for_rhs);
+  d4est_laplacian_flux_destroy(flux_data_for_apply_lhs);
+  d4est_laplacian_flux_destroy(flux_data_for_residual);
   
   d4est_ops_destroy(d4est_ops);
   p4est_destroy(p4est);

@@ -40,13 +40,8 @@ void
   d4est_elliptic_data_copy_ptrs(prob_vecs, &elliptic_data_for_rhs);
   elliptic_data_for_rhs.u = u_eq_0; 
   elliptic_data_for_rhs.Au = Au_eq_0; 
-
   
   d4est_laplacian_apply_aij(p4est, ghost, ghost_data, &elliptic_data_for_rhs, flux_fcn_data_for_build_rhs, d4est_ops, d4est_geom, d4est_quad, d4est_factors, which_field); 
-
-  
-
-
 
   double* f = NULL;
   if (init_option == INIT_FIELD_ON_LOBATTO){

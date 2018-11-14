@@ -101,7 +101,7 @@ typedef struct {
   /* array of 0 and 1 for whether this node touches boundary */
   int* node_touches_boundary;
 
-  /* array of 0 and 1 for whether this node touches boundary */
+  /* array of 0 and 1 for whether this face touches boundary */
   int* face_touches_element;
   
   double* xyz;
@@ -161,9 +161,7 @@ typedef struct {
   d4est_mesh_face_h_t face_h_type;
   
 } d4est_mesh_initial_extents_t;
-
  
-/* This file was automatically generated.  Do not edit! */
 void d4est_mesh_apply_invM_on_field(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,double *in,double *out);
 void d4est_mesh_debug_boundary_elements(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,const char **field_names,double **fields,int local_nodes);
 double *d4est_mesh_get_field_on_element(p4est_t *p4est,d4est_element_data_t *ed,d4est_ghost_data_t *d4est_ghost_data,double *field,int local_nodes,int which_field);
