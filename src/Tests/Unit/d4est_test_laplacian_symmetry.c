@@ -306,7 +306,7 @@ int main(int argc, char *argv[])
                 d4est_geom,
                 d4est_quad,
                 d4est_factors,
-                SYM_PRINT_MAT,
+                SYM_PRINT_UNEQUAL_PAIRS_AND_XYZ,
                 D4EST_REAL_EPS
                );
 
