@@ -491,46 +491,46 @@ problem_init
     double* estimator_vtk = P4EST_ALLOC(double, 4*p4est->local_num_quadrants);
     double* estimator_vtk_per_face = P4EST_ALLOC(double, 18*p4est->local_num_quadrants);
 
-    /* double* residual_pointwise_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad); */
-    /* double* f_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad); */
+    double* residual_pointwise_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
+    double* f_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
 
-    /* d4est_hessian_compute_hessian_trace_of_field_on_quadrature_points */
-    /*   ( */
-    /*    p4est, */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    d4est_quad, */
-    /*    d4est_factors, */
-    /*    HESSIAN_ANALYTICAL, */
-    /*    prob_vecs.u, */
-    /*    residual_pointwise_quad */
-    /*   ); */
-    /* d4est_mesh_init_field */
-    /*   ( */
-    /*    p4est, */
-    /*    f_quad, */
-    /*    poisson_lorentzian_rhs_fcn, */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    d4est_factors, */
-    /*    INIT_FIELD_ON_LOBATTO, */
-    /*    NULL */
-    /*   ); */
+    d4est_hessian_compute_hessian_trace_of_field_on_quadrature_points
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       HESSIAN_NUMERICAL,
+       prob_vecs.u,
+       residual_pointwise_quad
+      );
+    d4est_mesh_init_field
+      (
+       p4est,
+       f_quad,
+       poisson_lorentzian_rhs_fcn,
+       d4est_ops,
+       d4est_geom,
+       d4est_factors,
+       INIT_FIELD_ON_LOBATTO,
+       NULL
+      );
 
     
-    /* for (int qnode = 0; qnode < d4est_factors->local_sizes.local_nodes_quad; qnode++){ */
+    for (int qnode = 0; qnode < d4est_factors->local_sizes.local_nodes_quad; qnode++){
 
-    /*   residual_pointwise_quad[qnode] = */
-    /*     f_quad[qnode] - residual_pointwise_quad[qnode]; */
+      residual_pointwise_quad[qnode] =
+        f_quad[qnode] - residual_pointwise_quad[qnode];
       
-    /* } */
+    }
 
     
     double* estimator = d4est_estimator_bi_new_compute
                         (
                          p4est,
                          &prob_vecs,
-                         NULL,//residual_pointwise_quad,
+                         residual_pointwise_quad,
                          penalty_data,
                          poisson_lorentzian_boundary_fcn,
                          &lorentzian_params,
@@ -545,13 +545,13 @@ problem_init
                          0,
                          estimator_vtk,
                          estimator_vtk_per_face,
-                         0,
-                         &prob_fcns
+                         1,
+                         NULL
                         );
 
     
-    /* P4EST_FREE(residual_pointwise_quad); */
-    /* P4EST_FREE(f_quad); */
+    P4EST_FREE(residual_pointwise_quad);
+    P4EST_FREE(f_quad);
 
     
     /* for (int i = 0; i < p4est->local_num_quadrants; i++){ */

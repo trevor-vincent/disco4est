@@ -10,7 +10,7 @@ d4est_solver_schwarz_cg_single_core
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- d4est_solver_schwarz_data_t* d4est_schwarz_data,
+ d4est_solver_schwarz_metadata_t* d4est_schwarz_data,
  d4est_solver_schwarz_operators_t* d4est_schwarz_ops,
  double* du_subdomain,
  double* rhs_subdomain,

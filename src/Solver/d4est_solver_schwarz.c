@@ -19,7 +19,7 @@
 #include <ini.h>
 
 static
-int d4est_solver_schwarz_input_handler
+int d4est_solver_schwarz_metadata_input_handler
 (
  void* user,
  const char* section,
@@ -27,8 +27,8 @@ int d4est_solver_schwarz_input_handler
  const char* value
 )
 {
-  d4est_solver_schwarz_data_t* pconfig = (d4est_solver_schwarz_data_t*)user;
-  if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"num_nodes_overlap")) {
+  d4est_solver_schwarz_metadata_t* pconfig = (d4est_solver_schwarz_metadata_t*)user;
+  if (d4est_util_match_couple(section,"d4est_solver_schwarz_metadata",name,"num_nodes_overlap")) {
     D4EST_ASSERT(pconfig->num_nodes_overlap == -1);
     pconfig->num_nodes_overlap = atoi(value);
   } 
@@ -41,23 +41,23 @@ int d4est_solver_schwarz_input_handler
 
 
 void
-d4est_solver_schwarz_input
+d4est_solver_schwarz_metadata_input
 (
  p4est_t* p4est,
  const char* input_file,
- d4est_solver_schwarz_data_t* schwarz_data
+ d4est_solver_schwarz_metadata_t* schwarz_data
 )
 {
-  zlog_category_t* c_default = zlog_get_category("d4est_solver_schwarz");
+  zlog_category_t* c_default = zlog_get_category("d4est_solver_schwarz_metadata");
   schwarz_data->num_nodes_overlap = -1;
   if (
       ini_parse(input_file,
-                d4est_solver_schwarz_input_handler,
+                d4est_solver_schwarz_metadata_input_handler,
                 schwarz_data) < 0
   ) {
     D4EST_ABORT("Can't load input file");
   }
-  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->num_nodes_overlap, -1);
+  D4EST_CHECK_INPUT("d4est_solver_schwarz_metadata", schwarz_data->num_nodes_overlap, -1);
   
   if (schwarz_data->num_nodes_overlap <= 0){
     D4EST_ABORT("num_nodes_overlap <= 0");
@@ -67,7 +67,7 @@ d4est_solver_schwarz_input
 }
 
 static void
-d4est_solver_schwarz_corner_callback
+d4est_solver_schwarz_metadata_corner_callback
 (
  p4est_iter_corner_info_t* info,
  void* user_data
@@ -75,7 +75,7 @@ d4est_solver_schwarz_corner_callback
 {
   int core_side = -1;
   p4est_t* p4est = info->p4est;
-  d4est_solver_schwarz_data_t* schwarz_data = user_data;
+  d4est_solver_schwarz_metadata_t* schwarz_data = user_data;
 
   for (int core = 0; core < info->sides.elem_count; core++){
     
@@ -88,25 +88,25 @@ d4est_solver_schwarz_corner_callback
       continue; 
     }
 
-    d4est_solver_schwarz_subdomain_data_t* sub_data = &schwarz_data->subdomain_data[ed_core->id];
+    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[ed_core->id];
 
     /* add core element to subdomain */
     if(sub_data->num_elements == 0){
       sub_data->num_elements++;
       sub_data->core_deg = ed_core->deg;
       sub_data->core_id = ed_core->id;
-      sub_data->element_data[0].id = ed_core->id;
-      sub_data->element_data[0].mpirank = ed_core->mpirank;
-      sub_data->element_data[0].tree = ed_core->tree;
-      sub_data->element_data[0].tree_quadid = ed_core->tree_quadid;
-      sub_data->element_data[0].is_core = 1;
-      sub_data->element_data[0].deg = ed_core->deg;
-      sub_data->element_data[0].faces[0] = -1;
-      sub_data->element_data[0].faces[1] = -1;
-      sub_data->element_data[0].faces[2] = -1;
-      sub_data->element_data[0].core_faces[0] = -1;
-      sub_data->element_data[0].core_faces[1] = -1;
-      sub_data->element_data[0].core_faces[2] = -1;    
+      sub_data->element_metadata[0].id = ed_core->id;
+      sub_data->element_metadata[0].mpirank = ed_core->mpirank;
+      sub_data->element_metadata[0].tree = ed_core->tree;
+      sub_data->element_metadata[0].tree_quadid = ed_core->tree_quadid;
+      sub_data->element_metadata[0].is_core = 1;
+      sub_data->element_metadata[0].deg = ed_core->deg;
+      sub_data->element_metadata[0].faces[0] = -1;
+      sub_data->element_metadata[0].faces[1] = -1;
+      sub_data->element_metadata[0].faces[2] = -1;
+      sub_data->element_metadata[0].core_faces[0] = -1;
+      sub_data->element_metadata[0].core_faces[1] = -1;
+      sub_data->element_metadata[0].core_faces[2] = -1;    
     }
 
     /* printf("ed_core->id = %d\n", ed_core->id); */
@@ -124,7 +124,7 @@ d4est_solver_schwarz_corner_callback
         int found = 0;
         for (int i = 0; i < sub_data->num_elements; i++){
           /* already added this element */
-          if (sub_data->element_data[i].id == ed_side->id){
+          if (sub_data->element_metadata[i].id == ed_side->id){
             found = 1;
             break;
           }
@@ -200,9 +200,9 @@ d4est_solver_schwarz_corner_callback
         /* d4est_element_data_t* ed_side = side_info->quad->p.user_data;  */
         sub_data->num_elements++;      
         if (shares_face){
-          sub_data->element_data[sub_data->num_elements - 1].faces[0] = side_face_id;
-          sub_data->element_data[sub_data->num_elements - 1].faces[1] = -1;
-          sub_data->element_data[sub_data->num_elements - 1].faces[2] = -1;
+          sub_data->element_metadata[sub_data->num_elements - 1].faces[0] = side_face_id;
+          sub_data->element_metadata[sub_data->num_elements - 1].faces[1] = -1;
+          sub_data->element_metadata[sub_data->num_elements - 1].faces[2] = -1;
 
           /* sub_data->element_data[sub_data->num_elements - 1].core_faces[0] = core_face_id; */
           /* sub_data->element_data[sub_data->num_elements - 1].core_faces[1] = -1; */
@@ -211,9 +211,9 @@ d4est_solver_schwarz_corner_callback
         }
 #if (P4EST_DIM)==3
         else if (shares_edge){    
-          sub_data->element_data[sub_data->num_elements - 1].faces[0] = p8est_edge_faces[side_edge_id][0];
-          sub_data->element_data[sub_data->num_elements - 1].faces[1] = p8est_edge_faces[side_edge_id][1];
-          sub_data->element_data[sub_data->num_elements - 1].faces[2] = -1;
+          sub_data->element_metadata[sub_data->num_elements - 1].faces[0] = p8est_edge_faces[side_edge_id][0];
+          sub_data->element_metadata[sub_data->num_elements - 1].faces[1] = p8est_edge_faces[side_edge_id][1];
+          sub_data->element_metadata[sub_data->num_elements - 1].faces[2] = -1;
 
 
           /* sub_data->element_data[sub_data->num_elements - 1].core_faces[0] = p8est_edge_faces[core_edge_id][0]; */
@@ -225,17 +225,17 @@ d4est_solver_schwarz_corner_callback
         else {
 
 #if (P4EST_DIM)==3
-          sub_data->element_data[sub_data->num_elements - 1].faces[0] = p8est_corner_faces[side_info->corner][0];
-          sub_data->element_data[sub_data->num_elements - 1].faces[1] = p8est_corner_faces[side_info->corner][1];
-          sub_data->element_data[sub_data->num_elements - 1].faces[2] = p8est_corner_faces[side_info->corner][2];
+          sub_data->element_metadata[sub_data->num_elements - 1].faces[0] = p8est_corner_faces[side_info->corner][0];
+          sub_data->element_metadata[sub_data->num_elements - 1].faces[1] = p8est_corner_faces[side_info->corner][1];
+          sub_data->element_metadata[sub_data->num_elements - 1].faces[2] = p8est_corner_faces[side_info->corner][2];
 
           /* sub_data->element_data[sub_data->num_elements - 1].core_faces[0] = p8est_corner_faces[core_info->corner][0]; */
           /* sub_data->element_data[sub_data->num_elements - 1].core_faces[1] = p8est_corner_faces[core_info->corner][1]; */
           /* sub_data->element_data[sub_data->num_elements - 1].core_faces[2] = p8est_corner_faces[core_info->corner][2]; */
 
 #else
-          sub_data->element_data[sub_data->num_elements - 1].faces[0] = p4est_corner_faces[side_info->corner][0];
-          sub_data->element_data[sub_data->num_elements - 1].faces[1] = p4est_corner_faces[side_info->corner][1];
+          sub_data->element_metadata[sub_data->num_elements - 1].faces[0] = p4est_corner_faces[side_info->corner][0];
+          sub_data->element_metadata[sub_data->num_elements - 1].faces[1] = p4est_corner_faces[side_info->corner][1];
 
           /* sub_data->element_data[sub_data->num_elements - 1].core_faces[0] = p4est_corner_faces[core_info->corner][0]; */
           /* sub_data->element_data[sub_data->num_elements - 1].core_faces[1] = p4est_corner_faces[core_info->corner][1]; */
@@ -245,32 +245,32 @@ d4est_solver_schwarz_corner_callback
         D4EST_ASSERT(sub_data->num_elements <= (((P4EST_DIM) ==3) ? 57 : 13));
 
         for (int face_it = 0; face_it < (P4EST_DIM); face_it++){
-          int test_face = sub_data->element_data[sub_data->num_elements - 1].faces[face_it];
-          sub_data->element_data[sub_data->num_elements - 1].core_faces[face_it] = -1;
+          int test_face = sub_data->element_metadata[sub_data->num_elements - 1].faces[face_it];
+          sub_data->element_metadata[sub_data->num_elements - 1].core_faces[face_it] = -1;
           if(test_face != -1){
-            sub_data->element_data[sub_data->num_elements - 1].core_faces[face_it] =
+            sub_data->element_metadata[sub_data->num_elements - 1].core_faces[face_it] =
               d4est_reference_get_mirrored_face(test_face);
           }
         }
         
         /* add side element to subdomain */
-        sub_data->element_data[sub_data->num_elements - 1].id = ed_side->id;
-        sub_data->element_data[sub_data->num_elements - 1].mpirank = ed_side->mpirank;
-        sub_data->element_data[sub_data->num_elements - 1].tree = ed_side->tree;
-        sub_data->element_data[sub_data->num_elements - 1].tree_quadid = ed_side->tree_quadid;
-        sub_data->element_data[sub_data->num_elements - 1].is_core = 0;
-        sub_data->element_data[sub_data->num_elements - 1].deg = ed_side->deg;
+        sub_data->element_metadata[sub_data->num_elements - 1].id = ed_side->id;
+        sub_data->element_metadata[sub_data->num_elements - 1].mpirank = ed_side->mpirank;
+        sub_data->element_metadata[sub_data->num_elements - 1].tree = ed_side->tree;
+        sub_data->element_metadata[sub_data->num_elements - 1].tree_quadid = ed_side->tree_quadid;
+        sub_data->element_metadata[sub_data->num_elements - 1].is_core = 0;
+        sub_data->element_metadata[sub_data->num_elements - 1].deg = ed_side->deg;
       }
     }
   }
 }
 
 static void
-d4est_solver_schwarz_init_subdomain_metadata
+d4est_solver_schwarz_metadata_init_subdomain_metadata
 (
  p4est_t* p4est,
  d4est_ghost_t* d4est_ghost,
- d4est_solver_schwarz_data_t* schwarz_data
+ d4est_solver_schwarz_metadata_t* schwarz_data
 )
 {
     
@@ -281,7 +281,7 @@ d4est_solver_schwarz_init_subdomain_metadata
                  NULL,
                  NULL,
                  NULL,
-                 d4est_solver_schwarz_corner_callback);
+                 d4est_solver_schwarz_metadata_corner_callback);
 
 #else
   p4est_iterate (p4est,
@@ -290,7 +290,7 @@ d4est_solver_schwarz_init_subdomain_metadata
                  NULL,
                  /* NULL, */
                  NULL,
-                 d4est_solver_schwarz_corner_callback);
+                 d4est_solver_schwarz_metadata_corner_callback);
 #endif
 
   /* sort */
@@ -298,13 +298,13 @@ d4est_solver_schwarz_init_subdomain_metadata
 }
 
 static int
-d4est_solver_schwarz_sort_callback(const void *p,
+d4est_solver_schwarz_metadata_sort_callback(const void *p,
                                    const void *q)
 
 {
   int ret;
-  d4est_solver_schwarz_element_data_t x = *(const d4est_solver_schwarz_element_data_t *)p;
-  d4est_solver_schwarz_element_data_t y = *(const d4est_solver_schwarz_element_data_t *)q;
+  d4est_solver_schwarz_element_metadata_t x = *(const d4est_solver_schwarz_element_metadata_t *)p;
+  d4est_solver_schwarz_element_metadata_t y = *(const d4est_solver_schwarz_element_metadata_t *)q;
 
   /* Avoid return x - y, which can cause undefined behaviour
        because of signed integer overflow. */
@@ -327,29 +327,29 @@ d4est_solver_schwarz_sort_callback(const void *p,
 
 
 static void
-d4est_solver_schwarz_sort_elements
+d4est_solver_schwarz_metadata_sort_elements
 (
- d4est_solver_schwarz_data_t* schwarz_data
+ d4est_solver_schwarz_metadata_t* schwarz_data
 )
 {  
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    d4est_solver_schwarz_subdomain_data_t sub_data = schwarz_data->subdomain_data[i];
-    qsort(sub_data.element_data, sub_data.num_elements,
-          sizeof(d4est_solver_schwarz_element_data_t),d4est_solver_schwarz_sort_callback);
+    d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_data->subdomain_metadata[i];
+    qsort(sub_data.element_metadata, sub_data.num_elements,
+          sizeof(d4est_solver_schwarz_element_metadata_t),d4est_solver_schwarz_metadata_sort_callback);
   }
 }
 
 static void
-d4est_solver_schwarz_compute_strides_and_sizes
+d4est_solver_schwarz_metadata_compute_strides_and_sizes
 (
- d4est_solver_schwarz_data_t* schwarz_data
+ d4est_solver_schwarz_metadata_t* schwarz_data
 )
 {
   int sub_nodal_stride = 0;
   int sub_restricted_nodal_stride = 0;
 
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    d4est_solver_schwarz_subdomain_data_t* sub_data = &schwarz_data->subdomain_data[i];
+    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[i];
 
     sub_data->restricted_nodal_size = 0;
     sub_data->nodal_size = 0;
@@ -362,7 +362,7 @@ d4est_solver_schwarz_compute_strides_and_sizes
     /* printf("sub_data->num_elements = %d\n", sub_data->num_elements); */
     
     for (int j = 0; j < sub_data->num_elements; j++){
-      d4est_solver_schwarz_element_data_t* ed = &sub_data->element_data[j];
+      d4est_solver_schwarz_element_metadata_t* ed = &sub_data->element_metadata[j];
       int res_volume_nodes = 1;
       for (int k = 0; k < (P4EST_DIM); k++){
         if (ed->faces[k] != -1){
@@ -393,8 +393,8 @@ d4est_solver_schwarz_compute_strides_and_sizes
 }
 
 
-d4est_solver_schwarz_data_t*
-d4est_solver_schwarz_init
+d4est_solver_schwarz_metadata_t*
+d4est_solver_schwarz_metadata_init
 (
  p4est_t* p4est,
  d4est_ghost_t* d4est_ghost,
@@ -402,13 +402,13 @@ d4est_solver_schwarz_init
  /* int num_nodes_overlap */
 )
 {
-  d4est_solver_schwarz_data_t* schwarz_data = P4EST_ALLOC(d4est_solver_schwarz_data_t, 1);
+  d4est_solver_schwarz_metadata_t* schwarz_data = P4EST_ALLOC(d4est_solver_schwarz_metadata_t, 1);
   schwarz_data->restricted_nodal_size = 0;
   schwarz_data->nodal_size = 0;
   schwarz_data->num_subdomains = p4est->local_num_quadrants;
-  schwarz_data->subdomain_data = P4EST_ALLOC(d4est_solver_schwarz_subdomain_data_t, schwarz_data->num_subdomains);
+  schwarz_data->subdomain_metadata = P4EST_ALLOC(d4est_solver_schwarz_subdomain_metadata_t, schwarz_data->num_subdomains);
 
-  d4est_solver_schwarz_input
+  d4est_solver_schwarz_metadata_input
     (
      p4est,
      input_file,
@@ -420,35 +420,35 @@ d4est_solver_schwarz_init
   
   /* fill subdomains */
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    schwarz_data->subdomain_data[i].num_elements = 0;
-    schwarz_data->subdomain_data[i].element_data = P4EST_ALLOC(d4est_solver_schwarz_element_data_t, max_connections);
+    schwarz_data->subdomain_metadata[i].num_elements = 0;
+    schwarz_data->subdomain_metadata[i].element_metadata = P4EST_ALLOC(d4est_solver_schwarz_element_metadata_t, max_connections);
   }
 
-  d4est_solver_schwarz_init_subdomain_metadata(p4est, d4est_ghost, schwarz_data);
-  d4est_solver_schwarz_sort_elements(schwarz_data);
-  d4est_solver_schwarz_compute_strides_and_sizes(schwarz_data);
+  d4est_solver_schwarz_metadata_init_subdomain_metadata(p4est, d4est_ghost, schwarz_data);
+  d4est_solver_schwarz_metadata_sort_elements(schwarz_data);
+  d4est_solver_schwarz_metadata_compute_strides_and_sizes(schwarz_data);
 
   return schwarz_data;
 }
 
 void
-d4est_solver_schwarz_destroy
+d4est_solver_schwarz_metadata_destroy
 (
- d4est_solver_schwarz_data_t* schwarz_data
+ d4est_solver_schwarz_metadata_t* schwarz_data
 )
 {
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    P4EST_FREE(schwarz_data->subdomain_data[i].element_data);
+    P4EST_FREE(schwarz_data->subdomain_metadata[i].element_metadata);
   }
-  P4EST_FREE(schwarz_data->subdomain_data);
+  P4EST_FREE(schwarz_data->subdomain_metadata);
   P4EST_FREE(schwarz_data);
 }
 
 void
-d4est_solver_schwarz_print
+d4est_solver_schwarz_metadata_print
 (
  p4est_t* p4est,
- d4est_solver_schwarz_data_t* schwarz_data
+ d4est_solver_schwarz_metadata_t* schwarz_data
 )
 {
   
@@ -459,7 +459,7 @@ d4est_solver_schwarz_print
   printf("nodal_size = %d\n", schwarz_data->nodal_size);
   printf("restricted_nodal_size = %d\n", schwarz_data->restricted_nodal_size);
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    d4est_solver_schwarz_subdomain_data_t* sub_data = &schwarz_data->subdomain_data[i];
+    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[i];
     printf("\n");
     printf("Subdomain %d info\n", i);
     printf("********************************\n");
@@ -469,7 +469,7 @@ d4est_solver_schwarz_print
     printf("restricted_nodal_stride = %d\n", sub_data->restricted_nodal_stride);
     printf("nodal_stride = %d\n", sub_data->nodal_stride);
     for (int j = 0; j < sub_data->num_elements; j++){
-      d4est_solver_schwarz_element_data_t* ed = &sub_data->element_data[j];
+      d4est_solver_schwarz_element_metadata_t* ed = &sub_data->element_metadata[j];
       printf("Element %d info\n", j);
       printf("*****************\n");
       printf("mpirank = %d\n", ed->mpirank);

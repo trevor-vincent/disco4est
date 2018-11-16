@@ -306,8 +306,8 @@ int main(int argc, char *argv[])
   /* END AMR AND MESH STUFF */
   /* END AMR AND MESH STUFF */
   
-  d4est_solver_schwarz_data_t* schwarz_data
-    = d4est_solver_schwarz_init(
+  d4est_solver_schwarz_metadata_t* schwarz_data
+    = d4est_solver_schwarz_metadata_init(
                                 p4est,
                                 d4est_ghost,
                                 (argc == 2) ? argv[1] : default_input_file
@@ -318,7 +318,7 @@ int main(int argc, char *argv[])
     = d4est_solver_schwarz_operators_init
     (d4est_ops);
 
-  d4est_solver_schwarz_print
+  d4est_solver_schwarz_metadata_print
     (
      p4est,
      schwarz_data
@@ -671,7 +671,7 @@ int main(int argc, char *argv[])
 
   for (int i = 0; i < p4est->local_num_quadrants; i++){
 
-    d4est_solver_schwarz_subdomain_data_t* sub_data = &schwarz_data->subdomain_data[i];
+    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[i];
 
     double* u_sub = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
                     (
@@ -800,7 +800,7 @@ int main(int argc, char *argv[])
     d4est_ghost_data = NULL;
   } 
   
-  d4est_solver_schwarz_destroy
+  d4est_solver_schwarz_metadata_destroy
     (
      schwarz_data
     );

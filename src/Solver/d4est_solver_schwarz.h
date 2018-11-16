@@ -44,14 +44,14 @@ typedef struct {
   int restricted_nodal_size; 
   int restricted_nodal_stride; /* stride into just the restricted nodal field on this subdomain, it is not a stride into a local nodal field and is not a stride into a restricted field over all subdomains, i.e. it is zero on the first node of the first element of the containing subdomain*/
   
-} d4est_solver_schwarz_element_data_t;
+} d4est_solver_schwarz_element_metadata_t;
 
 typedef struct {
 
   int mpirank;
   int subdomain_id;
   int core_id; /* id stride in element_data for core */
-  d4est_solver_schwarz_element_data_t*  element_data;
+  d4est_solver_schwarz_element_metadata_t*  element_metadata;
   int core_deg;
   int num_elements;
   int restricted_nodal_size;
@@ -59,7 +59,7 @@ typedef struct {
   int nodal_size;
   int nodal_stride;
   
-} d4est_solver_schwarz_subdomain_data_t;
+} d4est_solver_schwarz_subdomain_metadata_t;
 
 typedef struct {
 
@@ -69,15 +69,15 @@ typedef struct {
   int restricted_nodal_size; /* restricted nodal size of all subdomains combined */
   int nodal_size; /* nodal size of all subdomains combined */
   int num_subdomains; /* Equivalent to number of local quadrants */
-  d4est_solver_schwarz_subdomain_data_t* subdomain_data; /* The elements and their connections in the subdomain */
+  d4est_solver_schwarz_subdomain_metadata_t* subdomain_metadata; /* The elements and their connections in the subdomain */
 
   
-} d4est_solver_schwarz_data_t;
+} d4est_solver_schwarz_metadata_t;
 
 /* This file was automatically generated.  Do not edit! */
-void d4est_solver_schwarz_print(p4est_t *p4est,d4est_solver_schwarz_data_t *schwarz_data);
-void d4est_solver_schwarz_destroy(d4est_solver_schwarz_data_t *schwarz_data);
-d4est_solver_schwarz_data_t *d4est_solver_schwarz_init(p4est_t *p4est,d4est_ghost_t *d4est_ghost,const char *input_file);
-void d4est_solver_schwarz_input(p4est_t *p4est,const char *input_file,d4est_solver_schwarz_data_t *schwarz_data);
+void d4est_solver_schwarz_metadata_print(p4est_t *p4est,d4est_solver_schwarz_metadata_t *schwarz_data);
+void d4est_solver_schwarz_metadata_destroy(d4est_solver_schwarz_metadata_t *schwarz_data);
+d4est_solver_schwarz_metadata_t *d4est_solver_schwarz_metadata_init(p4est_t *p4est,d4est_ghost_t *d4est_ghost,const char *input_file);
+void d4est_solver_schwarz_metadata_input(p4est_t *p4est,const char *input_file,d4est_solver_schwarz_metadata_t *schwarz_data);
 
 #endif

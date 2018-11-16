@@ -194,6 +194,6 @@ houston_u_dirichlet_prefactor_maxp_minh
 }
 
 /* This file was automatically generated.  Do not edit! */
-double *d4est_estimator_bi_new_compute(p4est_t *p4est,d4est_elliptic_data_t *d4est_elliptic_data,double *pointwise_residual_on_physical_quadrature_points,d4est_estimator_bi_new_penalty_data_t penalty_data,d4est_xyz_fcn_t u_bndry_fcn,void *bndry_ctx,d4est_ghost_t *d4est_ghost,d4est_ghost_data_t *d4est_ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom_physical,d4est_mesh_data_t *d4est_factors_physical,d4est_geometry_t *d4est_geom_compactified,d4est_mesh_data_t *d4est_factors_compactified,d4est_quadrature_t *d4est_quad,int which_field,double *estimator_vtk,double *estimator_vtk_per_face);
+double *d4est_estimator_bi_new_compute(p4est_t *p4est,d4est_elliptic_data_t *d4est_elliptic_data,double *pointwise_residual_on_physical_quadrature_points,d4est_estimator_bi_new_penalty_data_t penalty_data,d4est_xyz_fcn_t u_bndry_fcn,void *bndry_ctx,d4est_ghost_t *d4est_ghost,d4est_ghost_data_t *d4est_ghost_data,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom_physical,d4est_mesh_data_t *d4est_factors_physical,d4est_geometry_t *d4est_geom_compactified,d4est_mesh_data_t *d4est_factors_compactified,d4est_quadrature_t *d4est_quad,int which_field,double *estimator_vtk,double *estimator_vtk_per_face,int use_pointwise_residual,d4est_elliptic_eqns_t *fcns);
 
 #endif

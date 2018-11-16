@@ -378,7 +378,9 @@ d4est_estimator_bi_new_compute
  d4est_quadrature_t* d4est_quad,
  int which_field,
  double* estimator_vtk, /* should be 4*num_quadrants*num_faces or NULL if not needed */
- double* estimator_vtk_per_face
+ double* estimator_vtk_per_face,
+ int use_pointwise_residual,
+ d4est_elliptic_eqns_t* fcns
 )
 {
   penalty_data.estimator_vtk = estimator_vtk;
@@ -391,8 +393,38 @@ d4est_estimator_bi_new_compute
       estimator_vtk_per_face[i] = 0.;
     }
   }
-  
+
   double* estimator = P4EST_ALLOC(double, p4est->local_num_quadrants);
+
+  if(!use_pointwise_residual){
+ d4est_elliptic_eqns_build_residual
+    (
+     p4est,
+     d4est_ghost,
+     d4est_ghost_data,
+     fcns,
+     d4est_elliptic_data,
+     d4est_ops,
+     d4est_geom_physical,
+     d4est_quad,
+     d4est_factors_physical
+    );
+  
+  d4est_mesh_compute_l2_norm_sqr
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom_compactified,
+     d4est_quad,
+     d4est_factors_compactified,
+     d4est_elliptic_data->Au,
+     d4est_elliptic_data->local_nodes,
+     NULL,
+     estimator
+    );
+  }
+  
+
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)
@@ -411,21 +443,23 @@ d4est_estimator_bi_new_compute
                           d4est_factors_compactified,
                           ed
                          );
-        
-        estimator[ed->id] = d4est_quadrature_innerproduct
-                            (
-                             d4est_ops,
-                             d4est_geom_compactified,
-                             d4est_quad,
-                             NULL,
-                             QUAD_OBJECT_VOLUME,
-                             QUAD_INTEGRAND_UNKNOWN,
-                             &pointwise_residual_on_physical_quadrature_points[ed->quad_stride],
-                             &pointwise_residual_on_physical_quadrature_points[ed->quad_stride],
-                             J_quad,
-                             ed->deg_quad
-                            );
 
+        if (use_pointwise_residual){
+          estimator[ed->id] = d4est_quadrature_innerproduct
+                              (
+                               d4est_ops,
+                               d4est_geom_compactified,
+                               d4est_quad,
+                               NULL,
+                               QUAD_OBJECT_VOLUME,
+                               QUAD_INTEGRAND_UNKNOWN,
+                               &pointwise_residual_on_physical_quadrature_points[ed->quad_stride],
+                               &pointwise_residual_on_physical_quadrature_points[ed->quad_stride],
+                               J_quad,
+                               ed->deg_quad
+                              );
+        }
+        
         estimator[ed->id] *= h*h/(deg*deg);
 
         if (penalty_data.estimator_vtk != NULL){

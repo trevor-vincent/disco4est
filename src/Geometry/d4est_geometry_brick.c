@@ -2,6 +2,28 @@
 #include <ini.h>
 #include <zlog.h>
 
+
+
+static void
+d4est_geometry_brick_D2X(d4est_geometry_t* d4est_geom,
+                                p4est_topidx_t which_tree,
+                                p4est_qcoord_t q0 [(P4EST_DIM)],
+                                p4est_qcoord_t dq,
+                                const double rst[(P4EST_DIM)], /* [-1,1]^3 */
+                                double d2xyz_drstdrst[(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)]
+                               )
+{
+
+    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+        for (int d3 = 0; d3 < (P4EST_DIM); d3++){
+          d2xyz_drstdrst[d1][d2][d3] = 0.;
+        }
+      }
+    }
+}
+
+
 static
 int d4est_geometry_brick_get_number_of_regions
 (
@@ -233,6 +255,7 @@ d4est_geometry_brick_new
   d4est_geometry_brick_new_aux(d4est_geom, brick_attrs);
 
   d4est_geom->get_region = d4est_geometry_brick_get_region;
+  d4est_geom->D2X = d4est_geometry_brick_D2X;
   d4est_geom->get_number_of_regions = d4est_geometry_brick_get_number_of_regions;
   
   if (mpirank == 0){
