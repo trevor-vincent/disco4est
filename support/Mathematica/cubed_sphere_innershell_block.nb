@@ -3,10 +3,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[         0,          0]
-NotebookDataLength[     41641,        903]
-NotebookOptionsPosition[     39973,        867]
-NotebookOutlinePosition[     40306,        882]
-CellTagsIndexPosition[     40263,        879]
+NotebookDataLength[     96610,       1763]
+NotebookOptionsPosition[     92982,       1707]
+NotebookOutlinePosition[     93317,       1722]
+CellTagsIndexPosition[     93274,       1719]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -57,7 +57,7 @@ Cell[BoxData[{
  CellChangeTimes->{{3.699541951997349*^9, 3.69954196217584*^9}, 
    3.6995493751103497`*^9, 3.699550534738366*^9, {3.700095289438952*^9, 
    3.700095364168597*^9}},
- CellLabel->"In[21]:=",ExpressionUUID->"a088fe37-1914-4735-b029-66801e9d2b11"],
+ CellLabel->"In[68]:=",ExpressionUUID->"a088fe37-1914-4735-b029-66801e9d2b11"],
 
 Cell[BoxData[{
  RowBox[{
@@ -95,7 +95,7 @@ Cell[BoxData[{
  CellChangeTimes->{{3.6995419796783953`*^9, 3.699542033818336*^9}, {
    3.699544419647629*^9, 3.699544421151099*^9}, 3.699550466693034*^9, {
    3.700095264264658*^9, 3.700095264421986*^9}, 3.7000953382437067`*^9},
- CellLabel->"In[22]:=",ExpressionUUID->"3f5aee32-9e22-4cec-9f1e-9704c1531d6d"],
+ CellLabel->"In[69]:=",ExpressionUUID->"3f5aee32-9e22-4cec-9f1e-9704c1531d6d"],
 
 Cell[BoxData[
  RowBox[{
@@ -113,9 +113,7 @@ Cell[BoxData[
 
  CellChangeTimes->{{3.6995432899345407`*^9, 3.699543289935378*^9}, {
   3.699543411139988*^9, 3.6995434595761623`*^9}},
- CellLabel->"In[25]:=",ExpressionUUID->"f3e85842-6406-457e-9e50-b2d9cb348d3d"],
-
-Cell[CellGroupData[{
+ CellLabel->"In[72]:=",ExpressionUUID->"f3e85842-6406-457e-9e50-b2d9cb348d3d"],
 
 Cell[BoxData[{
  RowBox[{
@@ -413,8 +411,7 @@ Cell[BoxData[{
           RowBox[{
            RowBox[{"xr", "*", "ys"}], "-", 
            RowBox[{"yr", "*", "xs"}]}], ")"}]}], "}"}]}], "}"}]}], ";"}], 
-   "*)"}]}], "\[IndentingNewLine]", 
- RowBox[{
+   "*)"}], "\[IndentingNewLine]", 
   RowBox[{"(*", 
    RowBox[{
     RowBox[{"Do", "[", 
@@ -491,44 +488,45 @@ Cell[BoxData[{
        RowBox[{"i", ",", "3"}], "}"}], ",", 
       RowBox[{"{", 
        RowBox[{"j", ",", "3"}], "}"}]}], "]"}]}], "*)"}], 
-  RowBox[{"Do", "[", 
-   RowBox[{
-    RowBox[{"Print", "[", 
-     RowBox[{"StringReplace", "[", 
-      RowBox[{
-       RowBox[{"StringJoin", "[", 
-        RowBox[{"\"\<d2xyz_drstdrst[\>\"", ",", 
-         RowBox[{"ToString", "[", 
-          RowBox[{"i", "-", "1"}], "]"}], ",", "\"\<][\>\"", ",", 
-         RowBox[{"ToString", "[", 
-          RowBox[{"j", "-", "1"}], "]"}], ",", "\"\<][\>\"", ",", 
-         "\"\<2] = \>\"", ",", 
-         RowBox[{"ToString", "[", 
-          RowBox[{"CForm", "[", 
-           RowBox[{"Simplify", "[", 
-            RowBox[{"D", "[", 
-             RowBox[{
+  RowBox[{"(*", 
+   RowBox[{"Do", "[", 
+    RowBox[{
+     RowBox[{"Print", "[", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"StringJoin", "[", 
+         RowBox[{"\"\<d2xyz_drstdrst[\>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"i", "-", "1"}], "]"}], ",", "\"\<][\>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"j", "-", "1"}], "]"}], ",", "\"\<][\>\"", ",", 
+          "\"\<2] = \>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"CForm", "[", 
+            RowBox[{"Simplify", "[", 
+             RowBox[{"D", "[", 
               RowBox[{
-               RowBox[{"dxdr", "[", 
-                RowBox[{"[", "i", "]"}], "]"}], "[", 
-               RowBox[{"[", "j", "]"}], "]"}], ",", "t"}], "]"}], "]"}], 
-           "]"}], "]"}], ",", "\"\<;\>\""}], "]"}], ",", 
-       RowBox[{"{", 
-        RowBox[{
-         RowBox[{"\"\<Power\>\"", "\[Rule]", "\"\<pow\>\""}], ",", " ", 
-         RowBox[{"\"\<Pi\>\"", "\[Rule]", "\"\<M_PI\>\""}], ",", 
-         RowBox[{"\"\<Sin\>\"", "\[Rule]", "\"\<sin\>\""}], ",", 
-         RowBox[{"\"\<Cos\>\"", "\[Rule]", "\"\<cos\>\""}], ",", 
-         RowBox[{"\"\<Tan\>\"", "\[Rule]", "\"\<tan\>\""}], ",", 
-         RowBox[{"\"\<Sqrt\>\"", "->", "\"\<sqrt\>\""}], ",", 
+               RowBox[{
+                RowBox[{"dxdr", "[", 
+                 RowBox[{"[", "i", "]"}], "]"}], "[", 
+                RowBox[{"[", "j", "]"}], "]"}], ",", "t"}], "]"}], "]"}], 
+            "]"}], "]"}], ",", "\"\<;\>\""}], "]"}], ",", 
+        RowBox[{"{", 
          RowBox[{
-         "\"\<Sec\>\"", "\[Rule]", "\"\<d4est_util_secant_fcn\>\""}]}], 
-        "}"}]}], "]"}], "]"}], ",", 
-    RowBox[{"{", 
-     RowBox[{"i", ",", "3"}], "}"}], ",", 
-    RowBox[{"{", 
-     RowBox[{"j", ",", "3"}], "}"}]}], 
-   "]"}]}], "\[IndentingNewLine]"}], "Input",
+          RowBox[{"\"\<Power\>\"", "\[Rule]", "\"\<pow\>\""}], ",", " ", 
+          RowBox[{"\"\<Pi\>\"", "\[Rule]", "\"\<M_PI\>\""}], ",", 
+          RowBox[{"\"\<Sin\>\"", "\[Rule]", "\"\<sin\>\""}], ",", 
+          RowBox[{"\"\<Cos\>\"", "\[Rule]", "\"\<cos\>\""}], ",", 
+          RowBox[{"\"\<Tan\>\"", "\[Rule]", "\"\<tan\>\""}], ",", 
+          RowBox[{"\"\<Sqrt\>\"", "->", "\"\<sqrt\>\""}], ",", 
+          RowBox[{
+          "\"\<Sec\>\"", "\[Rule]", "\"\<d4est_util_secant_fcn\>\""}]}], 
+         "}"}]}], "]"}], "]"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"i", ",", "3"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"j", ",", "3"}], "}"}]}], "]"}], 
+   "*)"}]}], "\[IndentingNewLine]"}], "Input",
  CellChangeTimes->{{3.69954197218334*^9, 3.699541972184321*^9}, {
    3.699542129577129*^9, 3.699542220945642*^9}, {3.699543118381762*^9, 
    3.6995434063743362`*^9}, {3.699543816973815*^9, 3.699543824968581*^9}, {
@@ -545,328 +543,1170 @@ Cell[BoxData[{
    3.7512988755263157`*^9, 3.751298930244697*^9}, 3.751302000081716*^9, {
    3.751304994375039*^9, 3.7513049967914467`*^9}, 3.751305088759527*^9, {
    3.7513064123289433`*^9, 3.751306440435088*^9}, {3.751306575048231*^9, 
-   3.75130659112648*^9}},
- CellLabel->"In[26]:=",ExpressionUUID->"3fdfecb2-b43c-4509-b67c-575d159224ac"],
+   3.75130659112648*^9}, 3.751570537519498*^9},
+ CellLabel->"In[73]:=",ExpressionUUID->"3fdfecb2-b43c-4509-b67c-575d159224ac"],
 
 Cell[CellGroupData[{
 
-Cell[BoxData["\<\"d2xyz_drstdrst[0][0][2] = ((amax - amin)*(cmax - \
-cmin)*(3*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + \
-cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - \
-cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*((amax + amin \
-+ amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin \
-+ cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(-2 + \
-pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + \
-bmin + bmax*s - bmin*s))/8.),2)) - 2*M_PI*(-2 + cmax + cmin + cmax*t - \
-cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + \
-cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2)*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + \
-amax*r - amin*r))/8.))*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-2*(-5 \
-+ cmax + cmin + cmax*t - cmin*t) + (-2 + cmax + cmin + cmax*t - \
-cmin*t)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + (-2 + cmax + \
-cmin + cmax*t - cmin*t)*pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)) - 16*M_PI*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + \
-t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-((amax + \
-amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + \
-cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - \
-16*M_PI*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + \
-cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-((amax + \
-amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + \
-cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 8*(-(R0*(-4 + \
-cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - \
-cmin*t))*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + \
-cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2))/2.)*(-2 + pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*(5 + \
-cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - \
-cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 16*(-(R0*(-4 + \
-cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - \
-cmin*t))*(-4 + M_PI*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + \
-cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2) - 32*(R0 - \
-R1)*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + \
-cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2))/2.)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + \
-cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2)))/(512.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2.5));\"\>"], "Print",
- CellChangeTimes->{3.7513065673112993`*^9, 3.7513067106302223`*^9},
- CellLabel->
-  "During evaluation of \
-In[26]:=",ExpressionUUID->"1a8781fb-1bba-4dfe-9825-ac5d8e25f926"],
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"Do", "[", 
+    RowBox[{
+     RowBox[{"Print", "[", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"StringJoin", "[", 
+         RowBox[{"\"\<d2xyz_drstdrst[\>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"i", "-", "1"}], "]"}], ",", "\"\<][\>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"j", "-", "1"}], "]"}], ",", "\"\<][\>\"", ",", 
+          "\"\<0] = \>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"CForm", "[", 
+            RowBox[{"D", "[", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"dxdr", "[", 
+                RowBox[{"[", "i", "]"}], "]"}], "[", 
+               RowBox[{"[", "j", "]"}], "]"}], ",", "r"}], "]"}], "]"}], 
+           "]"}], ",", "\"\<;\>\""}], "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\"\<Power\>\"", "\[Rule]", "\"\<pow\>\""}], ",", " ", 
+          RowBox[{"\"\<Pi\>\"", "\[Rule]", "\"\<M_PI\>\""}], ",", 
+          RowBox[{"\"\<Sin\>\"", "\[Rule]", "\"\<sin\>\""}], ",", 
+          RowBox[{"\"\<Cos\>\"", "\[Rule]", "\"\<cos\>\""}], ",", 
+          RowBox[{"\"\<Tan\>\"", "\[Rule]", "\"\<tan\>\""}], ",", 
+          RowBox[{"\"\<Sqrt\>\"", "->", "\"\<sqrt\>\""}], ",", 
+          RowBox[{
+          "\"\<Sec\>\"", "\[Rule]", "\"\<d4est_util_secant_fcn\>\""}]}], 
+         "}"}]}], "]"}], "]"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"i", ",", "3"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"j", ",", "3"}], "}"}]}], "]"}], 
+   RowBox[{"Do", "[", 
+    RowBox[{
+     RowBox[{"Print", "[", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"StringJoin", "[", 
+         RowBox[{"\"\<d2xyz_drstdrst[\>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"i", "-", "1"}], "]"}], ",", "\"\<][\>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"j", "-", "1"}], "]"}], ",", "\"\<][\>\"", ",", 
+          "\"\<1] = \>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"CForm", "[", 
+            RowBox[{"D", "[", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"dxdr", "[", 
+                RowBox[{"[", "i", "]"}], "]"}], "[", 
+               RowBox[{"[", "j", "]"}], "]"}], ",", "s"}], "]"}], "]"}], 
+           "]"}], ",", "\"\<;\>\""}], "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\"\<Power\>\"", "\[Rule]", "\"\<pow\>\""}], ",", " ", 
+          RowBox[{"\"\<Pi\>\"", "\[Rule]", "\"\<M_PI\>\""}], ",", 
+          RowBox[{"\"\<Sin\>\"", "\[Rule]", "\"\<sin\>\""}], ",", 
+          RowBox[{"\"\<Cos\>\"", "\[Rule]", "\"\<cos\>\""}], ",", 
+          RowBox[{"\"\<Tan\>\"", "\[Rule]", "\"\<tan\>\""}], ",", 
+          RowBox[{"\"\<Sqrt\>\"", "->", "\"\<sqrt\>\""}], ",", 
+          RowBox[{
+          "\"\<Sec\>\"", "\[Rule]", "\"\<d4est_util_secant_fcn\>\""}]}], 
+         "}"}]}], "]"}], "]"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"i", ",", "3"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"j", ",", "3"}], "}"}]}], "]"}], 
+   RowBox[{"Do", "[", 
+    RowBox[{
+     RowBox[{"Print", "[", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"StringJoin", "[", 
+         RowBox[{"\"\<d2xyz_drstdrst[\>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"i", "-", "1"}], "]"}], ",", "\"\<][\>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"j", "-", "1"}], "]"}], ",", "\"\<][\>\"", ",", 
+          "\"\<2] = \>\"", ",", 
+          RowBox[{"ToString", "[", 
+           RowBox[{"CForm", "[", 
+            RowBox[{"D", "[", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"dxdr", "[", 
+                RowBox[{"[", "i", "]"}], "]"}], "[", 
+               RowBox[{"[", "j", "]"}], "]"}], ",", "t"}], "]"}], "]"}], 
+           "]"}], ",", "\"\<;\>\""}], "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\"\<Power\>\"", "\[Rule]", "\"\<pow\>\""}], ",", " ", 
+          RowBox[{"\"\<Pi\>\"", "\[Rule]", "\"\<M_PI\>\""}], ",", 
+          RowBox[{"\"\<Sin\>\"", "\[Rule]", "\"\<sin\>\""}], ",", 
+          RowBox[{"\"\<Cos\>\"", "\[Rule]", "\"\<cos\>\""}], ",", 
+          RowBox[{"\"\<Tan\>\"", "\[Rule]", "\"\<tan\>\""}], ",", 
+          RowBox[{"\"\<Sqrt\>\"", "->", "\"\<sqrt\>\""}], ",", 
+          RowBox[{
+          "\"\<Sec\>\"", "\[Rule]", "\"\<d4est_util_secant_fcn\>\""}]}], 
+         "}"}]}], "]"}], "]"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"i", ",", "3"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"j", ",", "3"}], "}"}]}], "]"}]}], 
+  "\[IndentingNewLine]"}]], "Input",
+ CellChangeTimes->{{3.751578729497343*^9, 3.7515787690605383`*^9}},
+ CellLabel->"In[90]:=",ExpressionUUID->"4b4b3aa6-7708-476d-a4d5-c9b588333f0e"],
 
-Cell[BoxData["\<\"d2xyz_drstdrst[0][1][2] = ((bmax - bmin)*(cmax - \
-cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(3*(-2 + cmax \
-+ cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + \
-cmax + cmin + cmax*t - cmin*t))*((amax + amin + amax*r - amin*r)*(-4 + cmax + \
-cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - \
-cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))*(-2 + \
-pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + \
-bmin + bmax*s - bmin*s))/8.),2)) - 4*(2 + cmin*(-1 + t) - cmax*(1 + \
-t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + \
-cmax*t - cmin*t))*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + \
-amax*r - amin*r))/8.))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin \
-+ cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(R0 - R1)*(2 \
-+ cmin*(-1 + t) - cmax*(1 + t))*(-((amax + amin + amax*r - amin*r)*(-4 + cmax \
-+ cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - \
-cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + \
-t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - \
-cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(-(R0*(-4 + \
-cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - \
-cmin*t))*(-((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - \
-cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + \
-amax*r - amin*r))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + \
-cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.)))/(512.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2.5));\"\>"], "Print",
- CellChangeTimes->{3.7513065673112993`*^9, 3.751306833499118*^9},
- CellLabel->
-  "During evaluation of \
-In[26]:=",ExpressionUUID->"ff3d3b95-28d6-4c5a-9a7c-7e6c845b047d"],
+Cell[CellGroupData[{
 
-Cell[BoxData["\<\"d2xyz_drstdrst[0][2][2] = (pow(cmax - cmin,2)*(3*(R0*(-4 + \
-cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - \
-cmin*t))*((amax + amin + amax*r - amin*r)*(-4 + cmax + cmin + cmax*t - \
-cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(amax + amin + \
-amax*r - amin*r))/8.))*pow(-2 + pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2),2) + \
-8*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t \
-- cmin*t))*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + amax*r \
-- amin*r))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*(5 + cmin*(-1 + t) - \
-cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + \
-amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.) + 32*(R0 - R1)*(-((amax + amin + amax*r - amin*r)*(-4 + \
-cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - \
-cmin*t)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.))/2.)*(-2 + \
-pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + \
-bmin + bmax*s - bmin*s))/8.),2))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) \
-+ 32*(R0 - R1)*(amax + amin + amax*r - amin*r - 2*tan((M_PI*(amax + amin + \
-amax*r - amin*r))/8.))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + \
-cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2)))/(128.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2.5));\"\>"], "Print",
- CellChangeTimes->{3.7513065673112993`*^9, 3.7513068737890053`*^9},
+Cell[BoxData["\<\"d2xyz_drstdrst[0][0][0] = (3*pow(amax - \
+amin,2)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - \
+cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),4)*pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin \
++ ((amax - amin)*(1 + r))/2.))/4.)))/(64.*pow(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),2.5)) - ((amax - \
+amin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*(((amax - amin)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.))/2. + \
+((amax - amin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2))/8.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))/(4.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - (pow(amax - amin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),4)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - \
+cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)))/(64.*pow(1 + \
+2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) - (pow(amax \
+- amin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin \
++ ((amax - amin)*(1 + r))/2.))/4.)))/(32.*pow(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) + (pow(amax \
+- amin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))/(32.*sqrt(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))));\"\>"], "Print",
+ CellChangeTimes->{3.751578771848765*^9},
  CellLabel->
   "During evaluation of \
-In[26]:=",ExpressionUUID->"3f6f2e22-d480-4ecd-abe5-94c3242116cc"],
+In[90]:=",ExpressionUUID->"46d19b5b-0f38-4696-b94e-18735f723bc7"],
 
-Cell[BoxData["\<\"d2xyz_drstdrst[1][0][2] = ((amax - amin)*(cmax - \
-cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(3*(-2 + cmax \
-+ cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + \
-cmax + cmin + cmax*t - cmin*t))*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + \
-cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin + cmax*t - \
-cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*(-2 + \
-pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + \
-bmin + bmax*s - bmin*s))/8.),2)) - 4*(2 + cmin*(-1 + t) - cmax*(1 + \
-t))*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + \
-cmax*t - cmin*t))*(bmax + bmin + bmax*s - bmin*s - 2*tan((M_PI*(bmax + bmin + \
-bmax*s - bmin*s))/8.))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin \
-+ cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(R0 - R1)*(2 \
-+ cmin*(-1 + t) - cmax*(1 + t))*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax \
-+ cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - \
-cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + \
-t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - \
-cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 16*(-(R0*(-4 + \
-cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - \
-cmin*t))*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - \
-cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + \
-bmax*s - bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + \
-cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.)))/(512.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2.5));\"\>"], "Print",
- CellChangeTimes->{3.7513065673112993`*^9, 3.751306992812068*^9},
+Cell[BoxData["\<\"d2xyz_drstdrst[0][1][0] = (3*(amax - amin)*(bmax - \
+bmin)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((amin + \
+((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.))/(64.*pow(1 \
++ 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 \
++ t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),2.5)) - ((bmax - \
+bmin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((amax - \
+amin)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.))/2. + ((amax - amin)*M_PI*(-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + \
+((amax - amin)*(1 + \
+r))/2.))/4.),2))/8.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - \
+bmin)*(1 + s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.751578771849918*^9},
  CellLabel->
   "During evaluation of \
-In[26]:=",ExpressionUUID->"66c29337-eabb-4951-89dd-18c8c75c5f62"],
+In[90]:=",ExpressionUUID->"1e110091-3437-4d81-901d-1bbe9b4afb0a"],
 
-Cell[BoxData["\<\"d2xyz_drstdrst[1][1][2] = ((bmax - bmin)*(cmax - \
-cmin)*(3*M_PI*(-2 + cmax + cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + \
-cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - \
-cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*((bmax + bmin \
-+ bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t) - 2*(-2 + cmax + cmin \
-+ cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))*(-2 + \
-pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + \
-bmin + bmax*s - bmin*s))/8.),2)) - 2*M_PI*(-2 + cmax + cmin + cmax*t - \
-cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + \
-cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)*(bmax + bmin + bmax*s - bmin*s - 2*tan((M_PI*(bmax + bmin + \
-bmax*s - bmin*s))/8.))*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(-2*(-5 \
-+ cmax + cmin + cmax*t - cmin*t) + (-2 + cmax + cmin + cmax*t - \
-cmin*t)*pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + (-2 + cmax + \
-cmin + cmax*t - cmin*t)*pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)) - 16*M_PI*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + \
-t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(-((bmax + \
-bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + \
-cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - \
-16*M_PI*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + \
-cmax*t - cmin*t))*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(-((bmax + \
-bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.))/2.)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + \
-cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) - 8*(-(R0*(-4 + \
-cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - \
-cmin*t))*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + \
-cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2))/2.)*(-2 + pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*(5 + \
-cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - \
-cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) + 16*(-(R0*(-4 + \
-cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t - \
-cmin*t))*(-4 + M_PI*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + cmin + \
-cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.,2) - 32*(R0 - \
-R1)*(-2*(-4 + cmax + cmin + cmax*t - cmin*t) + (M_PI*(-2 + cmax + cmin + \
-cmax*t - cmin*t)*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2))/2.)*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + \
-cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2)))/(512.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2.5));\"\>"], "Print",
- CellChangeTimes->{3.7513065673112993`*^9, 3.751307114779771*^9},
+Cell[BoxData["\<\"d2xyz_drstdrst[0][2][0] = (3*(amax - amin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((amin + \
+((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((amax - amin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)*(((-cmax + cmin)*(amin + ((amax - amin)*(1 + r))/2.))/2. + \
+((cmax - cmin)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))/2.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((amax - amin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((amin + \
+((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((amax - amin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((amin + \
+((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((amax - amin)*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.))/2. + ((amax - amin)*M_PI*(-1 + cmin + ((cmax - \
+cmin)*(1 + t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 \
++ r))/2.))/4.),2))/8.)*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)))/2.))/(2.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + \
+t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)),1.5)) + ((R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((amax - amin)*(-cmax + \
+cmin))/4. + ((amax - amin)*(cmax - \
+cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2))/16.))/sqrt(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))) + ((((-cmax + cmin)*R0)/2. + ((cmax - cmin)*R1)/2.)*(((amax \
+- amin)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.))/2. + ((amax - amin)*M_PI*(-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2))/8.))/sqrt(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)));\"\>"], "Print",
+ CellChangeTimes->{3.751578771854106*^9},
  CellLabel->
   "During evaluation of \
-In[26]:=",ExpressionUUID->"9c48d4c7-281a-481f-8203-d49c56c51402"],
+In[90]:=",ExpressionUUID->"0be7ddc3-74d2-49fa-b508-ec18ac477a66"],
 
-Cell[BoxData["\<\"d2xyz_drstdrst[1][2][2] = (pow(cmax - cmin,2)*(3*(R0*(-4 + \
-cmax + cmin + cmax*t - cmin*t) - R1*(-2 + cmax + cmin + cmax*t - \
-cmin*t))*((bmax + bmin + bmax*s - bmin*s)*(-4 + cmax + cmin + cmax*t - \
-cmin*t) - 2*(-2 + cmax + cmin + cmax*t - cmin*t)*tan((M_PI*(bmax + bmin + \
-bmax*s - bmin*s))/8.))*pow(-2 + pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2),2) + \
-8*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + R1*(-2 + cmax + cmin + cmax*t \
-- cmin*t))*(bmax + bmin + bmax*s - bmin*s - 2*tan((M_PI*(bmax + bmin + bmax*s \
-- bmin*s))/8.))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + \
-pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2))*(5 + cmin*(-1 + t) - \
-cmax*(1 + t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + \
-amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.) + 32*(R0 - R1)*(-((bmax + bmin + bmax*s - bmin*s)*(-4 + \
-cmax + cmin + cmax*t - cmin*t))/4. + ((-2 + cmax + cmin + cmax*t - \
-cmin*t)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.))/2.)*(-2 + \
-pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + \
-bmin + bmax*s - bmin*s))/8.),2))*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)))/2.) \
-+ 32*(R0 - R1)*(bmax + bmin + bmax*s - bmin*s - 2*tan((M_PI*(bmax + bmin + \
-bmax*s - bmin*s))/8.))*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + cmax + \
-cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2)))/(128.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2.5));\"\>"], "Print",
- CellChangeTimes->{3.7513065673112993`*^9, 3.751307154308547*^9},
+Cell[BoxData["\<\"d2xyz_drstdrst[1][0][0] = (3*pow(amax - \
+amin,2)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - \
+cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),4)*pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*((bmin + ((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin \
++ ((bmax - bmin)*(1 + s))/2.))/4.)))/(64.*pow(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),2.5)) - (pow(amax \
+- amin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),4)*((bmin + ((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin \
++ ((bmax - bmin)*(1 + s))/2.))/4.)))/(64.*pow(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) - (pow(amax \
+- amin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*((bmin + ((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin \
++ ((bmax - bmin)*(1 + s))/2.))/4.)))/(32.*pow(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5));\"\>"], \
+"Print",
+ CellChangeTimes->{3.7515787718644533`*^9},
  CellLabel->
   "During evaluation of \
-In[26]:=",ExpressionUUID->"133d29f5-f34b-40ca-a16f-4c946060ba11"],
+In[90]:=",ExpressionUUID->"31d50d2d-2bd0-4d50-9b07-bf1573a5a2a1"],
 
-Cell[BoxData["\<\"d2xyz_drstdrst[2][0][2] = ((amax - amin)*(cmax - \
-cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2)*tan((M_PI*(amax + amin + amax*r - amin*r))/8.)*(-3*(-2 + cmax \
-+ cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + \
-cmax + cmin + cmax*t - cmin*t))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - \
-4*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(5 + cmin*(-1 + t) - cmax*(1 + \
-t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + \
-amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.) - 4*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + \
-R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(5 + cmin*(-1 + t) - cmax*(1 + t) + \
-((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.)))/(128.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2.5));\"\>"], "Print",
- CellChangeTimes->{3.7513065673112993`*^9, 3.751307157918025*^9},
+Cell[BoxData["\<\"d2xyz_drstdrst[1][1][0] = (3*(amax - amin)*(bmax - \
+bmin)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)))/(64.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((amax - amin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2)*(((bmax - bmin)*(2 - cmin - ((cmax - cmin)*(1 + \
+t))/2.))/2. + ((bmax - bmin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))/8.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.751578771873241*^9},
  CellLabel->
   "During evaluation of \
-In[26]:=",ExpressionUUID->"f8239987-b5e3-4183-8b13-5e4f9209cb04"],
+In[90]:=",ExpressionUUID->"5c374927-b95e-4f70-a7da-fc4e7685b37e"],
 
-Cell[BoxData["\<\"d2xyz_drstdrst[2][1][2] = ((bmax - bmin)*(cmax - \
-cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)*tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.)*(-3*(-2 + cmax \
-+ cmin + cmax*t - cmin*t)*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) - R1*(-2 + \
-cmax + cmin + cmax*t - cmin*t))*(-2 + pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - bmin*s))/8.),2)) - \
-4*(R0 - R1)*(2 + cmin*(-1 + t) - cmax*(1 + t))*(5 + cmin*(-1 + t) - cmax*(1 + \
-t) + ((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + \
-amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.) - 4*(-(R0*(-4 + cmax + cmin + cmax*t - cmin*t)) + \
-R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(5 + cmin*(-1 + t) - cmax*(1 + t) + \
-((-2 + cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.)))/(128.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2.5));\"\>"], "Print",
- CellChangeTimes->{3.7513065673112993`*^9, 3.751307159781308*^9},
+Cell[BoxData["\<\"d2xyz_drstdrst[1][2][0] = (3*(amax - amin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((amax - amin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)*(((-cmax + cmin)*(bmin + ((bmax - bmin)*(1 + s))/2.))/2. + \
+((cmax - cmin)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/2.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((amax - amin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((amax - amin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.751578771877186*^9},
  CellLabel->
   "During evaluation of \
-In[26]:=",ExpressionUUID->"953116dd-7d8e-464f-9629-b25ebd355442"],
+In[90]:=",ExpressionUUID->"170ac3a0-f943-4429-a2f8-21fa1c317c95"],
 
-Cell[BoxData["\<\"d2xyz_drstdrst[2][2][2] = -(pow(cmax - cmin,2)*(-2 + \
-pow(tan((M_PI*(amax + amin + amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + \
-bmin + bmax*s - bmin*s))/8.),2))*(3*(R0*(-4 + cmax + cmin + cmax*t - cmin*t) \
-- R1*(-2 + cmax + cmin + cmax*t - cmin*t))*(-2 + pow(tan((M_PI*(amax + amin + \
-amax*r - amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)) - 8*(R0 - R1)*(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.)))/(32.*pow(5 + cmin*(-1 + t) - cmax*(1 + t) + ((-2 + \
-cmax + cmin + cmax*t - cmin*t)*(pow(tan((M_PI*(amax + amin + amax*r - \
-amin*r))/8.),2) + pow(tan((M_PI*(bmax + bmin + bmax*s - \
-bmin*s))/8.),2)))/2.,2.5));\"\>"], "Print",
- CellChangeTimes->{3.7513065673112993`*^9, 3.751307162627089*^9},
+Cell[BoxData["\<\"d2xyz_drstdrst[2][0][0] = (3*pow(amax - \
+amin,2)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - \
+cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),4)*pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2))/(64.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 \
++ r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - (pow(amax - amin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),4))/(64.*pow(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) - (pow(amax \
+- amin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2))/(32.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 \
++ r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.7515787718826017`*^9},
  CellLabel->
   "During evaluation of \
-In[26]:=",ExpressionUUID->"252dd6a5-d857-4321-a943-75f60027e13a"]
-}, Open  ]]
+In[90]:=",ExpressionUUID->"f1d60bee-644d-403b-bc86-5db622342bf3"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[2][1][0] = (3*(amax - amin)*(bmax - \
+bmin)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.))/(64.*pow(1 + \
+2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),2.5));\"\>"], \
+"Print",
+ CellChangeTimes->{3.7515787718861732`*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"dc9c5c41-b781-4614-a3e4-45194640f925"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[2][2][0] = (3*(amax - amin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*(-cmax + \
+cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((amax - amin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.))/(8.*pow(1 \
++ 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 \
++ t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) - ((amax - \
+amin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.751578771888122*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"555ec42a-e227-4f37-8a43-ed981e65001a"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[0][0][1] = (3*(amax - amin)*(bmax - \
+bmin)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((amin + \
+((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.))/(64.*pow(1 \
++ 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 \
++ t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),2.5)) - ((bmax - \
+bmin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((amax - \
+amin)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.))/2. + ((amax - amin)*M_PI*(-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + \
+((amax - amin)*(1 + \
+r))/2.))/4.),2))/8.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - \
+bmin)*(1 + s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.7515787718913183`*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"4e58a03c-d305-4da5-aa1f-c95aa4a85108"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[0][1][1] = (3*pow(bmax - \
+bmin,2)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - \
+cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),4)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin \
++ ((amax - amin)*(1 + r))/2.))/4.))*pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))/(64.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 \
++ r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - (pow(bmax - bmin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + \
+((bmax - bmin)*(1 + s))/2.))/4.),4)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - \
+cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)))/(64.*pow(1 + \
+2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) - (pow(bmax \
+- bmin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin \
++ ((amax - amin)*(1 + r))/2.))/4.))*pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))/(32.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 \
++ r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.7515787718943233`*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"ff961f5e-c8ab-4ae6-b735-5bb646490a28"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[0][2][1] = (3*(bmax - bmin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin \
++ ((amax - amin)*(1 + r))/2.))/4.))*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((bmax - bmin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - \
+bmin)*(1 + s))/2.))/4.),2)*(((-cmax + cmin)*(amin + ((amax - amin)*(1 + \
+r))/2.))/2. + ((cmax - cmin)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((bmax - bmin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin \
++ ((amax - amin)*(1 + r))/2.))/4.))*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((bmax - bmin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin \
++ ((amax - amin)*(1 + r))/2.))/4.))*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.751578771899994*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"f0bc72da-d895-4fb5-aa7c-2b091cceadb2"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[1][0][1] = (3*(amax - amin)*(bmax - \
+bmin)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)))/(64.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((amax - amin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2)*(((bmax - bmin)*(2 - cmin - ((cmax - cmin)*(1 + \
+t))/2.))/2. + ((bmax - bmin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))/8.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.751578771906196*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"bcbf9b45-551a-4b4a-87f9-e3949a6bdd44"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[1][1][1] = (3*pow(bmax - \
+bmin,2)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - \
+cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),4)*pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*((bmin + ((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin \
++ ((bmax - bmin)*(1 + s))/2.))/4.)))/(64.*pow(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),2.5)) - ((bmax - \
+bmin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*(((bmax - bmin)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.))/2. + \
+((bmax - bmin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))/8.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(4.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - (pow(bmax - bmin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + \
+((bmax - bmin)*(1 + s))/2.))/4.),4)*((bmin + ((bmax - bmin)*(1 + s))/2.)*(2 - \
+cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.)))/(64.*pow(1 + \
+2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) - (pow(bmax \
+- bmin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*((bmin + ((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin \
++ ((bmax - bmin)*(1 + s))/2.))/4.)))/(32.*pow(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) + (pow(bmax \
+- bmin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(32.*sqrt(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))));\"\>"], "Print",
+ CellChangeTimes->{3.751578771911036*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"399e22c1-3b76-4dde-af71-c94d97215d03"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[1][2][1] = (3*(bmax - bmin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((bmax - bmin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - \
+bmin)*(1 + s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)*(((-cmax + cmin)*(bmin + ((bmax - bmin)*(1 + s))/2.))/2. + \
+((cmax - cmin)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/2.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((bmax - bmin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((bmax - bmin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((bmax - bmin)*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.))/2. + ((bmax - bmin)*M_PI*(-1 + cmin + ((cmax - \
+cmin)*(1 + t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2))/8.)*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)))/2.))/(2.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + \
+t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)),1.5)) + ((R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((bmax - bmin)*(-cmax + \
+cmin))/4. + ((bmax - bmin)*(cmax - \
+cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))/16.))/sqrt(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))) + ((((-cmax + cmin)*R0)/2. + ((cmax - cmin)*R1)/2.)*(((bmax \
+- bmin)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.))/2. + ((bmax - bmin)*M_PI*(-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + \
+((bmax - bmin)*(1 + s))/2.))/4.),2))/8.))/sqrt(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)));\"\>"], "Print",
+ CellChangeTimes->{3.751578771918858*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"9c085a55-a349-4de1-b1b2-5b1eac8648b0"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[2][0][1] = (3*(amax - amin)*(bmax - \
+bmin)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.))/(64.*pow(1 + \
+2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),2.5));\"\>"], \
+"Print",
+ CellChangeTimes->{3.751578771926587*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"644f431e-8a17-4c01-acf8-2ad083b95e34"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[2][1][1] = (3*pow(bmax - \
+bmin,2)*pow(M_PI,2)*pow(-1 + cmin + ((cmax - cmin)*(1 + t))/2.,2)*(R0*(2 - \
+cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),4)*pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))/(64.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 \
++ r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - (pow(bmax - bmin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + \
+((bmax - bmin)*(1 + s))/2.))/4.),4))/(64.*pow(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) - (pow(bmax \
+- bmin,2)*pow(M_PI,2)*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin \
+- ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))/(32.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 \
++ r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.751578771928684*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"b0356268-12f3-4713-959f-2880b96e8a77"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[2][2][1] = (3*(bmax - bmin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.)*(-cmax + \
+cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((bmax - bmin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.))/(8.*pow(1 \
++ 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 \
++ t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) - ((bmax - \
+bmin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + \
+((bmax - bmin)*(1 + s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.751578771931552*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"01ed2cc2-7495-425b-9fc8-3910c2ffffed"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[0][0][2] = (3*(amax - amin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((amin + \
+((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((amax - amin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)*(((-cmax + cmin)*(amin + ((amax - amin)*(1 + r))/2.))/2. + \
+((cmax - cmin)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))/2.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((amax - amin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((amin + \
+((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((amax - amin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((amin + \
+((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((amax - amin)*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.))/2. + ((amax - amin)*M_PI*(-1 + cmin + ((cmax - \
+cmin)*(1 + t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 \
++ r))/2.))/4.),2))/8.)*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)))/2.))/(2.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + \
+t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)),1.5)) + ((R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((amax - amin)*(-cmax + \
+cmin))/4. + ((amax - amin)*(cmax - \
+cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2))/16.))/sqrt(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))) + ((((-cmax + cmin)*R0)/2. + ((cmax - cmin)*R1)/2.)*(((amax \
+- amin)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.))/2. + ((amax - amin)*M_PI*(-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2))/8.))/sqrt(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)));\"\>"], "Print",
+ CellChangeTimes->{3.751578771934905*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"bea4fa9f-8ad5-4d16-ae59-d8ebacaa13f5"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[0][1][2] = (3*(bmax - bmin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin \
++ ((amax - amin)*(1 + r))/2.))/4.))*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((bmax - bmin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - \
+bmin)*(1 + s))/2.))/4.),2)*(((-cmax + cmin)*(amin + ((amax - amin)*(1 + \
+r))/2.))/2. + ((cmax - cmin)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((bmax - bmin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin \
++ ((amax - amin)*(1 + r))/2.))/4.))*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((bmax - bmin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin \
++ ((amax - amin)*(1 + r))/2.))/4.))*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.751578771944564*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"7567ba9a-0ca3-4365-a8ff-a3378ce2b8be"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[0][2][2] = (3*(R0*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*((amin + \
+((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))*pow(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax \
+- amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.,2))/(4.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + \
+t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)),2.5)) - ((R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((-cmax + cmin)*(amin + ((amax \
+- amin)*(1 + r))/2.))/2. + ((cmax - cmin)*tan((M_PI*(amin + ((amax - amin)*(1 \
++ r))/2.))/4.))/2.)*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)))/2.))/pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5) - ((((-cmax + cmin)*R0)/2. + ((cmax - \
+cmin)*R1)/2.)*((amin + ((amax - amin)*(1 + r))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(amin \
++ ((amax - amin)*(1 + r))/2.))/4.))*(-cmax + cmin + ((cmax - \
+cmin)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)))/2.))/pow(1 + 2*(2 \
+- cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5) + (2*(((-cmax \
++ cmin)*R0)/2. + ((cmax - cmin)*R1)/2.)*(((-cmax + cmin)*(amin + ((amax - \
+amin)*(1 + r))/2.))/2. + ((cmax - cmin)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))/2.))/sqrt(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)));\"\>"], "Print",
+ CellChangeTimes->{3.7515787719509687`*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"7fef00b6-2bb5-4ca0-8816-43d2ab2c04bb"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[1][0][2] = (3*(amax - amin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((amax - amin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.)*(((-cmax + cmin)*(bmin + ((bmax - bmin)*(1 + s))/2.))/2. + \
+((cmax - cmin)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/2.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((amax - amin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((amax - amin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.7515787719587507`*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"78217b1f-990d-4d7c-b3b0-85de1d396e03"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[1][1][2] = (3*(bmax - bmin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((bmax - bmin)*M_PI*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax \
+- cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - \
+bmin)*(1 + s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)*(((-cmax + cmin)*(bmin + ((bmax - bmin)*(1 + s))/2.))/2. + \
+((cmax - cmin)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/2.))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((bmax - bmin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)))/(8.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((bmax - bmin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.)*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.)))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5)) - ((R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((bmax - bmin)*(2 - cmin - \
+((cmax - cmin)*(1 + t))/2.))/2. + ((bmax - bmin)*M_PI*(-1 + cmin + ((cmax - \
+cmin)*(1 + t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2))/8.)*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)))/2.))/(2.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + \
+t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)),1.5)) + ((R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((bmax - bmin)*(-cmax + \
+cmin))/4. + ((bmax - bmin)*(cmax - \
+cmin)*M_PI*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))/16.))/sqrt(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2))) + ((((-cmax + cmin)*R0)/2. + ((cmax - cmin)*R1)/2.)*(((bmax \
+- bmin)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.))/2. + ((bmax - bmin)*M_PI*(-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + \
+((bmax - bmin)*(1 + s))/2.))/4.),2))/8.))/sqrt(1 + 2*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)));\"\>"], "Print",
+ CellChangeTimes->{3.7515787719635563`*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"6c73bdf8-42cd-4744-8569-e9d4c765d72f"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[1][2][2] = (3*(R0*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*((bmin + \
+((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))*pow(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax \
+- amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.,2))/(4.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + \
+t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)),2.5)) - ((R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*(((-cmax + cmin)*(bmin + ((bmax \
+- bmin)*(1 + s))/2.))/2. + ((cmax - cmin)*tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.))/2.)*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)))/2.))/pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5) - ((((-cmax + cmin)*R0)/2. + ((cmax - \
+cmin)*R1)/2.)*((bmin + ((bmax - bmin)*(1 + s))/2.)*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*tan((M_PI*(bmin \
++ ((bmax - bmin)*(1 + s))/2.))/4.))*(-cmax + cmin + ((cmax - \
+cmin)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)))/2.))/pow(1 + 2*(2 \
+- cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5) + (2*(((-cmax \
++ cmin)*R0)/2. + ((cmax - cmin)*R1)/2.)*(((-cmax + cmin)*(bmin + ((bmax - \
+bmin)*(1 + s))/2.))/2. + ((cmax - cmin)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/2.))/sqrt(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)));\"\>"], "Print",
+ CellChangeTimes->{3.751578771971119*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"9d046db8-0dc6-4779-b34d-621b077f7501"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[2][0][2] = (3*(amax - amin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.)*(-cmax + \
+cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((amax - amin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.))/(8.*pow(1 \
++ 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 \
++ t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) - ((amax - \
+amin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2)*tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.751578771977825*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"3f962cad-27da-4408-a6ea-c9b598029c95"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[2][1][2] = (3*(bmax - bmin)*M_PI*(-1 + cmin \
++ ((cmax - cmin)*(1 + t))/2.)*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+R1*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.)*(-cmax + \
+cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) \
++ (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),2.5)) - ((bmax - bmin)*M_PI*(((-cmax + cmin)*R0)/2. + ((cmax \
+- cmin)*R1)/2.)*(-1 + cmin + ((cmax - cmin)*(1 + \
+t))/2.)*pow(d4est_util_secant_fcn((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.))/(8.*pow(1 \
++ 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 \
++ t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + r))/2.))/4.),2) + \
+pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + s))/2.))/4.),2)),1.5)) - ((bmax - \
+bmin)*(cmax - cmin)*M_PI*(R0*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + R1*(-1 \
++ cmin + ((cmax - cmin)*(1 + t))/2.))*pow(d4est_util_secant_fcn((M_PI*(bmin + \
+((bmax - bmin)*(1 + s))/2.))/4.),2)*tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.))/(16.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + (-1 + \
+cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5));\"\>"], "Print",
+ CellChangeTimes->{3.751578771981248*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"5c683e64-4024-4019-9f17-06262d018ed6"],
+
+Cell[BoxData["\<\"d2xyz_drstdrst[2][2][2] = (3*(R0*(2 - cmin - ((cmax - \
+cmin)*(1 + t))/2.) + R1*(-1 + cmin + ((cmax - cmin)*(1 + t))/2.))*pow(-cmax + \
+cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - amin)*(1 + \
+r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.,2))/(4.*pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + \
+t))/2.) + (-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + \
+((amax - amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 \
++ s))/2.))/4.),2)),2.5)) - ((((-cmax + cmin)*R0)/2. + ((cmax - \
+cmin)*R1)/2.)*(-cmax + cmin + ((cmax - cmin)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)))/2.))/pow(1 + 2*(2 - cmin - ((cmax - cmin)*(1 + t))/2.) + \
+(-1 + cmin + ((cmax - cmin)*(1 + t))/2.)*(pow(tan((M_PI*(amin + ((amax - \
+amin)*(1 + r))/2.))/4.),2) + pow(tan((M_PI*(bmin + ((bmax - bmin)*(1 + \
+s))/2.))/4.),2)),1.5);\"\>"], "Print",
+ CellChangeTimes->{3.751578771985841*^9},
+ CellLabel->
+  "During evaluation of \
+In[90]:=",ExpressionUUID->"e51c3ef0-0d92-4eaa-b9c1-56421a0eadd8"]
+}, Open  ]],
+
+Cell[BoxData[
+ SuperscriptBox["Null", "3"]], "Output",
+ CellChangeTimes->{3.751578771990542*^9},
+ CellLabel->"Out[90]=",ExpressionUUID->"2a56fc06-dae1-4d67-9586-69b2f150207a"]
 }, Open  ]]
 },
-WindowSize->{1366, 768},
-WindowMargins->{{0, Automatic}, {Automatic, 0}},
+WindowSize->{443, 605},
+WindowMargins->{{Automatic, 461}, {78, Automatic}},
 FrontEndVersion->"11.3 for Linux x86 (64-bit) (March 6, 2018)",
 StyleDefinitions->"Default.nb"
 ]
@@ -884,19 +1724,39 @@ Notebook[{
 Cell[400, 13, 1583, 46, 103, "Input",ExpressionUUID->"a088fe37-1914-4735-b029-66801e9d2b11"],
 Cell[1986, 61, 1208, 36, 78, "Input",ExpressionUUID->"3f5aee32-9e22-4cec-9f1e-9704c1531d6d"],
 Cell[3197, 99, 546, 16, 31, "Input",ExpressionUUID->"f3e85842-6406-457e-9e50-b2d9cb348d3d"],
+Cell[3746, 117, 15362, 429, 561, "Input",ExpressionUUID->"3fdfecb2-b43c-4509-b67c-575d159224ac"],
 Cell[CellGroupData[{
-Cell[3768, 119, 15290, 429, 607, "Input",ExpressionUUID->"3fdfecb2-b43c-4509-b67c-575d159224ac"],
+Cell[19133, 550, 4759, 113, 170, "Input",ExpressionUUID->"4b4b3aa6-7708-476d-a4d5-c9b588333f0e"],
 Cell[CellGroupData[{
-Cell[19083, 552, 4075, 57, 598, "Print",ExpressionUUID->"1a8781fb-1bba-4dfe-9825-ac5d8e25f926"],
-Cell[23161, 611, 2309, 33, 334, "Print",ExpressionUUID->"ff3d3b95-28d6-4c5a-9a7c-7e6c845b047d"],
-Cell[25473, 646, 2147, 30, 290, "Print",ExpressionUUID->"3f6f2e22-d480-4ecd-abe5-94c3242116cc"],
-Cell[27623, 678, 2309, 33, 334, "Print",ExpressionUUID->"66c29337-eabb-4951-89dd-18c8c75c5f62"],
-Cell[29935, 713, 4073, 57, 598, "Print",ExpressionUUID->"9c48d4c7-281a-481f-8203-d49c56c51402"],
-Cell[34011, 772, 2145, 30, 290, "Print",ExpressionUUID->"133d29f5-f34b-40ca-a16f-4c946060ba11"],
-Cell[36159, 804, 1387, 20, 180, "Print",ExpressionUUID->"f8239987-b5e3-4183-8b13-5e4f9209cb04"],
-Cell[37549, 826, 1387, 20, 180, "Print",ExpressionUUID->"953116dd-7d8e-464f-9629-b25ebd355442"],
-Cell[38939, 848, 1006, 15, 136, "Print",ExpressionUUID->"252dd6a5-d857-4321-a943-75f60027e13a"]
-}, Open  ]]
+Cell[23917, 667, 3563, 51, 510, "Print",ExpressionUUID->"46d19b5b-0f38-4696-b94e-18735f723bc7"],
+Cell[27483, 720, 1791, 26, 246, "Print",ExpressionUUID->"1e110091-3437-4d81-901d-1bbe9b4afb0a"],
+Cell[29277, 748, 4697, 65, 708, "Print",ExpressionUUID->"0be7ddc3-74d2-49fa-b508-ec18ac477a66"],
+Cell[33977, 815, 2307, 34, 334, "Print",ExpressionUUID->"31d50d2d-2bd0-4d50-9b07-bf1573a5a2a1"],
+Cell[36287, 851, 1791, 26, 246, "Print",ExpressionUUID->"5c374927-b95e-4f70-a7da-fc4e7685b37e"],
+Cell[38081, 879, 3040, 43, 444, "Print",ExpressionUUID->"170ac3a0-f943-4429-a2f8-21fa1c317c95"],
+Cell[41124, 924, 1775, 26, 246, "Print",ExpressionUUID->"f1d60bee-644d-403b-bc86-5db622342bf3"],
+Cell[42902, 952, 888, 14, 114, "Print",ExpressionUUID->"dc9c5c41-b781-4614-a3e4-45194640f925"],
+Cell[43793, 968, 1857, 27, 268, "Print",ExpressionUUID->"555ec42a-e227-4f37-8a43-ed981e65001a"],
+Cell[45653, 997, 1793, 26, 246, "Print",ExpressionUUID->"4e58a03c-d305-4da5-aa1f-c95aa4a85108"],
+Cell[47449, 1025, 2303, 32, 334, "Print",ExpressionUUID->"ff961f5e-c8ab-4ae6-b735-5bb646490a28"],
+Cell[49755, 1059, 3040, 43, 444, "Print",ExpressionUUID->"f0bc72da-d895-4fb5-aa7c-2b091cceadb2"],
+Cell[52798, 1104, 1791, 26, 246, "Print",ExpressionUUID->"bcbf9b45-551a-4b4a-87f9-e3949a6bdd44"],
+Cell[54592, 1132, 3563, 51, 510, "Print",ExpressionUUID->"399e22c1-3b76-4dde-af71-c94d97215d03"],
+Cell[58158, 1185, 4697, 65, 708, "Print",ExpressionUUID->"9c085a55-a349-4de1-b1b2-5b1eac8648b0"],
+Cell[62858, 1252, 886, 14, 114, "Print",ExpressionUUID->"644f431e-8a17-4c01-acf8-2ad083b95e34"],
+Cell[63747, 1268, 1773, 26, 246, "Print",ExpressionUUID->"b0356268-12f3-4713-959f-2880b96e8a77"],
+Cell[65523, 1296, 1857, 27, 268, "Print",ExpressionUUID->"01ed2cc2-7495-425b-9fc8-3910c2ffffed"],
+Cell[67383, 1325, 4697, 65, 708, "Print",ExpressionUUID->"bea4fa9f-8ad5-4d16-ae59-d8ebacaa13f5"],
+Cell[72083, 1392, 3040, 43, 444, "Print",ExpressionUUID->"7567ba9a-0ca3-4365-a8ff-a3378ce2b8be"],
+Cell[75126, 1437, 2520, 35, 356, "Print",ExpressionUUID->"7fef00b6-2bb5-4ca0-8816-43d2ab2c04bb"],
+Cell[77649, 1474, 3042, 43, 444, "Print",ExpressionUUID->"78217b1f-990d-4d7c-b3b0-85de1d396e03"],
+Cell[80694, 1519, 4699, 65, 708, "Print",ExpressionUUID->"6c73bdf8-42cd-4744-8569-e9d4c765d72f"],
+Cell[85396, 1586, 2518, 35, 1566, "Print",ExpressionUUID->"9d046db8-0dc6-4779-b34d-621b077f7501"],
+Cell[87917, 1623, 1857, 27, 1148, "Print",ExpressionUUID->"3f962cad-27da-4408-a6ea-c9b598029c95"],
+Cell[89777, 1652, 1857, 27, 1148, "Print",ExpressionUUID->"5c683e64-4024-4019-9f17-06262d018ed6"],
+Cell[91637, 1681, 1139, 17, 158, "Print",ExpressionUUID->"e51c3ef0-0d92-4eaa-b9c1-56421a0eadd8"]
+}, Open  ]],
+Cell[92791, 1701, 175, 3, 37, "Output",ExpressionUUID->"2a56fc06-dae1-4d67-9586-69b2f150207a"]
 }, Open  ]]
 }
 ]

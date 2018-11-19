@@ -37,7 +37,7 @@ typedef struct {
   
   /* gives local or ghost element that touches a face or -1 if it's a 2nd-layer ghost or no face, gives same id as element if boundary 
    * the id is between 0 and local_num_quadrants + ghost_num_quadrants - 1*/
-  d4est_element_data_t elements_that_touch_face[(P4EST_FACES)][(P4EST_HALF)];
+  /* d4est_mortar_data_t elements_that_touch_face[(P4EST_FACES)][(P4EST_HALF)]; */
 
   int nodal_size; 
   int nodal_stride; /* stride into just the nodal field on this subdomain, it is not a stride into a local nodal field and is not a stride into a field over all subdomains, i.e. it is zero on the first node of the first element of the containing subdomain*/

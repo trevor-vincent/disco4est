@@ -3,8 +3,9 @@
 void
 d4est_solver_schwarz_laplacian_apply_aij_over_subdomain
 (
- d4est_schwarz_data_t* schwarz_data,
+ d4est_schwarz_metadata_t* schwarz_data,
  d4est_schwarz_operators_t* schwarz_ops,
+ double* Au_over_subdomain,
  double* u_over_subdomain,
  int subdomain
 )

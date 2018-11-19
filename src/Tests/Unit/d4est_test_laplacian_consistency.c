@@ -460,7 +460,6 @@ int main(int argc, char *argv[])
      (int**)((const int*[]){element_id, NULL}),
      -1
     );
-      
     /* d4est_output_vtk */
     /*   (p4est, */
     /*    d4est_ops, */

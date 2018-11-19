@@ -317,12 +317,13 @@ problem_init
 
   d4est_laplacian_flux_sipg_params_t* sipg_params = flux_data_for_lhs->flux_data;
   
-  d4est_estimator_bi_new_penalty_data_t penalty_data;
+  d4est_estimator_bi_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
   /* penalty_data.size_params = NULL; */
   penalty_data.u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
   penalty_data.gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
+
   
   d4est_amr_smooth_pred_marker_t amr_marker;
   amr_marker.user = (void*)&ctx;
@@ -488,8 +489,9 @@ problem_init
     double* estimator_vtk = P4EST_ALLOC(double, 4*p4est->local_num_quadrants);
     double* estimator_vtk_per_face = P4EST_ALLOC(double, 18*p4est->local_num_quadrants);
 
-    double* residual_pointwise_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
+    double* residual_pointwise_quad = P4EST_ALLOC_ZERO(double, d4est_factors->local_sizes.local_nodes_quad);
     double* f_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
+    double* f = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes);
 
     d4est_hessian_compute_hessian_trace_of_field_on_quadrature_points
       (
@@ -502,10 +504,11 @@ problem_init
        prob_vecs.u,
        residual_pointwise_quad
       );
+    
     d4est_mesh_init_field
       (
        p4est,
-       f_quad,
+       f,
        poisson_lorentzian_rhs_fcn,
        d4est_ops,
        d4est_geom,
@@ -514,6 +517,38 @@ problem_init
        NULL
       );
 
+
+    for (int i = 0; i < p4est->local_num_quadrants; i++){
+
+      d4est_element_data_t* ed = d4est_factors->element_data[i];
+    
+      d4est_quadrature_volume_t mesh_object;
+      mesh_object.dq =  ed->dq;
+      mesh_object.tree = ed->tree;
+      mesh_object.element_id = ed->id;
+        
+      mesh_object.q[0] = ed->q[0];
+      mesh_object.q[1] = ed->q[1];
+#if (P4EST_DIM)==3
+      mesh_object.q[2] = ed->q[2];
+#endif
+      d4est_quadrature_interpolate
+        (
+         d4est_ops,
+         d4est_quad,
+         d4est_geom,
+         &mesh_object,
+         QUAD_OBJECT_VOLUME,
+         QUAD_INTEGRAND_UNKNOWN,
+         &f[ed->nodal_stride],
+         ed->deg,
+         &f_quad[ed->quad_stride],
+         ed->deg_quad
+        );
+
+    }
+
+    
     
     for (int qnode = 0; qnode < d4est_factors->local_sizes.local_nodes_quad; qnode++){
 
@@ -523,32 +558,59 @@ problem_init
     }
 
     
-    double* estimator = d4est_estimator_bi_new_compute
-                        (
-                         p4est,
-                         &prob_vecs,
-                         residual_pointwise_quad,
-                         penalty_data,
-                         poisson_lorentzian_boundary_fcn,
-                         &lorentzian_params,
-                         *d4est_ghost,
-                         d4est_ghost_data,
-                         d4est_ops,
-                         d4est_geom,
-                         d4est_factors,
-                         d4est_geom_compactified,
-                         d4est_factors_compactified,
-                         d4est_quad,
-                         0,
-                         estimator_vtk,
-                         estimator_vtk_per_face,
-                         1,
-                         NULL
-                        );
+    /* double* estimator = */
+    /*   d4est_estimator_bi_new_compute */
+    /*                     ( */
+    /*                      p4est, */
+    /*                      &prob_vecs, */
+    /*                      residual_pointwise_quad, */
+    /*                      penalty_data, */
+    /*                      poisson_lorentzian_boundary_fcn, */
+    /*                      &lorentzian_params, */
+    /*                      *d4est_ghost, */
+    /*                      d4est_ghost_data, */
+    /*                      d4est_ops, */
+    /*                      d4est_geom, */
+    /*                      d4est_factors, */
+    /*                      d4est_geom_compactified, */
+    /*                      d4est_factors_compactified, */
+    /*                      d4est_quad, */
+    /*                      0, */
+    /*                      estimator_vtk, */
+    /*                      estimator_vtk_per_face, */
+    /*                      1, */
+    /*                      NULL */
+    /*                     ); */
+
+
+    double* estimator =
+      d4est_estimator_bi_compute
+      (
+       p4est,
+       &prob_vecs,
+       &prob_fcns,
+       penalty_data,
+       poisson_lorentzian_boundary_fcn,
+       &lorentzian_params,
+       *d4est_ghost,
+       d4est_ghost_data,
+       d4est_ops,
+       d4est_geom,
+       d4est_factors,
+       d4est_geom_compactified,
+       d4est_factors_compactified,
+       d4est_quad,
+       0,
+       estimator_vtk,
+       estimator_vtk_per_face
+      );
+
+    
 
     
     P4EST_FREE(residual_pointwise_quad);
     P4EST_FREE(f_quad);
+    P4EST_FREE(f);
 
     
     /* for (int i = 0; i < p4est->local_num_quadrants; i++){ */
@@ -1142,4 +1204,5 @@ problem_init
   P4EST_FREE(prob_vecs.u);
   P4EST_FREE(prob_vecs.Au);
   P4EST_FREE(prob_vecs.rhs);
+
 }

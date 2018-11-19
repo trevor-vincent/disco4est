@@ -532,7 +532,8 @@ d4est_estimator_bi_new_compute
      d4est_factors_physical,
      &flux_fcns
     );
-  
+
+  /* DEBUG_PRINT_ARR_DBL(estimator, p4est->local_num_quadrants); */
   D4EST_FREE_DIM_VEC(dudr_local);  
   D4EST_FREE_DIM_VEC(dudr_ghost);  
   return estimator;

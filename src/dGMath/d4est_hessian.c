@@ -24,8 +24,8 @@ d4est_hessian
  double* hessian_u_quad [(P4EST_DIM)][(P4EST_DIM)],
  double* hessian_trace_u_quad,
  int deg_quad,
- double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)],
- double* d2xyz_drstdrst_quad [(P4EST_DIM)][(P4EST_DIM)][P4EST_DIM]
+ double* drdx_quad [(P4EST_DIM)][(P4EST_DIM)],
+ double* d2xdrdr_quad [(P4EST_DIM)][(P4EST_DIM)][P4EST_DIM]
 )
 {
   D4EST_ASSERT(object_type == QUAD_OBJECT_VOLUME);
@@ -33,11 +33,31 @@ d4est_hessian
   int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), deg_quad);
   int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM), deg_lobatto);
 
-  double* du_db [P4EST_DIM]; D4EST_ALLOC_DIM_VEC(du_db, volume_nodes_lobatto);
-  double* du_db_quad [P4EST_DIM]; D4EST_ALLOC_DIM_VEC(du_db_quad, volume_nodes_quad);
-  double* d2u_dadb [P4EST_DIM][P4EST_DIM]; D4EST_ALLOC_DBYD_MAT(d2u_dadb, volume_nodes_lobatto);
-  double* d2u_dadb_quad [P4EST_DIM][P4EST_DIM]; D4EST_ALLOC_DBYD_MAT(d2u_dadb_quad, volume_nodes_quad);
+  double* du [P4EST_DIM]; D4EST_ALLOC_DIM_VEC(du, volume_nodes_lobatto);
+  double* du_quad [P4EST_DIM]; D4EST_ALLOC_DIM_VEC(du_quad, volume_nodes_quad);
+  double* d2u [P4EST_DIM][P4EST_DIM]; D4EST_ALLOC_DBYD_MAT(d2u, volume_nodes_lobatto);
+  double* d2u_quad [P4EST_DIM][P4EST_DIM]; D4EST_ALLOC_DBYD_MAT(d2u_quad, volume_nodes_quad);
 
+  double* d2rdrdx_quad [(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)];
+
+  for (int m = 0; m < (P4EST_DIM); m++){
+    for (int n = 0; n < (P4EST_DIM); n++){
+      for (int k = 0; k < (P4EST_DIM); k++){
+        d2rdrdx_quad[m][n][k] = P4EST_ALLOC_ZERO(double, volume_nodes_quad);
+        for (int node = 0; node < volume_nodes_quad; node++){
+          for (int a = 0; a < (P4EST_DIM); a++) {
+            for (int l = 0; l < (P4EST_DIM); ++l) {
+              d2rdrdx_quad[m][n][k][node] -= drdx_quad[m][l][node]*drdx_quad[a][n][node]*d2xdrdr_quad[l][a][k][node];
+              /* printf("d2rdrdx_quad[%d][%d][%d] = %.15f\n", m,n,k, d2rdrdx_quad[m][n][k][node]); */
+              /* printf("drdx_quad[%d][%d] = %.15f\n", m,n,k, drdx_quad[m][n][node]); */
+            }
+          }
+        }        
+      }
+    }
+  }
+
+  
   if (hessian_u_quad != NULL && hessian_u_quad[0][0] != NULL){
       for (int j = 0; j < (P4EST_DIM); j++){
         for (int k = 0; k < (P4EST_DIM); k++){
@@ -55,7 +75,10 @@ d4est_hessian
   }
   
   for (int b = 0; b < (P4EST_DIM); b++){
-    d4est_operators_apply_dij(d4est_ops, u, (P4EST_DIM), deg_lobatto, b, du_db[b]);  
+    d4est_operators_apply_dij(d4est_ops, u, (P4EST_DIM), deg_lobatto, b, du[b]);
+
+    
+    /* DEBUG_PRINT_ARR_DBL(du[b], volume_nodes_lobatto); */
     d4est_quadrature_interpolate(
                                  d4est_ops,
                                  d4est_quad,
@@ -63,14 +86,14 @@ d4est_hessian
                                  object,
                                  object_type,
                                  integrand_type,
-                                 du_db[b],
+                                 du[b],
                                  deg_lobatto,
-                                 du_db_quad[b],
+                                 du_quad[b],
                                  deg_quad
     );
 
     for (int a = 0; a < (P4EST_DIM); a++){
-      d4est_operators_apply_dij(d4est_ops, du_db[b], (P4EST_DIM), deg_lobatto, a, d2u_dadb[a][b]);
+      d4est_operators_apply_dij(d4est_ops, du[b], (P4EST_DIM), deg_lobatto, a, d2u[b][a]);
       d4est_quadrature_interpolate(
                                    d4est_ops,
                                    d4est_quad,
@@ -78,9 +101,9 @@ d4est_hessian
                                    object,
                                    object_type,
                                    integrand_type,
-                                   d2u_dadb[a][b],
+                                   d2u[b][a],
                                    deg_lobatto,
-                                   d2u_dadb_quad[a][b],
+                                   d2u_quad[b][a],
                                    deg_quad
       );
     }    
@@ -92,70 +115,40 @@ d4est_hessian
         for (int node = 0; node < volume_nodes_quad; node++){
           for (int a = 0; a < (P4EST_DIM); a++){
             for (int b = 0; b < (P4EST_DIM); b++){
-              for (int g = 0; g < (P4EST_DIM); g++){
-                for (int l = 0; l < (P4EST_DIM); l++){        
-                  hessian_u_quad[i][j][node] += -1.*drst_dxyz_quad[a][i][node]*drst_dxyz_quad[b][l][node]
-                                                *drst_dxyz_quad[g][j][node]*d2xyz_drstdrst_quad[l][g][a][node]*
-                                                du_db_quad[b][node];
-                }
-              }
+              hessian_u_quad[j][i][node] += drdx_quad[a][i][node]*(d2rdrdx_quad[b][j][a][node]*du_quad[b][node] + drdx_quad[b][j][node]*d2u_quad[b][a][node]);
             }
           }       
         }
       }
     }
 
-    for (int i = 0; i < (P4EST_DIM); i++){
-      for (int j = 0; j < (P4EST_DIM); j++){
-        for (int node = 0; node < volume_nodes_quad; node++){
-          for (int a = 0; a < (P4EST_DIM); a++){
-            for (int b = 0; b < (P4EST_DIM); b++){
-              hessian_u_quad[i][j][node] += drst_dxyz_quad[a][i][node]*drst_dxyz_quad[b][j][node]
-                                            *d2u_dadb_quad[b][a][node];
-            }
-          }
-        }
-      }
-    }
     
   }
   if (hessian_trace_u_quad != NULL){
-
     for (int node = 0; node < volume_nodes_quad; node++){
-          for (int i = 0; i < (P4EST_DIM); i++){
-          for (int a = 0; a < (P4EST_DIM); a++){
-            for (int b = 0; b < (P4EST_DIM); b++){
-              for (int g = 0; g < (P4EST_DIM); g++){
-                for (int l = 0; l < (P4EST_DIM); l++){        
-                  hessian_trace_u_quad[node] += -1.*drst_dxyz_quad[a][i][node]*drst_dxyz_quad[b][l][node]
-                                                *drst_dxyz_quad[g][i][node]*d2xyz_drstdrst_quad[l][g][a][node]*
-                                                du_db_quad[b][node];
-
-                }
-              }
-            }
-          }       
-        }
-    }
-
-
-        for (int node = 0; node < volume_nodes_quad; node++){
-          for (int i = 0; i < (P4EST_DIM); i++){
-          for (int a = 0; a < (P4EST_DIM); a++){
-            for (int b = 0; b < (P4EST_DIM); b++){
-              hessian_trace_u_quad[node] += drst_dxyz_quad[a][i][node]*drst_dxyz_quad[b][i][node]
-                                            *d2u_dadb_quad[b][a][node];
-            }
+      for (int i = 0; i < (P4EST_DIM); i++){
+        for (int a = 0; a < (P4EST_DIM); a++){
+          /* printf("d2u_quad[%d][%d][node] = %.15f\n", i,a, d2u_quad[i][a][node]); */
+          for (int b = 0; b < (P4EST_DIM); b++){
+            hessian_trace_u_quad[node] += drdx_quad[a][i][node]*(d2rdrdx_quad[b][i][a][node]*du_quad[b][node] + drdx_quad[b][i][node]*d2u_quad[b][a][node]);
           }
-        }
+        }       
+      }
+    }      
+  }
+
+  for (int m = 0; m < (P4EST_DIM); m++){
+    for (int n = 0; n < (P4EST_DIM); n++){
+      for (int k = 0; k < (P4EST_DIM); k++){
+        P4EST_FREE(d2rdrdx_quad[m][n][k]);
+      }
     }
-      
   }
   
-  D4EST_FREE_DIM_VEC(du_db);
-  D4EST_FREE_DIM_VEC(du_db_quad);
-  D4EST_FREE_DBYD_MAT(d2u_dadb);
-  D4EST_FREE_DBYD_MAT(d2u_dadb_quad);
+  D4EST_FREE_DIM_VEC(du);
+  D4EST_FREE_DIM_VEC(du_quad);
+  D4EST_FREE_DBYD_MAT(d2u);
+  D4EST_FREE_DBYD_MAT(d2u_quad);
 }
 
 void
@@ -170,26 +163,22 @@ d4est_hessian_compute_d2xdrdr_on_quadrature_points_of_element
  double* d2xdrdr_quad [(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)]
 )
 {
-
   int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
   int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
 
-
-    d4est_quadrature_volume_t mesh_object;
-    mesh_object.dq =  ed->dq;
-    mesh_object.tree = ed->tree;
-    mesh_object.element_id = ed->id;
+  d4est_quadrature_volume_t mesh_object;
+  mesh_object.dq =  ed->dq;
+  mesh_object.tree = ed->tree;
+  mesh_object.element_id = ed->id;
         
-    mesh_object.q[0] = ed->q[0];
-    mesh_object.q[1] = ed->q[1];
+  mesh_object.q[0] = ed->q[0];
+  mesh_object.q[1] = ed->q[1];
 #if (P4EST_DIM)==3
-    mesh_object.q[2] = ed->q[2];
+  mesh_object.q[2] = ed->q[2];
 #endif
 
-  
   if (compute_method == HESSIAN_ANALYTICAL){
 
-    
     d4est_rst_t rst_points_quad;
     rst_points_quad = d4est_quadrature_get_rst_points
                       (

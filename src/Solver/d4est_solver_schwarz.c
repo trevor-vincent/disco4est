@@ -431,6 +431,31 @@ d4est_solver_schwarz_metadata_init
   return schwarz_data;
 }
 
+/* void */
+/* d4est_solver_schwarz_metadata_get_face_neighbours */
+/* ( */
+
+/* ){ */
+/*   for (int i = 0; i < schwarz_data->num_subdomains; i++){ */
+/*     d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_data->subdomain_metadata[subdomain]; */
+/*     for (int j = 0; j < sub_data->num_elements; j++){ */
+/*       d4est_solver_schwarz_element_metadata_t schwarz_ed = sub_data.element_metadata[j]; */
+
+/*       d4est_element_data_t* ed_metadata = d4est_factors->element_data[schwarz_ed->id]; */
+
+/*       for (int f = 0; f < (P4EST_FACES); f++){ */
+/*         for (int s_p = 0; s_p < (P4EST_HALF): s_p++){ */
+          
+/*           p_tree_that_touch_face [f][s_p]; */
+/*           p_tree_quadid_that_touch_face[f][s_p]; */
+/*           p_face_that_touch_face [ */
+          
+/*         } */
+/*       } */
+/*     } */
+/*   } */
+/* } */
+
 void
 d4est_solver_schwarz_metadata_destroy
 (
