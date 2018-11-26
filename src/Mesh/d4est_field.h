@@ -11,7 +11,6 @@ typedef enum {
               VOLUME, /* a field on each element volume */
               NODAL, /* a field on the LGL points of each element  */
               FACE, /* a field on each face of an element */
-              MORTAR, /* a field on each mortar face touching the element, per element size = (P4EST_FACES)*(P4EST_HALF) */
               NO_TYPE
 } d4est_field_type_t;
 

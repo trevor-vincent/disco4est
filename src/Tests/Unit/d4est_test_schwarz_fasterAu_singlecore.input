@@ -1,12 +1,12 @@
 [initial_mesh]
 min_quadrants = -1
-min_level = 0
+min_level = 1
 fill_uniform = 1
-region0_deg = 4
+region0_deg = 1
 region0_deg_quad_inc = 0
-region1_deg = 4
+region1_deg = 1
 region1_deg_quad_inc = 0
-region2_deg = 4
+region2_deg = 1
 region2_deg_quad_inc = 0
 
 [mesh_parameters]
@@ -19,12 +19,8 @@ name = sipg
 sipg_penalty_prefactor = 2
 sipg_penalty_fcn = maxp_sqr_over_minh
 
-[d4est_solver_schwarz]
+[d4est_solver_schwarz_metadata]
 num_nodes_overlap = 2
-subdomain_iter = 1000;
-subdomain_rtol = 1e-5;
-subdomain_atol = 1e-15;
-schwarz_iter = 1000;
 
 [d4est_vtk]
 filename = d4est_test_schwarz
@@ -38,12 +34,13 @@ wrap_rank = 0
 write_deg = 1
 
 [geometry]
-name = cubed_sphere
-R0 = .3333333333333
-R1 = .6666666666666
-R2 = 1
-compactify_outer_shell = 0
-compactify_inner_shell = 0
+name = brick
+X0 = 0.0
+X1 = 1.0
+Y0 = 0.0
+Y1 = 1.0
+Z0 = 0.0
+Z1 = 1.0
 DX_compute_method = analytic
 JAC_compute_method = numerical
 

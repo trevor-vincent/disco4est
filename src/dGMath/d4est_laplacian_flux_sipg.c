@@ -306,12 +306,15 @@ d4est_laplacian_flux_sipg_dirichlet
   for (int i = 0; i < volume_nodes_m; i++){
     for (int d = 0; d < (P4EST_DIM); d++){
       boundary_data->Au_m[i] += DT_lifted_VT_w_term2_lobatto[d][i];
+      /* printf("lifted_VT_w_term2_lobatto[%d][%d] = %.15f\n",d,i, lifted_VT_w_term2_lobatto[d][i]); */
       /* e_m->Au_elem[i] += DT_lifted_VT_w_term2_lobatto[d][i]; */
     }
     /* e_m->Au_elem[i] += lifted_VT_w_term3_lobatto[i]; */
     boundary_data->Au_m[i] +=  lifted_VT_w_term3_lobatto[i];
+    /* printf("lifted_VT_w_term3_lobatto[%d] = %.15f\n",i, lifted_VT_w_term3_lobatto[i]); */
     /* e_m->Au_elem[i] += lifted_VT_w_term1_lobatto[i]; */
     boundary_data->Au_m[i] += lifted_VT_w_term1_lobatto[i];
+    /* printf("lifted_VT_w_term1_lobatto[%d] = %.15f\n",i, lifted_VT_w_term1_lobatto[i]); */
   }
 
   
@@ -790,7 +793,7 @@ d4est_laplacian_flux_sipg_interface_aux
                                  &lifted_proj_VT_w_term3_mortar_lobatto[volume_stride]);
 
 
-     
+      
     }
 
     volume_stride += volume_nodes_m;
@@ -884,7 +887,8 @@ d4est_laplacian_flux_sipg_interface
   int stride = 0;
   for (int f = 0; f < faces_m; f++){
     int volume_nodes_m = d4est_lgl_get_nodes((P4EST_DIM), e_m[f]->deg);
-    if (e_m_is_ghost[f] == 0){    
+    /* this if statement could perhaps be reduced to just Au_m[f] != NULL */
+    if (e_m_is_ghost[f] == 0 &&  mortar_data->Au_m[f] != NULL){    
       /* printf("Element = %d\n, face = %d\n", e_m[f]->id, f_m); */
       for (int i = 0; i < volume_nodes_m; i++){
         /* printf("term 2\n"); */

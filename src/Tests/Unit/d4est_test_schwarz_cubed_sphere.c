@@ -10,7 +10,7 @@
 #include <d4est_element_data.h>
 #include <d4est_laplacian.h>
 #include <d4est_laplacian_flux.h>
-#include <d4est_solver_schwarz.h>
+#include <d4est_solver_schwarz_metadata.h>
 #include <d4est_solver_schwarz_helpers.h>
 #include <petscsnes.h>
 #include <zlog.h>
@@ -307,7 +307,8 @@ int main(int argc, char *argv[])
   d4est_solver_schwarz_metadata_print
     (
      p4est,
-     schwarz_data
+     schwarz_data,
+     d4est_ghost
     );
 
   /* BEGIN SETUP EQUATIONS AND DATA */
@@ -521,11 +522,9 @@ int main(int argc, char *argv[])
        d4est_quad,
        d4est_factors
     );
-    /* } */
     
     double r2 = d4est_linalg_vec_dot(r, r, local_sizes.local_nodes);  
     printf("r2 = %.15f\n", r2);
-
 
     double* pre_solve_r = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
       (

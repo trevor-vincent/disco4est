@@ -109,6 +109,7 @@ SET (
   src/Mesh/d4est_mortars.c
   src/Mesh/d4est_mortars_aux.c
   src/Mesh/d4est_ghost_data.c
+  src/Mesh/d4est_ghost_data_ext.c
   src/Mesh/d4est_ghost.c
   src/Databox/d4est_databox.c
   src/Dictionary/d4est_dictionary.c
@@ -119,6 +120,7 @@ SET (
   src/IO/d4est_h5.c
   src/IO/d4est_checkpoint.c
   src/IO/d4est_vtk.c
+  src/IO/p4est_vtk_ext.c
   src/IO/d4est_norms.c
   src/Solver/d4est_solver_cg.c
   src/Solver/d4est_solver_fcg.c
@@ -136,11 +138,13 @@ SET (
   src/Solver/d4est_solver_multigrid_mesh_analyzer.c
   src/Solver/d4est_solver_multigrid_matrix_operator.c
   src/Solver/d4est_solver_multigrid_smoother_cheby.c
+  src/Solver/d4est_solver_multigrid_smoother_schwarz.c
   src/Solver/d4est_solver_multigrid_smoother_krylov_petsc.c
   src/Solver/d4est_solver_cg_eigs.c
-  src/Solver/d4est_solver_schwarz.c
+  src/Solver/d4est_solver_schwarz_metadata.c
   src/Solver/d4est_solver_schwarz_operators.c
   src/Solver/d4est_solver_schwarz_helpers.c
+  src/Solver/d4est_solver_schwarz_laplacian.c
   # src/Solver/d4est_solver_jacobian_tester.c
   src/Solver/d4est_solver_full_matrix.c
   src/Solver/d4est_solver_matrix_symmetry.c
@@ -376,7 +380,17 @@ add_d4est_unit_test_3d(d4est_test_laplacian_symmetry d4est_test_laplacian_symmet
 add_d4est_unit_test_2d(d4est_test_laplacian_symmetry_2d d4est_test_laplacian_symmetry_2.c Unit d4est_test_laplacian_symmetry_2d)
 add_d4est_unit_test_2d(d4est_test_schwarz_disk d4est_test_schwarz_disk.c Unit d4est_test_schwarz_disk)
 add_d4est_unit_test_3d(d4est_test_schwarz_cubed_sphere d4est_test_schwarz_cubed_sphere.c Unit d4est_test_schwarz_cubed_sphere)
+add_d4est_unit_test_3d(d4est_test_schwarz_cubed_sphere_fasterAu d4est_test_schwarz_cubed_sphere_fasterAu.c Unit d4est_test_schwarz_cubed_sphere_fasterAu)
+
+add_d4est_unit_test_3d(d4est_test_schwarz_fasterAu_singlecore d4est_test_schwarz_fasterAu_singlecore.c Unit d4est_test_schwarz_fasterAu_singlecore)
+add_d4est_unit_test_3d(d4est_test_schwarz_slowerAu_singlecore d4est_test_schwarz_slowerAu_singlecore.c Unit d4est_test_schwarz_slowerAu_singlecore)
+
+add_d4est_unit_test_2d(d4est_test_schwarz_ghostdata d4est_test_schwarz_ghostdata.c Unit d4est_test_schwarz_ghostdata)
+
+
 add_d4est_unit_test_3d(d4est_test_laplacian_consistency d4est_test_laplacian_consistency.c Unit d4est_test_laplacian_consistency)
+
+
 add_d4est_unit_test_3d(d4est_test_hessian_trace_cubed_sphere d4est_test_hessian_trace_cubed_sphere.c Unit d4est_test_hessian_trace_cubed_sphere)
 add_d4est_unit_test_3d(d4est_test_laplacian_speedup d4est_test_laplacian_speedup.c Unit d4est_test_laplacian_speedup)
 add_d4est_bash_regression_test(d4est_test_stamm.sh Regression d4est_test_stamm)
@@ -388,6 +402,7 @@ add_d4est_bash_regression_test(d4est_test_twopunctures_2.sh Regression d4est_tes
 add_d4est_bash_regression_test(d4est_test_mpi.sh Regression d4est_test_mpi)
 
 add_d4est_problem_2d(stamm_driver stamm_multigrid_pc.c Stamm)
+add_d4est_problem_2d(stamm_neweta_driver stamm_multigrid_pc_neweta.c Stamm)
 add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c Poisson)
 add_d4est_problem_3d(poisson_sinx_multigrid_driver poisson_sinx_multigrid.c Poisson)
 add_d4est_problem_3d(poisson_lorentzian_multigrid_driver poisson_lorentzian_multigrid.c Poisson)

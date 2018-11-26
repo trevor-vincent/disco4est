@@ -6,6 +6,8 @@
 #include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
 #include <d4est_estimator_bi.h>
+#include <d4est_estimator_bi_new.h>
+#include <d4est_estimator_stats.h>
 #include <d4est_solver_cg.h>
 #include <d4est_amr.h>
 #include <d4est_amr_smooth_pred.h>
@@ -43,9 +45,14 @@ amr_mark_element
 {
   problem_ctx_t* ctx = user;
   
-  double eta2_avg = stats->estimator_mean;
+  /* double eta2_avg = stats->estimator_mean; */
   /* printf("eta2_avg, eta2, params->sigma = %.25f,%.25f,%.25f\n",eta2_avg,eta2,params->sigma); */
-  return (eta2 >= params->sigma*eta2_avg);
+  /* return (eta2 >= params->sigma*eta2_avg); */
+
+    double eta2_percentile = stats->estimator_at_percentile;
+      /* = d4est_estimator_stats_get_percentile(stats,params->percentile); */
+    return ((eta2 >= eta2_percentile) || fabs(eta2 - eta2_percentile) < eta2*1e-4);
+  
 }
 
 static
@@ -234,7 +241,32 @@ problem_init
 
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; ++level){
     
-    double* estimator = d4est_estimator_bi_compute
+    /* double* estimator = d4est_estimator_bi_compute */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    &prob_fcns, */
+    /*    penalty_data, */
+    /*    stamm_boundary_fcn, */
+    /*    NULL, */
+    /*    *d4est_ghost, */
+    /*    d4est_ghost_data, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_factors, */
+    /*    d4est_geom, */
+    /*    d4est_factors, */
+    /*    d4est_quad, */
+    /*    0, */
+    /*    NULL, */
+    /*    NULL */
+    /*   ); */
+
+
+
+
+    double* estimator =
+      d4est_estimator_bi_compute
       (
        p4est,
        &prob_vecs,
@@ -254,6 +286,8 @@ problem_init
        NULL,
        NULL
       );
+
+    
 
     d4est_estimator_stats_t* stats = P4EST_ALLOC(d4est_estimator_stats_t,1);
     d4est_estimator_stats_compute(p4est, estimator, stats, 0, 1, 0);

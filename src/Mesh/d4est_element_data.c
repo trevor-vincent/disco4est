@@ -288,9 +288,6 @@ d4est_element_data_get_size_of_field
   else if (type == FACE){
     return (P4EST_FACES);
   }
-  else if (type == MORTAR){
-    return (P4EST_FACES)*(P4EST_HALF);
-  }
   else {
     D4EST_ABORT("not a supported type");
   }
@@ -311,9 +308,6 @@ int d4est_element_data_get_stride_for_field
   }
   else if (type == FACE){
     return ed->id*(P4EST_FACES);
-  }
-  else if (type == MORTAR){
-    return ed->id*(P4EST_FACES)*(P4EST_HALF);
   }
   else {
     D4EST_ABORT("not a supported type");

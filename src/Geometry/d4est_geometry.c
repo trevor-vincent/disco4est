@@ -99,6 +99,7 @@ d4est_geometry_input
   input.JAC_compute_method = GEOM_COMPUTE_NOT_SET;
   
   if (ini_parse(input_file, d4est_geometry_input_handler, &input) < 0) {
+    printf("input_file = %s\n", input_file);
     D4EST_ABORT("Can't load input file");
   }
 

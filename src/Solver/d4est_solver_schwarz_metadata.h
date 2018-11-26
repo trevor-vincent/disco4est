@@ -3,7 +3,7 @@
 #define D4EST_SOLVER_SCHWARZ_H 
 
 #include <pXest.h>
-
+#include <d4est_ghost_data_ext.h>
 typedef struct {
 
   int process_p;
@@ -14,7 +14,6 @@ typedef struct {
   int is_hanging;
   p4est_qcoord_t q [(P4EST_DIM)];
   p4est_qcoord_t dq;
-
   
 } d4est_schwarz_plus_face_info_t;
 
@@ -38,7 +37,6 @@ typedef struct {
   /* gives local or ghost element that touches a face or -1 if it's a 2nd-layer ghost or no face, gives same id as element if boundary 
    * the id is between 0 and local_num_quadrants + ghost_num_quadrants - 1*/
   /* d4est_mortar_data_t elements_that_touch_face[(P4EST_FACES)][(P4EST_HALF)]; */
-
   int nodal_size; 
   int nodal_stride; /* stride into just the nodal field on this subdomain, it is not a stride into a local nodal field and is not a stride into a field over all subdomains, i.e. it is zero on the first node of the first element of the containing subdomain*/
   int restricted_nodal_size; 
@@ -63,19 +61,26 @@ typedef struct {
 
 typedef struct {
 
+  /* EXTERNALLY SET */
+  int subdomain_iter;
+  int schwarz_iter;
+  double subdomain_rtol;
+  double subdomain_atol;
+  int print_info;
   int num_nodes_overlap;   /* Quantifies how many 1-D nodes are in the overlap of the the schwarz subdomain 
                             * this is a number between 1 and (minimum mesh degree + 1) */
 
+  /* INTERNALLY SET */
   int restricted_nodal_size; /* restricted nodal size of all subdomains combined */
   int nodal_size; /* nodal size of all subdomains combined */
   int num_subdomains; /* Equivalent to number of local quadrants */
   d4est_solver_schwarz_subdomain_metadata_t* subdomain_metadata; /* The elements and their connections in the subdomain */
-
+  d4est_ghost_data_ext_t* subdomain_ghostdata;
   
 } d4est_solver_schwarz_metadata_t;
 
 /* This file was automatically generated.  Do not edit! */
-void d4est_solver_schwarz_metadata_print(p4est_t *p4est,d4est_solver_schwarz_metadata_t *schwarz_data);
+void d4est_solver_schwarz_metadata_print(p4est_t *p4est,d4est_solver_schwarz_metadata_t *schwarz_data,d4est_ghost_t *d4est_ghost);
 void d4est_solver_schwarz_metadata_destroy(d4est_solver_schwarz_metadata_t *schwarz_data);
 d4est_solver_schwarz_metadata_t *d4est_solver_schwarz_metadata_init(p4est_t *p4est,d4est_ghost_t *d4est_ghost,const char *input_file);
 void d4est_solver_schwarz_metadata_input(p4est_t *p4est,const char *input_file,d4est_solver_schwarz_metadata_t *schwarz_data);

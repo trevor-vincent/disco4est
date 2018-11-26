@@ -132,6 +132,11 @@ struct d4est_laplacian_flux_data{
   double* Au;
   int local_nodes;
   int which_field;
+
+  /* these are needed to zero out external fields to schwarz subdomain */
+  int using_schwarz;
+  int zero_and_skip_m [(P4EST_HALF)];
+  int zero_and_skip_p [(P4EST_HALF)];
   
   void (*destroy)(d4est_laplacian_flux_data_t*);
   
@@ -166,11 +171,11 @@ typedef struct {
 
 } d4est_laplacian_dirichlet_bc_t;
 
-
+/* This file was automatically generated.  Do not edit! */
+void d4est_laplacian_flux_schwarz(p4est_t *p4est,d4est_element_data_t **e_m,int faces_m,int f_m,int mortar_side_id_m,d4est_element_data_t **e_p,int faces_p,int f_p,int mortar_side_id_p,int *e_m_is_ghost,int *zero_and_skip_m,int *zero_and_skip_p,int orientation,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,void *params);
 void d4est_laplacian_flux_destroy(d4est_laplacian_flux_data_t *data);
 d4est_laplacian_flux_data_t *d4est_laplacian_flux_new(p4est_t *p4est,const char *input_file,d4est_laplacian_bc_t bc_type,void *bc_data);
 d4est_mortars_fcn_ptrs_t d4est_laplacian_flux_fetch_fcns(d4est_laplacian_flux_data_t *data);
-void d4est_laplacian_flux_init_element_data(p4est_t *p4est,d4est_operators_t *d4est_ops,double *u,double *Au);
 int d4est_laplacian_get_degree_mortar_quad(d4est_element_data_t *ed,void *user);
 
 #endif

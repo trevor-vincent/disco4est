@@ -10,7 +10,7 @@
 #include <d4est_element_data.h>
 #include <d4est_laplacian.h>
 #include <d4est_laplacian_flux.h>
-#include <d4est_solver_schwarz.h>
+#include <d4est_solver_schwarz_metadata.h>
 #include <d4est_solver_schwarz_helpers.h>
 #include <petscsnes.h>
 #include <zlog.h>
@@ -321,7 +321,8 @@ int main(int argc, char *argv[])
   d4est_solver_schwarz_metadata_print
     (
      p4est,
-     schwarz_data
+     schwarz_data,
+     d4est_ghost
     );
 
   /* BEGIN SETUP EQUATIONS AND DATA */

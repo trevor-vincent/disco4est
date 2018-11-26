@@ -33,7 +33,7 @@ int d4est_solver_cg_input_handler
     pconfig->iter = atoi(value);
   }
   else {
-    return 0;  /* unknown section/name, error */
+    return 0;
   }
   return 1;
 }

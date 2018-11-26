@@ -10,6 +10,37 @@
 #include <d4est_ghost_data.h>
 #include <d4est_checkpoint_type.h>
 
+typedef struct {
+  
+  int mortar_side_id;
+  
+  int faces_m;
+  int faces_p; /* equals 0 on physical boundary */
+  int f_p;
+  int f_m;
+  int tree_p;
+  int tree_m;
+  int orientation;
+  
+  int q_p [(P4EST_HALF)][(P4EST_DIM)];
+  int dq_p [(P4EST_HALF)];
+  int tree_quadid_p [(P4EST_HALF)];
+  int deg_p [(P4EST_HALF)];
+  int deg_quad_p [(P4EST_HALF)];
+
+  int q_m [(P4EST_HALF)][(P4EST_DIM)];
+  int dq_m [(P4EST_HALF)];
+  int tree_quadid_m [(P4EST_HALF)];
+  int deg_m [(P4EST_HALF)];
+  int deg_quad_m [(P4EST_HALF)];
+
+  int boundary_quad_vector_stride;
+  int mortar_quad_scalar_stride;
+  int mortar_quad_vector_stride;
+  int mortar_quad_matrix_stride;
+  
+} d4est_mortar_side_data_t;
+
 
 typedef enum {INITIALIZE_GHOST, DO_NOT_INITIALIZE_GHOST} d4est_mesh_ghost_init_option_t;
 typedef enum {INITIALIZE_QUADRATURE_DATA, DO_NOT_INITIALIZE_QUADRATURE_DATA} d4est_mesh_quadrature_data_init_option_t;
@@ -45,6 +76,7 @@ typedef struct {
   int local_mortar_nodes_quad;
   int local_boundary_nodes_quad;
   int local_nodes_quad;
+  int local_mortar_sides;
   
 } d4est_mesh_local_sizes_t;
 
@@ -103,6 +135,8 @@ typedef struct {
 
   /* array of 0 and 1 for whether this face touches boundary */
   int* face_touches_element;
+
+  d4est_mortar_side_data_t* mortar_side_data;
   
   double* xyz;
   double* xyz_quad;
@@ -162,7 +196,9 @@ typedef struct {
   
 } d4est_mesh_initial_extents_t;
  
+/* This file was automatically generated.  Do not edit! */
 void d4est_mesh_apply_invM_on_field(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,double *in,double *out);
+void d4est_mesh_print_out_mortar_data(d4est_mesh_data_t *d4est_factors);
 void d4est_mesh_debug_boundary_elements(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,const char **field_names,double **fields,int local_nodes);
 double *d4est_mesh_get_field_on_element(p4est_t *p4est,d4est_element_data_t *ed,d4est_ghost_data_t *d4est_ghost_data,double *field,int local_nodes,int which_field);
 int d4est_mesh_is_it_a_ghost_element(p4est_t *p4est,d4est_element_data_t *ed);

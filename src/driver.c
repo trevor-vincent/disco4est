@@ -25,6 +25,11 @@ int main(int argc, char *argv[])
   if (zlog_init("logging.conf") != 0) 
     printf("Initializing logging failed.\n");
   zlog_category_t *c_default = zlog_get_category("d4est");
+
+  char* input_file = P4EST_ALLOC(char, 200);
+  /* sprintf(input_file, "%s", (argc == 2) ? argv[1] : "options.input"); */
+  sprintf(input_file, "%s", (argc == 2) ? argv[1] : "options.input");
+
   
   if (proc_rank == 0) {
     zlog_info(c_default, "------");
@@ -45,7 +50,7 @@ int main(int argc, char *argv[])
     zlog_info(c_default, "DIM = 2");
 #endif
 
-    zlog_info(c_default, "options file = %s", (argc == 2) ? argv[1] : "options.input");
+    zlog_info(c_default, "options file = %s", input_file);
     zlog_info(c_default, "mpisize = %d", proc_size);
     zlog_info(c_default, "------");
   }
@@ -54,11 +59,11 @@ int main(int argc, char *argv[])
   /* p4est_init(NULL, SC_LP_ALWAYS); */
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
-                                                    (argc == 2) ? argv[1] : "options.input",
+                                                    input_file,
                                                     "geometry",
                                                     c_geom);
 
-  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] : "options.input", d4est_geom);
+  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse(input_file, d4est_geom);
 
   p4est_t* p4est;
   d4est_operators_t* d4est_ops = d4est_ops_init(initial_grid_input->max_degree);
@@ -184,7 +189,7 @@ int main(int argc, char *argv[])
   if(proc_rank == 0)
     zlog_debug(c_default, "max_degree = %d", initial_grid_input->max_degree);
   d4est_mesh_data_t* d4est_factors = d4est_mesh_data_init(p4est);
-  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, (argc == 2) ? argv[1] : "options.input", "quadrature");  
+  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature");  
   d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
                                          (
                                           p4est,
@@ -214,7 +219,7 @@ int main(int argc, char *argv[])
      d4est_quad,
      d4est_factors,
      initial_grid_input,
-     (argc == 2) ? argv[1] : "options.input",
+     input_file,
      mpicomm
     );
 
@@ -248,6 +253,6 @@ int main(int argc, char *argv[])
 
   zlog_fini();
 
-  
+  P4EST_FREE(input_file);
   return 0;
 }

@@ -140,6 +140,61 @@ void
 }
 
 void
+d4est_laplacian_apply_stiffness_matrix_on_element
+(
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_element_data_t* ed,
+ double * restrict  u_element,
+ double * restrict  Au_element
+)
+{
+
+  d4est_quadrature_volume_t mesh_vol = {.dq = ed->dq,
+                                        .tree = ed->tree,
+                                        .q[0] = ed->q[0],
+                                        .q[1] = ed->q[1],
+#if (P4EST_DIM)==3                                              
+                                        .q[2] = ed->q[2],
+#endif
+                                        .element_id = ed->id
+                                       };
+
+
+  double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points
+                   (
+                    d4est_factors,
+                    ed
+                   );
+
+
+
+  d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                         (
+                                          d4est_factors,
+                                          ed
+                                         );
+
+  d4est_quadrature_apply_stiffness_matrix
+    (
+     d4est_ops,
+     d4est_quad,
+     d4est_geom,
+     &mesh_vol,
+     QUAD_OBJECT_VOLUME,
+     QUAD_INTEGRAND_UNKNOWN,
+     u_element,
+     ed->deg,
+     J_quad,
+     md_on_e.rst_xyz_quad,
+     ed->deg_quad,
+     Au_element
+    );
+}
+
+void
 d4est_laplacian_apply_stiffness_matrix
 (
  p4est_t* p4est,
@@ -164,45 +219,17 @@ d4est_laplacian_apply_stiffness_matrix
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
         d4est_element_data_t* ed = quad->p.user_data; 
 
-        d4est_quadrature_volume_t mesh_vol = {.dq = ed->dq,
-                                              .tree = ed->tree,
-                                              .q[0] = ed->q[0],
-                                              .q[1] = ed->q[1],
-#if (P4EST_DIM)==3                                              
-                                              .q[2] = ed->q[2],
-#endif
-                                              .element_id = ed->id
-                                             };
-
-
-        double* J_quad = d4est_mesh_get_jacobian_on_quadrature_points(d4est_factors,
-                                                                      ed);
-
-
-
-        d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
-                                               (
-                                                d4est_factors,
-                                                ed
-                                               );
-        
-        d4est_quadrature_apply_stiffness_matrix
+        d4est_laplacian_apply_stiffness_matrix_on_element
           (
            d4est_ops,
-           d4est_quad,
            d4est_geom,
-           &mesh_vol,
-           QUAD_OBJECT_VOLUME,
-           QUAD_INTEGRAND_UNKNOWN,
+           d4est_quad,
+           d4est_factors,
+           ed,
            &u[which_field*local_nodes + ed->nodal_stride],           
-           ed->deg,
-           J_quad,
-           md_on_e.rst_xyz_quad,
-           ed->deg_quad,
-           &Au[which_field*local_nodes + ed->nodal_stride]
+           &Au[which_field*local_nodes + ed->nodal_stride]           
           );
       }
-
     }
 }
 

@@ -1,5 +1,5 @@
 double
-d4est_solver_schwarz_cg_single_core
+d4est_solver_schwarz_metadata.cg_single_core
 (
  p4est_t* p4est,
  d4est_elliptic_data_t* vecs,

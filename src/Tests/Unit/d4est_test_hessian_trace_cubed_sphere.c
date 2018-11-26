@@ -196,19 +196,19 @@ int main(int argc, char *argv[])
     printf("[D4EST_INFO]: DIM = 2\n");
 #endif
 
-  char* default_input_file = P4EST_ALLOC(char, 100);
-  sprintf(default_input_file, "%s", (argc == 2) ? argv[1] : "d4est_test_hessian_trace_cubed_sphere.input");
+  char* input_file = P4EST_ALLOC(char, 100);
+  sprintf(input_file, "%s", (argc == 2) ? argv[1] : "d4est_test_hessian_trace_cubed_sphere.input");
   
   if (proc_rank == 0)
-    printf("[D4EST_INFO]: options file = %s\n", default_input_file);
+    printf("[D4EST_INFO]: options file = %s\n", input_file);
     
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry");
   d4est_geometry_t* d4est_geom = d4est_geometry_new(proc_rank,
-                                                    default_input_file,
+                                                    input_file,
                                                     "geometry",
                                                     c_geom);
 
-  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse(default_input_file, d4est_geom);
+  d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse(input_file, d4est_geom);
 
   p4est_t* p4est;
   p4est = p4est_new_ext
@@ -245,12 +245,12 @@ int main(int argc, char *argv[])
   /* start just-in-time dg-math */
   d4est_operators_t* d4est_ops = d4est_ops_init(20);
   d4est_mesh_data_t* d4est_factors = d4est_mesh_data_init(p4est);
-  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, default_input_file, "quadrature");
+  d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature");
   
 
 
   d4est_test_hessian_trace_params_t params = d4est_test_hessian_trace_params_input
-                                             (default_input_file);
+                                             (input_file);
   
   d4est_ghost_t* d4est_ghost = NULL;
   
@@ -422,7 +422,7 @@ int main(int argc, char *argv[])
     (
      p4est,
      d4est_ops,
-     default_input_file,
+     input_file,
      "d4est_vtk",
      (const char*[]){"f_quad, u, hessian_trace_ana, hessian_trace_num", NULL},
      (double**)((const double*[]){f_quad, u, hessian_trace_u_ana, hessian_trace_u_num, NULL}),
@@ -461,7 +461,7 @@ int main(int argc, char *argv[])
 /*     bc_data_for_lhs.dirichlet_fcn = u_fcn; */
 /*     bc_data_for_lhs.eval_method = eval_method;   */
 
-/*     d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, default_input_file, BC_DIRICHLET, &bc_data_for_lhs); */
+/*     d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs); */
 
 
 /*     d4est_elliptic_eqns_t prob_fcns; */
@@ -548,7 +548,7 @@ int main(int argc, char *argv[])
   p4est_destroy(p4est);
   d4est_geometry_destroy(d4est_geom);
 
-  P4EST_FREE(default_input_file);
+  P4EST_FREE(input_file);
   PetscFinalize();
   return 0;
 }

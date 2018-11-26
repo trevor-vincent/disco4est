@@ -15,8 +15,6 @@
 /*   } d4est_mortars_exchange_data_option_t; */
 
 
-
-
 /* No problem specific data needed */
 typedef void (*d4est_mortars_interface_fcn_t)
 (

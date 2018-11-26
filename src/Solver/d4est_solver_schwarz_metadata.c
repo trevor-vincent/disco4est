@@ -14,9 +14,44 @@
 #include <d4est_checkpoint.h>
 #include <d4est_element_data.h>
 #include <petscsnes.h>
-#include <d4est_solver_schwarz.h>
+#include <d4est_solver_schwarz_metadata.h>
+#include <d4est_ghost_data_ext.h>
 #include <zlog.h>
 #include <ini.h>
+
+
+static int field_size_of_ghost_fcn
+(
+ d4est_ghost_t* d4est_ghost,
+ int gid,
+ int tn,
+ void* user_ctx
+)
+{
+  return sizeof(d4est_solver_schwarz_subdomain_metadata_t);
+}
+
+static int field_size_of_mirror_fcn
+(
+ d4est_ghost_t* d4est_ghost,
+ int gid,
+ int tn,
+ void* user_ctx
+)
+{
+  return sizeof(d4est_solver_schwarz_subdomain_metadata_t);
+}
+
+static int field_stride_of_mirror_fcn
+(
+ d4est_ghost_t* d4est_ghost,
+ int mirr,
+ int tn,
+ void* user_ctx
+)
+{
+  return d4est_ghost->mirror_elements[mirr].id;
+}
 
 static
 int d4est_solver_schwarz_metadata_input_handler
@@ -28,17 +63,35 @@ int d4est_solver_schwarz_metadata_input_handler
 )
 {
   d4est_solver_schwarz_metadata_t* pconfig = (d4est_solver_schwarz_metadata_t*)user;
-  if (d4est_util_match_couple(section,"d4est_solver_schwarz_metadata",name,"num_nodes_overlap")) {
+  if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"num_nodes_overlap")) {
     D4EST_ASSERT(pconfig->num_nodes_overlap == -1);
     pconfig->num_nodes_overlap = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"subdomain_atol")) {
+    D4EST_ASSERT(pconfig->subdomain_atol == -1);
+    pconfig->subdomain_atol = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"subdomain_rtol")) {
+    D4EST_ASSERT(pconfig->subdomain_rtol == -1);
+    pconfig->subdomain_rtol = atof(value);
+  }
+  else if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"subdomain_iter")) {
+    D4EST_ASSERT(pconfig->subdomain_iter == -1);
+    pconfig->subdomain_iter = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"schwarz_iter")) {
+    D4EST_ASSERT(pconfig->schwarz_iter == -1);
+    pconfig->schwarz_iter = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"print_info")) {
+    D4EST_ASSERT(pconfig->print_info == -1);
+    pconfig->print_info = atoi(value);
   } 
   else {
     return 0;  /* unknown section/name, error */
   }
   return 1;
 }
-
-
 
 void
 d4est_solver_schwarz_metadata_input
@@ -50,6 +103,12 @@ d4est_solver_schwarz_metadata_input
 {
   zlog_category_t* c_default = zlog_get_category("d4est_solver_schwarz_metadata");
   schwarz_data->num_nodes_overlap = -1;
+  schwarz_data->subdomain_iter = -1;
+  schwarz_data->subdomain_rtol = -1;
+  schwarz_data->subdomain_atol = -1;
+  schwarz_data->schwarz_iter = -1;
+  schwarz_data->print_info = -1;
+  
   if (
       ini_parse(input_file,
                 d4est_solver_schwarz_metadata_input_handler,
@@ -57,7 +116,12 @@ d4est_solver_schwarz_metadata_input
   ) {
     D4EST_ABORT("Can't load input file");
   }
-  D4EST_CHECK_INPUT("d4est_solver_schwarz_metadata", schwarz_data->num_nodes_overlap, -1);
+  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->num_nodes_overlap, -1);
+  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->schwarz_iter, -1);
+  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->subdomain_iter, -1);
+  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->subdomain_rtol, -1);
+  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->subdomain_atol, -1);
+  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->print_info, -1);
   
   if (schwarz_data->num_nodes_overlap <= 0){
     D4EST_ABORT("num_nodes_overlap <= 0");
@@ -428,6 +492,27 @@ d4est_solver_schwarz_metadata_init
   d4est_solver_schwarz_metadata_sort_elements(schwarz_data);
   d4est_solver_schwarz_metadata_compute_strides_and_sizes(schwarz_data);
 
+  
+  /* schwarz_data->subdomain_ghostdata = */
+  /*   d4est_ghost_data_ext_init */
+  /*   ( */
+  /*    p4est, */
+  /*    d4est_ghost, */
+  /*    1, */
+  /*    field_size_of_ghost_fcn, */
+  /*    field_size_of_mirror_fcn, */
+  /*    field_stride_of_mirror_fcn, */
+  /*    NULL */
+  /*   ); */
+  
+  /* d4est_ghost_data_ext_exchange */
+  /*   ( */
+  /*    p4est, */
+  /*    d4est_ghost, */
+  /*    schwarz_data->subdomain_ghostdata, */
+  /*    (char**)&schwarz_data->subdomain_metadata */
+  /*   ); */
+  
   return schwarz_data;
 }
 
@@ -466,28 +551,33 @@ d4est_solver_schwarz_metadata_destroy
     P4EST_FREE(schwarz_data->subdomain_metadata[i].element_metadata);
   }
   P4EST_FREE(schwarz_data->subdomain_metadata);
+
+
+  /* d4est_ghost_data_ext_destroy */
+  /*   ( */
+  /*    schwarz_data->subdomain_ghostdata */
+  /*   ); */
+  
   P4EST_FREE(schwarz_data);
 }
 
-void
-d4est_solver_schwarz_metadata_print
+static void
+d4est_solver_schwarz_metadata_print_subdomain
 (
- p4est_t* p4est,
- d4est_solver_schwarz_metadata_t* schwarz_data
+ d4est_solver_schwarz_subdomain_metadata_t* sub_data,
+ int i,
+ int ghost
 )
 {
-  
-  printf("Schwarz data on proc %d\n", p4est->mpirank);
-  printf("***********************\n");
-  printf("num subdomains = %d\n", schwarz_data->num_subdomains);
-  printf("num_nodes_overlap = %d\n", schwarz_data->num_nodes_overlap);
-  printf("nodal_size = %d\n", schwarz_data->nodal_size);
-  printf("restricted_nodal_size = %d\n", schwarz_data->restricted_nodal_size);
-  for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[i];
     printf("\n");
-    printf("Subdomain %d info\n", i);
+    if (ghost){
+      printf("Ghost Subdomain %d info\n", i);
+    }
+    else {
+      printf("Subdomain %d info\n", i);
+    }
     printf("********************************\n");
+    printf("mpirank = %d\n", sub_data->mpirank);
     printf("num_elements = %d\n",sub_data->num_elements);
     printf("restricted_nodal_size = %d\n", sub_data->restricted_nodal_size);
     printf("nodal_size = %d\n", sub_data->nodal_size);
@@ -514,5 +604,47 @@ d4est_solver_schwarz_metadata_print
       printf("core_faces[1] = %d\n", ed->core_faces[1]);
       printf("core_faces[2] = %d\n", ed->core_faces[2]);     
     }
+}
+
+void
+d4est_solver_schwarz_metadata_print
+(
+ p4est_t* p4est,
+ d4est_solver_schwarz_metadata_t* schwarz_data,
+ d4est_ghost_t* d4est_ghost
+)
+{
+  printf("Schwarz data on proc %d\n", p4est->mpirank);
+  printf("***********************\n");
+  printf("num subdomains = %d\n", schwarz_data->num_subdomains);
+  printf("num_nodes_overlap = %d\n", schwarz_data->num_nodes_overlap);
+  printf("nodal_size = %d\n", schwarz_data->nodal_size);
+  printf("restricted_nodal_size = %d\n", schwarz_data->restricted_nodal_size);
+  for (int i = 0; i < schwarz_data->num_subdomains; i++){
+    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[i];
+    d4est_solver_schwarz_metadata_print_subdomain(sub_data,i,0);
   }
+  
+  /* if(d4est_ghost != NULL){ */
+  /*   printf("Ghost subdomains on proc %d\n", p4est->mpirank); */
+  /*   printf("***************************\n", p4est->mpirank); */
+  /*   for (int gid = 0; gid < schwarz_data->subdomain_ghostdata->num_ghosts; gid++){ */
+  /*     d4est_solver_schwarz_subdomain_metadata_t* sub_data = */
+  /*       (d4est_solver_schwarz_subdomain_metadata_t*) */
+  /*       d4est_ghost_data_ext_get_field_on_element */
+  /*       ( */
+  /*        &d4est_ghost->ghost_elements[gid], */
+  /*        0, */
+  /*        schwarz_data->subdomain_ghostdata */
+  /*       ); */
+
+  /*     d4est_solver_schwarz_metadata_print_subdomain */
+  /*       ( */
+  /*        sub_data, */
+  /*        gid, */
+  /*        1 */
+  /*       ); */
+  /*   } */
+  /*   printf("***************************\n", p4est->mpirank); */
+  /* } */
 }

@@ -295,8 +295,6 @@ problem_init
     flux_data_for_lhs = d4est_laplacian_with_opt_flux_new(p4est, input_file, BC_ROBIN, &bc_data_robin_for_lhs);
     flux_data_for_rhs = d4est_laplacian_with_opt_flux_new(p4est, input_file,  BC_ROBIN, &bc_data_robin_for_lhs);
   }
-  
-
 
   problem_ctx_t ctx;
   ctx.flux_data_for_apply_lhs = flux_data_for_lhs;

@@ -62,11 +62,7 @@ poly_vec_fcn
 #endif
  void* user
 ){
-  return exp(x+y)*(x*x+y*y - 1.);
-
-  /* double pi = 3.1415926535897932384626433832795; */
-  /* return sin(pi*sqrt(x*x + y*y)); */
-  /* return x*x + y*y - 1; */
+  return exp(x + y + z)*(x*x + y*y + z*z - 1.);
 }
 
 double
@@ -101,7 +97,8 @@ neg_laplacian_poly_vec_fcn
   /* return -4.; */
   /* double pi = 3.1415926535897932384626433832795; */
   /* return 4*pi*(-cos(pi*(x*x + y*y)) + pi*(x*x + y*y)*sin(pi*(x*x + y*y))); */
-  return -2*exp(x + y)*(x*(2. + x) + 1. + y*(2.+y));
+  return -1.*exp(x + y + z)* (3. + x *(4. + 3.* x) + y* (4. + 3.* y) + z* (4. + 3. * z));
+  /* return -2*exp(x + y)*(x*(2. + x) + 1. + y*(2.+y)); */
 }
 
 static void 
@@ -151,7 +148,7 @@ int main(int argc, char *argv[])
   if(proc_rank == 0)
     printf("[D4EST_INFO]: DIM = 2\n");
 #endif
-  const char* default_input_file = "d4est_test_schwarz_disk.input";
+  const char* default_input_file = "d4est_test_schwarz_cubed_sphere.input";
   
   if (proc_rank == 0)
     printf("[D4EST_INFO]: options file = %s\n", (argc == 2) ? argv[1] : default_input_file);
@@ -552,7 +549,7 @@ int main(int argc, char *argv[])
 
 
     printf("Solving\n");
-    d4est_solver_schwarz_compute_and_add_correction
+    d4est_solver_schwarz_compute_and_add_correction_version2
       (
        p4est,
        d4est_geom,
@@ -562,17 +559,10 @@ int main(int argc, char *argv[])
        d4est_ghost_data,
        schwarz_data,
        schwarz_ops,
-       &prob_fcns_for_lhs,
-       &elliptic_data,
+       flux_data_for_apply_lhs,
        sol,
-       r,
-       1000,
-       1e-15,
-       1e-15,
-       NULL,//helper_array,
-       -1//i
+       r
       );
-
 
     double* post_solve_u = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
       (
