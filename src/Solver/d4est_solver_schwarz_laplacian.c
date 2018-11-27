@@ -112,6 +112,7 @@ convert_mortar_side_data_to_elements
 static void
 d4est_solver_schwarz_laplacian_compute_dudr
 (
+ p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  d4est_solver_schwarz_subdomain_metadata_t* sub_data,
  d4est_mesh_data_t* d4est_factors,
@@ -120,7 +121,12 @@ d4est_solver_schwarz_laplacian_compute_dudr
 ){
  int stride = 0;
  for (int i = 0; i < sub_data->num_elements; i++){
-   d4est_element_data_t* ed = d4est_factors->element_data[sub_data->element_metadata[i].id];
+    d4est_element_data_t* ed = d4est_element_data_get_ptr(
+                                                          p4est,
+                                                          sub_data->element_metadata[i].tree,
+                                                          sub_data->element_metadata[i].tree_quadid
+                                                         );
+
    int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),ed->deg);
    for (int d = 0; d < (P4EST_DIM); d++){
      d4est_operators_apply_dij(
@@ -152,8 +158,14 @@ d4est_solver_schwarz_laplacian_compute_stiffness
 {
  int stride = 0;
  for (int i = 0; i < sub_data->num_elements; i++){
-   d4est_element_data_t* ed = d4est_factors->element_data
-                              [sub_data->element_metadata[i].id];
+
+    d4est_element_data_t* ed = d4est_element_data_get_ptr(
+                                                          p4est,
+                                                          sub_data->element_metadata[i].tree,
+                                                          sub_data->element_metadata[i].tree_quadid
+                                                         );
+
+   
    int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),ed->deg);
    d4est_laplacian_apply_stiffness_matrix_on_element
      (
@@ -214,6 +226,7 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
   /* Compute dudr */  
   d4est_solver_schwarz_laplacian_compute_dudr
     (
+     p4est,
      d4est_ops,
      sub_data,
      d4est_factors,
@@ -253,10 +266,13 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
   /* int num_mortar_sides_done = 0; */
   
   for (int i = 0; i < sub_data->num_elements; i++){
-
-    d4est_element_data_t* ed
-      = d4est_factors->element_data[sub_data->element_metadata[i].id];
-      
+    
+    d4est_element_data_t* ed = d4est_element_data_get_ptr(
+                                                          p4est,
+                                                          sub_data->element_metadata[i].tree,
+                                                          sub_data->element_metadata[i].tree_quadid
+                                                         );
+    
     for (int f = 0; f < (P4EST_FACES); f++){
 
       int mortar_side_id_m = ed->face_belongs_to_which_mortar[f];

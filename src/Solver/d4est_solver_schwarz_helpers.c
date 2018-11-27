@@ -59,6 +59,7 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  d4est_mesh_data_t* d4est_factors,
+ d4est_ghost_t* ghost,
  d4est_ghost_data_t* ghost_data,
  d4est_solver_schwarz_metadata_t* schwarz_data,
  d4est_solver_schwarz_operators_t* schwarz_ops,
@@ -70,16 +71,23 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
 {
   d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_data->subdomain_metadata[subdomain];
   for (int j = 0; j < sub_data.num_elements; j++){
-    d4est_solver_schwarz_element_metadata_t ed = sub_data.element_metadata[j];
+    d4est_solver_schwarz_element_metadata_t schwarz_ed = sub_data.element_metadata[j];
     double* field_ed = NULL;      
-    if (ed.mpirank == p4est->mpirank){
-      field_ed = &field[d4est_factors->element_data[ed.id]->nodal_stride];
+    if (schwarz_ed.mpirank == p4est->mpirank){
+      d4est_element_data_t* mesh_ed = d4est_element_data_get_ptr(
+                                                                 p4est,
+                                                                 schwarz_ed.tree,
+                                                                 schwarz_ed.tree_quadid
+                                                                );
+      field_ed = &field[mesh_ed->nodal_stride];
     }
     else {
+      D4EST_ABORT("schwarz ghost not supported yet");
       field_ed =
         d4est_ghost_data_get_field_on_element
         (
-         d4est_factors->element_data[ed.id + p4est->local_num_quadrants],
+         &ghost->ghost_elements[schwarz_ed.id],/* d4est_factors->element_data[ed.id + p4est->local_num_quadrants], */
+         /* d4est_element_data_get_ptr(p4est,ed.tree,schwarz_ed.tree_quadid), */
          ghost_data_num_of_field,
          ghost_data
         );
@@ -89,11 +97,11 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
        schwarz_ops,
        field_ed,
        (P4EST_DIM),
-       &(ed.faces[0]),
-       ed.deg,
+       &(schwarz_ed.faces[0]),
+       schwarz_ed.deg,
        schwarz_data->num_nodes_overlap,
        D4OPS_NO_TRANSPOSE,
-       &restricted_field_over_subdomain[ed.restricted_nodal_stride]
+       &restricted_field_over_subdomain[schwarz_ed.restricted_nodal_stride]
       );
   }
 }
@@ -104,6 +112,7 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  d4est_mesh_data_t* d4est_factors,
+ d4est_ghost_t* ghost,
  d4est_ghost_data_t* ghost_data,
  d4est_solver_schwarz_metadata_t* schwarz_data,
  d4est_solver_schwarz_operators_t* schwarz_ops,
@@ -119,6 +128,7 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains
        p4est,
        d4est_ops,
        d4est_factors,
+       ghost,
        ghost_data,
        schwarz_data,
        schwarz_ops,
@@ -293,10 +303,12 @@ d4est_solver_schwarz_convert_restricted_subdomain_field_to_global_nodal_field
   if (p4est->mpisize == 1){    
     d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_data->subdomain_metadata[sub_id];
     for (int j = 0; j < sub_data.num_elements; j++){
-      d4est_solver_schwarz_element_metadata_t ed = sub_data.element_metadata[j];
-      int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed.deg);
-      int local_nodal_stride = d4est_factors->element_data[ed.id]->nodal_stride;
-      int sub_nodal_stride = ed.nodal_stride;
+      d4est_solver_schwarz_element_metadata_t schwarz_ed = sub_data.element_metadata[j];
+      d4est_element_data_t* mesh_ed = d4est_element_data_get_ptr(p4est, schwarz_ed.tree, schwarz_ed.tree_quadid);
+      
+      int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), schwarz_ed.deg);
+      int local_nodal_stride = mesh_ed->nodal_stride;
+      int sub_nodal_stride = schwarz_ed.nodal_stride;
 
       d4est_util_copy_1st_to_2nd(&transpose_restricted_field_on_subdomain[sub_nodal_stride],
                                  &field[local_nodal_stride],
@@ -381,9 +393,11 @@ d4est_solver_schwarz_zero_field_over_subdomain_single_core
 {
   D4EST_ASSERT(p4est->mpisize == 1);
   for (int j = 0; j < sub_data.num_elements; j++){
-    d4est_solver_schwarz_element_metadata_t ed = sub_data.element_metadata[j];
-    int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed.deg);
-    int local_nodal_stride = d4est_factors->element_data[ed.id]->nodal_stride;
+    d4est_solver_schwarz_element_metadata_t schwarz_ed = sub_data.element_metadata[j];
+    d4est_element_data_t* mesh_ed = d4est_element_data_get_ptr(p4est, schwarz_ed.tree, schwarz_ed.tree_quadid);
+    
+    int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), mesh_ed->deg);
+    int local_nodal_stride = mesh_ed->nodal_stride;
     for (int i = 0; i < volume_nodes; i++){
       field[local_nodal_stride + i] = 0.;
     }
@@ -500,6 +514,7 @@ void d4est_solver_schwarz_apply_lhs_single_core
        p4est,
        schwarz_ops->d4est_ops,
        d4est_factors,
+       ghost,
        ghost_data,
        schwarz_data,
        schwarz_ops,
@@ -728,6 +743,7 @@ d4est_solver_schwarz_compute_and_add_correction
      p4est,
      schwarz_ops->d4est_ops,
      d4est_factors,
+     ghost,
      ghost_data,
      schwarz_data,
      schwarz_ops,
@@ -805,11 +821,12 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
     d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_data->subdomain_metadata[i];
     for (int j = 0; j < sub_data.num_elements; j++){
-      d4est_solver_schwarz_element_metadata_t ed = sub_data.element_metadata[j];
+      d4est_solver_schwarz_element_metadata_t schwarz_ed = sub_data.element_metadata[j];
+      d4est_element_data_t* mesh_ed = d4est_element_data_get_ptr(p4est, schwarz_ed.tree, schwarz_ed.tree_quadid);
 
-      int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed.deg);
-      int local_nodal_stride = d4est_factors->element_data[ed.id]->nodal_stride;
-      int sub_nodal_stride = sub_data.nodal_stride + ed.nodal_stride;
+      int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), mesh_ed->deg);
+      int local_nodal_stride = mesh_ed->nodal_stride;
+      int sub_nodal_stride = sub_data.nodal_stride + schwarz_ed.nodal_stride;
       for (int k = 0; k < volume_nodes; k++){
         u[local_nodal_stride + k] += correction_field_over_subdomains[sub_nodal_stride + k];
       }
@@ -957,6 +974,7 @@ d4est_solver_schwarz_compute_and_add_correction_version2
      p4est,
      schwarz_ops->d4est_ops,
      d4est_factors,
+     ghost,
      ghost_data,
      schwarz_data,
      schwarz_ops,
@@ -999,11 +1017,15 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core_version2
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
     d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_data->subdomain_metadata[i];
     for (int j = 0; j < sub_data.num_elements; j++){
-      d4est_solver_schwarz_element_metadata_t ed = sub_data.element_metadata[j];
-
-      int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed.deg);
-      int local_nodal_stride = d4est_factors->element_data[ed.id]->nodal_stride;
-      int sub_nodal_stride = sub_data.nodal_stride + ed.nodal_stride;
+      d4est_solver_schwarz_element_metadata_t schwarz_ed = sub_data.element_metadata[j];
+      d4est_element_data_t* mesh_ed = d4est_element_data_get_ptr(
+                                                                 p4est,
+                                                                 schwarz_ed.tree,
+                                                                 schwarz_ed.tree_quadid
+                                                                );
+      int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), mesh_ed->deg);
+      int local_nodal_stride = mesh_ed->nodal_stride;
+      int sub_nodal_stride = sub_data.nodal_stride + schwarz_ed.nodal_stride;
       for (int k = 0; k < volume_nodes; k++){
         u[local_nodal_stride + k] += correction_field_over_subdomains[sub_nodal_stride + k];
       }

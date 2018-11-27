@@ -19,11 +19,9 @@ d4est_solver_multigrid_smoother_schwarz
   d4est_solver_multigrid_smoother_schwarz_t* smoother_data = mg_data->smoother->user;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
 
-  double* residual = P4EST_ALLOC(double, vecs->local_nodes);
-
   for (int i = 0; i < smoother_data->schwarz_metadata_on_level[level]->schwarz_iter; i++){
     double* temp_Au = vecs->Au;
-    vecs->Au = residual;
+    vecs->Au = r;
 
     d4est_elliptic_eqns_apply_lhs
       (
@@ -38,9 +36,9 @@ d4est_solver_multigrid_smoother_schwarz
        updater->current_d4est_factors
       );
 
-    d4est_linalg_vec_xpby(r, -1., residual, vecs->local_nodes);    
+    d4est_linalg_vec_xpby(vecs->rhs, -1., r, vecs->local_nodes);    
     vecs->Au = temp_Au;
-  
+
     d4est_solver_schwarz_compute_and_add_correction_version2
       (
        p4est,
@@ -53,15 +51,33 @@ d4est_solver_multigrid_smoother_schwarz
        smoother_data->schwarz_ops,
        smoother_data->flux_data_for_lhs,
        vecs->u,
-       residual
+       r
       );
 
     if (smoother_data->schwarz_metadata_on_level[level]->print_info){
-      double r2 = d4est_linalg_vec_dot(residual, residual, vecs->local_nodes);  
-      printf("[SCHWARZ_SMOOTHER_INFO] r2 = %.15f\n", r2);
+      double r2 = d4est_linalg_vec_dot(r, r, vecs->local_nodes);  
+      printf("[SCHWARZ_SMOOTHER_INFO] mg_level = %d, schwarz iter = %d, r = %.15f\n", level, i, sqrt(r2));
     }
   }
-  P4EST_FREE(residual);
+
+  double* temp_Au = vecs->Au;
+  vecs->Au = r;
+
+  d4est_elliptic_eqns_apply_lhs
+    (
+     p4est,
+     updater->current_d4est_ghost,
+     updater->current_d4est_ghost_data,
+     fcns,
+     vecs,
+     mg_data->d4est_ops,
+     mg_data->d4est_geom,
+     mg_data->d4est_quad,
+     updater->current_d4est_factors
+    );
+
+  d4est_linalg_vec_xpby(vecs->rhs, -1., r, vecs->local_nodes);    
+  vecs->Au = temp_Au;  
 }
   
 
@@ -164,4 +180,5 @@ d4est_solver_multigrid_smoother_schwarz_update
                                                           );
     }
   }
+  
 }

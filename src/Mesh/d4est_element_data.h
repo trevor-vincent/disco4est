@@ -55,14 +55,11 @@ typedef struct {
 } d4est_element_data_t;
 
 /* This file was automatically generated.  Do not edit! */
+d4est_element_data_t *d4est_element_data_get_ptr(p4est_t *p4est,int tree,int tree_quadid);
 int d4est_element_data_get_stride_for_field(d4est_element_data_t *ed,d4est_field_type_t type);
 int d4est_element_data_get_size_of_field(d4est_element_data_t *ed,d4est_field_type_t type);
-void d4est_element_data_print_local_estimator(p4est_t *p4est);
 void d4est_element_data_reorient_f_p_elements_to_f_m_order(d4est_element_data_t **e_p,int face_dim,int f_m,int f_p,int o,int faces_p,d4est_element_data_t *e_p_oriented[(P4EST_HALF)]);
 void d4est_element_data_store_nodal_vec_in_vertex_array(p4est_t *p4est,double *nodal_vec,double *corner_vec);
 void d4est_element_data_store_element_scalar_in_vertex_array(p4est_t *p4est,double *vertex_array,double(*get_local_scalar_fcn)(d4est_element_data_t *));
-void d4est_element_data_copy_from_storage_to_vec(p4est_t *p4est,double *vec);
-void d4est_element_data_copy_from_vec_to_storage(p4est_t *p4est,double *vec);
-
 
 #endif

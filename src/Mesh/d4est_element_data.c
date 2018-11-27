@@ -313,3 +313,17 @@ int d4est_element_data_get_stride_for_field
     D4EST_ABORT("not a supported type");
   }
 }
+
+d4est_element_data_t*
+d4est_element_data_get_ptr
+(
+ p4est_t* p4est,
+ int tree_id,
+ int tree_quadid
+)
+{
+  p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tree_id);
+  sc_array_t* tquadrants = &tree->quadrants;
+  p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, tree_quadid);
+  return  (d4est_element_data_t*)(quad->p.user_data);
+}

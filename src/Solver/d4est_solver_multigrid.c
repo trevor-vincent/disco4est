@@ -749,6 +749,13 @@ d4est_solver_multigrid_vcycle
       vecs_for_smooth.local_nodes = nodes_on_level_of_multigrid[level];
     }
 
+
+      /* printf("******* LEVEL %d INFO *******\n", level); */
+      /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_smooth.Au, vecs_for_smooth.local_nodes); */
+      /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_smooth.u, vecs_for_smooth.local_nodes); */
+      /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_smooth.rhs, vecs_for_smooth.local_nodes); */
+      /* printf("******* DONE LEVEL %d INFO *******\n", level); */
+    
     /**********************************************************/
     /**********************************************************/
     /******************* BEGIN SMOOTH *************************/
