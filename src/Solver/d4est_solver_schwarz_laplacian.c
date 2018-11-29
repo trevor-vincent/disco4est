@@ -11,11 +11,7 @@ convert_mortar_side_data_to_elements
  p4est_t* p4est,
  d4est_solver_schwarz_subdomain_metadata_t* sub_data,
  d4est_mortar_side_data_t* mortar_data,
- d4est_element_data_t** e_m,
- d4est_element_data_t** e_p,
- int* zero_and_skip_m,
- int* zero_and_skip_p,
- int* element_m_sub_id
+ d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data_on_face
 )
 {
   int skip_p_sum = 0;
@@ -24,90 +20,162 @@ convert_mortar_side_data_to_elements
     int mortar_side_id = mortar_data->mortar_side_id;
     int f_m = mortar_data->f_m;
 
-    e_m[0]->boundary_quad_vector_stride[f_m] = -1;
-    e_m[0]->mortar_quad_vector_stride[f_m] = -1;
-    e_m[0]->mortar_quad_scalar_stride[f_m] = -1;
-    e_m[0]->mortar_quad_matrix_stride[f_m] = -1;
+    laplacian_mortar_data_on_face->e_m[0].boundary_quad_vector_stride[f_m] = -1;
+    laplacian_mortar_data_on_face->e_m[0].mortar_quad_vector_stride[f_m] = -1;
+    laplacian_mortar_data_on_face->e_m[0].mortar_quad_scalar_stride[f_m] = -1;
+    laplacian_mortar_data_on_face->e_m[0].mortar_quad_matrix_stride[f_m] = -1;
     
-    e_m[i]->q[0] = mortar_data->q_m[i][0];
-    e_m[i]->q[1] = mortar_data->q_m[i][1];
+    laplacian_mortar_data_on_face->e_m[i].q[0] = mortar_data->q_m[i][0];
+    laplacian_mortar_data_on_face->e_m[i].q[1] = mortar_data->q_m[i][1];
 #if (P4EST_DIM)==3
-    e_m[i]->q[2] = mortar_data->q_m[i][2];
+    laplacian_mortar_data_on_face->e_m[i].q[2] = mortar_data->q_m[i][2];
 #endif
-    e_m[i]->dq = mortar_data->dq_m[i];
-    e_m[i]->deg = mortar_data->deg_m[i];
-    e_m[i]->deg_quad = mortar_data->deg_quad_m[i];
-    e_m[i]->tree = mortar_data->tree_m;
-    e_m[i]->tree_quadid = mortar_data->tree_quadid_m[i];
-    e_m[i]->face_belongs_to_which_mortar[f_m] = mortar_side_id;
-    e_m[i]->mpirank = p4est->mpirank;
-    e_m[i]->id = -1;
-    e_m[i]->sqr_nodal_stride = -1;
-    e_m[i]->quad_stride = -1;
+    laplacian_mortar_data_on_face->e_m[i].dq = mortar_data->dq_m[i];
+    laplacian_mortar_data_on_face->e_m[i].deg = mortar_data->deg_m[i];
+    laplacian_mortar_data_on_face->e_m[i].deg_quad = mortar_data->deg_quad_m[i];
+    laplacian_mortar_data_on_face->e_m[i].tree = mortar_data->tree_m;
+    laplacian_mortar_data_on_face->e_m[i].tree_quadid = mortar_data->tree_quadid_m[i];
+    laplacian_mortar_data_on_face->e_m[i].face_belongs_to_which_mortar[f_m] = mortar_side_id;
+    laplacian_mortar_data_on_face->e_m[i].mpirank = p4est->mpirank;
+    laplacian_mortar_data_on_face->e_m[i].id = -1;
+    laplacian_mortar_data_on_face->e_m[i].sqr_nodal_stride = -1;
+    laplacian_mortar_data_on_face->e_m[i].quad_stride = -1;
     int id = d4est_solver_schwarz_is_element_in_subdomain
              (
               sub_data,
-              e_m[i]->tree,
-              e_m[i]->tree_quadid
+              laplacian_mortar_data_on_face->e_m[i].tree,
+              laplacian_mortar_data_on_face->e_m[i].tree_quadid
              );
     if (id >= 0){
-      element_m_sub_id[i] = id;
-      zero_and_skip_m[i] = 0;
-      e_m[i]->nodal_stride = sub_data->element_metadata[id].nodal_stride;
+      laplacian_mortar_data_on_face->element_m_sub_id[i] = id;
+      laplacian_mortar_data_on_face->zero_and_skip_m[i] = 0;
+      laplacian_mortar_data_on_face->e_m[i].nodal_stride = sub_data->element_metadata[id].nodal_stride;
     }
     else {
-      element_m_sub_id[i] = -1;
-      zero_and_skip_m[i] = 1;
-      e_m[i]->nodal_stride = -1;
+      laplacian_mortar_data_on_face->element_m_sub_id[i] = -1;
+      laplacian_mortar_data_on_face->zero_and_skip_m[i] = 1;
+      laplacian_mortar_data_on_face->e_m[i].nodal_stride = -1;
     }
   }
   for (int i = 0; i < mortar_data->faces_p; i++){
     int mortar_side_id = mortar_data->mortar_side_id;
     int f_p = mortar_data->f_p;
-    e_p[0]->boundary_quad_vector_stride[f_p] = -1;
-    e_p[0]->mortar_quad_vector_stride[f_p] = -1;
-    e_p[0]->mortar_quad_scalar_stride[f_p] = -1;
-    e_p[0]->mortar_quad_matrix_stride[f_p] = -1;
-    e_p[i]->q[0] = mortar_data->q_p[i][0];
-    e_p[i]->q[1] = mortar_data->q_p[i][1];
+    laplacian_mortar_data_on_face->e_p[0].boundary_quad_vector_stride[f_p] = -1;
+    laplacian_mortar_data_on_face->e_p[0].mortar_quad_vector_stride[f_p] = -1;
+    laplacian_mortar_data_on_face->e_p[0].mortar_quad_scalar_stride[f_p] = -1;
+    laplacian_mortar_data_on_face->e_p[0].mortar_quad_matrix_stride[f_p] = -1;
+    laplacian_mortar_data_on_face->e_p[i].q[0] = mortar_data->q_p[i][0];
+    laplacian_mortar_data_on_face->e_p[i].q[1] = mortar_data->q_p[i][1];
 #if (P4EST_DIM)==3
-    e_p[i]->q[2] = mortar_data->q_p[i][2];
+    laplacian_mortar_data_on_face->e_p[i].q[2] = mortar_data->q_p[i][2];
 #endif
-    e_p[i]->dq = mortar_data->dq_p[i];
-    e_p[i]->deg = mortar_data->deg_p[i];
-    e_p[i]->deg_quad = mortar_data->deg_quad_p[i];
-    e_p[i]->tree = mortar_data->tree_p;
-    e_p[i]->tree_quadid = mortar_data->tree_quadid_p[i];
-    e_p[i]->face_belongs_to_which_mortar[f_p] = -1;
-    e_p[i]->mpirank = p4est->mpirank;
-    e_p[i]->id = -1;
-    e_p[i]->sqr_nodal_stride = -1;
-    e_p[i]->quad_stride = -1;
+    laplacian_mortar_data_on_face->e_p[i].dq = mortar_data->dq_p[i];
+    laplacian_mortar_data_on_face->e_p[i].deg = mortar_data->deg_p[i];
+    laplacian_mortar_data_on_face->e_p[i].deg_quad = mortar_data->deg_quad_p[i];
+    laplacian_mortar_data_on_face->e_p[i].tree = mortar_data->tree_p;
+    laplacian_mortar_data_on_face->e_p[i].tree_quadid = mortar_data->tree_quadid_p[i];
+    laplacian_mortar_data_on_face->e_p[i].face_belongs_to_which_mortar[f_p] = -1;
+    laplacian_mortar_data_on_face->e_p[i].mpirank = p4est->mpirank;
+    laplacian_mortar_data_on_face->e_p[i].id = -1;
+    laplacian_mortar_data_on_face->e_p[i].sqr_nodal_stride = -1;
+    laplacian_mortar_data_on_face->e_p[i].quad_stride = -1;
     int id = d4est_solver_schwarz_is_element_in_subdomain
              (
               sub_data,
-              e_p[i]->tree,
-              e_p[i]->tree_quadid
+              laplacian_mortar_data_on_face->e_p[i].tree,
+              laplacian_mortar_data_on_face->e_p[i].tree_quadid
              );
 
     if (id >= 0){
-      zero_and_skip_p[i] = 0;
-      e_p[i]->nodal_stride = sub_data->element_metadata[id].nodal_stride;
+      laplacian_mortar_data_on_face->zero_and_skip_p[i] = 0;
+      laplacian_mortar_data_on_face->e_p[i].nodal_stride = sub_data->element_metadata[id].nodal_stride;
     }
     else {
-      zero_and_skip_p[i] = 1;
-      e_p[i]->nodal_stride = -1;
+      laplacian_mortar_data_on_face->zero_and_skip_p[i] = 1;
+      laplacian_mortar_data_on_face->e_p[i].nodal_stride = -1;
       skip_p_sum++;
     }
   }
 
-  e_m[0]->boundary_quad_vector_stride[mortar_data->f_m] = mortar_data->boundary_quad_vector_stride;
-  e_m[0]->mortar_quad_vector_stride[mortar_data->f_m] = mortar_data->mortar_quad_vector_stride;
-  e_m[0]->mortar_quad_scalar_stride[mortar_data->f_m] = mortar_data->mortar_quad_scalar_stride;
-  e_m[0]->mortar_quad_matrix_stride[mortar_data->f_m] = mortar_data->mortar_quad_matrix_stride;
+  laplacian_mortar_data_on_face->e_m[0].boundary_quad_vector_stride[mortar_data->f_m]
+    = mortar_data->boundary_quad_vector_stride;
+  laplacian_mortar_data_on_face->e_m[0].mortar_quad_vector_stride[mortar_data->f_m]
+    = mortar_data->mortar_quad_vector_stride;
+  laplacian_mortar_data_on_face->e_m[0].mortar_quad_scalar_stride[mortar_data->f_m]
+    = mortar_data->mortar_quad_scalar_stride;
+  laplacian_mortar_data_on_face->e_m[0].mortar_quad_matrix_stride[mortar_data->f_m]
+    = mortar_data->mortar_quad_matrix_stride;
 
-  return (skip_p_sum == mortar_data->faces_p);
+  laplacian_mortar_data_on_face->skip_if_overlap_less_than_element_nodal_size = (skip_p_sum == mortar_data->faces_p);
+
+  if(mortar_data->faces_p == 0){
+    laplacian_mortar_data_on_face->is_boundary = 1;
+  }
+  else {
+    laplacian_mortar_data_on_face->is_boundary = 0;
+  }
+  
 }
+
+
+d4est_solver_schwarz_laplacian_mortar_data_t*
+d4est_solver_schwarz_laplacian_mortar_data_init
+(
+ p4est_t* p4est,
+ d4est_solver_schwarz_metadata_t* schwarz_metadata,
+ d4est_mesh_data_t* d4est_factors
+)
+{
+  d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data
+    = P4EST_ALLOC(d4est_solver_schwarz_laplacian_mortar_data_t,
+                  schwarz_metadata->num_elements*(P4EST_FACES));
+
+  for (int s = 0; s < schwarz_metadata->num_subdomains; s++){
+
+    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_metadata->subdomain_metadata[s];
+  
+    for (int se = 0; se < sub_data->num_elements; se++){
+      
+      d4est_element_data_t* ed = d4est_element_data_get_ptr
+                                 (
+                                  p4est,
+                                  sub_data->element_metadata[se].tree,
+                                  sub_data->element_metadata[se].tree_quadid
+                                 );
+    
+      for (int f = 0; f < (P4EST_FACES); f++){        
+        int mortar_side_id_m = ed->face_belongs_to_which_mortar[f];
+        d4est_mortar_side_data_t* mortar_side_data = &d4est_factors->mortar_side_data[mortar_side_id_m];
+        int laplacian_stride = (sub_data->element_stride + se)*(P4EST_FACES) + f;
+        for (int i = 0; i < (P4EST_HALF); i++){
+          laplacian_mortar_data[laplacian_stride].e_m_is_ghost[i] = 0;
+          laplacian_mortar_data[laplacian_stride].zero_and_skip_m[i] = 0;
+          laplacian_mortar_data[laplacian_stride].zero_and_skip_p[i] = 0;
+          laplacian_mortar_data[laplacian_stride].element_m_sub_id[i] = -1;
+        }      
+        convert_mortar_side_data_to_elements
+          (
+           p4est,
+           sub_data,
+           mortar_side_data,
+           &laplacian_mortar_data[laplacian_stride]
+          );
+      }
+      
+    }   
+  }
+}
+
+void
+d4est_solver_schwarz_laplacian_mortar_data_destroy
+(
+ d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data
+)
+{
+  P4EST_FREE(laplacian_mortar_data);
+}
+  
+
 
 static void
 d4est_solver_schwarz_laplacian_compute_dudr
@@ -159,25 +227,26 @@ d4est_solver_schwarz_laplacian_compute_stiffness
  int stride = 0;
  for (int i = 0; i < sub_data->num_elements; i++){
 
-    d4est_element_data_t* ed = d4est_element_data_get_ptr(
-                                                          p4est,
-                                                          sub_data->element_metadata[i].tree,
-                                                          sub_data->element_metadata[i].tree_quadid
-                                                         );
-
-   
-   int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),ed->deg);
-   d4est_laplacian_apply_stiffness_matrix_on_element
-     (
-      d4est_ops,
-      d4est_geom,
-      d4est_quad,
-      d4est_factors,
-      ed,
-      &restrict_transpose_u_over_subdomain[stride],
-      &Au[stride]
-     );
-   stride += volume_nodes_lobatto;
+    d4est_element_data_t* ed
+      = d4est_element_data_get_ptr
+      (
+       p4est,
+       sub_data->element_metadata[i].tree,
+       sub_data->element_metadata[i].tree_quadid
+      );
+    
+    int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),ed->deg);
+    d4est_laplacian_apply_stiffness_matrix_on_element
+      (
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       ed,
+       &restrict_transpose_u_over_subdomain[stride],
+       &Au[stride]
+      );
+    stride += volume_nodes_lobatto;
  }
 }
 
@@ -193,6 +262,7 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
  d4est_solver_schwarz_metadata_t* schwarz_data,
  d4est_solver_schwarz_operators_t* schwarz_ops,
  d4est_laplacian_flux_data_t* flux_fcn_data,
+ d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data,
  double* u_restricted_field_over_subdomain,
  double* Au_restricted_field_over_subdomain,
  int subdomain
@@ -214,15 +284,6 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
      subdomain
     );
 
-  /* restrict transpose subdomain */
-  d4est_element_data_t** e_m = P4EST_ALLOC(d4est_element_data_t*, (P4EST_HALF));
-  d4est_element_data_t** e_p = P4EST_ALLOC(d4est_element_data_t*, (P4EST_HALF));
-
-  for (int i = 0; i < (P4EST_HALF); i++){
-    e_m[i] = P4EST_ALLOC(d4est_element_data_t, 1);
-    e_p[i] = P4EST_ALLOC(d4est_element_data_t, 1);
-  }
-  
   /* Compute dudr */  
   d4est_solver_schwarz_laplacian_compute_dudr
     (
@@ -248,7 +309,6 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
      Au
     );
 
-  
   /* Compute mortar integrals */
   flux_fcn_data->d4est_ghost_data = NULL;
   flux_fcn_data->d4est_ghost = d4est_ghost;
@@ -266,18 +326,19 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
   /* int num_mortar_sides_done = 0; */
   
   for (int i = 0; i < sub_data->num_elements; i++){
+
+    d4est_element_data_t* ed = d4est_element_data_get_ptr
+                               (
+                                p4est,
+                                sub_data->element_metadata[i].tree,
+                                sub_data->element_metadata[i].tree_quadid
+                               );
     
-    d4est_element_data_t* ed = d4est_element_data_get_ptr(
-                                                          p4est,
-                                                          sub_data->element_metadata[i].tree,
-                                                          sub_data->element_metadata[i].tree_quadid
-                                                         );
     
     for (int f = 0; f < (P4EST_FACES); f++){
 
       int mortar_side_id_m = ed->face_belongs_to_which_mortar[f];
       d4est_mortar_side_data_t* mortar_side_data = &d4est_factors->mortar_side_data[mortar_side_id_m];
-                             
       
       int compute = 1;
       /* check if we have already computed this mortar */;
@@ -285,57 +346,40 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
         compute = 0;
       }
         
-      /* for (int c = 0; c < num_mortar_sides_done; i++){ */
-      /*   if (mortar_sides_done[c] == mortar_side_data->mortar_side_id){ */
-      /*     compute = 0; */
-      /*     break; */
-      /*   } */
-      /* } */
-
-      int zero_and_skip_m [] = {0,0,0,0};
-      int zero_and_skip_p [] = {0,0,0,0};
-      int e_m_is_ghost [] = {0,0,0,0};
-      int element_m_sub_id [] = {-1,-1,-1,-1};
-      
+      d4est_solver_schwarz_laplacian_mortar_data_t laplacian_mortar_data_on_face
+        = laplacian_mortar_data[(sub_data->element_stride + i)*(P4EST_FACES) + f];
+        
       if (compute){
-        int skip_if_overlap_less_than_element_nodal_size
-          = convert_mortar_side_data_to_elements
-          (
-           p4est,
-           sub_data,
-           mortar_side_data,
-           e_m,
-           e_p,
-           zero_and_skip_m,
-           zero_and_skip_p,
-           element_m_sub_id
-          );
-        if (mortar_side_data->faces_p != 0 &&
-            skip_if_overlap_less_than_element_nodal_size == 1
+        if (laplacian_mortar_data_on_face.is_boundary != 1 &&
+            laplacian_mortar_data_on_face.skip_if_overlap_less_than_element_nodal_size == 1
             && schwarz_data->num_nodes_overlap < ed->deg + 1){
           compute = 0;
         }            
       }
 
-      /* printf("i e_m[0]->deg, f, mortar = %d %d %d %d\n", i, e_m[0]->deg, f, mortar_side_id_m); */
+      d4est_element_data_t* e_m [P4EST_HALF];
+      d4est_element_data_t* e_p [P4EST_HALF];
+      for (int e = 0; e < (P4EST_HALF); e++){
+        e_m[e] = &laplacian_mortar_data_on_face.e_m[e];
+        e_p[e] = &laplacian_mortar_data_on_face.e_p[e];
+      }
       
-      /* optimization, don't compute if we skip all p elements and overlap size is not an entire element, because then none of these sides contribute anyway (e.g. flux is zero) */
-  
+      
       if (compute){
           d4est_laplacian_flux_schwarz
           (
            p4est,
-           e_m,
+           &e_m[0],
            mortar_side_data->faces_m,
            mortar_side_data->f_m,
            mortar_side_data->mortar_side_id,
-           e_p,
+           &e_p[0],
            mortar_side_data->faces_p,
            mortar_side_data->f_p,
            -1,
-           e_m_is_ghost,
-           zero_and_skip_m,
-           zero_and_skip_p,
+           &laplacian_mortar_data_on_face.e_m_is_ghost[0],
+           &laplacian_mortar_data_on_face.zero_and_skip_m[0],
+           &laplacian_mortar_data_on_face.zero_and_skip_p[0],
            mortar_side_data->orientation,
            d4est_ops,
            d4est_geom,
@@ -344,14 +388,12 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
            flux_fcn_data
           );
           for (int m = 0; m < mortar_side_data->faces_m; m++){
-            if (!zero_and_skip_m[m]){
-              mortar_sides_done[element_m_sub_id[m]*(P4EST_FACES)
+            if (!laplacian_mortar_data_on_face.zero_and_skip_m[m]){
+              mortar_sides_done[laplacian_mortar_data_on_face.element_m_sub_id[m]*(P4EST_FACES)
                                 +  mortar_side_data->f_m] = 1;
             }
           }
               
-        /* mortar_sides_done[num_mortar_sides_done] = mortar_side_data->mortar_side_id; */
-        /* num_mortar_sides_done += 1; */
       }
     }   
   }
@@ -366,13 +408,6 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
     );
   
  
-  for (int i = 0; i < (P4EST_HALF); i++){
-    P4EST_FREE(e_m[i]);
-    P4EST_FREE(e_p[i]);
-  }
-  P4EST_FREE(e_m);
-  P4EST_FREE(e_p);
-
   P4EST_FREE(mortar_sides_done);
   P4EST_FREE(Au);
   P4EST_FREE(transpose_restricted_u);

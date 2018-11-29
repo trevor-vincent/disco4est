@@ -56,6 +56,7 @@ typedef struct {
   int restricted_nodal_stride;
   int nodal_size;
   int nodal_stride;
+  int element_stride;
   
 } d4est_solver_schwarz_subdomain_metadata_t;
 
@@ -74,8 +75,10 @@ typedef struct {
   int restricted_nodal_size; /* restricted nodal size of all subdomains combined */
   int nodal_size; /* nodal size of all subdomains combined */
   int num_subdomains; /* Equivalent to number of local quadrants */
+  int num_elements; /* Total elements over all subdomains */
   d4est_solver_schwarz_subdomain_metadata_t* subdomain_metadata; /* The elements and their connections in the subdomain */
   d4est_ghost_data_ext_t* subdomain_ghostdata;
+  d4est_ghost_t* d4est_ghost;
   
 } d4est_solver_schwarz_metadata_t;
 

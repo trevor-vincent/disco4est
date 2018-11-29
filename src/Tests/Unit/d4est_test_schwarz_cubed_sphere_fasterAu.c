@@ -12,6 +12,7 @@
 #include <d4est_laplacian_flux.h>
 #include <d4est_solver_schwarz_metadata.h>
 #include <d4est_solver_schwarz_helpers.h>
+#include <d4est_solver_schwarz_laplacian.h>
 #include <petscsnes.h>
 #include <zlog.h>
 
@@ -470,6 +471,13 @@ int main(int argc, char *argv[])
 
   /* DEBUG_PRINT_2ARR_DBL(rhs_over_subdomains, sol_over_subdomains, schwarz_data->restricted_nodal_size); */
 
+
+  d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data = d4est_solver_schwarz_laplacian_mortar_data_init
+                                                                        (
+                                                                         p4est,
+                                                                         schwarz_data,
+                                                                         d4est_factors
+                                                                        );
   d4est_vtk_helper_array_t* helper_array = d4est_vtk_helper_array_init
     (
      p4est,
@@ -550,6 +558,8 @@ int main(int argc, char *argv[])
                                ,local_sizes.local_nodes);
 
 
+
+    
     printf("Solving\n");
     d4est_solver_schwarz_compute_and_add_correction_version2
       (
@@ -562,9 +572,12 @@ int main(int argc, char *argv[])
        schwarz_data,
        schwarz_ops,
        flux_data_for_apply_lhs,
+       laplacian_mortar_data,
        sol,
        r
       );
+
+
 
     double* post_solve_u = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
       (
@@ -790,6 +803,11 @@ int main(int argc, char *argv[])
     (
      schwarz_ops
     );
+
+
+    d4est_solver_schwarz_laplacian_mortar_data_destroy(laplacian_mortar_data);
+  
+
   
   d4est_mesh_initial_extents_destroy(initial_grid_input);
   d4est_mesh_data_destroy(d4est_factors);

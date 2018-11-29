@@ -39,6 +39,10 @@ d4est_solver_multigrid_smoother_schwarz
     d4est_linalg_vec_xpby(vecs->rhs, -1., r, vecs->local_nodes);    
     vecs->Au = temp_Au;
 
+    if (p4est->mpisize != 1){
+      D4EST_ABORT("We need to transfer the residual, to get the ghost portions");
+    }
+    
     d4est_solver_schwarz_compute_and_add_correction_version2
       (
        p4est,
@@ -46,10 +50,11 @@ d4est_solver_multigrid_smoother_schwarz
        mg_data->d4est_quad,
        updater->current_d4est_factors,
        updater->current_d4est_ghost,
-       updater->current_d4est_ghost_data,
+       updater->current_d4est_ghost_data, /* should contain ghost data for residual only */
        smoother_data->schwarz_metadata_on_level[level],
        smoother_data->schwarz_ops,
        smoother_data->flux_data_for_lhs,
+       smoother_data->laplacian_mortar_data_on_level[level],
        vecs->u,
        r
       );
@@ -88,6 +93,7 @@ d4est_solver_multigrid_smoother_schwarz_init
  int num_of_levels,
  d4est_operators_t* d4est_ops,
  d4est_ghost_t* d4est_ghost,
+ d4est_mesh_data_t* d4est_factors,
  const char* input_file
 )
 {
@@ -95,13 +101,23 @@ d4est_solver_multigrid_smoother_schwarz_init
   d4est_solver_multigrid_smoother_schwarz_t* smoother_data = P4EST_ALLOC(d4est_solver_multigrid_smoother_schwarz_t,1);
 
   smoother_data->schwarz_metadata_on_level = P4EST_ALLOC(d4est_solver_schwarz_metadata_t*, num_of_levels); 
+  smoother_data->laplacian_mortar_data_on_level = P4EST_ALLOC(d4est_solver_schwarz_laplacian_mortar_data_t*, num_of_levels); 
   
   for (int level = 0; level < num_of_levels; level++){
     smoother_data->schwarz_metadata_on_level[level] = NULL;
+    smoother_data->laplacian_mortar_data_on_level[level] = NULL;
   }
   
   smoother_data->schwarz_metadata_on_level[num_of_levels-1]
     = d4est_solver_schwarz_metadata_init(p4est, d4est_ghost, input_file);
+
+  smoother_data->laplacian_mortar_data_on_level[num_of_levels-1]
+    = d4est_solver_schwarz_laplacian_mortar_data_init
+    (
+     p4est,
+     smoother_data->schwarz_metadata_on_level[num_of_levels-1],
+     d4est_factors
+    );
 
   smoother_data->schwarz_ops = d4est_solver_schwarz_operators_init
     (d4est_ops);
@@ -137,12 +153,24 @@ d4est_solver_multigrid_smoother_schwarz_destroy
 )
 {
   d4est_solver_multigrid_smoother_schwarz_t* smoother_data = smoother->user;
+
   for (int level = 0;
        level < smoother_data->num_of_levels;
        level++){
+
     if(smoother_data->schwarz_metadata_on_level[level] != NULL){
-      d4est_solver_schwarz_metadata_destroy(smoother_data->schwarz_metadata_on_level[level]);
+      d4est_solver_schwarz_metadata_destroy
+        (
+         smoother_data->schwarz_metadata_on_level[level]
+        );
     }
+    if(smoother_data->laplacian_mortar_data_on_level[level] != NULL){
+      d4est_solver_schwarz_laplacian_mortar_data_destroy
+        (
+         smoother_data->laplacian_mortar_data_on_level[level]
+        );
+    }
+    
   }
 
   d4est_solver_schwarz_operators_destroy
@@ -150,6 +178,8 @@ d4est_solver_multigrid_smoother_schwarz_destroy
      smoother_data->schwarz_ops
     );
 
+
+  
   d4est_laplacian_flux_destroy(smoother_data->flux_data_for_lhs);
   
   P4EST_FREE(smoother_data->input_file);
@@ -179,6 +209,16 @@ d4est_solver_multigrid_smoother_schwarz_update
                                                            smoother_data->input_file
                                                           );
     }
+    compute_solver_schwarz_data = (smoother_data->laplacian_mortar_data_on_level[level-1] == NULL);
+    if (compute_solver_schwarz_data) {
+      smoother_data->laplacian_mortar_data_on_level[level-1]
+        = d4est_solver_schwarz_laplacian_mortar_data_init
+        (
+         p4est,
+         smoother_data->schwarz_metadata_on_level[level-1],
+         updater->current_d4est_factors
+        );
+    }    
   }
   
 }

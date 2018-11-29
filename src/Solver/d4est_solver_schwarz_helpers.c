@@ -855,6 +855,7 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core_version2
  d4est_solver_schwarz_metadata_t* schwarz_data,
  d4est_solver_schwarz_operators_t* schwarz_ops,
  d4est_laplacian_flux_data_t* flux_fcn_data,
+ d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data,
  double* du_restricted_field_over_subdomain,
  double* rhs_restricted_field_over_subdomain,
  int iter,
@@ -890,6 +891,7 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core_version2
      schwarz_data,
      schwarz_ops,
      flux_fcn_data,
+     laplacian_mortar_data,
      du_restricted_field_over_subdomain,
      Ad,
      subdomain
@@ -917,6 +919,7 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core_version2
      schwarz_data,
      schwarz_ops,
      flux_fcn_data,
+     laplacian_mortar_data,
      d,
      Ad,
      subdomain
@@ -958,6 +961,7 @@ d4est_solver_schwarz_compute_and_add_correction_version2
  d4est_solver_schwarz_metadata_t* schwarz_data,
  d4est_solver_schwarz_operators_t* schwarz_ops,
  d4est_laplacian_flux_data_t* flux_fcn_data,
+ d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data,
  double* u,
  double* r
 )
@@ -996,6 +1000,7 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core_version2
        schwarz_data,
        schwarz_ops,
        flux_fcn_data,
+       laplacian_mortar_data,
        &du[sub_data.restricted_nodal_stride],
        &restricted_r[sub_data.restricted_nodal_stride],
        schwarz_data->subdomain_iter,

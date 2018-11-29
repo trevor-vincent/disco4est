@@ -1,6 +1,6 @@
 [initial_mesh]
 min_quadrants = -1
-min_level = 1
+min_level = 2
 fill_uniform = 1
 region0_deg = 4
 region0_deg_quad_inc = 0
@@ -19,8 +19,13 @@ name = sipg
 sipg_penalty_prefactor = 2
 sipg_penalty_fcn = maxp_sqr_over_minh
 
-[d4est_solver_schwarz_metadata]
+[d4est_solver_schwarz]
 num_nodes_overlap = 2
+subdomain_iter = 1000
+schwarz_iter = 1000
+subdomain_atol = 1e-5
+subdomain_rtol = 1e-5
+print_info = 1
 
 [d4est_vtk]
 filename = d4est_test_schwarz

@@ -1002,9 +1002,7 @@ d4est_mesh_compute_mortar_quadrature_quantities
      &flux_fcns
      //EXCHANGE_GHOST_DATA /* might not be needed because it's done for size computations */
     );
-
 }
-
 
 static void
 d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback

@@ -462,7 +462,13 @@ int main(int argc, char *argv[])
      poly_vec_over_subdomains
     );
 
-
+  d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data =
+d4est_solver_schwarz_laplacian_mortar_data_init
+    (
+     p4est,
+     schwarz_data,
+     d4est_factors
+    );
 
   
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
@@ -480,6 +486,7 @@ int main(int argc, char *argv[])
        schwarz_data,
        schwarz_ops,
        flux_data_for_apply_lhs,
+       laplacian_mortar_data,
        &poly_vec_over_subdomains[sub_data->restricted_nodal_stride],
        &Apoly_vec_over_subdomains_2[sub_data->restricted_nodal_stride],
        i
@@ -503,6 +510,7 @@ int main(int argc, char *argv[])
     d4est_ghost_data_destroy(d4est_ghost_data);
     d4est_ghost_data = NULL;
   } 
+
   
   P4EST_FREE(u);
   P4EST_FREE(poly_vec);
@@ -526,6 +534,9 @@ int main(int argc, char *argv[])
      schwarz_ops
     );
 
+
+  d4est_solver_schwarz_laplacian_mortar_data_destroy(laplacian_mortar_data);
+  
   d4est_mesh_initial_extents_destroy(initial_grid_input);
   d4est_mesh_data_destroy(d4est_factors);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);

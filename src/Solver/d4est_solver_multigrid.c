@@ -369,6 +369,7 @@ d4est_solver_multigrid_set_smoother(p4est_t* p4est, const char* input_file,  d4e
                          mg_data->num_of_levels,
                          mg_data->d4est_ops,
                          updater->current_d4est_ghost,
+                         updater->current_d4est_factors,
                          input_file
                         );
   }
