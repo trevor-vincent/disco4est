@@ -3,9 +3,14 @@
 
 typedef struct {
 
-  double* drst_dxyz_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
-  double* sj_on_f_m_mortar_quad;
-  double* n_on_f_m_mortar_quad [(P4EST_DIM)];
+  double* drst_dxyz_m_mortar_quad;
+  double* drst_dxyz_p_mortar_quad_porder;
+  double* sj_m_mortar_quad;
+  double* n_m_mortar_quad;
+  double* hm_mortar_quad;
+  double* hp_mortar_quad;
+  double* xyz_m_mortar_quad;
+  double* xyz_m_mortar_lobatto;
 
   d4est_ghost_data_ext_t* mortar_side_ghost_data;
 

@@ -133,11 +133,24 @@ struct d4est_laplacian_flux_data{
   int local_nodes;
   int which_field;
 
-  /* these are needed to zero out external fields to schwarz subdomain */
+  /* these are set internally by the schwarz modules subdomain */
   int using_schwarz;
   int zero_and_skip_m [(P4EST_HALF)];
   int zero_and_skip_p [(P4EST_HALF)];
-  
+
+  /* used by schwarz, but could be used by other modules too */
+  /* if using provided mesh data, these should be provided */
+  /* This overrides the usual locally collected mesh data that is used */
+  int using_provided_mesh_data;
+  double *hm_mortar_quad;
+  double *hp_mortar_quad;
+  double *sj_m_mortar_quad;
+  double *n_m_mortar_quad;
+  double *xyz_m_mortar_quad;
+  double *xyz_m_mortar_lobatto;
+  double *drst_dxyz_m_mortar_quad;
+  double *drst_dxyz_p_mortar_quad_porder;
+    
   void (*destroy)(d4est_laplacian_flux_data_t*);
   
 };

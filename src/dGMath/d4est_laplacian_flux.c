@@ -34,7 +34,7 @@ d4est_laplacian_flux_boundary
  void* params
 )
 {
-  d4est_laplacian_flux_data_t* d4est_laplacian_flux_params = params;
+  d4est_laplacian_flux_data_t* laplacian_flux_params = params;
   int face_nodes_m_lobatto = d4est_lgl_get_nodes((P4EST_DIM) - 1, e_m->deg);
   int deg_quad = e_m->deg_quad;
   int face_nodes_m_quad = d4est_lgl_get_nodes((P4EST_DIM) - 1, deg_quad);
@@ -51,18 +51,41 @@ d4est_laplacian_flux_boundary
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* xyz_on_f_m_lobatto [(P4EST_DIM)];
 
-  double * restrict  h_quad = &d4est_factors->hm_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
-  double * restrict  sj_on_f_m_quad = &d4est_factors->sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
+  double * restrict  h_quad = NULL;
+  double * restrict  sj_on_f_m_quad = NULL;
+
+  if(!laplacian_flux_params->using_provided_mesh_data){
+    
+    h_quad = &d4est_factors->hm_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
+    sj_on_f_m_quad = &d4est_factors->sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
   
-  for (int d = 0; d < (P4EST_DIM); d++){
-    n_on_f_m_quad[d] = &d4est_factors->n_m_mortar_quad[e_m->mortar_quad_vector_stride[f_m] + d*face_nodes_m_quad];
-    xyz_on_f_m_quad[d] = &d4est_factors->xyz_m_mortar_quad[e_m->boundary_quad_vector_stride[f_m] + d*face_nodes_m_quad];
-    xyz_on_f_m_lobatto[d] = &d4est_factors->xyz_m_mortar_lobatto[e_m->boundary_quad_vector_stride[f_m] + d*face_nodes_m_quad];
+    for (int d = 0; d < (P4EST_DIM); d++){
+      n_on_f_m_quad[d] = &d4est_factors->n_m_mortar_quad[e_m->mortar_quad_vector_stride[f_m] + d*face_nodes_m_quad];
+      xyz_on_f_m_quad[d] = &d4est_factors->xyz_m_mortar_quad[e_m->boundary_quad_vector_stride[f_m] + d*face_nodes_m_quad];
+      xyz_on_f_m_lobatto[d] = &d4est_factors->xyz_m_mortar_lobatto[e_m->boundary_quad_vector_stride[f_m] + d*face_nodes_m_quad];
+    }
+  
+    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+        drst_dxyz_quad[d1][d2] =  &d4est_factors->drst_dxyz_m_mortar_quad[e_m->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*face_nodes_m_quad];
+      }
+    }
   }
+  else {
+    
+    h_quad = &laplacian_flux_params->hm_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
+    sj_on_f_m_quad = &laplacian_flux_params->sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
   
-  for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-    for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-      drst_dxyz_quad[d1][d2] =  &d4est_factors->drst_dxyz_m_mortar_quad[e_m->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*face_nodes_m_quad];
+    for (int d = 0; d < (P4EST_DIM); d++){
+      n_on_f_m_quad[d] = &laplacian_flux_params->n_m_mortar_quad[e_m->mortar_quad_vector_stride[f_m] + d*face_nodes_m_quad];
+      xyz_on_f_m_quad[d] = &laplacian_flux_params->xyz_m_mortar_quad[e_m->boundary_quad_vector_stride[f_m] + d*face_nodes_m_quad];
+      xyz_on_f_m_lobatto[d] = &laplacian_flux_params->xyz_m_mortar_lobatto[e_m->boundary_quad_vector_stride[f_m] + d*face_nodes_m_quad];
+    }
+  
+    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+        drst_dxyz_quad[d1][d2] =  &laplacian_flux_params->drst_dxyz_m_mortar_quad[e_m->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*face_nodes_m_quad];
+      }
     }
   }
   
@@ -87,7 +110,7 @@ d4est_laplacian_flux_boundary
     d4est_operators_apply_slicer
       (
        d4est_ops,
-       &d4est_laplacian_flux_params->dudr_local[d][e_m->nodal_stride],
+       &laplacian_flux_params->dudr_local[d][e_m->nodal_stride],
        (P4EST_DIM),
        f_m,
        e_m->deg,
@@ -112,7 +135,7 @@ d4est_laplacian_flux_boundary
   d4est_operators_apply_slicer
     (
      d4est_ops,
-     &d4est_laplacian_flux_params->u[e_m->nodal_stride],
+     &laplacian_flux_params->u[e_m->nodal_stride],
      (P4EST_DIM),
      f_m,
      e_m->deg,
@@ -161,12 +184,12 @@ d4est_laplacian_flux_boundary
   boundary_data.h_quad = h_quad;
   boundary_data.Au_m =  d4est_mesh_get_field_on_element
                          (
-                          d4est_laplacian_flux_params->p4est,
+                          laplacian_flux_params->p4est,
                           e_m,
                           NULL,
-                          d4est_laplacian_flux_params->Au,
-                          d4est_laplacian_flux_params->local_nodes,
-                          d4est_laplacian_flux_params->which_field
+                          laplacian_flux_params->Au,
+                          laplacian_flux_params->local_nodes,
+                          laplacian_flux_params->which_field
                          );
   
   D4EST_COPY_DBYD_MAT(drst_dxyz_quad, boundary_data.drst_dxyz_quad);
@@ -175,8 +198,8 @@ d4est_laplacian_flux_boundary
   D4EST_COPY_DIM_VEC(xyz_on_f_m_quad, boundary_data.xyz_on_f_m_quad);
   D4EST_COPY_DIM_VEC(xyz_on_f_m_lobatto, boundary_data.xyz_on_f_m_lobatto);
 
-  if (d4est_laplacian_flux_params->boundary_fcn != NULL){
-    d4est_laplacian_flux_params->boundary_fcn
+  if (laplacian_flux_params->boundary_fcn != NULL){
+    laplacian_flux_params->boundary_fcn
       (
        p4est,
        e_m,
@@ -187,8 +210,8 @@ d4est_laplacian_flux_boundary
        d4est_quad,
        d4est_factors,
        &boundary_data,
-       d4est_laplacian_flux_params->bc_data,
-       d4est_laplacian_flux_params->flux_data
+       laplacian_flux_params->bc_data,
+       laplacian_flux_params->flux_data
       );
   }
   
@@ -222,7 +245,7 @@ static void
  void* params
 )
 {
-  d4est_laplacian_flux_data_t* d4est_laplacian_flux_params = params;
+  d4est_laplacian_flux_data_t* laplacian_flux_params = params;
   int stride;
   int deg_p_lobatto [(P4EST_HALF)];
   int face_nodes_p_lobatto [(P4EST_HALF)];
@@ -247,7 +270,7 @@ static void
   int total_side_nodes_m_quad = 0;
   for (int i = 0; i < faces_m; i++){
     deg_m_lobatto[i] = e_m[i]->deg;
-    deg_m_quad[i] = e_m[i]->deg_quad;/* d4est_laplacian_flux_params->get_deg_mortar_quad(e_m[i], d4est_laplacian_flux_params->get_deg_mortar_quad_ctx); */
+    deg_m_quad[i] = e_m[i]->deg_quad;/* laplacian_flux_params->get_deg_mortar_quad(e_m[i], laplacian_flux_params->get_deg_mortar_quad_ctx); */
     
     face_nodes_m_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_m[i]->deg);
     face_nodes_m_quad[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_m_quad[i]);
@@ -262,7 +285,7 @@ static void
   for (int i = 0; i < faces_p; i++){
     deg_p_lobatto[i] = e_p_oriented[i]->deg;
     deg_p_quad[i] = e_p_oriented[i]->deg_quad;
-    //d4est_laplacian_flux_params->get_deg_mortar_quad(e_p_oriented[i], d4est_laplacian_flux_params->get_deg_mortar_quad_ctx);
+    //laplacian_flux_params->get_deg_mortar_quad(e_p_oriented[i], laplacian_flux_params->get_deg_mortar_quad_ctx);
     deg_p_lobatto_porder[i] = e_p[i]->deg;
 
     face_nodes_p_lobatto[i] = d4est_lgl_get_nodes( (P4EST_DIM) - 1, e_p_oriented[i]->deg );
@@ -378,29 +401,58 @@ static void
   double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* drst_dxyz_p_on_mortar_quad_porder [(P4EST_DIM)][(P4EST_DIM)];
   double* n_on_f_m_mortar_quad [(P4EST_DIM)];
-  double * restrict  sj_on_f_m_mortar_quad = &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
 
-   for (int d = 0; d < (P4EST_DIM); d++){
-     n_on_f_m_mortar_quad[d] = &d4est_factors->n_m_mortar_quad[e_m[0]->mortar_quad_vector_stride[f_m] + d*total_nodes_mortar_quad];
-   }
-
+  double * restrict  sj_on_f_m_mortar_quad = NULL;
   
-   for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-     for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-       drst_dxyz_m_on_mortar_quad[d1][d2] =  &d4est_factors->drst_dxyz_m_mortar_quad[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
-     }
-   }
+  double* hm_mortar_quad = NULL;
+  double* hp_mortar_quad = NULL;
+    
+  if (!laplacian_flux_params->using_provided_mesh_data){
+    sj_on_f_m_mortar_quad = &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
 
-   for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-     for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-       drst_dxyz_p_on_mortar_quad_porder[d1][d2] =  &d4est_factors->drst_dxyz_p_mortar_quad_porder[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
-     }
-   }
+    for (int d = 0; d < (P4EST_DIM); d++){
+      n_on_f_m_mortar_quad[d] = &d4est_factors->n_m_mortar_quad[e_m[0]->mortar_quad_vector_stride[f_m] + d*total_nodes_mortar_quad];
+    }
   
+    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+        drst_dxyz_m_on_mortar_quad[d1][d2] =  &d4est_factors->drst_dxyz_m_mortar_quad[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
+      }
+    }
+
+    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+        drst_dxyz_p_on_mortar_quad_porder[d1][d2] =  &d4est_factors->drst_dxyz_p_mortar_quad_porder[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
+      }
+    }
+  
+    hm_mortar_quad = &d4est_factors->hm_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+    hp_mortar_quad = &d4est_factors->hp_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+  }
+  else {
+    sj_on_f_m_mortar_quad = &laplacian_flux_params->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+
+    for (int d = 0; d < (P4EST_DIM); d++){
+      n_on_f_m_mortar_quad[d] = &laplacian_flux_params->n_m_mortar_quad[e_m[0]->mortar_quad_vector_stride[f_m] + d*total_nodes_mortar_quad];
+    }
+  
+    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+        drst_dxyz_m_on_mortar_quad[d1][d2] =  &laplacian_flux_params->drst_dxyz_m_mortar_quad[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
+      }
+    }
+
+    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+        drst_dxyz_p_on_mortar_quad_porder[d1][d2] =  &laplacian_flux_params->drst_dxyz_p_mortar_quad_porder[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
+      }
+    }
+  
+    hm_mortar_quad = &laplacian_flux_params->hm_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+    hp_mortar_quad = &laplacian_flux_params->hp_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];    
+  }
+    
   double* tmp = P4EST_ALLOC(double, total_side_nodes_p_quad);
-  double* hm_mortar_quad = &d4est_factors->hm_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
-  double* hp_mortar_quad = &d4est_factors->hp_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
-  
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_porder, total_side_nodes_p_lobatto);
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_porder, total_nodes_mortar_quad);
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_quad_porder, total_nodes_mortar_quad);
@@ -413,16 +465,16 @@ static void
 
 
   double* zero_field = NULL;
-  if (d4est_laplacian_flux_params->using_schwarz){
+  if (laplacian_flux_params->using_schwarz){
     int max_deg = -1;
     int sum_m_or_p = 0;
     for (int i = 0; i < faces_m; i++){
       max_deg = (e_m[i]->deg > max_deg) ? e_m[i]->deg : max_deg;
-      sum_m_or_p += d4est_laplacian_flux_params->zero_and_skip_m[i];
+      sum_m_or_p += laplacian_flux_params->zero_and_skip_m[i];
     }
     for (int i = 0; i < faces_p; i++){
       max_deg = (e_p[i]->deg > max_deg) ? e_p[i]->deg : max_deg;
-      sum_m_or_p += d4est_laplacian_flux_params->zero_and_skip_p[i];
+      sum_m_or_p += laplacian_flux_params->zero_and_skip_p[i];
     }
     if (sum_m_or_p > 0){
       zero_field = P4EST_ALLOC_ZERO(double, d4est_lgl_get_nodes((P4EST_DIM), max_deg));
@@ -433,18 +485,18 @@ static void
   for (int i = 0; i < faces_m; i++){
 
     double* u_m = NULL;
-    if (d4est_laplacian_flux_params->using_schwarz && d4est_laplacian_flux_params->zero_and_skip_m[i]){
+    if (laplacian_flux_params->using_schwarz && laplacian_flux_params->zero_and_skip_m[i]){
       u_m = zero_field;
     }
     else {
       u_m = d4est_mesh_get_field_on_element
             (
-             d4est_laplacian_flux_params->p4est,
+             laplacian_flux_params->p4est,
              e_m[i],
-             d4est_laplacian_flux_params->d4est_ghost_data,
-             d4est_laplacian_flux_params->u,
-             d4est_laplacian_flux_params->local_nodes,
-             d4est_laplacian_flux_params->which_field);
+             laplacian_flux_params->d4est_ghost_data,
+             laplacian_flux_params->u,
+             laplacian_flux_params->local_nodes,
+             laplacian_flux_params->which_field);
     }
     
     d4est_operators_apply_slicer
@@ -466,18 +518,18 @@ static void
 
     double* u_p = NULL;
 
-    if (d4est_laplacian_flux_params->using_schwarz && d4est_laplacian_flux_params->zero_and_skip_p[i]){
+    if (laplacian_flux_params->using_schwarz && laplacian_flux_params->zero_and_skip_p[i]){
       u_p = zero_field;
     }
     else {
       u_p = d4est_mesh_get_field_on_element
             (
-             d4est_laplacian_flux_params->p4est,
+             laplacian_flux_params->p4est,
              e_p_oriented[i],
-             d4est_laplacian_flux_params->d4est_ghost_data,
-             d4est_laplacian_flux_params->u,
-             d4est_laplacian_flux_params->local_nodes,
-             d4est_laplacian_flux_params->which_field
+             laplacian_flux_params->d4est_ghost_data,
+             laplacian_flux_params->u,
+             laplacian_flux_params->local_nodes,
+             laplacian_flux_params->which_field
             );
     }
     
@@ -572,19 +624,19 @@ static void
     
     stride = 0;
     for (int f = 0; f < faces_m; f++){    
-      int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_laplacian_flux_params->p4est,e_m[f]);
+      int is_it_ghost = d4est_mesh_is_it_a_ghost_element(laplacian_flux_params->p4est,e_m[f]);
       double* dudr_m [(P4EST_DIM)];
       if (is_it_ghost){
-        D4EST_COPY_DIM_VEC(d4est_laplacian_flux_params->dudr_ghost, dudr_m);
+        D4EST_COPY_DIM_VEC(laplacian_flux_params->dudr_ghost, dudr_m);
       }
       else{
-        D4EST_COPY_DIM_VEC(d4est_laplacian_flux_params->dudr_local, dudr_m);
+        D4EST_COPY_DIM_VEC(laplacian_flux_params->dudr_local, dudr_m);
       };
 
       d4est_operators_apply_slicer
         (
          d4est_ops,
-         (d4est_laplacian_flux_params->zero_and_skip_m[f]) ? zero_field : &dudr_m[d][e_m[f]->nodal_stride],//&e_m[f]->dudr_elem[d][0],
+         (laplacian_flux_params->zero_and_skip_m[f]) ? zero_field : &dudr_m[d][e_m[f]->nodal_stride],//&e_m[f]->dudr_elem[d][0],
          (P4EST_DIM),
          f_m,
          e_m[f]->deg,
@@ -596,20 +648,20 @@ static void
     stride = 0;
     for (int f = 0; f < faces_p; f++){
 
-      int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_laplacian_flux_params->p4est,e_p[f]);
+      int is_it_ghost = d4est_mesh_is_it_a_ghost_element(laplacian_flux_params->p4est,e_p[f]);
       double* dudr_p [(P4EST_DIM)];
 
       if (is_it_ghost){
-        D4EST_COPY_DIM_VEC(d4est_laplacian_flux_params->dudr_ghost, dudr_p);
+        D4EST_COPY_DIM_VEC(laplacian_flux_params->dudr_ghost, dudr_p);
       }
       else{
-        D4EST_COPY_DIM_VEC(d4est_laplacian_flux_params->dudr_local, dudr_p);
+        D4EST_COPY_DIM_VEC(laplacian_flux_params->dudr_local, dudr_p);
       }
       
       d4est_operators_apply_slicer
         (
          d4est_ops,
-         (d4est_laplacian_flux_params->zero_and_skip_p[f]) ? zero_field : &dudr_p[d][e_p[f]->nodal_stride],//&e_p[f]->dudr_elem[d][0],
+         (laplacian_flux_params->using_schwarz && laplacian_flux_params->zero_and_skip_p[f]) ? zero_field : &dudr_p[d][e_p[f]->nodal_stride],//&e_p[f]->dudr_elem[d][0],
          (P4EST_DIM),
          f_p,
          e_p[f]->deg,
@@ -795,8 +847,8 @@ static void
   
 
   for (int i = 0; i < faces_m; i++){
-    int is_it_ghost = d4est_mesh_is_it_a_ghost_element(d4est_laplacian_flux_params->p4est,e_m[i]);
-    if (d4est_laplacian_flux_params->using_schwarz && d4est_laplacian_flux_params->zero_and_skip_m[i]){
+    int is_it_ghost = d4est_mesh_is_it_a_ghost_element(laplacian_flux_params->p4est,e_m[i]);
+    if (laplacian_flux_params->using_schwarz && laplacian_flux_params->zero_and_skip_m[i]){
       interface_data.Au_m[i] = NULL;
     }
     else {
@@ -804,12 +856,12 @@ static void
                                ? NULL
                                : d4est_mesh_get_field_on_element
                                (
-                                d4est_laplacian_flux_params->p4est,
+                                laplacian_flux_params->p4est,
                                 e_m[i],
                                 NULL,
-                                d4est_laplacian_flux_params->Au,
-                                d4est_laplacian_flux_params->local_nodes,
-                                d4est_laplacian_flux_params->which_field
+                                laplacian_flux_params->Au,
+                                laplacian_flux_params->local_nodes,
+                                laplacian_flux_params->which_field
                                );
     }
 }
@@ -819,8 +871,8 @@ static void
   D4EST_COPY_DIM_VEC(dudx_p_on_f_p_mortar_quad,interface_data.dudx_p_on_f_p_mortar_quad);
   D4EST_COPY_DIM_VEC(n_on_f_m_mortar_quad,interface_data.n_on_f_m_mortar_quad);
 
-  if (d4est_laplacian_flux_params->interface_fcn != NULL){
-    d4est_laplacian_flux_params->interface_fcn
+  if (laplacian_flux_params->interface_fcn != NULL){
+    laplacian_flux_params->interface_fcn
       (
        p4est,
        e_m,
@@ -838,7 +890,7 @@ static void
        d4est_quad,
        d4est_factors,
        &interface_data,
-       d4est_laplacian_flux_params->flux_data
+       laplacian_flux_params->flux_data
       );
 
   }
@@ -939,6 +991,7 @@ d4est_laplacian_flux_new
 
   /* begin - only used for schwarz */
   data->using_schwarz = 0;
+  data->using_provided_mesh_data = 0;
   for (int i = 0; i < (P4EST_HALF); i++){
     data->zero_and_skip_m[i] = 0;
     data->zero_and_skip_p[i] = 0;
@@ -991,13 +1044,13 @@ void
  void* params
 )
 {
-  d4est_laplacian_flux_data_t* d4est_laplacian_flux_params = params;
-  d4est_laplacian_flux_params->using_schwarz = 1;
+  d4est_laplacian_flux_data_t* laplacian_flux_params = params;
+  laplacian_flux_params->using_schwarz = 1;
   for (int i = 0; i < faces_m; i++){
-    d4est_laplacian_flux_params->zero_and_skip_m[i] = zero_and_skip_m[i];
+    laplacian_flux_params->zero_and_skip_m[i] = zero_and_skip_m[i];
   }
   for (int i = 0; i < faces_p; i++){
-    d4est_laplacian_flux_params->zero_and_skip_p[i] = zero_and_skip_p[i];
+    laplacian_flux_params->zero_and_skip_p[i] = zero_and_skip_p[i];
   }
   if (faces_p != 0){
   d4est_laplacian_flux_interface

@@ -32,8 +32,6 @@ static int field_stride_of_mirror_fcn
 }
 
 
-
-
 d4est_solver_schwarz_mortar_data_t*
 d4est_solver_schwarz_mortar_data_init
 (

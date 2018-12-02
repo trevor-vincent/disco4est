@@ -82,7 +82,6 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
       field_ed = &field[mesh_ed->nodal_stride];
     }
     else {
-      D4EST_ABORT("schwarz ghost not supported yet");
       field_ed =
         d4est_ghost_data_get_field_on_element
         (

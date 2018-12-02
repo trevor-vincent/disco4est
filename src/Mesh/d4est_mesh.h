@@ -41,8 +41,8 @@ typedef struct {
   int mortar_quad_matrix_stride;
 
   /* the ones above are redundant and can be reduced to */
-  int boundary_quad_stride;
-  int mortar_quad_stride;
+  /* int boundary_quad_stride; */
+  /* int mortar_quad_stride; */
   
 } d4est_mortar_side_data_t;
 

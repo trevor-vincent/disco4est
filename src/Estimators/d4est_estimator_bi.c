@@ -480,6 +480,7 @@ d4est_estimator_bi_compute
     flux_data.dudr_local[i] = dudr_local[i];
     flux_data.dudr_ghost[i] = dudr_ghost[i];
   }
+  flux_data.using_schwarz = 0;
   
   d4est_laplacian_dirichlet_bc_t bc_data;
   bc_data.dirichlet_fcn = u_bndry_fcn;
