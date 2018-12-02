@@ -482,6 +482,7 @@ d4est_solver_schwarz_metadata_init
   d4est_solver_schwarz_metadata_t* schwarz_data = P4EST_ALLOC(d4est_solver_schwarz_metadata_t, 1);
   schwarz_data->restricted_nodal_size = 0;
   schwarz_data->nodal_size = 0;
+  schwarz_data->num_elements = 0;
   schwarz_data->num_subdomains = p4est->local_num_quadrants;
   schwarz_data->subdomain_metadata = P4EST_ALLOC(d4est_solver_schwarz_subdomain_metadata_t, schwarz_data->num_subdomains);
 

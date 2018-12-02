@@ -536,8 +536,6 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
     );
 
   P4EST_FREE(j_div_sj_m_mortar_quad);
-  
- 
 }
 
 void
@@ -580,7 +578,7 @@ d4est_mesh_calculate_mortar_h
     }
   }
   else if (face_h_type == FACE_H_EQ_J_DIV_SJ_MIN_LOBATTO){
-
+    D4EST_ABORT("");
     /* when we try to compute h for the "plus" side and if this side exists on another processor, this will fail because it tries to receive
      * the j_div_sj_min from the local memory not the other processors memeory. This needs to be fixed before use, hence the ABORT */
     
@@ -605,6 +603,7 @@ d4est_mesh_calculate_mortar_h
   }
 
   else if (face_h_type == FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO){
+    D4EST_ABORT("");
     int stride = 0;
     double h [P4EST_HALF];
     for (int f = 0; f < num_faces_mortar; f++){

@@ -493,17 +493,17 @@ d4est_solver_schwarz_laplacian_mortar_data_init
       );
 
 
-    /* double* temp2 = &Apoly_vec_over_subdomains_2[sub_data->restricted_nodal_stride]; */
-    /* DEBUG_PRINT_2ARR_DBL(temp1, temp2, sub_data->restricted_nodal_size); */
-    /* DEBUG_PRINT_ARR_DBL(temp2, sub_data->restricted_nodal_size); */
+  /*   /\* double* temp2 = &Apoly_vec_over_subdomains_2[sub_data->restricted_nodal_stride]; *\/ */
+  /*   /\* DEBUG_PRINT_2ARR_DBL(temp1, temp2, sub_data->restricted_nodal_size); *\/ */
+  /*   /\* DEBUG_PRINT_ARR_DBL(temp2, sub_data->restricted_nodal_size); *\/ */
     
     
-      /* DEBUG_PRINT_2ARR_DBL(Apoly_vec_over_subdomains_2, */
-                           /* Apoly_vec_over_subdomains_2, */
-                           /* sub_data->restricted_nodal_size); */
+  /*     /\* DEBUG_PRINT_2ARR_DBL(Apoly_vec_over_subdomains_2, *\/ */
+  /*                          /\* Apoly_vec_over_subdomains_2, *\/ */
+  /*                          /\* sub_data->restricted_nodal_size); *\/ */
   }
 
-  printf("\n******RESULT******\n");
+  /* printf("\n******RESULT******\n"); */
   DEBUG_PRINT_2ARR_DBL(poly_vec_over_subdomains,Apoly_vec_over_subdomains_2, schwarz_data->restricted_nodal_size);
   
   if (d4est_ghost_data != NULL){

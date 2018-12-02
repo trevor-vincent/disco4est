@@ -34,10 +34,15 @@ typedef struct {
   int deg_m [(P4EST_HALF)];
   int deg_quad_m [(P4EST_HALF)];
 
+  /* deprecated soon for the ones below */
   int boundary_quad_vector_stride;
   int mortar_quad_scalar_stride;
   int mortar_quad_vector_stride;
   int mortar_quad_matrix_stride;
+
+  /* the ones above are redundant and can be reduced to */
+  int boundary_quad_stride;
+  int mortar_quad_stride;
   
 } d4est_mortar_side_data_t;
 

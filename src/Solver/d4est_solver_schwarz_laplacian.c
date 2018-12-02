@@ -5,7 +5,7 @@
 #include <d4est_laplacian_flux.h>
 
 static
-int
+void
 convert_mortar_side_data_to_elements
 (
  p4est_t* p4est,
@@ -114,7 +114,7 @@ convert_mortar_side_data_to_elements
   else {
     laplacian_mortar_data_on_face->is_boundary = 0;
   }
-  
+  /* printf("is_boundary = %d\n",laplacian_mortar_data_on_face->is_boundary); */
 }
 
 
@@ -126,6 +126,7 @@ d4est_solver_schwarz_laplacian_mortar_data_init
  d4est_mesh_data_t* d4est_factors
 )
 {
+  /* printf("NUMBER OF ELEMENTS = %d\n", schwarz_metadata->num_elements); */
   d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data
     = P4EST_ALLOC(d4est_solver_schwarz_laplacian_mortar_data_t,
                   schwarz_metadata->num_elements*(P4EST_FACES));
@@ -147,12 +148,17 @@ d4est_solver_schwarz_laplacian_mortar_data_init
         int mortar_side_id_m = ed->face_belongs_to_which_mortar[f];
         d4est_mortar_side_data_t* mortar_side_data = &d4est_factors->mortar_side_data[mortar_side_id_m];
         int laplacian_stride = (sub_data->element_stride + se)*(P4EST_FACES) + f;
+
+        /* if (laplacian_stride > schwarz_metadata->num_elements*(P4EST_FACES)){ */
+          /* D4EST_ABORT("laplacian_stride > schwarz_data->num_elements*(P4EST_FACES)"); */
+        /* } */
+        
         for (int i = 0; i < (P4EST_HALF); i++){
           laplacian_mortar_data[laplacian_stride].e_m_is_ghost[i] = 0;
           laplacian_mortar_data[laplacian_stride].zero_and_skip_m[i] = 0;
           laplacian_mortar_data[laplacian_stride].zero_and_skip_p[i] = 0;
           laplacian_mortar_data[laplacian_stride].element_m_sub_id[i] = -1;
-        }      
+        }
         convert_mortar_side_data_to_elements
           (
            p4est,
@@ -160,10 +166,14 @@ d4est_solver_schwarz_laplacian_mortar_data_init
            mortar_side_data,
            &laplacian_mortar_data[laplacian_stride]
           );
+
       }
       
     }   
   }
+
+  /* printf("MOTHERFUCKING DONE\n"); */
+  return laplacian_mortar_data;
 }
 
 void
@@ -346,12 +356,12 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
         compute = 0;
       }
         
-      d4est_solver_schwarz_laplacian_mortar_data_t laplacian_mortar_data_on_face
-        = laplacian_mortar_data[(sub_data->element_stride + i)*(P4EST_FACES) + f];
+      d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data_on_face
+        = &laplacian_mortar_data[(sub_data->element_stride + i)*(P4EST_FACES) + f];
         
       if (compute){
-        if (laplacian_mortar_data_on_face.is_boundary != 1 &&
-            laplacian_mortar_data_on_face.skip_if_overlap_less_than_element_nodal_size == 1
+        if (laplacian_mortar_data_on_face->is_boundary != 1 &&
+            laplacian_mortar_data_on_face->skip_if_overlap_less_than_element_nodal_size == 1
             && schwarz_data->num_nodes_overlap < ed->deg + 1){
           compute = 0;
         }            
@@ -360,8 +370,8 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
       d4est_element_data_t* e_m [P4EST_HALF];
       d4est_element_data_t* e_p [P4EST_HALF];
       for (int e = 0; e < (P4EST_HALF); e++){
-        e_m[e] = &laplacian_mortar_data_on_face.e_m[e];
-        e_p[e] = &laplacian_mortar_data_on_face.e_p[e];
+        e_m[e] = &laplacian_mortar_data_on_face->e_m[e];
+        e_p[e] = &laplacian_mortar_data_on_face->e_p[e];
       }
       
       
@@ -377,9 +387,9 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
            mortar_side_data->faces_p,
            mortar_side_data->f_p,
            -1,
-           &laplacian_mortar_data_on_face.e_m_is_ghost[0],
-           &laplacian_mortar_data_on_face.zero_and_skip_m[0],
-           &laplacian_mortar_data_on_face.zero_and_skip_p[0],
+           &laplacian_mortar_data_on_face->e_m_is_ghost[0],
+           &laplacian_mortar_data_on_face->zero_and_skip_m[0],
+           &laplacian_mortar_data_on_face->zero_and_skip_p[0],
            mortar_side_data->orientation,
            d4est_ops,
            d4est_geom,
@@ -388,8 +398,8 @@ d4est_solver_schwarz_laplacian_apply_over_subdomain
            flux_fcn_data
           );
           for (int m = 0; m < mortar_side_data->faces_m; m++){
-            if (!laplacian_mortar_data_on_face.zero_and_skip_m[m]){
-              mortar_sides_done[laplacian_mortar_data_on_face.element_m_sub_id[m]*(P4EST_FACES)
+            if (!laplacian_mortar_data_on_face->zero_and_skip_m[m]){
+              mortar_sides_done[laplacian_mortar_data_on_face->element_m_sub_id[m]*(P4EST_FACES)
                                 +  mortar_side_data->f_m] = 1;
             }
           }
