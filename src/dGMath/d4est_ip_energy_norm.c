@@ -410,8 +410,13 @@ d4est_ip_energy_norm_compute
     flux_data.dudr_local[i] = dudr_local[i];
     flux_data.dudr_ghost[i] = dudr_ghost[i];
   }
-  
-  
+  flux_data.using_schwarz = 0;
+  flux_data.using_provided_mesh_data = 0;
+  for (int i = 0; i < (P4EST_HALF); i++){
+    flux_data.zero_and_skip_m[i] = 0;
+    flux_data.zero_and_skip_p[i] = 0;
+  }
+
   d4est_mortars_fcn_ptrs_t flux_fcns = d4est_laplacian_flux_fetch_fcns(&flux_data);
   
   d4est_mortars_compute_flux_on_local_elements

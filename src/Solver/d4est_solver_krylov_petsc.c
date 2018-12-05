@@ -404,7 +404,7 @@ d4est_solver_krylov_petsc_solve
   VecPlaceArray(b, rhs);
   VecPlaceArray(x, u);
   KSPMonitorSet(ksp, d4est_solver_krylov_petsc_monitor, &petsc_ctx, NULL);
-  KSPSetInitialGuessNonzero(ksp,PETSC_TRUE);
+  /* KSPSetInitialGuessNonzero(ksp,PETSC_TRUE); */
     
   KSPSolve(ksp,b,x);
   

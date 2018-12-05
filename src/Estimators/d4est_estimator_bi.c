@@ -481,6 +481,12 @@ d4est_estimator_bi_compute
     flux_data.dudr_ghost[i] = dudr_ghost[i];
   }
   flux_data.using_schwarz = 0;
+  flux_data.using_provided_mesh_data = 0;
+  for (int i = 0; i < (P4EST_HALF); i++){
+    flux_data.zero_and_skip_m[i] = 0;
+    flux_data.zero_and_skip_p[i] = 0;
+  }
+
   
   d4est_laplacian_dirichlet_bc_t bc_data;
   bc_data.dirichlet_fcn = u_bndry_fcn;
