@@ -184,6 +184,8 @@ int main(int argc, char *argv[])
   d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains(p4est, d4est_ops, d4est_factors, d4est_ghost, d4est_ghost_data,
      schwarz_data, schwarz_ops, poly_vec, 0, restricted_poly_vec_over_subdomains);
 
+  
+
   printf("schwarz_data->restricted_nodal_size = %d\n", schwarz_data->restricted_nodal_size);
   
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, restricted_poly_vec_over_subdomains, schwarz_data->restricted_nodal_size);

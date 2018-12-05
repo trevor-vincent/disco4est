@@ -41,7 +41,7 @@ typedef struct {
   
   int region;
   int tree;
-  int tree_quadid;
+  int tree_quadid; /* local id of quadrant in tree */
   p4est_qcoord_t q [(P4EST_DIM)];
   p4est_qcoord_t dq;
   
