@@ -19,7 +19,7 @@
 #include <zlog.h>
 #include <ini.h>
 
-static int field_size_of_ghost_fcn
+static int schwarz_subdomain_field_size_of_ghost_fcn
 (
  d4est_ghost_t* d4est_ghost,
  int gid,
@@ -30,18 +30,7 @@ static int field_size_of_ghost_fcn
   return sizeof(d4est_solver_schwarz_subdomain_metadata_t);
 }
 
-static int field_size_of_mirror_fcn
-(
- d4est_ghost_t* d4est_ghost,
- int gid,
- int tn,
- void* user_ctx
-)
-{
-  return sizeof(d4est_solver_schwarz_subdomain_metadata_t);
-}
-
-static int field_stride_of_mirror_fcn
+static int schwarz_subdomain_field_size_of_mirror_fcn
 (
  d4est_ghost_t* d4est_ghost,
  int mirr,
@@ -49,7 +38,81 @@ static int field_stride_of_mirror_fcn
  void* user_ctx
 )
 {
-  return d4est_ghost->mirror_elements[mirr].id;
+  return sizeof(d4est_solver_schwarz_subdomain_metadata_t);
+}
+
+static int schwarz_subdomain_field_stride_of_mirror_fcn
+(
+ d4est_ghost_t* d4est_ghost,
+ int mirr,
+ int tn,
+ void* user_ctx
+)
+{
+  return d4est_ghost->mirror_elements[mirr].id*sizeof(d4est_solver_schwarz_subdomain_metadata_t);
+}
+
+
+
+static int schwarz_element_field_size_of_ghost_fcn
+(
+ d4est_ghost_t* d4est_ghost,
+ int gid,
+ int tn,
+ void* user_ctx
+)
+{
+  /* return sizeof(d4est_solver_schwarz_element_metadata_t); */
+
+
+  /* d4est_solver_schwarz_metadata_t* schwarz_metadata = user_ctx; */
+  /* d4est_solver_schwarz_subdomain_metadata_t* sub_data = */
+    /* (d4est_solver_schwarz_subdomain_metadata_t*) */
+    /* d4est_ghost_data_ext_get_field_on_element */
+    /* ( */
+     /* &d4est_ghost->ghost_elements[gid], */
+     /* 0, */
+     /* schwarz_metadata->subdomain_ghostdata */
+    /* ); */
+        
+  /* return sizeof(d4est_solver_schwarz_element_metadata_t)*sub_data->num_elements; */
+
+  int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13;
+  return sizeof(d4est_solver_schwarz_element_metadata_t)*max_connections;
+}
+
+static int schwarz_element_field_size_of_mirror_fcn
+(
+ d4est_ghost_t* d4est_ghost,
+ int mirr,
+ int tn,
+ void* user_ctx
+)
+{
+  /* d4est_solver_schwarz_metadata_t* schwarz_metadata = user_ctx; */
+  /* int id = d4est_ghost->mirror_elements[mirr].id; */
+  /* return sizeof(d4est_solver_schwarz_element_metadata_t)*schwarz_metadata->subdomain_metadata[id].num_elements; */
+
+  int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13;
+  return sizeof(d4est_solver_schwarz_element_metadata_t)*max_connections;
+  
+}
+
+static int schwarz_element_field_stride_of_mirror_fcn
+(
+ d4est_ghost_t* d4est_ghost,
+ int mirr,
+ int tn,
+ void* user_ctx
+)
+{
+  /* d4est_solver_schwarz_metadata_t* schwarz_metadata = user_ctx; */
+  int id = d4est_ghost->mirror_elements[mirr].id;
+  /* return sizeof(d4est_solver_schwarz_element_metadata_t)*schwarz_metadata->subdomain_metadata[id].element_stride; */
+
+  int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13;
+  return sizeof(d4est_solver_schwarz_element_metadata_t)*max_connections*id;
+  
 }
 
 static
@@ -418,18 +481,38 @@ d4est_solver_schwarz_metadata_sort_elements
   }
 }
 
+
+
+
 static void
 d4est_solver_schwarz_metadata_compute_strides_and_sizes
 (
- d4est_solver_schwarz_metadata_t* schwarz_data
+ d4est_solver_schwarz_metadata_t* schwarz_data,
+ d4est_ghost_t* d4est_ghost //set to NULL if setting strides for local data, non-NULL for ghost data strides
 )
 {
   int sub_nodal_stride = 0;
   int sub_restricted_nodal_stride = 0;
   int sub_element_stride = 0;
+
+  int num_subdomains = schwarz_data->num_subdomains;
+  if (d4est_ghost != NULL){
+    num_subdomains = schwarz_data->subdomain_ghostdata->num_ghosts;
+  }
   
-  for (int i = 0; i < schwarz_data->num_subdomains; i++){
+  for (int i = 0; i < num_subdomains; i++){
+
     d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[i];
+    if (d4est_ghost != NULL){
+      sub_data =
+        (d4est_solver_schwarz_subdomain_metadata_t*)
+        d4est_ghost_data_ext_get_field_on_element
+        (
+         &d4est_ghost->ghost_elements[i],
+         0,
+         schwarz_data->subdomain_ghostdata
+        );
+    }
 
     sub_data->restricted_nodal_size = 0;
     sub_data->nodal_size = 0;
@@ -466,15 +549,15 @@ d4est_solver_schwarz_metadata_compute_strides_and_sizes
 
     sub_nodal_stride += sub_data->nodal_size;
     sub_restricted_nodal_stride += sub_data->restricted_nodal_size;
-    sub_element_stride += sub_data->num_elements;
+    /* sub_element_stride += sub_data->num_elements; */
+    int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13;
+    sub_element_stride += max_connections;
     
     schwarz_data->restricted_nodal_size += sub_data->restricted_nodal_size;
     schwarz_data->nodal_size += sub_data->nodal_size;
     schwarz_data->num_elements += sub_data->num_elements;
   }
-
 }
-
 
 d4est_solver_schwarz_metadata_t*
 d4est_solver_schwarz_metadata_init
@@ -485,12 +568,16 @@ d4est_solver_schwarz_metadata_init
  /* int num_nodes_overlap */
 )
 {
+  /* TODO: Get rid of max_connections and actually just use proper number of elements */
+  int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13;
+
   d4est_solver_schwarz_metadata_t* schwarz_data = P4EST_ALLOC(d4est_solver_schwarz_metadata_t, 1);
   schwarz_data->restricted_nodal_size = 0;
   schwarz_data->nodal_size = 0;
   schwarz_data->num_elements = 0;
   schwarz_data->num_subdomains = p4est->local_num_quadrants;
   schwarz_data->subdomain_metadata = P4EST_ALLOC(d4est_solver_schwarz_subdomain_metadata_t, schwarz_data->num_subdomains);
+  schwarz_data->element_metadata = P4EST_ALLOC(d4est_solver_schwarz_element_metadata_t, schwarz_data->num_subdomains*max_connections);
 
   d4est_solver_schwarz_metadata_input
     (
@@ -500,17 +587,19 @@ d4est_solver_schwarz_metadata_init
     );
   
   /* schwarz_data->num_nodes_overlap = num_nodes_overlap; */
-  int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13;
+
   
   /* fill subdomains */
+  int stride = 0;
   for (int i = 0; i < schwarz_data->num_subdomains; i++){
     schwarz_data->subdomain_metadata[i].num_elements = 0;
-    schwarz_data->subdomain_metadata[i].element_metadata = P4EST_ALLOC(d4est_solver_schwarz_element_metadata_t, max_connections);
+    schwarz_data->subdomain_metadata[i].element_metadata = &schwarz_data->element_metadata[stride];
+    stride += max_connections;
   }
 
   d4est_solver_schwarz_metadata_init_subdomain_metadata(p4est, d4est_ghost, schwarz_data);
   d4est_solver_schwarz_metadata_sort_elements(schwarz_data);
-  d4est_solver_schwarz_metadata_compute_strides_and_sizes(schwarz_data);
+  d4est_solver_schwarz_metadata_compute_strides_and_sizes(schwarz_data,NULL);
 
   
   schwarz_data->subdomain_ghostdata =
@@ -519,9 +608,9 @@ d4est_solver_schwarz_metadata_init
      p4est,
      d4est_ghost,
      1,
-     field_size_of_ghost_fcn,
-     field_size_of_mirror_fcn,
-     field_stride_of_mirror_fcn,
+     schwarz_subdomain_field_size_of_ghost_fcn,
+     schwarz_subdomain_field_size_of_mirror_fcn,
+     schwarz_subdomain_field_stride_of_mirror_fcn,
      NULL
     );
   
@@ -532,6 +621,56 @@ d4est_solver_schwarz_metadata_init
      schwarz_data->subdomain_ghostdata,
      (char**)&schwarz_data->subdomain_metadata
     );
+
+  schwarz_data->element_ghostdata =
+    d4est_ghost_data_ext_init
+    (
+     p4est,
+     d4est_ghost,
+     1,
+     schwarz_element_field_size_of_ghost_fcn,
+     schwarz_element_field_size_of_mirror_fcn,
+     schwarz_element_field_stride_of_mirror_fcn,
+     NULL
+    );
+  
+  d4est_ghost_data_ext_exchange
+    (
+     p4est,
+     d4est_ghost,
+     schwarz_data->element_ghostdata,
+     (char**)&schwarz_data->element_metadata
+    );
+
+  if(d4est_ghost != NULL){
+    int stride = 0;
+    printf("Ghost subdomains on proc %d\n", p4est->mpirank);
+    printf("***************************\n", p4est->mpirank);
+    for (int gid = 0; gid < schwarz_data->subdomain_ghostdata->num_ghosts; gid++){
+      d4est_solver_schwarz_subdomain_metadata_t* sub_data =
+        (d4est_solver_schwarz_subdomain_metadata_t*)
+        d4est_ghost_data_ext_get_field_on_element
+        (
+         &d4est_ghost->ghost_elements[gid],
+         0,
+         schwarz_data->subdomain_ghostdata
+        );
+
+       sub_data->element_metadata = d4est_ghost_data_ext_get_field_on_element
+        (
+         &d4est_ghost->ghost_elements[gid],
+         0,
+         schwarz_data->element_ghostdata
+        );
+
+       sub_data->element_stride = stride;
+       stride += max_connections;      
+    }
+    printf("***************************\n", p4est->mpirank);
+  }
+
+  d4est_solver_schwarz_metadata_compute_strides_and_sizes(schwarz_data,d4est_ghost);
+  
   
   return schwarz_data;
 }
@@ -567,16 +706,20 @@ d4est_solver_schwarz_metadata_destroy
  d4est_solver_schwarz_metadata_t* schwarz_data
 )
 {
-  for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    P4EST_FREE(schwarz_data->subdomain_metadata[i].element_metadata);
-  }
   P4EST_FREE(schwarz_data->subdomain_metadata);
-
+  P4EST_FREE(schwarz_data->element_metadata);
 
   d4est_ghost_data_ext_destroy
     (
      schwarz_data->subdomain_ghostdata
     );
+
+
+  d4est_ghost_data_ext_destroy
+    (
+     schwarz_data->element_ghostdata
+    );
+
   
   P4EST_FREE(schwarz_data);
 }
@@ -619,10 +762,14 @@ d4est_solver_schwarz_metadata_print_subdomain
       printf("is_core = %d\n", ed->is_core);
       printf("faces[0] = %d\n", ed->faces[0]);
       printf("faces[1] = %d\n", ed->faces[1]);
+#if (P4EST_DIM)==3
       printf("faces[2] = %d\n", ed->faces[2]);
+#endif
       printf("core_faces[0] = %d\n", ed->core_faces[0]);
       printf("core_faces[1] = %d\n", ed->core_faces[1]);
-      printf("core_faces[2] = %d\n", ed->core_faces[2]);     
+#if (P4EST_DIM)==3
+      printf("core_faces[2] = %d\n", ed->core_faces[2]);
+#endif
     }
 }
 
@@ -658,6 +805,8 @@ d4est_solver_schwarz_metadata_print
          schwarz_data->subdomain_ghostdata
         );
 
+      printf("sub_data->num_elements = %d\n", sub_data->num_elements);
+      printf("sub_data->num_elements = %d\n", sub_data->restricted_nodal_size);
       d4est_solver_schwarz_metadata_print_subdomain
         (
          sub_data,

@@ -21,6 +21,7 @@
 #include <zlog.h>
 #include <ini.h>
 #include <d4est_solver_schwarz_metadata.h>
+#include <d4est_solver_schwarz_transfer_ghost_data.h>
 #include <d4est_solver_schwarz_helpers.h>
 
 double
@@ -179,39 +180,47 @@ int main(int argc, char *argv[])
                                                                                schwarz_data->nodal_size);
 
   
-  d4est_field_type_t field_type = NODAL;
-  d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
-                                           d4est_ghost,
-                                           &field_type,
-                                           1);
+  /* d4est_field_type_t field_type = NODAL; */
+  /* d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est, */
+  /*                                          d4est_ghost, */
+  /*                                          &field_type, */
+  /*                                          1); */
 
-  d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data, poly_vec);
+  /* d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data, poly_vec); */
   
-  d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains(p4est, d4est_ops, d4est_factors, d4est_ghost, d4est_ghost_data,
-     schwarz_data, schwarz_ops, poly_vec, 0, restricted_poly_vec_over_subdomains);
+  /* d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains(p4est, d4est_ops, d4est_factors, d4est_ghost, d4est_ghost_data, */
+  /*    schwarz_data, schwarz_ops, poly_vec, 0, restricted_poly_vec_over_subdomains); */
 
-  d4est_solver_schwarz_apply_restrict_transpose_to_restricted_field_over_subdomains
-    (
-     schwarz_data,
-     schwarz_ops,
-     restricted_poly_vec_over_subdomains,
-     transpose_restrict_restricted_poly_vec_over_subdomains
-    );
+  /* d4est_solver_schwarz_apply_restrict_transpose_to_restricted_field_over_subdomains */
+  /*   ( */
+  /*    schwarz_data, */
+  /*    schwarz_ops, */
+  /*    restricted_poly_vec_over_subdomains, */
+  /*    transpose_restrict_restricted_poly_vec_over_subdomains */
+  /*   ); */
 
-  d4est_ghost_data_ext_t* ghost_data_for_schwarz = NULL;
-  d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
+  /* d4est_ghost_data_ext_t* ghost_data_for_schwarz = NULL; */
+  /* d4est_solver_schwarz_transfer_ghost_data_and_add_corrections */
+  /*   ( */
+  /*    p4est, */
+  /*    d4est_ghost, */
+  /*    schwarz_data, */
+  /*    &ghost_data_for_schwarz, */
+  /*    poly_vec_final, */
+  /*    transpose_restrict_restricted_poly_vec_over_subdomains */
+  /*   ); */
+
+  /* printf("schwarz_data->restricted_nodal_size = %d\n", schwarz_data->restricted_nodal_size); */
+  
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, restricted_poly_vec_over_subdomains, schwarz_data->restricted_nodal_size); */
+
+
+  d4est_solver_schwarz_metadata_print
     (
      p4est,
-     d4est_ghost,
      schwarz_data,
-     &ghost_data_for_schwarz,
-     poly_vec_final,
-     transpose_restrict_restricted_poly_vec_over_subdomains
+     d4est_ghost
     );
-
-  printf("schwarz_data->restricted_nodal_size = %d\n", schwarz_data->restricted_nodal_size);
-  
-  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, restricted_poly_vec_over_subdomains, schwarz_data->restricted_nodal_size);
   
   P4EST_FREE(restricted_poly_vec_over_subdomains);
   P4EST_FREE(transpose_restrict_restricted_poly_vec_over_subdomains);
@@ -235,10 +244,10 @@ int main(int argc, char *argv[])
   if (d4est_ghost != NULL)
     d4est_ghost_destroy(d4est_ghost);
 
-  if (d4est_ghost_data != NULL){
-    d4est_ghost_data_destroy(d4est_ghost_data);
-    d4est_ghost_data = NULL;
-  } 
+  /* if (d4est_ghost_data != NULL){ */
+  /*   d4est_ghost_data_destroy(d4est_ghost_data); */
+  /*   d4est_ghost_data = NULL; */
+  /* }  */
     
   d4est_mesh_initial_extents_destroy(initial_grid_input);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);

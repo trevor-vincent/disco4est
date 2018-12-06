@@ -77,7 +77,11 @@ typedef struct {
   int num_subdomains; /* Equivalent to number of local quadrants */
   int num_elements; /* Total elements over all subdomains */
   d4est_solver_schwarz_subdomain_metadata_t* subdomain_metadata; /* The elements and their connections in the subdomain */
+  d4est_solver_schwarz_element_metadata_t*  element_metadata;
+  
   d4est_ghost_data_ext_t* subdomain_ghostdata;
+  d4est_ghost_data_ext_t* element_ghostdata;
+  
   d4est_ghost_t* d4est_ghost;
   
 } d4est_solver_schwarz_metadata_t;
