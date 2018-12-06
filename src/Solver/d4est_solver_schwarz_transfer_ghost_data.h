@@ -2,7 +2,7 @@
 #define D4EST_SOLVER_SCHWARZ_TRANSFER_GHOST_DATA_H 
 
 #include <pXest.h>
-#include <d4est_mesh_data.h>
+#include <d4est_mesh.h>
 #include <d4est_element_data.h>
 #include <d4est_solver_schwarz_metadata.h>
 #include <d4est_solver_schwarz_transfer_ghost_data.h>

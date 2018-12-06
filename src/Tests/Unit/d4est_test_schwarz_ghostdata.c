@@ -159,6 +159,7 @@ int main(int argc, char *argv[])
 
   
   double* poly_vec = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes);
+  double* poly_vec_final = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes);
   d4est_mesh_init_field
     (
      p4est,
@@ -173,6 +174,11 @@ int main(int argc, char *argv[])
 
   double* restricted_poly_vec_over_subdomains = P4EST_ALLOC(double,
                                                  schwarz_data->restricted_nodal_size);
+
+  double* transpose_restrict_restricted_poly_vec_over_subdomains = P4EST_ALLOC(double,
+                                                                               schwarz_data->nodal_size);
+
+  
   d4est_field_type_t field_type = NODAL;
   d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
                                            d4est_ghost,
@@ -184,14 +190,33 @@ int main(int argc, char *argv[])
   d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains(p4est, d4est_ops, d4est_factors, d4est_ghost, d4est_ghost_data,
      schwarz_data, schwarz_ops, poly_vec, 0, restricted_poly_vec_over_subdomains);
 
-  
+  d4est_solver_schwarz_apply_restrict_transpose_to_restricted_field_over_subdomains
+    (
+     schwarz_data,
+     schwarz_ops,
+     restricted_poly_vec_over_subdomains,
+     transpose_restrict_restricted_poly_vec_over_subdomains
+    );
+
+  d4est_ghost_data_ext_t* ghost_data_for_schwarz = NULL;
+  d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
+    (
+     p4est,
+     d4est_ghost,
+     schwarz_data,
+     &ghost_data_for_schwarz,
+     poly_vec_final,
+     transpose_restrict_restricted_poly_vec_over_subdomains
+    );
 
   printf("schwarz_data->restricted_nodal_size = %d\n", schwarz_data->restricted_nodal_size);
   
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, restricted_poly_vec_over_subdomains, schwarz_data->restricted_nodal_size);
   
   P4EST_FREE(restricted_poly_vec_over_subdomains);
+  P4EST_FREE(transpose_restrict_restricted_poly_vec_over_subdomains);
   P4EST_FREE(poly_vec);
+  P4EST_FREE(poly_vec_final);
   
 
   d4est_solver_schwarz_metadata_destroy

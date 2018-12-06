@@ -23,7 +23,7 @@ set(CMAKE_MODULE_PATH
 include(machine)
 
 find_package(MPI REQUIRED)
-
+message("mpi version = ${MPI_VERSION}")
 ##
 ## Set build include path
 ##
@@ -145,6 +145,7 @@ SET (
   src/Solver/d4est_solver_schwarz_operators.c
   src/Solver/d4est_solver_schwarz_helpers.c
   src/Solver/d4est_solver_schwarz_laplacian.c
+  # src/Solver/d4est_solver_schwarz_transfer_ghost_data.c
   # src/Solver/d4est_solver_jacobian_tester.c
   src/Solver/d4est_solver_full_matrix.c
   src/Solver/d4est_solver_matrix_symmetry.c
@@ -385,7 +386,7 @@ add_d4est_unit_test_3d(d4est_test_laplacian_symmetry d4est_test_laplacian_symmet
 # add_d4est_unit_test_3d(d4est_test_schwarz_fasterAu_singlecore d4est_test_schwarz_fasterAu_singlecore.c Unit d4est_test_schwarz_fasterAu_singlecore)
 # add_d4est_unit_test_3d(d4est_test_schwarz_slowerAu_singlecore d4est_test_schwarz_slowerAu_singlecore.c Unit d4est_test_schwarz_slowerAu_singlecore)
 
-add_d4est_unit_test_2d(d4est_test_schwarz_ghostdata d4est_test_schwarz_ghostdata.c Unit d4est_test_schwarz_ghostdata)
+# add_d4est_unit_test_2d(d4est_test_schwarz_ghostdata d4est_test_schwarz_ghostdata.c Unit d4est_test_schwarz_ghostdata)
 
 
 add_d4est_unit_test_3d(d4est_test_laplacian_consistency d4est_test_laplacian_consistency.c Unit d4est_test_laplacian_consistency)
