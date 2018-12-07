@@ -878,23 +878,23 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core_version2
   double* Ad = P4EST_ALLOC(double, nodes); 
   double* r = P4EST_ALLOC(double, nodes);
   
- 
-  d4est_solver_schwarz_laplacian_apply_over_subdomain
-    (
-     p4est,
-     schwarz_ops->d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     d4est_factors,
-     ghost,
-     schwarz_data,
-     schwarz_ops,
-     flux_fcn_data,
-     laplacian_mortar_data,
-     du_restricted_field_over_subdomain,
-     Ad,
-     subdomain
-    );
+  D4EST_ABORT("Need to add support for this again");
+  /* d4est_solver_schwarz_laplacian_apply_over_subdomain */
+  /*   ( */
+  /*    p4est, */
+  /*    schwarz_ops->d4est_ops, */
+  /*    d4est_geom, */
+  /*    d4est_quad, */
+  /*    d4est_factors, */
+  /*    ghost, */
+  /*    schwarz_data, */
+  /*    schwarz_ops, */
+  /*    flux_fcn_data, */
+  /*    laplacian_mortar_data, */
+  /*    du_restricted_field_over_subdomain, */
+  /*    Ad, */
+  /*    subdomain */
+  /*   ); */
   
   
   d4est_util_copy_1st_to_2nd(Ad, r, nodes);
@@ -906,23 +906,23 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core_version2
   
   for (int i = 0; i < iter && (delta_new > atol*atol + delta_0 * rtol*rtol); i++){
 
-
-  d4est_solver_schwarz_laplacian_apply_over_subdomain
-    (
-     p4est,
-     schwarz_ops->d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     d4est_factors,
-     ghost,
-     schwarz_data,
-     schwarz_ops,
-     flux_fcn_data,
-     laplacian_mortar_data,
-     d,
-     Ad,
-     subdomain
-    );
+    D4EST_ABORT("Add support for this again");
+  /* d4est_solver_schwarz_laplacian_apply_over_subdomain */
+  /*   ( */
+  /*    p4est, */
+  /*    schwarz_ops->d4est_ops, */
+  /*    d4est_geom, */
+  /*    d4est_quad, */
+  /*    d4est_factors, */
+  /*    ghost, */
+  /*    schwarz_data, */
+  /*    schwarz_ops, */
+  /*    flux_fcn_data, */
+  /*    laplacian_mortar_data, */
+  /*    d, */
+  /*    Ad, */
+  /*    subdomain */
+  /*   ); */
     
     d_dot_Ad = d4est_linalg_vec_dot(d, Ad, nodes);
 

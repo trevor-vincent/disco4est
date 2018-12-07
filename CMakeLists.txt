@@ -138,14 +138,15 @@ SET (
   src/Solver/d4est_solver_multigrid_mesh_analyzer.c
   src/Solver/d4est_solver_multigrid_matrix_operator.c
   src/Solver/d4est_solver_multigrid_smoother_cheby.c
-  src/Solver/d4est_solver_multigrid_smoother_schwarz.c
+  # src/Solver/d4est_solver_multigrid_smoother_schwarz.c
   src/Solver/d4est_solver_multigrid_smoother_krylov_petsc.c
   src/Solver/d4est_solver_cg_eigs.c
   src/Solver/d4est_solver_schwarz_metadata.c
   src/Solver/d4est_solver_schwarz_operators.c
   src/Solver/d4est_solver_schwarz_helpers.c
-  src/Solver/d4est_solver_schwarz_laplacian.c
+  # src/Solver/d4est_solver_schwarz_laplacian.c
   src/Solver/d4est_solver_schwarz_transfer_ghost_data.c
+  src/Solver/d4est_solver_schwarz_mortar_data.c
   # src/Solver/d4est_solver_jacobian_tester.c
   src/Solver/d4est_solver_full_matrix.c
   src/Solver/d4est_solver_matrix_symmetry.c

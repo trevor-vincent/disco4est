@@ -377,9 +377,6 @@ d4est_mesh_initial_extents_parse
     }
   }
 
-  /* printf("%s: d4est_laplacian_flux_sipg_params_h_calc = %s\n", printf_prefix, h_eq); */
-  /* d4est_laplacian_flux_sipg_params_get_string_from_h_calc (input->sipg_flux_h,h_eq); */
-  
   return initial_extents;
 }
 
@@ -537,6 +534,45 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
 
   P4EST_FREE(j_div_sj_m_mortar_quad);
 }
+
+void
+d4est_mesh_calculate_mortar_h_eq_j_div_sj_quad
+(
+ double* j_div_sj_quad_mortar,
+ int num_faces_mortar,
+ int* nodes_mortar_quad,
+ double* h_quad_mortar
+){
+  int stride = 0;
+  for (int f = 0; f < num_faces_mortar; f++){
+    for (int k = 0; k < nodes_mortar_quad[f]; k++){
+      int ks = k + stride;
+      h_quad_mortar[ks] = j_div_sj_quad_mortar[ks];
+    }
+    stride += nodes_mortar_quad[f];
+  }
+}
+
+
+void
+d4est_mesh_calculate_mortar_h_eq_tree_h
+(
+ p4est_qcoord_t dq_0,
+ int num_faces_mortar,
+ int* nodes_mortar_quad,
+ double* h_quad_mortar
+){
+    int stride = 0;
+    for (int f = 0; f < num_faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        h_quad_mortar[ks] = dq_0/(double)P4EST_ROOT_LEN;
+      }
+      stride += nodes_mortar_quad[f];
+    }
+}
+
+
 
 void
 d4est_mesh_calculate_mortar_h
@@ -1017,7 +1053,7 @@ d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback
  void* params
 )
 {
-  e_m->face_belongs_to_which_mortar[f_m] = mortar_side_id_m;
+
   d4est_mesh_local_sizes_t* sizes = params;    
   /* e_m->p_tree_that_touch_face [f_m][0] = e_m->tree; */
   /* e_m->p_tree_quadid_that_touch_face [f_m][0] = e_m->tree_quadid; */
@@ -1040,7 +1076,8 @@ d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback
   sizes->local_boundary_nodes_quad += d4est_lgl_get_nodes(
                                                         (P4EST_DIM)-1,
                                                         e_m->deg_quad);
-
+  
+  e_m->face_belongs_to_which_mortar[f_m] = sizes->local_mortar_sides;
   sizes->local_mortar_sides += 1;
 
 
@@ -1068,9 +1105,6 @@ d4est_mesh_compute_mortar_quadrature_sizes_interface_callback
 )
 {
 
-  for (int f = 0; f < faces_m; f++){
-    e_m[f]->face_belongs_to_which_mortar[f_m] = mortar_side_id_m;
-  }
   /* for (int m = 0; m < faces_m; m++){ */
       /* e_m[m]->p_face_that_touch_face [f_m] = f_p; */
     /* for (int i = 0; i < (P4EST_HALF); i++){ */
@@ -1109,9 +1143,12 @@ d4est_mesh_compute_mortar_quadrature_sizes_interface_callback
     e_m[f]->mortar_quad_vector_stride[f_m] = -1;
     e_m[f]->mortar_quad_matrix_stride[f_m] = -1;
   }
-
   
-  sizes->local_mortar_nodes_quad += total_mortar_nodes_quad;
+  sizes->local_mortar_nodes_quad += total_mortar_nodes_quad;  
+  for (int f = 0; f < faces_m; f++){
+    e_m[f]->face_belongs_to_which_mortar[f_m] = sizes->local_mortar_sides;
+  }
+
   sizes->local_mortar_sides += 1;
 }
 

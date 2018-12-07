@@ -23,6 +23,7 @@
 #include <d4est_solver_schwarz_metadata.h>
 #include <d4est_solver_schwarz_transfer_ghost_data.h>
 #include <d4est_solver_schwarz_helpers.h>
+#include <d4est_solver_schwarz_mortar_data.h>
 
 double
 poly_vec_fcn
@@ -180,54 +181,86 @@ int main(int argc, char *argv[])
                                                                                schwarz_data->nodal_size);
 
   
-  /* d4est_field_type_t field_type = NODAL; */
-  /* d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est, */
-  /*                                          d4est_ghost, */
-  /*                                          &field_type, */
-  /*                                          1); */
+  d4est_field_type_t field_type = NODAL;
+  d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
+                                           d4est_ghost,
+                                           &field_type,
+                                           1);
 
-  /* d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data, poly_vec); */
+  d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data, poly_vec);
   
-  /* d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains(p4est, d4est_ops, d4est_factors, d4est_ghost, d4est_ghost_data, */
-  /*    schwarz_data, schwarz_ops, poly_vec, 0, restricted_poly_vec_over_subdomains); */
+  d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains(p4est, d4est_ops, d4est_factors, d4est_ghost, d4est_ghost_data,
+     schwarz_data, schwarz_ops, poly_vec, 0, restricted_poly_vec_over_subdomains);
 
-  /* d4est_solver_schwarz_apply_restrict_transpose_to_restricted_field_over_subdomains */
-  /*   ( */
-  /*    schwarz_data, */
-  /*    schwarz_ops, */
-  /*    restricted_poly_vec_over_subdomains, */
-  /*    transpose_restrict_restricted_poly_vec_over_subdomains */
-  /*   ); */
+  d4est_solver_schwarz_apply_restrict_transpose_to_restricted_field_over_subdomains
+    (
+     schwarz_data,
+     schwarz_ops,
+     restricted_poly_vec_over_subdomains,
+     transpose_restrict_restricted_poly_vec_over_subdomains
+    );
 
-  /* d4est_ghost_data_ext_t* ghost_data_for_schwarz = NULL; */
-  /* d4est_solver_schwarz_transfer_ghost_data_and_add_corrections */
-  /*   ( */
-  /*    p4est, */
-  /*    d4est_ghost, */
-  /*    schwarz_data, */
-  /*    &ghost_data_for_schwarz, */
-  /*    poly_vec_final, */
-  /*    transpose_restrict_restricted_poly_vec_over_subdomains */
-  /*   ); */
+  for (int i = 0; i < d4est_factors->local_sizes.local_nodes; i++){
+    poly_vec_final[i] = 1.;
+  }
+  
+  d4est_ghost_data_ext_t* ghost_data_for_schwarz = NULL;
+  d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
+    (
+     p4est,
+     d4est_ghost,
+     schwarz_data,
+     &ghost_data_for_schwarz,
+     poly_vec_final,
+     transpose_restrict_restricted_poly_vec_over_subdomains
+    );
 
   /* printf("schwarz_data->restricted_nodal_size = %d\n", schwarz_data->restricted_nodal_size); */
   
-  /* DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, restricted_poly_vec_over_subdomains, schwarz_data->restricted_nodal_size); */
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, restricted_poly_vec_over_subdomains, schwarz_data->restricted_nodal_size);
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, transpose_restrict_restricted_poly_vec_over_subdomains, schwarz_data->nodal_size);
 
+  double local_sum = d4est_util_sum_array_dbl(poly_vec_final, d4est_factors->local_sizes.local_nodes);
+  double global_sum = 0;
+  sc_reduce(
+    &local_sum,
+    &global_sum,
+    1,
+    sc_MPI_DOUBLE,
+    sc_MPI_SUM,
+    0,
+    sc_MPI_COMM_WORLD
+  );
+  if (p4est->mpirank == 0){
+    printf(" final sum = %.15f\n", global_sum);
+  }
 
-  d4est_solver_schwarz_metadata_print
-    (
-     p4est,
-     schwarz_data,
-     d4est_ghost
-    );
+  /* d4est_solver_schwarz_metadata_print */
+    /* ( */
+     /* p4est, */
+     /* schwarz_data, */
+     /* d4est_ghost */
+    /* ); */
   
   P4EST_FREE(restricted_poly_vec_over_subdomains);
   P4EST_FREE(transpose_restrict_restricted_poly_vec_over_subdomains);
   P4EST_FREE(poly_vec);
   P4EST_FREE(poly_vec_final);
   
+  d4est_solver_schwarz_mortar_data_t* schwarz_mortar_data = 
+    d4est_solver_schwarz_mortar_data_init
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     d4est_ghost,
+     initial_grid_input->face_h_type
+    );
 
+  d4est_solver_schwarz_mortar_data_destroy(schwarz_mortar_data);
+  
   d4est_solver_schwarz_metadata_destroy
     (
      schwarz_data
@@ -239,15 +272,13 @@ int main(int argc, char *argv[])
      schwarz_ops
     );
 
-  
-  
   if (d4est_ghost != NULL)
     d4est_ghost_destroy(d4est_ghost);
 
-  /* if (d4est_ghost_data != NULL){ */
-  /*   d4est_ghost_data_destroy(d4est_ghost_data); */
-  /*   d4est_ghost_data = NULL; */
-  /* }  */
+  if (d4est_ghost_data != NULL){
+    d4est_ghost_data_destroy(d4est_ghost_data);
+    d4est_ghost_data = NULL;
+  }
     
   d4est_mesh_initial_extents_destroy(initial_grid_input);
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);

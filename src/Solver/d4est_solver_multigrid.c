@@ -362,16 +362,17 @@ d4est_solver_multigrid_set_smoother(p4est_t* p4est, const char* input_file,  d4e
                         );
   }
   else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_schwarz")){
-    d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
-    mg_data->smoother = d4est_solver_multigrid_smoother_schwarz_init
-                        (
-                         p4est,
-                         mg_data->num_of_levels,
-                         mg_data->d4est_ops,
-                         updater->current_d4est_ghost,
-                         updater->current_d4est_factors,
-                         input_file
-                        );
+    D4EST_ABORT("Need to add support for this again");
+    /* d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater; */
+    /* mg_data->smoother = d4est_solver_multigrid_smoother_schwarz_init */
+                        /* ( */
+                         /* p4est, */
+                         /* mg_data->num_of_levels, */
+                         /* mg_data->d4est_ops, */
+                         /* updater->current_d4est_ghost, */
+                         /* updater->current_d4est_factors, */
+                         /* input_file */
+                        /* ); */
   }
   else {
     zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid");
@@ -391,7 +392,8 @@ d4est_solver_multigrid_destroy_smoother( d4est_solver_multigrid_data_t* mg_data)
     d4est_solver_multigrid_smoother_cheby_destroy(mg_data->smoother);
   }
   else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_schwarz")){
-    d4est_solver_multigrid_smoother_schwarz_destroy(mg_data->smoother);
+    D4EST_ABORT("Need to add support for this again");
+    /* d4est_solver_multigrid_smoother_schwarz_destroy(mg_data->smoother); */
   }
   else {
     zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid");

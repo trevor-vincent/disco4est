@@ -10,42 +10,6 @@
 #include <d4est_ghost_data.h>
 #include <d4est_checkpoint_type.h>
 
-typedef struct {
-  
-  int mortar_side_id;
-  
-  int faces_m;
-  int faces_p; /* equals 0 on physical boundary */
-  int f_p;
-  int f_m;
-  int tree_p;
-  int tree_m;
-  int orientation;
-  
-  int q_p [(P4EST_HALF)][(P4EST_DIM)];
-  int dq_p [(P4EST_HALF)];
-  int tree_quadid_p [(P4EST_HALF)];
-  int deg_p [(P4EST_HALF)];
-  int deg_quad_p [(P4EST_HALF)];
-
-  int q_m [(P4EST_HALF)][(P4EST_DIM)];
-  int dq_m [(P4EST_HALF)];
-  int tree_quadid_m [(P4EST_HALF)];
-  int deg_m [(P4EST_HALF)];
-  int deg_quad_m [(P4EST_HALF)];
-
-  /* deprecated soon for the ones below */
-  int boundary_quad_vector_stride;
-  int mortar_quad_scalar_stride;
-  int mortar_quad_vector_stride;
-  int mortar_quad_matrix_stride;
-
-  /* the ones above are redundant and can be reduced to */
-  /* int boundary_quad_stride; */
-  /* int mortar_quad_stride; */
-  
-} d4est_mortar_side_data_t;
-
 
 typedef enum {INITIALIZE_GHOST, DO_NOT_INITIALIZE_GHOST} d4est_mesh_ghost_init_option_t;
 typedef enum {INITIALIZE_QUADRATURE_DATA, DO_NOT_INITIALIZE_QUADRATURE_DATA} d4est_mesh_quadrature_data_init_option_t;
@@ -141,7 +105,7 @@ typedef struct {
   /* array of 0 and 1 for whether this face touches boundary */
   int* face_touches_element;
 
-  d4est_mortar_side_data_t* mortar_side_data;
+  /* d4est_mortar_side_data_t* mortar_side_data; */
   
   double* xyz;
   double* xyz_quad;

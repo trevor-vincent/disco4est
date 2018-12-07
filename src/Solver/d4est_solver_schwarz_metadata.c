@@ -264,10 +264,10 @@ d4est_solver_schwarz_metadata_corner_callback
               break;
             }
           }
-          if (side_info->is_ghost && p4est->mpirank == 0){
-            printf("local mpirank = %d, ghost mpirank = %d, core_id = %d, ghost_quadid = %d, tree, tree_quadid = %d,%d, found = %d\n", p4est->mpirank,
-                   ed_side->mpirank, ed_core->id, side_info->quadid, ed_side->tree, ed_side->tree_quadid, found);
-          }
+          /* if (side_info->is_ghost && p4est->mpirank == 0){ */
+            /* printf("local mpirank = %d, ghost mpirank = %d, core_id = %d, ghost_quadid = %d, tree, tree_quadid = %d,%d, found = %d\n", p4est->mpirank, */
+                   /* ed_side->mpirank, ed_core->id, side_info->quadid, ed_side->tree, ed_side->tree_quadid, found); */
+          /* } */
           
           if (found == 1){
             continue;
@@ -642,10 +642,10 @@ d4est_solver_schwarz_metadata_init
      (char**)&schwarz_data->element_metadata
     );
 
-  if(d4est_ghost != NULL){
+  if(d4est_ghost != NULL && p4est->mpisize > 1){
     int stride = 0;
-    printf("Ghost subdomains on proc %d\n", p4est->mpirank);
-    printf("***************************\n", p4est->mpirank);
+    /* printf("Ghost subdomains on proc %d\n", p4est->mpirank); */
+    /* printf("***************************\n", p4est->mpirank); */
     for (int gid = 0; gid < schwarz_data->subdomain_ghostdata->num_ghosts; gid++){
       d4est_solver_schwarz_subdomain_metadata_t* sub_data =
         (d4est_solver_schwarz_subdomain_metadata_t*)

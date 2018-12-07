@@ -100,11 +100,13 @@ d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
                                                                  schwarz_ed->tree,
                                                                  schwarz_ed->tree_quadid
                                                                 );
-      int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), mesh_ed->deg);
-      int local_nodal_stride = mesh_ed->nodal_stride;
-      int sub_nodal_stride = sub_data->nodal_stride + schwarz_ed->nodal_stride;
-      for (int k = 0; k < volume_nodes; k++){
-        u[local_nodal_stride + k] += du_over_subdomains[sub_nodal_stride + k];
+      if (schwarz_ed->mpirank == p4est->mpirank){
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), mesh_ed->deg);
+        int local_nodal_stride = mesh_ed->nodal_stride;
+        int sub_nodal_stride = sub_data->nodal_stride + schwarz_ed->nodal_stride;
+        for (int k = 0; k < volume_nodes; k++){
+          u[local_nodal_stride + k] += du_over_subdomains[sub_nodal_stride + k];
+        }
       }
     }
   }
@@ -151,9 +153,9 @@ d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
                                           );
           int mesh_stride = mesh_ed->nodal_stride;
           int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), mesh_ed->deg);
-                             for (int i = 0; i < volume_nodes; i++){
-                                                                    u[mesh_stride + i] = du_data[schwarz_stride + i];
-                             }
+          for (int i = 0; i < volume_nodes; i++){
+            u[mesh_stride + i] += du_data[schwarz_stride + i];
+          }
         }
       
       }
