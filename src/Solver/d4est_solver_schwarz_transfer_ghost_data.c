@@ -95,12 +95,14 @@ d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
     d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_metadata->subdomain_metadata[i];
     for (int j = 0; j < sub_data->num_elements; j++){
       d4est_solver_schwarz_element_metadata_t* schwarz_ed = &sub_data->element_metadata[j];
-      d4est_element_data_t* mesh_ed = d4est_element_data_get_ptr(
-                                                                 p4est,
-                                                                 schwarz_ed->tree,
-                                                                 schwarz_ed->tree_quadid
-                                                                );
+
       if (schwarz_ed->mpirank == p4est->mpirank){
+        d4est_element_data_t* mesh_ed = d4est_element_data_get_ptr
+                                        (
+                                         p4est,
+                                         schwarz_ed->tree,
+                                         schwarz_ed->tree_quadid
+                                        );
         int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), mesh_ed->deg);
         int local_nodal_stride = mesh_ed->nodal_stride;
         int sub_nodal_stride = sub_data->nodal_stride + schwarz_ed->nodal_stride;

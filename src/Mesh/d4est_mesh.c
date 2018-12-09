@@ -396,11 +396,25 @@ d4est_mesh_compute_mortar_quadrature_quantities_boundary_callback
 )
 {
   int total_mortar_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM)-1, e_m->deg_quad);
-  int scalar_stride = e_m->mortar_quad_scalar_stride[f_m];
-  int vector_stride = e_m->mortar_quad_vector_stride[f_m];
-  int matrix_stride = e_m->mortar_quad_matrix_stride[f_m];
-  int vector_boundary_stride = e_m->boundary_quad_vector_stride[f_m];
+  /* int scalar_stride = e_m->mortar_quad_scalar_stride[f_m]; */
+  /* int vector_stride = e_m->mortar_quad_vector_stride[f_m]; */
+  /* int matrix_stride = e_m->mortar_quad_matrix_stride[f_m]; */
+  /* int vector_boundary_stride = e_m->boundary_quad_vector_stride[f_m]; */
 
+
+  d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m] = d4est_factors->aux_mortar_quad_stride;
+  d4est_factors->local_strides[e_m->id].boundary_quad_stride[f_m] = d4est_factors->aux_boundary_quad_stride;
+  d4est_factors->aux_mortar_quad_stride += total_mortar_nodes_quad;
+  d4est_factors->aux_boundary_quad_stride += total_mortar_nodes_quad;
+
+  
+  int scalar_stride = d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m];
+  int vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m];
+  int matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m];
+  int vector_boundary_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m->id].boundary_quad_stride[f_m];
+  
+
+  
   double* n_m_mortar_quad [(P4EST_DIM)];
   double* xyz_m_mortar_quad [(P4EST_DIM)];
   double* xyz_m_mortar_lobatto [(P4EST_DIM)];
@@ -821,9 +835,42 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
     mortar_nodes_quad_porder[inew] = mortar_nodes_quad[i];
   }
   
-  int scalar_stride = e_m[0]->mortar_quad_scalar_stride[f_m];
-  int vector_stride = e_m[0]->mortar_quad_vector_stride[f_m];
-  int matrix_stride = e_m[0]->mortar_quad_matrix_stride[f_m];
+  /* int scalar_stride = e_m[0]->mortar_quad_scalar_stride[f_m]; */
+  /* int vector_stride = e_m[0]->mortar_quad_vector_stride[f_m]; */
+  /* int matrix_stride = e_m[0]->mortar_quad_matrix_stride[f_m]; */
+
+
+  /* d4est_mesh_local_sizes_t* sizes = params; */
+  /* d4est_element_data_t* e_p_oriented [(P4EST_HALF)]; */
+  /* d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented); */
+
+  /* calculate degs and nodes of the mortar faces */
+  /* int total_mortar_nodes_quad = 0; */
+  /* for (int i = 0; i < faces_m; i++) */
+    /* for (int j = 0; j < faces_p; j++){ */
+      /* int deg_mortar_quad = d4est_util_max_int */
+                            /* ( */
+                             /* e_m[i]->deg_quad, */
+                             /* e_p_oriented[j]->deg_quad */
+                            /* ); */
+      /* total_mortar_nodes_quad += d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad ); */
+    /* } */
+
+  /* e_m[0]->mortar_quad_scalar_stride[f_m] = sizes->local_mortar_nodes_quad; */
+  /* e_m[0]->mortar_quad_vector_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM); */
+  /* e_m[0]->mortar_quad_matrix_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM)*(P4EST_DIM); */
+
+  for (int f = 0; f < faces_m; f++){
+    d4est_factors->local_strides[e_m[f]->id].mortar_quad_stride[f_m] = d4est_factors->aux_mortar_quad_stride;
+    d4est_factors->local_strides[e_m[f]->id].boundary_quad_stride[f_m] = -1;
+  }
+  d4est_factors->aux_mortar_quad_stride += total_mortar_nodes_quad;
+  
+  
+  int scalar_stride = d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
+  int vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
+  int matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
+  int boundary_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].boundary_quad_stride[f_m];
   
   double* n_m_mortar_quad [(P4EST_DIM)];
   double* drst_dxyz_m_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
@@ -1064,10 +1111,14 @@ d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback
     /* e_m->p_tree_quadid_that_touch_face [f_m][i] = -1; */
   /* } */
    
-  e_m->boundary_quad_vector_stride[f_m] = (P4EST_DIM)*sizes->local_boundary_nodes_quad;
-  e_m->mortar_quad_scalar_stride[f_m] = sizes->local_mortar_nodes_quad;
-  e_m->mortar_quad_vector_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM);
-  e_m->mortar_quad_matrix_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
+  /* e_m->boundary_quad_vector_stride[f_m] = (P4EST_DIM)*sizes->local_boundary_nodes_quad; */
+  /* e_m->mortar_quad_scalar_stride[f_m] = sizes->local_mortar_nodes_quad; */
+  /* e_m->mortar_quad_vector_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM); */
+  /* e_m->mortar_quad_matrix_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM)*(P4EST_DIM); */
+
+
+  /* d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m] = sizes->local_mortar_nodes_quad; */
+  /* d4est_factors->local_strides[e_m->id].boundary_quad_stride[f_m] = sizes->local_boundary_nodes_quad; */
   
   sizes->local_mortar_nodes_quad += d4est_lgl_get_nodes(
                                                         (P4EST_DIM)-1,
@@ -1077,10 +1128,8 @@ d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback
                                                         (P4EST_DIM)-1,
                                                         e_m->deg_quad);
   
-  e_m->face_belongs_to_which_mortar[f_m] = sizes->local_mortar_sides;
+  /* e_m->face_belongs_to_which_mortar[f_m] = sizes->local_mortar_sides; */
   sizes->local_mortar_sides += 1;
-
-
 }
 
 static void
@@ -1134,20 +1183,26 @@ d4est_mesh_compute_mortar_quadrature_sizes_interface_callback
       total_mortar_nodes_quad += d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad );
     }
 
-  e_m[0]->mortar_quad_scalar_stride[f_m] = sizes->local_mortar_nodes_quad;
-  e_m[0]->mortar_quad_vector_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM);
-  e_m[0]->mortar_quad_matrix_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM)*(P4EST_DIM);
+  /* e_m[0]->mortar_quad_scalar_stride[f_m] = sizes->local_mortar_nodes_quad; */
+  /* e_m[0]->mortar_quad_vector_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM); */
+  /* e_m[0]->mortar_quad_matrix_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM)*(P4EST_DIM); */
 
-  for (int f = 1; f < faces_m; f++){
-    e_m[f]->mortar_quad_scalar_stride[f_m] = -1;
-    e_m[f]->mortar_quad_vector_stride[f_m] = -1;
-    e_m[f]->mortar_quad_matrix_stride[f_m] = -1;
-  }
+  /* for (int f = 0; f < faces_m; f++){ */
+    /* d4est_factors->local_strides[e_m[f]->id].mortar_quad_stride[f_m] = sizes->local_mortar_nodes_quad; */
+    /* d4est_factors->local_strides[e_m[f]->id].boundary_quad_stride[f_m] = -1; */
+  /* } */
+  
+  /* for (int f = 1; f < faces_m; f++){ */
+                                                                         
+  /*   e_m[f]->mortar_quad_scalar_stride[f_m] = -1; */
+  /*   e_m[f]->mortar_quad_vector_stride[f_m] = -1; */
+  /*   e_m[f]->mortar_quad_matrix_stride[f_m] = -1; */
+  /* } */
   
   sizes->local_mortar_nodes_quad += total_mortar_nodes_quad;  
-  for (int f = 0; f < faces_m; f++){
-    e_m[f]->face_belongs_to_which_mortar[f_m] = sizes->local_mortar_sides;
-  }
+  /* for (int f = 0; f < faces_m; f++){ */
+    /* e_m[f]->face_belongs_to_which_mortar[f_m] = sizes->local_mortar_sides; */
+  /* } */
 
   sizes->local_mortar_sides += 1;
 }
@@ -1171,7 +1226,10 @@ d4est_mesh_compute_mortar_quadrature_sizes
   flux_fcns.flux_boundary_fcn = d4est_mesh_compute_mortar_quadrature_sizes_boundary_callback;
   flux_fcns.user_ctx = (void*)local_sizes;
   
-  
+  local_sizes->local_mortar_nodes_quad = 0;
+  local_sizes->local_boundary_nodes_quad = 0;
+  local_sizes->local_mortar_sides = 0;
+    
   d4est_mortars_compute_flux_on_local_elements
     (
      p4est,
@@ -1190,6 +1248,8 @@ d4est_mesh_data_t*
 d4est_mesh_data_init()
 {
   d4est_mesh_data_t* d4est_factors = P4EST_ALLOC(d4est_mesh_data_t, 1);
+
+  d4est_factors->local_strides = NULL;
   d4est_factors->J_quad = NULL;
   d4est_factors->xyz = NULL;
   d4est_factors->xyz_quad = NULL;
@@ -1200,7 +1260,7 @@ d4est_mesh_data_init()
   d4est_factors->drst_dxyz_p_mortar_quad_porder = NULL;
 
   d4est_factors->element_touches_boundary = NULL;
-  d4est_factors->element_data = NULL;
+  /* d4est_factors->element_data = NULL; */
   d4est_factors->node_touches_boundary = NULL;
   d4est_factors->face_touches_element = NULL;
   d4est_factors->hm_mortar_quad = NULL;
@@ -1343,20 +1403,27 @@ d4est_mesh_data_realloc
                                                              double,
                                                              local_matrix_mortar_nodes_quad);
 
-  d4est_factors->drst_dxyz_p_mortar_quad_porder = P4EST_REALLOC(d4est_factors->drst_dxyz_p_mortar_quad_porder,
-                                                                    double,
-                                                                    local_matrix_mortar_nodes_quad);
-
+  d4est_factors->drst_dxyz_p_mortar_quad_porder =
+    P4EST_REALLOC(d4est_factors->drst_dxyz_p_mortar_quad_porder,
+                  double,
+                  local_matrix_mortar_nodes_quad);
+  
 
 
   d4est_factors->element_touches_boundary = P4EST_REALLOC(d4est_factors->element_touches_boundary,
                                                       int,
                                                       p4est->local_num_quadrants);
 
-  d4est_factors->element_data = P4EST_REALLOC(d4est_factors->element_data,
-                                              d4est_element_data_t*,
-                                              (p4est->local_num_quadrants + ghost_elements));
 
+  
+  /* d4est_factors->local_strides = P4EST_REALLOC(d4est_factors->local_strides, */
+  /*                                             d4est_mesh_local_strides_t*, */
+  /*                                             (p4est->local_num_quadrants)); */
+
+
+  d4est_factors->local_strides = P4EST_REALLOC(d4est_factors->local_strides,
+                                               d4est_mesh_local_strides_t,
+                                               (p4est->local_num_quadrants));
   
   d4est_factors->node_touches_boundary = P4EST_REALLOC(d4est_factors->node_touches_boundary,
                                                       int,
@@ -1461,6 +1528,7 @@ d4est_mesh_data_destroy
 {
   if (d4est_factors != NULL){
     P4EST_FREE(d4est_factors->J_quad);
+    P4EST_FREE(d4est_factors->local_strides);
     P4EST_FREE(d4est_factors->xyz);
     P4EST_FREE(d4est_factors->xyz_quad);
     P4EST_FREE(d4est_factors->xyz_rst_quad);
@@ -1470,7 +1538,7 @@ d4est_mesh_data_destroy
     P4EST_FREE(d4est_factors->drst_dxyz_p_mortar_quad_porder);
     P4EST_FREE(d4est_factors->hm_mortar_quad);
     P4EST_FREE(d4est_factors->element_touches_boundary);
-    P4EST_FREE(d4est_factors->element_data);
+    /* P4EST_FREE(d4est_factors->element_data); */
     P4EST_FREE(d4est_factors->node_touches_boundary);
     P4EST_FREE(d4est_factors->face_touches_element);
     P4EST_FREE(d4est_factors->hp_mortar_quad);
@@ -1709,7 +1777,7 @@ d4est_mesh_init_element_size_parameters_ghost
   for (int gid = 0; gid < d4est_ghost->ghost->ghosts.elem_count; gid++){
     d4est_element_data_t* ged = &d4est_ghost->ghost_elements[gid];
     ged->id = gid;
-    d4est_factors->element_data[p4est->local_num_quadrants + gid] = ged;
+    /* d4est_factors->element_data[p4est->local_num_quadrants + gid] = ged; */
     d4est_mesh_init_element_size_parameters
       (
        p4est,
@@ -2421,6 +2489,8 @@ d4est_mesh_data_compute
  d4est_mesh_volume_h_t volume_h_type
 )
 {
+
+
   for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)
@@ -2443,7 +2513,7 @@ d4est_mesh_data_compute
         mesh_object.q[2] = ed->q[2];
 #endif
 
-        d4est_factors->element_data[ed->id] = ed;
+        /* d4est_factors->element_data[ed->id] = ed; */
         
         d4est_rst_t rst_points_quad;
         rst_points_quad = d4est_quadrature_get_rst_points
@@ -2568,6 +2638,9 @@ d4est_mesh_data_compute
      volume_h_type
     );
 
+  d4est_factors->aux_mortar_quad_stride = 0;
+  d4est_factors->aux_boundary_quad_stride = 0;
+
   d4est_mesh_compute_mortar_quadrature_quantities
     (
      p4est,
@@ -2668,6 +2741,7 @@ d4est_mesh_update
  void* user_ctx
 )
 {
+
   d4est_mesh_local_sizes_t local_sizes =
     d4est_mesh_init_element_data(p4est,
                                  d4est_ops,
@@ -3456,8 +3530,6 @@ d4est_mesh_apply_invM_on_field
  double* out
 ){
 
-  
-  
  for (p4est_topidx_t tt = p4est->first_local_tree;
        tt <= p4est->last_local_tree;
        ++tt)

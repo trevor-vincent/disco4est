@@ -60,12 +60,12 @@ d4est_ghost_init
     ged->nodal_stride = stride;
     ged->quad_stride = -1;
     ged->sqr_nodal_stride = -1;
-    for (int i = 0; i < (P4EST_FACES); i++){
-      ged->boundary_quad_vector_stride[i] = -1;
-      ged->mortar_quad_vector_stride[i] = -1;
-      ged->mortar_quad_scalar_stride[i] = -1;
-      ged->mortar_quad_matrix_stride[i] = -1;
-    }    
+    /* for (int i = 0; i < (P4EST_FACES); i++){ */
+    /*   ged->boundary_quad_vector_stride[i] = -1; */
+    /*   ged->mortar_quad_vector_stride[i] = -1; */
+    /*   ged->mortar_quad_scalar_stride[i] = -1; */
+    /*   ged->mortar_quad_matrix_stride[i] = -1; */
+    /* }     */
     stride += volume_nodes_lobatto;    
   }
   

@@ -202,6 +202,8 @@ d4est_solver_schwarz_mortar_data_interface_callback
   mortar_side_data->tree_m = e_m[0]->tree;
   mortar_side_data->orientation = orientation;
 
+  mortar_side_data->mortar_side_id = stride;
+  
   for (int f = 0; f < faces_m; f++){
     mortar_side_data->q_m[f][0] = e_m[f]->q[0];
     mortar_side_data->q_m[f][1] = e_m[f]->q[1];
@@ -212,6 +214,8 @@ d4est_solver_schwarz_mortar_data_interface_callback
     mortar_side_data->tree_quadid_m[f] = e_m[f]->tree_quadid;
     mortar_side_data->deg_m[f] = e_m[f]->deg;
     mortar_side_data->deg_quad_m[f] = e_m[f]->deg_quad;
+
+    
   }
 
   for (int f = 0; f < faces_p; f++){
@@ -226,7 +230,9 @@ d4est_solver_schwarz_mortar_data_interface_callback
     mortar_side_data->deg_quad_p[f] = e_p[f]->deg_quad;
   }
 
-  mortar_side_data->mortar_side_id = stride;
+  
+
+  
   schwarz_mortar_data->stride += 1;
 }
 
@@ -727,11 +733,21 @@ d4est_solver_schwarz_mortar_data_init
       /*     ); */
       /* } */
 
+          int nodes_mortar_quad [(P4EST_HALF)];
+
+          for (int i = 0; i < faces_mortar; i++){
+            nodes_mortar_quad[i]
+              = d4est_lgl_get_nodes((P4EST_DIM)-1,
+                                    deg_mortar_quad_morder[i]);
+          }
+
+        
         if (face_h_type == FACE_H_EQ_J_DIV_SJ_QUAD){
           /* D4EST_ABORT("H_EQ_J_DIV_SJ_QUAD is no longer supported"); */
+          
           d4est_mesh_calculate_mortar_h_eq_j_div_sj_quad
             (
-             j_div_sj_m_quad_mortar,
+             j_div_sj_m_mortar_quad,
              faces_mortar,
              nodes_mortar_quad,
              hm_mortar_quad
@@ -739,14 +755,28 @@ d4est_solver_schwarz_mortar_data_init
 
           d4est_mesh_calculate_mortar_h_eq_j_div_sj_quad
             (
-             j_div_sj_m_quad_mortar,
+             j_div_sj_p_mortar_quad,
              faces_mortar,
              nodes_mortar_quad,
-             hm_mortar_quad
+             hp_mortar_quad
             );
         }
         else if (face_h_type == FACE_H_EQ_TREE_H){
+          d4est_mesh_calculate_mortar_h_eq_tree_h
+            (
+             ghost_mortar_side_data[f].dq_m[0],
+             faces_mortar,
+             nodes_mortar_quad,
+             hm_mortar_quad
+            );
 
+          d4est_mesh_calculate_mortar_h_eq_tree_h
+            (
+             ghost_mortar_side_data[f].dq_p[0],
+             faces_mortar,
+             nodes_mortar_quad,
+             hp_mortar_quad
+            );
         }
         else {
           D4EST_ABORT("face_h_type");
@@ -763,7 +793,62 @@ d4est_solver_schwarz_mortar_data_init
   return schwarz_mortar_data;
 }
 
+int
+d4est_solver_schwarz_mortar_data_sum_test
+(
+ d4est_mesh_data_t* d4est_factors,
+ d4est_solver_schwarz_metadata_t* schwarz_metadata
+)
+{
+    for (int i = 0; i < schwarz_metadata->num_subdomains; i++){
+    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_metadata->subdomain_metadata[i];
+    for (int j = 0; j < sub_data->num_elements; j++){
+      d4est_solver_schwarz_element_metadata_t* schwarz_ed = &sub_data->element_metadata[j];
 
+      if (schwarz_ed->mpirank == p4est->mpirank){
+
+        d4est_element_data_t* mesh_ed =
+          d4est_element_data_get_ptr
+          (
+           p4est,
+           schwarz_ed->tree,
+           schwarz_ed->tree_quadid
+          );
+
+        for (int f = 0; f < (P4EST_FACES); f++){
+          
+        }
+        
+    
+      }
+      else {
+        /* get element  */
+
+      }
+      
+    }
+  }
+
+
+
+
+  
+  for (int gid = 0; gid < d4est_ghost->ghost->ghosts.elem_count; gid++){
+
+    d4est_mortar_side_data_t* ghost_mortar_side_data =
+      d4est_ghost_data_ext_get_field_on_element
+      (
+       &d4est_ghost->ghost_elements[gid],
+       0,
+       schwarz_mortar_data->mortar_side_ghost_data
+      );
+    
+    for (int f = 0; f < (P4EST_FACES); f++){
+    }
+
+  }
+
+}
 /* TODO: to check schwarz mortar data do a sum over 
 sj mortar data in serial and parallel over all schwarz subdomains */
 /* This file was automatically generated.  Do not edit! */

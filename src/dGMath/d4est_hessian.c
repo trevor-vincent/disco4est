@@ -288,67 +288,75 @@ d4est_hessian_compute_hessian_trace_of_field_on_quadrature_points
     }
   }
  
-  
-  for (int i = 0; i < p4est->local_num_quadrants; i++){
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
 
-    d4est_element_data_t* ed = d4est_factors->element_data[i];
-    
-    double* d2xyz_drstdrst_quad_on_e [(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)];
-    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
-      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-        for (int d3 = 0; d3 < (P4EST_DIM); d3++){
-          d2xyz_drstdrst_quad_on_e[d1][d2][d3] = &d2xdrdr[d1][d2][d3][ed->quad_stride];
-        }
-      }
-    }
-
-    d4est_hessian_compute_d2xdrdr_on_quadrature_points_of_element
-      (
-       ed,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       compute_method,
-       d2xyz_drstdrst_quad_on_e
-      );
-
-    d4est_quadrature_volume_t mesh_object;
-    mesh_object.dq =  ed->dq;
-    mesh_object.tree = ed->tree;
-    mesh_object.element_id = ed->id;
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
         
-    mesh_object.q[0] = ed->q[0];
-    mesh_object.q[1] = ed->q[1];
+        double* d2xyz_drstdrst_quad_on_e [(P4EST_DIM)][(P4EST_DIM)][(P4EST_DIM)];
+        for (int d1 = 0; d1 < (P4EST_DIM); d1++){
+          for (int d2 = 0; d2 < (P4EST_DIM); d2++){
+            for (int d3 = 0; d3 < (P4EST_DIM); d3++){
+              d2xyz_drstdrst_quad_on_e[d1][d2][d3] = &d2xdrdr[d1][d2][d3][ed->quad_stride];
+            }
+          }
+        }
+
+        d4est_hessian_compute_d2xdrdr_on_quadrature_points_of_element
+          (
+           ed,
+           d4est_ops,
+           d4est_geom,
+           d4est_quad,
+           d4est_factors,
+           compute_method,
+           d2xyz_drstdrst_quad_on_e
+          );
+
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq =  ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
 #if (P4EST_DIM)==3
-    mesh_object.q[2] = ed->q[2];
+        mesh_object.q[2] = ed->q[2];
 #endif
 
     
-    d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
-                                           (
-                                            d4est_factors,
-                                            ed
-                                           );
+        d4est_mesh_data_on_element_t md_on_e = d4est_mesh_data_on_element
+                                               (
+                                                d4est_factors,
+                                                ed
+                                               );
 
     
-    d4est_hessian
-      (
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       &mesh_object,
-       QUAD_OBJECT_VOLUME,
-       QUAD_INTEGRAND_UNKNOWN,
-       &field_lobatto[ed->nodal_stride],
-       ed->deg,
-       NULL,
-       &del2field[ed->quad_stride],
-       ed->deg_quad,
-       md_on_e.rst_xyz_quad,
-       d2xyz_drstdrst_quad_on_e
-      );
-  }
+        d4est_hessian
+          (
+           d4est_ops,
+           d4est_geom,
+           d4est_quad,
+           &mesh_object,
+           QUAD_OBJECT_VOLUME,
+           QUAD_INTEGRAND_UNKNOWN,
+           &field_lobatto[ed->nodal_stride],
+           ed->deg,
+           NULL,
+           &del2field[ed->quad_stride],
+           ed->deg_quad,
+           md_on_e.rst_xyz_quad,
+           d2xyz_drstdrst_quad_on_e
+          );
+      }
+    }
 
   for (int d1 = 0; d1 < (P4EST_DIM); d1++){
     for (int d2 = 0; d2 < (P4EST_DIM); d2++){

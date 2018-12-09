@@ -6,51 +6,44 @@
 #include <d4est_operators.h>
 #include <d4est_field.h>
 
+#ifdef D4EST_TEST
 #define MAX_NODES 729
+#endif
 
 typedef struct {
 
-  int owner_proc;
-  int this_proc_id;
-
-} global_element_info_t;
-
-
-typedef struct {
-
-  /* identification */
+  /* processor information for element */
   int id;
   int mpirank;
-
-  /* TODO: remove these strides and int arrays and put in d4est_mesh_data */
+  int tree_quadid; /* local id of quadrant in tree */
+  
+  /* TODO: Convenience strides, will be removed 
+   * and places in d4est_mesh_data */
+  
   int sqr_nodal_stride;
   int nodal_stride;
   int quad_stride;
 
-  int boundary_quad_vector_stride [P4EST_FACES];
-  int mortar_quad_scalar_stride [P4EST_FACES];
-  int mortar_quad_vector_stride [P4EST_FACES];
-  int mortar_quad_matrix_stride [P4EST_FACES];
+  /* WILL BE REMOVED ASAP and put in d4est_mesh_data*/
+  /* int boundary_quad_vector_stride [P4EST_FACES]; */
+  /* int mortar_quad_scalar_stride [P4EST_FACES]; */
+  /* int mortar_quad_vector_stride [P4EST_FACES]; */
+  /* int mortar_quad_matrix_stride [P4EST_FACES]; */
 
-  /* mainly for schwarz, stored in order of touching (+) tree
-   * needs to be reoriented into (-) tree if needed in (-) order */
-  /* int p_tree_that_touch_face [P4EST_FACES][P4EST_HALF]; */
-  /* int p_tree_quadid_that_touch_face [P4EST_FACES][P4EST_HALF]; */
-  /* int p_face_that_touch_face [P4EST_FACES]; */
-  int face_belongs_to_which_mortar [(P4EST_FACES)];
-  
+  /* topological information for element */
   int region;
   int tree;
-  int tree_quadid; /* local id of quadrant in tree */
   p4est_qcoord_t q [(P4EST_DIM)];
   p4est_qcoord_t dq;
   
+  /* nodal dG information for element */
+  int deg; /* nodal degree */
+  int deg_quad; /* deg for quadrature */
+
+  /* only used in tests */
 #ifdef D4EST_TEST
   double test_vecs[3][MAX_NODES];
 #endif
-
-  int deg; /* nodal degree */
-  int deg_quad; /* deg for quadrature */
   
 } d4est_element_data_t;
 

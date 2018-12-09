@@ -53,18 +53,24 @@ d4est_laplacian_with_opt_flux_boundary
   double* drst_dxyz_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* xyz_on_f_m_lobatto [(P4EST_DIM)];
 
-  double * restrict  h_quad = &d4est_factors->hm_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
-  double * restrict  sj_on_f_m_quad = &d4est_factors->sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
+
+  int mortar_quad_scalar_stride = d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m];
+  int mortar_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m];
+  int mortar_quad_matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m];
+  int boundary_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m->id].boundary_quad_stride[f_m];
+  
+  double * restrict  h_quad = &d4est_factors->hm_mortar_quad[mortar_quad_scalar_stride];
+  double * restrict  sj_on_f_m_quad = &d4est_factors->sj_m_mortar_quad[mortar_quad_scalar_stride];
   
   for (int d = 0; d < (P4EST_DIM); d++){
-    n_on_f_m_quad[d] = &d4est_factors->n_m_mortar_quad[e_m->mortar_quad_vector_stride[f_m] + d*face_nodes_m_quad];
-    xyz_on_f_m_quad[d] = &d4est_factors->xyz_m_mortar_quad[e_m->boundary_quad_vector_stride[f_m] + d*face_nodes_m_quad];
-    xyz_on_f_m_lobatto[d] = &d4est_factors->xyz_m_mortar_lobatto[e_m->boundary_quad_vector_stride[f_m] + d*face_nodes_m_quad];
+    n_on_f_m_quad[d] = &d4est_factors->n_m_mortar_quad[mortar_quad_vector_stride + d*face_nodes_m_quad];
+    xyz_on_f_m_quad[d] = &d4est_factors->xyz_m_mortar_quad[boundary_quad_vector_stride + d*face_nodes_m_quad];
+    xyz_on_f_m_lobatto[d] = &d4est_factors->xyz_m_mortar_lobatto[boundary_quad_vector_stride + d*face_nodes_m_quad];
   }
   
   for (int d1 = 0; d1 < (P4EST_DIM); d1++){
     for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-      drst_dxyz_quad[d1][d2] =  &d4est_factors->drst_dxyz_m_mortar_quad[e_m->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*face_nodes_m_quad];
+      drst_dxyz_quad[d1][d2] =  &d4est_factors->drst_dxyz_m_mortar_quad[mortar_quad_matrix_stride + (d1 + (P4EST_DIM)*d2)*face_nodes_m_quad];
     }
   }
   
@@ -434,22 +440,28 @@ may need to all be reoriented so we may not want to skip, because this routine w
   double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
   double* drst_dxyz_p_on_mortar_quad_porder [(P4EST_DIM)][(P4EST_DIM)];
   double* n_on_f_m_mortar_quad [(P4EST_DIM)];
-  double * restrict  sj_on_f_m_mortar_quad = &d4est_factors->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+
+  int mortar_quad_scalar_stride = d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
+  int mortar_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
+  int mortar_quad_matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
+  int boundary_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].boundary_quad_stride[f_m];
+
+  double * restrict  sj_on_f_m_mortar_quad = &d4est_factors->sj_m_mortar_quad[mortar_quad_scalar_stride];
 
    for (int d = 0; d < (P4EST_DIM); d++){
-     n_on_f_m_mortar_quad[d] = &d4est_factors->n_m_mortar_quad[e_m[0]->mortar_quad_vector_stride[f_m] + d*total_nodes_mortar_quad];
+     n_on_f_m_mortar_quad[d] = &d4est_factors->n_m_mortar_quad[mortar_quad_vector_stride + d*total_nodes_mortar_quad];
    }
 
   
    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-       drst_dxyz_m_on_mortar_quad[d1][d2] =  &d4est_factors->drst_dxyz_m_mortar_quad[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
+       drst_dxyz_m_on_mortar_quad[d1][d2] =  &d4est_factors->drst_dxyz_m_mortar_quad[mortar_quad_matrix_stride + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
      }
    }
 
    for (int d1 = 0; d1 < (P4EST_DIM); d1++){
      for (int d2 = 0; d2 < (P4EST_DIM); d2++){
-       drst_dxyz_p_on_mortar_quad_porder[d1][d2] =  &d4est_factors->drst_dxyz_p_mortar_quad_porder[e_m[0]->mortar_quad_matrix_stride[f_m] + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
+       drst_dxyz_p_on_mortar_quad_porder[d1][d2] =  &d4est_factors->drst_dxyz_p_mortar_quad_porder[mortar_quad_matrix_stride + (d1 + (P4EST_DIM)*d2)*total_nodes_mortar_quad];
    
        
      }
@@ -458,8 +470,8 @@ may need to all be reoriented so we may not want to skip, because this routine w
 
   
   double* tmp = P4EST_ALLOC(double, total_side_nodes_p_quad);
-  double* hm_mortar_quad = &d4est_factors->hm_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
-  double* hp_mortar_quad = &d4est_factors->hp_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+  double* hm_mortar_quad = &d4est_factors->hm_mortar_quad[mortar_quad_scalar_stride];
+  double* hp_mortar_quad = &d4est_factors->hp_mortar_quad[mortar_quad_scalar_stride];
   
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_porder, total_side_nodes_p_lobatto);
   D4EST_ALLOC_DIM_VEC(dudr_p_on_f_p_mortar_porder, total_nodes_mortar_quad);

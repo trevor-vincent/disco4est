@@ -303,10 +303,18 @@ int main(int argc, char *argv[])
      &params
     );
 
-  for (int i = 0; i < p4est->local_num_quadrants; i++){
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
 
-    d4est_element_data_t* ed = d4est_factors->element_data[i];
-    
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        
     d4est_quadrature_volume_t mesh_object;
     mesh_object.dq =  ed->dq;
     mesh_object.tree = ed->tree;
@@ -332,6 +340,7 @@ int main(int argc, char *argv[])
     );
 
   }
+}
 
   d4est_hessian_compute_hessian_trace_of_field_on_quadrature_points
     (
@@ -362,8 +371,19 @@ int main(int argc, char *argv[])
   double* max_error_global = P4EST_ALLOC_ZERO(double, number_of_regions);
   
   int num = 0;
-  for (int i = 0; i < p4est->local_num_quadrants; i++){
-    d4est_element_data_t* ed = d4est_factors->element_data[i];
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        
+    
     int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
     for (int i = 0; i < volume_nodes_quad; i++){
       double f = f_quad[ed->quad_stride + i];
@@ -374,7 +394,7 @@ int main(int argc, char *argv[])
       max_error_local [ed->region] = (error > max_error_local[ed->region]) ? error : max_error_local[ed->region];
     }
   }
-
+}
     /* for (int i = 0; i < number_of_regions; i++){ */
     /*   printf("quad, nodes, error_region_%d = %d %d %.15f\n", i, p4est->local_num_quadrants, local_nodes, max_error_local[i]); */
     /* } */

@@ -444,8 +444,7 @@ problem_init
                                                                  &field_type,
                                                                  1);
     
-    // Extract mesh data  
-
+    // Extract mesh data      
     d4est_mesh_data_realloc
       (
        p4est,
@@ -453,7 +452,7 @@ problem_init
        d4est_factors_compactified,
        d4est_factors->local_sizes
       );
-    
+
     d4est_mesh_data_compute
       (
        p4est,

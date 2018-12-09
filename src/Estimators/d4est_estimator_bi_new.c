@@ -51,10 +51,15 @@ d4est_estimator_bi_new_dirichlet
   double* Je2 = P4EST_ALLOC(double, face_nodes_m_quad);
   /* double* h_quad = boundary_data->h_quad; */
 
+  int mortar_quad_scalar_stride = d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m];
+  int mortar_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m];
+  int mortar_quad_matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m];
+  int boundary_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m->id].boundary_quad_stride[f_m];
+  
 
-  double * restrict  h_quad = &d4est_factors_compactified->hm_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
+  double * restrict  h_quad = &d4est_factors_compactified->hm_mortar_quad[mortar_quad_scalar_stride];
 
-  double * restrict  sj_on_f_m_quad = &d4est_factors_compactified->sj_m_mortar_quad[e_m->mortar_quad_scalar_stride[f_m]];
+  double * restrict  sj_on_f_m_quad = &d4est_factors_compactified->sj_m_mortar_quad[mortar_quad_scalar_stride];
   
   
   for (int i = 0; i < face_nodes_m_quad; i++){
@@ -184,7 +189,13 @@ d4est_estimator_bi_new_interface
   double* u_m_on_f_m_mortar_quad = interface_data->u_m_on_f_m_mortar_quad;
   /* double* sj_on_f_m_mortar_quad = interface_data->sj_on_f_m_mortar_quad;
  */
-  double * restrict  sj_on_f_m_mortar_quad = &d4est_factors_compactified->sj_m_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+
+  int mortar_quad_scalar_stride = d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
+  int mortar_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
+  int mortar_quad_matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
+  int boundary_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].boundary_quad_stride[f_m];
+  
+  double * restrict  sj_on_f_m_mortar_quad = &d4est_factors_compactified->sj_m_mortar_quad[mortar_quad_scalar_stride];
   double* u_p_on_f_p_mortar_quad = interface_data->u_p_on_f_p_mortar_quad;
   
   double* drst_dxyz_m_on_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
@@ -211,8 +222,8 @@ d4est_estimator_bi_new_interface
   /* double* hp_mortar_quad = interface_data->hp_mortar_quad; */
 
 
-  double* hm_mortar_quad = &d4est_factors_compactified->hm_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
-  double* hp_mortar_quad = &d4est_factors_compactified->hp_mortar_quad[e_m[0]->mortar_quad_scalar_stride[f_m]];
+  double* hm_mortar_quad = &d4est_factors_compactified->hm_mortar_quad[mortar_quad_scalar_stride];
+  double* hp_mortar_quad = &d4est_factors_compactified->hp_mortar_quad[mortar_quad_scalar_stride];
   
   
   double* Je1_prefactor = P4EST_ALLOC(double, total_nodes_mortar_quad);

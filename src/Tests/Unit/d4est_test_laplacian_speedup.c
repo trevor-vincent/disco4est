@@ -464,9 +464,18 @@ int main(int argc, char *argv[])
     printf("**********DONE**********\n");
     printf("before and after opt times = %f, %f\n", time_spent, time_spent_2);
 
-    for (int i = 0; i < p4est->local_num_quadrants; i++){
-      d4est_element_data_t* ed = d4est_factors->element_data[i];
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
 
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        
       int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
 
       for (int j = 0; j < volume_nodes; j++){
@@ -484,7 +493,7 @@ int main(int argc, char *argv[])
         D4EST_ABORT("ABORTING BAD ELEMENT");
       }
     }
-
+  }
     double u_sum = d4est_util_sum_array_dbl(poly_vec, local_nodes);
     double Au_sum = d4est_util_sum_array_dbl(Apoly_vec, local_nodes);
     double Au_sum_with_opt = d4est_util_sum_array_dbl(Apoly_vec_with_opt, local_nodes);

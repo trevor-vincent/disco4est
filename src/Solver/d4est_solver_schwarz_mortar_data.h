@@ -53,11 +53,12 @@ typedef struct {
   double* xyz_on_f_m_quad;
   double* xyz_on_f_m_lobatto;
 
-  int stride;
-  
+  int stride;  
   d4est_mortar_side_data_t* mortar_side_data;
   d4est_ghost_data_ext_t* mortar_side_ghost_data;
 
+  int* which_mortar_face_belongs_to;
+  
 }d4est_solver_schwarz_mortar_data_t;
 
 

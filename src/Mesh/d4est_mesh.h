@@ -90,12 +90,25 @@ typedef struct {
   
 } d4est_mesh_size_parameters_t;
 
+
+typedef struct {
+
+  int nodal_sqr_stride;
+  int nodal_stride;
+  int quad_stride;
+  int mortar_quad_stride [P4EST_FACES];
+  int boundary_quad_stride [P4EST_FACES];
+  
+} d4est_mesh_local_strides_t;
+
+
 /* If not specified explicitly, everything is (-) side order */
 typedef struct {
   
   d4est_mesh_local_sizes_t local_sizes;
-  d4est_element_data_t** element_data;
 
+  d4est_mesh_local_strides_t* local_strides;
+  
   /* array of 0 and 1 for whether this element touches boundary */
   int* element_touches_boundary;
 
@@ -105,8 +118,6 @@ typedef struct {
   /* array of 0 and 1 for whether this face touches boundary */
   int* face_touches_element;
 
-  /* d4est_mortar_side_data_t* mortar_side_data; */
-  
   double* xyz;
   double* xyz_quad;
   double* xyz_rst_quad;
@@ -130,6 +141,10 @@ typedef struct {
   double* diam_volume;
   double* area;
   double* volume;
+
+  /* internal, don't touch these */
+  int aux_mortar_quad_stride;
+  int aux_boundary_quad_stride;
   
 } d4est_mesh_data_t;
 
@@ -167,7 +182,6 @@ typedef struct {
  
 /* This file was automatically generated.  Do not edit! */
 void d4est_mesh_apply_invM_on_field(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,double *in,double *out);
-void d4est_mesh_print_out_mortar_data(d4est_mesh_data_t *d4est_factors);
 void d4est_mesh_debug_boundary_elements(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,const char **field_names,double **fields,int local_nodes);
 double *d4est_mesh_get_field_on_element(p4est_t *p4est,d4est_element_data_t *ed,d4est_ghost_data_t *d4est_ghost_data,double *field,int local_nodes,int which_field);
 int d4est_mesh_is_it_a_ghost_element(p4est_t *p4est,d4est_element_data_t *ed);
@@ -207,6 +221,8 @@ d4est_mesh_data_t *d4est_mesh_data_init();
 void d4est_mesh_compute_mortar_quadrature_sizes(p4est_t *p4est,d4est_ghost_t *d4est_ghost,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mesh_local_sizes_t *local_sizes);
 void d4est_mesh_compute_mortar_quadrature_quantities(p4est_t *p4est,d4est_ghost_t *d4est_ghost,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_mesh_face_h_t face_h_type);
 void d4est_mesh_compute_mortar_quadrature_quantities_interface_callback(p4est_t *p4est,d4est_element_data_t **e_m,int faces_m,int f_m,int mortar_side_id_m,d4est_element_data_t **e_p,int faces_p,int f_p,int mortar_side_id_p,int *e_m_is_ghost,int orientation,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,void *params);
+void d4est_mesh_calculate_mortar_h_eq_tree_h(p4est_qcoord_t dq_0,int num_faces_mortar,int *nodes_mortar_quad,double *h_quad_mortar);
+void d4est_mesh_calculate_mortar_h_eq_j_div_sj_quad(double *j_div_sj_quad_mortar,int num_faces_mortar,int *nodes_mortar_quad,double *h_quad_mortar);
 d4est_mesh_size_parameters_t d4est_mesh_get_size_parameters(d4est_mesh_data_t *factors);
 void d4est_mesh_calculate_mortar_h(p4est_t *p4est,d4est_element_data_t **elems_side,int face_side,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_face_h_t face_h_type,double *j_div_sj_quad_mortar,double *h_quad_mortar,int num_faces_mortar,int num_faces_side,int *nodes_mortar_quad,d4est_mesh_size_parameters_t size_params);
 d4est_mesh_data_on_element_t d4est_mesh_data_on_element(d4est_mesh_data_t *d4est_factors,d4est_element_data_t *ed);

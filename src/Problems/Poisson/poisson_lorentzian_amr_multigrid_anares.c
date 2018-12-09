@@ -517,11 +517,18 @@ problem_init
        NULL
       );
 
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
 
-    for (int i = 0; i < p4est->local_num_quadrants; i++){
-
-      d4est_element_data_t* ed = d4est_factors->element_data[i];
-    
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        
       d4est_quadrature_volume_t mesh_object;
       mesh_object.dq =  ed->dq;
       mesh_object.tree = ed->tree;
@@ -547,7 +554,7 @@ problem_init
         );
 
     }
-
+  }
     
     
     for (int qnode = 0; qnode < d4est_factors->local_sizes.local_nodes_quad; qnode++){
