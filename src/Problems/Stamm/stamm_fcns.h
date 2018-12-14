@@ -262,7 +262,7 @@ stamm_initial_guess
  void* user
 )
 {
-  return 100.;
+  return 0.5;
 }
 
 

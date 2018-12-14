@@ -28,15 +28,21 @@ int
 d4est_solver_schwarz_is_element_in_subdomain
 (
  d4est_solver_schwarz_subdomain_metadata_t* sub_data,
+ int element_mpirank,
  int element_tree,
  int element_tree_quadid
 )
 {
   for (int i = 0; i < sub_data->num_elements; i++){
+    int mpirank = sub_data->element_metadata[i].mpirank;
     int tree = sub_data->element_metadata[i].tree;
     int tree_quadid = sub_data->element_metadata[i].tree_quadid;
-    if (tree == element_tree &&
-        element_tree_quadid == tree_quadid){
+    if (tree == element_tree
+        &&
+        tree_quadid == element_tree_quadid
+        &&
+        mpirank == element_mpirank
+       ){
       return i;
     }
   }

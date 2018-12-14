@@ -104,11 +104,6 @@ cg_solve
   d4est_linalg_vec_xpby(b, -1., r, nodes);
   d4est_util_copy_1st_to_2nd(r, d, nodes);
   delta_new = d4est_linalg_vec_dot(r,r,nodes);
-
-
-  /* printf("d_dot_ad = %.15f\n", d_dot_Ad); */
-  /* printf("beta = %.15f\n", beta); */
-  /* printf("alpha = %.15f\n", alpha); */
   
   for (int i = 0; i < iter; i++){
 
@@ -178,9 +173,7 @@ cg_solve
 
       free(Tk_sub);
       free(Tk_eig_vals);
-    }
-    
-    
+    }    
   }
   
   free(Ax);

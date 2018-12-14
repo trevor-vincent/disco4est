@@ -24,6 +24,7 @@
 #include <d4est_solver_schwarz_transfer_ghost_data.h>
 #include <d4est_solver_schwarz_helpers.h>
 #include <d4est_solver_schwarz_geometric_data.h>
+#include <d4est_solver_schwarz_laplacian_ext.h>
 
 double
 poly_vec_fcn
@@ -78,7 +79,7 @@ int main(int argc, char *argv[])
 #endif
 
   char* input_file = P4EST_ALLOC(char, 100);
-  sprintf(input_file, "%s", (argc == 2) ? argv[1] : "d4est_test_schwarz_ghostdata.input");
+  sprintf(input_file, "%s", (argc == 2) ? argv[1] : "d4est_test_schwarz_parallelAu.input");
   
   if (proc_rank == 0)
     printf("[D4EST_INFO]: options file = %s\n", input_file);
@@ -126,7 +127,11 @@ int main(int argc, char *argv[])
   d4est_mesh_data_t* d4est_factors = d4est_mesh_data_init(p4est);
   d4est_quadrature_t* d4est_quad = d4est_quadrature_new(p4est, d4est_ops, d4est_geom, input_file, "quadrature");
   
-  d4est_ghost_t* d4est_ghost = NULL;  
+
+
+  
+  d4est_ghost_t* d4est_ghost = NULL;
+  
   d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
                                          (
                                           p4est,
@@ -155,9 +160,8 @@ int main(int argc, char *argv[])
     = d4est_solver_schwarz_operators_init
     (d4est_ops);
 
-  
-  double* poly_vec = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes);
-  double* poly_vec_final = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes);
+    double* poly_vec = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes);
+  /* double* poly_vec_final = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes); */
   d4est_mesh_init_field
     (
      p4est,
@@ -170,88 +174,46 @@ int main(int argc, char *argv[])
      NULL
     );
 
-  double* restricted_poly_vec_over_subdomains = P4EST_ALLOC(double,
+  dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
+
+  /* / Setup boundary conditions */
+  d4est_laplacian_dirichlet_bc_t bc_data_for_lhs;
+  bc_data_for_lhs.dirichlet_fcn = poly_vec_fcn;
+  bc_data_for_lhs.eval_method = eval_method;  
+
+    
+  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, input_file, BC_DIRICHLET, &bc_data_for_lhs);
+  
+  double* poly_vec_over_subdomains = P4EST_ALLOC(double,
                                                  schwarz_data->restricted_nodal_size);
 
-  double* transpose_restrict_restricted_poly_vec_over_subdomains = P4EST_ALLOC(double,
-                                                                               schwarz_data->nodal_size);
+  double* Apoly_vec_over_subdomains = P4EST_ALLOC(double,
+                                                    schwarz_data->restricted_nodal_size);
 
-  
+
   d4est_field_type_t field_type = NODAL;
   d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
-                                           d4est_ghost,
-                                           &field_type,
-                                           1);
+                                                               d4est_ghost,
+                                                               &field_type,
+                                                               1);
 
+    
   d4est_ghost_data_exchange(p4est,d4est_ghost,d4est_ghost_data, poly_vec);
   
-  d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains(p4est, d4est_ops, d4est_factors, d4est_ghost, d4est_ghost_data,
-     schwarz_data, schwarz_ops, poly_vec, 0, restricted_poly_vec_over_subdomains);
-
-  d4est_solver_schwarz_apply_restrict_transpose_to_restricted_field_over_subdomains
-    (
-     schwarz_data,
-     schwarz_ops,
-     restricted_poly_vec_over_subdomains,
-     transpose_restrict_restricted_poly_vec_over_subdomains
-    );
-
-  for (int i = 0; i < d4est_factors->local_sizes.local_nodes; i++){
-    poly_vec_final[i] = 1.;
-  }
-  
-  d4est_ghost_data_ext_t* ghost_data_for_schwarz = NULL;
-  d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
+  d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains
     (
      p4est,
+     d4est_ops,
+     d4est_factors,
      d4est_ghost,
+     d4est_ghost_data,
      schwarz_data,
-     &ghost_data_for_schwarz,
-     poly_vec_final,
-     transpose_restrict_restricted_poly_vec_over_subdomains
-    );
- 
-  DEBUG_PRINT_MPI_ARR_DBL_SUM
-    (
-     p4est->mpirank,
-     restricted_poly_vec_over_subdomains,
-     schwarz_data->restricted_nodal_size
-    );
-  
-  DEBUG_PRINT_MPI_ARR_DBL_SUM
-    (
-     p4est->mpirank,
-     transpose_restrict_restricted_poly_vec_over_subdomains,
-     schwarz_data->nodal_size
+     schwarz_ops,
+     poly_vec,
+     0,
+     poly_vec_over_subdomains
     );
 
-  double local_sum = d4est_util_sum_array_dbl(poly_vec_final, d4est_factors->local_sizes.local_nodes);
-  double global_sum = 0;
-  sc_reduce(
-    &local_sum,
-    &global_sum,
-    1,
-    sc_MPI_DOUBLE,
-    sc_MPI_SUM,
-    0,
-    sc_MPI_COMM_WORLD
-  );
-  if (p4est->mpirank == 0){
-    printf(" final sum = %.15f\n", global_sum);
-  }
-
-  /* d4est_solver_schwarz_metadata_print */
-    /* ( */
-     /* p4est, */
-     /* schwarz_data, */
-     /* d4est_ghost */
-    /* ); */
-  
-  P4EST_FREE(restricted_poly_vec_over_subdomains);
-  P4EST_FREE(transpose_restrict_restricted_poly_vec_over_subdomains);
-  P4EST_FREE(poly_vec);
-  P4EST_FREE(poly_vec_final);
-  
   d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data = 
     d4est_solver_schwarz_geometric_data_init
     (
@@ -265,54 +227,99 @@ int main(int argc, char *argv[])
      schwarz_data
     );
 
-  d4est_solver_schwarz_geometric_data_check_hp
-    (
-     p4est,
-     d4est_ghost,
-     d4est_factors,
-     schwarz_data,
-     schwarz_geometric_data
-    );
+  
+  for (int i = 0; i < schwarz_data->num_subdomains; i++){
+
+    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[i];
+
+    d4est_solver_schwarz_laplacian_ext_apply_over_subdomain
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       d4est_ghost,
+       schwarz_data,
+       schwarz_ops,
+       schwarz_geometric_data,
+       flux_data_for_apply_lhs,
+       &poly_vec_over_subdomains[sub_data->restricted_nodal_stride],
+       &Apoly_vec_over_subdomains[sub_data->restricted_nodal_stride],
+       i
+      );
+  }
+
+  /* DEBUG_PRINT_2ARR_DBL(poly_vec_over_subdomains, */
+  /*                      Apoly_vec_over_subdomains, */
+  /*                      schwarz_data->restricted_nodal_size); */
+
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, Apoly_vec_over_subdomains,
+                          schwarz_data->restricted_nodal_size);
+
+
+  double local_sum = d4est_util_sum_array_dbl
+                  (Apoly_vec_over_subdomains,
+                   schwarz_data->restricted_nodal_size);
+
+  double global_sum;
+  sc_reduce(
+            &local_sum,
+            &global_sum,
+            1,
+            sc_MPI_DOUBLE,
+            sc_MPI_SUM,
+            0,
+            sc_MPI_COMM_WORLD
+  );
+
+  printf("total sum = %.15f\n", global_sum);
 
   
-  d4est_solver_schwarz_geometric_data_sum_test
-    (
-     p4est,
-     d4est_ghost,
-     d4est_factors,
-     schwarz_data,
-     schwarz_geometric_data
-    );
-
   
+  if (d4est_ghost_data != NULL){
+    d4est_ghost_data_destroy(d4est_ghost_data);
+    d4est_ghost_data = NULL;
+  } 
   d4est_solver_schwarz_geometric_data_destroy(schwarz_geometric_data);
+
+  P4EST_FREE(poly_vec);
+  P4EST_FREE(poly_vec_over_subdomains);
+  P4EST_FREE(Apoly_vec_over_subdomains);
+  d4est_laplacian_flux_destroy(flux_data_for_apply_lhs);
   
   d4est_solver_schwarz_metadata_destroy
     (
      schwarz_data
     );
 
-
   d4est_solver_schwarz_operators_destroy
     (
      schwarz_ops
     );
 
-  if (d4est_ghost != NULL)
+
+  d4est_mesh_initial_extents_destroy(initial_grid_input);
+  d4est_mesh_data_destroy(d4est_factors);
+  d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
+  
+  if (d4est_ghost) {
     d4est_ghost_destroy(d4est_ghost);
+  }
+
 
   if (d4est_ghost_data != NULL){
     d4est_ghost_data_destroy(d4est_ghost_data);
     d4est_ghost_data = NULL;
   }
-    
-  d4est_mesh_initial_extents_destroy(initial_grid_input);
-  d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
+
+  
   d4est_ops_destroy(d4est_ops);
   p4est_destroy(p4est);
   d4est_geometry_destroy(d4est_geom);
 
   P4EST_FREE(input_file);
+  
   PetscFinalize();
   return 0;
 }

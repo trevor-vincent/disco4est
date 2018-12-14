@@ -403,10 +403,31 @@ d4est_solver_krylov_petsc_solve
   KSPSetOperators(ksp,A,A);
   VecPlaceArray(b, rhs);
   VecPlaceArray(x, u);
-  KSPMonitorSet(ksp, d4est_solver_krylov_petsc_monitor, &petsc_ctx, NULL);
+
+
   /* KSPSetInitialGuessNonzero(ksp,PETSC_TRUE); */
-    
+  
+  /* double* xptr; */
+  /* double* bptr; */
+  /* VecGetArray(x,&xptr); */
+  /* VecGetArray(b,&bptr); */
+  /* for (int i = 0; i < local_nodes; i++){ */
+  /* bptr[i] = rhs[i]; */
+  /* xptr[i] = u[i]; */
+  /* VecSetValueLocal(x, i, u[i], INSERT_VALUES); */
+  /* VecSetValueLocal(b, i, rhs[i], INSERT_VALUES); */
+  /* } */
+  
+  KSPMonitorSet(ksp, d4est_solver_krylov_petsc_monitor, &petsc_ctx, NULL);
   KSPSolve(ksp,b,x);
+
+  /* double* xptr; */
+  /* VecGetArray(x,&xptr); */
+  /* for (int i = 0; i < local_nodes; i++){ */
+    /* u[i] = xptr[i]; */
+  /* } */
+  
+  VecView(x,PETSC_VIEWER_STDOUT_WORLD);
   
   KSPGetIterationNumber(ksp, &(info.total_krylov_iterations));
   KSPGetResidualNorm(ksp, &(info.residual_norm));

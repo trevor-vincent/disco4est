@@ -519,11 +519,13 @@ int main(int argc, char *argv[])
   }
 
   printf("\n******RESULT******\n");
-  DEBUG_PRINT_2ARR_DBL(poly_vec_over_subdomains,
-                       Apoly_vec_over_subdomains,
-                       schwarz_data->restricted_nodal_size);
+  /* DEBUG_PRINT_2ARR_DBL(poly_vec_over_subdomains, */
+  /*                      Apoly_vec_over_subdomains, */
+  /*                      schwarz_data->restricted_nodal_size); */
 
   
+  DEBUG_PRINT_ARR_DBL_SUM(Apoly_vec_over_subdomains,
+                          schwarz_data->restricted_nodal_size);
 
   if (d4est_ghost_data != NULL){
     d4est_ghost_data_destroy(d4est_ghost_data);

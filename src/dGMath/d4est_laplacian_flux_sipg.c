@@ -564,7 +564,7 @@ d4est_laplacian_flux_sipg_interface_aux
   double * restrict  hm_mortar_quad = mortar_data->hm_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
   double * restrict  hp_mortar_quad = mortar_data->hp_mortar_quad;//P4EST_ALLOC(double, total_nodes_mortar_quad);
 
-  double debug_sigma_sum = 0.;
+  /* double debug_sigma_sum = 0.; */
   int stride = 0;
   double* sigma = P4EST_ALLOC(double, total_nodes_mortar_quad);
   for (int f = 0; f < faces_mortar; f++){
@@ -578,7 +578,8 @@ d4est_laplacian_flux_sipg_interface_aux
                      hp_mortar_quad[ks],
                      ip_flux_params->sipg_penalty_prefactor
                     );
-        debug_sigma_sum += sigma[ks];
+
+        /* debug_sigma_sum += sigma[ks]; */
     }
     stride += nodes_mortar_quad[f];
   }
@@ -624,6 +625,11 @@ d4est_laplacian_flux_sipg_interface_aux
       }
         
       term3_mortar_quad[ks] = sj_on_f_m_mortar_quad[ks]*sigma[ks]*(u_m_on_f_m_mortar_quad[ks] - u_p_on_f_p_mortar_quad[ks]);
+      /* printf("du, sj, sigma, term3_mortar_quad = %f %f %f %f\n", */
+             /* (u_m_on_f_m_mortar_quad[ks] - u_p_on_f_p_mortar_quad[ks]), */
+             /* sj_on_f_m_mortar_quad[ks], */
+             /* sigma[ks], */
+             /* term3_mortar_quad[ks]); */
       /* printf("term3_mortar_quad[%d] = %.15f\n", ks, term3_mortar_quad[ks]); */
     }
 
@@ -897,12 +903,21 @@ d4est_laplacian_flux_sipg_interface
         }
 
         /* printf("term 3\n"); */
+
         mortar_data->Au_m[f][i] += lifted_proj_VT_w_term3_mortar_lobatto[i + stride];
 
         /* printf("term 1\n"); */
+
         mortar_data->Au_m[f][i] += lifted_proj_VT_w_term1_mortar_lobatto[i + stride];
+
+        
         /* if(e_m[0]->tree != e_p[0]->tree) */
           /* printf("mortar_data->Au_m[%d][%d] = %.15f\n", f,i, mortar_data->Au_m[f][i]); */
+
+        /* if (mortar_data->Au_m[f][i] != mortar_data->Au_m[f][i]){ */
+          /* printf("mortar_data->Au_m[f][i] = %.15f\n", mortar_data->Au_m[f][i]); */
+          /* D4EST_ABORT(""); */
+        /* } */
       }
     }
     stride += volume_nodes_m;

@@ -181,9 +181,11 @@ typedef struct {
 } d4est_mesh_initial_extents_t;
  
 /* This file was automatically generated.  Do not edit! */
+/* This file was automatically generated.  Do not edit! */
 void d4est_mesh_apply_invM_on_field(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,double *in,double *out);
 void d4est_mesh_debug_boundary_elements(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,const char **field_names,double **fields,int local_nodes);
 double *d4est_mesh_get_field_on_element(p4est_t *p4est,d4est_element_data_t *ed,d4est_ghost_data_t *d4est_ghost_data,double *field,int local_nodes,int which_field);
+double *d4est_mesh_get_field_on_element_local(p4est_t *p4est,d4est_element_data_t *ed,double *field,int local_nodes,int which_field);
 int d4est_mesh_is_it_a_ghost_element(p4est_t *p4est,d4est_element_data_t *ed);
 d4est_mesh_interpolate_data_t d4est_mesh_interpolate_at_tree_coord(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,double abc[(P4EST_DIM)],int tree_id,double *f,int print);
 double d4est_mesh_volume_integral(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,int(*is_it_in_volume)(d4est_element_data_t *,void *),double(*compute_volume_integral)(d4est_element_data_t *,void *),void *user);

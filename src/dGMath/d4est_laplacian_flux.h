@@ -137,7 +137,8 @@ struct d4est_laplacian_flux_data{
   int using_schwarz;
   int zero_and_skip_m [(P4EST_HALF)];
   int zero_and_skip_p [(P4EST_HALF)];
-
+  int subdomain;
+  
   /* used by schwarz, but could be used by other modules too */
   /* if using provided mesh data, these should be provided */
   /* This overrides the usual locally collected mesh data that is used */

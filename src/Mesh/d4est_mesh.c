@@ -1476,8 +1476,6 @@ d4est_mesh_data_realloc
                                                       double,
                                                       local_vector_boundary_nodes_quad);
 
-
-
   
   d4est_factors->j_div_sj_min = P4EST_REALLOC(d4est_factors->j_div_sj_min,
                                               double,
@@ -3293,6 +3291,19 @@ d4est_mesh_is_it_a_ghost_element
  d4est_element_data_t* ed
 ){
   return (p4est->mpirank != ed->mpirank);
+}
+
+double*
+d4est_mesh_get_field_on_element_local
+(
+ p4est_t* p4est,
+ d4est_element_data_t* ed,
+ double* field,
+ int local_nodes,
+ int which_field
+)
+{    return &field[which_field*local_nodes + ed->nodal_stride];
+
 }
 
 double*

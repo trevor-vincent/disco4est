@@ -496,8 +496,18 @@ static void
   for (int i = 0; i < faces_m; i++){
 
     double* u_m = NULL;
-    if (laplacian_flux_params->using_schwarz && laplacian_flux_params->zero_and_skip_m[i]){
+    if (laplacian_flux_params->using_schwarz == 1 && laplacian_flux_params->zero_and_skip_m[i] == 1){
       u_m = zero_field;
+    }
+    else if (laplacian_flux_params->using_schwarz){
+      u_m = d4est_mesh_get_field_on_element_local
+            (
+             laplacian_flux_params->p4est,
+             e_m[i],
+             laplacian_flux_params->u,
+             laplacian_flux_params->local_nodes,
+             laplacian_flux_params->which_field
+            );      
     }
     else {
       u_m = d4est_mesh_get_field_on_element
@@ -520,6 +530,22 @@ static void
        e_m[i]->deg,
        &u_m_on_f_m[stride]
       );
+
+
+      /* if (laplacian_flux_params->subdomain == 0 && */
+      /*     p4est->mpirank == 2){ */
+
+      /*   for (int fn = 0; fn < face_nodes_m_lobatto[i]; fn++){ */
+      /*     printf("u_m_on_f_m[stride + fn] = %.15f\n", */
+      /*            u_m_on_f_m[stride + fn]); */
+      /*   } */
+        
+        /* double* u_m_print =        &u_m_on_f_m[stride]; */
+      /* DEBUG_PRINT_ARR_DBL(u_m_print, face_nodes_m_lobatto[i]); */
+      /* printf("face_nodes_m_lobatto[i] = %d\n", */
+             /* face_nodes_m_lobatto[i]); */
+      /* } */
+
     
     stride += face_nodes_m_lobatto[i];
   }
@@ -531,6 +557,16 @@ static void
 
     if (laplacian_flux_params->using_schwarz && laplacian_flux_params->zero_and_skip_p[i]){
       u_p = zero_field;
+    }
+    else if (laplacian_flux_params->using_schwarz){
+      u_p = d4est_mesh_get_field_on_element_local
+            (
+             laplacian_flux_params->p4est,
+             e_p_oriented[i],
+             laplacian_flux_params->u,
+             laplacian_flux_params->local_nodes,
+             laplacian_flux_params->which_field
+            );      
     }
     else {
       u_p = d4est_mesh_get_field_on_element
@@ -653,15 +689,26 @@ static void
          e_m[f]->deg,
          &dudr_m_on_f_m[d][stride]
         );
+
+      /* if (laplacian_flux_params->subdomain == 0 && */
+      /*     p4est->mpirank == 2){ */
+      /* double* dudr_m_print = (laplacian_flux_params->zero_and_skip_m[f]) ? zero_field : &dudr_m[d][e_m[f]->nodal_stride]; */
+      /* DEBUG_PRINT_ARR_DBL(dudr_m_print, face_nodes_m_lobatto[f]); */
+      /* } */
+      
       stride += face_nodes_m_lobatto[f];
     }
     
     stride = 0;
     for (int f = 0; f < faces_p; f++){
 
-      int is_it_ghost = d4est_mesh_is_it_a_ghost_element(laplacian_flux_params->p4est,e_p[f]);
+      int is_it_ghost = d4est_mesh_is_it_a_ghost_element
+                        (
+                         laplacian_flux_params->p4est,
+                         e_p[f]
+                        );
+      
       double* dudr_p [(P4EST_DIM)];
-
       if (is_it_ghost){
         D4EST_COPY_DIM_VEC(laplacian_flux_params->dudr_ghost, dudr_p);
       }
@@ -678,6 +725,15 @@ static void
          e_p[f]->deg,
          &dudr_p_on_f_p_porder[d][stride]
         );
+
+
+      /* if (laplacian_flux_params->subdomain == 0 && */
+      /*     p4est->mpirank == 2){ */
+      /* double* dudr_p_print = (laplacian_flux_params->zero_and_skip_p[f]) ? zero_field : &dudr_p[d][e_p[f]->nodal_stride]; */
+      /* DEBUG_PRINT_ARR_DBL(dudr_p_print, d4est_lgl_get_nodes((P4EST_DIM)-1, e_p[f]->deg)); */
+      /* } */
+      
+      
       stride += d4est_lgl_get_nodes((P4EST_DIM)-1, e_p[f]->deg);
     }
 
