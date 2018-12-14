@@ -110,10 +110,10 @@ d4est_solver_krylov_petsc_set_options_database_from_params
   else
     PetscOptionsClearValue(NULL,"-ksp_converged_reason");
 
-  if(input->ksp_initial_guess_nonzero)
-    PetscOptionsSetValue(NULL,"-ksp_initial_guess_nonzero","");
-  else
-    PetscOptionsClearValue(NULL,"-ksp_initial_guess_nonzero");
+  /* if(input->ksp_initial_guess_nonzero) */
+    /* PetscOptionsSetValue(NULL,"-ksp_initial_guess_nonzero",""); */
+  /* else */
+    /* PetscOptionsClearValue(NULL,"-ksp_initial_guess_nonzero"); */
 
   if(input->ksp_monitor_singular_value == 1)
     PetscOptionsSetValue(NULL,"-ksp_monitor_singular_value","");
@@ -399,12 +399,43 @@ d4est_solver_krylov_petsc_solve
     );
   MatShellSetOperation(A,MATOP_MULT,(void(*)())d4est_solver_krylov_petsc_apply_aij);
 
-  /* Set Amat and Pmat, where Pmat is the matrix the Preconditioner needs */
   KSPSetOperators(ksp,A,A);
-  VecPlaceArray(b, rhs);
+  
+  double* r = NULL;
+  double* u0 = NULL;
+  if(d4est_solver_krylov_petsc_params->ksp_initial_guess_nonzero == 1){
+    r = P4EST_ALLOC(double, local_nodes);
+    u0 = P4EST_ALLOC(double, local_nodes);
+
+    double* tmp = vecs->Au;
+    vecs->Au = r;
+    d4est_elliptic_eqns_build_residual
+      (
+       p4est,
+       *ghost,
+       *ghost_data,
+       fcns,
+       vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors
+      );
+    vecs->Au = tmp;
+    VecPlaceArray(b, r);
+    for (int i = 0; i < local_nodes; i++)
+      u0[i] = u[i];
+  }
+  else {
+    VecPlaceArray(b, rhs);
+  }
   VecPlaceArray(x, u);
+  
+  /* Set Amat and Pmat, where Pmat is the matrix the Preconditioner needs */
 
 
+
+  
   /* KSPSetInitialGuessNonzero(ksp,PETSC_TRUE); */
   
   /* double* xptr; */
@@ -427,7 +458,9 @@ d4est_solver_krylov_petsc_solve
     /* u[i] = xptr[i]; */
   /* } */
   
-  VecView(x,PETSC_VIEWER_STDOUT_WORLD);
+  /* VecView(x,PETSC_VIEWER_STDOUT_WORLD); */
+
+
   
   KSPGetIterationNumber(ksp, &(info.total_krylov_iterations));
   KSPGetResidualNorm(ksp, &(info.residual_norm));
@@ -438,6 +471,15 @@ d4est_solver_krylov_petsc_solve
   VecDestroy(&x);
   VecDestroy(&b);
   KSPDestroy(&ksp);
+
+  if(d4est_solver_krylov_petsc_params->ksp_initial_guess_nonzero == 1){
+    for (int i = 0; i < local_nodes; i++){
+      u[i] += u0[i];
+    }
+    P4EST_FREE(r);
+    P4EST_FREE(u0);
+  }
+
   
   if (p4est->mpirank == 0) {
     double duration_seconds = ((double)(clock() - start)) / CLOCKS_PER_SEC;
