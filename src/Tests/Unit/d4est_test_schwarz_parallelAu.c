@@ -153,7 +153,8 @@ int main(int argc, char *argv[])
     = d4est_solver_schwarz_metadata_init(
                                 p4est,
                                 d4est_ghost,
-                                input_file
+                                input_file,
+                                "d4est_solver_schwarz"
     );
 
   d4est_solver_schwarz_operators_t* schwarz_ops
@@ -221,10 +222,11 @@ int main(int argc, char *argv[])
      d4est_ops,
      d4est_geom,
      d4est_quad,
-     d4est_factors,
      d4est_ghost,
-     initial_grid_input->face_h_type,
-     schwarz_data
+     d4est_factors,
+     schwarz_data,
+     input_file,
+     "d4est_solver_schwarz"
     );
 
   
@@ -273,7 +275,8 @@ int main(int argc, char *argv[])
             sc_MPI_COMM_WORLD
   );
 
-  printf("total sum = %.15f\n", global_sum);
+  if (p4est->mpirank == 0)
+    printf("total sum = %.15f\n", global_sum);
 
   
   

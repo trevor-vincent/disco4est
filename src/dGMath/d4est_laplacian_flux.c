@@ -683,7 +683,7 @@ static void
       d4est_operators_apply_slicer
         (
          d4est_ops,
-         (laplacian_flux_params->zero_and_skip_m[f]) ? zero_field : &dudr_m[d][e_m[f]->nodal_stride],//&e_m[f]->dudr_elem[d][0],
+         (laplacian_flux_params->using_schwarz && laplacian_flux_params->zero_and_skip_m[f]) ? zero_field : &dudr_m[d][e_m[f]->nodal_stride],//&e_m[f]->dudr_elem[d][0],
          (P4EST_DIM),
          f_m,
          e_m[f]->deg,

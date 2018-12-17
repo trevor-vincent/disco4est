@@ -1,6 +1,6 @@
 
-#ifndef D4EST_SOLVER_SCHWARZ_H
-#define D4EST_SOLVER_SCHWARZ_H 
+#ifndef D4EST_SOLVER_SCHWARZ_METADATA_H
+#define D4EST_SOLVER_SCHWARZ_METADATA_H 
 
 #include <pXest.h>
 #include <d4est_ghost_data_ext.h>
@@ -63,11 +63,11 @@ typedef struct {
 typedef struct {
 
   /* EXTERNALLY SET */
-  int subdomain_iter;
-  int schwarz_iter;
-  double subdomain_rtol;
-  double subdomain_atol;
-  int print_info;
+  /* int subdomain_iter; */
+  /* int schwarz_iter; */
+  /* double subdomain_rtol; */
+  /* double subdomain_atol; */
+  /* int print_info; */
   int num_nodes_overlap;   /* Quantifies how many 1-D nodes are in the overlap of the the schwarz subdomain 
                             * this is a number between 1 and (minimum mesh degree + 1) */
 
@@ -83,13 +83,14 @@ typedef struct {
   d4est_ghost_data_ext_t* element_ghostdata;
   
   d4est_ghost_t* d4est_ghost;
+  const char* input_section;
   
 } d4est_solver_schwarz_metadata_t;
 
 /* This file was automatically generated.  Do not edit! */
-void d4est_solver_schwarz_metadata_print(p4est_t *p4est,d4est_solver_schwarz_metadata_t *schwarz_data,d4est_ghost_t *d4est_ghost);
-void d4est_solver_schwarz_metadata_destroy(d4est_solver_schwarz_metadata_t *schwarz_data);
-d4est_solver_schwarz_metadata_t *d4est_solver_schwarz_metadata_init(p4est_t *p4est,d4est_ghost_t *d4est_ghost,const char *input_file);
-void d4est_solver_schwarz_metadata_input(p4est_t *p4est,const char *input_file,d4est_solver_schwarz_metadata_t *schwarz_data);
+void d4est_solver_schwarz_metadata_print(p4est_t *p4est,d4est_solver_schwarz_metadata_t *schwarz_metadata,d4est_ghost_t *d4est_ghost);
+void d4est_solver_schwarz_metadata_destroy(d4est_solver_schwarz_metadata_t *schwarz_metadata);
+d4est_solver_schwarz_metadata_t *d4est_solver_schwarz_metadata_init(p4est_t *p4est,d4est_ghost_t *d4est_ghost,const char *input_file,const char *input_section);
+void d4est_solver_schwarz_metadata_input(p4est_t *p4est,const char *input_file,const char *input_section,d4est_solver_schwarz_metadata_t *schwarz_metadata);
 
 #endif

@@ -310,7 +310,8 @@ int main(int argc, char *argv[])
     = d4est_solver_schwarz_metadata_init(
                                 p4est,
                                 d4est_ghost,
-                                (argc == 2) ? argv[1] : default_input_file
+                                (argc == 2) ? argv[1] : default_input_file,
+                                "d4est_solver_schwarz"
     );
 
 

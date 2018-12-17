@@ -968,7 +968,10 @@ d4est_solver_schwarz_compute_and_add_correction_version2
  d4est_laplacian_flux_data_t* flux_fcn_data,
  d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data,
  double* u,
- double* r
+ double* r,
+ int subdomain_iter,
+ double subdomain_atol,
+ double subdomain_rtol
 )
 {
 
@@ -1008,9 +1011,9 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core_version2
        laplacian_mortar_data,
        &du[sub_data.restricted_nodal_stride],
        &restricted_r[sub_data.restricted_nodal_stride],
-       schwarz_data->subdomain_iter,
-       schwarz_data->subdomain_atol,
-       schwarz_data->subdomain_rtol,
+       subdomain_iter,
+       subdomain_atol,
+       subdomain_rtol,
        i
       );
   }

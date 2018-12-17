@@ -66,6 +66,9 @@ d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
  double* du_over_subdomains
 )
 {
+  /* DEBUG_PRINT_ARR_DBL(du_over_subdomains, */
+                      /* schwarz_metadata->nodal_size); */
+  
   if (p4est->mpisize > 1){
     if (*d4est_ghost_data_ext == NULL){
       *d4est_ghost_data_ext =
@@ -108,6 +111,8 @@ d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
         int sub_nodal_stride = sub_data->nodal_stride + schwarz_ed->nodal_stride;
         for (int k = 0; k < volume_nodes; k++){
           u[local_nodal_stride + k] += du_over_subdomains[sub_nodal_stride + k];
+          /* printf("du_over_subdomains[sub_nodal_stride + k] = %.15f\n", */
+                 /* du_over_subdomains[sub_nodal_stride + k]); */
         }
       }
     }

@@ -9,6 +9,8 @@
 #include <d4est_solver_schwarz_geometric_data.h>
 #include <d4est_solver_schwarz_metadata.h>
 #include <d4est_solver_schwarz_helpers.h>
+#include <ini.h>
+
 #include <sc_reduce.h>
 static int field_size_of_ghost_fcn
 (
@@ -42,6 +44,76 @@ static int field_stride_of_mirror_fcn
 {
   return sizeof(d4est_mortar_side_data_t)*(P4EST_FACES)*mirr;
 }
+
+
+static
+int d4est_solver_schwarz_geometric_data_input_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_solver_schwarz_geometric_data_t* pconfig = (d4est_solver_schwarz_geometric_data_t*)user;
+  const char* input_section = pconfig->input_section;
+  if (d4est_util_match_couple(section,"mesh_parameters",name,"face_h_type")) {
+    D4EST_ASSERT(pconfig->face_h_type == FACE_H_EQ_NOT_SET);
+    if(d4est_util_match(value, "FACE_H_EQ_J_DIV_SJ_QUAD")){
+      pconfig->face_h_type = FACE_H_EQ_J_DIV_SJ_QUAD;
+    }
+    else if(d4est_util_match(value, "FACE_H_EQ_J_DIV_SJ_MIN_LOBATTO")){
+      pconfig->face_h_type = FACE_H_EQ_J_DIV_SJ_MIN_LOBATTO;
+    }
+    else if(d4est_util_match(value, "FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO")){
+      pconfig->face_h_type = FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO;
+    }
+    else if(d4est_util_match(value, "FACE_H_EQ_VOLUME_DIV_AREA")){
+      pconfig->face_h_type = FACE_H_EQ_VOLUME_DIV_AREA;
+    }
+    else if(d4est_util_match(value, "FACE_H_EQ_FACE_DIAM")){
+      pconfig->face_h_type = FACE_H_EQ_FACE_DIAM;
+    }
+    else if(d4est_util_match(value, "FACE_H_EQ_TREE_H")){
+      pconfig->face_h_type = FACE_H_EQ_TREE_H;
+    }
+    else {
+      printf("face_h_type = %s\n", value);
+      D4EST_ABORT("face_h_type is not set to a supported value\n");
+    }
+  }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+
+
+void
+d4est_solver_schwarz_geometric_data_input
+(
+ p4est_t* p4est,
+ const char* input_file,
+ const char* input_section,
+ d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data
+)
+{  
+  schwarz_geometric_data->input_section = input_section;
+  schwarz_geometric_data->face_h_type = FACE_H_EQ_NOT_SET;
+
+  if(
+     ini_parse(input_file,
+               d4est_solver_schwarz_geometric_data_input_handler,
+               schwarz_geometric_data) < 0
+  ){
+    D4EST_ABORT("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT("mesh_parameters", schwarz_geometric_data->face_h_type, FACE_H_EQ_NOT_SET);
+  
+}
+
 
 
 
@@ -296,6 +368,8 @@ d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
  d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data
 )
 {
+  /* printf("schwarz_metadata->num_elements = %d\n", */
+         /* schwarz_metadata->num_elements); */
   int* sides_done = P4EST_ALLOC_ZERO(int, schwarz_metadata->num_elements*(P4EST_FACES));
 
   int stride = 0;
@@ -309,6 +383,10 @@ d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
       for (int f = 0; f < (P4EST_FACES); f++){
         int mortar_face_stride = (stride + num_of_mortars)*(P4EST_HALF);
         /* already computed for this subdomain */
+        /* printf("j = %d\n", j); */
+        /* printf("sub_data->element_stride = %d\n", sub_data->element_stride); */
+        /* printf("(sub_data->element_stride + j)*(P4EST_FACES) + f = %d\n", */
+               /* (sub_data->element_stride + j)*(P4EST_FACES) + f); */
         if (sides_done[(sub_data->element_stride + j)*(P4EST_FACES) + f] == 1){
           continue;
         }
@@ -392,15 +470,24 @@ d4est_solver_schwarz_geometric_data_init
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
- d4est_mesh_data_t* d4est_factors,
  d4est_ghost_t* d4est_ghost,
- d4est_mesh_face_h_t face_h_type,
- d4est_solver_schwarz_metadata_t* schwarz_metadata
+ d4est_mesh_data_t* d4est_factors,
+ d4est_solver_schwarz_metadata_t* schwarz_metadata,
+ const char* input_file,
+ const char* input_section
 )
 {
   d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data =
     P4EST_ALLOC(d4est_solver_schwarz_geometric_data_t, 1);
 
+d4est_solver_schwarz_geometric_data_input
+(
+ p4est,
+ input_file,
+ input_section,
+ schwarz_geometric_data
+);
+  
   /* printf(" d4est_factors->local_sizes.local_mortar_sides = %d\n",  d4est_factors->local_sizes.local_mortar_sides); */
   schwarz_geometric_data->mortar_side_data = P4EST_ALLOC(d4est_mortar_side_data_t, d4est_factors->local_sizes.local_mortar_sides);
   schwarz_geometric_data->mortar_which_touches_face = P4EST_ALLOC(int, p4est->local_num_quadrants*(P4EST_FACES));
@@ -662,7 +749,7 @@ d4est_solver_schwarz_geometric_data_init
            d4est_ops,
            d4est_geom,
            d4est_quad,
-           face_h_type,
+           schwarz_geometric_data->face_h_type,
            j_div_sj_m_mortar_quad,
            hm_mortar_quad,
            1,
@@ -830,7 +917,7 @@ d4est_solver_schwarz_geometric_data_init
            d4est_ops,
            d4est_geom,
            d4est_quad,
-           face_h_type,
+           schwarz_geometric_data->face_h_type,
            j_div_sj_m_mortar_quad,
            hm_mortar_quad,
            faces_mortar,
@@ -847,7 +934,7 @@ d4est_solver_schwarz_geometric_data_init
            d4est_ops,
            d4est_geom,
            d4est_quad,
-           face_h_type,
+           schwarz_geometric_data->face_h_type,
            j_div_sj_p_mortar_quad,
            hp_mortar_quad,
            faces_mortar,
@@ -1094,7 +1181,7 @@ d4est_solver_schwarz_geometric_data_check_hp
     int num_mortars = schwarz_geometric_data->num_of_mortars_per_subdomain[i];
     int mortar_stride = schwarz_geometric_data->mortar_strides_per_subdomain[i];
     /* total_num_of_mortars += num_mortars; */
-    printf("**************Subdomain %d**************\n", i);
+    /* printf("**************Subdomain %d**************\n", i); */
     for (int m = 0; m < num_mortars; m++){
 
       d4est_mortar_side_data_t* mortar_side_data =
@@ -1105,14 +1192,14 @@ d4est_solver_schwarz_geometric_data_check_hp
       int mortar_quad_stride = mortar_side_data->mortar_quad_stride;
       int boundary_vector_stride = (P4EST_DIM)*mortar_side_data->boundary_quad_stride;
       int boundary_quad_stride = mortar_side_data->boundary_quad_stride;
-      printf("**************Mortar %d**************\n", m);
-      printf("total mortar nodes quad = %d\n",
-             mortar_side_data->total_mortar_nodes_quad);
-      printf("mpirank = %d\n", p4est->mpirank);
-      printf("subdomain = %d\n", i);
-      printf("is ghost = %d\n", mortar_side_data->is_ghost);
-      printf("faces_m = %d\n", mortar_side_data->faces_m);
-      printf("faces_p = %d\n", mortar_side_data->faces_p);
+      /* printf("**************Mortar %d**************\n", m); */
+      /* printf("total mortar nodes quad = %d\n", */
+             /* mortar_side_data->total_mortar_nodes_quad); */
+      /* printf("mpirank = %d\n", p4est->mpirank); */
+      /* printf("subdomain = %d\n", i); */
+      /* printf("is ghost = %d\n", mortar_side_data->is_ghost); */
+      /* printf("faces_m = %d\n", mortar_side_data->faces_m); */
+      /* printf("faces_p = %d\n", mortar_side_data->faces_p); */
 
       double* hp = NULL;
       if (mortar_side_data->faces_p != 0){
@@ -1122,13 +1209,13 @@ d4est_solver_schwarz_geometric_data_check_hp
         else {
           hp = &d4est_factors->hm_mortar_quad[mortar_quad_stride];
         }
-        for (
-             int n = 0;
-             n < mortar_side_data->total_mortar_nodes_quad;
-             n++
-        ){
-          printf("hp[%d] = %.15f\n", n, hp[n]);
-        }
+        /* for ( */
+             /* int n = 0; */
+             /* n < mortar_side_data->total_mortar_nodes_quad; */
+             /* n++ */
+        /* ){ */
+          /* printf("hp[%d] = %.15f\n", n, hp[n]); */
+        /* } */
       }
     }
   }
@@ -1190,6 +1277,7 @@ d4est_solver_schwarz_geometric_data_sum_test
         sj = &schwarz_geometric_data->sj_m_mortar_quad[mortar_quad_stride];
         hm = &schwarz_geometric_data->hm_mortar_quad[mortar_quad_stride];
         hp = &schwarz_geometric_data->hp_mortar_quad[mortar_quad_stride];
+
       }
       else {
         d4est_mesh_local_strides_t* strides_check =
@@ -1202,6 +1290,11 @@ d4est_solver_schwarz_geometric_data_sum_test
         hp = &d4est_factors->hp_mortar_quad[mortar_quad_stride];
       }
 
+      if (mortar_side_data->tree_m != mortar_side_data->tree_p && mortar_side_data->tree_p != -1){
+        DEBUG_PRINT_3ARR_DBL(sj,hm,hp, mortar_side_data->total_mortar_nodes_quad);
+      }
+
+      
       if (mortar_side_data->faces_p == 0){
         num_of_bndry_mortars++;
         if(mortar_side_data->is_ghost){

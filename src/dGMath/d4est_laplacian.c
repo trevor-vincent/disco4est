@@ -375,6 +375,9 @@ d4est_laplacian_apply_aij
   flux_fcn_data->local_nodes = d4est_elliptic_data->local_nodes;
   flux_fcn_data->u = d4est_elliptic_data->u;
   flux_fcn_data->Au = d4est_elliptic_data->Au;
+  flux_fcn_data->using_schwarz = 0;
+  flux_fcn_data->using_provided_mesh_data = 0;
+  
   for (int i = 0; i < (P4EST_DIM); i++){
     flux_fcn_data->dudr_local[i] = dudr_local[i];
     flux_fcn_data->dudr_ghost[i] = dudr_ghost[i];

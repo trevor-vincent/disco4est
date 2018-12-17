@@ -125,30 +125,11 @@ int d4est_solver_schwarz_metadata_input_handler
 )
 {
   d4est_solver_schwarz_metadata_t* pconfig = (d4est_solver_schwarz_metadata_t*)user;
-  if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"num_nodes_overlap")) {
+  const char* input_section = pconfig->input_section;
+  if (d4est_util_match_couple(section,input_section,name,"num_nodes_overlap")) {
     D4EST_ASSERT(pconfig->num_nodes_overlap == -1);
     pconfig->num_nodes_overlap = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"subdomain_atol")) {
-    D4EST_ASSERT(pconfig->subdomain_atol == -1);
-    pconfig->subdomain_atol = atof(value);
-  }
-  else if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"subdomain_rtol")) {
-    D4EST_ASSERT(pconfig->subdomain_rtol == -1);
-    pconfig->subdomain_rtol = atof(value);
-  }
-  else if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"subdomain_iter")) {
-    D4EST_ASSERT(pconfig->subdomain_iter == -1);
-    pconfig->subdomain_iter = atoi(value);
-  }
-  else if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"schwarz_iter")) {
-    D4EST_ASSERT(pconfig->schwarz_iter == -1);
-    pconfig->schwarz_iter = atoi(value);
-  }
-  else if (d4est_util_match_couple(section,"d4est_solver_schwarz",name,"print_info")) {
-    D4EST_ASSERT(pconfig->print_info == -1);
-    pconfig->print_info = atoi(value);
-  } 
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -160,36 +141,28 @@ d4est_solver_schwarz_metadata_input
 (
  p4est_t* p4est,
  const char* input_file,
- d4est_solver_schwarz_metadata_t* schwarz_data
+ const char* input_section,
+ d4est_solver_schwarz_metadata_t* schwarz_metadata
 )
 {
   zlog_category_t* c_default = zlog_get_category("d4est_solver_schwarz_metadata");
-  schwarz_data->num_nodes_overlap = -1;
-  schwarz_data->subdomain_iter = -1;
-  schwarz_data->subdomain_rtol = -1;
-  schwarz_data->subdomain_atol = -1;
-  schwarz_data->schwarz_iter = -1;
-  schwarz_data->print_info = -1;
+  schwarz_metadata->num_nodes_overlap = -1;
+  schwarz_metadata->input_section = input_section;
   
   if (
       ini_parse(input_file,
                 d4est_solver_schwarz_metadata_input_handler,
-                schwarz_data) < 0
+                schwarz_metadata) < 0
   ) {
     D4EST_ABORT("Can't load input file");
   }
-  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->num_nodes_overlap, -1);
-  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->schwarz_iter, -1);
-  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->subdomain_iter, -1);
-  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->subdomain_rtol, -1);
-  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->subdomain_atol, -1);
-  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_data->print_info, -1);
+  D4EST_CHECK_INPUT("d4est_solver_schwarz", schwarz_metadata->num_nodes_overlap, -1);
   
-  if (schwarz_data->num_nodes_overlap <= 0){
+  if (schwarz_metadata->num_nodes_overlap <= 0){
     D4EST_ABORT("num_nodes_overlap <= 0");
   }
   
-  zlog_info(c_default, "num_nodes_overlap = %d\n", schwarz_data->num_nodes_overlap);
+  zlog_info(c_default, "num_nodes_overlap = %d\n", schwarz_metadata->num_nodes_overlap);
 }
 
 static void
@@ -201,8 +174,8 @@ d4est_solver_schwarz_metadata_corner_callback
 {
   int core_side = -1;
   p4est_t* p4est = info->p4est;
-  d4est_solver_schwarz_metadata_t* schwarz_data = user_data;
-  d4est_element_data_t* ghost_data = schwarz_data->d4est_ghost->ghost_elements;
+  d4est_solver_schwarz_metadata_t* schwarz_metadata = user_data;
+  d4est_element_data_t* ghost_data = schwarz_metadata->d4est_ghost->ghost_elements;
 
   
   for (int core = 0; core < info->sides.elem_count; core++){
@@ -215,7 +188,7 @@ d4est_solver_schwarz_metadata_corner_callback
 
       d4est_element_data_t* ed_core = core_info->quad->p.user_data;
     
-      d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[ed_core->id];
+      d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_metadata->subdomain_metadata[ed_core->id];
 
       /* add core element to subdomain */
       if(sub_data->num_elements == 0){
@@ -411,15 +384,15 @@ d4est_solver_schwarz_metadata_init_subdomain_metadata
 (
  p4est_t* p4est,
  d4est_ghost_t* d4est_ghost,
- d4est_solver_schwarz_metadata_t* schwarz_data
+ d4est_solver_schwarz_metadata_t* schwarz_metadata
 )
 {
-  schwarz_data->d4est_ghost = d4est_ghost;
+  schwarz_metadata->d4est_ghost = d4est_ghost;
   
 #if (P4EST_DIM)==3
   p8est_iterate (p4est,
                  (void*)d4est_ghost->ghost,
-                 schwarz_data,
+                 schwarz_metadata,
                  NULL,
                  NULL,
                  NULL,
@@ -428,7 +401,7 @@ d4est_solver_schwarz_metadata_init_subdomain_metadata
 #else
   p4est_iterate (p4est,
                  (void*)d4est_ghost->ghost,
-                 schwarz_data,
+                 schwarz_metadata,
                  NULL,
                  /* NULL, */
                  NULL,
@@ -471,11 +444,11 @@ d4est_solver_schwarz_metadata_sort_callback(const void *p,
 static void
 d4est_solver_schwarz_metadata_sort_elements
 (
- d4est_solver_schwarz_metadata_t* schwarz_data
+ d4est_solver_schwarz_metadata_t* schwarz_metadata
 )
 {  
-  for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_data->subdomain_metadata[i];
+  for (int i = 0; i < schwarz_metadata->num_subdomains; i++){
+    d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_metadata->subdomain_metadata[i];
     qsort(sub_data.element_metadata, sub_data.num_elements,
           sizeof(d4est_solver_schwarz_element_metadata_t),d4est_solver_schwarz_metadata_sort_callback);
   }
@@ -487,7 +460,7 @@ d4est_solver_schwarz_metadata_sort_elements
 static void
 d4est_solver_schwarz_metadata_compute_strides_and_sizes
 (
- d4est_solver_schwarz_metadata_t* schwarz_data,
+ d4est_solver_schwarz_metadata_t* schwarz_metadata,
  d4est_ghost_t* d4est_ghost //set to NULL if setting strides for local data, non-NULL for ghost data strides
 )
 {
@@ -495,14 +468,14 @@ d4est_solver_schwarz_metadata_compute_strides_and_sizes
   int sub_restricted_nodal_stride = 0;
   int sub_element_stride = 0;
 
-  int num_subdomains = schwarz_data->num_subdomains;
+  int num_subdomains = schwarz_metadata->num_subdomains;
   if (d4est_ghost != NULL){
-    num_subdomains = schwarz_data->subdomain_ghostdata->num_ghosts;
+    num_subdomains = schwarz_metadata->subdomain_ghostdata->num_ghosts;
   }
   
   for (int i = 0; i < num_subdomains; i++){
 
-    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[i];
+    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_metadata->subdomain_metadata[i];
     if (d4est_ghost != NULL){
       sub_data =
         (d4est_solver_schwarz_subdomain_metadata_t*)
@@ -510,7 +483,7 @@ d4est_solver_schwarz_metadata_compute_strides_and_sizes
         (
          &d4est_ghost->ghost_elements[i],
          0,
-         schwarz_data->subdomain_ghostdata
+         schwarz_metadata->subdomain_ghostdata
         );
     }
 
@@ -530,7 +503,7 @@ d4est_solver_schwarz_metadata_compute_strides_and_sizes
       int res_volume_nodes = 1;
       for (int k = 0; k < (P4EST_DIM); k++){
         if (ed->faces[k] != -1){
-          res_volume_nodes *= schwarz_data->num_nodes_overlap;
+          res_volume_nodes *= schwarz_metadata->num_nodes_overlap;
         }
         else {
           res_volume_nodes *= (ed->deg + 1);
@@ -550,12 +523,12 @@ d4est_solver_schwarz_metadata_compute_strides_and_sizes
     sub_nodal_stride += sub_data->nodal_size;
     sub_restricted_nodal_stride += sub_data->restricted_nodal_size;
     /* sub_element_stride += sub_data->num_elements; */
-    int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13;
-    sub_element_stride += max_connections;
+    /* int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13; */
+    sub_element_stride += sub_data->num_elements;
     
-    schwarz_data->restricted_nodal_size += sub_data->restricted_nodal_size;
-    schwarz_data->nodal_size += sub_data->nodal_size;
-    schwarz_data->num_elements += sub_data->num_elements;
+    schwarz_metadata->restricted_nodal_size += sub_data->restricted_nodal_size;
+    schwarz_metadata->nodal_size += sub_data->nodal_size;
+    schwarz_metadata->num_elements += sub_data->num_elements;
   }
 }
 
@@ -564,45 +537,47 @@ d4est_solver_schwarz_metadata_init
 (
  p4est_t* p4est,
  d4est_ghost_t* d4est_ghost,
- const char* input_file
+ const char* input_file,
+ const char* input_section
  /* int num_nodes_overlap */
 )
 {
   /* TODO: Get rid of max_connections and actually just use proper number of elements */
   int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13;
 
-  d4est_solver_schwarz_metadata_t* schwarz_data = P4EST_ALLOC(d4est_solver_schwarz_metadata_t, 1);
-  schwarz_data->restricted_nodal_size = 0;
-  schwarz_data->nodal_size = 0;
-  schwarz_data->num_elements = 0;
-  schwarz_data->num_subdomains = p4est->local_num_quadrants;
-  schwarz_data->subdomain_metadata = P4EST_ALLOC(d4est_solver_schwarz_subdomain_metadata_t, schwarz_data->num_subdomains);
-  schwarz_data->element_metadata = P4EST_ALLOC(d4est_solver_schwarz_element_metadata_t, schwarz_data->num_subdomains*max_connections);
+  d4est_solver_schwarz_metadata_t* schwarz_metadata = P4EST_ALLOC(d4est_solver_schwarz_metadata_t, 1);
+  schwarz_metadata->restricted_nodal_size = 0;
+  schwarz_metadata->nodal_size = 0;
+  schwarz_metadata->num_elements = 0;
+  schwarz_metadata->num_subdomains = p4est->local_num_quadrants;
+  schwarz_metadata->subdomain_metadata = P4EST_ALLOC(d4est_solver_schwarz_subdomain_metadata_t, schwarz_metadata->num_subdomains);
+  schwarz_metadata->element_metadata = P4EST_ALLOC(d4est_solver_schwarz_element_metadata_t, schwarz_metadata->num_subdomains*max_connections);
 
   d4est_solver_schwarz_metadata_input
     (
      p4est,
      input_file,
-     schwarz_data
+     input_section,
+     schwarz_metadata
     );
   
-  /* schwarz_data->num_nodes_overlap = num_nodes_overlap; */
+  /* schwarz_metadata->num_nodes_overlap = num_nodes_overlap; */
 
   
   /* fill subdomains */
   int stride = 0;
-  for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    schwarz_data->subdomain_metadata[i].num_elements = 0;
-    schwarz_data->subdomain_metadata[i].element_metadata = &schwarz_data->element_metadata[stride];
+  for (int i = 0; i < schwarz_metadata->num_subdomains; i++){
+    schwarz_metadata->subdomain_metadata[i].num_elements = 0;
+    schwarz_metadata->subdomain_metadata[i].element_metadata = &schwarz_metadata->element_metadata[stride];
     stride += max_connections;
   }
 
-  d4est_solver_schwarz_metadata_init_subdomain_metadata(p4est, d4est_ghost, schwarz_data);
-  d4est_solver_schwarz_metadata_sort_elements(schwarz_data);
-  d4est_solver_schwarz_metadata_compute_strides_and_sizes(schwarz_data,NULL);
+  d4est_solver_schwarz_metadata_init_subdomain_metadata(p4est, d4est_ghost, schwarz_metadata);
+  d4est_solver_schwarz_metadata_sort_elements(schwarz_metadata);
+  d4est_solver_schwarz_metadata_compute_strides_and_sizes(schwarz_metadata,NULL);
 
   
-  schwarz_data->subdomain_ghostdata =
+  schwarz_metadata->subdomain_ghostdata =
     d4est_ghost_data_ext_init
     (
      p4est,
@@ -618,11 +593,11 @@ d4est_solver_schwarz_metadata_init
     (
      p4est,
      d4est_ghost,
-     schwarz_data->subdomain_ghostdata,
-     (char**)&schwarz_data->subdomain_metadata
+     schwarz_metadata->subdomain_ghostdata,
+     (char**)&schwarz_metadata->subdomain_metadata
     );
 
-  schwarz_data->element_ghostdata =
+  schwarz_metadata->element_ghostdata =
     d4est_ghost_data_ext_init
     (
      p4est,
@@ -638,29 +613,29 @@ d4est_solver_schwarz_metadata_init
     (
      p4est,
      d4est_ghost,
-     schwarz_data->element_ghostdata,
-     (char**)&schwarz_data->element_metadata
+     schwarz_metadata->element_ghostdata,
+     (char**)&schwarz_metadata->element_metadata
     );
 
   if(d4est_ghost != NULL && p4est->mpisize > 1){
     int stride = 0;
     /* printf("Ghost subdomains on proc %d\n", p4est->mpirank); */
     /* printf("***************************\n", p4est->mpirank); */
-    for (int gid = 0; gid < schwarz_data->subdomain_ghostdata->num_ghosts; gid++){
+    for (int gid = 0; gid < schwarz_metadata->subdomain_ghostdata->num_ghosts; gid++){
       d4est_solver_schwarz_subdomain_metadata_t* sub_data =
         (d4est_solver_schwarz_subdomain_metadata_t*)
         d4est_ghost_data_ext_get_field_on_element
         (
          &d4est_ghost->ghost_elements[gid],
          0,
-         schwarz_data->subdomain_ghostdata
+         schwarz_metadata->subdomain_ghostdata
         );
 
        sub_data->element_metadata = d4est_ghost_data_ext_get_field_on_element
         (
          &d4est_ghost->ghost_elements[gid],
          0,
-         schwarz_data->element_ghostdata
+         schwarz_metadata->element_ghostdata
         );
 
        sub_data->element_stride = stride;
@@ -669,10 +644,10 @@ d4est_solver_schwarz_metadata_init
     printf("***************************\n", p4est->mpirank);
   }
 
-  d4est_solver_schwarz_metadata_compute_strides_and_sizes(schwarz_data,d4est_ghost);
+  d4est_solver_schwarz_metadata_compute_strides_and_sizes(schwarz_metadata,d4est_ghost);
   
   
-  return schwarz_data;
+  return schwarz_metadata;
 }
 
 /* void */
@@ -680,8 +655,8 @@ d4est_solver_schwarz_metadata_init
 /* ( */
 
 /* ){ */
-/*   for (int i = 0; i < schwarz_data->num_subdomains; i++){ */
-/*     d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_data->subdomain_metadata[subdomain]; */
+/*   for (int i = 0; i < schwarz_metadata->num_subdomains; i++){ */
+/*     d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_metadata->subdomain_metadata[subdomain]; */
 /*     for (int j = 0; j < sub_data->num_elements; j++){ */
 /*       d4est_solver_schwarz_element_metadata_t schwarz_ed = sub_data.element_metadata[j]; */
 
@@ -703,25 +678,25 @@ d4est_solver_schwarz_metadata_init
 void
 d4est_solver_schwarz_metadata_destroy
 (
- d4est_solver_schwarz_metadata_t* schwarz_data
+ d4est_solver_schwarz_metadata_t* schwarz_metadata
 )
 {
-  P4EST_FREE(schwarz_data->subdomain_metadata);
-  P4EST_FREE(schwarz_data->element_metadata);
+  P4EST_FREE(schwarz_metadata->subdomain_metadata);
+  P4EST_FREE(schwarz_metadata->element_metadata);
 
   d4est_ghost_data_ext_destroy
     (
-     schwarz_data->subdomain_ghostdata
+     schwarz_metadata->subdomain_ghostdata
     );
 
 
   d4est_ghost_data_ext_destroy
     (
-     schwarz_data->element_ghostdata
+     schwarz_metadata->element_ghostdata
     );
 
   
-  P4EST_FREE(schwarz_data);
+  P4EST_FREE(schwarz_metadata);
 }
 
 static void
@@ -777,32 +752,32 @@ void
 d4est_solver_schwarz_metadata_print
 (
  p4est_t* p4est,
- d4est_solver_schwarz_metadata_t* schwarz_data,
+ d4est_solver_schwarz_metadata_t* schwarz_metadata,
  d4est_ghost_t* d4est_ghost
 )
 {
   printf("Schwarz data on proc %d\n", p4est->mpirank);
   printf("***********************\n");
-  printf("num subdomains = %d\n", schwarz_data->num_subdomains);
-  printf("num_nodes_overlap = %d\n", schwarz_data->num_nodes_overlap);
-  printf("nodal_size = %d\n", schwarz_data->nodal_size);
-  printf("restricted_nodal_size = %d\n", schwarz_data->restricted_nodal_size);
-  for (int i = 0; i < schwarz_data->num_subdomains; i++){
-    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[i];
+  printf("num subdomains = %d\n", schwarz_metadata->num_subdomains);
+  printf("num_nodes_overlap = %d\n", schwarz_metadata->num_nodes_overlap);
+  printf("nodal_size = %d\n", schwarz_metadata->nodal_size);
+  printf("restricted_nodal_size = %d\n", schwarz_metadata->restricted_nodal_size);
+  for (int i = 0; i < schwarz_metadata->num_subdomains; i++){
+    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_metadata->subdomain_metadata[i];
     d4est_solver_schwarz_metadata_print_subdomain(sub_data,i,0);
   }
   
   if(d4est_ghost != NULL){
     printf("Ghost subdomains on proc %d\n", p4est->mpirank);
     printf("***************************\n", p4est->mpirank);
-    for (int gid = 0; gid < schwarz_data->subdomain_ghostdata->num_ghosts; gid++){
+    for (int gid = 0; gid < schwarz_metadata->subdomain_ghostdata->num_ghosts; gid++){
       d4est_solver_schwarz_subdomain_metadata_t* sub_data =
         (d4est_solver_schwarz_subdomain_metadata_t*)
         d4est_ghost_data_ext_get_field_on_element
         (
          &d4est_ghost->ghost_elements[gid],
          0,
-         schwarz_data->subdomain_ghostdata
+         schwarz_metadata->subdomain_ghostdata
         );
 
       printf("sub_data->num_elements = %d\n", sub_data->num_elements);

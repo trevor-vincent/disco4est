@@ -168,7 +168,7 @@ d4est_solver_schwarz_laplacian_ext_apply_over_subdomain
   /* D4EST_ASSERT(p4est->mpisize == 1); */
   d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[subdomain];
 
-  double* Au = P4EST_ALLOC(double, sub_data->nodal_size);
+  double* Au = P4EST_ALLOC_ZERO(double, sub_data->nodal_size);
   double* transpose_restricted_u = P4EST_ALLOC(double, sub_data->nodal_size);
   double* dudr [(P4EST_DIM)]; D4EST_ALLOC_DIM_VEC(dudr, sub_data->nodal_size);
   

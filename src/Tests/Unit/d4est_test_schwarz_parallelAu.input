@@ -1,6 +1,6 @@
 [initial_mesh]
 min_quadrants = -1
-min_level = 2
+min_level = 0
 fill_uniform = 1
 region0_deg = 4
 region0_deg_quad_inc = 0
@@ -38,16 +38,28 @@ write_rank = 1
 wrap_rank = 0
 write_deg = 1
 
+; [geometry]
+; name = brick
+; X0 = 0.0
+; X1 = 1.0
+; Y0 = 0.0
+; Y1 = 1.0
+; Z0 = 0.0
+; Z1 = 1.0
+; DX_compute_method = analytic
+; JAC_compute_method = numerical
+
+
 [geometry]
-name = brick
-X0 = 0.0
-X1 = 1.0
-Y0 = 0.0
-Y1 = 1.0
-Z0 = 0.0
-Z1 = 1.0
+name = cubed_sphere
+R0 = .3333333333333
+R1 = .6666666666666
+R2 = 1
+compactify_outer_shell = 0
+compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
+
 
 [quadrature]
 name = legendre
