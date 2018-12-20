@@ -20,12 +20,12 @@ sipg_penalty_prefactor = 2
 sipg_penalty_fcn = maxp_sqr_over_minh
 
 [d4est_solver_schwarz]
-num_nodes_overlap = 2
-subdomain_iter = 1000
-schwarz_iter = 1000
-subdomain_atol = 1e-5
-subdomain_rtol = 1e-5
-print_info = 1
+num_nodes_overlap = 4
+subdomain_iter = 1000;
+subdomain_rtol = 1e-15;
+subdomain_atol = 1e-15;
+schwarz_iter = 1000;
+verbose = 0;
 
 [d4est_vtk]
 filename = d4est_test_schwarz
@@ -47,15 +47,6 @@ compactify_outer_shell = 0
 compactify_inner_shell = 0
 DX_compute_method = analytic
 JAC_compute_method = numerical
-
-
-; [geometry]
-; name = disk
-; R0 = .5
-; R1 = 1
-; DX_compute_method = numerical
-; JAC_compute_method = numerical
-
 
 [quadrature]
 name = legendre

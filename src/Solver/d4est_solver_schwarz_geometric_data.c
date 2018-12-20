@@ -1022,15 +1022,13 @@ d4est_solver_schwarz_geometric_data_input
     double* J_quad_ghost
       = &schwarz_geometric_data->J_quad_ghost[volume_ghost_quad_stride];
 
-    double* rst_xyz_quad_ghost [P4EST_DIM][P4EST_DIM];
+    double* rst_xyz_quad_ghost [(P4EST_DIM)][(P4EST_DIM)];
 
-    int matrix_ghost_quad_stride = volume_ghost_quad_stride*(P4EST_DIM)*(P4EST_DIM);
-    
     for (int i = 0; i < (P4EST_DIM); i++){
       for (int j = 0; j < (P4EST_DIM); j++){
           rst_xyz_quad_ghost[i][j] =
             &schwarz_geometric_data->rst_xyz_quad_ghost
-            [volume_ghost_quad_stride + (i + j*(P4EST_DIM))*ghost_volume_quad_size];
+            [volume_ghost_quad_stride + (i*(P4EST_DIM) + j)*ghost_volume_quad_size];
       }
     }
 
@@ -1154,10 +1152,25 @@ d4est_solver_schwarz_geometric_data_input
        volume_nodes_quad
       );
 
+    /* printf("rank %d, gid %d, stride %d, rst[1][0][0] = %.15f\n",  p4est->mpirank, gid, volume_ghost_quad_stride, rst_xyz_quad_ghost[1][0][0]); */
+
     D4EST_FREE_DIM_VEC(xyz_quad_ghost);
     D4EST_FREE_DIM_VEC(xyz_lobatto_ghost);
     D4EST_FREE_DBYD_MAT(xyz_rst_quad_ghost);
     schwarz_geometric_data->volume_quad_strides_per_ghost[gid] = volume_ghost_quad_stride;
+
+   /*  double* rst_xyz_quad_ghost_test [(P4EST_DIM)][(P4EST_DIM)]; */
+   /* for (int i = 0; i < (P4EST_DIM); i++){ */
+   /*    for (int j = 0; j < (P4EST_DIM); j++){ */
+   /*        rst_xyz_quad_ghost_test[i][j] = */
+   /*          &schwarz_geometric_data->rst_xyz_quad_ghost */
+   /*          [schwarz_geometric_data->volume_quad_strides_per_ghost[gid] + (i + j*(P4EST_DIM))*ghost_volume_quad_size]; */
+   /*    } */
+   /*  } */
+
+   
+   /* printf("rank %d, gid %d, rst[1][0][0] = %.15f, test = %.15f\n", p4est->mpirank, gid, rst_xyz_quad_ghost[1][0][0], rst_xyz_quad_ghost_test[1][0][0]); */
+    
     volume_ghost_quad_stride += volume_nodes_quad;    
   }
   
@@ -1220,6 +1233,234 @@ d4est_solver_schwarz_geometric_data_check_hp
     }
   }
 }
+
+
+void
+d4est_solver_schwarz_geometric_data_volume_sum_test
+(
+ p4est_t* p4est,
+ d4est_ghost_t* d4est_ghost,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_solver_schwarz_metadata_t* schwarz_metadata,
+ d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data
+){
+  double sum = 0;
+  for (int subdomain = 0; subdomain < schwarz_metadata->num_subdomains; subdomain++){
+  d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_metadata->subdomain_metadata[subdomain];
+ for (int el = 0; el < sub_data->num_elements; el++){
+
+   d4est_solver_schwarz_element_metadata_t* schwarz_ed = &sub_data->element_metadata[el];
+
+   d4est_element_data_t* mesh_ed = NULL;
+   double* J_quad = NULL;
+   double* rst_xyz_quad [P4EST_DIM][P4EST_DIM];
+   if (schwarz_ed->mpirank == p4est->mpirank){
+     mesh_ed = d4est_element_data_get_ptr
+               (
+                p4est,
+                schwarz_ed->tree,
+                schwarz_ed->tree_quadid
+               );
+
+     J_quad = d4est_mesh_get_jacobian_on_quadrature_points
+              (
+               d4est_factors,
+               mesh_ed
+              );
+
+     for (int i = 0; i < (P4EST_DIM); i++){
+       for (int j = 0; j < (P4EST_DIM); j++){
+         rst_xyz_quad[i][j] = &d4est_factors->rst_xyz_quad
+                              [(i*(P4EST_DIM) + j)*d4est_factors->local_sizes.local_nodes_quad
+                               + mesh_ed->quad_stride];
+       }
+     }     
+   }
+   else {
+     mesh_ed = &d4est_ghost->ghost_elements[schwarz_ed->id];
+     int ghost_quad_stride = schwarz_geometric_data->volume_quad_strides_per_ghost[schwarz_ed->id];
+     int total_ghost_size = schwarz_geometric_data->total_ghost_volume_quad_size;
+     J_quad = &schwarz_geometric_data->J_quad_ghost[ghost_quad_stride];
+     for (int i = 0; i < (P4EST_DIM); i++){
+       for (int j = 0; j < (P4EST_DIM); j++){
+         rst_xyz_quad[i][j] = &schwarz_geometric_data->rst_xyz_quad_ghost
+                              [(i*(P4EST_DIM) + j)*total_ghost_size
+                               + ghost_quad_stride];
+       }
+     }     
+     
+   }
+   int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM),
+                                               schwarz_ed->deg);
+
+
+   for (int k = 0; k < volume_nodes_quad; k++){
+     for (int i = 0; i < (P4EST_DIM); i++){
+       for (int j = 0; j < (P4EST_DIM); j++){
+         sum += rst_xyz_quad[i][j][k];
+       }
+     }
+     sum += J_quad[k];
+   }
+
+   /* d4est_laplacian_apply_stiffness_matrix_on_element */
+   /*   ( */
+   /*    d4est_ops, */
+   /*    d4est_geom, */
+   /*    d4est_quad, */
+   /*    d4est_factors, */
+   /*    mesh_ed, */
+   /*    &restrict_transpose_u_over_subdomain[stride], */
+   /*    &Au[stride] */
+   /*   ); */
+   /* stride += volume_nodes_lobatto; */
+ }
+  }
+
+   double global_sum;
+   sc_reduce(
+             &sum,
+             &global_sum,
+             4,
+             sc_MPI_DOUBLE,
+             sc_MPI_SUM,
+             0,
+             sc_MPI_COMM_WORLD
+   );
+
+  if (p4est->mpirank == 0){
+    printf("global_volume_data_sum = %.15f\n", global_sum);
+  }
+   
+}
+
+
+void
+d4est_solver_schwarz_geometric_data_volume_sum_test_2
+(
+ p4est_t* p4est,
+ d4est_ghost_t* d4est_ghost,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_solver_schwarz_metadata_t* schwarz_metadata,
+ d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data
+){
+  /* double sum = 0; */
+  for (int subdomain = 0; subdomain < schwarz_metadata->num_subdomains; subdomain++){
+  d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_metadata->subdomain_metadata[subdomain];
+ for (int el = 0; el < sub_data->num_elements; el++){
+
+   d4est_solver_schwarz_element_metadata_t* schwarz_ed = &sub_data->element_metadata[el];
+
+   d4est_element_data_t* mesh_ed = NULL;
+   double* J_quad = NULL;
+   double* rst_xyz_quad [P4EST_DIM][P4EST_DIM];
+   if (schwarz_ed->mpirank == p4est->mpirank){
+     mesh_ed = d4est_element_data_get_ptr
+               (
+                p4est,
+                schwarz_ed->tree,
+                schwarz_ed->tree_quadid
+               );
+
+     J_quad = d4est_mesh_get_jacobian_on_quadrature_points
+              (
+               d4est_factors,
+               mesh_ed
+              );
+
+     for (int i = 0; i < (P4EST_DIM); i++){
+       for (int j = 0; j < (P4EST_DIM); j++){
+         rst_xyz_quad[i][j] = &d4est_factors->rst_xyz_quad
+                              [(i*(P4EST_DIM) + j)*d4est_factors->local_sizes.local_nodes_quad
+                               + mesh_ed->quad_stride];
+       }
+     }
+
+     /* printf("core_tree, elem, schwarz_ed_id, rst[1][0][0] = %d %d %d %.15f\n", */
+            /* sub_data->core_tree, el, schwarz_ed->id, rst_xyz_quad[1][0][0]); */
+   }
+   else {
+     mesh_ed = &d4est_ghost->ghost_elements[schwarz_ed->id];
+     int ghost_quad_stride = schwarz_geometric_data->volume_quad_strides_per_ghost[schwarz_ed->id];
+     int total_ghost_size = schwarz_geometric_data->total_ghost_volume_quad_size;
+
+     
+     J_quad = &schwarz_geometric_data->J_quad_ghost[ghost_quad_stride];
+     
+     for (int i = 0; i < (P4EST_DIM); i++){
+       for (int j = 0; j < (P4EST_DIM); j++){
+         rst_xyz_quad[i][j] = &schwarz_geometric_data->rst_xyz_quad_ghost
+                              [(i*(P4EST_DIM) + j)*total_ghost_size
+                               + ghost_quad_stride];
+       }
+     }     
+     /* printf("rank %d core_tree, elem-isg, schwarz_ed_id, ghost_stride, rst[1][0][0] = %d %d %d %d %.15f\n",p4est->mpirank, */
+            /* sub_data->core_tree, el, schwarz_ed->id, (1*(P4EST_DIM) + 0)*total_ghost_size + ghost_quad_stride,rst_xyz_quad[1][0][0]); */
+   }
+   int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM),
+                                               schwarz_ed->deg);
+
+   double sum = 0;
+   for (int k = 0; k < volume_nodes_quad; k++){
+     sum += J_quad[k];
+   }
+
+   /* D4EST_ASSERT(sub_data->element_metadata[0].is_core == 1); */
+   if (schwarz_ed->is_core == 1){
+   d4est_element_data_t*  core_ed = d4est_element_data_get_ptr
+               (
+                p4est,
+                schwarz_ed->tree,
+                schwarz_ed->tree_quadid
+               );
+
+   
+/*    int ctree = core_ed->tree; */
+/*    int q0 = core_ed->q[0]; */
+/*    int q1 = core_ed->q[1]; */
+/* #if (P4EST_DIM)==3 */
+/*    int q2 = core_ed->q[2]; */
+/* #endif */
+
+/* #if (P4EST_DIM)==3 */
+/*    printf("mpirank %d, subdomain %d, core tree %d, core q %d %d %d\n", p4est->mpirank, subdomain, ctree, q0, q1, q2); */
+/* #else */
+/*    printf("mpirank %d, subdomain %d, core tree %d, core q %d %d\n", p4est->mpirank, subdomain, ctree, q0, q1); */
+/* #endif */
+   }
+   /* printf("Mpirank %d, Subdomain %d, Element %d, jac sum %.15f\n", p4est->mpirank, subdomain,  i, sum); */
+   
+   /* d4est_laplacian_apply_stiffness_matrix_on_element */
+   /*   ( */
+   /*    d4est_ops, */
+   /*    d4est_geom, */
+   /*    d4est_quad, */
+   /*    d4est_factors, */
+   /*    mesh_ed, */
+   /*    &restrict_transpose_u_over_subdomain[stride], */
+   /*    &Au[stride] */
+   /*   ); */
+   /* stride += volume_nodes_lobatto; */
+ }
+  }
+
+   /* double global_sum; */
+   /* sc_reduce( */
+             /* &eesum, */
+             /* &global_sum, */
+             /* 4, */
+             /* sc_MPI_DOUBLE, */
+             /* sc_MPI_SUM, */
+             /* 0, */
+             /* sc_MPI_COMM_WORLD */
+   /* ); */
+
+  /* if (p4est->mpirank == 0){ */
+    /* printf("global_volume_data_sum = %.15f\n", global_sum); */
+  /* } */
+   
+}
+
 
 void
 d4est_solver_schwarz_geometric_data_sum_test
@@ -1290,9 +1531,9 @@ d4est_solver_schwarz_geometric_data_sum_test
         hp = &d4est_factors->hp_mortar_quad[mortar_quad_stride];
       }
 
-      if (mortar_side_data->tree_m != mortar_side_data->tree_p && mortar_side_data->tree_p != -1){
-        DEBUG_PRINT_3ARR_DBL(sj,hm,hp, mortar_side_data->total_mortar_nodes_quad);
-      }
+      /* if (mortar_side_data->tree_m != mortar_side_data->tree_p && mortar_side_data->tree_p != -1){ */
+        /* DEBUG_PRINT_3ARR_DBL(sj,hm,hp, mortar_side_data->total_mortar_nodes_quad); */
+      /* } */
 
       
       if (mortar_side_data->faces_p == 0){
@@ -1371,3 +1612,4 @@ d4est_solver_schwarz_geometric_data_sum_test
   }
 }
 
+ 

@@ -31,7 +31,7 @@ int d4est_solver_schwarz_subdomain_solver_cg_input_handler
     D4EST_ASSERT(pconfig->subdomain_iter == -1);
     pconfig->subdomain_iter = atoi(value);
   }
-  else if (d4est_util_match_couple(section,input_section,name,"verbose")) {
+  else if (d4est_util_match_couple(section,input_section,name,"subdomain_verbose")) {
     D4EST_ASSERT(pconfig->verbose == -1);
     pconfig->verbose = atoi(value);
   }

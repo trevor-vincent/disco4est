@@ -79,8 +79,11 @@ int main(int argc, char *argv[])
 #endif
 
   char* input_file = P4EST_ALLOC(char, 100);
+#if (P4EST_DIM)==3
   sprintf(input_file, "%s", (argc == 2) ? argv[1] : "d4est_test_schwarz_parallelAu.input");
-  
+  #else
+    sprintf(input_file, "%s", (argc == 2) ? argv[1] : "d4est_test_schwarz_parallelAu_2d.input");
+#endif
   if (proc_rank == 0)
     printf("[D4EST_INFO]: options file = %s\n", input_file);
     
@@ -215,6 +218,8 @@ int main(int argc, char *argv[])
      poly_vec_over_subdomains
     );
 
+  /* DEBUG_PRINT_MPI_ARR_DBL(p4est->mpirank,poly_vec_over_subdomains, schwarz_data->restricted_nodal_size); */
+  
   d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data = 
     d4est_solver_schwarz_geometric_data_init
     (

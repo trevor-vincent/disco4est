@@ -114,7 +114,6 @@ convert_mortar_side_data_to_elements
   else {
     laplacian_mortar_data_on_face->is_boundary = 0;
   }
-  /* printf("is_boundary = %d\n",laplacian_mortar_data_on_face->is_boundary); */
 }
 
 
@@ -126,7 +125,6 @@ d4est_solver_schwarz_laplacian_mortar_data_init
  d4est_mesh_data_t* d4est_factors
 )
 {
-  /* printf("NUMBER OF ELEMENTS = %d\n", schwarz_metadata->num_elements); */
   d4est_solver_schwarz_laplacian_mortar_data_t* laplacian_mortar_data
     = P4EST_ALLOC(d4est_solver_schwarz_laplacian_mortar_data_t,
                   schwarz_metadata->num_elements*(P4EST_FACES));
@@ -172,7 +170,6 @@ d4est_solver_schwarz_laplacian_mortar_data_init
     }   
   }
 
-  /* printf("MOTHERFUCKING DONE\n"); */
   return laplacian_mortar_data;
 }
 

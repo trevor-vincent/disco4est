@@ -40,6 +40,14 @@ typedef enum
     END
   } d4est_solver_multigrid_state_t;
 
+
+typedef enum {
+              MG_SMOOTHER_CHEBY,
+              MG_SMOOTHER_SCHWARZ,
+              MG_SMOOTHER_PETSC,
+              MG_SMOOTHER_NOT_SET
+} d4est_solver_multigrid_smoother_type_t;
+
 typedef
 void
 (*d4est_solver_multigrid_update_callback_fcn_t)
@@ -119,6 +127,7 @@ typedef struct {
 
 typedef struct {
 
+  d4est_solver_multigrid_smoother_type_t type;
   d4est_solver_multigrid_update_callback_fcn_t update;
   d4est_solver_multigrid_smoother_fcn_t smooth;
   void* user;

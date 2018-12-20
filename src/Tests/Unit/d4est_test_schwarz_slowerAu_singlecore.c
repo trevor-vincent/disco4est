@@ -383,7 +383,8 @@ int main(int argc, char *argv[])
     (
      p4est,
      d4est_ghost,
-     input_file
+     input_file,
+     "d4est_solver_schwarz"
     );
 
   d4est_solver_schwarz_operators_t* schwarz_ops

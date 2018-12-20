@@ -55,15 +55,19 @@ d4est_solver_schwarz_laplacian_ext_compute_stiffness
  double * restrict  Au
 )
 {
+  /* printf("\n\n mpirank %d, subdomain id %d\n", p4est->mpirank, sub_data->subdomain_id); */
  int stride = 0;
- for (int i = 0; i < sub_data->num_elements; i++){
-
-   d4est_solver_schwarz_element_metadata_t* schwarz_ed = &sub_data->element_metadata[i];
+ for (int el = 0; el < sub_data->num_elements; el++){
+   /* printf("\n element %d\n", i); */
+   d4est_solver_schwarz_element_metadata_t* schwarz_ed = &sub_data->element_metadata[el];
 
    d4est_element_data_t* mesh_ed = NULL;
    double* J_quad = NULL;
+
+   int is_ghost = schwarz_ed->mpirank != p4est->mpirank;
    double* rst_xyz_quad [P4EST_DIM][P4EST_DIM];
-   if (schwarz_ed->mpirank == p4est->mpirank){
+
+   if (!is_ghost){
      mesh_ed = d4est_element_data_get_ptr
                (
                 p4est,
@@ -97,7 +101,7 @@ d4est_solver_schwarz_laplacian_ext_compute_stiffness
                                + ghost_quad_stride];
        }
      }     
-     
+     /* printf("element is ghost\n"); */
    }
    int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),
                                                   schwarz_ed->deg);
@@ -116,7 +120,7 @@ d4est_solver_schwarz_laplacian_ext_compute_stiffness
 
 
 
-
+  
   d4est_quadrature_apply_stiffness_matrix
     (
      d4est_ops,
@@ -133,17 +137,29 @@ d4est_solver_schwarz_laplacian_ext_compute_stiffness
      &Au[stride]
     );
 
-   /* d4est_laplacian_apply_stiffness_matrix_on_element */
-   /*   ( */
-   /*    d4est_ops, */
-   /*    d4est_geom, */
-   /*    d4est_quad, */
-   /*    d4est_factors, */
-   /*    mesh_ed, */
-   /*    &restrict_transpose_u_over_subdomain[stride], */
-   /*    &Au[stride] */
-   /*   ); */
-   stride += volume_nodes_lobatto;
+  /* double Au_sum = 0; */
+  /* double J_sum = 0; */
+  /* double rst_xyz_sum = 0; */
+
+  /* for (int k = 0; k < volume_nodes_lobatto; k++){ */
+  /*   J_sum += J_quad[k]; */
+  /*   Au_sum += Au[stride + k]; */
+  /*    for (int i = 0; i < (P4EST_DIM); i++){ */
+  /*      for (int j = 0; j < (P4EST_DIM); j++){ */
+  /*        rst_xyz_sum += rst_xyz_quad[i][j][k]; */
+  /*      } */
+  /*    } */
+  /* } */
+  
+  /* if (!is_ghost){ */
+  /* printf("core_tree, elem,  J, rstxyz, Au  %d %d %d %.15f %.15f %.15f\n", sub_data->core_tree, el, is_ghost, J_quad[1], rst_xyz_quad[1][0][0], Au[stride]); */
+  /* } */
+  /* else { */
+     /* int ghost_quad_stride = schwarz_geometric_data->volume_quad_strides_per_ghost[schwarz_ed->id]; */
+     /* printf("core_tree, elem,  gstride, J, rstxyz, Au  %d %d %d %.15f %.15f %.15f\n", sub_data->core_tree, el, ghost_quad_stride, J_quad[1], rst_xyz_quad[1][0][0], Au[stride]); */
+  /* } */
+
+  stride += volume_nodes_lobatto;
  }
 }
 
@@ -181,7 +197,7 @@ d4est_solver_schwarz_laplacian_ext_apply_over_subdomain
      subdomain
     );
 
-  /* Compute dudr */  
+  /* Compute dudr */ 
   d4est_solver_schwarz_laplacian_ext_compute_dudr
     (
      p4est,
@@ -224,10 +240,11 @@ d4est_solver_schwarz_laplacian_ext_apply_over_subdomain
 
    int subdomain_mortar_stride =
      schwarz_geometric_data->mortar_strides_per_subdomain[subdomain];
-   int subdomain_num_mortars = 
+   int subdomain_num_mortars =
      schwarz_geometric_data->num_of_mortars_per_subdomain[subdomain];
-   
-  for (int i = 0; i < subdomain_num_mortars; i++){
+
+
+   for (int i = 0; i < subdomain_num_mortars; i++){
 
     d4est_mortar_side_data_t* mortar_side_data =
       schwarz_geometric_data->subdomain_mortars[subdomain_mortar_stride + i];
@@ -254,14 +271,12 @@ d4est_solver_schwarz_laplacian_ext_apply_over_subdomain
       flux_fcn_data->drst_dxyz_p_mortar_quad_porder =
         &schwarz_geometric_data->drst_dxyz_p_mortar_quad_porder[matrix_stride];
     }
-
+    
     int skip_stride = (P4EST_HALF)*(subdomain_mortar_stride + i);
     int* zero_and_skip_m
       = &schwarz_geometric_data->zero_and_skip_m[skip_stride];
     int* zero_and_skip_p
       = &schwarz_geometric_data->zero_and_skip_p[skip_stride];
-
-
     int* nodal_stride_m
       = &schwarz_geometric_data->nodal_stride_m[skip_stride];
     int* nodal_stride_p
@@ -271,7 +286,6 @@ d4est_solver_schwarz_laplacian_ext_apply_over_subdomain
                         mortar_side_data->faces_m) ?
                        mortar_side_data->faces_p :
                        mortar_side_data->faces_m;
-    
 
       d4est_element_data_t* e_m [P4EST_HALF];
       d4est_element_data_t* e_p [P4EST_HALF];
@@ -286,9 +300,7 @@ d4est_solver_schwarz_laplacian_ext_apply_over_subdomain
         e_p[e]->mpirank = p4est->mpirank;
       }
       
-      
       int e_m_is_ghost [] = {0,0,0,0};
-      
       /* if (!do_not_compute){ */
       d4est_laplacian_flux_schwarz
         (
@@ -334,8 +346,8 @@ d4est_solver_schwarz_laplacian_ext_apply_over_subdomain
   
   /* if(p4est->mpirank == 3 && subdomain == 1){ */
   /*   printf("p4est->mpirank = %d, subdomain id = %d\n", p4est->mpirank, subdomain); */
-  /*   DEBUG_PRINT_ARR_DBL(Au_restricted_field_over_subdomain, */
-  /*                       sub_data->restricted_nodal_size); */
+    /* DEBUG_PRINT_ARR_DBL(Au_restricted_field_over_subdomain, */
+                        /* sub_data->restricted_nodal_size); */
   /*   D4EST_ABORT(""); */
   /* } */
 

@@ -96,6 +96,10 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
          ghost_data_num_of_field,
          ghost_data
         );
+
+      /* int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), */
+                                             /* ghost->ghost_elements[schwarz_ed.id].deg); */
+      /* DEBUG_PRINT_MPI_ARR_DBL(p4est->mpirank, field_ed, volume_nodes); */
     }
     d4est_solver_schwarz_operators_apply_schwarz_restrictor
       (
@@ -108,6 +112,11 @@ d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomain
        D4OPS_NO_TRANSPOSE,
        &restricted_field_over_subdomain[schwarz_ed.restricted_nodal_stride]
       );
+    /* double* tmp =&restricted_field_over_subdomain[schwarz_ed.restricted_nodal_stride]; */
+    /* DEBUG_PRINT_MPI_ARR_DBL(p4est->mpirank, */
+                            /* tmp, */
+                            /* schwarz_ed.restricted_nodal_size); */
+                            
   }
 }
 

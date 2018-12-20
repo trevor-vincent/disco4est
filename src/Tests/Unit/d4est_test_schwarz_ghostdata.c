@@ -78,7 +78,11 @@ int main(int argc, char *argv[])
 #endif
 
   char* input_file = P4EST_ALLOC(char, 100);
+#if (P4EST_DIM)==3
   sprintf(input_file, "%s", (argc == 2) ? argv[1] : "d4est_test_schwarz_ghostdata.input");
+#else
+  sprintf(input_file, "%s", (argc == 2) ? argv[1] : "d4est_test_schwarz_ghostdata_2d.input");
+#endif
   
   if (proc_rank == 0)
     printf("[D4EST_INFO]: options file = %s\n", input_file);
@@ -189,6 +193,32 @@ int main(int argc, char *argv[])
   d4est_solver_schwarz_convert_nodal_field_to_restricted_field_over_subdomains(p4est, d4est_ops, d4est_factors, d4est_ghost, d4est_ghost_data,
      schwarz_data, schwarz_ops, poly_vec, 0, restricted_poly_vec_over_subdomains);
 
+
+  /* int restricted_nodal_size_check = 0; */
+  /* for (int i = 0; i < schwarz_data->num_subdomains; i++){ */
+  /*   d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[i]; */
+  /*   for (int j = 0; j < sub_data->num_elements; j++){ */
+  /*     d4est_solver_schwarz_element_metadata_t schwarz_ed = sub_data->element_metadata[j]; */
+  /*     double* tmp =&restricted_poly_vec_over_subdomains[sub_data->restricted_nodal_stride + schwarz_ed.restricted_nodal_stride]; */
+  /*     DEBUG_PRINT_MPI_ARR_DBL(p4est->mpirank, */
+  /*                             tmp, */
+  /*                             schwarz_ed.restricted_nodal_size); */
+  /*     restricted_nodal_size_check += schwarz_ed.restricted_nodal_size; */
+                            
+  /*   } */
+  /* } */
+  /* printf("restricted_nodal_size_check %d, schwarz_data->restricted_nodal_size %d\n", restricted_nodal_size_check, */
+  /*        schwarz_data->restricted_nodal_size); */
+
+  /* if (p4est->mpirank == 0){ */
+  /* d4est_solver_schwarz_metadata_print */
+  /*   ( */
+  /*    p4est, */
+  /*    schwarz_data, */
+  /*    d4est_ghost */
+  /*   ); */
+  /* } */
+  
   d4est_solver_schwarz_apply_restrict_transpose_to_restricted_field_over_subdomains
     (
      schwarz_data,
@@ -197,49 +227,64 @@ int main(int argc, char *argv[])
      transpose_restrict_restricted_poly_vec_over_subdomains
     );
 
-  for (int i = 0; i < d4est_factors->local_sizes.local_nodes; i++){
-    poly_vec_final[i] = 1.;
-  }
-  
-  d4est_ghost_data_ext_t* ghost_data_for_schwarz = NULL;
-  d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
-    (
-     p4est,
-     d4est_ghost,
-     schwarz_data,
-     &ghost_data_for_schwarz,
-     poly_vec_final,
-     transpose_restrict_restricted_poly_vec_over_subdomains
-    );
- 
-  DEBUG_PRINT_MPI_ARR_DBL_SUM
-    (
-     p4est->mpirank,
-     restricted_poly_vec_over_subdomains,
-     schwarz_data->restricted_nodal_size
-    );
-  
-  DEBUG_PRINT_MPI_ARR_DBL_SUM
-    (
-     p4est->mpirank,
-     transpose_restrict_restricted_poly_vec_over_subdomains,
-     schwarz_data->nodal_size
-    );
+  /* DEBUG_PRINT_MPI_ARR_DBL */
+  /*   ( */
+  /*    p4est->mpirank, */
+  /*    restricted_poly_vec_over_subdomains, */
+  /*    schwarz_data->restricted_nodal_size */
+  /*   ); */
 
-  double local_sum = d4est_util_sum_array_dbl(poly_vec_final, d4est_factors->local_sizes.local_nodes);
-  double global_sum = 0;
-  sc_reduce(
-    &local_sum,
-    &global_sum,
-    1,
-    sc_MPI_DOUBLE,
-    sc_MPI_SUM,
-    0,
-    sc_MPI_COMM_WORLD
-  );
-  if (p4est->mpirank == 0){
-    printf(" final sum = %.15f\n", global_sum);
-  }
+  
+  /* for (int i = 0; i < d4est_factors->local_sizes.local_nodes; i++){ */
+  /*   poly_vec_final[i] = 1.; */
+  /* } */
+  
+  /* d4est_ghost_data_ext_t* ghost_data_for_schwarz = NULL; */
+  /* d4est_solver_schwarz_transfer_ghost_data_and_add_corrections */
+  /*   ( */
+  /*    p4est, */
+  /*    d4est_ghost, */
+  /*    schwarz_data, */
+  /*    &ghost_data_for_schwarz, */
+  /*    poly_vec_final, */
+  /*    transpose_restrict_restricted_poly_vec_over_subdomains */
+  /*   ); */
+
+  /* DEBUG_PRINT_MPI_ARR_DBL */
+  /*   ( */
+  /*    p4est->mpirank, */
+  /*    poly_vec, */
+  /*    d4est_factors->local_sizes.local_nodes */
+  /*   ); */
+  
+  /* DEBUG_PRINT_MPI_ARR_DBL */
+  /*   ( */
+  /*    p4est->mpirank, */
+  /*    restricted_poly_vec_over_subdomains, */
+  /*    schwarz_data->restricted_nodal_size */
+  /*   ); */
+  
+  /* DEBUG_PRINT_MPI_ARR_DBL_SUM */
+  /*   ( */
+  /*    p4est->mpirank, */
+  /*    transpose_restrict_restricted_poly_vec_over_subdomains, */
+  /*    schwarz_data->nodal_size */
+  /*   ); */
+
+  /* double local_sum = d4est_util_sum_array_dbl(poly_vec_final, d4est_factors->local_sizes.local_nodes); */
+  /* double global_sum = 0; */
+  /* sc_reduce( */
+  /*   &local_sum, */
+  /*   &global_sum, */
+  /*   1, */
+  /*   sc_MPI_DOUBLE, */
+  /*   sc_MPI_SUM, */
+  /*   0, */
+  /*   sc_MPI_COMM_WORLD */
+  /* ); */
+  /* if (p4est->mpirank == 0){ */
+  /*   printf(" final sum = %.15f\n", global_sum); */
+  /* } */
 
   /* d4est_solver_schwarz_metadata_print */
     /* ( */
@@ -253,7 +298,7 @@ int main(int argc, char *argv[])
   P4EST_FREE(poly_vec);
   P4EST_FREE(poly_vec_final);
   
-  d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data = 
+  d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data =
     d4est_solver_schwarz_geometric_data_init
     (
      p4est,
@@ -261,21 +306,20 @@ int main(int argc, char *argv[])
      d4est_geom,
      d4est_quad,
      d4est_ghost,
-     d4est_factors,     
+     d4est_factors,
      schwarz_data,
      input_file,
      "d4est_solver_schwarz"
     );
 
-  d4est_solver_schwarz_geometric_data_check_hp
-    (
-     p4est,
-     d4est_ghost,
-     d4est_factors,
-     schwarz_data,
-     schwarz_geometric_data
-    );
-
+  /* d4est_solver_schwarz_geometric_data_check_hp */
+  /*   ( */
+  /*    p4est, */
+  /*    d4est_ghost, */
+  /*    d4est_factors, */
+  /*    schwarz_data, */
+  /*    schwarz_geometric_data */
+  /*   ); */
   
   d4est_solver_schwarz_geometric_data_sum_test
     (
@@ -286,6 +330,23 @@ int main(int argc, char *argv[])
      schwarz_geometric_data
     );
 
+  d4est_solver_schwarz_geometric_data_volume_sum_test
+    (
+     p4est,
+     d4est_ghost,
+     d4est_factors,
+     schwarz_data,
+     schwarz_geometric_data
+    );
+
+  d4est_solver_schwarz_geometric_data_volume_sum_test_2
+    (
+     p4est,
+     d4est_ghost,
+     d4est_factors,
+     schwarz_data,
+     schwarz_geometric_data
+    );
   
   d4est_solver_schwarz_geometric_data_destroy(schwarz_geometric_data);
   
@@ -293,7 +354,6 @@ int main(int argc, char *argv[])
     (
      schwarz_data
     );
-
 
   d4est_solver_schwarz_operators_destroy
     (

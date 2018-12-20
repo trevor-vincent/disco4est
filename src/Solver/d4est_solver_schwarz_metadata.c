@@ -195,6 +195,7 @@ d4est_solver_schwarz_metadata_corner_callback
         sub_data->num_elements++;
         sub_data->core_deg = ed_core->deg;
         sub_data->core_id = ed_core->id;
+        sub_data->core_tree = ed_core->tree;
         sub_data->element_metadata[0].id = ed_core->id;
         sub_data->element_metadata[0].mpirank = ed_core->mpirank;
         sub_data->element_metadata[0].tree = ed_core->tree;
@@ -525,10 +526,12 @@ d4est_solver_schwarz_metadata_compute_strides_and_sizes
     /* sub_element_stride += sub_data->num_elements; */
     /* int max_connections = ((P4EST_DIM)==3 ) ? 57 : 13; */
     sub_element_stride += sub_data->num_elements;
-    
+
+    if (d4est_ghost == NULL){
     schwarz_metadata->restricted_nodal_size += sub_data->restricted_nodal_size;
     schwarz_metadata->nodal_size += sub_data->nodal_size;
     schwarz_metadata->num_elements += sub_data->num_elements;
+    }
   }
 }
 
@@ -567,6 +570,8 @@ d4est_solver_schwarz_metadata_init
   /* fill subdomains */
   int stride = 0;
   for (int i = 0; i < schwarz_metadata->num_subdomains; i++){
+    schwarz_metadata->subdomain_metadata[i].mpirank = p4est->mpirank;
+    schwarz_metadata->subdomain_metadata[i].subdomain_id = i;
     schwarz_metadata->subdomain_metadata[i].num_elements = 0;
     schwarz_metadata->subdomain_metadata[i].element_metadata = &schwarz_metadata->element_metadata[stride];
     stride += max_connections;
@@ -641,7 +646,7 @@ d4est_solver_schwarz_metadata_init
        sub_data->element_stride = stride;
        stride += max_connections;      
     }
-    printf("***************************\n", p4est->mpirank);
+    /* printf("***************************\n", p4est->mpirank); */
   }
 
   d4est_solver_schwarz_metadata_compute_strides_and_sizes(schwarz_metadata,d4est_ghost);

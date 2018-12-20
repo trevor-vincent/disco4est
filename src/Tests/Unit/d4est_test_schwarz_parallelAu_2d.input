@@ -38,23 +38,23 @@ write_rank = 1
 wrap_rank = 0
 write_deg = 1
 
-[geometry]
-name = cubed_sphere
-R0 = .3333333333333
-R1 = .6666666666666
-R2 = 1
-compactify_outer_shell = 0
-compactify_inner_shell = 0
-DX_compute_method = analytic
-JAC_compute_method = numerical
-
-
 ; [geometry]
-; name = disk
-; R0 = .5
-; R1 = 1
-; DX_compute_method = numerical
+; name = cubed_sphere
+; R0 = .3333333333333
+; R1 = .6666666666666
+; R2 = 1
+; compactify_outer_shell = 0
+; compactify_inner_shell = 0
+; DX_compute_method = analytic
 ; JAC_compute_method = numerical
+
+
+[geometry]
+name = disk
+R0 = .5
+R1 = 1
+DX_compute_method = numerical
+JAC_compute_method = numerical
 
 
 [quadrature]

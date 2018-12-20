@@ -51,6 +51,7 @@ typedef struct {
   int core_id; /* id stride in element_data for core */
   d4est_solver_schwarz_element_metadata_t*  element_metadata;
   int core_deg;
+  int core_tree;
   int num_elements;
   int restricted_nodal_size;
   int restricted_nodal_stride;

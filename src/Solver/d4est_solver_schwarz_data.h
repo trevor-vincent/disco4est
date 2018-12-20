@@ -1,0 +1,5 @@
+#ifndef D4EST_SOLVER_SCHWARZ_DATA_H
+#define D4EST_SOLVER_SCHWARZ_DATA_H 
+
+
+#endif
