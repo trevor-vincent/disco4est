@@ -4,11 +4,13 @@
 #include <d4est_mesh.h>
 #include <d4est_amr.h>
 #include <d4est_amr_random.h>
+#include <d4est_geometry_cubed_sphere.h>
 #include <d4est_vtk.h>
 #include <d4est_h5.h>
 #include <d4est_checkpoint.h>
 #include <d4est_element_data.h>
 #include <petscsnes.h>
+#include <p4est_vtk_ext.h>
 #include <zlog.h>
 
 static double
@@ -204,7 +206,35 @@ int main(int argc, char *argv[])
      NULL,
      -1
     );
-     
+
+#if (P4EST_DIM)==3
+  if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_13TREE){
+    double R2 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R2;
+    double R1 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R1;
+    double R0 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R0;
+
+    p8est_geometry_t   *p8est_geom = 
+      p8est_geometry_new_sphere (d4est_geom->p4est_conn,
+                                 R2, R1, R0);
+
+    p4est_vtk_ext_write_all
+      (p4est,
+       p8est_geom,
+       .99,
+       1,
+       1,
+       1,
+       1,
+       0,
+       0,
+       "d4est_test_vtk_p4est_vtk"
+      );
+
+    p4est_geometry_destroy(p8est_geom);
+  }
+#endif  
+
+  
   P4EST_FREE(deg_array);
   P4EST_FREE(element_volume);
   P4EST_FREE(sinvec);

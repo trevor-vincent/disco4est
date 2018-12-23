@@ -7,7 +7,7 @@ d4est_solver_multigrid_p_coarsen
  p4est_iter_volume_info_t * info,
  void *user_data
 ){
-  d4est_solver_multigrid_data_t* mg_data = (d4est_solver_multigrid_data_t*) info->p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) info->p4est->user_pointer;
   d4est_solver_multigrid_refine_data_t* coarse_grid_refinement = (d4est_solver_multigrid_refine_data_t*) mg_data->coarse_grid_refinement;
   p4est_quadrant_t *q = info->quad;
   d4est_element_data_t* ed = (d4est_element_data_t *) q->p.user_data;
@@ -26,7 +26,7 @@ d4est_solver_multigrid_coarsen (
                    p4est_quadrant_t * children[]
                   )
 {
-  d4est_solver_multigrid_data_t* mg_data = (d4est_solver_multigrid_data_t*) p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) p4est->user_pointer;
   d4est_solver_multigrid_refine_data_t* coarse_grid_refinement = (d4est_solver_multigrid_refine_data_t*) mg_data->coarse_grid_refinement;
   int* stride = &mg_data->stride;
 
@@ -56,7 +56,7 @@ d4est_solver_multigrid_coarsen_init
 )
 {
 
-  d4est_solver_multigrid_data_t* mg_data = (d4est_solver_multigrid_data_t*) p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) p4est->user_pointer;
   d4est_solver_multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
   
   int* stride = &mg_data->stride;
@@ -91,7 +91,7 @@ d4est_solver_multigrid_store_balance_changes
       exit(1);
     }
  
-  d4est_solver_multigrid_data_t* mg_data = (d4est_solver_multigrid_data_t*) p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) p4est->user_pointer;
   d4est_solver_multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
 
   int parent_id = ((d4est_element_data_t*) outgoing[0]->p.user_data)->id;
@@ -113,7 +113,7 @@ d4est_solver_multigrid_apply_restriction
  void* user_data
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = (d4est_solver_multigrid_data_t*) info->p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) info->p4est->user_pointer;
   d4est_solver_multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
   d4est_operators_t* d4est_ops = mg_data->d4est_ops;
 
@@ -219,7 +219,7 @@ d4est_solver_multigrid_refine_and_apply_prolongation_replace
       exit(1);
     }
   
-  d4est_solver_multigrid_data_t* mg_data = (d4est_solver_multigrid_data_t*) p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) p4est->user_pointer;
   d4est_solver_multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
 
   /* the refine function increments the stride, so the stride of
@@ -241,7 +241,7 @@ d4est_solver_multigrid_refine_and_apply_prolongation
  p4est_quadrant_t * quadrant
 )
 {  
-  d4est_solver_multigrid_data_t* mg_data = (d4est_solver_multigrid_data_t*) p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) p4est->user_pointer;
   d4est_solver_multigrid_refine_data_t* coarse_grid_refinement = mg_data->coarse_grid_refinement;
   d4est_operators_t* d4est_ops = mg_data->d4est_ops;
 

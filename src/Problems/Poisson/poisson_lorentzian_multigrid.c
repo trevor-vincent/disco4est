@@ -398,7 +398,7 @@ problem_init
     
     // Setup d4est_solver_multigrid
     d4est_krylov_pc_t* pc = NULL;
-    d4est_solver_multigrid_data_t* mg_data = d4est_solver_multigrid_data_init(
+    d4est_solver_multigrid_t* mg_data = d4est_solver_multigrid_data_init(
       p4est,
       d4est_ops,
       d4est_geom,

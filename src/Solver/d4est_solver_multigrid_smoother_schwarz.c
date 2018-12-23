@@ -47,7 +47,7 @@ d4est_solver_multigrid_smoother_schwarz_set_apply_lhs
  d4est_ghost_t* d4est_ghost,
  d4est_mesh_data_t* d4est_factors,
  d4est_solver_schwarz_apply_lhs_t* apply_lhs,
- d4est_solver_multigrid_data_t* mg_data,
+ d4est_solver_multigrid_t* mg_data,
  const char* input_file
 ){
   
@@ -88,7 +88,7 @@ d4est_solver_multigrid_smoother_schwarz
  int level
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_smoother_schwarz_t* smoother_data = mg_data->smoother->user;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
 
@@ -252,7 +252,7 @@ d4est_solver_multigrid_smoother_schwarz_update
  d4est_elliptic_data_t* vecs
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_smoother_schwarz_t* smoother_data = mg_data->smoother->user;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   

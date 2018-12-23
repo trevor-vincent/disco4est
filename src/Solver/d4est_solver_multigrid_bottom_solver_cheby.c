@@ -65,7 +65,7 @@ d4est_solver_multigrid_bottom_solver_cheby
  double* r
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_bottom_solver_cheby_t* cheby = mg_data->bottom_solver->user;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   int level = 0;

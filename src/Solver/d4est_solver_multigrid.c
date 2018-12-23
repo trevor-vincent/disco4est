@@ -213,7 +213,7 @@ d4est_solver_multigrid_update_components
 )
 {
 
-  d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   
   if (mg_data->elem_data_updater != NULL){
     if (mg_data->elem_data_updater->update != NULL){
@@ -273,7 +273,7 @@ int d4est_solver_multigrid_input_handler
  const char* value
 )
 {
-   d4est_solver_multigrid_data_t* mg_data = (( d4est_solver_multigrid_data_t*)user);
+   d4est_solver_multigrid_t* mg_data = (( d4est_solver_multigrid_t*)user);
   
   if (d4est_util_match_couple(section,"multigrid",name,"vcycle_imax")) {
     D4EST_ASSERT(mg_data->vcycle_imax == -1);
@@ -348,7 +348,7 @@ int d4est_solver_multigrid_input_handler
 
 
 void
-d4est_solver_multigrid_set_smoother(p4est_t* p4est, const char* input_file,  d4est_solver_multigrid_data_t* mg_data){
+d4est_solver_multigrid_set_smoother(p4est_t* p4est, const char* input_file,  d4est_solver_multigrid_t* mg_data){
 
   if(d4est_util_match(mg_data->smoother_name, "mg_smoother_krylov_petsc")){
     mg_data->smoother = d4est_solver_multigrid_smoother_krylov_petsc_init(p4est, input_file);
@@ -386,7 +386,7 @@ d4est_solver_multigrid_set_smoother(p4est_t* p4est, const char* input_file,  d4e
 
 
 void
-d4est_solver_multigrid_destroy_smoother( d4est_solver_multigrid_data_t* mg_data){
+d4est_solver_multigrid_destroy_smoother( d4est_solver_multigrid_t* mg_data){
 
   if(d4est_util_match(mg_data->smoother_name, "mg_smoother_krylov_petsc")){
     d4est_solver_multigrid_smoother_krylov_petsc_destroy(mg_data->smoother);
@@ -406,7 +406,7 @@ d4est_solver_multigrid_destroy_smoother( d4est_solver_multigrid_data_t* mg_data)
 }
 
 void
-d4est_solver_multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file,  d4est_solver_multigrid_data_t* mg_data){
+d4est_solver_multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file,  d4est_solver_multigrid_t* mg_data){
 
   if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_krylov_petsc")){
     mg_data->bottom_solver = d4est_solver_multigrid_bottom_solver_krylov_petsc_init
@@ -439,7 +439,7 @@ d4est_solver_multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file,
 
 
 void
-d4est_solver_multigrid_destroy_bottom_solver( d4est_solver_multigrid_data_t* mg_data){
+d4est_solver_multigrid_destroy_bottom_solver( d4est_solver_multigrid_t* mg_data){
 
   if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_krylov_petsc")){
     d4est_solver_multigrid_bottom_solver_krylov_petsc_destroy
@@ -467,7 +467,7 @@ d4est_solver_multigrid_destroy_bottom_solver( d4est_solver_multigrid_data_t* mg_
 }
 
 
- d4est_solver_multigrid_data_t*
+ d4est_solver_multigrid_t*
 d4est_solver_multigrid_data_init
 (
  p4est_t* p4est,
@@ -482,7 +482,7 @@ d4est_solver_multigrid_data_init
 )
 {
   zlog_category_t* c_default = zlog_get_category("d4est_solver_multigrid");
-  d4est_solver_multigrid_data_t* mg_data = P4EST_ALLOC( d4est_solver_multigrid_data_t, 1);
+  d4est_solver_multigrid_t* mg_data = P4EST_ALLOC( d4est_solver_multigrid_t, 1);
 
   int d4est_solver_multigrid_min_level, d4est_solver_multigrid_max_level;
   int num_of_h_coarsen_levels = d4est_solver_multigrid_get_h_coarsen_levels(p4est);  
@@ -594,7 +594,7 @@ d4est_solver_multigrid_data_init
 void
 d4est_solver_multigrid_set_user_callbacks
 (
-  d4est_solver_multigrid_data_t* mg_data,
+  d4est_solver_multigrid_t* mg_data,
  d4est_solver_multigrid_user_callbacks_t* user_callbacks
 )
 {
@@ -603,7 +603,7 @@ d4est_solver_multigrid_set_user_callbacks
 
 
 void
-d4est_solver_multigrid_data_destroy( d4est_solver_multigrid_data_t* mg_data)
+d4est_solver_multigrid_data_destroy( d4est_solver_multigrid_t* mg_data)
 {
   if (mg_data->profiler != NULL){
     d4est_solver_multigrid_profiler_basic_destroy(mg_data->profiler);
@@ -642,7 +642,7 @@ d4est_solver_multigrid_vcycle
 {
   zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid");
 
-   d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+   d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   int level;
 
   /* start and end levels of d4est_solver_multigrid */
@@ -1205,7 +1205,7 @@ d4est_solver_multigrid_compute_residual
  d4est_elliptic_eqns_t* fcns
 ){
   
-   d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+   d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   d4est_ghost_t* d4est_ghost = updater->current_d4est_ghost;
   d4est_ghost_data_t* d4est_ghost_data = updater->current_d4est_ghost_data;
@@ -1272,7 +1272,7 @@ d4est_solver_multigrid_solve
  p4est_t* p4est,
  d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
-  d4est_solver_multigrid_data_t* mg_data
+  d4est_solver_multigrid_t* mg_data
 )
 {
   zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid");

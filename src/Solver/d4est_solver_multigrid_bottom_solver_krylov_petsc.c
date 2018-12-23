@@ -12,7 +12,7 @@ d4est_solver_multigrid_bottom_solver_krylov_petsc
 )
 {
 
-  d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   d4est_solver_krylov_petsc_params_t* params = mg_data->bottom_solver->user;
 

@@ -18,7 +18,7 @@ typedef struct {
 typedef struct {
 
   int use_matrix_operator;
-  d4est_solver_multigrid_data_t* mg_data;
+  d4est_solver_multigrid_t* mg_data;
   okendon_params_t* okendon_params;
   d4est_laplacian_flux_data_t* flux_data_for_jac;
   d4est_laplacian_flux_data_t* flux_data_for_res;
@@ -159,7 +159,7 @@ void okendon_apply_jac_add_nonlinear_term_using_matrix
 {
   double* M_fofu0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
   problem_ctx_t* ctx = user;
-  d4est_solver_multigrid_data_t* mg_data = ctx->mg_data;
+  d4est_solver_multigrid_t* mg_data = ctx->mg_data;
   multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
   int matrix_stride = 0;
@@ -292,7 +292,7 @@ void okendon_apply_jac
       );
   else {
     
-    d4est_solver_multigrid_data_t* mg_data = ctx->mg_data;
+    d4est_solver_multigrid_t* mg_data = ctx->mg_data;
     multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
     if (matrix_op->matrix != matrix_op->matrix_at0){
@@ -425,7 +425,7 @@ void okendond4est_krylov_pc_setup_fcn
  d4est_krylov_pc_t* d4est_krylov_pc
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = d4est_krylov_pc->pc_data;
+  d4est_solver_multigrid_t* mg_data = d4est_krylov_pc->pc_data;
   krylov_ctx_t* ctx = d4est_krylov_pc->pc_ctx;
 
   if (ctx->p4est->mpirank == 0)

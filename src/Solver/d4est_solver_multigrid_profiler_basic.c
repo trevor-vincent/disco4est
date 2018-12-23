@@ -87,7 +87,7 @@ d4est_solver_multigrid_profiler_basic_update
  d4est_elliptic_data_t* vecs
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_profiler_t* profiler = mg_data->profiler;
   d4est_solver_multigrid_profiler_basic_data_t* profiler_data = profiler->user;
   

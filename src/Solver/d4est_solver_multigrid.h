@@ -7,7 +7,7 @@
 #include <d4est_elliptic_eqns.h>
 #include <d4est_operators.h>
 
-typedef struct  d4est_solver_multigrid_data  d4est_solver_multigrid_data_t;
+typedef struct  d4est_solver_multigrid_data  d4est_solver_multigrid_t;
 
 typedef struct {
 
@@ -260,14 +260,14 @@ struct  d4est_solver_multigrid_data {
 };
 
 /* This file was automatically generated.  Do not edit! */
-void d4est_solver_multigrid_solve(p4est_t *p4est,d4est_elliptic_data_t *vecs,d4est_elliptic_eqns_t *fcns,d4est_solver_multigrid_data_t *mg_data);
-void d4est_solver_multigrid_data_destroy(d4est_solver_multigrid_data_t *mg_data);
-void d4est_solver_multigrid_set_user_callbacks(d4est_solver_multigrid_data_t *mg_data,d4est_solver_multigrid_user_callbacks_t *user_callbacks);
-d4est_solver_multigrid_data_t *d4est_solver_multigrid_data_init(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_ghost_t **d4est_ghost,d4est_ghost_data_t **d4est_ghost_data,d4est_mesh_data_t *d4est_factors,d4est_mesh_initial_extents_t *initial_extents,const char *input_file);
-void d4est_solver_multigrid_destroy_bottom_solver(d4est_solver_multigrid_data_t *mg_data);
-void d4est_solver_multigrid_set_bottom_solver(p4est_t *p4est,const char *input_file,d4est_solver_multigrid_data_t *mg_data);
-void d4est_solver_multigrid_destroy_smoother(d4est_solver_multigrid_data_t *mg_data);
-void d4est_solver_multigrid_set_smoother(p4est_t *p4est,const char *input_file,d4est_solver_multigrid_data_t *mg_data);
+void d4est_solver_multigrid_solve(p4est_t *p4est,d4est_elliptic_data_t *vecs,d4est_elliptic_eqns_t *fcns,d4est_solver_multigrid_t *mg_data);
+void d4est_solver_multigrid_data_destroy(d4est_solver_multigrid_t *mg_data);
+void d4est_solver_multigrid_set_user_callbacks(d4est_solver_multigrid_t *mg_data,d4est_solver_multigrid_user_callbacks_t *user_callbacks);
+d4est_solver_multigrid_t *d4est_solver_multigrid_data_init(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_ghost_t **d4est_ghost,d4est_ghost_data_t **d4est_ghost_data,d4est_mesh_data_t *d4est_factors,d4est_mesh_initial_extents_t *initial_extents,const char *input_file);
+void d4est_solver_multigrid_destroy_bottom_solver(d4est_solver_multigrid_t *mg_data);
+void d4est_solver_multigrid_set_bottom_solver(p4est_t *p4est,const char *input_file,d4est_solver_multigrid_t *mg_data);
+void d4est_solver_multigrid_destroy_smoother(d4est_solver_multigrid_t *mg_data);
+void d4est_solver_multigrid_set_smoother(p4est_t *p4est,const char *input_file,d4est_solver_multigrid_t *mg_data);
 int d4est_solver_multigrid_get_h_coarsen_levels_old(p4est_t *p4est);
 int d4est_solver_multigrid_get_h_coarsen_levels_initial(p4est_t *p4est,d4est_mesh_initial_extents_t *initial_extents);
 int d4est_solver_multigrid_get_h_coarsen_levels_post_initial(p4est_t *p4est,int num_of_levels_last,int has_there_been_h_refinements);

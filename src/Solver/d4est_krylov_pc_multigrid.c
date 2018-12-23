@@ -15,7 +15,7 @@ d4est_krylov_pc_multigrid_setup
   /* add to mg_data setup int every time this is called */
   /* d4est_krylov_pc_multigrid_data_t* kpcmgdata = kpc->pc_data; */
   d4est_krylov_pc_multigrid_data_t* kpcmgdata = kpc->pc_data;
-  d4est_solver_multigrid_data_t* mg_data = kpcmgdata->mg_data;
+  d4est_solver_multigrid_t* mg_data = kpcmgdata->mg_data;
     
   if (kpcmgdata->user_setup_fcn != NULL)
     kpcmgdata->user_setup_fcn(kpc);
@@ -38,7 +38,7 @@ void
 d4est_krylov_pc_multigrid_apply(d4est_krylov_pc_t* kpc, double* xp, double* yp)
 {
   d4est_krylov_pc_multigrid_data_t* kpcmgdata = kpc->pc_data;
- d4est_solver_multigrid_data_t* mg_data = kpcmgdata->mg_data;
+ d4est_solver_multigrid_t* mg_data = kpcmgdata->mg_data;
   krylov_ctx_t* kct = kpc->pc_ctx;
   int local_nodes = kct->vecs->local_nodes;
   int na;
@@ -67,7 +67,7 @@ d4est_krylov_pc_multigrid_apply(d4est_krylov_pc_t* kpc, double* xp, double* yp)
 d4est_krylov_pc_t*
 d4est_krylov_pc_multigrid_create
 (
-d4est_solver_multigrid_data_t* mg_data,
+d4est_solver_multigrid_t* mg_data,
  void(*user_setup_fcn)(d4est_krylov_pc_t* kpc)
 ){
 

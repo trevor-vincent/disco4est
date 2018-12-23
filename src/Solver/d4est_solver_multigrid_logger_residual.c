@@ -18,7 +18,7 @@ d4est_solver_multigrid_logger_residual_update
  d4est_elliptic_data_t* vecs
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   double r2_i_global = mg_data->vcycle_r2_global_current;
   double old_r2_i_global = mg_data->vcycle_r2_global_last;
   int v = mg_data->vcycle_num_finished;

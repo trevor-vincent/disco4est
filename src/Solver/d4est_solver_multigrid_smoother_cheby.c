@@ -87,7 +87,7 @@ d4est_solver_multigrid_smoother_cheby_iterate
  /* d4est_solver_multigrid_cheby_params_t* cheby_params */
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = (d4est_solver_multigrid_data_t*) p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) p4est->user_pointer;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   zlog_category_t *c_default = zlog_get_category("d4est_d4est_solver_multigrid_smoother_cheby");   
   d4est_ghost_t* d4est_ghost = updater->current_d4est_ghost;
@@ -172,7 +172,7 @@ d4est_solver_multigrid_smoother_cheby_update
  d4est_elliptic_data_t* vecs
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = (d4est_solver_multigrid_data_t*) p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) p4est->user_pointer;
   d4est_solver_multigrid_smoother_cheby_t* cheby = mg_data->smoother->user;  
   int vcycle = mg_data->vcycle_num_finished;
 
@@ -216,7 +216,7 @@ d4est_solver_multigrid_smoother_cheby
  int level
 )
 {  
-  d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_smoother_cheby_t* cheby = mg_data->smoother->user;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   

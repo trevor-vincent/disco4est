@@ -289,7 +289,7 @@ problem_init
     /*   ); */
 
     
-    d4est_solver_multigrid_data_t* mg_data = multigrid_data_init(p4est,
+    d4est_solver_multigrid_t* mg_data = multigrid_data_init(p4est,
                                                     d4est_ops,
                                                     d4est_geom,
                                                     d4est_quad,

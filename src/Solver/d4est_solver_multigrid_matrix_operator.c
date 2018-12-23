@@ -13,7 +13,7 @@ d4est_solver_multigrid_matrix_operator_restriction_callback
  int num_children_h
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = (d4est_solver_multigrid_data_t*) info->p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) info->p4est->user_pointer;
   d4est_operators_t* d4est_ops = mg_data->d4est_ops;
   d4est_solver_multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
@@ -54,7 +54,7 @@ d4est_solver_multigrid_matrix_operator_update_callback
  d4est_elliptic_data_t* vecs
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
   /* int vcycle = mg_data->vcycle_num_finished; */
 

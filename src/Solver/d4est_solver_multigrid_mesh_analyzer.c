@@ -24,7 +24,7 @@ void d4est_solver_multigrid_mesh_analyzer_save_vtk
  p4est_t* p4est
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_mesh_analyzer_t* mesh_analyzer = mg_data->analyzer;
   d4est_operators_t* d4est_ops = mg_data->d4est_ops;
   /* char* output = "d4est_solver_multigrid_mesh_analyzer"; */
@@ -54,7 +54,7 @@ void d4est_solver_multigrid_mesh_analyzer_update
  d4est_elliptic_data_t* vecs
 )
 {
-  d4est_solver_multigrid_data_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_mesh_analyzer_t* mesh_analyzer = mg_data->analyzer;
   
   if(mg_data->mg_state == START){

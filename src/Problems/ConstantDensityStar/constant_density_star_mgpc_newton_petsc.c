@@ -490,7 +490,7 @@ problem_init
     /* mpi_assert(proc_size == 1); */
     /* int num_of_levels = max_level + 1; */
 
-    d4est_solver_multigrid_data_t* mg_data = d4est_solver_multigrid_data_init(
+    d4est_solver_multigrid_t* mg_data = d4est_solver_multigrid_data_init(
       p4est,
       d4est_ops,
       d4est_geom,
