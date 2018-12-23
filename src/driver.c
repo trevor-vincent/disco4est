@@ -1,3 +1,4 @@
+#include <version.h>
 #include <pXest.h>
 #include <problem.h>
 #include <d4est_geometry.h>
@@ -43,7 +44,10 @@ int main(int argc, char *argv[])
 #else
     zlog_info(c_default, "DEBUG MODE OFF");
 #endif
-  
+
+    zlog_info(c_default, "git commit hash = %s",
+              GIT_COMMIT_HASH);
+    
 #if (P4EST_DIM)==3
     zlog_info(c_default, "DIM = 3");
 #else
