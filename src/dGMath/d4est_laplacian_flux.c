@@ -1031,6 +1031,8 @@ d4est_laplacian_flux_fetch_fcns
   flux_fcns.flux_interface_fcn = d4est_laplacian_flux_interface;
   flux_fcns.flux_boundary_fcn = d4est_laplacian_flux_boundary;
   flux_fcns.user_ctx = (void*)data;
+  /* flux_fcns.using_schwarz = 0; */
+  /* flux_fcns.using_provided_mesh_data = 0; */
   return flux_fcns;
 }
 

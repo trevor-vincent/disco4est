@@ -428,14 +428,17 @@ d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
           }
         }
 
-
+        int skip_p_sum = 0;
         for (int fp = 0; fp < mortar_side_data->faces_p; fp++){
+
           int is_in_subdomain =
             d4est_solver_schwarz_is_element_in_subdomain(sub_data,
                                                          mortar_side_data->e_p[fp].mpirank,
                                                          mortar_side_data->e_p[fp].tree,
                                                          mortar_side_data->e_p[fp].tree_quadid
                                                         );
+
+          skip_p_sum += (is_in_subdomain < 0);
           if (is_in_subdomain >= 0){
             schwarz_geometric_data->nodal_stride_p[mortar_face_stride + fp]
               = sub_data->element_metadata[is_in_subdomain].nodal_stride;
@@ -447,6 +450,13 @@ d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
             schwarz_geometric_data->zero_and_skip_p[mortar_face_stride + fp] = 1;
           }           
         }
+        /* potential speed up */
+        /* if (skip_p_sum == mortar_side_data->faces_p */
+            /* && */
+            /* overlap_m_sum == mortar_side_data->faces_m){ */
+          /* continue; */
+        /* } */
+        
         /* save mortar then move stride one forward */
         schwarz_geometric_data->subdomain_mortars[stride + num_of_mortars] = mortar_side_data;
         num_of_mortars++;

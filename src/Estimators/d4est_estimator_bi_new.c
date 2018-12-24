@@ -532,6 +532,10 @@ d4est_estimator_bi_new_compute
   flux_data.flux_data = &penalty_data;
   
   d4est_mortars_fcn_ptrs_t flux_fcns = d4est_laplacian_flux_fetch_fcns(&flux_data);
+
+  flux_data.using_schwarz = 0;
+  flux_data.using_provided_mesh_data = 0;
+
   
   d4est_mortars_compute_flux_on_local_elements
     (
