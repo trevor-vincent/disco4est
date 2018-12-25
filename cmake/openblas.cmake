@@ -32,15 +32,6 @@ macro(openblas_try_prefix)
   endif()
 endmacro()
 
-if (BLAS_PREFIX)
-  openblas_try_prefix()
-elseif (NOT ENABLE_BUNDLED_BLAS)
-  openblas_try_system()
-else()
-  openblas_use_bundled()
-endif()
-
-include_directories(${BLAS_INCLUDE_DIRS})
 
 message(STATUS "Use openblas includes: ${BLAS_INCLUDE_DIRS}")
 message(STATUS "Use openblas library: ${BLAS_LIBRARIES}")
@@ -59,6 +50,16 @@ macro(openblas_build)
     add_dependencies(build_bundled_libs openblas)
 endmacro()
 
+
+if (BLAS_PREFIX)
+  openblas_try_prefix()
+elseif (NOT ENABLE_BUNDLED_BLAS)
+  openblas_try_system()
+else()
+  openblas_use_bundled()
+endif()
+
+include_directories(${BLAS_INCLUDE_DIRS})
 
 # if(ENABLE_BUNDLED_BLAS)
 
