@@ -20,7 +20,7 @@ endmacro()
 #
 macro (petsc_try_prefix)
   find_path(PETSC_INCLUDE_DIRS petsc.h ${PETSC_PREFIX}/include)
-  find_library(PETSC_LIB libpetsc.a libpetsc.so ${PETSC_PREFIX}/lib)
+  find_library(PETSC_LIB libpetsc.so libpetsc.a ${PETSC_PREFIX}/lib)
 
   if(PETSC_INCLUDE_DIRS AND PETSC_LIB)
     set(PETSC_LIBRARIES ${PETSC_LIB})
