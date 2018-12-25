@@ -19,15 +19,15 @@ endmacro()
 # Check if there is a usable petsc at the given prefix path.
 #
 macro (petsc_try_prefix)
-  find_path(PETSC_INCLUDE_DIRS petsc.h ${PETSC_PREFIX}/include)
-  find_library(PETSC_LIB libpetsc.a ${PETSC_PREFIX}/lib)
+  # find_path(PETSC_INCLUDE_DIRS petsc.h ${PETSC_PREFIX}/include)
+  # find_library(PETSC_LIB libpetsc.a ${PETSC_PREFIX}/lib)
 
-  if(PETSC_INCLUDE_DIRS AND PETSC_LIB)
-    set(PETSC_LIBRARIES ${PETSC_LIB})
-    include_directories(${PETSC_INCLUDE_DIRS})
-  else()
-    message(FATAL_ERROR "Couldn't find petsc in '${PETSC_PREFIX}'")
-  endif()
+  # if(PETSC_INCLUDE_DIRS AND PETSC_LIB)
+    set(PETSC_LIBRARIES ${PETSC_PREFIX}/lib)
+    include_directories(${PETSC_PREFIX}/include)
+  # else()
+    # message(FATAL_ERROR "Couldn't find petsc in '${PETSC_PREFIX}'")
+  # endif()
 endmacro()
 
 #
