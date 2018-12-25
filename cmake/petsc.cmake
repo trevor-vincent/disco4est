@@ -62,10 +62,10 @@ macro(petsc_build)
   endif("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
 
   set(blas_config_args
-    "--with-blas-lib=${OPENBLAS_LIBRARIES}"
+    "--with-blas-lib=${BLAS_LIBRARIES}"
     )
   set(lapack_config_args
-    "--with-lapack-lib=${OPENBLAS_LIBRARIES}"
+    "--with-lapack-lib=${BLAS_LIBRARIES}"
     )    
   ExternalProject_Add(petsc
     PREFIX    ${CMAKE_BINARY_DIR}/third_party/petsc
@@ -84,7 +84,7 @@ macro(petsc_build)
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/third_party/petsc && make -j1 --silent V=0
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/third_party/petsc && make install --silent
     )
-  if(ENABLE_BUNDLED_OPENBLAS)
+  if(ENABLE_BUNDLED_BLAS)
     add_dependencies(petsc openblas)
   endif()
   add_dependencies(build_bundled_libs petsc)
