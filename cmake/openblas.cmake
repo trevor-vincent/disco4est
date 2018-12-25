@@ -18,6 +18,7 @@ macro(openblas_try_system)
   message(STATUS "******Trying to find blas on system******.")
   find_package(BLAS REQUIRED)
   message(STATUS "Found a system-wide openblas.")
+  # message(STATUS "Found a system-wide openblas.")
 endmacro()
 
 macro(openblas_try_prefix)
@@ -32,9 +33,6 @@ macro(openblas_try_prefix)
   endif()
 endmacro()
 
-
-message(STATUS "Use openblas includes: ${BLAS_INCLUDE_DIRS}")
-message(STATUS "Use openblas library: ${BLAS_LIBRARIES}")
 
 macro(openblas_build)
   ExternalProject_Add(openblas
@@ -60,6 +58,8 @@ else()
 endif()
 
 include_directories(${BLAS_INCLUDE_DIRS})
+message(STATUS "Use openblas includes: ${BLAS_INCLUDE_DIRS}")
+message(STATUS "Use openblas library: ${BLAS_LIBRARIES}")
 
 # if(ENABLE_BUNDLED_BLAS)
 
