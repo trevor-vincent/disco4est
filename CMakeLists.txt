@@ -193,7 +193,7 @@ SET (
   dl
   # ${CMAKE_BINARY_DIR}/ThirdParty/zlib/install/lib/libz.a
   ${ZLIB_LIBRARIES}
-  ${OPENBLAS_LIBRARIES}
+  ${BLAS_LIBRARIES}
   pthread
   gfortran
   ${HDF5_LIBRARIES}
