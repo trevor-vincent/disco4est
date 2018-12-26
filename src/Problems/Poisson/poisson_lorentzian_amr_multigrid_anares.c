@@ -563,54 +563,53 @@ problem_init
         f_quad[qnode] - residual_pointwise_quad[qnode];
       
     }
-
     
-    /* double* estimator = */
-    /*   d4est_estimator_bi_new_compute */
-    /*                     ( */
-    /*                      p4est, */
-    /*                      &prob_vecs, */
-    /*                      residual_pointwise_quad, */
-    /*                      penalty_data, */
-    /*                      poisson_lorentzian_boundary_fcn, */
-    /*                      &lorentzian_params, */
-    /*                      *d4est_ghost, */
-    /*                      d4est_ghost_data, */
-    /*                      d4est_ops, */
-    /*                      d4est_geom, */
-    /*                      d4est_factors, */
-    /*                      d4est_geom_compactified, */
-    /*                      d4est_factors_compactified, */
-    /*                      d4est_quad, */
-    /*                      0, */
-    /*                      estimator_vtk, */
-    /*                      estimator_vtk_per_face, */
-    /*                      1, */
-    /*                      NULL */
-    /*                     ); */
-
-
     double* estimator =
-      d4est_estimator_bi_compute
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       penalty_data,
-       poisson_lorentzian_boundary_fcn,
-       &lorentzian_params,
-       *d4est_ghost,
-       d4est_ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_factors,
-       d4est_geom_compactified,
-       d4est_factors_compactified,
-       d4est_quad,
-       0,
-       estimator_vtk,
-       estimator_vtk_per_face
-      );
+      d4est_estimator_bi_new_compute
+                        (
+                         p4est,
+                         &prob_vecs,
+                         residual_pointwise_quad,
+                         penalty_data,
+                         poisson_lorentzian_boundary_fcn,
+                         &lorentzian_params,
+                         *d4est_ghost,
+                         d4est_ghost_data,
+                         d4est_ops,
+                         d4est_geom,
+                         d4est_factors,
+                         d4est_geom_compactified,
+                         d4est_factors_compactified,
+                         d4est_quad,
+                         0,
+                         estimator_vtk,
+                         estimator_vtk_per_face,
+                         1,
+                         NULL
+                        );
+
+
+    /* double* estimator = */
+    /*   d4est_estimator_bi_compute */
+    /*   ( */
+    /*    p4est, */
+    /*    &prob_vecs, */
+    /*    &prob_fcns, */
+    /*    penalty_data, */
+    /*    poisson_lorentzian_boundary_fcn, */
+    /*    &lorentzian_params, */
+    /*    *d4est_ghost, */
+    /*    d4est_ghost_data, */
+    /*    d4est_ops, */
+    /*    d4est_geom, */
+    /*    d4est_factors, */
+    /*    d4est_geom_compactified, */
+    /*    d4est_factors_compactified, */
+    /*    d4est_quad, */
+    /*    0, */
+    /*    estimator_vtk, */
+    /*    estimator_vtk_per_face */
+    /*   ); */
 
     
 
