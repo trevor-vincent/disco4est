@@ -317,9 +317,9 @@ problem_init
 
   d4est_laplacian_flux_sipg_params_t* sipg_params = flux_data_for_lhs->flux_data;
   
-  d4est_estimator_bi_penalty_data_t penalty_data;
+  d4est_estimator_bi_new_penalty_data_t penalty_data;
   penalty_data.u_penalty_fcn = houston_u_prefactor_maxp_minh;
-  /* penalty_data.size_params = NULL; */
+  penalty_data.size_params = NULL;
   penalty_data.u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
   penalty_data.gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
   penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
