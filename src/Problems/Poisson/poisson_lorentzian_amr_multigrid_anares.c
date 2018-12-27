@@ -486,6 +486,8 @@ problem_init
        initial_extents->volume_h_type
       );
 
+    double* estimator_vtk = P4EST_ALLOC(double, 4*p4est->local_num_quadrants);
+    double* estimator_vtk_per_face = P4EST_ALLOC(double, 18*p4est->local_num_quadrants);
 
     double* residual_pointwise_quad = P4EST_ALLOC_ZERO(double, d4est_factors->local_sizes.local_nodes_quad);
     double* f_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
@@ -569,8 +571,8 @@ problem_init
                          &prob_vecs,
                          residual_pointwise_quad,
                          penalty_data,
-                         zero_fcn,
-                         NULL,
+                         poisson_lorentzian_boundary_fcn,
+                         &lorentzian_params,
                          *d4est_ghost,
                          d4est_ghost_data,
                          d4est_ops,
@@ -580,8 +582,8 @@ problem_init
                          d4est_factors_compactified,
                          d4est_quad,
                          0,
-                         NULL,
-                         NULL,
+                         estimator_vtk,
+                         estimator_vtk_per_face,
                          1,
                          NULL
                         );
