@@ -111,7 +111,7 @@ d4est_solver_schwarz_subdomain_solver_cg
  void* params
 )
 {
-  zlog_category_t* c_default = zlog_get_category("d4est_solver_schwarz_subdomain_solver_cg");
+  /* zlog_category_t* c_default = zlog_get_category("d4est_solver_schwarz_subdomain_solver_cg"); */
 
   d4est_solver_schwarz_subdomain_solver_cg_t* cg_params
     = params;
@@ -156,6 +156,10 @@ d4est_solver_schwarz_subdomain_solver_cg
   delta_new = d4est_linalg_vec_dot(r,r,nodes);
   double delta_0 = delta_new;  
 
+  /* printf("iter = %d\n", iter); */
+  /* printf("rtol = %.15f\n", rtol); */
+  /* printf("atol = %.15f\n", atol); */
+  /* printf("subdomain verbose = %d\n", cg_params->verbose); */
   int i;
   for (i = 0;
        i < iter && (delta_new > atol*atol + delta_0 * rtol*rtol);
@@ -198,7 +202,7 @@ d4est_solver_schwarz_subdomain_solver_cg
   }
 
   if (cg_params->verbose == 1){
-    zlog_info(c_default, "rank subdomain iters r2 %d %d %d %.15f\n", p4est->mpirank, subdomain, i, delta_new);
+    printf("rank subdomain iters r %d %d %d %.15f\n", p4est->mpirank, subdomain, i, sqrt(delta_new));
   }
   
   P4EST_FREE(Ad);

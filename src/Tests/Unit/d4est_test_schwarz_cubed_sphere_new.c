@@ -360,17 +360,6 @@ d4est_solver_schwarz_t* schwarz =
 
  int iter = 1;
   for (int i = 0; i < iter; i++){
-
-
-    /* if (d4est_ghost_data != NULL){ */
-    /* d4est_ghost_data_destroy(d4est_ghost_data); */
-    /* d4est_ghost_data = NULL; */
-    /* }  */
-    /* d4est_ghost_data = d4est_ghost_data_init */
-    /*                    (p4est, */
-    /*                     d4est_ghost, */
-    /*                     &field_type, */
-    /*                     1); */
     
     elliptic_data.u = u;
     elliptic_data.Au = r;
@@ -445,7 +434,9 @@ d4est_solver_schwarz_t* schwarz =
     printf("pre r2 norm, post l2 norm = %.15f, %.15f\n",globals[0], globals[1]);
   }
 
-    
+  if (p4est->mpirank == 0 && i == 0){
+    D4EST_ASSERT( fabs(globals[1] - 0.152286) < 1e-6);
+  }
   }
 
    if (d4est_ghost_data != NULL){
