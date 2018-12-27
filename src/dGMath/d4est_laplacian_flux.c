@@ -476,9 +476,10 @@ static void
 
 
   double* zero_field = NULL;
+  int sum_m_or_p = 0;
   if (laplacian_flux_params->using_schwarz){
     int max_deg = -1;
-    int sum_m_or_p = 0;
+
     for (int i = 0; i < faces_m; i++){
       max_deg = (e_m[i]->deg > max_deg) ? e_m[i]->deg : max_deg;
       sum_m_or_p += laplacian_flux_params->zero_and_skip_m[i];
@@ -961,6 +962,11 @@ static void
       );
 
   }
+
+  if (sum_m_or_p > 0){
+    P4EST_FREE(zero_field);
+  }
+  
 
   P4EST_FREE(u_m_on_f_m);
   P4EST_FREE(u_p_on_f_p);

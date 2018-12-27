@@ -55,7 +55,6 @@ d4est_solver_schwarz_subdomain_solver_init
   ){
     D4EST_ABORT("Can't load input file");
   }
-
   
   D4EST_CHECK_INPUT(input_section, schwarz_subdomain_solver->solver_type, SUBDOMAIN_SOLVER_NOT_SET);
 

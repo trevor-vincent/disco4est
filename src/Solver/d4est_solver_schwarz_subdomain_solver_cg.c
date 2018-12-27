@@ -111,20 +111,17 @@ d4est_solver_schwarz_subdomain_solver_cg
  void* params
 )
 {
+  zlog_category_t* c_default = zlog_get_category("d4est_solver_schwarz_subdomain_solver_cg");
+
   d4est_solver_schwarz_subdomain_solver_cg_t* cg_params
     = params;
-  
+
   int iter = cg_params->subdomain_iter;
   double atol = cg_params->subdomain_atol;
   double rtol = cg_params->subdomain_rtol;
-
-  if (cg_params->verbose == 1){
-    printf("\n****************************************\n");
-    printf("CG Solve for Subdomain %d on mpirank %d\n", subdomain, p4est->mpirank);
-    printf("****************************************\n");
-  }
   
-  int nodes = schwarz_metadata->subdomain_metadata[subdomain].restricted_nodal_size;
+  int nodes
+    = schwarz_metadata->subdomain_metadata[subdomain].restricted_nodal_size;
   
   double delta_new, delta_old, temp_max, temp_min, d_dot_Ad;
   double alpha = -1.;
@@ -158,8 +155,9 @@ d4est_solver_schwarz_subdomain_solver_cg
   d4est_util_copy_1st_to_2nd(r, d, nodes);
   delta_new = d4est_linalg_vec_dot(r,r,nodes);
   double delta_0 = delta_new;  
-  
-  for (int i = 0;
+
+  int i;
+  for (i = 0;
        i < iter && (delta_new > atol*atol + delta_0 * rtol*rtol);
        i++){
 
@@ -194,14 +192,17 @@ d4est_solver_schwarz_subdomain_solver_cg
     beta = delta_new/delta_old;
     d4est_linalg_vec_xpby(r, beta, d, nodes);    
 
-    if (cg_params->verbose == 1){
-      printf("%d: i, r2 = %d, %.15f\n", p4est->mpirank, i, delta_new);
-      /* DEBUG_PRINT_ARR_DBL(du_restricted_field_over_subdomain, */
-                          /* nodes); */
+    if (cg_params->verbose == 2){
+      printf("rank subdomain iters r2 %d %d %d %.15f\n", p4est->mpirank, subdomain, i, delta_new);
     }
+  }
+
+  if (cg_params->verbose == 1){
+    zlog_info(c_default, "rank subdomain iters r2 %d %d %d %.15f\n", p4est->mpirank, subdomain, i, delta_new);
   }
   
   P4EST_FREE(Ad);
   P4EST_FREE(d);
   P4EST_FREE(r);
+  /* retrun final_info; */
 }

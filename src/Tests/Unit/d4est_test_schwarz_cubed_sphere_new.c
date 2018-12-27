@@ -358,7 +358,7 @@ d4est_solver_schwarz_t* schwarz =
      "d4est_solver_schwarz"
     );
 
- int iter = 10;
+ int iter = 1;
   for (int i = 0; i < iter; i++){
 
 
