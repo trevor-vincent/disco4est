@@ -435,7 +435,7 @@ problem_init
        d4est_geom,
        d4est_factors,
        INIT_FIELD_ON_LOBATTO,
-       NULL
+       &ctx
       );
 
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -494,7 +494,7 @@ problem_init
                          residual_pointwise_quad,
                          penalty_data,
                          stamm_boundary_fcn,
-                         &stamm_params,
+                         &ctx,
                          *d4est_ghost,
                          d4est_ghost_data,
                          d4est_ops,

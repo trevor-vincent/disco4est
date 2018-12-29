@@ -5,7 +5,7 @@
 #include <problem.h>
 #include <d4est_elliptic_data.h>
 #include <d4est_elliptic_eqns.h>
-#include <d4est_estimator_bi.h>
+#include <d4est_estimator_bi_new.h>
 #include <d4est_solver_cg.h>
 #include <d4est_amr.h>
 #include <d4est_amr_smooth_pred.h>
@@ -500,13 +500,29 @@ problem_init
       ip_norm_data.size_params = &size_params;
       sipg_params->size_params = &size_params;
     }
+
+    double* residual_pointwise_quad
+      = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
+    
+    two_punctures_pointwise_residual
+      (
+       p4est,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       prob_vecs.u,
+       residual_pointwise_quad,
+       0,
+       &ctx
+      );
     
     double* estimator =
-      d4est_estimator_bi_compute
+      d4est_estimator_bi_new_compute
       (
        p4est,
        &prob_vecs,
-       &prob_fcns,
+       residual_pointwise_quad,
        penalty_data,
        zero_fcn,
        NULL,
@@ -520,8 +536,12 @@ problem_init
        d4est_quad,
        0,
        NULL,
+       NULL,
+       1,
        NULL
       );
+
+    P4EST_FREE(residual_pointwise_quad);
 
     d4est_amr_smooth_pred_params_t* sp_params = d4est_amr_smooth_pred_params_input
                                                 (
@@ -693,20 +713,6 @@ problem_init
     u_prev = P4EST_REALLOC(u_prev, double, prob_vecs.local_nodes);
     error = P4EST_REALLOC(error, double, prob_vecs.local_nodes);
     d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
-
-
-
-    /* int min_level, max_level; */
-
-      /* multigrid_get_level_range(p4est, &min_level, &max_level); */
-      /* printf("[min_level, max_level] = [%d,%d]\n", min_level, max_level); */
-
-      /* int num_of_levels = (max_level-min_level) + 1; */
-
- 
-      /* multigrid_logger_t* logger = multigrid_logger_residual_init */
-      /*                              ( */
-      /*                              ); */
       
       d4est_solver_multigrid_t* mg_data = d4est_solver_multigrid_data_init(p4est,
                                                       d4est_ops,

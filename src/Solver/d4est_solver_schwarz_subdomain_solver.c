@@ -17,9 +17,7 @@ int d4est_solver_schwarz_subdomain_solver_input_handler
 
   if (d4est_util_match_couple(section,pconfig->input_section, name, "subdomain_solver")) {
     if(d4est_util_match(value, "cg")){
-      pconfig->solver_type = SUBDOMAIN_SOLVER_CG;
-
-      
+      pconfig->solver_type = SUBDOMAIN_SOLVER_CG;    
     }
     else {
       zlog_error(c_default, "%s is not a supported subdomain solver", value);

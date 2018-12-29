@@ -89,7 +89,7 @@ d4est_solver_multigrid_smoother_cheby_iterate
 {
   d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) p4est->user_pointer;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
-  zlog_category_t *c_default = zlog_get_category("d4est_d4est_solver_multigrid_smoother_cheby");   
+  zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid_smoother_cheby");   
   d4est_ghost_t* d4est_ghost = updater->current_d4est_ghost;
   d4est_ghost_data_t* d4est_ghost_data = updater->current_d4est_ghost_data;
   
@@ -246,7 +246,7 @@ d4est_solver_multigrid_smoother_cheby
   double lmax = cheby->eigs[level];
 
   if (cheby->cheby_print_spectral_bound && p4est->mpirank == 0){
-    zlog_category_t *c_default = zlog_get_category("d4est_d4est_solver_multigrid_smoother_cheby");    
+    zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid_smoother_cheby");    
     zlog_info(c_default, "mg_level,spectral_bound,multiplier = %d,%f,%f", level, cheby->eigs[level], cheby->cheby_eigs_max_multiplier);
   }
   

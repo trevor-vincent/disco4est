@@ -14,6 +14,85 @@
 #include <d4est_solver_schwarz_helpers.h>
 #include <petscsnes.h>
 #include <zlog.h>
+#include <ini.h>
+
+typedef struct {
+
+  int schwarz_iter;
+  int element_to_hrefine;
+  
+} d4est_test_schwarz_cubed_sphere_hanging_t;
+
+
+
+static
+int d4est_test_schwarz_cubed_sphere_hanging_input_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_test_schwarz_cubed_sphere_hanging_t* pconfig = (d4est_test_schwarz_cubed_sphere_hanging_t*)user;
+
+  if (d4est_util_match_couple(section, "d4est_test_params", name, "schwarz_iter")) {
+    D4EST_ASSERT(pconfig->schwarz_iter == -2);
+    pconfig->schwarz_iter = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"d4est_test_params",name,"element_to_hrefine")) {
+    D4EST_ASSERT(pconfig->element_to_hrefine == -2);
+    pconfig->element_to_hrefine = atoi(value);
+  }
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+static
+d4est_test_schwarz_cubed_sphere_hanging_t
+d4est_test_schwarz_cubed_sphere_hanging_input
+(
+ const char* input_file
+)
+{
+  d4est_test_schwarz_cubed_sphere_hanging_t input;
+
+  input.schwarz_iter = -2;
+  input.element_to_hrefine = -2;
+  
+  if (ini_parse(input_file, d4est_test_schwarz_cubed_sphere_hanging_input_handler, &input) < 0) {
+    printf("input_file = %s\n", input_file);
+    D4EST_ABORT("Can't load input file");
+  }
+
+  D4EST_CHECK_INPUT("d4est_test_params", input.schwarz_iter, -2);
+  D4EST_CHECK_INPUT("d4est_test_params", input.element_to_hrefine, -2);
+
+  return input;
+}
+
+
+
+static void 
+d4est_test_iterate_refine_only_one_element
+(
+ p4est_iter_volume_info_t* info,
+ void* user_data
+)
+{
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
+  int* element_to_refine = (int*) (d4est_amr->scheme->amr_scheme_data);
+  d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
+  if (elem_data->id == *element_to_refine){
+    d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;
+  }
+  else {
+    d4est_amr->refinement_log[elem_data->id] = elem_data->deg;
+  }
+}
+
 
 static void
 d4est_test_build_residual
@@ -101,23 +180,6 @@ neg_laplacian_poly_vec_fcn
   /* return -2*exp(x + y)*(x*(2. + x) + 1. + y*(2.+y)); */
 }
 
-static void 
-d4est_test_iterate_refine_only_one_element
-(
- p4est_iter_volume_info_t* info,
- void* user_data
-)
-{
-  d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
-  int* element_to_refine = (int*) (d4est_amr->scheme->amr_scheme_data);
-  d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
-  if (elem_data->id == *element_to_refine){
-    d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;
-  }
-  else {
-    d4est_amr->refinement_log[elem_data->id] = elem_data->deg;
-  }
-}
 
 int main(int argc, char *argv[])
 {
@@ -188,6 +250,9 @@ int main(int argc, char *argv[])
     printf("[D4EST_INFO]: min_level = %d\n", initial_grid_input->min_level);
     printf("[D4EST_INFO]: fill_uniform = %d\n", initial_grid_input->fill_uniform);
   }
+
+  d4est_test_schwarz_cubed_sphere_hanging_t test_hanging_input = d4est_test_schwarz_cubed_sphere_hanging_input(default_input_file);
+  
   
   sc_MPI_Barrier(mpicomm);
   printf("[D4EST_INFO]: elements on proc %d = %d\n", proc_rank, p4est->local_num_quadrants);
@@ -223,11 +288,14 @@ int main(int argc, char *argv[])
 
 
 
-  /* create amr scheme */
-  int add_amr_in_one_element = 0;
-  if (add_amr_in_one_element){
+  printf("element_to_hrefine = %d\n",
+         test_hanging_input.element_to_hrefine);
+  
+  if (test_hanging_input.element_to_hrefine >= 0){
+    
+    
     int* refinement_log = P4EST_ALLOC(int, p4est->local_num_quadrants);
-    int element_to_refine = 0;
+    int element_to_refine = test_hanging_input.element_to_hrefine;
     d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
     d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
     scheme->post_balance_callback = NULL;
@@ -279,6 +347,7 @@ int main(int argc, char *argv[])
     initial_grid_input->initial_nodes = local_sizes.local_nodes;
   }
 
+
   d4est_field_type_t field_type = NODAL;
   d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
                                                                d4est_ghost,
@@ -296,7 +365,8 @@ int main(int argc, char *argv[])
     = d4est_solver_schwarz_metadata_init(
                                 p4est,
                                 d4est_ghost,
-                                (argc == 2) ? argv[1] : default_input_file
+                                (argc == 2) ? argv[1] : default_input_file,
+                                "d4est_solver_schwarz"
     );
 
 
@@ -470,6 +540,69 @@ int main(int argc, char *argv[])
 
   /* DEBUG_PRINT_2ARR_DBL(rhs_over_subdomains, sol_over_subdomains, schwarz_data->restricted_nodal_size); */
 
+ for (int i = 0; i < schwarz_data->num_subdomains; i++){
+
+   d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[i];
+   
+   double* u_sub = P4EST_ALLOC(double, sub_data->restricted_nodal_size);
+   double* zeroed_u_field_over_mesh = P4EST_ALLOC_ZERO(double, d4est_factors->local_sizes.local_nodes);
+   double* zeroed_Au_field_over_mesh = P4EST_ALLOC_ZERO(double, d4est_factors->local_sizes.local_nodes);
+   double* Au_sub = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes);
+
+   for (int j = 0; j < sub_data->restricted_nodal_size; j++){
+     u_sub[j] = sub_data->restricted_nodal_stride + j;
+   }
+
+   printf("Subdomain = %d\n", i); 
+   /* d4est_solver_schwarz_laplacian_ext_apply_over_subdomain */
+   /*   ( */
+   /*    p4est, */
+   /*    d4est_ops, */
+   /*    d4est_geom, */
+   /*    d4est_quad, */
+   /*    d4est_factors, */
+   /*    d4est_ghost, */
+   /*    schwarz->metadata, */
+   /*    schwarz->operators, */
+   /*    schwarz->geometric_data, */
+   /*    flux_data_for_apply_lhs, */
+   /*    u_sub, */
+   /*    Au_sub, */
+   /*    i */
+   /*   ); */
+
+   d4est_solver_schwarz_apply_lhs_single_core
+     (
+      p4est,
+      schwarz_data,
+      schwarz_ops,
+      d4est_ghost,
+      d4est_ghost_data,
+      d4est_geom,
+      d4est_quad,
+      d4est_factors,
+      &prob_fcns_for_lhs,
+      &elliptic_data,
+      u_sub,
+      Au_sub,
+      zeroed_u_field_over_mesh,
+      zeroed_Au_field_over_mesh,
+      i,
+      NULL
+     );
+
+   
+   DEBUG_PRINT_ARR_DBL_SUM(u_sub, sub_data->restricted_nodal_size);
+   DEBUG_PRINT_ARR_DBL_SUM(Au_sub, sub_data->restricted_nodal_size);
+   P4EST_FREE(u_sub);
+   P4EST_FREE(zeroed_u_field_over_mesh);
+   P4EST_FREE(zeroed_Au_field_over_mesh);
+   P4EST_FREE(Au_sub);
+   
+ }
+
+
+  
   d4est_vtk_helper_array_t* helper_array = d4est_vtk_helper_array_init
     (
      p4est,
@@ -479,10 +612,10 @@ int main(int argc, char *argv[])
      500
     );
   
-  int iterations = 20;
   double* sol = P4EST_ALLOC_ZERO(double, local_sizes.local_nodes);
-  
-  for (int i = 0; i < iterations; i++){
+
+  int iter = test_hanging_input.schwarz_iter;
+  for (int i = 0; i < iter; i++){
 
     double* pre_solve_Au = d4est_vtk_helper_array_alloc_and_add_nodal_dbl_field
       (

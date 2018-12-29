@@ -261,23 +261,27 @@ d4est_solver_multigrid_smoother_schwarz_update
     if (compute_solver_schwarz_data) {
 
       if(smoother_data->apply_lhs_is_set == 0){
-        D4EST_ABORT("");
+        D4EST_ABORT("apply lhs is not set");
       }
       
- smoother_data->schwarz_on_level[level - 1] =
-    d4est_solver_schwarz_init
-    (
-     p4est,
-     mg_data->d4est_ops,
-     mg_data->d4est_geom,
-     mg_data->d4est_quad,
-     updater->current_d4est_ghost,
-     updater->current_d4est_factors,
-     NULL,
-     smoother_data->apply_lhs,
-     smoother_data->input_file,
-     "mg_smoother_schwarz"
-    );
+      if (p4est->mpirank == 0){
+        zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid_smoother_schwarz");    
+        zlog_debug(c_default, "Computing schwarz data for smoother on level %d", level);
+      }
+      smoother_data->schwarz_on_level[level - 1] =
+        d4est_solver_schwarz_init
+        (
+         p4est,
+         mg_data->d4est_ops,
+         mg_data->d4est_geom,
+         mg_data->d4est_quad,
+         updater->current_d4est_ghost,
+         updater->current_d4est_factors,
+         NULL,
+         smoother_data->apply_lhs,
+         smoother_data->input_file,
+         "mg_smoother_schwarz"
+        );
     }    
   }
 }
