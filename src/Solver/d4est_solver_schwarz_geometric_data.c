@@ -961,7 +961,7 @@ d4est_solver_schwarz_geometric_data_input
            d4est_mesh_get_size_parameters(d4est_factors)
           );
 
-        for (int b = 0; b < ghost_mortar_side_data->total_mortar_nodes_quad; b++){
+        for (int b = 0; b < ghost_mortar_side_data[f].total_mortar_nodes_quad; b++){
           D4EST_ASSERT(hp_mortar_quad[b] > 0);
         }
         

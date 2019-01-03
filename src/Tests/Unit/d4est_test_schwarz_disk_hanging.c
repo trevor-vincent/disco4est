@@ -338,6 +338,8 @@ int main(int argc, char *argv[])
                                           (void*)initial_grid_input
                                          );
 
+  /* p4est_partition(p4est, 1, NULL); */
+  /* p4est_balance (p4est, P4EST_CONNECT_FULL, NULL); */
   
   /* create amr scheme */
   printf("element_to_hrefine = %d\n",
@@ -468,27 +470,9 @@ int main(int argc, char *argv[])
      flux_data_for_apply_lhs
     );
 
-  
-  d4est_laplacian_build_rhs_with_strong_bc
-    (
-     p4est,
-     d4est_ghost,
-     d4est_ghost_data,
-     d4est_ops,
-     d4est_geom,
-     d4est_quad,
-     d4est_factors,
-     &elliptic_data,
-     flux_data_for_residual,
-     rhs,
-     neg_laplacian_poly_vec_fcn,
-     INIT_FIELD_ON_LOBATTO,
-     NULL,
-     0
-    );
 
-d4est_solver_schwarz_t* schwarz =
-  d4est_solver_schwarz_init
+  d4est_solver_schwarz_t* schwarz =
+    d4est_solver_schwarz_init
     (
      p4est,
      d4est_ops,
@@ -502,46 +486,44 @@ d4est_solver_schwarz_t* schwarz =
      "d4est_solver_schwarz"
     );
 
-
-
  d4est_solver_schwarz_metadata_t* schwarz_metadata
    = schwarz->metadata;
 
- for (int i = 0; i < schwarz_metadata->num_subdomains; i++){
+ /* for (int i = 0; i < schwarz_metadata->num_subdomains; i++){ */
 
-   d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_metadata->subdomain_metadata[i];
+ /*   d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_metadata->subdomain_metadata[i]; */
    
-   double* u_sub = P4EST_ALLOC(double, sub_data->restricted_nodal_size);
-   double* Au_sub = P4EST_ALLOC(double, sub_data->restricted_nodal_size);
+ /*   double* u_sub = P4EST_ALLOC(double, sub_data->restricted_nodal_size); */
+ /*   double* Au_sub = P4EST_ALLOC(double, sub_data->restricted_nodal_size); */
 
-   for (int j = 0; j < sub_data->restricted_nodal_size; j++){
-     u_sub[j] = sub_data->restricted_nodal_stride + j;
-   }
+ /*   for (int j = 0; j < sub_data->restricted_nodal_size; j++){ */
+ /*     u_sub[j] = sub_data->restricted_nodal_stride + j; */
+ /*   } */
 
-   printf("Subdomain = %d\n", i); 
-   d4est_solver_schwarz_laplacian_ext_apply_over_subdomain
-     (
-      p4est,
-      d4est_ops,
-      d4est_geom,
-      d4est_quad,
-      d4est_factors,
-      d4est_ghost,
-      schwarz->metadata,
-      schwarz->operators,
-      schwarz->geometric_data,
-      flux_data_for_apply_lhs,
-      u_sub,
-      Au_sub,
-      i
-     );
+   /* printf("Subdomain = %d\n", i); */
+   /* d4est_solver_schwarz_laplacian_ext_apply_over_subdomain */
+   /*   ( */
+   /*    p4est, */
+   /*    d4est_ops, */
+   /*    d4est_geom, */
+   /*    d4est_quad, */
+   /*    d4est_factors, */
+   /*    d4est_ghost, */
+   /*    schwarz->metadata, */
+   /*    schwarz->operators, */
+   /*    schwarz->geometric_data, */
+   /*    flux_data_for_apply_lhs, */
+   /*    u_sub, */
+   /*    Au_sub, */
+   /*    i */
+   /*   ); */
 
-   DEBUG_PRINT_ARR_DBL_SUM(u_sub, sub_data->restricted_nodal_size);
-   DEBUG_PRINT_ARR_DBL_SUM(Au_sub, sub_data->restricted_nodal_size);
-   P4EST_FREE(u_sub);
-   P4EST_FREE(Au_sub);
+   /* DEBUG_PRINT_ARR_DBL_SUM(u_sub, sub_data->restricted_nodal_size); */
+   /* DEBUG_PRINT_ARR_DBL_SUM(Au_sub, sub_data->restricted_nodal_size); */
+ /*   P4EST_FREE(u_sub); */
+ /*   P4EST_FREE(Au_sub); */
    
- }
+ /* } */
  
  
  int iter = test_hanging_input.schwarz_iter;
@@ -616,7 +598,7 @@ d4est_solver_schwarz_t* schwarz =
             sc_MPI_SUM,
             0,
             sc_MPI_COMM_WORLD
-  );    
+  );
 
   if(p4est->mpirank == 0){
     printf("pre r2 norm, post l2 norm = %.15f, %.15f\n",globals[0], globals[1]);

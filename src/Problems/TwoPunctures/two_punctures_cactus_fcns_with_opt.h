@@ -696,12 +696,8 @@ two_punctures_pointwise_residual
     }
     P4EST_FREE(f_quad);
     P4EST_FREE(f_lob);
-  }
-
-
-    
+  }   
 }
-
 
 static void
 two_punctures_build_residual

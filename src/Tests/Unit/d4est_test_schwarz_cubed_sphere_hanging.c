@@ -618,6 +618,8 @@ d4est_solver_schwarz_t* schwarz =
   if(p4est->mpirank == 0){
     printf("pre r2 norm, post l2 norm = %.15f, %.15f\n",globals[0], globals[1]);
   }
+
+  D4EST_ASSERT(fabs(globals[1] - 0.1738781) < 1e-7);
   
   clock_t end = clock();
   double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
