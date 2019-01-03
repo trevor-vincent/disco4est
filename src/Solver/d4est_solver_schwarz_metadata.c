@@ -794,6 +794,6 @@ d4est_solver_schwarz_metadata_print
          1
         );
     }
-    printf("***************************\n", p4est->mpirank);
+    printf("***************************\n");
   }
 }
