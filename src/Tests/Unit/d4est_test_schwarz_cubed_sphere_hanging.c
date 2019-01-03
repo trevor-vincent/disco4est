@@ -97,7 +97,7 @@ d4est_test_iterate_refine_only_one_element
   d4est_amr_t* d4est_amr = (d4est_amr_t*) info->p4est->user_pointer;
   int* element_to_refine = (int*) (d4est_amr->scheme->amr_scheme_data);
   d4est_element_data_t* elem_data = (d4est_element_data_t*) info->quad->p.user_data;
-  if (elem_data->id == *element_to_refine){
+  if (elem_data->tree == *element_to_refine){
     d4est_amr->refinement_log[elem_data->id] = -elem_data->deg;
   }
   else {

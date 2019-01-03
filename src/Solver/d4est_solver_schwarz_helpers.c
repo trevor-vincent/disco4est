@@ -634,7 +634,7 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
 )
 {
 
-  printf("SOLVE FOR SUBDOMAIN %d\n", subdomain);
+
   int nodes = schwarz_data->subdomain_metadata[subdomain].restricted_nodal_size;
   
   double delta_new, delta_old, temp_max, temp_min, d_dot_Ad;
@@ -676,8 +676,8 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
   delta_new = d4est_linalg_vec_dot(r,r,nodes);
   double delta_0 = delta_new;
   
-  
-  for (int i = 0; i < iter && (delta_new > atol*atol + delta_0 * rtol*rtol); i++){
+  int i;
+  for (i = 0; i < iter && (delta_new > atol*atol + delta_0 * rtol*rtol); i++){
 
     d4est_solver_schwarz_apply_lhs_single_core
       (
@@ -716,6 +716,9 @@ d4est_solver_schwarz_cg_solve_subdomain_single_core
     d4est_linalg_vec_xpby(r, beta, d, nodes);    
     
   }
+
+  printf("SOLVE FOR SUBDOMAIN %d, iter %d, r %.15f\n", subdomain,
+         i, sqrt(delta_new));
   
   P4EST_FREE(Ad);
   P4EST_FREE(d);

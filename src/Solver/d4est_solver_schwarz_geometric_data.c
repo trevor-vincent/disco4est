@@ -387,6 +387,8 @@ d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
         /* printf("sub_data->element_stride = %d\n", sub_data->element_stride); */
         /* printf("(sub_data->element_stride + j)*(P4EST_FACES) + f = %d\n", */
                /* (sub_data->element_stride + j)*(P4EST_FACES) + f); */
+
+        
         if (sides_done[(sub_data->element_stride + j)*(P4EST_FACES) + f] == 1){
           continue;
         }
@@ -407,7 +409,13 @@ d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
           mortar_side_data = &ghost_mortar_side_data[f];
         }
           
-          
+        /* if (i == 0 && mortar_side_data->mortar_side_id == 8){ */
+          /* printf("Subdomain 0 && mortar_side_id_m 8\n"); */
+          /* printf("subdomain element = %d\n",j); */
+          /* printf("sides_done[(sub_data->element_stride + j)*(P4EST_FACES) + f] = %d\n", */
+                 /* sides_done[(sub_data->element_stride + j)*(P4EST_FACES) + f]); */
+        /* } */
+        
         for (int fm = 0; fm < mortar_side_data->faces_m; fm++){
 
           int is_in_subdomain =
@@ -419,8 +427,8 @@ d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
           if (is_in_subdomain >= 0){
             schwarz_geometric_data->nodal_stride_m[mortar_face_stride + fm]
               = sub_data->element_metadata[is_in_subdomain].nodal_stride;
-            sides_done[(sub_data->element_stride + is_in_subdomain)*(P4EST_FACES) + mortar_side_data->f_m] == 1;
-
+            sides_done[(sub_data->element_stride + is_in_subdomain)*(P4EST_FACES) + mortar_side_data->f_m] = 1;
+            
             D4EST_ASSERT(schwarz_geometric_data->nodal_stride_m[mortar_face_stride + fm] < sub_data->nodal_size);
           }
           else {
@@ -444,7 +452,7 @@ d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
               = sub_data->element_metadata[is_in_subdomain].nodal_stride;
             D4EST_ASSERT(schwarz_geometric_data->nodal_stride_p[mortar_face_stride + fp] < sub_data->nodal_size);
               
-            sides_done[(sub_data->element_stride + is_in_subdomain)*(P4EST_FACES) + mortar_side_data->f_p] == 1;
+            /* sides_done[(sub_data->element_stride + is_in_subdomain)*(P4EST_FACES) + mortar_side_data->f_p] = 1; */
           }
           else {
             schwarz_geometric_data->zero_and_skip_p[mortar_face_stride + fp] = 1;

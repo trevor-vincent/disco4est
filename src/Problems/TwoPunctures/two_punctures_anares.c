@@ -806,16 +806,21 @@ problem_init
       prob_vecs.num_of_fields = 1;
 
       if (initial_extents->load_newton_checkpoint == 1){
-        if (level == initial_level)
-          zlog_info(c_tp,"Loading from newton checkpoint if level %d == initial_level %d",
+        if (level == initial_level){
+          if (p4est->mpirank == 0)
+            zlog_info(c_tp,"Loading from newton checkpoint if level %d == initial_level %d",
                  level, initial_level);
-        else
-          zlog_info(c_tp,"We will not load from newton checkpoint because level %d != initial_level %d"
+        }
+        else{
+          if (p4est->mpirank == 0)
+            zlog_info(c_tp,"We will not load from newton checkpoint because level %d != initial_level %d"
                  ,level, initial_level);
+        }
       }
-      else
-        zlog_info(c_tp,"We will not load from newton checkpoint");
-      
+      else{
+        if (p4est->mpirank == 0)
+          zlog_info(c_tp,"We will not load from newton checkpoint");
+      }
       if (level == initial_level && initial_extents->load_newton_checkpoint == 1){
 
         d4est_checkpoint_read_dataset

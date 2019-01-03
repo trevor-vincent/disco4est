@@ -550,13 +550,32 @@ static void
     
     stride += face_nodes_m_lobatto[i];
   }
+
+
+  int zero_and_skip_p_oriented [P4EST_HALF];
+  if (faces_p == 1){
+    zero_and_skip_p_oriented[0] = laplacian_flux_params->zero_and_skip_p[0];
+  }
+  else {
+    for (int i = 0; i < faces_p; i++){
+      int inew = d4est_reference_reorient_face_order
+                 (
+                  (P4EST_DIM)-1,
+                  f_m,
+                  f_p,
+                  orientation,
+                  i
+                 );
+      zero_and_skip_p_oriented[i] = laplacian_flux_params->zero_and_skip_p[inew];
+    }
+  }
  
   stride = 0;
   for (int i = 0; i < faces_p; i++){
 
     double* u_p = NULL;
 
-    if (laplacian_flux_params->using_schwarz && laplacian_flux_params->zero_and_skip_p[i]){
+    if (laplacian_flux_params->using_schwarz && zero_and_skip_p_oriented[i]){
       u_p = zero_field;
     }
     else if (laplacian_flux_params->using_schwarz){
