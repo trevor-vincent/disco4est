@@ -1,0 +1,13 @@
+#ifndef D4EST_SOLVER_MULTIGRID_BOTTOM_SOLVER_REUSE_SMOOTHER_H
+#define D4EST_SOLVER_MULTIGRID_BOTTOM_SOLVER_REUSE_SMOOTHER_H 
+
+#include <pXest.h>
+#include <d4est_solver_multigrid.h>
+
+void
+d4est_solver_multigrid_bottom_solver_reuse_smoother_destroy(d4est_solver_multigrid_bottom_solver_t *bottom_solver);
+void
+d4est_solver_multigrid_bottom_solver_reuse_smoother_solve(p4est_t *p4est,d4est_elliptic_data_t *vecs,d4est_elliptic_eqns_t *fcns,double *r);
+d4est_solver_multigrid_bottom_solver_t *d4est_solver_multigrid_bottom_solver_reuse_smoother_init();
+
+#endif
