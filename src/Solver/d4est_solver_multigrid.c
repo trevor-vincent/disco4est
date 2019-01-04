@@ -21,6 +21,7 @@
 #include <d4est_solver_multigrid_bottom_solver_cg.h>
 #include <d4est_solver_multigrid_bottom_solver_cheby.h>
 #include <d4est_solver_multigrid_bottom_solver_krylov_petsc.h>
+#include <d4est_solver_multigrid_bottom_solver_reuse_smoother.h>
 #include <zlog.h>
 #include <time.h>
 
@@ -430,6 +431,14 @@ d4est_solver_multigrid_set_bottom_solver(p4est_t* p4est, const char* input_file,
                                                 input_file
                                                );
   }
+
+  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_reuse_smoother")){
+    mg_data->bottom_solver = d4est_solver_multigrid_bottom_solver_reuse_smoother_init
+                                               (
+                                               );
+  }
+
+  
   else {
     zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid");
     zlog_error(c_default, "You chose the %s bottom_solver.", mg_data->bottom_solver_name);
@@ -459,6 +468,13 @@ d4est_solver_multigrid_destroy_bottom_solver( d4est_solver_multigrid_t* mg_data)
        mg_data->bottom_solver
       );
   }
+  else if(d4est_util_match(mg_data->bottom_solver_name, "mg_bottom_solver_reuse_smoother")){
+    d4est_solver_multigrid_bottom_solver_reuse_smoother_destroy
+      (
+       mg_data->bottom_solver
+      );
+  }
+  
   else {
     zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid");
     zlog_error(c_default, "You chose the %s bottom_solver.", mg_data->bottom_solver_name);

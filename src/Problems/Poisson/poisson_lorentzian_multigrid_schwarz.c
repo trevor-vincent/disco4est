@@ -931,7 +931,6 @@ problem_init
     );
   
     if (mg_data->smoother->type == MG_SMOOTHER_SCHWARZ){
-      printf("Using schwarz");
       d4est_solver_multigrid_smoother_schwarz_set_apply_lhs
         (
          p4est,

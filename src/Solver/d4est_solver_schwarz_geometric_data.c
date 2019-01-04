@@ -359,6 +359,24 @@ d4est_solver_schwarz_geometric_data_destroy
   P4EST_FREE(schwarz_geometric_data);
 }
 
+
+
+/** 
+ * This method removes the redundant mortars
+ *
+ * A lot of mortars will be shared by other elements
+ * in the most general, non-conforming case. We can 
+ * not speed this up even further by removing the mortars
+ * on the boundary of the schwarz domain when the overlap
+ * is not the size of element because even though the solution
+ * field might be zero on the schwarz boundary in that case, its
+ * derivative may not be.
+ * 
+ * @param p4est 
+ * @param d4est_ghost 
+ * @param schwarz_metadata 
+ * @param schwarz_geometric_data 
+ */
 void
 d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
 (
@@ -415,19 +433,46 @@ d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
           /* printf("sides_done[(sub_data->element_stride + j)*(P4EST_FACES) + f] = %d\n", */
                  /* sides_done[(sub_data->element_stride + j)*(P4EST_FACES) + f]); */
         /* } */
-        
-        for (int fm = 0; fm < mortar_side_data->faces_m; fm++){
 
-          int is_in_subdomain =
+        /* int overlap_m_sum = 0; */
+        /* int in_subdomain_m_sum = 0; */
+        /* int skip_p_sum = 0; */
+        int is_in_subdomain_m [P4EST_HALF];
+        int is_in_subdomain_p [P4EST_HALF];
+        for (int fm = 0; fm < mortar_side_data->faces_m; fm++){
+          is_in_subdomain_m[fm] =
             d4est_solver_schwarz_is_element_in_subdomain(sub_data,
                                                          mortar_side_data->e_m[fm].mpirank,
                                                          mortar_side_data->e_m[fm].tree,
                                                          mortar_side_data->e_m[fm].tree_quadid
                                                         );
-          if (is_in_subdomain >= 0){
+          /* in_subdomain_m_sum += (is_in_subdomain_m[fm] >= 0); */
+          /* overlap_m_sum += (mortar_side_data->e_m[fm].deg + 1 > schwarz_metadata->num_nodes_overlap) && (is_in_subdomain_m[fm] >= 0); */
+        }
+
+
+        for (int fp = 0; fp < mortar_side_data->faces_p; fp++){
+          is_in_subdomain_p[fp] =
+            d4est_solver_schwarz_is_element_in_subdomain(sub_data,
+                                                         mortar_side_data->e_p[fp].mpirank,
+                                                         mortar_side_data->e_p[fp].tree,
+                                                         mortar_side_data->e_p[fp].tree_quadid
+                                                        );
+          /* skip_p_sum += (is_in_subdomain_p[fp] < 0); */
+        }
+        /* This face is external to the schwarz subdomain and all fields are zero on it */
+        /* if (mortar_side_data->faces_p != 0 && */
+            /* skip_p_sum == mortar_side_data->faces_p && */
+            /* overlap_m_sum == in_subdomain_m_sum){ */
+          /* continue; */
+        /* } */
+        
+        for (int fm = 0; fm < mortar_side_data->faces_m; fm++){
+
+          if (is_in_subdomain_m[fm] >= 0){
             schwarz_geometric_data->nodal_stride_m[mortar_face_stride + fm]
-              = sub_data->element_metadata[is_in_subdomain].nodal_stride;
-            sides_done[(sub_data->element_stride + is_in_subdomain)*(P4EST_FACES) + mortar_side_data->f_m] = 1;
+              = sub_data->element_metadata[is_in_subdomain_m[fm]].nodal_stride;
+            sides_done[(sub_data->element_stride + is_in_subdomain_m[fm])*(P4EST_FACES) + mortar_side_data->f_m] = 1;
             
             D4EST_ASSERT(schwarz_geometric_data->nodal_stride_m[mortar_face_stride + fm] < sub_data->nodal_size);
           }
@@ -436,20 +481,20 @@ d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
           }
         }
 
-        int skip_p_sum = 0;
+
         for (int fp = 0; fp < mortar_side_data->faces_p; fp++){
 
-          int is_in_subdomain =
-            d4est_solver_schwarz_is_element_in_subdomain(sub_data,
-                                                         mortar_side_data->e_p[fp].mpirank,
-                                                         mortar_side_data->e_p[fp].tree,
-                                                         mortar_side_data->e_p[fp].tree_quadid
-                                                        );
+          /* int is_in_subdomain = */
+            /* d4est_solver_schwarz_is_element_in_subdomain(sub_data, */
+                                                         /* mortar_side_data->e_p[fp].mpirank, */
+                                                         /* mortar_side_data->e_p[fp].tree, */
+                                                         /* mortar_side_data->e_p[fp].tree_quadid */
+                                                        /* ); */
 
-          skip_p_sum += (is_in_subdomain < 0);
-          if (is_in_subdomain >= 0){
+          /* skip_p_sum += (is_in_subdomain < 0); */
+          if (is_in_subdomain_p[fp] >= 0){
             schwarz_geometric_data->nodal_stride_p[mortar_face_stride + fp]
-              = sub_data->element_metadata[is_in_subdomain].nodal_stride;
+              = sub_data->element_metadata[is_in_subdomain_p[fp]].nodal_stride;
             D4EST_ASSERT(schwarz_geometric_data->nodal_stride_p[mortar_face_stride + fp] < sub_data->nodal_size);
               
             /* sides_done[(sub_data->element_stride + is_in_subdomain)*(P4EST_FACES) + mortar_side_data->f_p] = 1; */
@@ -475,6 +520,7 @@ d4est_solver_schwarz_geometric_data_reduce_to_minimal_set
     schwarz_geometric_data->mortar_strides_per_subdomain[i] = stride;
     stride += num_of_mortars;
   }
+  /* printf("Total number of mortars = %d\n", stride); */
 
   P4EST_FREE(sides_done);
 

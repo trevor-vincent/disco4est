@@ -285,3 +285,4 @@ d4est_solver_multigrid_smoother_schwarz_update
     }    
   }
 }
+

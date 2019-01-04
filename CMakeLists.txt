@@ -132,6 +132,7 @@ SET (
   src/Solver/d4est_solver_multigrid_bottom_solver_cg.c
   src/Solver/d4est_solver_multigrid_bottom_solver_cheby.c
   src/Solver/d4est_solver_multigrid_bottom_solver_krylov_petsc.c
+  src/Solver/d4est_solver_multigrid_bottom_solver_reuse_smoother.c
   src/Solver/d4est_solver_multigrid_element_data_updater.c
   src/Solver/d4est_solver_multigrid_logger_residual.c
   src/Solver/d4est_solver_multigrid_profiler_basic.c
@@ -405,7 +406,7 @@ add_d4est_unit_test_3d(d4est_test_schwarz_operators d4est_test_schwarz_operators
 # add_d4est_unit_test_2d(d4est_test_schwarz_ghostdata d4est_test_schwarz_ghostdata.c Unit d4est_test_schwarz_ghostdata)
 add_d4est_unit_test_3d(d4est_test_schwarz_cubed_sphere_new_3d d4est_test_schwarz_cubed_sphere_new.c Unit d4est_test_schwarz_cubed_sphere_new_3d)
 
-# add_d4est_unit_test_3d(d4est_test_schwarz_cubed_sphere_hanging d4est_test_schwarz_cubed_sphere_hanging.c Unit d4est_test_schwarz_cubed_sphere_hanging)
+add_d4est_unit_test_3d(d4est_test_schwarz_cubed_sphere_hanging d4est_test_schwarz_cubed_sphere_hanging.c Unit d4est_test_schwarz_cubed_sphere_hanging)
 # add_d4est_unit_test_3d(d4est_test_schwarz_slowerAu_cubed_sphere_hanging d4est_test_schwarz_slowerAu_cubed_sphere_hanging.c Unit d4est_test_schwarz_slowerAu_cubed_sphere_hanging)
 
 
