@@ -774,7 +774,7 @@ d4est_solver_schwarz_metadata_print
   
   if(d4est_ghost != NULL){
     printf("Ghost subdomains on proc %d\n", p4est->mpirank);
-    printf("***************************\n", p4est->mpirank);
+    printf("***************************\n");
     for (int gid = 0; gid < schwarz_metadata->subdomain_ghostdata->num_ghosts; gid++){
       d4est_solver_schwarz_subdomain_metadata_t* sub_data =
         (d4est_solver_schwarz_subdomain_metadata_t*)
