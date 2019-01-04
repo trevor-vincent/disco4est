@@ -396,7 +396,37 @@ problem_init
        NULL,
        level
       );
-      
+
+    double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
+
+    d4est_element_data_store_nodal_vec_in_vertex_array
+      (
+       p4est,
+       prob_vecs.u,
+       u_vertex
+      );
+
+    char* u_corner_file = P4EST_ALLOC(char, 100);
+    sprintf(u_corner_file, "%s_%d", "u_corner", level);
+    p4est_vtk_ext_write_all
+      (p4est,
+       NULL,
+       0.99,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0,
+       u_corner_file,
+       "u",
+       u_vertex
+      );
+
+    P4EST_FREE(u_corner_file);
+    P4EST_FREE(u_vertex);
+
+    
 
     ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
     ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;

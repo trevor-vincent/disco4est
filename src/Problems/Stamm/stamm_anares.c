@@ -634,7 +634,7 @@ problem_init
        1,
        1,
        0,
-       "u_corner",
+       u_corner_file,
        "u",
        u_vertex
       );
