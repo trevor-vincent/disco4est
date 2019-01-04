@@ -225,7 +225,7 @@ d4est_util_is_power_of
 )
 {
   if (power_of > number && number != 1){
-    printf("power_of > number && number != 1\n", power_of);
+    printf("power_of > number && number != 1\n");
     printf("power_of = %d\n", power_of);
     printf("number = %d\n", number);
     D4EST_ABORT("");
