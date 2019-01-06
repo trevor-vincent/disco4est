@@ -202,14 +202,14 @@ d4est_solver_schwarz_subdomain_solver_cg
     d4est_linalg_vec_xpby(r, beta, d, nodes);    
 
     if (cg_params->verbose == 2){
-      zlog_info(c_default, "rank subdomain core_tree iters r2 %d %d %d %d %.15f\n", p4est->mpirank, subdomain, sub_data->core_tree, i, delta_new);
+      zlog_info(c_default, "rank subdomain core_tree iters r2 %d %d %d %d %.15f", p4est->mpirank, subdomain, sub_data->core_tree, i, delta_new);
     }
   }
 
   if (cg_params->verbose >= 1){
     clock_t end = clock();
     double time_spent = (double)(end-begin)/CLOCKS_PER_SEC;
-    zlog_info(c_default, "rank subdomain core_tree iters r time %d %d %d %d %.15f %f\n", p4est->mpirank, subdomain, sub_data->core_tree, i, sqrt(delta_new), time_spent);
+    zlog_info(c_default, "rank subdomain core_tree iters r time %d %d %d %d %.15f %f", p4est->mpirank, subdomain, sub_data->core_tree, i, sqrt(delta_new), time_spent);
   }
   
   P4EST_FREE(Ad);

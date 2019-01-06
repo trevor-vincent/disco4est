@@ -1187,7 +1187,6 @@ problem_init
     iterations++;
 
     d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
-
     
     if (level != d4est_amr->num_of_amr_steps && level != 0){
       d4est_checkpoint_save
@@ -1224,14 +1223,11 @@ problem_init
   d4est_laplacian_flux_destroy(flux_data_for_lhs);
   d4est_laplacian_flux_destroy(flux_data_for_rhs);
   d4est_norms_linear_fit_destroy(point_3m_fit);
-
-
   d4est_solver_schwarz_apply_lhs_destroy
     (
      apply_lhs
     );
-  
-  
+    
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
   P4EST_FREE(prob_vecs.u);

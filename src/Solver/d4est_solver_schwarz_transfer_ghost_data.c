@@ -174,7 +174,7 @@ d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
   clock_t end = clock();
   double time_spent = (double)(end-begin)/CLOCKS_PER_SEC;
 
-  zlog_info(c_default, "Gathering schwarz contributions in %f seconds", time_spent);
+  zlog_info(c_default, "Gathering schwarz contributions in %f seconds on rank %d", time_spent, p4est->mpirank);
 }
 
 
