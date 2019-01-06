@@ -6,7 +6,7 @@
 #include <d4est_linalg.h>
 #include <d4est_xyz_functions.h>
 #include <ini.h>
-
+#include <time.h>
 
 
 static
@@ -88,6 +88,8 @@ d4est_solver_multigrid_smoother_schwarz
  int level
 )
 {
+  zlog_category_t* c_default = zlog_get_category("d4est_schwarz_solver");
+  
   d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_smoother_schwarz_t* smoother_data = mg_data->smoother->user;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
@@ -95,6 +97,8 @@ d4est_solver_multigrid_smoother_schwarz
   if(smoother_data->apply_lhs_is_set == 0){
     D4EST_ABORT("Please call d4est_solver_multigrid_smoother_schwarz_set_apply_lhs before solving");
   }
+  clock_t start = clock();
+  
   
   for (int i = 0; i < smoother_data->iterations; i++){
 
@@ -129,11 +133,10 @@ d4est_solver_multigrid_smoother_schwarz
        vecs->u,
        r
       );
-
     
-    if (smoother_data->verbose){
+    if (smoother_data->verbose && p4est->mpirank == 0){
       double r2 = d4est_linalg_vec_dot(r, r, vecs->local_nodes);  
-      printf("[SCHWARZ_SMOOTHER_INFO] mg_level = %d, schwarz iter = %d, r = %.15f\n", level, i, sqrt(r2));
+      zlog_info(c_default,"mg_level = %d, schwarz iter = %d, r_on_proc0 = %.15f\n", level, i, sqrt(r2));
     }
   }
 
@@ -154,7 +157,13 @@ d4est_solver_multigrid_smoother_schwarz
     );
 
   d4est_linalg_vec_xpby(vecs->rhs, -1., r, vecs->local_nodes);    
-  vecs->Au = temp_Au;  
+  vecs->Au = temp_Au;
+  
+  clock_t end = clock();
+  if (p4est->mpirank == 0){
+    double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
+    zlog_info(c_default, "Time spent smoothing (seconds) = %f\n", time_spent);
+  }
 }
   
 
@@ -264,10 +273,7 @@ d4est_solver_multigrid_smoother_schwarz_update
         D4EST_ABORT("apply lhs is not set");
       }
       
-      if (p4est->mpirank == 0){
-        zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid_smoother_schwarz");    
-        zlog_debug(c_default, "Computing schwarz data for smoother on level %d", level);
-      }
+      clock_t begin = clock();
       smoother_data->schwarz_on_level[level - 1] =
         d4est_solver_schwarz_init
         (
@@ -282,6 +288,15 @@ d4est_solver_multigrid_smoother_schwarz_update
          smoother_data->input_file,
          "mg_smoother_schwarz"
         );
+
+      clock_t end = clock();
+      double time_spent = (double)(end - begin)/CLOCKS_PER_SEC;
+        
+      if (p4est->mpirank == 0){
+        zlog_category_t *c_default = zlog_get_category("d4est_schwarz_setup");    
+        zlog_debug(c_default, "Computing schwarz data for smoother on level %d in %f seconds", level, time_spent);
+      }
+        
     }    
   }
 }

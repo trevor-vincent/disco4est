@@ -12,7 +12,7 @@ int d4est_solver_schwarz_subdomain_solver_input_handler
  const char* value
 )
 {
-  zlog_category_t *c_default = zlog_get_category("d4est_solver_schwarz_subdomain_solver"); // TODO: get from function argument
+  zlog_category_t *c_default = zlog_get_category("d4est_solver_schwarz_subdomain_solver"); 
   d4est_solver_schwarz_subdomain_solver_t* pconfig = (d4est_solver_schwarz_subdomain_solver_t*)user;
 
   if (d4est_util_match_couple(section,pconfig->input_section, name, "subdomain_solver")) {

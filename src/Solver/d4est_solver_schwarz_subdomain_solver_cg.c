@@ -5,8 +5,9 @@
 #include <d4est_solver_schwarz_operators.h>
 #include <d4est_solver_schwarz_apply_lhs.h>
 #include <d4est_linalg.h>
+#include <zlog.h>
 #include <ini.h>
-
+#include <time.h>
 static
 int d4est_solver_schwarz_subdomain_solver_cg_input_handler
 (
@@ -111,11 +112,15 @@ d4est_solver_schwarz_subdomain_solver_cg
  void* params
 )
 {
-  /* zlog_category_t* c_default = zlog_get_category("d4est_solver_schwarz_subdomain_solver_cg"); */
+  clock_t begin = clock();
+  zlog_category_t* c_default = zlog_get_category("d4est_schwarz_subdomain");
 
   d4est_solver_schwarz_subdomain_solver_cg_t* cg_params
     = params;
 
+  d4est_solver_schwarz_subdomain_metadata_t* sub_data =
+    &schwarz_metadata->subdomain_metadata[subdomain];
+  
   int iter = cg_params->subdomain_iter;
   double atol = cg_params->subdomain_atol;
   double rtol = cg_params->subdomain_rtol;
@@ -197,12 +202,14 @@ d4est_solver_schwarz_subdomain_solver_cg
     d4est_linalg_vec_xpby(r, beta, d, nodes);    
 
     if (cg_params->verbose == 2){
-      printf("rank subdomain iters r2 %d %d %d %.15f\n", p4est->mpirank, subdomain, i, delta_new);
+      zlog_info(c_default, "rank subdomain core_tree iters r2 %d %d %d %d %.15f\n", p4est->mpirank, subdomain, sub_data->core_tree, i, delta_new);
     }
   }
 
-  if (cg_params->verbose == 1){
-    printf("rank subdomain iters r %d %d %d %.15f\n", p4est->mpirank, subdomain, i, sqrt(delta_new));
+  if (cg_params->verbose >= 1){
+    clock_t end = clock();
+    double time_spent = (double)(end-begin)/CLOCKS_PER_SEC;
+    zlog_info(c_default, "rank subdomain core_tree iters r time %d %d %d %d %.15f %f\n", p4est->mpirank, subdomain, sub_data->core_tree, i, sqrt(delta_new), time_spent);
   }
   
   P4EST_FREE(Ad);

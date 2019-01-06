@@ -18,17 +18,10 @@ typedef struct {
   int tree_quadid; /* local id of quadrant in tree */
   
   /* TODO: Convenience strides, will be removed 
-   * and places in d4est_mesh_data */
-  
+   * and places in d4est_mesh_data eventually*/
   int sqr_nodal_stride;
   int nodal_stride;
   int quad_stride;
-
-  /* WILL BE REMOVED ASAP and put in d4est_mesh_data*/
-  /* int boundary_quad_vector_stride [P4EST_FACES]; */
-  /* int mortar_quad_scalar_stride [P4EST_FACES]; */
-  /* int mortar_quad_vector_stride [P4EST_FACES]; */
-  /* int mortar_quad_matrix_stride [P4EST_FACES]; */
 
   /* topological information for element */
   int region;
@@ -43,6 +36,11 @@ typedef struct {
   /* only used in tests */
 #ifdef D4EST_TEST
   double test_vecs[3][MAX_NODES];
+  /* double area [P4EST_FACES]; */
+  /* double volume; */
+  /* double j_div_sj_min_lobatto [P4EST_FACES]; */
+  /* double j_div_sj_avg_lobatto [P4EST_FACES]; */
+  /* double j_div_sj_max_lobatto [P4EST_FACES]; */
 #endif
   
 } d4est_element_data_t;

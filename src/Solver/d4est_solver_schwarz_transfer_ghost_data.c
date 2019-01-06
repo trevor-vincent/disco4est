@@ -3,6 +3,7 @@
 #include <d4est_element_data.h>
 #include <d4est_solver_schwarz_metadata.h>
 #include <d4est_solver_schwarz_transfer_ghost_data.h>
+#include <time.h>
 
 static int field_size_of_ghost_fcn
 (
@@ -66,8 +67,8 @@ d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
  double* du_over_subdomains
 )
 {
-  /* DEBUG_PRINT_ARR_DBL(du_over_subdomains, */
-                      /* schwarz_metadata->nodal_size); */
+  zlog_category_t* c_default = zlog_get_category("d4est_schwarz_solver");
+  clock_t begin = clock();
   
   if (p4est->mpisize > 1){
     if (*d4est_ghost_data_ext == NULL){
@@ -168,8 +169,12 @@ d4est_solver_schwarz_transfer_ghost_data_and_add_corrections
       }
 
     }
-  }  
+  }
 
+  clock_t end = clock();
+  double time_spent = (double)(end-begin)/CLOCKS_PER_SEC;
+
+  zlog_info(c_default, "Gathering schwarz contributions in %f seconds", time_spent);
 }
 
 
