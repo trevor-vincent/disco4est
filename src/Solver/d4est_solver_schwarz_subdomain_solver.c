@@ -1,5 +1,6 @@
 #include <pXest.h>
 #include <d4est_solver_schwarz_subdomain_solver_cg.h>
+#include <d4est_solver_schwarz_subdomain_solver_gmres.h>
 #include <d4est_solver_schwarz_subdomain_solver.h>
 #include <ini.h>
 
@@ -19,6 +20,9 @@ int d4est_solver_schwarz_subdomain_solver_input_handler
     if(d4est_util_match(value, "cg")){
       pconfig->solver_type = SUBDOMAIN_SOLVER_CG;    
     }
+    else if(d4est_util_match(value, "gmres")){
+      pconfig->solver_type = SUBDOMAIN_SOLVER_GMRES;    
+    }    
     else {
       zlog_error(c_default, "%s is not a supported subdomain solver", value);
       D4EST_ABORT("");
@@ -67,6 +71,17 @@ d4est_solver_schwarz_subdomain_solver_init
        input_section
       );
   }
+  else if(schwarz_subdomain_solver->solver_type == SUBDOMAIN_SOLVER_GMRES){
+    schwarz_subdomain_solver->solver_fcn = d4est_solver_schwarz_subdomain_solver_gmres;
+    schwarz_subdomain_solver->destroy_fcn = d4est_solver_schwarz_subdomain_solver_gmres_destroy;
+    schwarz_subdomain_solver->solver_ctx =
+      d4est_solver_schwarz_subdomain_solver_gmres_init
+      (
+       p4est,
+       input_file,
+       input_section
+      );
+  }  
   else{
     D4EST_ABORT("Not a supported subdomain solver");
   }

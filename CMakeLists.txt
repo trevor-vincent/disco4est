@@ -148,6 +148,7 @@ SET (
   src/Solver/d4est_solver_schwarz_laplacian_ext.c
   src/Solver/d4est_solver_schwarz_transfer_ghost_data.c
   src/Solver/d4est_solver_schwarz_subdomain_solver_cg.c
+  src/Solver/d4est_solver_schwarz_subdomain_solver_gmres.c
   src/Solver/d4est_solver_schwarz_subdomain_solver.c
   src/Solver/d4est_solver_schwarz_apply_lhs.c
   src/Solver/d4est_solver_schwarz_geometric_data.c

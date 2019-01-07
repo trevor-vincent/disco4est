@@ -1,7 +1,7 @@
 #ifndef D4EST_SOLVER_SCHWARZ_SUBDOMAIN_SOLVER_H
 #define D4EST_SOLVER_SCHWARZ_SUBDOMAIN_SOLVER_H 
 
-typedef enum {SUBDOMAIN_SOLVER_NOT_SET, SUBDOMAIN_SOLVER_CG} d4est_solver_schwarz_subdomain_solver_type_t;
+typedef enum {SUBDOMAIN_SOLVER_NOT_SET, SUBDOMAIN_SOLVER_CG, SUBDOMAIN_SOLVER_GMRES} d4est_solver_schwarz_subdomain_solver_type_t;
 
 typedef
 void
