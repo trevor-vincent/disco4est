@@ -109,7 +109,7 @@ double **dmatrix ( int nrl, int nrh, int ncl, int nch )
   int nrow = nrh - nrl + 1;
   int ncol = nch - ncl + 1;
 
-  m= P4EST_ALLOC ( double* , nrow + 1);
+  m= malloc ((sizeof(double*))*(nrow + 1));
   
   if ( !m ) 
   {
@@ -142,8 +142,8 @@ double **dmatrix ( int nrl, int nrh, int ncl, int nch )
 static
 void free_dmatrix ( double **m, int nrl, int nrh, int ncl, int nch )
 {
-  P4EST_FREE ( ( char* ) ( m[nrl] + ncl - 1 ) );
-  P4EST_FREE ( ( char* ) ( m + nrl - 1 ) );
+  free ( ( char* ) ( m[nrl] + ncl - 1 ) );
+  free ( ( char* ) ( m + nrl - 1 ) );
   return;
 }
 
@@ -418,10 +418,11 @@ d4est_solver_schwarz_subdomain_solver_gmres
     }
   }
 
-   if (gmres_params->verbose >= 1){
+  if (gmres_params->verbose >= 1){
     clock_t end = clock();
     double time_spent = (double)(end-begin)/CLOCKS_PER_SEC;
     zlog_info(c_default, "rank subdomain core_tree iters r time %d %d %d %d %.15f %f", p4est->mpirank, subdomain, sub_data->core_tree, itr_used, rho, time_spent);
+    /* printf( "rank subdomain core_tree iters r time %d %d %d %d %.15f %f", p4est->mpirank, subdomain, sub_data->core_tree, itr_used, rho, time_spent); */
   }
   
   free ( c );
