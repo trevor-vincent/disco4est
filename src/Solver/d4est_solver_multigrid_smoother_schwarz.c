@@ -176,7 +176,7 @@ d4est_solver_multigrid_smoother_schwarz
        p4est,
        smoother_data->schwarz_on_level[level],
        smoother_data->input_file,
-       "d4est_schwarz_vtk",
+       "d4est_vtk_schwarz",
        "schwarz_mglevel",
        schwarz_folder,
        smoother_data->vtk_debug_mg_level,

@@ -1702,9 +1702,9 @@ d4est_vtk_save_aux
 
   cont->folder = d4est_util_add_cwd(folder);
   d4est_util_make_directory(cont->folder,0);
-  if (sub_folder_number >= 0){
-    asprintf(&cont->folder,"%s%d/", cont->folder, sub_folder_number);
-  }
+  /* if (sub_folder_number >= 0){ */
+  asprintf(&cont->folder,"%s%d/", cont->folder, sub_folder_number);
+  /* } */
   d4est_util_make_directory(cont->folder,0);
   
   zlog_category_t *c_vtk_geom = zlog_get_category("d4est_vtk_geometry");
