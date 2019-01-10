@@ -162,7 +162,7 @@ void mult_givens ( double c, double s, int k, double *g )
   return;
 }
 
-void
+d4est_solver_schwarz_subdomain_solver_info_t
 d4est_solver_schwarz_subdomain_solver_gmres
 (
  p4est_t* p4est,
@@ -433,4 +433,8 @@ d4est_solver_schwarz_subdomain_solver_gmres
   free_dmatrix(v,0,mr,0,n-1);
   free ( y );
   P4EST_FREE(Au_restricted_field_over_subdomain);
+
+
+  return (d4est_solver_schwarz_subdomain_solver_info_t){.final_iter = itr_used,
+      .final_res = rho};
 }

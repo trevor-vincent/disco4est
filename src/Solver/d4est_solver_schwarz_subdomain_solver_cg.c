@@ -94,7 +94,7 @@ d4est_solver_schwarz_subdomain_solver_cg_init
 }
 
 
-void
+d4est_solver_schwarz_subdomain_solver_info_t
 d4est_solver_schwarz_subdomain_solver_cg
 (
  p4est_t* p4est,
@@ -211,9 +211,14 @@ d4est_solver_schwarz_subdomain_solver_cg
     double time_spent = (double)(end-begin)/CLOCKS_PER_SEC;
     zlog_info(c_default, "rank subdomain core_tree iters r time %d %d %d %d %.15f %f", p4est->mpirank, subdomain, sub_data->core_tree, i, sqrt(delta_new), time_spent);
   }
+
   
   P4EST_FREE(Ad);
   P4EST_FREE(d);
   P4EST_FREE(r);
+
+  return (d4est_solver_schwarz_subdomain_solver_info_t){.final_iter = i,
+    .final_res = sqrt(delta_new)};
+    
   /* retrun final_info; */
 }

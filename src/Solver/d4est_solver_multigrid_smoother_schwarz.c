@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <pXest.h>
 #include <d4est_solver_multigrid_smoother_schwarz.h>
 #include <d4est_solver_multigrid.h>
@@ -31,6 +32,12 @@ int d4est_solver_multigrid_smoother_schwarz_input_handler
     D4EST_ASSERT(pconfig->verbose == -1);
     pconfig->verbose = atoi(value);
   }
+
+  else if ( d4est_util_match_couple(section,input_section,name,"smoother_vtk_debug")) {
+    D4EST_ASSERT(pconfig->vtk_debug == 0);
+    pconfig->vtk_debug = atoi(value);
+  }
+  
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -156,6 +163,32 @@ d4est_solver_multigrid_smoother_schwarz
      updater->current_d4est_factors
     );
 
+  
+  if (smoother_data->vtk_debug){
+    char* schwarz_folder;
+    asprintf(&schwarz_folder,"Schwarz_%d_%d/", smoother_data->vtk_debug_amr_level, smoother_data->vtk_debug_ksp_level);
+    
+    char* full_dir = d4est_util_add_cwd(schwarz_folder);
+    d4est_util_make_directory(full_dir,0);
+    
+    d4est_solver_schwarz_debug_vtk
+      (
+       p4est,
+       smoother_data->schwarz_on_level[level],
+       smoother_data->input_file,
+       "d4est_schwarz_vtk",
+       "schwarz_mglevel",
+       schwarz_folder,
+       smoother_data->vtk_debug_mg_level,
+       (const char * []){"residual",NULL},
+       (double* []){r}
+      );
+
+    free(schwarz_folder);
+    free(full_dir);
+  }
+
+  
   d4est_linalg_vec_xpby(vecs->rhs, -1., r, vecs->local_nodes);    
   vecs->Au = temp_Au;
   
@@ -183,9 +216,12 @@ d4est_solver_multigrid_smoother_schwarz_init
 
   smoother_data->schwarz_on_level = P4EST_ALLOC(d4est_solver_schwarz_t*, num_of_levels); 
 
+  smoother_data->vtk_debug_ksp_level = -1;
+  smoother_data->vtk_debug_mg_level = -1;
+  smoother_data->vtk_debug_amr_level = -1;
   smoother_data->iterations = -1;
   smoother_data->verbose = -1;
-
+  smoother_data->vtk_debug = 0;
 
   if(
      ini_parse(input_file,
@@ -264,7 +300,30 @@ d4est_solver_multigrid_smoother_schwarz_update
   d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_smoother_schwarz_t* smoother_data = mg_data->smoother->user;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
-  
+  if (smoother_data->vtk_debug){    
+    if (mg_data->mg_state == START){
+      smoother_data->vtk_debug_ksp_level++;
+    }
+    else if (mg_data->mg_state == UPV_PRE_SMOOTH ||
+             mg_data->mg_state == DOWNV_PRE_SMOOTH ||
+             mg_data->mg_state == COARSE_PRE_SOLVE){
+
+
+      if (mg_data->mg_state == UPV_PRE_SMOOTH ||
+         COARSE_PRE_SOLVE){
+        smoother_data->vtk_debug_mg_level = level;
+      }
+      else {
+        smoother_data->vtk_debug_mg_level = -level;        
+      }
+      
+      smoother_data->vtk_debug_amr_level = mg_data->amr_level;
+      if (mg_data->amr_level < 0){
+        printf("mg_data->amr_level < 0 but smoother_vtk_debug == 1 for schwarz");
+        D4EST_ABORT("");
+      }
+    }
+  }
   if (mg_data->mg_state == DOWNV_POST_BALANCE){
     int compute_solver_schwarz_data = (smoother_data->schwarz_on_level[level - 1] == NULL);
     if (compute_solver_schwarz_data) {

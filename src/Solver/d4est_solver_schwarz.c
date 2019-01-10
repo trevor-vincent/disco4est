@@ -1,6 +1,7 @@
 #include <d4est_solver_schwarz.h>
 #include <d4est_solver_schwarz_helpers.h>
 #include <d4est_solver_schwarz_transfer_ghost_data.h>
+#include <d4est_vtk.h>
 /** 
  * Init all the data needed for solving
  * with the schwarz method (additive)
@@ -87,43 +88,61 @@ d4est_solver_schwarz_init
                                                       );
 ;
   schwarz->correction_ghost_data = NULL;
+
+  schwarz->collect_subdomain_solve_info = 1;
+  if (schwarz->collect_subdomain_solve_info){
+    schwarz->subdomain_solve_residuals = P4EST_ALLOC(double,
+                                                     p4est->local_num_quadrants);
+
+    schwarz->subdomain_solve_iterations = P4EST_ALLOC(int,
+                                                      p4est->local_num_quadrants);
+  }
+
+
+  
   return schwarz;
 }
 
 void
 d4est_solver_schwarz_destroy
 (
- d4est_solver_schwarz_t* schwarz_data
+ d4est_solver_schwarz_t* schwarz
 )
 {
-  d4est_solver_schwarz_metadata_destroy(schwarz_data->metadata);
+  d4est_solver_schwarz_metadata_destroy(schwarz->metadata);
 
-  if(schwarz_data->operators_external_alloc == 0){
-    d4est_solver_schwarz_operators_destroy(schwarz_data->operators);
+  if(schwarz->operators_external_alloc == 0){
+    d4est_solver_schwarz_operators_destroy(schwarz->operators);
   }
   
   d4est_ghost_data_ext_destroy
     (
-     schwarz_data->correction_ghost_data
+     schwarz->correction_ghost_data
     );
 
   d4est_ghost_data_destroy
     (
-     schwarz_data->residual_ghost_data
+     schwarz->residual_ghost_data
     );
   
   d4est_solver_schwarz_geometric_data_destroy
     (
-     schwarz_data->geometric_data
+     schwarz->geometric_data
     );
   
   d4est_solver_schwarz_subdomain_solver_destroy
     (
-     schwarz_data->subdomain_solver
+     schwarz->subdomain_solver
     );
 
+
+  if (schwarz->collect_subdomain_solve_info){
+    P4EST_FREE(schwarz->subdomain_solve_residuals);
+    P4EST_FREE(schwarz->subdomain_solve_iterations);
+  }
+
   
-  P4EST_FREE(schwarz_data);
+  P4EST_FREE(schwarz);
 }
 
 
@@ -198,7 +217,7 @@ d4est_solver_schwarz_iterate
   for (int i = 0; i < schwarz_metadata->num_subdomains; i++){
     d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_metadata->subdomain_metadata[i];
 
-    schwarz->subdomain_solver->solver_fcn
+    d4est_solver_schwarz_subdomain_solver_info_t info = schwarz->subdomain_solver->solver_fcn
       (
        p4est,
        d4est_geom,
@@ -214,6 +233,9 @@ d4est_solver_schwarz_iterate
        i,
        schwarz->subdomain_solver->solver_ctx
       );
+
+    schwarz->subdomain_solve_residuals[sub_data.core_id] = info.final_res;
+    schwarz->subdomain_solve_iterations[sub_data.core_id] = info.final_iter;
   }
 
   d4est_solver_schwarz_compute_correction
@@ -237,4 +259,35 @@ d4est_solver_schwarz_iterate
   P4EST_FREE(restricted_r);
   P4EST_FREE(correction_field_over_subdomains);
   P4EST_FREE(du);  
+}
+
+void
+d4est_solver_schwarz_debug_vtk
+(
+ p4est_t* p4est,
+ d4est_solver_schwarz_t* schwarz,
+ char* input_file,
+ char* input_section,
+ char* save_as,
+ char* folder,
+ int sub_folder_number,
+ const char ** dg_field_names,
+ double ** dg_fields
+)
+{
+  d4est_vtk_save_aux
+    (
+     p4est,
+     schwarz->operators->d4est_ops,
+     input_file,
+     input_section,
+     dg_field_names,
+     dg_fields,
+     (const char * []){"subdomain_solve_residuals",NULL},
+     (double* []){schwarz->subdomain_solve_residuals},
+     (const char * []){"subdomain_solve_iterations",NULL},
+     (int* []){schwarz->subdomain_solve_iterations},
+     folder,
+     sub_folder_number
+    );    
 }

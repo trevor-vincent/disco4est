@@ -21,6 +21,15 @@ typedef struct {
   int verbose;
   int iterations;
   
+  int vtk_debug;
+  int* iterations_per_subdomain;
+  double* residual_per_subdomain;
+
+  /* only useful if vtk_debug == 1 */
+  int vtk_debug_ksp_level;
+  int vtk_debug_mg_level;
+  int vtk_debug_amr_level;
+  
 } d4est_solver_multigrid_smoother_schwarz_t;
 
 /* This file was automatically generated.  Do not edit! */

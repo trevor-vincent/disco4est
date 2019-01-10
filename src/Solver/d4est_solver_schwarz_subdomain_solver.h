@@ -1,6 +1,8 @@
 #ifndef D4EST_SOLVER_SCHWARZ_SUBDOMAIN_SOLVER_H
 #define D4EST_SOLVER_SCHWARZ_SUBDOMAIN_SOLVER_H 
 
+#include <d4est_solver_schwarz_subdomain_solver_info.h>
+
 typedef enum {SUBDOMAIN_SOLVER_NOT_SET, SUBDOMAIN_SOLVER_CG, SUBDOMAIN_SOLVER_GMRES} d4est_solver_schwarz_subdomain_solver_type_t;
 
 typedef
@@ -12,7 +14,7 @@ void
 
 
 typedef
-void
+d4est_solver_schwarz_subdomain_solver_info_t
 (*d4est_solver_schwarz_subdomain_solver_fcn_t)
 (
  p4est_t*,

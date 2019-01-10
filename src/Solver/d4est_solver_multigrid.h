@@ -201,6 +201,7 @@ struct  d4est_solver_multigrid_data {
   double power_imax; /* UNREQUIRED */
   double power_imin; /* UNREQUIRED */
   int use_p_coarsen; /* UNREQUIRED */ /* p-d4est_solver_multigrid is untested and aborts atm */
+  int amr_level;
     
   /* ******* INTERNAL PARAMETERS ******* */
   int num_of_levels;
@@ -272,5 +273,8 @@ int d4est_solver_multigrid_get_h_coarsen_levels_old(p4est_t *p4est);
 int d4est_solver_multigrid_get_h_coarsen_levels_initial(p4est_t *p4est,d4est_mesh_initial_extents_t *initial_extents);
 int d4est_solver_multigrid_get_h_coarsen_levels_post_initial(p4est_t *p4est,int num_of_levels_last,int has_there_been_h_refinements);
 int d4est_solver_multigrid_get_p_coarsen_levels(p4est_t *p4est);
+
+void d4est_solver_multigrid_data_set_amr_level(d4est_solver_multigrid_t*,int);
+
 
 #endif

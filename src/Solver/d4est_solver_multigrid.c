@@ -482,6 +482,15 @@ d4est_solver_multigrid_destroy_bottom_solver( d4est_solver_multigrid_t* mg_data)
   }
 }
 
+void
+d4est_solver_multigrid_data_set_amr_level
+(
+ d4est_solver_multigrid_t* mg_data,
+ int amr_level
+){
+  mg_data->amr_level = amr_level;
+}
+
 
  d4est_solver_multigrid_t*
 d4est_solver_multigrid_data_init
@@ -504,7 +513,8 @@ d4est_solver_multigrid_data_init
   int num_of_h_coarsen_levels = d4est_solver_multigrid_get_h_coarsen_levels(p4est);  
 
   D4EST_ASSERT(num_of_h_coarsen_levels >= 1);
-  
+
+  mg_data->amr_level = -1;
   mg_data->d4est_ops = d4est_ops;
   mg_data->d4est_geom = d4est_geom;
   mg_data->d4est_quad = d4est_quad;
