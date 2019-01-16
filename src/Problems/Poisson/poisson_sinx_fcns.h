@@ -42,7 +42,11 @@ poisson_sinx_rhs_fcn
  void* user
 )
 {
-  return (PI)*(PI)*(P4EST_DIM)*poisson_sinx_analytic_solution(x,y,z,user);
+  return (PI)*(PI)*(P4EST_DIM)*poisson_sinx_analytic_solution(x,y
+#if (P4EST_DIM)==3
+                                                              ,z
+#endif
+                                                              ,user);
 }
 
 
@@ -94,7 +98,11 @@ poisson_sinx__fcn
  void* user
 )
 {
-  return poisson_sinx_analytic_solution(x,y,z,user);
+  return poisson_sinx_analytic_solution(x,y,
+#if (P4EST_DIM)==3
+                                        z,
+#endif
+                                        user);
 }
 
 

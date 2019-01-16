@@ -420,6 +420,28 @@ d4est_solver_schwarz_t* schwarz =
     double globals [2];
     double locals [] = {r2, l2};
 
+    char* schwarz_folder;
+    asprintf(&schwarz_folder,"Schwarz_%d_%d/", 0, iter);
+    char* full_dir = d4est_util_add_cwd(schwarz_folder);
+    d4est_util_make_directory(full_dir,0);
+    
+    d4est_solver_schwarz_debug_vtk
+      (
+       p4est,
+       schwarz,
+       input_file,
+       "d4est_vtk",
+       "schwarz_mglevel",
+       schwarz_folder,
+       0,
+       (const char * []){"residual",NULL},
+       (double* []){r}
+      );
+
+    free(schwarz_folder);
+    free(full_dir);
+
+    
   sc_reduce(
             &locals,
             &globals,

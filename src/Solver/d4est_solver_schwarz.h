@@ -24,7 +24,6 @@ typedef struct {
   d4est_ghost_data_ext_t* correction_ghost_data;
   d4est_ghost_data_t* residual_ghost_data;
 
-  int collect_subdomain_solve_info;
   double* subdomain_solve_residuals;
   int* subdomain_solve_iterations;
   

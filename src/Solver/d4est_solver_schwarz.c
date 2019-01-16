@@ -89,14 +89,14 @@ d4est_solver_schwarz_init
 ;
   schwarz->correction_ghost_data = NULL;
 
-  schwarz->collect_subdomain_solve_info = 1;
-  if (schwarz->collect_subdomain_solve_info){
-    schwarz->subdomain_solve_residuals = P4EST_ALLOC(double,
+  /* schwarz->collect_subdomain_solve_info = 1; */
+  /* if (schwarz->collect_subdomain_solve_info){ */
+    schwarz->subdomain_solve_residuals = P4EST_ALLOC_ZERO(double,
                                                      p4est->local_num_quadrants);
 
-    schwarz->subdomain_solve_iterations = P4EST_ALLOC(int,
+    schwarz->subdomain_solve_iterations = P4EST_ALLOC_ZERO(int,
                                                       p4est->local_num_quadrants);
-  }
+  /* } */
 
 
   
@@ -136,10 +136,10 @@ d4est_solver_schwarz_destroy
     );
 
 
-  if (schwarz->collect_subdomain_solve_info){
+  /* if (schwarz->collect_subdomain_solve_info){ */
     P4EST_FREE(schwarz->subdomain_solve_residuals);
     P4EST_FREE(schwarz->subdomain_solve_iterations);
-  }
+  /* } */
 
   
   P4EST_FREE(schwarz);
@@ -216,7 +216,11 @@ d4est_solver_schwarz_iterate
 
   for (int i = 0; i < schwarz_metadata->num_subdomains; i++){
     d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_metadata->subdomain_metadata[i];
+    /* if (i == 1){ */
 
+      /* double* du_temp = &du[sub_data.restricted_nodal_stride]; */
+      /* DEBUG_PRINT_ARR_DBL(du_temp, sub_data.restricted_nodal_size); */
+      
     d4est_solver_schwarz_subdomain_solver_info_t info = schwarz->subdomain_solver->solver_fcn
       (
        p4est,
@@ -234,8 +238,10 @@ d4est_solver_schwarz_iterate
        schwarz->subdomain_solver->solver_ctx
       );
 
+    /* printf("sub_data.coreId, info.final_res, info.final_iter = %d, %f, %d\n", sub_data.core_id, info.final_res, info.final_iter); */
     schwarz->subdomain_solve_residuals[sub_data.core_id] = info.final_res;
     schwarz->subdomain_solve_iterations[sub_data.core_id] = info.final_iter;
+    /* } */
   }
 
   d4est_solver_schwarz_compute_correction

@@ -401,7 +401,8 @@ problem_init
   if (p4est->mpirank == 0)
     d4est_norms_write_headers(
                               (const char * []){"u", NULL},
-                              (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL}
+                              (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
+                              NULL
     );
 
 
@@ -668,6 +669,8 @@ problem_init
                      (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
                      (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy, &d4est_norms_fcn_energy_estimator },
                      (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx },
+                     NULL,
+                     NULL,
                      NULL
     );
     

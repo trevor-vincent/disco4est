@@ -112,6 +112,10 @@ d4est_solver_schwarz_subdomain_solver_cg
  void* params
 )
 {
+
+
+
+  
   clock_t begin = clock();
   zlog_category_t* c_default = zlog_get_category("d4est_schwarz_subdomain");
 
@@ -120,6 +124,8 @@ d4est_solver_schwarz_subdomain_solver_cg
 
   d4est_solver_schwarz_subdomain_metadata_t* sub_data =
     &schwarz_metadata->subdomain_metadata[subdomain];
+
+  /* DEBUG_PRINT_ARR_DBL(du_restricted_field_over_subdomain, sub_data->restricted_nodal_size); */
   
   int iter = cg_params->subdomain_iter;
   double atol = cg_params->subdomain_atol;
@@ -154,20 +160,23 @@ d4est_solver_schwarz_subdomain_solver_cg
      Ad,
      apply_lhs->apply_lhs_ctx
     );
+
+
+  /* DEBUG_PRINT_2ARR_DBL(du_restricted_field_over_subdomain,Ad, sub_data->restricted_nodal_size); */
     
   d4est_util_copy_1st_to_2nd(Ad, r, nodes);
   d4est_linalg_vec_xpby(rhs_restricted_field_over_subdomain, -1., r, nodes);
   d4est_util_copy_1st_to_2nd(r, d, nodes);
   delta_new = d4est_linalg_vec_dot(r,r,nodes);
   double delta_0 = delta_new;  
-
+  double tol_break = atol*atol + delta_0 * rtol*rtol;
   /* printf("iter = %d\n", iter); */
   /* printf("rtol = %.15f\n", rtol); */
   /* printf("atol = %.15f\n", atol); */
-  /* printf("subdomain verbose = %d\n", cg_params->verbose); */
+  /* printf("(delta_new > atol*atol + delta_0 * rtol*rtol) = %d\n", (delta_new > atol*atol + delta_0 * rtol*rtol)); */
   int i;
   for (i = 0;
-       i < iter && (delta_new > atol*atol + delta_0 * rtol*rtol);
+       i < iter;
        i++){
 
     apply_lhs->apply_lhs_fcn
@@ -186,6 +195,7 @@ d4est_solver_schwarz_subdomain_solver_cg
        Ad,
        apply_lhs->apply_lhs_ctx
       );
+    /* DEBUG_PRINT_2ARR_DBL(d,Ad, sub_data->restricted_nodal_size); */
     
     d_dot_Ad = d4est_linalg_vec_dot(d, Ad, nodes);
 
@@ -204,6 +214,11 @@ d4est_solver_schwarz_subdomain_solver_cg
     if (cg_params->verbose == 2){
       zlog_info(c_default, "rank subdomain core_tree iters r2 %d %d %d %d %.15f", p4est->mpirank, subdomain, sub_data->core_tree, i, delta_new);
     }
+    
+    if (delta_new < tol_break){
+      break;
+    }
+    
   }
 
   if (cg_params->verbose >= 1){

@@ -25,10 +25,51 @@
 #include <d4est_solver_multigrid_logger_residual.h>
 #include <d4est_solver_multigrid_element_data_updater.h>
 #include <d4est_solver_multigrid.h>
+#include <d4est_solver_schwarz.h>
+#include <d4est_solver_multigrid_smoother_schwarz.h>
+#include <d4est_solver_schwarz_laplacian_ext.h>
 #include <d4est_util.h>
 #include <time.h>
 #include <zlog.h>
 #include "poisson_sinx_fcns.h"
+
+
+static void
+poisson_sinx_schwarz_apply_lhs
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_ghost_t* d4est_ghost,
+ d4est_solver_schwarz_operators_t* schwarz_ops,
+ d4est_solver_schwarz_metadata_t* schwarz_data,
+ d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data,
+ int subdomain,
+ double* u_restricted_field_over_subdomain,
+ double* Au_restricted_field_over_subdomain,
+ void* ctx
+){
+
+  d4est_solver_schwarz_laplacian_ext_apply_over_subdomain
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     d4est_ghost,
+     schwarz_data,
+     schwarz_ops,
+     schwarz_geometric_data,
+     ctx,
+     u_restricted_field_over_subdomain,
+     Au_restricted_field_over_subdomain,
+     subdomain
+    );
+}
+
 
 void
 problem_init
@@ -94,7 +135,8 @@ problem_init
   if (p4est->mpirank == 0)
     d4est_norms_write_headers(
       (const char * []){"u", NULL},
-      (const char * []){"L_2", "L_infty", NULL}
+      (const char * []){"L_2", "L_infty", NULL},
+      NULL
     );
 
 
@@ -143,6 +185,13 @@ problem_init
 
   for (int level = 0; level < d4est_amr->num_of_amr_steps + 1; level++) {
 
+  d4est_solver_schwarz_apply_lhs_t*
+    apply_lhs = d4est_solver_schwarz_apply_lhs_init
+    (
+     poisson_sinx_schwarz_apply_lhs,
+     flux_data_for_apply_lhs
+    );
+    
 
     d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
                                                                  *d4est_ghost,
@@ -183,6 +232,30 @@ problem_init
       input_file
     );
 
+
+    if (mg_data->smoother->type == MG_SMOOTHER_SCHWARZ){
+
+
+      d4est_solver_multigrid_data_set_amr_level
+        (
+         mg_data,
+         level);
+
+      d4est_solver_multigrid_smoother_schwarz_set_apply_lhs
+        (
+         p4est,
+         d4est_ops,
+         d4est_geom,
+         d4est_quad,
+         *d4est_ghost,
+         d4est_factors,
+         apply_lhs,
+         mg_data,
+         input_file
+        );
+    }
+    
+    
     pc = d4est_krylov_pc_multigrid_create(mg_data, NULL);
 
     // Krylov PETSc solve
@@ -287,6 +360,8 @@ problem_init
       (const char * []){"L_2", "L_infty", NULL},
       (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty },
       (void * []){ &L2_norm_ctx, NULL },
+      NULL,
+      NULL,
       NULL
     );
 
@@ -341,6 +416,13 @@ problem_init
     d4est_krylov_pc_multigrid_destroy(pc);
     d4est_solver_multigrid_data_destroy(mg_data);
 
+
+    d4est_solver_schwarz_apply_lhs_destroy
+      (
+       apply_lhs
+      );
+  
+    
     if (d4est_ghost_data != NULL){
       d4est_ghost_data_destroy(d4est_ghost_data);
       d4est_ghost_data = NULL;

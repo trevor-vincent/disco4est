@@ -19,9 +19,11 @@
 double
 d4est_norms_fcn_L2
 (
+  p4est_t* p4est,
   double *field_value_errors,
   int num_nodes_local,
-  void *norm_fcn_ctx
+  void *norm_fcn_ctx,
+  int (*skip_element_fcn)(d4est_element_data_t*)
 )
 {
   d4est_norms_fcn_L2_ctx_t *ctx = norm_fcn_ctx;
@@ -34,8 +36,7 @@ d4est_norms_fcn_L2
     ctx->d4est_factors,
     field_value_errors,
     num_nodes_local,
-    /* DO_NOT_STORE_LOCALLY, */
-    NULL,
+    skip_element_fcn,
     NULL
   );
     
@@ -63,17 +64,43 @@ d4est_norms_fcn_L2
 double
 d4est_norms_fcn_Linfty
 (
-  double *field_value_errors,
-  int num_nodes_local,
-  void *norm_fcn_ctx
+ p4est_t* p4est,
+ double *field_value_errors,
+ int num_nodes_local,
+ void *norm_fcn_ctx,
+ int (*skip_element_fcn)(d4est_element_data_t*)
 )
 {
   double norm_local = 0;
-  for (int i = 0; i < num_nodes_local; i++) {
-    if (field_value_errors[i] > norm_local)
-      norm_local = field_value_errors[i];
+
+  if (skip_element_fcn == NULL){
+    for (int i = 0; i < num_nodes_local; i++) {
+      if (field_value_errors[i] > norm_local)
+        norm_local = field_value_errors[i];
+    }
   }
-  
+  else {
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt)
+      {
+        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+        sc_array_t* tquadrants = &tree->quadrants;
+        int Q = (p4est_locidx_t) tquadrants->elem_count;
+        for (int q = 0; q < Q; ++q) {
+          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+          d4est_element_data_t* ed = quad->p.user_data;
+          int skip_element = (skip_element_fcn != NULL) ? skip_element_fcn(ed) : 0;
+          if (!skip_element){
+            int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+            for (int i = 0; i < volume_nodes; i++) {
+              if (field_value_errors[ed->nodal_stride + i] > norm_local)
+                norm_local = field_value_errors[ed->nodal_stride + i];
+            }
+          }        
+        }
+      }
+  }
   // Reduce over all parallel processes
   double norm;
   sc_reduce(
@@ -174,25 +201,32 @@ d4est_norms_linear_fit_destroy
 double
 d4est_norms_fcn_energy
 (
+  p4est_t* p4est,
   double *field_value_errors,
   int num_nodes_local,
-  void *norm_fcn_ctx
+  void *norm_fcn_ctx,
+  int (*skip_element_fcn)(d4est_element_data_t*)
 )
 {
+  if (skip_element_fcn != NULL){
+    D4EST_ABORT("Do not use d4est_norms_fcn_energy when skip_element_fcn != NULL, (not supported)");
+  }
+  
   d4est_norms_fcn_energy_ctx_t *ctx = norm_fcn_ctx;
   
-  double norm_sq_local = d4est_ip_energy_norm_compute(
-    ctx->p4est,
-    field_value_errors,
-    ctx->energy_norm_data,
-    ctx->ghost,
-    ctx->ghost_data,
-    ctx->d4est_ops,
-    ctx->d4est_geom,
-    ctx->d4est_quad,
-    ctx->d4est_factors,
-    ctx->which_field
-  );
+  double norm_sq_local = d4est_ip_energy_norm_compute
+                         (
+                          ctx->p4est,
+                          field_value_errors,
+                          ctx->energy_norm_data,
+                          ctx->ghost,
+                          ctx->ghost_data,
+                          ctx->d4est_ops,
+                          ctx->d4est_geom,
+                          ctx->d4est_quad,
+                          ctx->d4est_factors,
+                          ctx->which_field
+                         );
 
   // Reduce over all parallel processes
   double norm_sq;
@@ -215,14 +249,38 @@ d4est_norms_fcn_energy
 double
 d4est_norms_fcn_energy_estimator
 (
+  p4est_t* p4est,
   double *field_value_errors,
   int num_nodes_local,
-  void *norm_fcn_ctx
+  void *norm_fcn_ctx,
+  int (*skip_element_fcn)(d4est_element_data_t*)
 )
 {
+  double norm_sq_local = 0.;
   d4est_norms_fcn_energy_ctx_t *ctx = norm_fcn_ctx;
-  double norm_sq_local = ctx->energy_estimator_sq_local;
-
+  double* estimator = ctx->energy_estimator;
+  
+  if (skip_element_fcn == NULL){
+    norm_sq_local = ctx->energy_estimator_sq_local;
+  }
+  else {
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt)
+      {
+        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+        sc_array_t* tquadrants = &tree->quadrants;
+        int Q = (p4est_locidx_t) tquadrants->elem_count;
+        for (int q = 0; q < Q; ++q) {
+          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+          d4est_element_data_t* ed = quad->p.user_data;
+          int skip_element = (skip_element_fcn != NULL) ? skip_element_fcn(ed) : 0;
+          if (!skip_element){
+            norm_sq_local += estimator[ed->id];
+          }        
+        }
+      }
+  }
   // Reduce over all parallel processes
   double norm_sq;
   sc_reduce(
@@ -251,13 +309,18 @@ void
 d4est_norms_write_headers
 (
   const char** field_names,
-  const char** norm_names
+  const char** norm_names,
+  const char* zlog_output_category_prefix
 ){
   int i_fields = -1;
   while (field_names[++i_fields] != NULL) {
 
     char *norms_output_category;
-    asprintf(&norms_output_category, "norms_%s", field_names[i_fields]);
+    if (zlog_output_category_prefix == NULL)
+      asprintf(&norms_output_category, "norms_%s", field_names[i_fields]);
+    else
+      asprintf(&norms_output_category, "%s_norms_%s", zlog_output_category_prefix, field_names[i_fields]);
+      
     zlog_category_t *c_norms_output = zlog_get_category(norms_output_category);
     free(norms_output_category);
     
@@ -272,13 +335,25 @@ d4est_norms_write_headers
   }
 }
 
-/*
-  Computes norms over the computational grid and outputs them to files.
-  
-  - field_names: Null terminated list of names for the fields on the computational grid. The norms are written in a separate file for each field. Either provide `field_values_compare` or an `analytical_solution` for each field.
-  - norm_names: Null terminated list of names for the norms to be computed for each field. These should correspond to the `norm_names` passed to an initial call to `d4est_norms_write_headers`.
-  - norm_fcns: A function pointer for each norm declared in `norm_names`. These functions are responsible for actually computing the norms. You can provide custom functions, or use the implementations supplied in the `d4est_norms_fcn` namespace.
-*/
+/** 
+ * Writes norms out for either the entire grid, or a region
+ * based on a non-null skip_element_fcn passed to d4est_norms_save
+ * 
+ * @param p4est 
+ * @param d4est_factors 
+ * @param field_names Null terminated list of names for the fields on the computational grid. The norms are written in a separate file for each field. Either provide `field_values_compare` or an `analytical_solution` for each field.
+ * @param field_values 
+ * @param field_values_compare 
+ * @param analytical_solutions 
+ * @param analytical_solution_ctxs 
+ * @param norm_names Null terminated list of names for the norms to be computed for each field. These should correspond to the `norm_names` passed to an initial call to `d4est_norms_write_headers`
+ * @param norm_fcns norm_fcns: A function pointer for each norm declared in `norm_names`. These functions are responsible for actually computing the norms. You can provide custom functions, or use the implementations supplied in the `d4est_norms_fcn` namespace.
+ * @param norm_fcn_ctxs 
+ * @param linear_fits 
+ * @param zlog_output_category_prefix 
+ * @param skip_element_fcn returns 1 if an element's norm should not be included, 0 otherwise, this is
+ * useful when you want to only compute norms on subspaces of the mesh.
+ */
 void
 d4est_norms_save
 (
@@ -292,7 +367,9 @@ d4est_norms_save
   const char **norm_names,
   d4est_norm_fcn_t *norm_fcns,
   void **norm_fcn_ctxs,
-  d4est_norms_linear_fit_t** linear_fits
+  d4est_norms_linear_fit_t** linear_fits,
+  const char* zlog_output_category_prefix,
+  int (*skip_element_fcn)(d4est_element_data_t*) /* for skipping elements not in region */
 )
 {
   zlog_category_t *c_default = zlog_get_category("d4est_norms");
@@ -307,30 +384,57 @@ d4est_norms_save
   while (norm_names[++num_norms] != NULL)
     continue;
 
-  // Get number of nodes on the local process
-  int num_nodes_local = d4est_mesh_get_local_nodes(p4est);
-  int num_nodes_local_combined[2] = {
-    num_nodes_local,
-    d4est_mesh_get_local_quad_nodes(p4est)
+
+  int local_nodes_in_region = 0;
+  int local_quad_nodes_in_region = 0;
+  int local_elements_in_region = 0;
+
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int Q = (p4est_locidx_t) tquadrants->elem_count;
+      for (int q = 0; q < Q; ++q) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, q);
+        d4est_element_data_t* ed = quad->p.user_data;
+        int skip_element = (skip_element_fcn != NULL) ? skip_element_fcn(ed) : 0;
+
+        if (!skip_element){
+          local_elements_in_region += 1;
+          local_nodes_in_region += d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+          local_quad_nodes_in_region += d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
+        }
+      }
+    }
+
+  int num_nodes_local_combined[3] = {
+    local_elements_in_region,
+    local_nodes_in_region,
+    local_quad_nodes_in_region
   };
-  int num_nodes_combined[2];
+  
+  int num_nodes_combined[3];
   sc_reduce(
     &num_nodes_local_combined,
     &num_nodes_combined,
-    2,
+    3,
     sc_MPI_INT,
     sc_MPI_SUM,
     0,
     sc_MPI_COMM_WORLD
   );
-  int num_nodes = num_nodes_combined[0];
-  int num_quad_nodes = num_nodes_combined[1];
-
+  int num_elements = num_nodes_combined[0];
+  int num_nodes = num_nodes_combined[1];
+  int num_quad_nodes = num_nodes_combined[2];
 
   d4est_xyz_fcn_t analytical_solution_i = NULL; // Points to the provided function when iterating through the fields, if one is available.
   double *field_values_analytical = NULL; // Holds computed analytical values when iterating through the fields, if no compare values were provided.
   double *field_values_compare_i = NULL; // Points to the compare values, either computed and stored in field_values_analytical, or provided by the function argument.
-  double *field_value_errors = P4EST_ALLOC(double, num_nodes_local); // Holds the computed errors between values and compare values when iterating through the fields.
+  int num_nodes_local = d4est_factors->local_sizes.local_nodes;
+  double *field_value_errors = P4EST_ALLOC(double,
+                                           num_nodes_local); // Holds the computed errors between values and compare values when iterating through the fields.
 
   // Collect local measure of norms
   for (int i_fields = 0; i_fields < num_fields; i_fields++){
@@ -367,11 +471,14 @@ d4est_norms_save
     double norms[num_norms];
     for (int i_norms=0; i_norms < num_norms; i_norms++) {
 
-      norms[i_norms] = (*(norm_fcns[i_norms]))(
-        field_value_errors,
-        num_nodes_local,
-        norm_fcn_ctxs[i_norms]
-      );
+      norms[i_norms] = (*(norm_fcns[i_norms]))
+                       (
+                        p4est,
+                        field_value_errors,
+                        num_nodes_local,
+                        norm_fcn_ctxs[i_norms],
+                        skip_element_fcn
+                       );
 
     }
 
@@ -395,7 +502,11 @@ d4est_norms_save
 
       // Construct filename
       char *norms_output_category;
-      asprintf(&norms_output_category, "norms_%s", field_names[i_fields]);
+      if (zlog_output_category_prefix == NULL)
+        asprintf(&norms_output_category, "norms_%s", field_names[i_fields]);
+      else
+        asprintf(&norms_output_category, "%s_norms_%s", zlog_output_category_prefix, field_names[i_fields]);
+      
       zlog_category_t *c_norms_output = zlog_get_category(norms_output_category);
       free(norms_output_category);
 

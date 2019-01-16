@@ -310,8 +310,6 @@ int main(int argc, char *argv[])
   elliptic_data.field_types = &field_type;
   elliptic_data.num_of_fields = 1;
 
-
-    
   d4est_mesh_init_field
     (
      p4est,
@@ -322,8 +320,7 @@ int main(int argc, char *argv[])
      d4est_factors,
      INIT_FIELD_ON_LOBATTO,
      NULL
-    );
-  
+    );  
 
   d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
                                                                d4est_ghost,
@@ -357,8 +354,8 @@ int main(int argc, char *argv[])
      0
     );
 
-d4est_solver_schwarz_t* schwarz =
-  d4est_solver_schwarz_init
+  d4est_solver_schwarz_t* schwarz =
+    d4est_solver_schwarz_init
     (
      p4est,
      d4est_ops,
@@ -425,8 +422,7 @@ d4est_solver_schwarz_t* schwarz =
        d4est_ghost,
        schwarz,
        u,
-       r,
-       d4est_ghost_data
+       r
       );
 
     d4est_util_compute_error_array(sol, u, error, local_sizes.local_nodes);

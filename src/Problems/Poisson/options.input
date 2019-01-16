@@ -150,3 +150,15 @@ iter = 1
 atol = 1e-15
 rtol = 1e-15
 monitor = 1
+
+
+
+[d4est_solver_schwarz]
+num_nodes_overlap = 2
+subdomain_iter = 1000;
+subdomain_rtol = 1e-1;
+subdomain_solver = cg
+subdomain_atol = 1e-15;
+smoother_iterations = 3;
+smoother_verbose = 1;
+subdomain_verbose = 0;
