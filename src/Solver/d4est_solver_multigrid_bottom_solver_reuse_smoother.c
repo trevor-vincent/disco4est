@@ -36,6 +36,7 @@ d4est_solver_multigrid_bottom_solver_reuse_smoother_solve
      0
     );  
 }
+
 void
 d4est_solver_multigrid_bottom_solver_reuse_smoother_destroy
 (

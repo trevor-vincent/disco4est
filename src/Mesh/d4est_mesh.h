@@ -142,6 +142,9 @@ typedef struct {
   double* area;
   double* volume;
 
+  /* if needed */
+  /* d4est_ghost_data_ext_t face_h_ghost_data; */
+
   /* internal, don't touch these */
   int aux_mortar_quad_stride;
   int aux_boundary_quad_stride;

@@ -9,7 +9,7 @@ d4est_krylov_pc_multigrid_setup
  d4est_krylov_pc_t* kpc
 )
 {
-  zlog_category_t *c_def = zlog_get_category("d4est_krylov_pc_multigrid");
+  /* zlog_category_t *c_def = zlog_get_category("d4est_krylov_pc_multigrid"); */
   /* zlog_info(c_def, "Operator is changing, running d4est_krylov_pc_multigrid_setup"); */
 
   /* add to mg_data setup int every time this is called */

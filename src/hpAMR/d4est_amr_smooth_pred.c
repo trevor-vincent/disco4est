@@ -149,6 +149,8 @@ d4est_amr_smooth_pred_post_balance_callback
      smooth_pred_data,
      &smooth_pred_data->predictor
     );
+
+  
 }
 
 static void

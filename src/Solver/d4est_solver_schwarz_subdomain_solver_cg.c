@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <pXest.h>
 #include <d4est_solver_schwarz_metadata.h>
 #include <d4est_solver_schwarz_geometric_data.h>
@@ -36,6 +37,11 @@ int d4est_solver_schwarz_subdomain_solver_cg_input_handler
     D4EST_ASSERT(pconfig->verbose == -1);
     pconfig->verbose = atoi(value);
   }
+ else if (d4est_util_match_couple(section,input_section,name,"print_each_subdomain_to_file")) {
+    D4EST_ASSERT(pconfig->print_each_subdomain_to_file == 0);
+    pconfig->print_each_subdomain_to_file = atoi(value);
+  }
+  
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -45,11 +51,20 @@ int d4est_solver_schwarz_subdomain_solver_cg_input_handler
 void
 d4est_solver_schwarz_subdomain_solver_cg_destroy
 (
- void* cg_params
-){
-  P4EST_FREE(cg_params);
-}
+ void* params
+)
+{
 
+  d4est_solver_schwarz_subdomain_solver_cg_t* cg_params
+    = params;
+  if(cg_params->print_each_subdomain_to_file){
+    for (int i = 0; i < cg_params->num_subdomains; i++){
+      fclose(cg_params->files[i]);
+    }
+    P4EST_FREE(cg_params->files);
+  }  
+  P4EST_FREE(cg_params); 
+}
 
 d4est_solver_schwarz_subdomain_solver_cg_t*
 d4est_solver_schwarz_subdomain_solver_cg_init
@@ -59,7 +74,6 @@ d4est_solver_schwarz_subdomain_solver_cg_init
  const char* input_section
 )
 {
-
   d4est_solver_schwarz_subdomain_solver_cg_t* solver_cg =
     P4EST_ALLOC(d4est_solver_schwarz_subdomain_solver_cg_t, 1);
   
@@ -67,9 +81,10 @@ d4est_solver_schwarz_subdomain_solver_cg_init
   solver_cg->subdomain_iter = -1;
   solver_cg->subdomain_rtol = -1;
   solver_cg->subdomain_atol = -1;
+  solver_cg->print_each_subdomain_to_file = 0;
   solver_cg->verbose = -1;
   solver_cg->input_section = input_section;
-
+  solver_cg->num_subdomains = p4est->local_num_quadrants;
   if(
      ini_parse(input_file,
                d4est_solver_schwarz_subdomain_solver_cg_input_handler,
@@ -83,6 +98,16 @@ d4est_solver_schwarz_subdomain_solver_cg_init
   D4EST_CHECK_INPUT(input_section, solver_cg->subdomain_atol, -1);
   D4EST_CHECK_INPUT(input_section, solver_cg->verbose, -1);
 
+  if(solver_cg->print_each_subdomain_to_file){
+    solver_cg->files = P4EST_ALLOC(FILE*, p4est->local_num_quadrants);
+    for (int i = 0; i < p4est->local_num_quadrants; i++){
+      char* schwarz_file;
+      asprintf(&schwarz_file,"schwarz_rank_%d_sub_%d", p4est->mpirank, i);
+      solver_cg->files[i] = fopen(schwarz_file, "w");
+      free(schwarz_file);
+    }
+  }
+  
   if (solver_cg->subdomain_iter <= 0 ||
       solver_cg->subdomain_rtol <= 0 ||
       solver_cg->subdomain_atol <= 0 
@@ -112,10 +137,7 @@ d4est_solver_schwarz_subdomain_solver_cg
  void* params
 )
 {
-
-
-
-  
+ 
   clock_t begin = clock();
   zlog_category_t* c_default = zlog_get_category("d4est_schwarz_subdomain");
 
@@ -211,8 +233,21 @@ d4est_solver_schwarz_subdomain_solver_cg
     beta = delta_new/delta_old;
     d4est_linalg_vec_xpby(r, beta, d, nodes);    
 
-    if (cg_params->verbose == 2){
-      zlog_info(c_default, "rank subdomain core_tree iters r2 %d %d %d %d %.15f", p4est->mpirank, subdomain, sub_data->core_tree, i, delta_new);
+    if (cg_params->verbose >= 2){
+      zlog_info(c_default,
+                "INTRA: %d subdomain %d core_tree %d       -       iter %d r %.15f ",
+                p4est->mpirank,
+                subdomain,
+                sub_data->core_tree,
+                i,
+                sqrt(delta_new)
+               );
+    }
+
+    if (cg_params->print_each_subdomain_to_file){
+      fprintf(cg_params->files[subdomain],
+              "rank %d subdomain %d core_tree %d     -     iter %d r %.15f\n",
+              p4est->mpirank, subdomain, sub_data->core_tree, i, sqrt(delta_new));
     }
     
     if (delta_new < tol_break){
@@ -221,10 +256,18 @@ d4est_solver_schwarz_subdomain_solver_cg
     
   }
 
-  if (cg_params->verbose >= 1){
+  if (cg_params->verbose == 1){
     clock_t end = clock();
     double time_spent = (double)(end-begin)/CLOCKS_PER_SEC;
-    zlog_info(c_default, "rank subdomain core_tree iters r time %d %d %d %d %.15f %f", p4est->mpirank, subdomain, sub_data->core_tree, i, sqrt(delta_new), time_spent);
+      zlog_info(c_default,
+                "POST: rank %d subdomain %d core_tree %d       -       iters %d time %f r %.15f ",
+                p4est->mpirank,
+                subdomain,
+                sub_data->core_tree,
+                i,
+                time_spent,
+                sqrt(delta_new)
+               );
   }
 
   

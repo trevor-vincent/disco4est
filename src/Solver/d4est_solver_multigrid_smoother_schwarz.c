@@ -189,7 +189,7 @@ d4est_solver_multigrid_smoother_schwarz
   }
 
   
-  d4est_linalg_vec_xpby(vecs->rhs, -1., r, vecs->local_nodes);    
+  d4est_linalg_vec_xpby(vecs->rhs, -1., r, vecs->local_nodes);
   vecs->Au = temp_Au;
   
   clock_t end = clock();

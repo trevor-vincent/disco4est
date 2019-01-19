@@ -10,7 +10,6 @@ typedef struct {
   void** ghost_data;
   d4est_operators_t* d4est_ops;
   d4est_geometry_t* d4est_geom;
-  
 } krylov_ctx_t;
 
 #endif

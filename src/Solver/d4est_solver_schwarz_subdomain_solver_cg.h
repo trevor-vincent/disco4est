@@ -16,6 +16,9 @@ typedef struct {
   int verbose;
 
   const char* input_section;
+  FILE** files;
+  int num_subdomains;
+  int print_each_subdomain_to_file;
   
 } d4est_solver_schwarz_subdomain_solver_cg_t;
 
