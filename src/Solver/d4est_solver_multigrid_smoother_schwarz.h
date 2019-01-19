@@ -26,9 +26,9 @@ typedef struct {
   double* residual_per_subdomain;
 
   /* only useful if vtk_debug == 1 */
-  int vtk_debug_ksp_level;
-  int vtk_debug_mg_level;
-  int vtk_debug_amr_level;
+  int debug_output_ksp_level;
+  int debug_output_mg_level;
+  int debug_output_amr_level;
   
 } d4est_solver_multigrid_smoother_schwarz_t;
 

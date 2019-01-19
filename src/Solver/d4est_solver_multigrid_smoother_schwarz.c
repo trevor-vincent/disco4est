@@ -166,7 +166,7 @@ d4est_solver_multigrid_smoother_schwarz
   
   if (smoother_data->vtk_debug){
     char* schwarz_folder;
-    asprintf(&schwarz_folder,"Schwarz_%d_%d/", smoother_data->vtk_debug_amr_level, smoother_data->vtk_debug_ksp_level);
+    asprintf(&schwarz_folder,"Schwarz_%d_%d/", smoother_data->debug_output_amr_level, smoother_data->debug_output_ksp_level);
     
     char* full_dir = d4est_util_add_cwd(schwarz_folder);
     d4est_util_make_directory(full_dir,0);
@@ -179,7 +179,7 @@ d4est_solver_multigrid_smoother_schwarz
        "d4est_vtk_schwarz",
        "schwarz_mglevel",
        schwarz_folder,
-       smoother_data->vtk_debug_mg_level,
+       smoother_data->debug_output_mg_level,
        (const char * []){"residual",NULL},
        (double* []){r}
       );
@@ -216,9 +216,9 @@ d4est_solver_multigrid_smoother_schwarz_init
 
   smoother_data->schwarz_on_level = P4EST_ALLOC(d4est_solver_schwarz_t*, num_of_levels); 
 
-  smoother_data->vtk_debug_ksp_level = -1;
-  smoother_data->vtk_debug_mg_level = -1;
-  smoother_data->vtk_debug_amr_level = -1;
+  smoother_data->debug_output_ksp_level = -1;
+  smoother_data->debug_output_mg_level = -1;
+  smoother_data->debug_output_amr_level = -1;
   smoother_data->iterations = -1;
   smoother_data->verbose = -1;
   smoother_data->vtk_debug = 0;
@@ -302,7 +302,7 @@ d4est_solver_multigrid_smoother_schwarz_update
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   if (smoother_data->vtk_debug){    
     if (mg_data->mg_state == START){
-      smoother_data->vtk_debug_ksp_level++;
+      smoother_data->debug_output_ksp_level++;
     }
     else if (mg_data->mg_state == UPV_PRE_SMOOTH ||
              mg_data->mg_state == DOWNV_PRE_SMOOTH ||
@@ -311,13 +311,13 @@ d4est_solver_multigrid_smoother_schwarz_update
 
       if (mg_data->mg_state == UPV_PRE_SMOOTH ||
          COARSE_PRE_SOLVE){
-        smoother_data->vtk_debug_mg_level = level;
+        smoother_data->debug_output_mg_level = level;
       }
       else {
-        smoother_data->vtk_debug_mg_level = -level;        
+        smoother_data->debug_output_mg_level = -level;        
       }
       
-      smoother_data->vtk_debug_amr_level = mg_data->amr_level;
+      smoother_data->debug_output_amr_level = mg_data->amr_level;
       if (mg_data->amr_level < 0){
         printf("mg_data->amr_level < 0 but smoother_vtk_debug == 1 for schwarz");
         D4EST_ABORT("");
