@@ -653,7 +653,7 @@ d4est_mesh_calculate_mortar_h
   }
 
   else if (face_h_type == FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO){
-    D4EST_ABORT("");
+    /* D4EST_ABORT(""); */
     int stride = 0;
     double h [P4EST_HALF];
     for (int f = 0; f < num_faces_mortar; f++){

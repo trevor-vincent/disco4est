@@ -647,16 +647,6 @@ d4est_solver_multigrid_data_destroy( d4est_solver_multigrid_t* mg_data)
   P4EST_FREE(mg_data);
 }
 
-/* static void */
-/* d4est_solver_multigrid_vcycle_test_levels */
-/* ( */
-/*  p4est_t* p4est, */
-/*  multigrid_data_t* mg_data */
-/* ) */
-/* { */
-
-/* } */
-
 
 static void
 d4est_solver_multigrid_vcycle

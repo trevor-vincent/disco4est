@@ -342,7 +342,7 @@ d4est_solver_multigrid_smoother_schwarz_update
          mg_data->d4est_quad,
          updater->current_d4est_ghost,
          updater->current_d4est_factors,
-         NULL,
+         smoother_data->schwarz_ops,
          smoother_data->apply_lhs,
          smoother_data->input_file,
          "mg_smoother_schwarz"
