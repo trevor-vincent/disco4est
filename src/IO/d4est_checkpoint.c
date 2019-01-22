@@ -36,11 +36,11 @@ d4est_checkpoint_save
   
   int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
   d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
-  
-  /* p4est_save(p4est_file_name, */
-             /* p4est, */
-             /* 0/\* do not save element data *\/); */
 
+  p4est_save(p4est_file_name,
+             p4est,
+             0/* do not save element data */);
+  
   int num_dg_nodes = 0;
   for (int i = 0; i < p4est->local_num_quadrants; i++){
     num_dg_nodes += d4est_lgl_get_nodes((P4EST_DIM), deg_array[i]);

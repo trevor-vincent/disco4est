@@ -89,6 +89,8 @@ void d4est_solver_multigrid_mesh_analyzer_update
     mesh_analyzer->deg_checksums[mesh_analyzer->stride]
       = d4est_mesh_get_local_degree_sum(p4est);
     d4est_solver_multigrid_mesh_analyzer_save_vtk(p4est);
+    /* d4est_solver_multigrid_mesh_analyzer_save_mesh(p4est, mesh_analyzer); */
+    
     mesh_analyzer->stride -= 1;
     mesh_analyzer->levels += 1;    
   }

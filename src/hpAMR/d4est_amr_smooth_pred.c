@@ -154,13 +154,13 @@ d4est_amr_smooth_pred_compute_post_p_balance_predictor
       for (int qq = 0; qq < QQ; ++qq) {
         p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
         d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
-
-
         
         if (d4est_amr->p_balance[id] >= d4est_amr->p_balance_if_diff
             && ed->deg < d4est_amr->max_degree - 1)
           {
+            printf("predictor before %f ",(*predictors)[id]);
             (*predictors)[id] = gamma_hpn.gamma_p*(*predictors)[id];
+            printf("predictor after %f\n",(*predictors)[id]);            
           };
         id++;
       }
