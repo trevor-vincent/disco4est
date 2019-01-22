@@ -859,7 +859,9 @@ d4est_amr_step
   }
   
   if(d4est_amr->p_balance_if_diff > 0){
-    zlog_info(c_default, "Starting to p-balance elements with that differ by %d orders", d4est_amr->p_balance_if_diff);    
+    if(p4est->mpirank == 0){
+      zlog_info(c_default, "Starting to p-balance elements with that differ by %d orders", d4est_amr->p_balance_if_diff);
+    }
     d4est_amr->p_balance = P4EST_ALLOC_ZERO(int, p4est->local_num_quadrants);
     
     p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FULL);

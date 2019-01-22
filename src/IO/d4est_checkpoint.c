@@ -455,7 +455,7 @@ d4est_checkpoint_check_dataset
   free(dataset_sum_name);  
   if (dataset_type == H5T_NATIVE_DOUBLE){
     double dataset_sum_dbl = *(double*)dataset_sum;
-    if (fabs(dataset_sum_dbl - dataset_sum_dbl_check) > 1.e-14){
+    if (fabs(dataset_sum_dbl - dataset_sum_dbl_check)/fabs(dataset_sum_dbl) > 1.e-14){
       zlog_error(c_default, "dataset = %s", dataset_name);
       zlog_error(c_default, "dataset_sum_dbl = %.20f", dataset_sum_dbl);
       zlog_error(c_default, "dataset_sum_dbl_check = %.20f", dataset_sum_dbl_check);
