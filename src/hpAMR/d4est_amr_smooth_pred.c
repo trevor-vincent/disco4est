@@ -71,7 +71,7 @@ d4est_amr_smooth_pred_pre_refine_callback
 }
 
 static void
-d4est_amr_smooth_pred_compute_post_balance_predictor
+d4est_amr_smooth_pred_compute_post_h_balance_predictor
 (
  p4est_t* p4est,
  d4est_amr_t* d4est_amr,
@@ -127,12 +127,48 @@ d4est_amr_smooth_pred_compute_post_balance_predictor
     
   D4EST_FREE(aux);
 }
- 
-
 
 
 static void
-d4est_amr_smooth_pred_post_balance_callback
+d4est_amr_smooth_pred_compute_post_p_balance_predictor
+(
+ p4est_t* p4est,
+ d4est_amr_t* d4est_amr,
+ d4est_amr_smooth_pred_data_t* smooth_pred_data,
+ double** predictors
+)
+{
+
+  gamma_params_t gamma_hpn
+    = smooth_pred_data->marker.set_element_gamma_fcn(p4est, NULL, NULL, smooth_pred_data->smooth_pred_params,smooth_pred_data->marker.user);
+        
+  int id = 0;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+      
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+
+
+        
+        if (d4est_amr->p_balance[id] >= d4est_amr->p_balance_if_diff
+            && ed->deg < d4est_amr->max_degree - 1)
+          {
+            (*predictors)[id] = gamma_hpn.gamma_p*(*predictors)[id];
+          };
+        id++;
+      }
+    }
+}
+
+static void
+d4est_amr_smooth_pred_post_p_balance_callback
 (
  p4est_t* p4est,
  void* user
@@ -142,7 +178,31 @@ d4est_amr_smooth_pred_post_balance_callback
   d4est_amr_t* d4est_amr = (d4est_amr_t*) user;
   d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
 
-  d4est_amr_smooth_pred_compute_post_balance_predictor
+  d4est_amr_smooth_pred_compute_post_p_balance_predictor
+    (
+     p4est,
+     d4est_amr,
+     smooth_pred_data,
+     &smooth_pred_data->predictor
+    );
+
+  
+}
+
+
+
+static void
+d4est_amr_smooth_pred_post_h_balance_callback
+(
+ p4est_t* p4est,
+ void* user
+)
+{
+
+  d4est_amr_t* d4est_amr = (d4est_amr_t*) user;
+  d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
+
+  d4est_amr_smooth_pred_compute_post_h_balance_predictor
     (
      p4est,
      d4est_amr,
@@ -357,9 +417,12 @@ d4est_amr_smooth_pred_init
   scheme->amr_scheme_data
     = smooth_pred_data;
 
-  scheme->post_balance_callback
-    = d4est_amr_smooth_pred_post_balance_callback;
+  scheme->post_h_balance_callback
+    = d4est_amr_smooth_pred_post_h_balance_callback;
 
+  scheme->post_p_balance_callback
+    = d4est_amr_smooth_pred_post_p_balance_callback;
+  
   scheme->destroy
     = d4est_amr_smooth_pred_destroy;
   

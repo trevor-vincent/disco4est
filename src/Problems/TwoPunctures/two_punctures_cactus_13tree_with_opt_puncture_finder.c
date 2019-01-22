@@ -420,7 +420,8 @@ problem_init
 
   d4est_amr_t* d4est_amr_puncture_finder = P4EST_ALLOC(d4est_amr_t, 1);
   d4est_amr_scheme_t* puncture_finder_scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
-  puncture_finder_scheme->post_balance_callback = NULL;
+  puncture_finder_scheme->post_h_balance_callback = NULL;
+  puncture_finder_scheme->post_p_balance_callback = NULL;
   puncture_finder_scheme->pre_refine_callback = NULL;
   puncture_finder_scheme->refine_replace_callback_fcn_ptr = NULL;
   puncture_finder_scheme->balance_replace_callback_fcn_ptr = NULL;
@@ -725,7 +726,8 @@ problem_init
          d4est_amr,
          &prob_vecs.u,
          estimator,
-         stats
+         stats,
+         input_file
         );
 
       

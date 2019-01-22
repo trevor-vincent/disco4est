@@ -26,6 +26,12 @@ typedef struct {
 
   double* subdomain_solve_residuals;
   int* subdomain_solve_iterations;
+
+  /* temporary for debugging */
+  int used_as_smoother;
+  int debug_output_ksp_level;
+  int debug_output_mg_level;
+  int debug_output_amr_level;
   
 } d4est_solver_schwarz_t;
 

@@ -400,6 +400,7 @@ set(CTEST_MEMORYCHECK_COMMAND /usr/bin/valgrind)
 set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/suppressions.txt" )
 
 add_d4est_unit_test_3d(d4est_test_vtk d4est_test_vtk.c Unit d4est_test_vtk)
+add_d4est_unit_test_3d(d4est_test_pbalance d4est_test_pbalance.c Unit d4est_test_pbalance)
 add_d4est_unit_test_3d(d4est_test_cg_eigs d4est_test_cg_eigs.c Unit d4est_test_cg_eigs)
 add_d4est_unit_test_3d(d4est_test_kron d4est_test_kron.c Unit d4est_test_kron)
 add_d4est_unit_test_3d(d4est_test_linalg d4est_test_linalg.c Unit d4est_test_linalg)
@@ -432,6 +433,7 @@ add_d4est_bash_regression_test(d4est_test_poisson_sinx.sh Regression d4est_test_
 add_d4est_bash_regression_test(d4est_test_twopunctures.sh Regression d4est_test_twopunctures)
 add_d4est_bash_regression_test(d4est_test_twopunctures_2.sh Regression d4est_test_twopunctures_2)
 add_d4est_bash_regression_test(d4est_test_mpi.sh Regression d4est_test_mpi)
+
 add_d4est_problem_2d(stamm_driver stamm_multigrid_pc.c Stamm)
 add_d4est_problem_2d(stamm_anares_driver stamm_anares.c Stamm)
 add_d4est_problem_3d(poisson_sinx_uniform_driver poisson_sinx_uniform.c Poisson)

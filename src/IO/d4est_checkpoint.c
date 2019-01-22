@@ -254,7 +254,8 @@ d4est_checkpoint_load_mesh_from_amr_history
  p4est_t* p4est,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
- d4est_mesh_initial_extents_t* initial_grid_input
+ d4est_mesh_initial_extents_t* initial_grid_input,
+ const char* input_file
 )
 {
   int initial_checkpoint_number = initial_grid_input->initial_checkpoint_number;
@@ -291,7 +292,9 @@ d4est_checkpoint_load_mesh_from_amr_history
     /* create amr scheme */
     d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1);
     d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
-    scheme->post_balance_callback = NULL;
+    scheme->post_h_balance_callback = NULL;
+    scheme->post_p_balance_callback = NULL;
+
     scheme->pre_refine_callback = NULL;
     scheme->refine_replace_callback_fcn_ptr = NULL;
     scheme->balance_replace_callback_fcn_ptr = NULL;
@@ -305,6 +308,7 @@ d4est_checkpoint_load_mesh_from_amr_history
     d4est_amr->refinement_log = NULL;
     d4est_amr->initial_log = NULL;
     d4est_amr->max_degree = 1000;
+    /* d4est_amr->p_balance_if_diff = -1; */
     
     d4est_amr_step
       (
@@ -313,7 +317,8 @@ d4est_checkpoint_load_mesh_from_amr_history
        d4est_amr,
        NULL,
        NULL,
-       NULL
+       NULL,
+       input_file
       );
 
     d4est_mesh_update

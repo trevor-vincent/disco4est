@@ -29,7 +29,10 @@ d4est_solver_schwarz_subdomain_solver_info_t
  double*,
  double*,
  int,
- void*
+ void*,
+ int,
+ int,
+ int
 );
 
 

@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <pXest.h>
 #include <d4est_quadrature.h>
 #include <d4est_element_data.h>

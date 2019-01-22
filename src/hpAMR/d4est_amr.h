@@ -43,7 +43,8 @@ typedef struct d4est_amr_scheme d4est_amr_scheme_t;
 struct d4est_amr_scheme {
   d4est_amr_scheme_type_t amr_scheme_type;
 
-  void (*post_balance_callback) (p4est_t*, void*);
+  void (*post_h_balance_callback) (p4est_t*, void*);
+  void (*post_p_balance_callback) (p4est_t*, void*);
   void (*pre_refine_callback) (p4est_t*, void*);
   p4est_replace_t refine_replace_callback_fcn_ptr;
   p4est_replace_t balance_replace_callback_fcn_ptr;
@@ -76,18 +77,21 @@ typedef struct {
   /* useful for multigrid, internally set */
   int has_there_been_h_refinements;
   int has_there_been_p_refinements;
-    
+
+  /* used for p-balancing */
+  int p_balance_if_diff;
+  int* p_balance; /* alias */
+  
 } d4est_amr_t;
 
 
 /* This file was automatically generated.  Do not edit! */
 void d4est_amr_destroy(d4est_amr_t *d4est_amr);
-void d4est_amr_step(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_amr_t *d4est_amr,double **field,double *d4est_estimator,d4est_estimator_stats_t *stats);
+void d4est_amr_step(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_amr_t *d4est_amr,double **field,double *d4est_estimator,d4est_estimator_stats_t *stats,const char *input_file);
 d4est_amr_t *d4est_amr_init_random_hp(p4est_t *p4est,int num_of_amr_steps);
 d4est_amr_t *d4est_amr_init_uniform_p(p4est_t *p4est,int num_of_amr_steps);
 d4est_amr_t *d4est_amr_init_uniform_h(p4est_t *p4est,int num_of_amr_steps);
 d4est_amr_t *d4est_amr_init(p4est_t *p4est,const char *input_file,void *scheme_data);
-void d4est_amr_input(const char *input_file,d4est_amr_t *d4est_amr);
 void d4est_amr_p_balance_aux(p4est_iter_face_info_t *info,void *user_data);
 
 #endif

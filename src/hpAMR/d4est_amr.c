@@ -95,11 +95,11 @@ void d4est_amr_p_balance_aux(
         if (sum_ghost_array < (P4EST_HALF)) {
           /* e_m = P4EST_HALF e_p = 1 */
           for (int f = 0; f < (P4EST_HALF); f++){
-            p_balance[e_m[f]->id] = p_balance[e_m[f]->id] > abs(e_p[0]->deg - e_m[f]->deg)
+            p_balance[e_m[f]->id] = p_balance[e_m[f]->id] > (e_p[0]->deg - e_m[f]->deg)
                                     ?
                                     p_balance[e_m[f]->id]
                                     :
-                                    abs(e_p[0]->deg - e_m[f]->deg);
+                                    (e_p[0]->deg - e_m[f]->deg);
           }
         }
 
@@ -124,11 +124,11 @@ void d4est_amr_p_balance_aux(
             }
               /* e_m = 1 e_p = P4EST_HALF */
               for (int f = 0; f < (P4EST_HALF); f++){
-                p_balance[e_m[0]->id] = p_balance[e_m[0]->id] > abs(e_p[f]->deg - e_m[0]->deg)
+                p_balance[e_m[0]->id] = p_balance[e_m[0]->id] > (e_p[f]->deg - e_m[0]->deg)
                                         ?
                                         p_balance[e_m[0]->id]
                                         :
-                                        abs(e_p[f]->deg - e_m[0]->deg);
+                                        (e_p[f]->deg - e_m[0]->deg);
               }
           }
 
@@ -142,11 +142,11 @@ void d4est_amr_p_balance_aux(
                   (d4est_element_data_t *)side[s_p]->is.full.quad->p.user_data;
 
 
-                p_balance[e_m[0]->id] = p_balance[e_m[0]->id] > abs(e_p[0]->deg - e_m[0]->deg)
+                p_balance[e_m[0]->id] = p_balance[e_m[0]->id] > (e_p[0]->deg - e_m[0]->deg)
                                         ?
                                         p_balance[e_m[0]->id]
                                         :
-                                        abs(e_p[0]->deg - e_m[0]->deg);
+                                        (e_p[0]->deg - e_m[0]->deg);
             
           }
         }
@@ -552,8 +552,39 @@ int d4est_amr_input_handler
   return 1;
 }
 
-void
-d4est_amr_input
+static
+int d4est_amr_extra_options_input_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  zlog_category_t *c_default = zlog_get_category("d4est_amr");
+
+  d4est_amr_t* pconfig = (d4est_amr_t*)user;
+
+ if (d4est_util_match_couple(section,"amr",name,"p_balance_if_diff")) { 
+    D4EST_ASSERT(pconfig->p_balance_if_diff == -1);
+    pconfig->p_balance_if_diff = atoi(value);
+  }
+  /* else if (d4est_util_match_couple(section,"amr",name,"max_degree")) { */
+    /* D4EST_ASSERT(pconfig->max_degree == -1); */
+    /* pconfig->max_degree = atoi(value); */
+    /* D4EST_ASSERT(atoi(value) > 0); */
+  /* } */
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+
+
+
+static
+void d4est_amr_input
 (
  const char* input_file,
  d4est_amr_t* d4est_amr
@@ -583,6 +614,23 @@ d4est_amr_input
     zlog_info(c_default, "num_of_amr_steps = %d",  d4est_amr->num_of_amr_steps);
     //    zlog_info(c_default, "max_degree = %d",  d4est_amr->max_degree);
   }
+}
+
+static
+void d4est_amr_extra_options_input
+(
+ const char* input_file,
+ d4est_amr_t* d4est_amr
+)
+{
+  zlog_category_t *c_default = zlog_get_category("d4est_amr");
+  d4est_amr->p_balance_if_diff = -1;
+  
+  if (ini_parse(input_file, d4est_amr_extra_options_input_handler, d4est_amr) < 0) {
+    D4EST_ABORT("Can't load input file in d4est_amr_input.");
+  }
+  
+  /* D4EST_CHECK_INPUT("amr", d4est_amr->p_balance_if_diff, -1); */
 }
 
 
@@ -759,7 +807,8 @@ d4est_amr_step
  d4est_amr_t* d4est_amr,
  double** field,
  double* d4est_estimator,
- d4est_estimator_stats_t* stats
+ d4est_estimator_stats_t* stats,
+ const char* input_file /* for extra options */
 )
 {
   zlog_category_t *c_default = zlog_get_category("d4est_amr");
@@ -789,79 +838,97 @@ d4est_amr_step
   d4est_amr_refine_elements(p4est);
 
   if (p4est->mpirank == 0)
-    zlog_info(c_default, "Starting to balance elements");
+    zlog_info(c_default, "Starting to h-balance elements");
 
   d4est_amr_balance_elements(p4est);
 
-  if(d4est_amr->scheme->post_balance_callback != NULL){
-    d4est_amr->scheme->post_balance_callback(p4est, d4est_amr);
+  if(d4est_amr->scheme->post_h_balance_callback != NULL){
+    d4est_amr->scheme->post_h_balance_callback(p4est, d4est_amr);
   }
 
-/*   if(p_balance_if_diff > 0){ */
-/*     int* p_balance = P4EST_ALLOC(int, p4est->local_num_quadrants); */
-/*     d4est_amr_p_balance_aux_data_t p_balance_data; */
-/*     p_balance_data.p_balance = p_balance; */
-
-/*     p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FULL); */
+  if (input_file == NULL){
+    d4est_amr->p_balance_if_diff = -1;
+    zlog_info(c_default, "We will not p-balance");
+  }
+  else {
+    d4est_amr_extra_options_input
+      (
+       input_file,
+       d4est_amr
+      );
+  }
+  
+  if(d4est_amr->p_balance_if_diff > 0){
+    zlog_info(c_default, "Starting to p-balance elements with that differ by %d orders", d4est_amr->p_balance_if_diff);    
+    d4est_amr->p_balance = P4EST_ALLOC_ZERO(int, p4est->local_num_quadrants);
     
-/*     d4est_element_data_t* ghost_elements = P4EST_ALLOC (d4est_element_data_t, */
-/*                                                         ghost->ghosts.elem_count); */
-
-/*     p4est_ghost_exchange_data(p4est, ghost, ghost_elements); */
-/*     p_balance_data.ghost_data = ghost_elements; */
+    p4est_ghost_t* ghost = p4est_ghost_new (p4est, P4EST_CONNECT_FULL);
     
-/*     int id = 0; */
-/*     for (p4est_topidx_t tt = p4est->first_local_tree; */
-/*          tt <= p4est->last_local_tree; */
-/*          ++tt) */
-/*       { */
-/*         p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-/*         sc_array_t* tquadrants = &tree->quadrants; */
-/*         int QQ = (p4est_locidx_t) tquadrants->elem_count; */
+    d4est_element_data_t* ghost_elements = P4EST_ALLOC (d4est_element_data_t,
+                                                        ghost->ghosts.elem_count);
 
-/*         for (int qq = 0; qq < QQ; ++qq) { */
-/*           p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq); */
-/*           d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data); */
-/*           ed->id = id; */
-/*           id++; */
-/*         } */
-/*       } */
+    d4est_amr_p_balance_aux_data_t p_balance_data;
+    p4est_ghost_exchange_data(p4est, ghost, ghost_elements);
+    p_balance_data.ghost_data = ghost_elements;
+    p_balance_data.p_balance = d4est_amr->p_balance;
     
-/*     p4est_iterate(p4est, */
-/*                   ghost, */
-/*                   (void*) &p_balance_data, */
-/*                   NULL, */
-/*                   d4est_amr_p_balance_aux, */
-/* #if (P4EST_DIM)==3 */
-/*                   NULL, */
-/* #endif */
-/*                   NULL); */
+    int id = 0;
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt)
+      {
+        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+        sc_array_t* tquadrants = &tree->quadrants;
+        int QQ = (p4est_locidx_t) tquadrants->elem_count;
+
+        for (int qq = 0; qq < QQ; ++qq) {
+          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+          d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+          ed->id = id;
+          id++;
+        }
+      }
+    
+    p4est_iterate(p4est,
+                  ghost,
+                  (void*) &p_balance_data,
+                  NULL,
+                  d4est_amr_p_balance_aux,
+#if (P4EST_DIM)==3
+                  NULL,
+#endif
+                  NULL);
 
 
-/*     for (p4est_topidx_t tt = p4est->first_local_tree; */
-/*          tt <= p4est->last_local_tree; */
-/*          ++tt) */
-/*       { */
-/*         p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-/*         sc_array_t* tquadrants = &tree->quadrants; */
-/*         int QQ = (p4est_locidx_t) tquadrants->elem_count; */
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt)
+      {
+        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+        sc_array_t* tquadrants = &tree->quadrants;
+        int QQ = (p4est_locidx_t) tquadrants->elem_count;
 
-/*         for (int qq = 0; qq < QQ; ++qq) { */
-/*           p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq); */
-/*           d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data); */
+        for (int qq = 0; qq < QQ; ++qq) {
+          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+          d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
 
-/*           if (p_balance[ed->id] >= p_balance_if_diff */
-/*               && ed->deg < d4est_amr->max_degree - 1){ */
-/*             ed->deg += 1; */
-/*           } */
+          if (d4est_amr->p_balance[ed->id] >= d4est_amr->p_balance_if_diff
+              && ed->deg < d4est_amr->max_degree - 1){
+            ed->deg += 1;
+          }
           
-/*         } */
-/*       } */
+        }
+      }
 
-/*     p4est_ghost_destroy(ghost); */
-/*     P4EST_FREE(ghost_elements); */
-/*     P4EST_FREE(p_balance); */
-/*   } */
+    if(d4est_amr->scheme->post_p_balance_callback != NULL){
+      d4est_amr->scheme->post_p_balance_callback(p4est, d4est_amr);
+    }
+  
+    p4est_ghost_destroy(ghost);
+    P4EST_FREE(ghost_elements);
+    P4EST_FREE(d4est_amr->p_balance);
+    d4est_amr->p_balance_if_diff = -1;
+  }
 
   
   if(field != NULL)

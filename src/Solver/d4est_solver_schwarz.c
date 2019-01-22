@@ -45,6 +45,8 @@ d4est_solver_schwarz_init
      input_section
     );
 
+  schwarz->used_as_smoother = 0;
+
   if (schwarz_ops == NULL){
     schwarz->operators = d4est_solver_schwarz_operators_init
                               (
@@ -220,7 +222,7 @@ d4est_solver_schwarz_iterate
 
       /* double* du_temp = &du[sub_data.restricted_nodal_stride]; */
       /* DEBUG_PRINT_ARR_DBL(du_temp, sub_data.restricted_nodal_size); */
-      
+
     d4est_solver_schwarz_subdomain_solver_info_t info = schwarz->subdomain_solver->solver_fcn
       (
        p4est,
@@ -235,7 +237,10 @@ d4est_solver_schwarz_iterate
        &du[sub_data.restricted_nodal_stride],
        &restricted_r[sub_data.restricted_nodal_stride],
        i,
-       schwarz->subdomain_solver->solver_ctx
+       schwarz->subdomain_solver->solver_ctx,
+       (schwarz->used_as_smoother) ? schwarz->debug_output_amr_level : -1,
+       (schwarz->used_as_smoother) ? schwarz->debug_output_ksp_level : -1,
+       (schwarz->used_as_smoother) ? schwarz->debug_output_mg_level : -1
       );
 
     /* printf("sub_data.coreId, info.final_res, info.final_iter = %d, %f, %d\n", sub_data.core_id, info.final_res, info.final_iter); */

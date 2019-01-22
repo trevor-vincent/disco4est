@@ -31,6 +31,7 @@
 #include <d4est_util.h>
 #include <d4est_h5.h>
 #include <d4est_checkpoint.h>
+#include <p4est_vtk_ext.h>
 #include <time.h>
 #include "constant_density_star_fcns.h"
 
@@ -464,7 +465,8 @@ problem_init
          d4est_amr,
          &prob_vecs.u,
          estimator,
-         stats
+         stats,
+         input_file
         );
       
     }

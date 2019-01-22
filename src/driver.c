@@ -169,7 +169,8 @@ int main(int argc, char *argv[])
        p4est,
        d4est_ops,
        d4est_geom,
-       initial_grid_input
+       initial_grid_input,
+       input_file
       );   
     
   }

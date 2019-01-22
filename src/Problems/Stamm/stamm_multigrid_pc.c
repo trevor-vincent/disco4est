@@ -368,7 +368,8 @@ problem_init
          (level > 1) ? d4est_amr : d4est_amr_uniform,
          &prob_vecs.u,
          estimator,
-         stats
+         stats,
+         input_file
         );
       
     }

@@ -177,7 +177,10 @@ d4est_solver_schwarz_subdomain_solver_gmres
  double* du_restricted_field_over_subdomain,
  double* rhs_restricted_field_over_subdomain,
  int subdomain,
- void* params
+ void* params,
+ int debug_amr,
+ int debug_ksp,
+ int debug_mg
 )
 {
   clock_t begin = clock();

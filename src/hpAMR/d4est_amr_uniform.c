@@ -53,9 +53,12 @@ d4est_amr_uniform_init
   scheme->amr_scheme_data
     = NULL;
 
-  scheme->post_balance_callback
+  scheme->post_h_balance_callback
     = NULL;
 
+  scheme->post_p_balance_callback
+    = NULL;
+  
   scheme->mark_elements
     = d4est_amr_uniform_mark_elements;
   

@@ -57,12 +57,12 @@ d4est_solver_schwarz_subdomain_solver_cg_destroy
 
   d4est_solver_schwarz_subdomain_solver_cg_t* cg_params
     = params;
-  if(cg_params->print_each_subdomain_solve_to_file){
-    for (int i = 0; i < cg_params->num_subdomains; i++){
-      fclose(cg_params->files[i]);
-    }
-    P4EST_FREE(cg_params->files);
-  }  
+  /* if(cg_params->print_each_subdomain_solve_to_file){ */
+    /* for (int i = 0; i < cg_params->num_subdomains; i++){ */
+      /* fclose(cg_params->files[i]); */
+    /* } */
+    /* P4EST_FREE(cg_params->files); */
+  /* }   */
   P4EST_FREE(cg_params); 
 }
 
@@ -98,15 +98,15 @@ d4est_solver_schwarz_subdomain_solver_cg_init
   D4EST_CHECK_INPUT(input_section, solver_cg->subdomain_atol, -1);
   D4EST_CHECK_INPUT(input_section, solver_cg->verbose, -1);
 
-  if(solver_cg->print_each_subdomain_solve_to_file){
-    solver_cg->files = P4EST_ALLOC(FILE*, p4est->local_num_quadrants);
-    for (int i = 0; i < p4est->local_num_quadrants; i++){
-      char* schwarz_file;
-      asprintf(&schwarz_file,"schwarz_rank_%d_sub_%d", p4est->mpirank, i);
-      solver_cg->files[i] = fopen(schwarz_file, "w");
-      free(schwarz_file);
-    }
-  }
+  /* if(solver_cg->print_each_subdomain_solve_to_file){ */
+    /* solver_cg->files = P4EST_ALLOC(FILE*, p4est->local_num_quadrants); */
+    /* for (int i = 0; i < p4est->local_num_quadrants; i++){ */
+      /* char* schwarz_file; */
+      /* asprintf(&schwarz_file,"schwarz_rank_%d_sub_%d", p4est->mpirank, i); */
+      /* solver_cg->files[i] = fopen(schwarz_file, "w"); */
+      /* free(schwarz_file); */
+    /* } */
+  /* } */
   
   if (solver_cg->subdomain_iter <= 0 ||
       solver_cg->subdomain_rtol <= 0 ||
@@ -134,7 +134,10 @@ d4est_solver_schwarz_subdomain_solver_cg
  double* du_restricted_field_over_subdomain,
  double* rhs_restricted_field_over_subdomain,
  int subdomain,
- void* params
+ void* params,
+ int debug_output_amr_level,
+ int debug_output_ksp_level,
+ int debug_output_mg_level
 )
 {
  
@@ -245,9 +248,19 @@ d4est_solver_schwarz_subdomain_solver_cg
     }
 
     if (cg_params->print_each_subdomain_solve_to_file){
-      fprintf(cg_params->files[subdomain],
+      char* file_name;
+      asprintf(&file_name, "schwarz_amr_ksp_mg_sub_%d_%d_%d_%d.dat",
+               debug_output_amr_level,
+               debug_output_mg_level,
+               debug_output_amr_level,
+              subdomain);
+
+      FILE* file_temp = fopen(file_name, "w");
+      fprintf(file_temp,
               "rank %d subdomain %d core_tree %d     -     iter %d r %.15f\n",
               p4est->mpirank, subdomain, sub_data->core_tree, i, sqrt(delta_new));
+      free(file_name);
+      fclose(file_temp);
     }
     
     if (delta_new < tol_break){

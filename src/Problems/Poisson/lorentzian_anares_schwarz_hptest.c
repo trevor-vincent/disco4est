@@ -327,7 +327,8 @@ problem_init
     int tree_to_refine = init_params.tree_to_refine;
     d4est_amr_t* d4est_amr_temp = P4EST_ALLOC(d4est_amr_t, 1);
     d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1);
-    scheme->post_balance_callback = NULL;
+    scheme->post_h_balance_callback = NULL;
+    scheme->post_p_balance_callback = NULL;
     scheme->pre_refine_callback = NULL;
     scheme->refine_replace_callback_fcn_ptr = NULL;
     scheme->balance_replace_callback_fcn_ptr = NULL;
@@ -347,6 +348,7 @@ problem_init
        p4est,
        NULL,
        d4est_amr_temp,
+       NULL,
        NULL,
        NULL,
        NULL
@@ -951,7 +953,8 @@ problem_init
          d4est_amr,
          &prob_vecs.u,
          estimator,
-         stats
+         stats,
+         input_file
         );
       
     }

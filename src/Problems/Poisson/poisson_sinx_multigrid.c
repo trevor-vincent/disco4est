@@ -383,6 +383,7 @@ problem_init
         d4est_amr,
         &prob_vecs.u,
         NULL,
+        NULL,
         NULL
       );
       

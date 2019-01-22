@@ -630,7 +630,8 @@ problem_init
          d4est_amr,
          &prob_vecs.u,
          estimator,
-         stats
+         stats,
+         input_file
         );
       
     }

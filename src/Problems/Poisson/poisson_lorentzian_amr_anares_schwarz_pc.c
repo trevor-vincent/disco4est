@@ -30,6 +30,7 @@
 #include <d4est_solver_multigrid.h>
 #include <d4est_solver_multigrid_logger_residual.h>
 #include <d4est_krylov_pc_multigrid.h>
+#include <d4est_krylov_pc_schwarz.h>
 #include <d4est_solver_multigrid_element_data_updater.h>
 #include <d4est_hessian.h>
 #include "poisson_lorentzian_fcns.h"
@@ -996,7 +997,8 @@ problem_init
          d4est_amr,
          &prob_vecs.u,
          estimator,
-         stats
+         stats,
+         input_file
         );
       
     }

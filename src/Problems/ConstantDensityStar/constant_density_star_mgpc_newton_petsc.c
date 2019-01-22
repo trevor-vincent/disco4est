@@ -425,7 +425,8 @@ problem_init
          (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr,
          &prob_vecs.u,
          estimator,
-         stats
+         stats,
+         input_file
         );
       
       if (p4est->mpirank == 0)

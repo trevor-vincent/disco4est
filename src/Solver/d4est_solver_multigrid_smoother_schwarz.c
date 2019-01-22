@@ -128,7 +128,11 @@ d4est_solver_multigrid_smoother_schwarz
     d4est_linalg_vec_xpby(vecs->rhs, -1., r, vecs->local_nodes);    
     vecs->Au = temp_Au;
 
-
+    smoother_data->schwarz_on_level[level]->used_as_smoother = 1;
+    smoother_data->schwarz_on_level[level]->debug_output_mg_level = smoother_data->debug_output_mg_level;
+    smoother_data->schwarz_on_level[level]->debug_output_amr_level = smoother_data->debug_output_amr_level;
+    smoother_data->schwarz_on_level[level]->debug_output_ksp_level = smoother_data->debug_output_ksp_level;
+    
     d4est_solver_schwarz_iterate
       (
        p4est,
