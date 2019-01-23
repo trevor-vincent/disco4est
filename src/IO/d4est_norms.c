@@ -317,9 +317,9 @@ d4est_norms_write_headers
 
     char *norms_output_category;
     if (zlog_output_category_prefix == NULL)
-      asprintf(&norms_output_category, "norms_%s", field_names[i_fields]);
+      asprintf(&norms_output_category, "d4est_region_all_norms_%s", field_names[i_fields]);
     else
-      asprintf(&norms_output_category, "%s_norms_%s", zlog_output_category_prefix, field_names[i_fields]);
+      asprintf(&norms_output_category, "d4est_%s_norms_%s", zlog_output_category_prefix, field_names[i_fields]);
       
     zlog_category_t *c_norms_output = zlog_get_category(norms_output_category);
     free(norms_output_category);
@@ -501,11 +501,12 @@ d4est_norms_save
     if (p4est->mpirank == 0) {
 
       // Construct filename
-      char *norms_output_category;
-      if (zlog_output_category_prefix == NULL)
-        asprintf(&norms_output_category, "norms_%s", field_names[i_fields]);
-      else
-        asprintf(&norms_output_category, "%s_norms_%s", zlog_output_category_prefix, field_names[i_fields]);
+ 
+    char *norms_output_category;
+    if (zlog_output_category_prefix == NULL)
+      asprintf(&norms_output_category, "d4est_region_all_norms_%s", field_names[i_fields]);
+    else
+      asprintf(&norms_output_category, "d4est_%s_norms_%s", zlog_output_category_prefix, field_names[i_fields]);
       
       zlog_category_t *c_norms_output = zlog_get_category(norms_output_category);
       free(norms_output_category);
@@ -514,7 +515,7 @@ d4est_norms_save
       asprintf(
         &output,
         "%d %d %d",
-        (int)p4est->global_num_quadrants,
+        (int)num_elements,
         num_nodes,
         num_quad_nodes
       );

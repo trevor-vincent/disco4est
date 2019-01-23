@@ -832,6 +832,17 @@ d4est_amr_step
 
   d4est_amr_mark_elements(p4est);
 
+   if (input_file == NULL){
+    d4est_amr->p_balance_if_diff = -1;
+    zlog_info(c_default, "We will not p-balance");
+  }
+  else {
+    d4est_amr_extra_options_input
+      (
+       input_file,
+       d4est_amr
+      );
+  }
 
   if(d4est_amr->p_balance_if_diff > 0){
     if(p4est->mpirank == 0){
@@ -849,22 +860,22 @@ d4est_amr_step
     p_balance_data.ghost_data = ghost_elements;
     p_balance_data.p_balance = d4est_amr->p_balance;
     
-    /* int id = 0; */
-    /* for (p4est_topidx_t tt = p4est->first_local_tree; */
-    /*      tt <= p4est->last_local_tree; */
-    /*      ++tt) */
-    /*   { */
-    /*     p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt); */
-    /*     sc_array_t* tquadrants = &tree->quadrants; */
-    /*     int QQ = (p4est_locidx_t) tquadrants->elem_count; */
+    int id = 0;
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt)
+      {
+        p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+        sc_array_t* tquadrants = &tree->quadrants;
+        int QQ = (p4est_locidx_t) tquadrants->elem_count;
 
-    /*     for (int qq = 0; qq < QQ; ++qq) { */
-    /*       p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq); */
-    /*       d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data); */
-    /*       ed->id = id; */
-    /*       id++; */
-    /*     } */
-    /*   } */
+        for (int qq = 0; qq < QQ; ++qq) {
+          p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+          d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+          ed->id = id;
+          id++;
+        }
+      }
     
     p4est_iterate(p4est,
                   ghost,
@@ -932,17 +943,7 @@ d4est_amr_step
     d4est_amr->scheme->post_h_balance_callback(p4est, d4est_amr);
   }
 
-  if (input_file == NULL){
-    d4est_amr->p_balance_if_diff = -1;
-    zlog_info(c_default, "We will not p-balance");
-  }
-  else {
-    d4est_amr_extra_options_input
-      (
-       input_file,
-       d4est_amr
-      );
-  }
+ 
   
 
   
