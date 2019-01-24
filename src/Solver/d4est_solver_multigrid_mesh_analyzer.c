@@ -27,7 +27,19 @@ void d4est_solver_multigrid_mesh_analyzer_save_vtk
   d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_mesh_analyzer_t* mesh_analyzer = mg_data->analyzer;
   d4est_operators_t* d4est_ops = mg_data->d4est_ops;
-  /* char* output = "d4est_solver_multigrid_mesh_analyzer"; */
+
+ 
+  /* char* temp; */
+  /* if (mg_data->state == UPV_PRE_SMOOTH){ */
+
+  /* } */
+  /* else if (mg_data->state == DOWNV_PRE_SMOOTH){ */
+
+  /* } */
+  /* else if (mg_data->state == COARSE_BOTTOM_SOLVE){ */
+
+  /* } */
+  
   d4est_vtk_save_aux
     (
      p4est,
@@ -43,8 +55,35 @@ void d4est_solver_multigrid_mesh_analyzer_save_vtk
      "multigrid_mesh_analyzer",
      mesh_analyzer->stride
     );
-  /* free(output); */
 }
+
+static
+void d4est_solver_multigrid_mesh_analyzer_save_checkpoint
+(
+ p4est_t* p4est
+)
+{
+  d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
+  d4est_solver_multigrid_mesh_analyzer_t* mesh_analyzer = mg_data->analyzer;
+  d4est_operators_t* d4est_ops = mg_data->d4est_ops;
+
+  d4est_vtk_save_aux
+    (
+     p4est,
+     d4est_ops,
+     mg_data->input_file,
+     "d4est_vtk",
+     (const char * []){NULL},
+     (double* []){},
+     (const char * []){NULL},
+     (double* []){},
+     NULL,
+     NULL,
+     "multigrid_mesh_analyzer",
+     mesh_analyzer->stride
+    );
+}
+
 
 static
 void d4est_solver_multigrid_mesh_analyzer_update
@@ -65,12 +104,18 @@ void d4est_solver_multigrid_mesh_analyzer_update
       = p4est_checksum(p4est);
     mesh_analyzer->deg_checksums[mesh_analyzer->stride]
       = d4est_mesh_get_local_degree_sum(p4est);
-    d4est_solver_multigrid_mesh_analyzer_save_vtk(p4est);
+    /* d4est_solver_multigrid_mesh_analyzer_save_vtk(p4est); */
     mesh_analyzer->stride -= 1;
   }
   else if (mg_data->mg_state == PRE_V){
   }
   else if (mg_data->mg_state == DOWNV_PRE_SMOOTH){
+    /* d4est_solver_multigrid_mesh_analyzer_save_vtk(p4est,level); */
+    /* d4est_solver_multigrid_mesh_analyzer_save_checkpoint(p4est,level); */
+  }
+  else if (mg_data->mg_state == UPV_PRE_SMOOTH){
+    /* d4est_solver_multigrid_mesh_analyzer_save_vtk(p4est,level); */
+    /* d4est_solver_multigrid_mesh_analyzer_save_checkpoint(p4est,level); */
   }
   else if (mg_data->mg_state == DOWNV_POST_SMOOTH){
   }
@@ -88,15 +133,17 @@ void d4est_solver_multigrid_mesh_analyzer_update
       = p4est_checksum(p4est);
     mesh_analyzer->deg_checksums[mesh_analyzer->stride]
       = d4est_mesh_get_local_degree_sum(p4est);
-    d4est_solver_multigrid_mesh_analyzer_save_vtk(p4est);
     /* d4est_solver_multigrid_mesh_analyzer_save_mesh(p4est, mesh_analyzer); */
     
     mesh_analyzer->stride -= 1;
     mesh_analyzer->levels += 1;    
   }
   else if (mg_data->mg_state == DOWNV_POST_RESTRICTION){
+    d4est_solver_multigrid_mesh_analyzer_save_vtk(p4est);
   }    
   else if (mg_data->mg_state == COARSE_PRE_SOLVE){
+    /* d4est_solver_multigrid_mesh_analyzer_save_vtk(p4est,level); */
+    /* d4est_solver_multigrid_mesh_analyzer_save_checkpoint(p4est,level); */
   }
   else if (mg_data->mg_state == COARSE_POST_SOLVE){
     mesh_analyzer->stride += 1;

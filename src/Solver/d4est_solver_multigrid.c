@@ -771,6 +771,14 @@ d4est_solver_multigrid_vcycle
       vecs_for_smooth.local_nodes = nodes_on_level_of_multigrid[level];
     }
 
+    
+    if(mg_data->use_analyzer){
+      mg_data->debug_current_u = vecs_for_smooth.u;
+      mg_data->debug_current_rhs = vecs_for_smooth.rhs;
+      mg_data->debug_nodes = vecs_for_smooth.local_nodes;
+    }
+
+
 
       /* printf("******* LEVEL %d INFO *******\n", level); */
       /* DEBUG_PRINT_ARR_DBL_SUM(vecs_for_smooth.Au, vecs_for_smooth.local_nodes); */
@@ -1013,6 +1021,14 @@ d4est_solver_multigrid_vcycle
   vecs_for_bottom_solve.local_nodes = nodes_on_level_of_multigrid[bottomlevel];
 
 
+  if(mg_data->use_analyzer){
+    mg_data->debug_current_u = vecs_for_bottom_solve.u;
+    mg_data->debug_current_rhs = vecs_for_bottom_solve.rhs;
+    mg_data->debug_nodes = vecs_for_bottom_solve.local_nodes;
+  }
+
+  
+
   mg_data->mg_state = COARSE_PRE_SOLVE; d4est_solver_multigrid_update_components(p4est, level, &vecs_for_bottom_solve);
   
   mg_data->bottom_solver->solve
@@ -1115,9 +1131,15 @@ d4est_solver_multigrid_vcycle
       vecs_for_smooth.Au = vecs->Au;//&Ae_at0[stride_to_fine_data];//mg_data->Ae;
       vecs_for_smooth.u = vecs->u;//&err_at0[stride_to_fine_data];//mg_data->err;
       vecs_for_smooth.rhs = vecs->rhs;//&res_at0[stride_to_fine_data];//mg_data->res;
-      vecs_for_smooth.local_nodes = mg_data->fine_nodes;
+      vecs_for_smooth.local_nodes = mg_data->fine_nodes;      
     }
-     
+
+    if(mg_data->use_analyzer){
+      mg_data->debug_current_u = vecs_for_smooth.u;
+      mg_data->debug_current_rhs = vecs_for_smooth.rhs;
+      mg_data->debug_nodes = vecs_for_smooth.local_nodes;
+    }
+      
     d4est_linalg_vec_axpy(1.0, &rres_at0[stride_to_fine_data], vecs_for_smooth.u, mg_data->fine_nodes);
 
 
@@ -1139,7 +1161,7 @@ d4est_solver_multigrid_vcycle
        &rres_at0[stride_to_fine_data],//mg_data->rres,
        fine_level
       );
-
+    
     mg_data->mg_state = UPV_POST_SMOOTH; d4est_solver_multigrid_update_components(p4est, level, &vecs_for_smooth);
 
 

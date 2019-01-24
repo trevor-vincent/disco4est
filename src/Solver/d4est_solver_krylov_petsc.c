@@ -211,16 +211,22 @@ d4est_solver_krylov_petsc_input
 static
 PetscErrorCode d4est_solver_krylov_petsc_monitor(KSP ksp,PetscInt it, PetscReal norm, void *ctx)
 {
+
+
+  
   krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
   zlog_category_t* c_default = zlog_get_category("d4est_solver_krylov_petsc");
   zlog_category_t* its_output = zlog_get_category("d4est_solver_iteration_info");
 
   if (petsc_ctx->p4est->mpirank == 0){
     double duration_seconds = ((double)(clock() - petsc_ctx->time_start)) / CLOCKS_PER_SEC;
-    zlog_info(its_output, "AMR_IT KSP_IT KSP_NORM TIME: %d %d %.25f %f", petsc_ctx->amr_level, it, norm, duration_seconds);
+    double emax, emin;
+    KSPComputeExtremeSingularValues(ksp, &emax, &emin);
+    zlog_info(its_output, "AMR_IT KSP_IT KSP_NORM TIME: %d %d %.25f %f %f %f", petsc_ctx->amr_level, it, norm, duration_seconds, emax, emin);
   }  
   if (petsc_ctx->checkpoint_every_n_krylov_its > 0 && petsc_ctx->amr_level >= 0){
     int it;
+
     KSPGetIterationNumber(*(petsc_ctx->ksp),&it);
     if ( (it - petsc_ctx->last_krylov_checkpoint_it) >= petsc_ctx->checkpoint_every_n_krylov_its ){
       char* output = NULL;
@@ -448,7 +454,7 @@ d4est_solver_krylov_petsc_solve
   /* VecSetValueLocal(x, i, u[i], INSERT_VALUES); */
   /* VecSetValueLocal(b, i, rhs[i], INSERT_VALUES); */
   /* } */
-  
+  KSPSetComputeSingularValues(ksp, PETSC_TRUE);
   KSPMonitorSet(ksp, d4est_solver_krylov_petsc_monitor, &petsc_ctx, NULL);
   KSPSolve(ksp,b,x);
 
