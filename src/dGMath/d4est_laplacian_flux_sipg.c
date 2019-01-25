@@ -971,8 +971,6 @@ d4est_laplacian_flux_sipg_penalty_mean_p_sqr_over_h
   return (penalty_prefactor*mean_penalty);
 }
 
-
-
 static double
 d4est_laplacian_flux_sipg_penalty_maxp_sqr_over_minh
 (
@@ -988,6 +986,22 @@ d4est_laplacian_flux_sipg_penalty_maxp_sqr_over_minh
   return (penalty_prefactor*(max_deg)*(max_deg))/min_h;
 }
 
+static double
+d4est_laplacian_flux_sipg_penalty_maxpp1_sqr_over_minh
+(
+ int deg_m,
+ double h_m,
+ int deg_p,
+ double h_p,
+ double penalty_prefactor
+)
+{
+  double max_deg = (deg_m > deg_p) ? deg_m : deg_p;
+  double min_h = (h_m < h_p) ? h_m : h_p;
+  return (penalty_prefactor*(max_deg + 1)*(max_deg + 1))/min_h;
+}
+
+
 static void
 d4est_laplacian_flux_sipg_params_get_string_from_penalty_fcn
 (
@@ -997,6 +1011,9 @@ d4est_laplacian_flux_sipg_params_get_string_from_penalty_fcn
 {
   if (fcn == d4est_laplacian_flux_sipg_penalty_maxp_sqr_over_minh){
     strcpy(string,"maxp_sqr_over_minh");
+  }
+  if (fcn == d4est_laplacian_flux_sipg_penalty_maxpp1_sqr_over_minh){
+    strcpy(string,"maxpp1_sqr_over_minh");
   }
   else if (fcn == d4est_laplacian_flux_sipg_penalty_meanp_sqr_over_meanh){
     strcpy(string,"meanp_sqr_over_meanh");
@@ -1017,6 +1034,9 @@ d4est_laplacian_flux_sipg_get_penalty_fcn_from_string
 {
   if (d4est_util_match(string,"maxp_sqr_over_minh")){
     return d4est_laplacian_flux_sipg_penalty_maxp_sqr_over_minh;
+  }
+  else if (d4est_util_match(string,"maxpp1_sqr_over_minh")){
+    return d4est_laplacian_flux_sipg_penalty_maxpp1_sqr_over_minh;
   }
   else if (d4est_util_match(string,"meanp_sqr_over_meanh")){
     return d4est_laplacian_flux_sipg_penalty_meanp_sqr_over_meanh;
