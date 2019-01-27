@@ -723,6 +723,30 @@ problem_init
        b,
        c
       );
+
+    d4est_laplacian_flux_sipg_penalty_debugger_t* debugger =
+      d4est_laplacian_flux_sipg_penalty_debugger_init
+      (
+       p4est,
+       sipg_params->penalty_fcn,
+       sipg_params->penalty_prefactor
+      );
+
+    d4est_laplacian_flux_sipg_penalty_debugger_get_vtk_data
+      (
+       p4est,
+       d4est_ghost,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       debugger
+      );
+    
+    d4est_laplacian_flux_sipg_penalty_debugger_init
+      (
+       debugger
+      );
     
     d4est_vtk_save
       (
@@ -751,6 +775,9 @@ problem_init
                            "estimator_Je3_face3",
                            "estimator_Je3_face4",
                            "estimator_Je3_face5",
+                           "average_min_penalty",
+                           "average_max_penalty",
+                           "average_mean_penalty",
                            NULL},
        (double* []){estimator,error_l2,&estimator_vtk[0], &estimator_vtk[1*p4est->local_num_quadrants],&estimator_vtk[2*p4est->local_num_quadrants],&estimator_vtk[3*p4est->local_num_quadrants],
                       &estimator_vtk_per_face[0*p4est->local_num_quadrants],
@@ -770,7 +797,10 @@ problem_init
                       &estimator_vtk_per_face[14*p4est->local_num_quadrants],
                       &estimator_vtk_per_face[15*p4est->local_num_quadrants],
                       &estimator_vtk_per_face[16*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[17*p4est->local_num_quadrants]
+                      &estimator_vtk_per_face[17*p4est->local_num_quadrants],
+                      debugger->average_min_penalty_vtk,
+                      debugger->average_max_penalty_vtk,
+                      debugger->average_mean_penalty_vtk
                       },
        NULL,
        NULL,
