@@ -86,6 +86,7 @@ SET (
   src/dGMath/d4est_laplacian.c
   src/dGMath/d4est_laplacian_flux.c
   src/dGMath/d4est_laplacian_flux_sipg.c
+  src/dGMath/d4est_laplacian_flux_sipg_penalty_debugger.c
   src/dGMath/d4est_hessian.c
   src/Mesh/d4est_mortars_with_opt.c
   # src/Mesh/d4est_mortars_aux.c
