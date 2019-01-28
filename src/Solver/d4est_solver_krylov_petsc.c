@@ -221,8 +221,10 @@ PetscErrorCode d4est_solver_krylov_petsc_monitor(KSP ksp,PetscInt it, PetscReal 
   if (petsc_ctx->p4est->mpirank == 0){
     double duration_seconds = ((double)(clock() - petsc_ctx->time_start)) / CLOCKS_PER_SEC;
     double emax, emin;
+    double global_nodes = petsc_ctx->global_nodes;
+    
     KSPComputeExtremeSingularValues(ksp, &emax, &emin);
-    zlog_info(its_output, "AMR_IT KSP_IT KSP_NORM TIME: %d %d %.25f %f %f %f", petsc_ctx->amr_level, it, norm, duration_seconds, emax, emin);
+    zlog_info(its_output, "ELEM NODES AMR_IT KSP_IT KSP_NORM TIME: %d %d %d %d %.25f %f %f %f", petsc_ctx->p4est->global_num_quadrants, global_nodes, petsc_ctx->amr_level, it, norm, duration_seconds, emax, emin);
   }  
   if (petsc_ctx->checkpoint_every_n_krylov_its > 0 && petsc_ctx->amr_level >= 0){
     int it;
@@ -351,11 +353,21 @@ d4est_solver_krylov_petsc_solve
   petsc_ctx.last_krylov_checkpoint_it = 0;
   petsc_ctx.amr_level = amr_level;
   petsc_ctx.time_start = start;
-
+  /* petsc_ctx.global_nodes = global_nodes; */
   petsc_ctx.ksp = &ksp;
 
   
   int local_nodes = vecs->local_nodes;
+  sc_allreduce(
+    &local_nodes,
+    &petsc_ctx.global_nodes,
+    1,
+    sc_MPI_INT,
+    sc_MPI_SUM,
+    sc_MPI_COMM_WORLD
+  );
+
+  
   double* u = vecs->u;
   double* rhs = vecs->rhs;
 

@@ -28,7 +28,8 @@ typedef struct {
   int checkpoint_every_n_krylov_its;
   int checkpoint_every_n_newton_its;
   int amr_level;
-
+  int global_nodes;
+  
   clock_t time_start; /* time at which krylov solver or newton solver (if nonlinear eqn)  started */
   
 } krylov_ctx_t;
