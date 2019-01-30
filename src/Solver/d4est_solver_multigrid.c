@@ -1310,7 +1310,7 @@ d4est_solver_multigrid_solve
  p4est_t* p4est,
  d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
-  d4est_solver_multigrid_t* mg_data
+ d4est_solver_multigrid_t* mg_data
 )
 {
   zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid");
@@ -1390,4 +1390,47 @@ d4est_solver_multigrid_solve
     double duration_seconds = ((double)(clock() - start)) / CLOCKS_PER_SEC;
     zlog_info(c_default, "solve completed in %.10f seconds.", duration_seconds);
   }
+}
+
+void
+d4est_solver_multigrid_get_matrix
+(
+ p4est_t* p4est,
+ d4est_elliptic_eqns_t* fcns,
+ d4est_elliptic_data_t* vecs,
+ d4est_solver_multigrid_t* mg_data,
+ double* a_mat
+)
+{
+  int local_nodes = vecs->local_nodes;
+  double* u_temp = P4EST_ALLOC(double, local_nodes);
+  double* Au_temp = P4EST_ALLOC(double, local_nodes);
+  
+  d4est_elliptic_data_t vecs_temp;
+  d4est_elliptic_data_copy_ptrs(vecs, &vecs_temp);
+  vecs_temp.u = u_temp;
+  vecs_temp.Au = Au_temp;
+  
+  d4est_util_fill_array(vecs_temp.u, 0., vecs_temp.local_nodes);
+  
+  for (int i = 0; i < vecs_temp.local_nodes; i++){
+    zlog_category_t* matrix_analysis = zlog_get_category("Computing %d/%d");
+    zlog_info(matrix_analysis,"Computing %d/%d",i,vecs_temp.local_nodes);
+    
+    vecs_temp.u[i] = 1.;
+
+    d4est_solver_multigrid_solve
+      (
+       p4est,
+       &vecs_temp,
+       fcns,
+       mg_data
+      );
+    
+    d4est_linalg_set_column(a_mat, vecs_temp.Au, i, vecs_temp.local_nodes, vecs_temp.local_nodes);
+    vecs_temp.u[i] = 0.;
+  }
+  
+  P4EST_FREE(u_temp);
+  P4EST_FREE(Au_temp);
 }

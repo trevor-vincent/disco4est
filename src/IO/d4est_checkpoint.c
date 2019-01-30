@@ -85,7 +85,9 @@ d4est_checkpoint_save
   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "mpi_size", H5T_NATIVE_INT, &checkmpi); 
   d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "quadrants", H5T_NATIVE_INT, 1);
   d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "quadrants", H5T_NATIVE_INT, &checkquadrants); 
-
+  /* d4est_h5_create_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "nodes", H5T_NATIVE_INT, 1); */
+  /* d4est_h5_write_dataset(p4est->mpirank, checkpoint_folder_and_prefix, "nodes", H5T_NATIVE_INT, &local_nodes);  */
+  
   int num_fields = 0;
   if (field_names != NULL && fields != NULL){
     for (int i = 0; field_names[i] != NULL; i++){
@@ -200,16 +202,21 @@ p4est_t*
 d4est_checkpoint_load_p4est_from_file
 (
  sc_MPI_Comm mpicomm,
- const char* checkpoint_prefix,
+ d4est_mesh_initial_extents_t* initial_grid_input,
  p4est_connectivity_t** connectivity
 )
 {
-  printf("[D4EST_CHECKPOINT]: Loading meshing from checkpoint file %s.p4est\n", checkpoint_prefix);
+  zlog_category_t* c_default = zlog_get_category("d4est_checkpoint");
+  int final_checkpoint_number = initial_grid_input->checkpoint_number;
+  const char* checkpoint_prefix = initial_grid_input->checkpoint_prefix;
 
-  char* p4est_file_name;
-  asprintf(&p4est_file_name,"%s.p4est", checkpoint_prefix);
   
-  p4est_t* p4est = p4est_load (p4est_file_name, mpicomm, 0, 0, NULL, connectivity);
+  char* p4est_file_name;
+  asprintf(&p4est_file_name,"Checkpoints/%d/%s.p4est", final_checkpoint_number, checkpoint_prefix);
+
+  zlog_info(c_default,"Loading meshing from checkpoint file %s\n", p4est_file_name);
+  
+  p4est_t* p4est = p4est_load (p4est_file_name, mpicomm, sizeof(d4est_element_data_t), 0, NULL, connectivity);
 
   free(p4est_file_name);
   return p4est;

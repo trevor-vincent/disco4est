@@ -343,17 +343,17 @@ problem_init
     d4est_amr_temp->refinement_log = NULL;
     d4est_amr_temp->initial_log = NULL;
     d4est_amr_temp->max_degree = 1000;
-    
-    d4est_amr_step
-      (
-       p4est,
-       NULL,
-       d4est_amr_temp,
-       NULL,
-       NULL,
-       NULL,
-       NULL
-      );
+    if(tree_to_refine >= 0)
+      d4est_amr_step
+        (
+         p4est,
+         NULL,
+         d4est_amr_temp,
+         NULL,
+         NULL,
+         NULL,
+         NULL
+        );
 
     P4EST_FREE(refinement_log);
     P4EST_FREE(d4est_amr_temp);

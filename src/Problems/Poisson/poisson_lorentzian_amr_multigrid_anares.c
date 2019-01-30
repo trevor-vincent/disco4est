@@ -205,6 +205,7 @@ amr_set_element_gamma
 typedef struct {
   
   int use_dirichlet;
+  int analyze_matrix;
   
 } poisson_lorentzian_init_params_t;
 
@@ -223,6 +224,10 @@ int poisson_lorentzian_init_params_handler
     D4EST_ASSERT(pconfig->use_dirichlet == -1);
     pconfig->use_dirichlet = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"problem",name,"analyze_matrix")) {
+    D4EST_ASSERT(pconfig->analyze_matrix == -1);
+    pconfig->analyze_matrix = atoi(value);
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -238,12 +243,14 @@ poisson_lorentzian_init_params_input
 {
   poisson_lorentzian_init_params_t input;
   input.use_dirichlet = -1;
+  input.analyze_matrix = -1;
 
   if (ini_parse(input_file, poisson_lorentzian_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
+  /* D4EST_CHECK_INPUT("problem", input.analyze_matrix, -1); */
   
   return input;
 }
@@ -1174,7 +1181,63 @@ problem_init
 
     prob_vecs.field_types = &field_type;
     prob_vecs.num_of_fields = 1;
+
+
+    if(init_params.analyze_matrix){
+  zlog_category_t* matrix_analysis = zlog_get_category("d4est_multigrid_matrix_analysis");
+      zlog_info(matrix_analysis,"ANALYZING THE MATRIX\n");
       
+      int local_nodes = d4est_factors->local_sizes.local_nodes;
+      
+      D4EST_ASSERT(p4est->mpisize == 1);
+      double* mg_mat = P4EST_ALLOC(double, local_nodes*local_nodes);
+      double* mg_mat_trans = P4EST_ALLOC(double, local_nodes*local_nodes);
+      
+      d4est_solver_multigrid_get_matrix
+        (
+         p4est,
+         &prob_fcns,
+         &prob_vecs,
+         mg_data,
+         mg_mat
+        );
+      
+      d4est_linalg_mat_transpose(mg_mat, mg_mat_trans, local_nodes);
+
+      double biggest_err;
+      int biggest_id;
+      double* eig_vals = P4EST_ALLOC(double, local_nodes);
+      
+      d4est_util_find_biggest_error(mg_mat, mg_mat_trans, local_nodes*local_nodes, &biggest_err, &biggest_id);
+
+      if (biggest_err < 1e-14){
+        d4est_linalg_sym_eigvecs
+          (mg_mat,eig_vals, local_nodes);
+
+        double min = d4est_util_min_dbl_array
+                     (
+                      eig_vals,
+                      local_nodes);
+        zlog_info(matrix_analysis, "Minimum eigenvalue = %f\n", min);
+        zlog_info(matrix_analysis, "Biggest symmetry err = %f\n", biggest_err);
+        if (min <= 0){        
+          DEBUG_PRINT_ARR_DBL(eig_vals, local_nodes);
+          D4EST_ABORT("Not SPD");
+        }
+      }
+      else {
+        printf("biggest_err = %f\n", biggest_err);
+        printf("biggest_id = %d\n", biggest_id);
+        printf("mg_mat[id] = %f\n", mg_mat[biggest_id]);
+        printf("mg_mat_trans[id] = %f\n", mg_mat_trans[biggest_id]);
+        D4EST_ABORT("Mg_mat not symmetric");
+      }
+
+      
+      P4EST_FREE(mg_mat);
+      P4EST_FREE(mg_mat_trans);
+    }
+    
     
     d4est_solver_krylov_petsc_solve
       (

@@ -8,6 +8,7 @@
 #include <d4est_krylov_pc.h>
 #include <d4est_checkpoint.h>
 #include <ini.h>
+#include <sc_reduce.h>
 #include <time.h>
 
 static

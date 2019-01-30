@@ -95,12 +95,12 @@ int main(int argc, char *argv[])
   else if (initial_grid_input->load_from_checkpoint == 1 &&
            initial_grid_input->checkpoint_type == D4EST_CHKPT_P4EST_H5){
 
-    D4EST_ABORT("This type of checkpoint may not work anymore, so we abort");
+    /* D4EST_ABORT("This type of checkpoint may not work anymore, so we abort"); */
     
     p4est = d4est_checkpoint_load_p4est_from_file
             (
              mpicomm,
-             initial_grid_input->checkpoint_prefix,
+             initial_grid_input,
              &d4est_geom->p4est_conn
             );
 

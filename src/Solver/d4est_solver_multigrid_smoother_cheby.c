@@ -52,6 +52,10 @@ d4est_solver_multigrid_smoother_cheby_input_handler
     D4EST_ASSERT(pconfig->cheby_print_spectral_bound_iterations == 0);
     pconfig->cheby_print_spectral_bound_iterations = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"make_cheby_symmetric")) {
+    D4EST_ASSERT(pconfig->make_cheby_symmetric == 0);
+    pconfig->make_cheby_symmetric = atoi(value);
+  }
   else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"cheby_use_new_cg_eigs")) {
     D4EST_ASSERT(pconfig->cheby_use_new_cg_eigs == 0);
     pconfig->cheby_use_new_cg_eigs = atoi(value);
@@ -219,8 +223,17 @@ d4est_solver_multigrid_smoother_cheby
   d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_smoother_cheby_t* cheby = mg_data->smoother->user;
   d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
-  
+
+  double* zero_vector = NULL;
+  double* temp_vector = NULL;
   if (cheby->cheby_eigs_compute){
+
+    if(cheby->make_cheby_symmetric){
+      temp_vector = vecs->u;
+      zero_vector = P4EST_ALLOC_ZERO(double, vecs->local_nodes);
+      vecs->u = zero_vector;
+    }
+    
       cg_eigs
         (
          p4est,
@@ -238,9 +251,56 @@ d4est_solver_multigrid_smoother_cheby
          &cheby->eigs[level]
         );
 
+      if(cheby->make_cheby_symmetric){
+        vecs->u = temp_vector;
+        P4EST_FREE(zero_vector);
+      }
+      
       cheby->eigs[level] *= cheby->cheby_eigs_max_multiplier;
   }
 
+  if(cheby->make_cheby_symmetric == 1){
+    if (cheby->cheby_eigs_reuse_fromdownvcycle != 1){
+      printf("If you set make_cheby_symmetric == 1, please set cheby_eigs_reuse_fromdownvcycle = 1\n");
+      D4EST_ABORT("");
+    }
+  }
+  
+  if (cheby->cheby_eigs_compute == 0 &&
+      cheby->make_cheby_symmetric == 1){
+    double dummy;
+
+    if(cheby->make_cheby_symmetric){
+      temp_vector = vecs->u;
+      zero_vector = P4EST_ALLOC_ZERO(double, vecs->local_nodes);
+      vecs->u = zero_vector;
+    }
+
+    cg_eigs
+        (
+         p4est,
+         vecs,
+         fcns,
+         updater->current_d4est_ghost,
+         updater->current_d4est_ghost_data,
+         mg_data->d4est_ops,
+         mg_data->d4est_geom,
+         mg_data->d4est_quad,
+         updater->current_d4est_factors,
+         cheby->cheby_eigs_cg_imax,
+         cheby->cheby_print_spectral_bound_iterations,
+         cheby->cheby_use_new_cg_eigs,
+         &dummy
+        );
+
+      if(cheby->make_cheby_symmetric){
+        vecs->u = temp_vector;
+        P4EST_FREE(zero_vector);
+      }
+
+      /* cheby->eigs[level] *= cheby->cheby_eigs_max_multiplier; */
+  }
+  
   int iter = cheby->cheby_imax;
   double lmin = cheby->eigs[level]/cheby->cheby_eigs_lmax_lmin_ratio;
   double lmax = cheby->eigs[level];
@@ -290,6 +350,7 @@ d4est_solver_multigrid_smoother_cheby_init
   cheby_data->cheby_print_spectral_bound = 0;
   cheby_data->cheby_print_spectral_bound_iterations = 0;
   cheby_data->cheby_use_new_cg_eigs = 0;
+  cheby_data->make_cheby_symmetric = 0;
 
   /* set internally */
   cheby_data->mpirank = p4est->mpirank;
@@ -299,6 +360,12 @@ d4est_solver_multigrid_smoother_cheby_init
     D4EST_ABORT("Can't load input file");
   }
 
+  if (cheby_data->make_cheby_symmetric){
+    if(!cheby_data->cheby_eigs_reuse_fromdownvcycle){
+      D4EST_ABORT("Do not use make_cheby_symmetric without cheby_eigs_reuse_fromdownvycle");
+    }
+  }
+  
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_imax, -1);
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_cg_imax, -1);
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_lmax_lmin_ratio, -1);
@@ -322,6 +389,7 @@ d4est_solver_multigrid_smoother_cheby_init
     zlog_debug(c_default, " Smoother print residual norm = %d", cheby_data->cheby_print_residual_norm);
     zlog_debug(c_default, " Smoother print eigs = %d", cheby_data->cheby_print_spectral_bound);
     zlog_debug(c_default, " Smoother use new cg eigs scheme = %d", cheby_data->cheby_use_new_cg_eigs);
+    zlog_debug(c_default, " Smoother make_cheby_symmetric = %d", cheby_data->make_cheby_symmetric);
   }
 
   smoother->user = cheby_data;
