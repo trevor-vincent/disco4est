@@ -1,0 +1,150 @@
+[initial_mesh]
+min_quadrants = -1
+min_level = 1
+fill_uniform = 1
+region0_deg = 1
+region0_deg_quad_inc = 0
+region1_deg = 1
+region1_deg_quad_inc = 0
+region2_deg = 1
+region2_deg_quad_inc = 0
+
+[mesh_parameters]
+face_h_type = FACE_H_EQ_J_DIV_SJ_QUAD
+volume_h_type = VOL_H_EQ_DIAM
+max_degree = 20
+
+[problem]
+use_dirichlet = 1
+
+[amr]
+scheme = smooth_pred
+num_of_amr_steps = 2
+gamma_h = 100000
+gamma_p = 0.1
+gamma_n = 1.
+percentile = 5
+initial_pred = 1000000000
+
+[flux]
+name = sipg
+sipg_penalty_prefactor = 2.0
+sipg_penalty_fcn = maxp_sqr_over_minh
+
+[geometry]
+name = brick
+X0 = 0.0
+X1 = 1.0
+Y0 = 0.0
+Y1 = 1.0
+Z0 = 0.0
+Z1 = 1.0
+DX_compute_method = analytic
+JAC_compute_method = numerical
+
+[d4est_solver_newton]
+atol = 1e-15
+rtol = 1e-15
+imax = 1000000
+imin = 1
+monitor = 1
+
+[d4est_solver_fcg]
+atol = 1e-15
+rtol = 1e-15
+iter = 1000000
+monitor = 1
+vi = 5
+precond_flag = 0
+
+
+[d4est_solver_cg]
+atol = 1e-15
+rtol = 1e-15
+iter = 1000000000
+monitor = 1
+
+
+[d4est_vtk]
+filename = lorentzian
+geometry_section = geometry
+output_type = ascii
+grid_type = dg
+write_tree = 1
+write_level = 1
+write_rank = 1
+wrap_rank = 0
+write_deg = 1
+
+
+[quadrature]
+name = legendre
+
+[d4est_solver_newton_petsc]
+snes_atol = 1e-15
+snes_rtol = 1e-50
+snes_stol = 1e-1
+snes_max_funcs = 1000000000
+snes_type = newtonls
+snes_max_it = 5
+snes_monitor = 1
+snes_linesearch_order = 3
+snes_linesearch_monitor = 1
+snes_converged_reason = 1
+snes_view = 1
+
+[d4est_solver_krylov_petsc]
+ksp_type = fcg
+ksp_atol = 1e-15
+ksp_rtol = 1e-15
+ksp_max_it = 10000
+ksp_view = 0
+ksp_monitor = 0
+ksp_converged_reason = 0
+ksp_initial_guess_nonzero = 0
+ksp_monitor_singular_value = 0
+
+[d4est_solver_krylov_petsc_no_mg]
+ksp_type = fcg
+ksp_atol = 1e-15
+ksp_rtol = 1e-15
+ksp_max_it = 10000
+ksp_view = 0
+ksp_monitor = 0
+ksp_converged_reason = 0
+ksp_initial_guess_nonzero = 0
+ksp_monitor_singular_value = 0
+
+[multigrid]
+vcycle_imax = 1;
+vcycle_rtol = 1e-15;
+vcycle_atol = 1e-15;
+smoother_name = mg_smoother_cheby
+bottom_solver_name = mg_bottom_solver_cheby
+print_state_info = 1
+
+[mg_bottom_solver_cg]
+bottom_iter = 100;
+bottom_rtol = 1e-10;
+bottom_atol = 0.;
+bottom_print_residual_norm = 0;
+
+[mg_smoother_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 1;
+cheby_print_eigs = 0;
+
+[mg_bottom_solver_cheby]
+cheby_imax = 15;
+cheby_eigs_cg_imax = 15;
+cheby_eigs_lmax_lmin_ratio = 30.;
+cheby_eigs_max_multiplier = 1.;
+cheby_eigs_reuse_fromdownvcycle = 0;
+cheby_eigs_reuse_fromlastvcycle = 0;
+cheby_print_residual_norm = 1;
+cheby_print_eig = 0;
