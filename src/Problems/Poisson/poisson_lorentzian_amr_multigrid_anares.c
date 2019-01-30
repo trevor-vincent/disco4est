@@ -225,7 +225,7 @@ int poisson_lorentzian_init_params_handler
     pconfig->use_dirichlet = atoi(value);
   }
   else if (d4est_util_match_couple(section,"problem",name,"analyze_matrix")) {
-    D4EST_ASSERT(pconfig->analyze_matrix == -1);
+    D4EST_ASSERT(pconfig->analyze_matrix == 0);
     pconfig->analyze_matrix = atoi(value);
   }
   else {
@@ -243,7 +243,7 @@ poisson_lorentzian_init_params_input
 {
   poisson_lorentzian_init_params_t input;
   input.use_dirichlet = -1;
-  input.analyze_matrix = -1;
+  input.analyze_matrix = 0;
 
   if (ini_parse(input_file, poisson_lorentzian_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
