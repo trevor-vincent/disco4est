@@ -24,6 +24,7 @@ typedef enum
     FACE_H_EQ_J_DIV_SJ_QUAD,
     FACE_H_EQ_J_DIV_SJ_MIN_LOBATTO,
     FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO,
+    FACE_H_EQ_J_DIV_SJ_MAX_LOBATTO,
     FACE_H_EQ_TREE_H,
     FACE_H_EQ_VOLUME_DIV_AREA,
     FACE_H_EQ_FACE_DIAM,
@@ -83,6 +84,7 @@ typedef struct {
 
   double* j_div_sj_min;
   double* j_div_sj_mean;
+  double* j_div_sj_max;
   double* diam_face;
   double* diam_volume;
   double* area;
@@ -137,6 +139,7 @@ typedef struct {
 
   double* j_div_sj_min;
   double* j_div_sj_mean;
+  double* j_div_sj_max;
   double* diam_face;
   double* diam_volume;
   double* area;

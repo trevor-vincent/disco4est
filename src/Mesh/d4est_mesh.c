@@ -29,6 +29,9 @@ d4est_mesh_data_get_string_from_face_h_type
   else if (h_calc == FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO){
     strcpy(string,"FACE_H_EQ_J_DIV_SJ_MEAN_lOBATTO");
   }
+    else if (h_calc == FACE_H_EQ_J_DIV_SJ_MAX_LOBATTO){
+    strcpy(string,"FACE_H_EQ_J_DIV_SJ_MAX_lOBATTO");
+  }
   else if (h_calc == FACE_H_EQ_VOLUME_DIV_AREA){
     strcpy(string,"FACE_H_EQ_VOLUME_DIV_AREA");
   }
@@ -149,6 +152,9 @@ int d4est_mesh_initial_extents_handler
     }
     else if(d4est_util_match(value, "FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO")){
       pconfig->face_h_type = FACE_H_EQ_J_DIV_SJ_MEAN_LOBATTO;
+    }
+    else if(d4est_util_match(value, "FACE_H_EQ_J_DIV_SJ_MAX_LOBATTO")){
+      pconfig->face_h_type = FACE_H_EQ_J_DIV_SJ_MAX_LOBATTO;
     }
     else if(d4est_util_match(value, "FACE_H_EQ_VOLUME_DIV_AREA")){
       pconfig->face_h_type = FACE_H_EQ_VOLUME_DIV_AREA;
@@ -672,6 +678,29 @@ d4est_mesh_calculate_mortar_h
       stride += nodes_mortar_quad[f];
     }
   }
+
+
+  else if (face_h_type == FACE_H_EQ_J_DIV_SJ_MAX_LOBATTO){
+    /* D4EST_ABORT(""); */
+    int stride = 0;
+    double h [P4EST_HALF];
+    for (int f = 0; f < num_faces_mortar; f++){
+
+      int element_id = elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->id;
+      int stride = (p4est->mpirank == elems_side[(num_faces_side == num_faces_mortar) ? f : 0]->mpirank) ? 0 : p4est->local_num_quadrants;
+      int element_index = element_id + stride;
+      h[f] = size_params.j_div_sj_max[element_index*(P4EST_FACES) + face_side]; 
+    }
+                 
+    for (int f = 0; f < num_faces_mortar; f++){
+      for (int k = 0; k < nodes_mortar_quad[f]; k++){
+        int ks = k + stride;
+        h_quad_mortar[ks] = h[f];
+      }
+      stride += nodes_mortar_quad[f];
+    }
+  }
+  
   
   else if (face_h_type == FACE_H_EQ_TOTAL_VOLUME_DIV_TOTAL_AREA){
     int stride = 0;
@@ -1274,6 +1303,7 @@ d4est_mesh_data_init()
 
   d4est_factors->j_div_sj_min = NULL;
   d4est_factors->j_div_sj_mean = NULL;
+  d4est_factors->j_div_sj_max = NULL;
   d4est_factors->diam_face = NULL;
   d4est_factors->diam_volume = NULL;
   d4est_factors->area = NULL;
@@ -1318,6 +1348,7 @@ d4est_mesh_data_zero
   
   d4est_util_zero_array(d4est_factors->j_div_sj_min, p4est->local_num_quadrants*(P4EST_FACES));
   d4est_util_zero_array(d4est_factors->j_div_sj_mean, p4est->local_num_quadrants*(P4EST_FACES));
+  d4est_util_zero_array(d4est_factors->j_div_sj_max, p4est->local_num_quadrants*(P4EST_FACES));
   d4est_util_zero_array(d4est_factors->diam_face, p4est->local_num_quadrants*(P4EST_FACES));
   d4est_util_zero_array(d4est_factors->area, p4est->local_num_quadrants*(P4EST_FACES));
   d4est_util_zero_array(d4est_factors->volume,p4est->local_num_quadrants);
@@ -1360,6 +1391,7 @@ d4est_mesh_data_debug_print
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->xyz_m_mortar_lobatto, local_vector_boundary_nodes_quad);
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->j_div_sj_min, p4est->local_num_quadrants*(P4EST_FACES));
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->j_div_sj_mean, p4est->local_num_quadrants*(P4EST_FACES));
+  DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->j_div_sj_max, p4est->local_num_quadrants*(P4EST_FACES));
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->diam_face, p4est->local_num_quadrants*(P4EST_FACES));
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->area, p4est->local_num_quadrants*(P4EST_FACES));
   DEBUG_PRINT_MPI_ARR_DBL_SUM(p4est->mpirank, d4est_factors->volume,p4est->local_num_quadrants);
@@ -1487,6 +1519,11 @@ d4est_mesh_data_realloc
                                               (p4est->local_num_quadrants + ghost_elements)*(P4EST_FACES));
 
 
+    d4est_factors->j_div_sj_max = P4EST_REALLOC(d4est_factors->j_div_sj_max,
+                                              double,
+                                              (p4est->local_num_quadrants + ghost_elements)*(P4EST_FACES));
+
+
   d4est_factors->diam_face = P4EST_REALLOC(d4est_factors->diam_face,
                                            double,
                                            (p4est->local_num_quadrants + ghost_elements)*(P4EST_FACES));
@@ -1548,6 +1585,7 @@ d4est_mesh_data_destroy
     P4EST_FREE(d4est_factors->diam_face);
     P4EST_FREE(d4est_factors->j_div_sj_min);
     P4EST_FREE(d4est_factors->j_div_sj_mean);
+    P4EST_FREE(d4est_factors->j_div_sj_max);
     P4EST_FREE(d4est_factors->diam_volume);
     P4EST_FREE(d4est_factors->area);
     P4EST_FREE(d4est_factors->volume);
@@ -1745,7 +1783,11 @@ d4est_mesh_init_element_size_parameters
           
     d4est_factors->diam_face[(ed->id+stride)*(P4EST_FACES) + f] = diam_face;
     d4est_factors->j_div_sj_min[(ed->id+stride)*(P4EST_FACES) + f] = d4est_util_min_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto);
-    d4est_factors->j_div_sj_mean[(ed->id+stride)*(P4EST_FACES) + f] = d4est_util_mean_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto); 
+    d4est_factors->j_div_sj_mean[(ed->id+stride)*(P4EST_FACES) + f] = d4est_util_mean_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto);
+
+
+    d4est_factors->j_div_sj_max[(ed->id+stride)*(P4EST_FACES) + f] = d4est_util_max_dbl_array(j_div_sj_on_f_lobatto, face_nodes_lobatto); 
+    
   }
      
   P4EST_FREE(ones);
@@ -2317,6 +2359,7 @@ d4est_mesh_get_size_parameters
   d4est_mesh_size_parameters_t size_params;
   size_params.j_div_sj_min = factors->j_div_sj_min;
   size_params.j_div_sj_mean = factors->j_div_sj_mean;
+  size_params.j_div_sj_max = factors->j_div_sj_max;
   size_params.diam_face = factors->diam_face;
   size_params.diam_volume = factors->diam_volume;
   size_params.area = factors->area;

@@ -1044,6 +1044,9 @@ d4est_laplacian_flux_sipg_get_penalty_fcn_from_string
   else if (d4est_util_match(string,"mean_p_sqr_over_h")){
     return d4est_laplacian_flux_sipg_penalty_mean_p_sqr_over_h;
   }
+  /* else if (d4est_util_match(string,"mean_p_sqr_over_h")){ */
+    /* return d4est_laplacian_flux_sipg_penalty_mean_p_sqr_over_h; */
+  /* } */
   else {
     D4EST_ABORT("This ip flux penalty calculation fcn does not exist");
     return NULL;
