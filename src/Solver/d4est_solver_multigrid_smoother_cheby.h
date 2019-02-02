@@ -1,6 +1,7 @@
 #ifndef MULTIGRID_SMOOTHER_CHEBY_D4EST_H
 #define MULTIGRID_SMOOTHER_CHEBY_D4EST_H 
 
+#include <pXest.h>
 #include <d4est_solver_multigrid.h>
 
 typedef struct {

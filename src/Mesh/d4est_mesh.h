@@ -106,9 +106,10 @@ typedef struct {
 
 /* If not specified explicitly, everything is (-) side order */
 typedef struct {
-  
-  d4est_mesh_local_sizes_t local_sizes;
 
+  d4est_mesh_local_sizes_t local_sizes;
+  int global_nodes;
+  
   d4est_mesh_local_strides_t* local_strides;
   
   /* array of 0 and 1 for whether this element touches boundary */
@@ -144,9 +145,6 @@ typedef struct {
   double* diam_volume;
   double* area;
   double* volume;
-
-  /* if needed */
-  /* d4est_ghost_data_ext_t face_h_ghost_data; */
 
   /* internal, don't touch these */
   int aux_mortar_quad_stride;

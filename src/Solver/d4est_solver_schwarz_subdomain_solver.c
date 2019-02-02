@@ -1,6 +1,7 @@
 #include <pXest.h>
 #include <d4est_solver_schwarz_subdomain_solver_cg.h>
 #include <d4est_solver_schwarz_subdomain_solver_gmres.h>
+#include <d4est_solver_schwarz_subdomain_solver_ksp.h>
 #include <d4est_solver_schwarz_subdomain_solver.h>
 #include <ini.h>
 
@@ -20,8 +21,8 @@ int d4est_solver_schwarz_subdomain_solver_input_handler
     if(d4est_util_match(value, "cg")){
       pconfig->solver_type = SUBDOMAIN_SOLVER_CG;    
     }
-    else if(d4est_util_match(value, "gmres")){
-      pconfig->solver_type = SUBDOMAIN_SOLVER_GMRES;    
+    else if(d4est_util_match(value, "ksp")){
+      pconfig->solver_type = SUBDOMAIN_SOLVER_KSP;    
     }    
     else {
       zlog_error(c_default, "%s is not a supported subdomain solver", value);
@@ -63,7 +64,7 @@ d4est_solver_schwarz_subdomain_solver_init
   if(schwarz_subdomain_solver->solver_type == SUBDOMAIN_SOLVER_CG){
     schwarz_subdomain_solver->solver_fcn = d4est_solver_schwarz_subdomain_solver_cg;
     schwarz_subdomain_solver->destroy_fcn = d4est_solver_schwarz_subdomain_solver_cg_destroy;
-    schwarz_subdomain_solver->solver_ctx =
+    schwarz_subdomain_solver->solver_params =
       d4est_solver_schwarz_subdomain_solver_cg_init
       (
        p4est,
@@ -71,17 +72,17 @@ d4est_solver_schwarz_subdomain_solver_init
        input_section
       );
   }
-  else if(schwarz_subdomain_solver->solver_type == SUBDOMAIN_SOLVER_GMRES){
-    schwarz_subdomain_solver->solver_fcn = d4est_solver_schwarz_subdomain_solver_gmres;
-    schwarz_subdomain_solver->destroy_fcn = d4est_solver_schwarz_subdomain_solver_gmres_destroy;
-    schwarz_subdomain_solver->solver_ctx =
-      d4est_solver_schwarz_subdomain_solver_gmres_init
+  else if(schwarz_subdomain_solver->solver_type == SUBDOMAIN_SOLVER_KSP){
+    schwarz_subdomain_solver->solver_fcn = d4est_solver_schwarz_subdomain_solver_ksp;
+    schwarz_subdomain_solver->destroy_fcn = d4est_solver_schwarz_subdomain_solver_ksp_destroy;
+    schwarz_subdomain_solver->solver_params =
+      d4est_solver_schwarz_subdomain_solver_ksp_init
       (
        p4est,
        input_file,
        input_section
       );
-  }  
+  }
   else{
     D4EST_ABORT("Not a supported subdomain solver");
   }
@@ -103,7 +104,7 @@ d4est_solver_schwarz_subdomain_solver_destroy
 ){
   schwarz_subdomain_solver->destroy_fcn
     (
-     schwarz_subdomain_solver->solver_ctx
+     schwarz_subdomain_solver->solver_params
     );
   P4EST_FREE(schwarz_subdomain_solver);
 }

@@ -158,9 +158,9 @@ d4est_amr_smooth_pred_compute_post_p_balance_predictor
         if (d4est_amr->p_balance[id] >= d4est_amr->p_balance_if_diff
             && ed->deg < d4est_amr->max_degree - 1)
           {
-            printf("predictor before %f ",(*predictors)[id]);
+            printf("predictor before %.15f ",(*predictors)[id]);
             (*predictors)[id] = gamma_hpn.gamma_p*(*predictors)[id];
-            printf("predictor after %f\n",(*predictors)[id]);            
+            printf("predictor after %.15f\n",(*predictors)[id]);            
           };
         id++;
       }
@@ -174,7 +174,6 @@ d4est_amr_smooth_pred_post_p_balance_callback
  void* user
 )
 {
-
   d4est_amr_t* d4est_amr = (d4est_amr_t*) user;
   d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
 

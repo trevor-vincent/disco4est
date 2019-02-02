@@ -12,6 +12,7 @@
 #include <d4est_solver_multigrid_callbacks.h>
 #include <d4est_solver_multigrid_element_data_updater.h>
 #include <d4est_solver_multigrid_smoother_cheby.h>
+#include <d4est_solver_multigrid_smoother_none.h>
 #include <d4est_solver_multigrid_smoother_schwarz.h>
 #include <d4est_solver_multigrid_logger_residual.h>
 #include <d4est_solver_multigrid_profiler_basic.h>
@@ -285,17 +286,17 @@ int d4est_solver_multigrid_input_handler
     mg_data->use_p_coarsen = atoi(value);
     D4EST_ABORT("use_p_coarsen not working yet");
   }
-  else if (d4est_util_match_couple(section,"multigrid",name,"use_power_method_debug")) {
-    D4EST_ASSERT(mg_data->use_power_method_debug == 0);
-    mg_data->use_power_method_debug = atoi(value);
+  else if (d4est_util_match_couple(section,"multigrid",name,"debug_with_power_method")) {
+    D4EST_ASSERT(mg_data->debug_with_power_method == 0);
+    mg_data->debug_with_power_method = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"multigrid",name,"print_state_info")) {
-    D4EST_ASSERT(mg_data->print_state_info == 0);
-    mg_data->print_state_info = atoi(value);
+  else if (d4est_util_match_couple(section,"multigrid",name,"debug_print_state_info")) {
+    D4EST_ASSERT(mg_data->debug_print_state_info == 0);
+    mg_data->debug_print_state_info = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"multigrid",name,"print_level_info")) {
-    D4EST_ASSERT(mg_data->print_level_info == 0);
-    mg_data->print_level_info = atoi(value);
+  else if (d4est_util_match_couple(section,"multigrid",name,"debug_print_level_info")) {
+    D4EST_ASSERT(mg_data->debug_print_level_info == 0);
+    mg_data->debug_print_level_info = atoi(value);
   }
   else if (d4est_util_match_couple(section,"multigrid",name,"power_atol")) {
     D4EST_ASSERT(mg_data->power_atol == -1);
@@ -313,13 +314,17 @@ int d4est_solver_multigrid_input_handler
     D4EST_ASSERT(mg_data->power_imax == -1);
     mg_data->power_imax = atoi(value);
   } 
-  else if (d4est_util_match_couple(section,"multigrid",name,"use_profiler")) {
-    D4EST_ASSERT(mg_data->use_profiler == 0);
-    mg_data->use_profiler = atoi(value);
+  else if (d4est_util_match_couple(section,"multigrid",name,"debug_use_profiler")) {
+    D4EST_ASSERT(mg_data->debug_use_profiler == 0);
+    mg_data->debug_use_profiler = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"multigrid",name,"use_analyzer")) {
-    D4EST_ASSERT(mg_data->use_analyzer == 0);
-    mg_data->use_analyzer = atoi(value);
+  else if (d4est_util_match_couple(section,"multigrid",name,"debug_use_analyzer")) {
+    D4EST_ASSERT(mg_data->debug_use_analyzer == 0);
+    mg_data->debug_use_analyzer = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"multigrid",name,"debug_zero_out_bottom_rhs")) {
+    D4EST_ASSERT(mg_data->debug_zero_out_bottom_rhs == 0);
+    mg_data->debug_zero_out_bottom_rhs = atoi(value);
   }
   else if (d4est_util_match_couple(section,"multigrid",name,"vcycle_rtol")) {
     D4EST_ASSERT(mg_data->vcycle_rtol == -1);
@@ -364,6 +369,15 @@ d4est_solver_multigrid_set_smoother(p4est_t* p4est, const char* input_file,  d4e
                         );
     mg_data->smoother->type = MG_SMOOTHER_CHEBY;
   }
+  else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_none")){
+    mg_data->smoother = d4est_solver_multigrid_smoother_none_init
+                        (
+                         p4est,
+                         mg_data->num_of_levels,
+                         input_file
+                        );
+    mg_data->smoother->type = MG_SMOOTHER_NONE;
+  }  
   else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_schwarz")){
     /* D4EST_ABORT("Need to add support for this again"); */
     d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
@@ -393,6 +407,12 @@ d4est_solver_multigrid_destroy_smoother( d4est_solver_multigrid_t* mg_data){
     d4est_solver_multigrid_smoother_krylov_petsc_destroy(mg_data->smoother);
   }
   else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_cheby")){
+    d4est_solver_multigrid_smoother_cheby_destroy(mg_data->smoother);
+  }
+  else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_none")){
+    d4est_solver_multigrid_smoother_none_destroy(mg_data->smoother);
+  }
+  else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_none")){
     d4est_solver_multigrid_smoother_cheby_destroy(mg_data->smoother);
   }
   else if(d4est_util_match(mg_data->smoother_name, "mg_smoother_schwarz")){
@@ -522,16 +542,17 @@ d4est_solver_multigrid_data_init
   mg_data->vcycle_atol = -1;
   mg_data->vcycle_rtol = -1;
   mg_data->vcycle_imax = -1;
-  mg_data->use_profiler = 0;
-  mg_data->use_analyzer = 0;
+  mg_data->debug_use_profiler = 0;
+  mg_data->debug_use_analyzer = 0;
+  mg_data->debug_zero_out_bottom_rhs = 0;
   mg_data->power_atol = -1;
-  mg_data->print_state_info = 0;
-  mg_data->print_level_info = 0;
+  mg_data->debug_print_state_info = 0;
+  mg_data->debug_print_level_info = 0;
   mg_data->power_rtol = -1;
   mg_data->power_imax = -1;
   mg_data->power_imin = -1;
   mg_data->linear_operator_updates = 0;
-  mg_data->use_power_method_debug = 0;
+  mg_data->debug_with_power_method = 0;
   mg_data->num_of_p_coarsen_levels = 0;
   mg_data->use_p_coarsen = 0;
   mg_data->bottom_solver_name[0] = '*';
@@ -588,20 +609,21 @@ d4est_solver_multigrid_data_init
     zlog_debug(c_default, "vcycle atol = %.25f", mg_data->vcycle_atol);
     zlog_debug(c_default, "smoother = %s", mg_data->smoother_name);
     zlog_debug(c_default, "bottom solver = %s", mg_data->bottom_solver_name);
-    zlog_debug(c_default, "use_profiler = %d", mg_data->use_profiler);
-    zlog_debug(c_default, "use_analyzer = %d", mg_data->use_analyzer);
-    zlog_debug(c_default, "use_power_method_debug = %d", mg_data->use_power_method_debug);
+    zlog_debug(c_default, "debug_use_profiler = %d", mg_data->debug_use_profiler);
+    zlog_debug(c_default, "debug_use_analyzer = %d", mg_data->debug_use_analyzer);
+    zlog_debug(c_default, "debug_zero_out_bottom_rhs = %d", mg_data->debug_zero_out_bottom_rhs);
+    zlog_debug(c_default, "debug_with_power_method = %d", mg_data->debug_with_power_method);
   }
 
   mg_data->logger = d4est_solver_multigrid_logger_residual_init();
-  if (mg_data->use_profiler == 1){
+  if (mg_data->debug_use_profiler == 1){
     mg_data->profiler = d4est_solver_multigrid_profiler_basic_init();
   }
   else {
     mg_data->profiler = NULL;
   }
 
-  if (mg_data->use_analyzer == 1){
+  if (mg_data->debug_use_analyzer == 1){
     mg_data->analyzer = d4est_solver_multigrid_mesh_analyzer_init();
   }
   else {
@@ -732,7 +754,7 @@ d4est_solver_multigrid_vcycle
   /**********************************************************/
   /* DEBUG_PRINT_ARR_DBL(vecs->u, vecs->local_nodes); */
 
-  if (mg_data->print_state_info && p4est->mpirank == 0){
+  if (mg_data->debug_print_state_info && p4est->mpirank == 0){
   zlog_debug(c_default, "Level = %d", toplevel);
   zlog_debug(c_default, "State = %s", "PRE_V");
   zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[toplevel]);
@@ -772,7 +794,7 @@ d4est_solver_multigrid_vcycle
     }
 
     
-    if(mg_data->use_analyzer){
+    if(mg_data->debug_use_analyzer){
       mg_data->debug_current_u = vecs_for_smooth.u;
       mg_data->debug_current_rhs = vecs_for_smooth.rhs;
       mg_data->debug_nodes = vecs_for_smooth.local_nodes;
@@ -792,7 +814,7 @@ d4est_solver_multigrid_vcycle
     /**********************************************************/
     /**********************************************************/
 
-    if (mg_data->print_state_info && p4est->mpirank == 0){
+    if (mg_data->debug_print_state_info && p4est->mpirank == 0){
       zlog_debug(c_default, "Level = %d", level);
       zlog_debug(c_default, "State = %s", "DOWNV_PRE_SMOOTH");
       zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
@@ -811,7 +833,7 @@ d4est_solver_multigrid_vcycle
        fine_level
       );
     
-    if (mg_data->print_state_info && p4est->mpirank == 0){
+    if (mg_data->debug_print_state_info && p4est->mpirank == 0){
       zlog_debug(c_default, "Level = %d", level);
       zlog_debug(c_default, "State = %s", "DOWNV_POST_SMOOTH");
       zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
@@ -822,7 +844,7 @@ d4est_solver_multigrid_vcycle
     mg_data->mg_state = DOWNV_POST_SMOOTH; d4est_solver_multigrid_update_components(p4est, level, &vecs_for_smooth);
 
 
-    if (mg_data->use_power_method_debug){
+    if (mg_data->debug_with_power_method){
 
       d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
       d4est_ghost_t* d4est_ghost = updater->current_d4est_ghost;
@@ -858,7 +880,7 @@ d4est_solver_multigrid_vcycle
     /******************* BEGIN COARSEN ************************/
     /**********************************************************/
     /**********************************************************/
-  if (mg_data->print_state_info && p4est->mpirank == 0){
+  if (mg_data->debug_print_state_info && p4est->mpirank == 0){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_PRE_COARSEN");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
@@ -889,7 +911,7 @@ d4est_solver_multigrid_vcycle
                          NULL
                         );
     }
-  if (mg_data->print_state_info && p4est->mpirank == 0){
+  if (mg_data->debug_print_state_info && p4est->mpirank == 0){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_POST_COARSEN");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
@@ -953,7 +975,7 @@ d4est_solver_multigrid_vcycle
     mg_data->temp_stride = 0;
     mg_data->intergrid_ptr = &rres_at0[stride_to_fine_data];//&(mg_data->rres)[0];
 
-  if (mg_data->print_state_info && p4est->mpirank == 0){
+  if (mg_data->debug_print_state_info && p4est->mpirank == 0){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_PRE_RESTRICTION");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
@@ -976,7 +998,7 @@ d4est_solver_multigrid_vcycle
                   NULL
     );
 
-  if (mg_data->print_state_info && p4est->mpirank == 0){
+  if (mg_data->debug_print_state_info && p4est->mpirank == 0){
     zlog_debug(c_default, "Level = %d", level);
     zlog_debug(c_default, "State = %s", "DOWNV_POST_RESTRICTION");
     zlog_debug(c_default, "elements_on_level = %d", elements_on_level_of_multigrid[level]);
@@ -1021,7 +1043,14 @@ d4est_solver_multigrid_vcycle
   vecs_for_bottom_solve.local_nodes = nodes_on_level_of_multigrid[bottomlevel];
 
 
-  if(mg_data->use_analyzer){
+  if(mg_data->debug_zero_out_bottom_rhs){
+    /* This should give an error of zero */
+    for (int i = 0; i < vecs_for_bottom_solve.local_nodes; i++){
+      vecs_for_bottom_solve.rhs[i] = 0.;
+    }
+  }
+
+  if(mg_data->debug_use_analyzer){
     mg_data->debug_current_u = vecs_for_bottom_solve.u;
     mg_data->debug_current_rhs = vecs_for_bottom_solve.rhs;
     mg_data->debug_nodes = vecs_for_bottom_solve.local_nodes;
@@ -1134,7 +1163,7 @@ d4est_solver_multigrid_vcycle
       vecs_for_smooth.local_nodes = mg_data->fine_nodes;      
     }
 
-    if(mg_data->use_analyzer){
+    if(mg_data->debug_use_analyzer){
       mg_data->debug_current_u = vecs_for_smooth.u;
       mg_data->debug_current_rhs = vecs_for_smooth.rhs;
       mg_data->debug_nodes = vecs_for_smooth.local_nodes;
@@ -1166,7 +1195,7 @@ d4est_solver_multigrid_vcycle
 
 
 
-    if (mg_data->use_power_method_debug){
+    if (mg_data->debug_with_power_method){
 
       d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
       d4est_ghost_t* d4est_ghost = updater->current_d4est_ghost;
@@ -1203,7 +1232,7 @@ d4est_solver_multigrid_vcycle
 
   mg_data->mg_state = POST_V; d4est_solver_multigrid_update_components(p4est, toplevel, NULL);
 
-  if (p4est->mpirank == 0 || mg_data->print_level_info){
+  if (p4est->mpirank == 0 || mg_data->debug_print_level_info){
     for (level = toplevel; level >= bottomlevel; --level){
       zlog_debug(c_default, "For each processor, we have Level %d, Number of elements %d, Number of nodes %d",
              level,
@@ -1393,6 +1422,55 @@ d4est_solver_multigrid_solve
 }
 
 void
+d4est_solver_multigrid_get_inv_matrix
+(
+ p4est_t* p4est,
+ d4est_elliptic_eqns_t* fcns,
+ d4est_elliptic_data_t* vecs,
+ d4est_solver_multigrid_t* mg_data,
+ double* a_mat
+)
+{
+  int local_nodes = vecs->local_nodes;
+  double* u_temp = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* rhs_temp = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* Au_temp = P4EST_ALLOC_ZERO(double, local_nodes);
+  
+  d4est_elliptic_data_t vecs_temp;
+  d4est_elliptic_data_copy_ptrs(vecs, &vecs_temp);
+  vecs_temp.u = u_temp;
+  vecs_temp.Au = Au_temp;
+  vecs_temp.rhs = rhs_temp;
+  
+
+  
+  for (int i = 0; i < vecs_temp.local_nodes; i++){
+    zlog_category_t* matrix_analysis = zlog_get_category("Computing %d/%d");
+    zlog_info(matrix_analysis,"Computing %d/%d",i,vecs_temp.local_nodes);
+
+    d4est_util_fill_array(vecs_temp.u, 0., vecs_temp.local_nodes);
+    
+    vecs_temp.rhs[i] = 1.;
+
+    d4est_solver_multigrid_solve
+      (
+       p4est,
+       &vecs_temp,
+       fcns,
+       mg_data
+      );
+    
+    d4est_linalg_set_column(a_mat, vecs_temp.u, i, vecs_temp.local_nodes, vecs_temp.local_nodes);
+    vecs_temp.rhs[i] = 0.;
+  }
+  
+  P4EST_FREE(u_temp);
+  P4EST_FREE(Au_temp);
+  P4EST_FREE(rhs_temp);
+}
+
+
+void
 d4est_solver_multigrid_get_matrix
 (
  p4est_t* p4est,
@@ -1403,21 +1481,25 @@ d4est_solver_multigrid_get_matrix
 )
 {
   int local_nodes = vecs->local_nodes;
-  double* u_temp = P4EST_ALLOC(double, local_nodes);
-  double* Au_temp = P4EST_ALLOC(double, local_nodes);
+  double* u_temp = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* rhs_temp = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* Au_temp = P4EST_ALLOC_ZERO(double, local_nodes);
+
+  for (int i = 0; i < local_nodes; i++) u_temp[i] += 1.;
   
   d4est_elliptic_data_t vecs_temp;
   d4est_elliptic_data_copy_ptrs(vecs, &vecs_temp);
   vecs_temp.u = u_temp;
   vecs_temp.Au = Au_temp;
-  
-  d4est_util_fill_array(vecs_temp.u, 0., vecs_temp.local_nodes);
+  vecs_temp.rhs = rhs_temp;
   
   for (int i = 0; i < vecs_temp.local_nodes; i++){
     zlog_category_t* matrix_analysis = zlog_get_category("Computing %d/%d");
     zlog_info(matrix_analysis,"Computing %d/%d",i,vecs_temp.local_nodes);
+
+    d4est_util_fill_array(vecs_temp.u, 0., vecs_temp.local_nodes);
     
-    vecs_temp.u[i] = 1.;
+    vecs_temp.rhs[i] = 1.;
 
     d4est_solver_multigrid_solve
       (
@@ -1427,10 +1509,11 @@ d4est_solver_multigrid_get_matrix
        mg_data
       );
     
-    d4est_linalg_set_column(a_mat, vecs_temp.Au, i, vecs_temp.local_nodes, vecs_temp.local_nodes);
-    vecs_temp.u[i] = 0.;
+    d4est_linalg_set_column(a_mat, vecs_temp.u, i, vecs_temp.local_nodes, vecs_temp.local_nodes);
+    vecs_temp.rhs[i] = 0.;
   }
   
   P4EST_FREE(u_temp);
   P4EST_FREE(Au_temp);
+  P4EST_FREE(rhs_temp);
 }

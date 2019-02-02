@@ -1,3 +1,4 @@
+#include <pXest.h>
 #include <d4est_solver_multigrid_smoother_cheby.h>
 #include <d4est_linalg.h>
 #include <ini.h>

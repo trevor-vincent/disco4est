@@ -226,7 +226,7 @@ PetscErrorCode d4est_solver_krylov_petsc_monitor(KSP ksp,PetscInt it, PetscReal 
     KSPComputeExtremeSingularValues(ksp, &emax, &emin);
     zlog_info(its_output, "ELEM NODES AMR_IT KSP_IT KSP_NORM TIME: %d %d %d %d %.25f %f %f %f",
               petsc_ctx->p4est->global_num_quadrants,
-              petsc_ctx->global_nodes,
+              petsc_ctx->d4est_factors->global_nodes,
               petsc_ctx->amr_level,
               it,
               norm,
@@ -366,15 +366,15 @@ d4est_solver_krylov_petsc_solve
 
   
   int local_nodes = vecs->local_nodes;
-  sc_reduce(
-    &local_nodes,
-    &petsc_ctx.global_nodes,
-    1,
-    sc_MPI_INT,
-    sc_MPI_SUM,
-    0,
-    sc_MPI_COMM_WORLD
-  );
+  /* sc_reduce( */
+  /*   &local_nodes, */
+  /*   &petsc_ctx.global_nodes, */
+  /*   1, */
+  /*   sc_MPI_INT, */
+  /*   sc_MPI_SUM, */
+  /*   0, */
+  /*   sc_MPI_COMM_WORLD */
+  /* ); */
 
   
   double* u = vecs->u;

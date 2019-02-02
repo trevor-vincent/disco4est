@@ -362,8 +362,8 @@ d4est_estimator_stats_compute_aux
     if (local_size_temp >= 0){
       sc_allreduce
         (
-         &global_size,
          &local_size_temp,
+         &global_size,
          1,
          sc_MPI_INT,
          sc_MPI_SUM,

@@ -2793,6 +2793,18 @@ d4est_mesh_update
                                  user_ctx);
 
 
+    int local_nodes = local_sizes.local_nodes;
+    int global_nodes = -1;
+    sc_allreduce
+      (
+       &local_nodes,
+       &global_nodes,
+       1,
+       sc_MPI_INT,
+       sc_MPI_SUM,
+       p4est->mpicomm
+      );
+    d4est_factors->global_nodes = global_nodes;
 
  if (ghost_init_option == INITIALIZE_GHOST){
     if (d4est_ghost != NULL && *d4est_ghost != NULL) {

@@ -43,6 +43,7 @@ typedef enum
 
 typedef enum {
               MG_SMOOTHER_CHEBY,
+              MG_SMOOTHER_NONE,
               MG_SMOOTHER_SCHWARZ,
               MG_SMOOTHER_PETSC,
               MG_SMOOTHER_NOT_SET
@@ -242,17 +243,20 @@ struct  d4est_solver_multigrid_data {
   int* nodes_on_level_of_surrogate_multigrid;
 
   /* UNREQUIRED - DEBUG */
-  int use_profiler; /* UNREQUIRED */
-  int use_analyzer; /* UNREQUIRED */
-  int print_state_info; /* UNREQUIRED */
-  int print_level_info; /* UNREQUIRED */
-  int use_power_method_debug; /* UNREQUIRED */
+  int debug_use_profiler; /* UNREQUIRED */
+  int debug_use_analyzer; /* UNREQUIRED */
+  int debug_zero_out_bottom_rhs; /* UNREQUIRED */
+  int debug_print_state_info; /* UNREQUIRED */
+  int debug_print_level_info; /* UNREQUIRED */
+  int debug_with_power_method; /* UNREQUIRED */
   double power_atol; /* UNREQUIRED */
   double power_rtol; /* UNREQUIRED */
   double power_imax; /* UNREQUIRED */
   double power_imin; /* UNREQUIRED */
   int use_p_coarsen; /* UNREQUIRED, NOT TESTED */ /* p-d4est_solver_multigrid is untested and aborts atm */
   int amr_level;
+  
+  /* used if debug_use_analyzer == 1 */
   double* debug_current_u;
   double* debug_current_rhs;
   int debug_nodes;

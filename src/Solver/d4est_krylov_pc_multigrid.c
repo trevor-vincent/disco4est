@@ -9,14 +9,21 @@ d4est_krylov_pc_multigrid_setup
  d4est_krylov_pc_t* kpc
 )
 {
-  /* zlog_category_t *c_def = zlog_get_category("d4est_krylov_pc_multigrid"); */
-  /* zlog_info(c_def, "Operator is changing, running d4est_krylov_pc_multigrid_setup"); */
-
-  /* add to mg_data setup int every time this is called */
-  /* d4est_krylov_pc_multigrid_data_t* kpcmgdata = kpc->pc_data; */
   d4est_krylov_pc_multigrid_data_t* kpcmgdata = kpc->pc_data;
   d4est_solver_multigrid_t* mg_data = kpcmgdata->mg_data;
-    
+  mg_data->linear_operator_updates++;
+  krylov_ctx_t* kct = kpc->pc_ctx;
+  
+  if(kct->p4est->mpirank == 0){
+    zlog_category_t *c_def = zlog_get_category("d4est_krylov_pc_multigrid");
+    zlog_info(c_def, "Operator is changing, running d4est_krylov_pc_multigrid_setup");
+    zlog_info(c_def, "mg_data->linear_operator_updates before setup = %d\n",
+              mg_data->linear_operator_updates);
+  }
+  mg_data->linear_operator_updates++;
+  /* add to mg_data setup int every time this is called */
+  /* d4est_krylov_pc_multigrid_data_t* kpcmgdata = kpc->pc_data; */
+  
   if (kpcmgdata->user_setup_fcn != NULL)
     kpcmgdata->user_setup_fcn(kpc);
 }
@@ -71,20 +78,8 @@ d4est_solver_multigrid_t* mg_data,
  void(*user_setup_fcn)(d4est_krylov_pc_t* kpc)
 ){
 
-  /* D4EST_ASSERT(user_setup_fcn == NULL); */
   d4est_krylov_pc_t* pc = P4EST_ALLOC(d4est_krylov_pc_t, 1);
-  /* d4est_krylov_pc_multigrid_data_t* kpcmgdata = P4EST_ALLOC(d4est_krylov_pc_multigrid_data_t,1); */
-  /* kpcmgdata->mg_data = mg_data; */
-  /* kpcmgdata->user_setup_fcn = user_setup_fcn; */
-  
   pc->pc_apply = d4est_krylov_pc_multigrid_apply;
-
-  /* if (user_setup_fcn != NULL){ */
-    /* pc->pc_setup = d4est_krylov_pc_multigrid_setup; */
-  /* } */
-  /* else{ */
-    /* pc->pc_setup = NULL; */
-  /* } */
 
   d4est_krylov_pc_multigrid_data_t* kpcmgdata = P4EST_ALLOC(d4est_krylov_pc_multigrid_data_t,1);
   kpcmgdata->mg_data = mg_data;

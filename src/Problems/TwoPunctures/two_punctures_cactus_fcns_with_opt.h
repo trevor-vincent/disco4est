@@ -828,14 +828,15 @@ void two_punctures_pc_setup_fcn
 )
 {
 
-  zlog_category_t* c_default = zlog_get_category("two_punctures_pc_setup_fcn");
+  zlog_category_t *c_def = zlog_get_category("d4est_solver_multigrid_matrix_operator");
   d4est_krylov_pc_multigrid_data_t* d4est_krylov_pcmgdata = d4est_krylov_pc->pc_data;
   d4est_solver_multigrid_t* mg_data = d4est_krylov_pcmgdata->mg_data;
   krylov_ctx_t* ctx = d4est_krylov_pc->pc_ctx;
 
-  if (ctx->p4est->mpirank == 0)
-    zlog_info(c_default, "Initializing Matrix Operator");
-
+  if (ctx->p4est->mpirank == 0){
+    zlog_info(c_def, "Running two_punctures_pc_setup_fcn");
+  }
+  
   d4est_solver_multigrid_matrix_setup_fofufofvlilj_operator
       (
        ctx->p4est,

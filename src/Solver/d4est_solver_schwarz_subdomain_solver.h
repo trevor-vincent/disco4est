@@ -3,7 +3,7 @@
 
 #include <d4est_solver_schwarz_subdomain_solver_info.h>
 
-typedef enum {SUBDOMAIN_SOLVER_NOT_SET, SUBDOMAIN_SOLVER_CG, SUBDOMAIN_SOLVER_GMRES} d4est_solver_schwarz_subdomain_solver_type_t;
+typedef enum {SUBDOMAIN_SOLVER_NOT_SET, SUBDOMAIN_SOLVER_CG, SUBDOMAIN_SOLVER_KSP} d4est_solver_schwarz_subdomain_solver_type_t;
 
 typedef
 void
@@ -29,10 +29,7 @@ d4est_solver_schwarz_subdomain_solver_info_t
  double*,
  double*,
  int,
- void*,
- int,
- int,
- int
+ void*
 );
 
 
@@ -41,7 +38,7 @@ typedef struct {
   d4est_solver_schwarz_subdomain_solver_type_t solver_type;
   d4est_solver_schwarz_subdomain_solver_fcn_t solver_fcn;
   d4est_solver_schwarz_subdomain_solver_destroy_fcn_t destroy_fcn;
-  void* solver_ctx;
+  void* solver_params;
 
   const char* input_section;
   

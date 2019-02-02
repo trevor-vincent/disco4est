@@ -1033,6 +1033,23 @@ problem_init
                      NULL
     );
 
+        d4est_norms_save(
+                     p4est,
+                     d4est_factors_compactified,
+                     (const char * []){ "u", NULL },
+                     (double * []){ prob_vecs.u },
+                     (double * []){ NULL },
+                     (d4est_xyz_fcn_t []){ poisson_lorentzian_analytic_solution },
+                     (void * []){ &ctx },
+                     (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
+                     (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy, &d4est_norms_fcn_energy_estimator },
+                     (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx },
+                     NULL,
+                     "compactified",
+                     NULL
+    );
+
+
 
     d4est_norms_save(
                      p4est,

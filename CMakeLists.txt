@@ -141,6 +141,7 @@ SET (
   src/Solver/d4est_solver_multigrid_mesh_analyzer.c
   src/Solver/d4est_solver_multigrid_matrix_operator.c
   src/Solver/d4est_solver_multigrid_smoother_cheby.c
+  src/Solver/d4est_solver_multigrid_smoother_none.c
   src/Solver/d4est_solver_multigrid_smoother_schwarz.c
   src/Solver/d4est_solver_multigrid_smoother_krylov_petsc.c
   src/Solver/d4est_solver_cg_eigs.c
@@ -150,7 +151,8 @@ SET (
   src/Solver/d4est_solver_schwarz_laplacian_ext.c
   src/Solver/d4est_solver_schwarz_transfer_ghost_data.c
   src/Solver/d4est_solver_schwarz_subdomain_solver_cg.c
-  src/Solver/d4est_solver_schwarz_subdomain_solver_gmres.c
+  # src/Solver/d4est_solver_schwarz_subdomain_solver_gmres.c
+  src/Solver/d4est_solver_schwarz_subdomain_solver_ksp.c
   src/Solver/d4est_solver_schwarz_subdomain_solver.c
   src/Solver/d4est_solver_schwarz_apply_lhs.c
   src/Solver/d4est_solver_schwarz_geometric_data.c
@@ -342,18 +344,11 @@ endfunction()
 function(add_d4est_unit_test_2d exec src parent_dir test_name)
   add_executable(${exec} ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/${src})
 
-  # SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
-  # SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
   target_link_libraries(${exec} d4est_test)
+
   add_test(NAME ${test_name} COMMAND ${CMAKE_BINARY_DIR}/Tests/${exec} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Tests/)
   target_compile_definitions(${exec} PRIVATE DIM=2 D4EST_TEST=1)
-  # target_compile_definitions(${exec} PRIVATE --fprofile-arcs --ftest-coverage)
 
-
-  # SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
-  # SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
-
-  #hopefully allows for this optimization
   include(CheckCXXCompilerFlag)
   CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
   if(COMPILER_SUPPORTS_MARCH_NATIVE)
@@ -364,7 +359,6 @@ function(add_d4est_unit_test_2d exec src parent_dir test_name)
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/"
     )
-  # target_compile_definitions(${exec} PRIVATE D4EST_TEST=1)  
   add_custom_command(
     TARGET ${exec} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
@@ -376,6 +370,63 @@ function(add_d4est_unit_test_2d exec src parent_dir test_name)
     ${CMAKE_SOURCE_DIR}/src/IO/logging.conf
     ${CMAKE_CURRENT_BINARY_DIR}/Tests/logging.conf)
 endfunction()
+
+
+
+function(add_d4est_unit_fake_test_3d exec src parent_dir test_name)
+  add_executable(${exec} ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/${src})
+  target_link_libraries(${exec} d8est_test)
+  # target_compile_definitions(${exec} PRIVATE DIM=3)
+  target_compile_definitions(${exec} PRIVATE DIM=3 D4EST_TEST=1)
+  # target_compile_definitions(${exec} PRIVATE --fprofile-arcs --ftest-coverage)
+  set_target_properties(${exec}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/"
+    )
+
+  
+  add_custom_command(
+    TARGET ${exec} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/*.input
+    "${CMAKE_BINARY_DIR}/Tests/")
+  add_custom_command(
+    TARGET ${exec} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_SOURCE_DIR}/src/IO/logging.conf
+    ${CMAKE_CURRENT_BINARY_DIR}/Tests/logging.conf)
+endfunction()
+
+
+function(add_d4est_unit_fake_test_2d exec src parent_dir test_name)
+  add_executable(${exec} ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/${src})
+
+  target_link_libraries(${exec} d4est_test)
+
+  target_compile_definitions(${exec} PRIVATE DIM=2 D4EST_TEST=1)
+
+  include(CheckCXXCompilerFlag)
+  CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
+  if(COMPILER_SUPPORTS_MARCH_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+  endif()
+  
+  set_target_properties(${exec}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Tests/"
+    )
+  add_custom_command(
+    TARGET ${exec} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_SOURCE_DIR}/src/Tests/${parent_dir}/*.input
+    "${CMAKE_BINARY_DIR}/Tests/")
+  add_custom_command(
+    TARGET ${exec} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_SOURCE_DIR}/src/IO/logging.conf
+    ${CMAKE_CURRENT_BINARY_DIR}/Tests/logging.conf)
+endfunction()
+
 
 function(add_d4est_bash_regression_test exec parent_dir test_name)
     add_custom_command(
@@ -401,9 +452,11 @@ set(CTEST_MEMORYCHECK_COMMAND /usr/bin/valgrind)
 set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --suppressions=${PROJECT_SOURCE_DIR}/suppressions.txt" )
 
 add_d4est_unit_test_3d(d4est_test_vtk d4est_test_vtk.c Unit d4est_test_vtk)
-add_d4est_unit_test_3d(d4est_test_checkpoint d4est_test_checkpoint.c Unit d4est_test_checkpoint)
 
-add_d4est_unit_test_2d(d4est_test_multigrid_cubic d4est_test_multigrid_cubic.c Unit d4est_test_multigrid_cubic)
+add_d4est_unit_fake_test_3d(d4est_test_checkpoint d4est_test_checkpoint.c Unit d4est_test_checkpoint)
+
+add_d4est_unit_fake_test_2d(d4est_test_multigrid_cubic d4est_test_multigrid_cubic.c Unit d4est_test_multigrid_cubic)
+
 add_d4est_unit_test_3d(d4est_test_pbalance d4est_test_pbalance.c Unit d4est_test_pbalance)
 add_d4est_unit_test_3d(d4est_test_cg_eigs d4est_test_cg_eigs.c Unit d4est_test_cg_eigs)
 add_d4est_unit_test_3d(d4est_test_kron d4est_test_kron.c Unit d4est_test_kron)

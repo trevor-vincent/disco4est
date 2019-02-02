@@ -569,6 +569,10 @@ int d4est_amr_extra_options_input_handler
     D4EST_ASSERT(pconfig->p_balance_if_diff == -1);
     pconfig->p_balance_if_diff = atoi(value);
   }
+ else if (d4est_util_match_couple(section,"amr",name,"load_balance")) { 
+    D4EST_ASSERT(pconfig->load_balance == 0);
+    pconfig->load_balance = atoi(value);
+  }
   /* else if (d4est_util_match_couple(section,"amr",name,"max_degree")) { */
     /* D4EST_ASSERT(pconfig->max_degree == -1); */
     /* pconfig->max_degree = atoi(value); */
@@ -625,6 +629,7 @@ void d4est_amr_extra_options_input
 {
   zlog_category_t *c_default = zlog_get_category("d4est_amr");
   d4est_amr->p_balance_if_diff = -1;
+  d4est_amr->load_balance = 0;
   
   if (ini_parse(input_file, d4est_amr_extra_options_input_handler, d4est_amr) < 0) {
     D4EST_ABORT("Can't load input file in d4est_amr_input.");
@@ -922,7 +927,7 @@ d4est_amr_step
     P4EST_FREE(d4est_amr->p_balance);
     d4est_amr->p_balance_if_diff = -1;
   }
-  
+
   if (p4est->mpirank == 0)
     zlog_info(c_default, "Starting to refine elements");
 
@@ -942,10 +947,6 @@ d4est_amr_step
   if(d4est_amr->scheme->post_h_balance_callback != NULL){
     d4est_amr->scheme->post_h_balance_callback(p4est, d4est_amr);
   }
-
- 
-  
-
   
   if(field != NULL)
     d4est_amr_interpolate_field
@@ -962,6 +963,12 @@ d4est_amr_step
   if (p4est->mpirank == 0)
     zlog_info(c_default, "New grid has %d elements", p4est->local_num_quadrants);
 
+  if(d4est_amr->load_balance){
+    /* partition */
+    /* trade vectors */
+    p4est_partition_ext(p4est,1,NULL);
+    
+  }
 
   d4est_amr->level++;
 }

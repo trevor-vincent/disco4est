@@ -127,6 +127,11 @@ d4est_solver_multigrid_bottom_solver_cg
   /* start working on d */
   vecs->u = d;
   int i;
+
+  if (p4est->mpirank == 0 && cg_params->bottom_print_residual_norm == 1){
+    zlog_info(c_default, "iter -1 delta_new = %.15f, atol*atol + delta_0 * rtol * rtol = %.15f, tol_break = %d", delta_new, atol*atol + delta_0 * rtol * rtol, (delta_new > atol*atol + delta_0 * rtol * rtol));
+  }
+  
   for (i = 0; i < imax && (delta_new > atol*atol + delta_0 * rtol * rtol); i++){
   
     /* Au = A*d; */

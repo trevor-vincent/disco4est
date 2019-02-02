@@ -389,6 +389,70 @@ int main(int argc, char *argv[])
     if(p4est->mpirank == 0){
       printf("l2 norm = %.15f\n",l2);
     }
+
+    int analyze_matrix;
+    printf("Analyze matrix? (0/1): ");
+    scanf("%d",&analyze_matrix);
+    
+   if(analyze_matrix){
+  zlog_category_t* matrix_analysis = zlog_get_category("d4est_multigrid_matrix_analysis");
+      zlog_info(matrix_analysis,"ANALYZING THE MATRIX\n");
+      
+      int local_nodes = d4est_factors->local_sizes.local_nodes;
+      
+      D4EST_ASSERT(p4est->mpisize == 1);
+      double* mg_mat = P4EST_ALLOC(double, local_nodes*local_nodes);
+      double* mg_mat_trans = P4EST_ALLOC(double, local_nodes*local_nodes);
+
+      d4est_solver_multigrid_get_matrix
+        (
+         p4est,
+         &prob_fcns_for_lhs,
+         &elliptic_data,
+         mg_data,
+         mg_mat
+        );
+      
+      d4est_linalg_mat_transpose(mg_mat, mg_mat_trans, local_nodes);
+
+      double biggest_err;
+      int biggest_id;
+      double* eig_vals = P4EST_ALLOC(double, local_nodes);
+      
+      d4est_util_find_biggest_error(mg_mat, mg_mat_trans, local_nodes*local_nodes, &biggest_err, &biggest_id);
+      printf("biggest_err = %.15f\n", biggest_err);
+      printf("biggest_id = %d\n", biggest_id);
+      printf("mg_mat[id] = %.15f\n", mg_mat[biggest_id]);
+      printf("mg_mat_trans[id] = %.15f\n", mg_mat_trans[biggest_id]);
+      if (biggest_err < 1e-10){
+        d4est_linalg_sym_eigvecs
+          (mg_mat,eig_vals, local_nodes);
+
+        double min = d4est_util_min_dbl_array
+                     (
+                      eig_vals,
+                      local_nodes);
+        zlog_info(matrix_analysis, "Minimum eigenvalue = %f\n", min);
+        zlog_info(matrix_analysis, "Biggest symmetry err = %f\n", biggest_err);
+        if (min <= 0){        
+          DEBUG_PRINT_ARR_DBL(eig_vals, local_nodes);
+          printf("Not SPD\n");
+        }
+      }
+      /* else { */
+        /* printf("biggest_err = %.15f\n", biggest_err); */
+        /* printf("biggest_id = %d\n", biggest_id); */
+        /* printf("mg_mat[id] = %.15f\n", mg_mat[biggest_id]); */
+        /* printf("mg_mat_trans[id] = %.15f\n", mg_mat_trans[biggest_id]); */
+        /* D4EST_ABORT("Mg_mat not symmetric"); */
+      /* } */
+
+      
+      P4EST_FREE(mg_mat);
+      P4EST_FREE(mg_mat_trans);
+    }
+ 
+
     
     d4est_solver_multigrid_data_destroy(mg_data);
 

@@ -81,6 +81,9 @@ typedef struct {
   /* used for p-balancing */
   int p_balance_if_diff;
   int* p_balance; /* alias */
+
+  /* cannot use load balancing with multi-level (more than 2) multi-grid, 2-level multigrid is fine though */
+  int load_balance;
   
 } d4est_amr_t;
 

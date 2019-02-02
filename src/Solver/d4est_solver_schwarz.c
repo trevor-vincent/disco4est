@@ -237,10 +237,7 @@ d4est_solver_schwarz_iterate
        &du[sub_data.restricted_nodal_stride],
        &restricted_r[sub_data.restricted_nodal_stride],
        i,
-       schwarz->subdomain_solver->solver_ctx,
-       (schwarz->used_as_smoother) ? schwarz->debug_output_amr_level : -1,
-       (schwarz->used_as_smoother) ? schwarz->debug_output_ksp_level : -1,
-       (schwarz->used_as_smoother) ? schwarz->debug_output_mg_level : -1
+       schwarz->subdomain_solver->solver_params
       );
 
     /* printf("sub_data.coreId, info.final_res, info.final_iter = %d, %f, %d\n", sub_data.core_id, info.final_res, info.final_iter); */
