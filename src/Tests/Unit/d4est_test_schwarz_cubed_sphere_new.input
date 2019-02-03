@@ -25,7 +25,7 @@ subdomain_iter = 1000;
 subdomain_rtol = 1e-15;
 subdomain_atol = 1e-15;
 subdomain_solver = cg
-subdomain_verbose = 1;
+subdomain_monitor = 1;
 
 [d4est_vtk]
 filename = d4est_test_schwarz
