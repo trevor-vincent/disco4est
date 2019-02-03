@@ -1,7 +1,7 @@
 #ifndef D4EST_KRYLOV_PC_SCHWARZ_H
 #define D4EST_KRYLOV_PC_SCHWARZ_H 
 
-
+#include <pXest.h>
 #include <d4est_solver_petsc.h>
 #include <d4est_solver_schwarz.h>
 #include <d4est_krylov_pc.h>

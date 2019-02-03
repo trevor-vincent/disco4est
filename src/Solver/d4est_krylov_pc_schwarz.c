@@ -1,3 +1,4 @@
+#include <pXest.h>
 #include <d4est_krylov_pc_schwarz.h>
 #include <d4est_solver_schwarz.h>
 #include <d4est_linalg.h>

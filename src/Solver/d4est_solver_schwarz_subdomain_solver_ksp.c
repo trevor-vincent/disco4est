@@ -218,14 +218,33 @@ d4est_solver_schwarz_subdomain_solver_ksp
   double* u = du_restricted_field_over_subdomain;
   double* rhs = rhs_restricted_field_over_subdomain;
 
-  KSPCreate(PETSC_COMM_WORLD,&ksp);
-  VecCreate(PETSC_COMM_WORLD,&x); //CHKERRQ(ierr);
+  KSPCreate(PETSC_COMM_SELF,&ksp);
+  VecCreate(PETSC_COMM_SELF,&x); //CHKERRQ(ierr);
   VecSetSizes(x, nodes, PETSC_DECIDE); //CHKERRQ(ierr);
-  /* VecSetFromOptions(x); //CHKERRQ(ierr); */
+  VecSetFromOptions(x); //CHKERRQ(ierr);
   VecDuplicate(x,&b); //CHKERRQ(ierr);  
-  /* KSPSetFromOptions(ksp); */
-  KSPSetTolerances(ksp,rtol,atol,PETSC_DEFAULT,iter);  
+
+  PetscOptionsClearValue(NULL,"-ksp_monitor");
+  PetscOptionsClearValue(NULL,"-ksp_view");
+  PetscOptionsClearValue(NULL,"-ksp_converged_reason");
+  PetscOptionsClearValue(NULL,"-ksp_monitor_singular_value");
+  PetscOptionsClearValue(NULL,"-ksp_type");
+  PetscOptionsClearValue(NULL,"-ksp_atol");
+  PetscOptionsClearValue(NULL,"-ksp_rtol");
+  PetscOptionsClearValue(NULL,"-ksp_max_it");
+  PetscOptionsClearValue(NULL,"-ksp_chebyshev_esteig_steps");
+  PetscOptionsClearValue(NULL,"-ksp_chebyshev_esteig");
+  PetscOptionsClearValue(NULL,"-ksp_chebyshev_esteig_random");
+  KSPSetFromOptions(ksp);
+  KSPSetTolerances(ksp,rtol,atol,PETSC_DEFAULT,iter);
+  KSPSetType(ksp,"fgmres");
   /* Create matrix-free shell for Aij */
+  PC pc;
+  KSPGetPC(ksp,&pc);
+  PCSetType(pc,PCNONE);//CHKERRQ(ierr);
+
+
+  
   Mat A;
   MatCreateShell
     (

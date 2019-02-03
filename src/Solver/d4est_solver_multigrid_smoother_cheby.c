@@ -53,9 +53,9 @@ d4est_solver_multigrid_smoother_cheby_input_handler
     D4EST_ASSERT(pconfig->cheby_print_spectral_bound_iterations == 0);
     pconfig->cheby_print_spectral_bound_iterations = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"make_cheby_symmetric")) {
-    D4EST_ASSERT(pconfig->make_cheby_symmetric == 0);
-    pconfig->make_cheby_symmetric = atoi(value);
+  else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"cheby_use_zero_guess_for_eigs")) {
+    D4EST_ASSERT(pconfig->cheby_use_zero_guess_for_eigs == 0);
+    pconfig->cheby_use_zero_guess_for_eigs = atoi(value);
   }
   else if (d4est_util_match_couple(section,"mg_smoother_cheby",name,"cheby_use_new_cg_eigs")) {
     D4EST_ASSERT(pconfig->cheby_use_new_cg_eigs == 0);
@@ -77,10 +77,17 @@ d4est_solver_multigrid_smoother_cheby_destroy(d4est_solver_multigrid_smoother_t*
   P4EST_FREE(smoother);
 }
 
+
 void 
-d4est_solver_multigrid_smoother_cheby_iterate
+d4est_solver_multigrid_smoother_cheby_iterate_aux
 (
  p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_ghost_t* d4est_ghost,
+ d4est_ghost_data_t* d4est_ghost_data,
  d4est_elliptic_data_t* vecs,
  d4est_elliptic_eqns_t* fcns,
  double* r,
@@ -88,15 +95,12 @@ d4est_solver_multigrid_smoother_cheby_iterate
  double lmin,
  double lmax,
  int print_residual_norm,
- int mg_level
- /* d4est_solver_multigrid_cheby_params_t* cheby_params */
+ int mg_level,
+ int compute_residual_at_end
 )
 {
-  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) p4est->user_pointer;
-  d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
   zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid_smoother_cheby");   
-  d4est_ghost_t* d4est_ghost = updater->current_d4est_ghost;
-  d4est_ghost_data_t* d4est_ghost_data = updater->current_d4est_ghost_data;
+
   
   int i;
   double d = (lmax + lmin)*.5;
@@ -122,10 +126,10 @@ d4est_solver_multigrid_smoother_cheby_iterate
      d4est_ghost_data,
      fcns,
      vecs,
-     mg_data->d4est_ops,
-     mg_data->d4est_geom,
-     mg_data->d4est_quad,
-     updater->current_d4est_factors
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors
     );
   
     d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
@@ -150,23 +154,69 @@ d4est_solver_multigrid_smoother_cheby_iterate
   }
 
   /* calculate the residual */
-  d4est_elliptic_eqns_apply_lhs
+  if(compute_residual_at_end == 1){
+    d4est_elliptic_eqns_apply_lhs
+      (
+       p4est,
+       d4est_ghost,
+       d4est_ghost_data,
+       fcns,
+       vecs,
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors
+      );
+  
+    d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
+    d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
+  }
+  
+  P4EST_FREE(p);
+}
+
+
+
+void 
+d4est_solver_multigrid_smoother_cheby_iterate
+(
+ p4est_t* p4est,
+ d4est_elliptic_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
+ double* r,
+ int iter,
+ double lmin,
+ double lmax,
+ int print_residual_norm,
+ int mg_level
+ /* d4est_solver_multigrid_cheby_params_t* cheby_params */
+)
+{
+  d4est_solver_multigrid_t* mg_data = (d4est_solver_multigrid_t*) p4est->user_pointer;
+  d4est_solver_multigrid_element_data_updater_t* updater = mg_data->elem_data_updater;
+  zlog_category_t *c_default = zlog_get_category("d4est_solver_multigrid_smoother_cheby");   
+  d4est_ghost_t* d4est_ghost = updater->current_d4est_ghost;
+  d4est_ghost_data_t* d4est_ghost_data = updater->current_d4est_ghost_data;
+
+  d4est_solver_multigrid_smoother_cheby_iterate_aux
     (
      p4est,
-     d4est_ghost,
-     d4est_ghost_data,
-     fcns,
-     vecs,
      mg_data->d4est_ops,
      mg_data->d4est_geom,
      mg_data->d4est_quad,
-     updater->current_d4est_factors
+     updater->current_d4est_factors,
+     d4est_ghost,
+     d4est_ghost_data,
+     vecs,
+     fcns,
+     r,
+     iter,
+     lmin,
+     lmax,
+     print_residual_norm,
+     mg_level,
+     1
     );
-  
-  d4est_util_copy_1st_to_2nd(Au, r, local_nodes);
-  d4est_linalg_vec_xpby(rhs, -1., r, local_nodes);
-
-  P4EST_FREE(p);
 }
 
 static void
@@ -229,7 +279,7 @@ d4est_solver_multigrid_smoother_cheby
   double* temp_vector = NULL;
   if (cheby->cheby_eigs_compute){
 
-    if(cheby->make_cheby_symmetric){
+    if(cheby->cheby_use_zero_guess_for_eigs){
       temp_vector = vecs->u;
       zero_vector = P4EST_ALLOC_ZERO(double, vecs->local_nodes);
       vecs->u = zero_vector;
@@ -252,7 +302,7 @@ d4est_solver_multigrid_smoother_cheby
          &cheby->eigs[level]
         );
 
-      if(cheby->make_cheby_symmetric){
+      if(cheby->cheby_use_zero_guess_for_eigs){
         vecs->u = temp_vector;
         P4EST_FREE(zero_vector);
       }
@@ -260,18 +310,18 @@ d4est_solver_multigrid_smoother_cheby
       cheby->eigs[level] *= cheby->cheby_eigs_max_multiplier;
   }
 
-  if(cheby->make_cheby_symmetric == 1){
+  if(cheby->cheby_use_zero_guess_for_eigs == 1){
     if (cheby->cheby_eigs_reuse_fromdownvcycle != 1){
-      printf("If you set make_cheby_symmetric == 1, please set cheby_eigs_reuse_fromdownvcycle = 1\n");
+      printf("If you set cheby_use_zero_guess_for_eigs == 1, please set cheby_eigs_reuse_fromdownvcycle = 1\n");
       D4EST_ABORT("");
     }
   }
   
   if (cheby->cheby_eigs_compute == 0 &&
-      cheby->make_cheby_symmetric == 1){
+      cheby->cheby_use_zero_guess_for_eigs == 1){
     double dummy;
 
-    if(cheby->make_cheby_symmetric){
+    if(cheby->cheby_use_zero_guess_for_eigs){
       temp_vector = vecs->u;
       zero_vector = P4EST_ALLOC_ZERO(double, vecs->local_nodes);
       vecs->u = zero_vector;
@@ -294,7 +344,7 @@ d4est_solver_multigrid_smoother_cheby
          &dummy
         );
 
-      if(cheby->make_cheby_symmetric){
+      if(cheby->cheby_use_zero_guess_for_eigs){
         vecs->u = temp_vector;
         P4EST_FREE(zero_vector);
       }
@@ -351,7 +401,7 @@ d4est_solver_multigrid_smoother_cheby_init
   cheby_data->cheby_print_spectral_bound = 0;
   cheby_data->cheby_print_spectral_bound_iterations = 0;
   cheby_data->cheby_use_new_cg_eigs = 0;
-  cheby_data->make_cheby_symmetric = 0;
+  cheby_data->cheby_use_zero_guess_for_eigs = 0;
 
   /* set internally */
   cheby_data->mpirank = p4est->mpirank;
@@ -361,9 +411,9 @@ d4est_solver_multigrid_smoother_cheby_init
     D4EST_ABORT("Can't load input file");
   }
 
-  if (cheby_data->make_cheby_symmetric){
+  if (cheby_data->cheby_use_zero_guess_for_eigs){
     if(!cheby_data->cheby_eigs_reuse_fromdownvcycle){
-      D4EST_ABORT("Do not use make_cheby_symmetric without cheby_eigs_reuse_fromdownvycle");
+      D4EST_ABORT("Do not use cheby_use_zero_guess_for_eigs without cheby_eigs_reuse_fromdownvycle");
     }
   }
   
@@ -373,10 +423,6 @@ d4est_solver_multigrid_smoother_cheby_init
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_max_multiplier, -1);
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_reuse_fromdownvcycle, -1);
   D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_eigs_reuse_fromlastvcycle, -1);
-  /* D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_use_new_cg_eigs, -1); */
-  /* D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_residual_norm, -1); */
-  /* D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_spectral_bound, -1); */
-  /* D4EST_CHECK_INPUT("mg_smoother_cheby", cheby_data->cheby_print_spectral_bound_iterations, -1); */
   
   
   if(p4est->mpirank == 0){
@@ -390,7 +436,7 @@ d4est_solver_multigrid_smoother_cheby_init
     zlog_debug(c_default, " Smoother print residual norm = %d", cheby_data->cheby_print_residual_norm);
     zlog_debug(c_default, " Smoother print eigs = %d", cheby_data->cheby_print_spectral_bound);
     zlog_debug(c_default, " Smoother use new cg eigs scheme = %d", cheby_data->cheby_use_new_cg_eigs);
-    zlog_debug(c_default, " Smoother make_cheby_symmetric = %d", cheby_data->make_cheby_symmetric);
+    zlog_debug(c_default, " Smoother cheby_use_zero_guess_for_eigs = %d", cheby_data->cheby_use_zero_guess_for_eigs);
   }
 
   smoother->user = cheby_data;
@@ -399,5 +445,3 @@ d4est_solver_multigrid_smoother_cheby_init
 
   return smoother;
 }
-
-

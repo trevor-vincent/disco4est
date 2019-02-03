@@ -130,6 +130,7 @@ SET (
   src/Solver/d4est_solver_newton_petsc.c
   src/Solver/d4est_krylov_pc_multigrid.c
   src/Solver/d4est_krylov_pc_schwarz.c
+  src/Solver/d4est_krylov_pc_cheby.c
   src/Solver/d4est_solver_multigrid.c
   src/Solver/d4est_solver_multigrid_bottom_solver_cg.c
   src/Solver/d4est_solver_multigrid_bottom_solver_cheby.c
@@ -505,6 +506,7 @@ add_d4est_problem_3d(poisson_lorentzian_amr_multigrid_numres_driver poisson_lore
 add_d4est_problem_3d(poisson_lorentzian_amr_multigrid_anares_driver poisson_lorentzian_amr_multigrid_anares.c Poisson)
 add_d4est_problem_3d(poisson_lorentzian_amr_multigrid_anares_schwarz_driver poisson_lorentzian_amr_multigrid_anares_schwarz.c Poisson)
 add_d4est_problem_3d(poisson_lorentzian_amr_anares_schwarz_pc_driver poisson_lorentzian_amr_anares_schwarz_pc.c Poisson)
+add_d4est_problem_3d(poisson_lorentzian_amr_anares_cheby_pc_driver poisson_lorentzian_amr_anares_cheby_pc.c Poisson)
 add_d4est_problem_3d(lorentzian_anares_schwarz_hptest_driver lorentzian_anares_schwarz_hptest.c Poisson)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
 add_d4est_problem_3d(constant_density_star_anares_driver cds_anares.c ConstantDensityStar)
