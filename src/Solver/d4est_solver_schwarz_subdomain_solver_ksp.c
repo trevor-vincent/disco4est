@@ -248,7 +248,7 @@ d4est_solver_schwarz_subdomain_solver_ksp
   Mat A;
   MatCreateShell
     (
-     PETSC_COMM_WORLD,
+     PETSC_COMM_SELF,
      nodes,
      nodes,
      PETSC_DETERMINE,
