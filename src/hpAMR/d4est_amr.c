@@ -569,9 +569,13 @@ int d4est_amr_extra_options_input_handler
     D4EST_ASSERT(pconfig->p_balance_if_diff == -1);
     pconfig->p_balance_if_diff = atoi(value);
   }
- else if (d4est_util_match_couple(section,"amr",name,"load_balance")) { 
-    D4EST_ASSERT(pconfig->load_balance == 0);
-    pconfig->load_balance = atoi(value);
+ else if (          d4est_util_match_couple(section,"amr",name,"load_balance_by_nodes")) { 
+    D4EST_ASSERT(pconfig->load_balance_by_nodes == 0);
+    pconfig->load_balance_by_nodes = atoi(value);
+  }
+  else if (          d4est_util_match_couple(section,"amr",name,"load_balance_by_elements")) { 
+    D4EST_ASSERT(pconfig->load_balance_by_elements == 0);
+    pconfig->load_balance_by_elements = atoi(value);
   }
   /* else if (d4est_util_match_couple(section,"amr",name,"max_degree")) { */
     /* D4EST_ASSERT(pconfig->max_degree == -1); */
@@ -629,7 +633,8 @@ void d4est_amr_extra_options_input
 {
   zlog_category_t *c_default = zlog_get_category("d4est_amr");
   d4est_amr->p_balance_if_diff = -1;
-  d4est_amr->load_balance = 0;
+  d4est_amr->load_balance_by_nodes = 0;
+  d4est_amr->load_balance_by_elements = 0;
   
   if (ini_parse(input_file, d4est_amr_extra_options_input_handler, d4est_amr) < 0) {
     D4EST_ABORT("Can't load input file in d4est_amr_input.");
@@ -725,7 +730,6 @@ d4est_amr_init_uniform_p
   d4est_amr_uniform_init(p4est, NULL, scheme, NULL);
 
   return d4est_amr;
-
 }
 
 
@@ -753,57 +757,112 @@ d4est_amr_init_random_hp
   return d4est_amr;
 }
 
-/* static void */
-/* d4est_amr_custom_destroy(d4est_amr_scheme_t* scheme) */
-/* { */
-/*   P4EST_FREE(scheme); */
-/* } */
-
-/* d4est_amr_t* */
-/* d4est_amr_custom_init */
-/* ( */
-/*  p4est_t* p4est, */
-/*  /\* int max_degree, *\/ */
-/*  int num_of_amr_steps, */
-/*  void(*d4est_amr_custom_mark_elements)(p4est_iter_volume_info_t*,void*), */
-/*  void* user */
-/* ) */
-/* { */
-/*   d4est_amr_t* d4est_amr = P4EST_ALLOC(d4est_amr_t, 1); */
-/*   d4est_amr_scheme_t* scheme = P4EST_ALLOC(d4est_amr_scheme_t, 1); */
-  
-/*   d4est_amr->scheme = scheme; */
-/*   d4est_amr->balance_log = NULL; */
-/*   d4est_amr->refinement_log = NULL; */
-/*   d4est_amr->initial_log = NULL; */
-/*   /\* d4est_amr->max_degree = max_degree; *\/ */
-/*   d4est_amr->num_of_amr_steps = num_of_amr_steps; */
-
-/*   scheme->amr_scheme_type = AMR_CUSTOM; */
-/*   scheme->pre_refine_callback */
-/*     = NULL; */
-  
-/*   scheme->balance_replace_callback_fcn_ptr */
-/*     = NULL; */
-
-/*   scheme->refine_replace_callback_fcn_ptr */
-/*     = NULL; */
-
-/*   scheme->amr_scheme_data */
-/*     = user; */
-
-/*   scheme->post_balance_callback */
-/*     = NULL; */
-
-/*   scheme->mark_elements */
-/*     = d4est_amr_custom_mark_elements; */
-  
-/*   scheme->destroy */
-/*     = d4est_amr_custom_destroy; */
-  
-/*   return d4est_amr; */
-/* } */
+int
+d4est_amr_load_balance_on_nodes_weight_fcn
+(
+ p4est_t * p4est,
+ p4est_topidx_t which_tree,
+ p4est_quadrant_t * quadrant
+){
+  d4est_element_data_t* ed = (quadrant->p.user_data);
+  return  d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+}
  
+
+void
+d4est_amr_load_balance
+(
+ p4est_t* p4est,
+ d4est_amr_t* d4est_amr,
+ double** field
+)
+{  
+  zlog_category_t* c_def
+    = zlog_get_category("d4est_amr_load_balance");
+  p4est_t* back = p4est_copy(p4est, 1);
+  if (d4est_amr->load_balance_by_elements){
+    if (p4est->mpirank == 0){
+      zlog_info(c_def, "Load balancing by number of elements");
+    }
+    p4est_partition_ext(p4est, 1, NULL);
+  }
+  else if (d4est_amr->load_balance_by_nodes){
+    if (p4est->mpirank == 0){
+      zlog_info(c_def, "Load balancing by number of nodes");
+    }
+    p4est_partition_ext(p4est, 1, d4est_amr_load_balance_on_nodes_weight_fcn);
+  }
+  else {
+    if (p4est->mpirank == 0){
+      zlog_info(c_def, "Skipping load balancing");
+    }
+    return;
+  }
+  
+  int* dest_sizes = P4EST_ALLOC (int, p4est->local_num_quadrants);
+  int* src_sizes = P4EST_ALLOC (int, back->local_num_quadrants);
+
+  int total_src_size = 0;
+  int total_dest_size = 0;
+  
+  /* Get source sizes */
+  int k = 0;
+  for (p4est_topidx_t tt = back->first_local_tree;
+       tt <= back->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (back->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        src_sizes[k] = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        total_src_size += src_sizes[k];
+        k++;
+      }
+    }
+
+  /* Get destination sizes */
+  k = 0;
+  for (p4est_topidx_t tt = p4est->first_local_tree;
+       tt <= p4est->last_local_tree;
+       ++tt)
+    {
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        dest_sizes[k] = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        total_dest_size += dest_sizes[k];
+        k++;
+      }
+    }
+
+  double* field_new = P4EST_ALLOC(double, total_dest_size);
+  
+  /* test quadrants quanties match element data quantities here */
+  p4est_transfer_custom (p4est->global_first_quadrant,
+                         back->global_first_quadrant,
+                         p4est->mpicomm,
+                         1,
+                         field_new,
+                         dest_sizes,
+                         *field,
+                         src_sizes);
+
+  zlog_info(c_def, "Load balancing on %d took elems %d, nodes %d to elems %d, nodes %d", p4est->mpirank, back->local_num_quadrants, total_src_size, p4est->local_num_quadrants, total_dest_size);
+  
+  /* test f(x,y,z) is properly distributed based on x,y,z now on this processor */
+  double* temp = *field;
+  *field = field_new;
+  P4EST_FREE(temp);
+}
+
+
 void
 d4est_amr_step
 (
@@ -962,13 +1021,6 @@ d4est_amr_step
 
   if (p4est->mpirank == 0)
     zlog_info(c_default, "New grid has %d elements", p4est->local_num_quadrants);
-
-  if(d4est_amr->load_balance){
-    /* partition */
-    /* trade vectors */
-    p4est_partition_ext(p4est,1,NULL);
-    
-  }
 
   d4est_amr->level++;
 }

@@ -16,6 +16,7 @@
 #include <p4est_iterate.h>
 #include <p4est_lnodes.h>
 #include <p4est_nodes.h>
+#include <p4est_communication.h>
 #else
 #include <p8est_vtk.h>
 #include <p8est_bits.h>
@@ -23,6 +24,7 @@
 #include <p8est_iterate.h>
 #include <p8est_lnodes.h>
 #include <p8est_nodes.h>
+#include <p8est_communication.h>
 #endif
 
 #endif

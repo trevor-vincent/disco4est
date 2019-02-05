@@ -83,7 +83,9 @@ typedef struct {
   int* p_balance; /* alias */
 
   /* cannot use load balancing with multi-level (more than 2) multi-grid, 2-level multigrid is fine though */
-  int load_balance;
+  int load_balance_by_nodes;
+  int load_balance_by_elements;
+
   
 } d4est_amr_t;
 
