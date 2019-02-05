@@ -405,11 +405,7 @@ problem_init
        p4est->local_num_quadrants*(P4EST_CHILDREN)
       );
 
-    for (int i = 0; i < p4est->local_num_quadrants*(P4EST_CHILDREN);
-         i++){
-      u_min_one_vertex[i] = 1.0 - u_vertex[i];
-    }
-    
+ 
     d4est_element_data_store_nodal_vec_in_vertex_array
       (
        p4est,
@@ -417,6 +413,13 @@ problem_init
        u_vertex
       );
 
+
+   for (int i = 0; i < p4est->local_num_quadrants*(P4EST_CHILDREN);
+         i++){
+      u_min_one_vertex[i] = 1.0 - u_vertex[i];
+    }
+    
+    
     char* u_corner_file = P4EST_ALLOC(char, 100);
     /* sprintf(u_corner_file, "%s%s_%d", folder,  "u_corner"); */
     sprintf(u_corner_file, "%s%s", folder,  "u_corner");
