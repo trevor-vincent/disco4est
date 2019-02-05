@@ -420,9 +420,9 @@ problem_init
     }
     
     
-    char* u_corner_file = P4EST_ALLOC(char, 1000);
+   char* u_corner_file;
     /* sprintf(u_corner_file, "%s%s_%d", folder,  "u_corner"); */
-    sprintf(u_corner_file, "%s%s", folder,  "u_corner");
+    asprintf(&u_corner_file, "%s%s", folder,  "u_corner");
     /* sprintf(u_corner_file, "%s_%d",  "u_corner"); */
     p4est_vtk_ext_write_all
       (p4est,
@@ -441,10 +441,11 @@ problem_init
        u_min_one_vertex
       );
 
-    P4EST_FREE(u_corner_file);
+    /* P4EST_FREE(u_corner_file); */
     P4EST_FREE(u_vertex);
     P4EST_FREE(u_min_one_vertex);
-    P4EST_FREE(folder);
+    free(folder);
+    free(u_corner_file);
 
     // Compute and save norms
 
