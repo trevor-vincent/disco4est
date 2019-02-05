@@ -431,7 +431,7 @@ problem_init
        1,
        1,
        1,
-       1,
+       2,
        0,
        u_corner_file,
        "u",
