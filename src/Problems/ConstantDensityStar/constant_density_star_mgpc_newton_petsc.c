@@ -388,58 +388,59 @@ problem_init
     P4EST_FREE(error);
 
 
-    /* char* folder = d4est_util_add_cwd("VTK_corner"); */
-    /* d4est_util_make_directory(folder,0); */
-    /* /\* if (sub_folder_number >= 0){ *\/ */
-    /* asprintf(&folder,"%s%d/", folder, level); */
-    /* /\* } *\/ */
-    /* d4est_util_make_directory(folder,0); */
-
-    
-    /* double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN)); */
-
-    /* double* u_min_one_vertex */
-    /*   = P4EST_ALLOC */
-    /*   ( */
-    /*    double, */
-    /*    p4est->local_num_quadrants*(P4EST_CHILDREN) */
-    /*   ); */
-
-    /* for (int i = 0; i < p4est->local_num_quadrants*(P4EST_CHILDREN); */
-    /*      i++){ */
-    /*   u_min_one_vertex[i] = 1.0 - u_vertex[i]; */
+    char* folder = d4est_util_add_cwd("VTK_corner");
+    d4est_util_make_directory(folder,0);
+    /* if (sub_folder_number >= 0){ */
+    asprintf(&folder,"%s%d/", folder, level);
     /* } */
+    d4est_util_make_directory(folder,0);
+
     
-    /* d4est_element_data_store_nodal_vec_in_vertex_array */
-    /*   ( */
-    /*    p4est, */
-    /*    prob_vecs.u, */
-    /*    u_vertex */
-    /*   ); */
+    double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
 
-    /* char* u_corner_file = P4EST_ALLOC(char, 100); */
+    double* u_min_one_vertex
+      = P4EST_ALLOC
+      (
+       double,
+       p4est->local_num_quadrants*(P4EST_CHILDREN)
+      );
+
+    for (int i = 0; i < p4est->local_num_quadrants*(P4EST_CHILDREN);
+         i++){
+      u_min_one_vertex[i] = 1.0 - u_vertex[i];
+    }
+    
+    d4est_element_data_store_nodal_vec_in_vertex_array
+      (
+       p4est,
+       prob_vecs.u,
+       u_vertex
+      );
+
+    char* u_corner_file = P4EST_ALLOC(char, 100);
     /* sprintf(u_corner_file, "%s%s_%d", folder,  "u_corner"); */
-    /* p4est_vtk_ext_write_all */
-    /*   (p4est, */
-    /*    NULL, */
-    /*    0.99, */
-    /*    1, */
-    /*    1, */
-    /*    1, */
-    /*    1, */
-    /*    1, */
-    /*    0, */
-    /*    u_corner_file, */
-    /*    "u", */
-    /*    u_vertex, */
-    /*    "one_minus_u", */
-    /*    u_min_one_vertex */
-    /*   ); */
+    sprintf(u_corner_file, "%s%s", folder,  "u_corner");
+    p4est_vtk_ext_write_all
+      (p4est,
+       NULL,
+       0.99,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0,
+       u_corner_file,
+       "u",
+       u_vertex,
+       "one_minus_u",
+       u_min_one_vertex
+      );
 
-    /* P4EST_FREE(u_corner_file); */
-    /* P4EST_FREE(u_vertex); */
-    /* P4EST_FREE(u_min_one_vertex); */
-    /* P4EST_FREE(folder); */
+    P4EST_FREE(u_corner_file);
+    P4EST_FREE(u_vertex);
+    P4EST_FREE(u_min_one_vertex);
+    P4EST_FREE(folder);
 
     // Compute and save norms
 
