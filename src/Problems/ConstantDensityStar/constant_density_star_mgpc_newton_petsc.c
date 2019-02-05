@@ -420,9 +420,10 @@ problem_init
     }
     
     
-    char* u_corner_file = P4EST_ALLOC(char, 100);
+    char* u_corner_file = P4EST_ALLOC(char, 1000);
     /* sprintf(u_corner_file, "%s%s_%d", folder,  "u_corner"); */
     sprintf(u_corner_file, "%s%s", folder,  "u_corner");
+    /* sprintf(u_corner_file, "%s_%d",  "u_corner"); */
     p4est_vtk_ext_write_all
       (p4est,
        NULL,
