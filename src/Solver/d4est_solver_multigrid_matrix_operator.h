@@ -11,7 +11,7 @@ struct d4est_solver_multigrid_matrix_op_t{
   /* if d4est_solver_multigrid is used as a preconditioner, this changes everytime a new newton iteration
    * occurs, which would mean the operator should change, which means we should update the 
    * the d4est_solver_multigrid matrix operator */
-  int linear_operator_updates;
+  int newton_iteration;
   
   int* matrix_nodes_on_level;
   int total_matrix_nodes_on_d4est_solver_multigrid;

@@ -17,7 +17,8 @@ d4est_solver_multigrid_matrix_operator_restriction_callback
   d4est_operators_t* d4est_ops = mg_data->d4est_ops;
   d4est_solver_multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
-  /* if (mg_data->linear_operator_updates == matrix_op->linear_operator_updates + 1){ */
+ if (matrix_op->completed_alloc != 1 ||
+      mg_data->using_newton && mg_data->newton_iteration != matrix_op->newton_iteration){
     int* fine_matrix_stride = &matrix_op->fine_matrix_stride;
     int* coarse_matrix_stride = &matrix_op->coarse_matrix_stride;
     int fine_matrix_nodes = matrix_op->fine_matrix_nodes;
@@ -43,7 +44,7 @@ d4est_solver_multigrid_matrix_operator_restriction_callback
   
     int coarse_volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM) , degH);
     (*coarse_matrix_stride) += coarse_volume_nodes*coarse_volume_nodes;
-  /* } */
+  }
 }
 
 static void
@@ -60,9 +61,9 @@ d4est_solver_multigrid_matrix_operator_update_callback
 
   if(p4est->mpirank == 0){
     zlog_category_t* c_def = zlog_get_category("d4est_solver_multigrid_matrix_operator");
-      zlog_info(c_def, "level = %d", level);
-      zlog_info(c_def, "mg_data->linear_operator_updates = %d\n",mg_data->linear_operator_updates);
-      zlog_info(c_def, "matrix_op->linear_operator_updates = %d\n",matrix_op->linear_operator_updates);
+      /* zlog_info(c_def, "level = %d", level); */
+      /* zlog_info(c_def, "mg_data->linear_operator_updates = %d\n",mg_data->linear_operator_updates); */
+      /* zlog_info(c_def, "matrix_op->linear_operator_updates = %d\n",matrix_op->linear_operator_updates); */
   }
   
   if(mg_data->mg_state == PRE_V){
@@ -115,20 +116,16 @@ d4est_solver_multigrid_matrix_operator_update_callback
   }
   else if(mg_data->mg_state == POST_V){
     matrix_op->completed_alloc = 1;
-    /* if (mg_data->linear_operator_updates == matrix_op->linear_operator_updates + 1){ */
-      /* matrix_op->linear_operator_updates++; */
-    /* } */
-    /* else if (mg_data->linear_operator_updates == matrix_op->linear_operator_updates){ */
-      /* return; */
-    /* } */
-    /* else { */
-      /* zlog_category_t *c_def = zlog_get_category("d4est_solver_multigrid_matrix_operator"); */
-      /* if(p4est->mpirank == 0){ */
-        /* zlog_info(c_def, "mg_data->linear_operator_updates = %d\n",mg_data->linear_operator_updates); */
-        /* zlog_info(c_def, "matrix_op->linear_operator_updates = %d\n",matrix_op->linear_operator_updates); */
-      /* } */
-      /* D4EST_ABORT("not good values for linear_operator_updates" ); */
-    /* } */
+    
+    if (mg_data->using_newton && mg_data->newton_iteration != matrix_op->newton_iteration){
+      zlog_category_t *c_def = zlog_get_category("d4est_solver_multigrid_matrix_operator");
+      zlog_info(c_def, "mg_data->using_newton = %d",mg_data->using_newton);
+      zlog_info(c_def, "mg_data->newton_iteration = %d",mg_data->newton_iteration);
+      zlog_info(c_def, "matrix_op->newton_iteration = %d",matrix_op->newton_iteration);
+      zlog_info(c_def, "Updating newton iteration in matrix operator");
+      matrix_op->newton_iteration = mg_data->newton_iteration;
+    }
+
   }
   else {
     return;
@@ -156,7 +153,7 @@ d4est_solver_multigrid_matrix_operator_init
   matrix_op->fine_matrix_stride = -1;
   matrix_op->coarse_matrix_stride = -1;
   matrix_op->matrix = matrix_op->matrix_at0;
-  matrix_op->linear_operator_updates = 0;
+  matrix_op->newton_iteration = -1;
 
   d4est_solver_multigrid_user_callbacks_t* user_callbacks = P4EST_ALLOC(d4est_solver_multigrid_user_callbacks_t, 1);
 

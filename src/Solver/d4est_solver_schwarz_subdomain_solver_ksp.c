@@ -242,8 +242,6 @@ d4est_solver_schwarz_subdomain_solver_ksp
   PC pc;
   KSPGetPC(ksp,&pc);
   PCSetType(pc,PCNONE);//CHKERRQ(ierr);
-
-
   
   Mat A;
   MatCreateShell

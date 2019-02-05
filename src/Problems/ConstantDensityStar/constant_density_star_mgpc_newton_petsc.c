@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <d4est_util.h>
@@ -30,6 +31,7 @@
 #include <d4est_util.h>
 #include <d4est_checkpoint.h>
 #include <d4est_h5.h>
+#include <p4est_vtk_ext.h>
 #include <time.h>
 #include <zlog.h>
 #include "constant_density_star_fcns.h"
@@ -360,13 +362,20 @@ problem_init
     
     d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
     // Save mesh data to VTK file
+ double* u_minus_one = P4EST_ALLOC(double, prob_vecs.local_nodes);
+
+
+    for (int i = 0; i < prob_vecs.local_nodes; i++){
+      u_minus_one[i] = prob_vecs.u[i] - 1.0;
+    }
+    
     d4est_vtk_save(
       p4est,
       d4est_ops,
       input_file,
       "d4est_vtk",
-      (const char * []){"u","u_analytic","error", NULL},
-      (double* []){prob_vecs.u, u_analytic, error},
+      (const char * []){"u","u_analytic","error", "u_minus_one", NULL},
+      (double* []){prob_vecs.u, u_analytic, error, u_minus_one},
       (const char * []){NULL},
       (double* []){NULL},
       NULL,
@@ -374,8 +383,63 @@ problem_init
       level
     );
 
+    P4EST_FREE(u_minus_one);
     P4EST_FREE(u_analytic);
     P4EST_FREE(error);
+
+
+    char* folder = d4est_util_add_cwd("VTK_corner");
+    d4est_util_make_directory(folder,0);
+    /* if (sub_folder_number >= 0){ */
+  asprintf(&folder,"%s%d/", folder, level);
+  /* } */
+  d4est_util_make_directory(folder,0);
+
+    
+    double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
+
+    double* u_min_one_vertex
+      = P4EST_ALLOC
+      (
+       double,
+       p4est->local_num_quadrants*(P4EST_CHILDREN)
+      );
+
+    for (int i = 0; i < p4est->local_num_quadrants*(P4EST_CHILDREN);
+         i++){
+      u_min_one_vertex[i] = 1.0 - u_vertex[i];
+    }
+    
+    d4est_element_data_store_nodal_vec_in_vertex_array
+      (
+       p4est,
+       prob_vecs.u,
+       u_vertex
+      );
+
+    char* u_corner_file = P4EST_ALLOC(char, 100);
+    sprintf(u_corner_file, "%s%s_%d", folder,  "u_corner");
+    p4est_vtk_ext_write_all
+      (p4est,
+       NULL,
+       0.99,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0,
+       u_corner_file,
+       "u",
+       u_vertex,
+       "one_minus_u",
+       u_min_one_vertex
+      );
+
+    P4EST_FREE(u_corner_file);
+    P4EST_FREE(u_vertex);
+    P4EST_FREE(u_min_one_vertex);
+    free(folder);
 
     // Compute and save norms
 
@@ -546,11 +610,8 @@ problem_init
       if (p4est->mpirank == 0)
         zlog_info(c_default, "Performing Newton PETSc solve...");
 
-
-
       prob_vecs.field_types = &field_type;
-      prob_vecs.num_of_fields = 1;
-      
+      prob_vecs.num_of_fields = 1;      
       
       d4est_solver_newton_petsc_solve(
         p4est,
@@ -588,19 +649,14 @@ problem_init
     zlog_info(c_default, "Saved checkpoint %d for process %d.", level, p4est->mpirank);
 
     d4est_krylov_pc_multigrid_destroy(pc);
-    /* d4est_solver_multigrid_logger_residual_destroy(logger); */
-    /* d4est_solver_multigrid_element_data_updater_destroy(updater, mg_data->num_of_levels); */
     d4est_solver_multigrid_data_destroy(mg_data);
     d4est_solver_multigrid_matrix_operator_destroy(user_callbacks);
-
     P4EST_FREE(estimator);
-
 
     if (d4est_ghost_data != NULL){
       d4est_ghost_data_destroy(d4est_ghost_data);
       d4est_ghost_data = NULL;
-    } 
-    
+    }     
   }
 
   printf("[D4EST_INFO]: Starting garbage collection...\n");
@@ -612,3 +668,4 @@ problem_init
   P4EST_FREE(prob_vecs.u);
   P4EST_FREE(prob_vecs.Au);
 }
+

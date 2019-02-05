@@ -11,16 +11,12 @@ d4est_krylov_pc_multigrid_setup
 {
   d4est_krylov_pc_multigrid_data_t* kpcmgdata = kpc->pc_data;
   d4est_solver_multigrid_t* mg_data = kpcmgdata->mg_data;
-  mg_data->linear_operator_updates++;
   krylov_ctx_t* kct = kpc->pc_ctx;
   
   if(kct->p4est->mpirank == 0){
     zlog_category_t *c_def = zlog_get_category("d4est_krylov_pc_multigrid");
     zlog_info(c_def, "Operator is changing, running d4est_krylov_pc_multigrid_setup");
-    zlog_info(c_def, "mg_data->linear_operator_updates before setup = %d\n",
-              mg_data->linear_operator_updates);
   }
-  mg_data->linear_operator_updates++;
   /* add to mg_data setup int every time this is called */
   /* d4est_krylov_pc_multigrid_data_t* kpcmgdata = kpc->pc_data; */
   
@@ -59,6 +55,16 @@ d4est_krylov_pc_multigrid_apply(d4est_krylov_pc_t* kpc, double* xp, double* yp)
   mg_prob_vecs.rhs = xp;
   mg_prob_vecs.Au = Au;
 
+
+  if (kct->using_newton == 1){
+    mg_data->newton_iteration = kct->newton_iteration;
+    mg_data->using_newton = 1;
+  }
+  else {
+    mg_data->using_newton = 0;
+  }
+  
+  
   d4est_solver_multigrid_solve
     (
      kct->p4est,
@@ -83,8 +89,6 @@ d4est_solver_multigrid_t* mg_data,
 
   d4est_krylov_pc_multigrid_data_t* kpcmgdata = P4EST_ALLOC(d4est_krylov_pc_multigrid_data_t,1);
   kpcmgdata->mg_data = mg_data;
-  kpcmgdata->ratio_is_getting_bad_counts = 0;
-  mg_data->linear_operator_updates = 0;
   kpcmgdata->user_setup_fcn = user_setup_fcn;
   pc->pc_setup = d4est_krylov_pc_multigrid_setup;
   pc->pc_data = kpcmgdata;

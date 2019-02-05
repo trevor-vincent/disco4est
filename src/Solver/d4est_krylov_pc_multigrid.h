@@ -10,8 +10,6 @@ typedef struct {
 
    d4est_solver_multigrid_t* mg_data;
   void(*user_setup_fcn)(d4est_krylov_pc_t* kpc);
-
-  int ratio_is_getting_bad_counts;
   
 } d4est_krylov_pc_multigrid_data_t;
 

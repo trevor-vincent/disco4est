@@ -361,6 +361,8 @@ d4est_solver_krylov_petsc_solve
   petsc_ctx.last_krylov_checkpoint_it = 0;
   petsc_ctx.amr_level = amr_level;
   petsc_ctx.time_start = start;
+  petsc_ctx.using_newton = 0;
+  petsc_ctx.newton_iteration = -1;
   /* petsc_ctx.global_nodes = global_nodes; */
   petsc_ctx.ksp = &ksp;
 

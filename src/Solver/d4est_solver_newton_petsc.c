@@ -182,7 +182,10 @@ PetscErrorCode d4est_solver_newton_petsc_save_x0
   d4est_elliptic_data_t* vecs = petsc_ctx->vecs;
   const double* px0;
   ierr = VecGetArrayRead( x0, &px0 ); CHKERRQ(ierr);
-
+  int newton_iteration;
+  SNESGetIterationNumber(MojSnes,&newton_iteration);
+  petsc_ctx->newton_iteration = newton_iteration;
+  
   int i;
   for (i = 0; i < vecs->local_nodes; i++){
     vecs->u0[i] = px0[i];
@@ -207,7 +210,8 @@ PetscErrorCode d4est_solver_newton_petsc_monitor(SNES snes,PetscInt it, PetscRea
 
   int lit;
   SNESGetLinearSolveIterations(snes,&lit);
-
+  petsc_ctx->newton_iteration = it;
+  
   if (petsc_ctx->p4est->mpirank == 0){
     double duration_seconds = ((double)(clock() - petsc_ctx->time_start)) / CLOCKS_PER_SEC;
     zlog_info(its_output,"AMR_IT SNES_IT KSP_IT SNES_NORM: %d %d %d %.25f %f", petsc_ctx->amr_level, it, lit, norm, duration_seconds);
@@ -447,7 +451,8 @@ d4est_solver_newton_petsc_solve
   SNESSetFunction(snes,r,d4est_solver_newton_petsc_get_residual,(void*)&petsc_ctx);//CHKERRQ(ierr);
   SNESGetKSP(snes,&ksp);
   petsc_ctx.ksp = &ksp;
-
+  petsc_ctx.using_newton = 1;
+  petsc_ctx.newton_iteration = -1;
   
   PC pc;
   KSPGetPC(ksp,&pc);

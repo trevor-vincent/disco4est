@@ -551,7 +551,8 @@ d4est_solver_multigrid_data_init
   mg_data->power_rtol = -1;
   mg_data->power_imax = -1;
   mg_data->power_imin = -1;
-  mg_data->linear_operator_updates = 0;
+  mg_data->newton_iteration = -1;
+  mg_data->using_newton = -1;
   mg_data->debug_with_power_method = 0;
   mg_data->num_of_p_coarsen_levels = 0;
   mg_data->use_p_coarsen = 0;

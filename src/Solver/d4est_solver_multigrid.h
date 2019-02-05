@@ -267,7 +267,8 @@ struct  d4est_solver_multigrid_data {
  * (e.g. a new newton iteration) 
  * This is used in d4est_solver_multigrid_matrix_operator for example. 
  */
-  int linear_operator_updates;
+  int using_newton;
+  int newton_iteration;
 };
 
 /* This file was automatically generated.  Do not edit! */
