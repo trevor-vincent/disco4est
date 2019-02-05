@@ -439,7 +439,7 @@ problem_init
     P4EST_FREE(u_corner_file);
     P4EST_FREE(u_vertex);
     P4EST_FREE(u_min_one_vertex);
-    free(folder);
+    P4EST_FREE(folder);
 
     // Compute and save norms
 

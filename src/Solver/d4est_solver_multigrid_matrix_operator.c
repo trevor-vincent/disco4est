@@ -17,8 +17,8 @@ d4est_solver_multigrid_matrix_operator_restriction_callback
   d4est_operators_t* d4est_ops = mg_data->d4est_ops;
   d4est_solver_multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
- /* if (matrix_op->completed_alloc != 1 || */
-      /* mg_data->using_newton && mg_data->newton_iteration != matrix_op->newton_iteration){ */
+ if (matrix_op->completed_alloc != 1 ||
+      mg_data->using_newton && mg_data->newton_iteration != matrix_op->newton_iteration){
     int* fine_matrix_stride = &matrix_op->fine_matrix_stride;
     int* coarse_matrix_stride = &matrix_op->coarse_matrix_stride;
     int fine_matrix_nodes = matrix_op->fine_matrix_nodes;
@@ -44,7 +44,7 @@ d4est_solver_multigrid_matrix_operator_restriction_callback
   
     int coarse_volume_nodes = d4est_lgl_get_nodes( (P4EST_DIM) , degH);
     (*coarse_matrix_stride) += coarse_volume_nodes*coarse_volume_nodes;
-  /* } */
+  }
 }
 
 static void
