@@ -362,11 +362,11 @@ problem_init
     
     d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
     // Save mesh data to VTK file
- double* u_minus_one = P4EST_ALLOC(double, prob_vecs.local_nodes);
+ double* u_min_one = P4EST_ALLOC(double, prob_vecs.local_nodes);
 
 
     for (int i = 0; i < prob_vecs.local_nodes; i++){
-      u_minus_one[i] = prob_vecs.u[i] - 1.0;
+      u_min_one[i] = prob_vecs.u[i] - 1.0;
     }
     
     d4est_vtk_save(
@@ -374,8 +374,8 @@ problem_init
       d4est_ops,
       input_file,
       "d4est_vtk",
-      (const char * []){"u","u_analytic","error", "u_minus_one", NULL},
-      (double* []){prob_vecs.u, u_analytic, error, u_minus_one},
+      (const char * []){"u","u_analytic","error", "u_min_one", NULL},
+      (double* []){prob_vecs.u, u_analytic, error, u_min_one},
       (const char * []){NULL},
       (double* []){NULL},
       NULL,
@@ -383,7 +383,7 @@ problem_init
       level
     );
 
-    P4EST_FREE(u_minus_one);
+    P4EST_FREE(u_min_one);
     P4EST_FREE(u_analytic);
     P4EST_FREE(error);
 
@@ -416,7 +416,7 @@ problem_init
 
    for (int i = 0; i < p4est->local_num_quadrants*(P4EST_CHILDREN);
          i++){
-      u_min_one_vertex[i] = 1.0 - u_vertex[i];
+      u_min_one_vertex[i] = u_vertex[i] - 1.0;
     }
     
     
