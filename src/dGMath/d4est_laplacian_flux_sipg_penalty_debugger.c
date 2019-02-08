@@ -1,8 +1,9 @@
+#define _GNU_SOURCE
 #include <pXest.h>
 #include <d4est_mortars.h>
 #include <d4est_laplacian_flux.h>
 #include <d4est_laplacian_flux_sipg_penalty_debugger.h>
-
+#include <ini.h>
 
 static void
 d4est_laplacian_flux_sipg_penalty_debugger_boundary
@@ -24,15 +25,16 @@ d4est_laplacian_flux_sipg_penalty_debugger_boundary
   int mortar_quad_scalar_stride = d4est_factors->local_strides[e_m->id].mortar_quad_stride[f_m];
   double* sigma = P4EST_ALLOC(double, face_nodes_m_quad);
   double * restrict  h_quad = &d4est_factors->hm_mortar_quad[mortar_quad_scalar_stride];
+  double multiplier = d4est_laplacian_flux_sipg_penalty_debugger_get_multiplier(penalty_data,e_m->region,e_m->region);
   
   for (int i = 0; i < face_nodes_m_quad; i++){
-    sigma[i] = penalty_data->penalty_fcn
+    sigma[i] = multiplier*penalty_data->sipg_penalty_fcn
                (
                 e_m->deg,
                 h_quad[i],
                 e_m->deg,
                 h_quad[i],
-                penalty_data->penalty_prefactor
+                penalty_data->sipg_penalty_prefactor
                );
   }
 
@@ -54,6 +56,9 @@ d4est_laplacian_flux_sipg_penalty_debugger_boundary
   penalty_data->min_penalty_vtk_per_face[f_m][e_m->id] = max;
   P4EST_FREE(sigma);
 }
+
+/* d4est_laplacian_with_opt_flux_sipg_params
+/* d4est_laplacian_flux_sipg_penalty_debugger */
 
 static void
 d4est_laplacian_flux_sipg_penalty_debugger_interface
@@ -119,18 +124,19 @@ d4est_laplacian_flux_sipg_penalty_debugger_interface
   double* hp_mortar_quad = &d4est_factors->hp_mortar_quad[mortar_quad_scalar_stride];  
 
   double* sigma = P4EST_ALLOC(double, total_nodes_mortar_quad);
-
+  double multiplier = d4est_laplacian_flux_sipg_penalty_debugger_get_multiplier(penalty_data,e_m[0]->region,e_p[0]->region);
+  
   int stride = 0;
   for (int f = 0; f < faces_mortar; f++){
     for (int k = 0; k < nodes_mortar_quad[f]; k++){
       int ks = k + stride;      
-      sigma[ks] = penalty_data->penalty_fcn
+      sigma[ks] = multiplier*penalty_data->sipg_penalty_fcn
                           (
                            (faces_m == faces_mortar) ? deg_m_lobatto[f] : deg_m_lobatto[0],
                            hm_mortar_quad[ks],
                            (faces_p == faces_mortar) ? deg_p_lobatto[f] : deg_p_lobatto[0],
                            hp_mortar_quad[ks],
-                           penalty_data->penalty_prefactor
+                           penalty_data->sipg_penalty_prefactor
                           );
     }
     stride += nodes_mortar_quad[f];
@@ -184,21 +190,224 @@ d4est_laplacian_flux_sipg_penalty_debugger_interface
 
   P4EST_FREE(sigma);
 }
+/* d4est_laplacian_flux_sipg_penalty_debugger_t* */
+
+static
+int d4est_laplacian_with_opt_flux_sipg_region_multiplier_input_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_laplacian_flux_sipg_penalty_debugger_t* pconfig = (d4est_laplacian_flux_sipg_penalty_debugger_t*)user;
+
+  int hit = 0;
+  for (int i = 0; i < pconfig->sipg_number_of_regions; i++){
+    char* mult_name;
+    asprintf(&mult_name,"region%d_multiplier", i);
+
+    if (d4est_util_match_couple(section,"flux",name,mult_name)) {
+      D4EST_ASSERT(pconfig->sipg_region_multipliers[i] == -1);
+      pconfig->sipg_region_multipliers[i] = atof(value);
+      hit++;
+    }
+    free(mult_name);
+  }
+  if (hit)
+    return 1;
+  else
+    return 0;
+}
+
+static
+int d4est_laplacian_with_opt_flux_sipg_region_boundary_multiplier_input_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_laplacian_flux_sipg_penalty_debugger_t* pconfig = (d4est_laplacian_flux_sipg_penalty_debugger_t*)user;
+
+  int hit = 0;
+
+  for (int i = 0; i < pconfig->sipg_number_of_region_boundaries; i++){
+    char* mult_name;
+    asprintf(&mult_name,"region_boundary%d_multiplier", i);
+
+    if (d4est_util_match_couple(section,"flux",name,mult_name)) {
+      D4EST_ASSERT(pconfig->sipg_region_boundary_multipliers[i] == -1);
+      pconfig->sipg_region_boundary_multipliers[i] = atof(value);
+      hit++;
+    }
+    free(mult_name);
+  }
+  
+  if (hit)
+    return 1;
+  else
+    return 0;
+}
+
+
+static
+int d4est_laplacian_flux_sipg_penalty_debugger_input_handler
+(
+ void* user,
+ const char* section,
+ const char* name,
+ const char* value
+)
+{
+  d4est_laplacian_flux_sipg_penalty_debugger_t* pconfig = (d4est_laplacian_flux_sipg_penalty_debugger_t*)user;
+
+  if (d4est_util_match_couple(section,"flux",name,"sipg_use_region_multiplier")) {
+    D4EST_ASSERT(pconfig->sipg_use_region_multipliers == 0);
+    pconfig->sipg_use_region_multipliers = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"flux",name,"sipg_use_region_boundary_multiplier")) {
+    D4EST_ASSERT(pconfig->sipg_use_region_boundary_multipliers == 0);
+    pconfig->sipg_use_region_boundary_multipliers = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"flux",name,"sipg_number_of_regions")) {
+    D4EST_ASSERT(pconfig->sipg_number_of_regions == 0);
+    pconfig->sipg_number_of_regions = atoi(value);
+  } 
+  else if (d4est_util_match_couple(section,"flux",name,"sipg_number_of_region_boundaries")) {
+    D4EST_ASSERT(pconfig->sipg_number_of_region_boundaries == 0);
+    pconfig->sipg_number_of_region_boundaries = atoi(value);
+  }  
+  else {
+    return 0;  /* unknown section/name, error */
+  }
+  return 1;
+}
+
+double
+d4est_laplacian_flux_sipg_penalty_debugger_get_multiplier
+(
+ d4est_laplacian_flux_sipg_penalty_debugger_t* input,
+ int region_m,
+ int region_p
+){
+  if (!input->sipg_use_region_boundary_multipliers &&
+      !input->sipg_use_region_multipliers){
+    return 1.0;
+  }
+
+  double multiplier = 1.0;
+  if (region_m == region_p){
+    if (input->sipg_use_region_multipliers){
+      multiplier = input->sipg_region_multipliers[region_m];
+    }
+  }
+  else {
+    int smaller_region = (region_m < region_p) ? region_m : region_p;
+    if (input->sipg_use_region_boundary_multipliers){
+      multiplier = input->sipg_region_boundary_multipliers[smaller_region];
+    }
+    else if (input->sipg_use_region_multipliers){
+      double mult_m = input->sipg_region_multipliers[region_m];
+      double mult_p = input->sipg_region_multipliers[region_p];
+      multiplier = .5*(mult_m + mult_p);
+    }
+    else {
+      multiplier = 1.0;
+    }
+  }
+
+  return multiplier;
+}
+
+
+void
+d4est_laplacian_flux_sipg_penalty_debugger_input
+(
+ p4est_t* p4est,
+ const char* input_file,
+ d4est_laplacian_flux_sipg_penalty_debugger_t* input
+)
+{
+  input->sipg_use_region_multipliers = 0;
+  input->sipg_use_region_boundary_multipliers = 0;
+  input->sipg_number_of_regions = -1;
+  input->sipg_number_of_region_boundaries = -1;
+
+  if (ini_parse(input_file, d4est_laplacian_flux_sipg_penalty_debugger_input_handler, input) < 0) {
+    D4EST_ABORT("Can't load input file");
+  }
+
+  if(input->sipg_use_region_multipliers){
+    
+    D4EST_CHECK_INPUT("flux", input->sipg_number_of_regions, -1);
+
+    if (input->sipg_number_of_regions > 10){
+      D4EST_ABORT("sipg_number_of_regions is capped at 10 in the code for now");
+    }
+
+    for (int i = 0; i < 10; i++){
+      input->sipg_region_multipliers[i] = -1;
+    }
+    
+    if (ini_parse(
+                  input_file,
+                  d4est_laplacian_with_opt_flux_sipg_region_multiplier_input_handler,
+                  input) < 0) {
+      D4EST_ABORT("Can't load input file");
+    }
+    
+    for (int i = 0; i < input->sipg_number_of_regions; i++){
+      D4EST_CHECK_INPUT("flux", input->sipg_region_multipliers[i], -1);
+    }
+  }
+
+  if(input->sipg_use_region_boundary_multipliers){
+    
+    D4EST_CHECK_INPUT("flux", input->sipg_number_of_region_boundaries, -1);
+
+    if (input->sipg_number_of_region_boundaries < 10){
+      D4EST_ABORT("sipg number_of_region_boundaries capped at 10 now");
+    }
+    
+    for (int i = 0; i < 10; i++){
+      input->sipg_region_boundary_multipliers[i] = -1;
+    }
+    
+    if (ini_parse(
+                  input_file,
+                  d4est_laplacian_with_opt_flux_sipg_region_boundary_multiplier_input_handler,
+                  input) < 0) {
+      D4EST_ABORT("Can't load input file");
+    }
+    
+    for (int i = 0; i < input->sipg_number_of_region_boundaries; i++){
+      D4EST_CHECK_INPUT("flux", input->sipg_region_boundary_multipliers[i], -1);
+    }
+  }
+  
+}
 
 
 d4est_laplacian_flux_sipg_penalty_debugger_t*
 d4est_laplacian_flux_sipg_penalty_debugger_init
 (
  p4est_t* p4est,
+ const char* input_file,
  penalty_calc_t penalty_fcn,
  double penalty_prefactor
 )
 {
   d4est_laplacian_flux_sipg_penalty_debugger_t* debugger =
     P4EST_ALLOC_ZERO(d4est_laplacian_flux_sipg_penalty_debugger_t,1);
-  debugger->penalty_fcn = penalty_fcn;
-  debugger->penalty_prefactor = penalty_prefactor;
+  debugger->sipg_penalty_fcn = penalty_fcn;
+  debugger->sipg_penalty_prefactor = penalty_prefactor;
 
+  d4est_laplacian_flux_sipg_penalty_debugger_input(p4est, input_file, debugger);
+
+  
   debugger->average_min_penalty_vtk =
     P4EST_ALLOC_ZERO(double, p4est->local_num_quadrants);
 

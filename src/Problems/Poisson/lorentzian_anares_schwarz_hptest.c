@@ -703,6 +703,7 @@ problem_init
       d4est_laplacian_flux_sipg_penalty_debugger_init
       (
        p4est,
+       input_file,
        sipg_params->sipg_penalty_fcn,
        sipg_params->sipg_penalty_prefactor
       );
