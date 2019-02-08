@@ -273,11 +273,11 @@ int d4est_laplacian_flux_sipg_penalty_debugger_input_handler
     pconfig->sipg_use_region_boundary_multipliers = atoi(value);
   }
   else if (d4est_util_match_couple(section,"flux",name,"sipg_number_of_regions")) {
-    D4EST_ASSERT(pconfig->sipg_number_of_regions == 0);
+    D4EST_ASSERT(pconfig->sipg_number_of_regions == -1);
     pconfig->sipg_number_of_regions = atoi(value);
   } 
   else if (d4est_util_match_couple(section,"flux",name,"sipg_number_of_region_boundaries")) {
-    D4EST_ASSERT(pconfig->sipg_number_of_region_boundaries == 0);
+    D4EST_ASSERT(pconfig->sipg_number_of_region_boundaries == -1);
     pconfig->sipg_number_of_region_boundaries = atoi(value);
   }  
   else {
@@ -368,7 +368,7 @@ d4est_laplacian_flux_sipg_penalty_debugger_input
     
     D4EST_CHECK_INPUT("flux", input->sipg_number_of_region_boundaries, -1);
 
-    if (input->sipg_number_of_region_boundaries < 10){
+    if (input->sipg_number_of_region_boundaries > 10){
       D4EST_ABORT("sipg number_of_region_boundaries capped at 10 now");
     }
     
