@@ -137,7 +137,7 @@ skip_curved_elements
 
 typedef struct {
   
-  int use_pointwise_esimator;
+  int use_pointwise_estimator;
   int use_dirichlet;
   
 } two_punctures_init_params_t;
@@ -474,11 +474,11 @@ problem_init
     ip_norm_data.size_params = NULL;
     sipg_params->size_params = NULL;
 
-    if (init_params.use_compactified_size_params){
-      penalty_data.size_params = &size_params;
-      ip_norm_data.size_params = &size_params;
-      sipg_params->size_params = &size_params;
-    }
+    /* if (init_params.use_compactified_size_params){ */
+      /* penalty_data.size_params = &size_params; */
+      /* ip_norm_data.size_params = &size_params; */
+      /* sipg_params->size_params = &size_params; */
+    /* } */
 
     double* residual_pointwise_quad
       = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
@@ -546,9 +546,9 @@ problem_init
        error_l2
       );
 
-    if(init_params.use_error_l2_as_estimator){
-      d4est_util_copy_1st_to_2nd(error_l2, estimator, p4est->local_num_quadrants);
-    }    
+    /* if(init_params.use_error_l2_as_estimator){ */
+      /* d4est_util_copy_1st_to_2nd(error_l2, estimator, p4est->local_num_quadrants); */
+    /* }     */
     
     d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
 
@@ -719,7 +719,7 @@ problem_init
       ctx.mg_data = mg_data;
       zlog_category_t *c_tp = zlog_get_category("two_punctures");
     
-    if (!init_params.do_not_solve){
+    /* if (!init_params.do_not_solve){ */
 
       d4est_solver_newton_petsc_params_t newton_params;
       d4est_solver_newton_petsc_input(p4est, input_file, &newton_params);
@@ -797,7 +797,7 @@ problem_init
          (mg_data->num_of_levels <= 1) ? NULL : pc,
          level
         );
-    }
+    /* } */
 
     d4est_mesh_interpolate_data_t data;
 
@@ -921,7 +921,7 @@ problem_init
     d4est_krylov_pc_multigrid_destroy(pc);
     d4est_solver_multigrid_data_destroy(mg_data);
     d4est_solver_multigrid_matrix_operator_destroy(user_callbacks);
-   f
+   
     P4EST_FREE(error_l2);
     P4EST_FREE(estimator);
 
