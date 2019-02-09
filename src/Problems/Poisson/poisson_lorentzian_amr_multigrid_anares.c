@@ -205,6 +205,7 @@ amr_set_element_gamma
 typedef struct {
   
   int use_dirichlet;
+  int use_pointwise_estimator;
   int analyze_matrix;
   
 } poisson_lorentzian_init_params_t;
@@ -223,6 +224,10 @@ int poisson_lorentzian_init_params_handler
   if (d4est_util_match_couple(section,"problem",name,"use_dirichlet")) {
     D4EST_ASSERT(pconfig->use_dirichlet == -1);
     pconfig->use_dirichlet = atoi(value);
+  }
+  else if (d4est_util_match_couple(section,"problem",name,"use_pointwise_estimator")) {
+    D4EST_ASSERT(pconfig->use_pointwise_estimator == -1);
+    pconfig->use_pointwise_estimator = atoi(value);
   }
   else if (d4est_util_match_couple(section,"problem",name,"analyze_matrix")) {
     D4EST_ASSERT(pconfig->analyze_matrix == 0);
@@ -243,6 +248,7 @@ poisson_lorentzian_init_params_input
 {
   poisson_lorentzian_init_params_t input;
   input.use_dirichlet = -1;
+  input.use_pointwise_estimator = -1;
   input.analyze_matrix = 0;
 
   if (ini_parse(input_file, poisson_lorentzian_init_params_handler, &input) < 0) {
@@ -250,6 +256,7 @@ poisson_lorentzian_init_params_input
   }
 
   D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
+  D4EST_CHECK_INPUT("problem", input.use_pointwise_estimator, -1);
   /* D4EST_CHECK_INPUT("problem", input.analyze_matrix, -1); */
   
   return input;
@@ -627,8 +634,8 @@ problem_init
                          0,
                          estimator_vtk,
                          estimator_vtk_per_face,
-                         1,
-                         NULL
+                         init_params.use_pointwise_estimator ? 1 : 0, 
+                         &prob_fcns
                         );
 
 
