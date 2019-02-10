@@ -16,6 +16,7 @@ max_degree = 20
 
 [problem]
 use_dirichlet = 1
+use_pointwise_estimator = 1
 
 [amr]
 scheme = smooth_pred
