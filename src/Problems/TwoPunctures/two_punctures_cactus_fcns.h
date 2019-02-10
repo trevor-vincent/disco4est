@@ -9,6 +9,7 @@
 #include <d4est_laplacian_flux.h>
 #include <d4est_solver_multigrid.h>
 #include <d4est_solver_multigrid_matrix_operator.h>
+#include <d4est_hessian.h>
 
 typedef struct {
 
@@ -686,5 +687,168 @@ void two_punctures_pc_setup_fcn
       ); 
 }
 
+static void
+two_punctures_pointwise_residual
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ double* u,
+ double* residual_pointwise_quad,
+ int interpolation_option,
+ void* user
+){
+  //interpolation option = 0 -> interpolate u to quad and compute
+  //f(u) on quad
+
+  //interpolation option = 1 -> interpolate f(u) to quad  
+  d4est_hessian_compute_hessian_trace_of_field_on_quadrature_points
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     HESSIAN_ANALYTICAL,
+     u,
+     residual_pointwise_quad
+    );
+
+  if (interpolation_option == 0){
+    double* u_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt){
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq =  ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
+#if (P4EST_DIM)==3
+        mesh_object.q[2] = ed->q[2];
+#endif
+
+        d4est_mesh_data_on_element_t md_on_e
+          = d4est_mesh_data_on_element
+          (
+           d4est_factors,
+           ed
+          );
+
+
+
+        d4est_quadrature_interpolate
+          (
+           d4est_ops,
+           d4est_quad,
+           d4est_geom,
+           &mesh_object,
+           QUAD_OBJECT_VOLUME,
+           QUAD_INTEGRAND_UNKNOWN,
+           &u[ed->nodal_stride],
+           ed->deg,
+           &u_quad[ed->quad_stride],
+           ed->deg_quad
+          );
+
+        int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
+
+
+        for (int i = 0; i < volume_nodes_quad; i++){
+          double x = md_on_e.xyz_quad[0][i];
+          double y = md_on_e.xyz_quad[1][i];
+          double z = md_on_e.xyz_quad[2][i];
+          double u = u_quad[ed->quad_stride + i];
+           
+          residual_pointwise_quad[ed->quad_stride +  i] =
+            two_punctures_neg_1o8_K2_psi_neg7(x,y,z,u,user)
+            - residual_pointwise_quad[ed->quad_stride +  i];
+        }
+      }
+    }
+    P4EST_FREE(u_quad);
+  }
+  else {
+    double* f_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
+    double* f_lob = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes);
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt){
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq =  ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
+#if (P4EST_DIM)==3
+        mesh_object.q[2] = ed->q[2];
+#endif
+
+        d4est_mesh_data_on_element_t md_on_e
+          = d4est_mesh_data_on_element
+          (
+           d4est_factors,
+           ed
+          );
+        
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
+
+        for (int i = 0; i < volume_nodes; i++){
+          double x = md_on_e.xyz[0][i];
+          double y = md_on_e.xyz[1][i];
+          double z = md_on_e.xyz[2][i];
+          f_lob[ed->nodal_stride + i] =
+            two_punctures_neg_1o8_K2_psi_neg7(x,y,z,u[ed->nodal_stride + i],user);
+        }
+
+
+        d4est_quadrature_interpolate
+          (
+           d4est_ops,
+           d4est_quad,
+           d4est_geom,
+           &mesh_object,
+           QUAD_OBJECT_VOLUME,
+           QUAD_INTEGRAND_UNKNOWN,
+           &f_lob[ed->nodal_stride],
+           ed->deg,
+           &f_quad[ed->quad_stride],
+           ed->deg_quad
+          );
+        
+        for (int i = 0; i < volume_nodes_quad; i++){
+          residual_pointwise_quad[ed->quad_stride +  i] =
+            f_quad[ed->quad_stride + i]
+            - residual_pointwise_quad[ed->quad_stride +  i];
+        }
+    
+      }
+    }
+    P4EST_FREE(f_quad);
+    P4EST_FREE(f_lob);
+  }   
+}
 
 #endif
