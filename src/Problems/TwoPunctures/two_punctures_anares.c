@@ -34,6 +34,41 @@
 #include <time.h>
 #include "two_punctures_cactus_fcns_with_opt.h"
 
+int
+keep_region_2_skipper
+(
+ d4est_element_data_t* ed
+){
+  if (ed->region != 2)
+    return 1; /* skip */
+  else
+    return 0; /* do_not_skip */
+}
+
+
+int
+keep_region_1_skipper
+(
+ d4est_element_data_t* ed
+){
+  if (ed->region != 1)
+    return 1; /* skip */
+  else
+    return 0; /* do_not_skip */
+}
+
+
+int
+keep_region_0_skipper
+(
+ d4est_element_data_t* ed
+){
+  if (ed->region != 0)
+    return 1; /* skip */
+  else
+    return 0; /* do_not_skip */
+}
+
 static
 double solve_for_c
 (
@@ -622,7 +657,8 @@ problem_init
     energy_norm_ctx.energy_estimator_sq_local = total_est;
     energy_norm_ctx.ghost = *d4est_ghost;
     energy_norm_ctx.ghost_data = d4est_ghost_data;
-
+    energy_norm_ctx.energy_estimator = estimator;
+    
     d4est_norms_save
       (
        p4est,
@@ -639,6 +675,62 @@ problem_init
        NULL,
        NULL
       );
+
+
+
+    d4est_norms_save(
+                     p4est,
+                     d4est_factors,
+                     (const char * []){ "u", NULL },
+                     (double * []){ prob_vecs.u },
+                     (double * []){ u_prev },
+                     (d4est_xyz_fcn_t []){ NULL },
+                     (void * []){ NULL },
+                     (const char * []){"L_2", "L_infty", "energy_estimator", NULL},
+                     (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy_estimator },
+                     (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx },
+                     NULL,
+                     "region_2",
+                     keep_region_2_skipper
+    );
+
+
+
+    d4est_norms_save(
+                     p4est,
+                     d4est_factors,
+                     (const char * []){ "u", NULL },
+                     (double * []){ prob_vecs.u },
+                     (double * []){ u_prev },
+                     (d4est_xyz_fcn_t []){ NULL },
+                     (void * []){ NULL },
+                     (const char * []){"L_2", "L_infty", "energy_estimator", NULL},
+                     (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy_estimator },
+                     (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx },
+                     NULL,
+                     "region_1",
+                     keep_region_1_skipper
+    );
+
+
+
+    d4est_norms_save(
+                     p4est,
+                     d4est_factors,
+                     (const char * []){ "u", NULL },
+                     (double * []){ prob_vecs.u },
+                     (double * []){ u_prev },
+                     (d4est_xyz_fcn_t []){ NULL },
+                     (void * []){ NULL },
+                     (const char * []){"L_2", "L_infty", "energy_estimator", NULL},
+                     (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy_estimator },
+                     (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx },
+                     NULL,
+                     "region_0",
+                     keep_region_0_skipper
+    );
+    
+    
     
     if (level != d4est_amr->num_of_amr_steps && level != 0){
 
