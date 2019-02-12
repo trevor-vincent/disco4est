@@ -422,6 +422,8 @@ constant_density_star_build_residual_add_nonlinear_term
            neg_2pi_rho_up1_neg5,
            user,
            NULL,
+           NULL,
+           0,
            NULL
           );
 
@@ -590,7 +592,9 @@ void constant_density_star_apply_jac_add_nonlinear_term
            user,
            NULL,
            NULL,
-           QUAD_APPLY_MATRIX
+           QUAD_APPLY_MATRIX,
+           0,
+           NULL
           );
         
       }

@@ -712,8 +712,8 @@ problem_init
    /*                                                 initial_extents */
    /*                                                ); */
       
-      d4est_solver_multigrid_user_callbacks_t* user_callbacks = d4est_solver_multigrid_matrix_operator_init(p4est, mg_data->num_of_levels);
-
+      two_punctures_params.interpolate_f = 0;      
+      d4est_solver_multigrid_user_callbacks_t* user_callbacks = d4est_solver_multigrid_matrix_operator_init(p4est, mg_data->num_of_levels,two_punctures_params.interpolate_f);
       d4est_solver_multigrid_set_user_callbacks(
                             mg_data,
                             user_callbacks

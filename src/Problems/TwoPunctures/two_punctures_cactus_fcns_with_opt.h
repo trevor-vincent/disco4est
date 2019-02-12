@@ -22,7 +22,8 @@ typedef struct {
   double par_P_minus [3];
   double par_m_plus;
   double par_m_minus;
-
+  int interpolate_f;
+  
   d4est_mesh_data_t* d4est_factors;
   
 } two_punctures_params_t;
@@ -345,6 +346,11 @@ void two_punctures_apply_jac_add_nonlinear_term
                                                   d4est_factors,
                                                   ed
                                                  );
+
+          problem_ctx_t* ctx = user;
+          two_punctures_params_t* two_punctures_params = ctx->two_punctures_params;
+
+         
         
         d4est_quadrature_apply_fofufofvlilj
           (
@@ -366,7 +372,9 @@ void two_punctures_apply_jac_add_nonlinear_term
            user,
            NULL,
            NULL,
-           QUAD_APPLY_MATRIX
+           QUAD_APPLY_MATRIX,
+           two_punctures_params->interpolate_f,
+           md_on_e.xyz
           );
 
       }
@@ -501,6 +509,9 @@ two_punctures_build_residual_add_nonlinear_term
                                                  );
 
         
+          problem_ctx_t* ctx = user;
+          two_punctures_params_t* two_punctures_params = ctx->two_punctures_params;
+
         
         d4est_quadrature_apply_fofufofvlj
           (
@@ -520,7 +531,9 @@ two_punctures_build_residual_add_nonlinear_term
            two_punctures_neg_1o8_K2_psi_neg7,
            user,
            NULL,
-           NULL
+           NULL,
+           two_punctures_params->interpolate_f,
+           md_on_e.xyz
           );
       }
     }

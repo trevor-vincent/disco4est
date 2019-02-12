@@ -136,7 +136,8 @@ d4est_solver_multigrid_user_callbacks_t*
 d4est_solver_multigrid_matrix_operator_init
 (
  p4est_t* p4est,
- int num_of_levels
+ int num_of_levels,
+ int interpolate_f
 )
 {
   d4est_solver_multigrid_matrix_op_t* matrix_op = P4EST_ALLOC(d4est_solver_multigrid_matrix_op_t, 1);
@@ -154,7 +155,8 @@ d4est_solver_multigrid_matrix_operator_init
   matrix_op->coarse_matrix_stride = -1;
   matrix_op->matrix = matrix_op->matrix_at0;
   matrix_op->newton_iteration = -1;
-
+  matrix_op->interpolate_f = interpolate_f;
+  
   d4est_solver_multigrid_user_callbacks_t* user_callbacks = P4EST_ALLOC(d4est_solver_multigrid_user_callbacks_t, 1);
 
   user_callbacks->mg_prolong_user_callback = NULL;
@@ -238,7 +240,9 @@ d4est_solver_multigrid_matrix_setup_fofufofvlilj_operator
            fofu_ctx,
            fofv_fcn,
            fofv_ctx,
-           QUAD_COMPUTE_MATRIX
+           QUAD_COMPUTE_MATRIX,
+           matrix_op->interpolate_f,
+           md_on_e.xyz
           );
 
         nodal_stride += volume_nodes;

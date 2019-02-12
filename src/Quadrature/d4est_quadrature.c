@@ -613,7 +613,9 @@ void d4est_quadrature_apply_fofufofvlilj
  void* fofu_ctx,
  d4est_xyzu_fcn_t fofv_fcn,
  void* fofv_ctx,
- d4est_quadrature_apply_or_compute_matrix_t apply_or_compute_matrix
+ d4est_quadrature_apply_or_compute_matrix_t apply_or_compute_matrix,
+ int interpolate_f,
+ double* xyz_lobatto [(P4EST_DIM)]
 )
 {
   if (fofu_fcn == NULL)
@@ -623,9 +625,11 @@ void d4est_quadrature_apply_fofufofvlilj
   
   double* u_quad = NULL;
   double* v_quad = NULL;
+  double* fofu_fofv_jac = NULL;
   int dim = (object_type == QUAD_OBJECT_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad);
   
+ if (!interpolate_f){
   if (u != NULL){
     u_quad = P4EST_ALLOC(double, volume_nodes_quad);
     d4est_quadrature_interpolate(
@@ -657,7 +661,7 @@ void d4est_quadrature_apply_fofufofvlilj
                  );
   }
   
-  double* fofu_fofv_jac = P4EST_ALLOC(double, volume_nodes_quad);
+  fofu_fofv_jac = P4EST_ALLOC(double, volume_nodes_quad);
   for (int i = 0; i < volume_nodes_quad; i++){
     fofu_fofv_jac[i] = jac_quad[i];
     if (u != NULL || fofu_fcn != identity_fcn){
@@ -679,7 +683,54 @@ void d4est_quadrature_apply_fofufofvlilj
                                    fofv_ctx);
     }
   }
+  }
+  else {
+    int volume_nodes_lobatto = d4est_lgl_get_nodes(dim, deg_lobatto);
+    double* fofu_fofv_lobatto = P4EST_ALLOC(double, volume_nodes_lobatto);
+    fofu_fofv_jac = P4EST_ALLOC(double, volume_nodes_quad);
+    
+    for (int i = 0; i < volume_nodes_lobatto; i++){
+      fofu_fofv_lobatto[i] = 1.0;
+      if (u != NULL || fofu_fcn != identity_fcn){
+        fofu_fofv_lobatto[i] *= fofu_fcn(xyz_lobatto[0][i],
+                                 xyz_lobatto[1][i],
+#if (P4EST_DIM)==3
+                                 xyz_lobatto[2][i],
+#endif
+                                 (u != NULL) ? u[i] : 0,
+                                 fofu_ctx);
+      }
+      if (v != NULL || fofv_fcn != identity_fcn){
+        fofu_fofv_lobatto[i] *= fofv_fcn(xyz_lobatto[0][i],
+                                 xyz_lobatto[1][i],
+#if (P4EST_DIM)==3
+                                 xyz_lobatto[2][i],
+#endif
+                                 (v != NULL) ? v[i] : 0,
+                                 fofv_ctx);
+      }
+    }
 
+    d4est_quadrature_interpolate(
+                                 d4est_ops,
+                                 d4est_quad,
+                                 d4est_geom,
+                                 object,
+                                 object_type,
+                                 integrand_type,
+                                 fofu_fofv_lobatto,
+                                 deg_lobatto,
+                                 fofu_fofv_jac,
+                                 deg_quad
+    );
+
+    for (int i = 0; i < volume_nodes_quad; i++){
+      fofu_fofv_jac[i] *= jac_quad[i];
+    }
+    
+    P4EST_FREE(fofu_fofv_lobatto);
+  }
+ 
   if (apply_or_compute_matrix == QUAD_APPLY_MATRIX){
     D4EST_ASSERT(vec != NULL);
     d4est_quadrature_apply_mass_matrix
@@ -743,9 +794,17 @@ void d4est_quadrature_apply_fofufofvlj
  d4est_xyzu_fcn_t fofu_fcn,
  void* fofu_ctx,
  d4est_xyzu_fcn_t fofv_fcn,
- void* fofv_ctx
+ void* fofv_ctx,
+ int interpolate_f,
+ double* xyz_lobatto [(P4EST_DIM)]
 )
 {
+  if(interpolate_f){
+    if(xyz_lobatto == NULL){
+      D4EST_ABORT("interpolate_f == 1, but xyz_lobatto == NULL");
+    }
+  }
+  
   if (fofu_fcn == NULL){
     fofu_fcn = identity_fcn;
   }
@@ -755,9 +814,12 @@ void d4est_quadrature_apply_fofufofvlj
   
   double* u_quad = NULL;
   double* v_quad = NULL;
+  double* fofu_fofv  = NULL;
   int dim = (object_type == QUAD_OBJECT_MORTAR) ? ((P4EST_DIM)-1) : (P4EST_DIM);
   int volume_nodes_quad = d4est_lgl_get_nodes(dim, deg_quad);
-  
+
+
+  if (!interpolate_f){
   if (u != NULL){
     u_quad = P4EST_ALLOC(double, volume_nodes_quad);
     d4est_quadrature_interpolate(
@@ -789,7 +851,7 @@ void d4est_quadrature_apply_fofufofvlj
                  );
   }
   
-  double* fofu_fofv = P4EST_ALLOC(double, volume_nodes_quad);
+  fofu_fofv = P4EST_ALLOC(double, volume_nodes_quad);
   for (int i = 0; i < volume_nodes_quad; i++){
     fofu_fofv[i] = 1.0;
     if (u != NULL || fofu_fcn != identity_fcn){
@@ -800,7 +862,6 @@ void d4est_quadrature_apply_fofufofvlj
 #endif
                                    (u != NULL) ? u_quad[i] : 0,
                                    fofu_ctx);
-      /* printf("xyz_quad[0][i], xyz_quad[1][i], xyz_quad[2][i], u[i], fofu_fofv[i] = %f,%f,%f,%f,%f\n",xyz_quad[0][i], xyz_quad[1][i], xyz_quad[2][i], u[i], fofu_fofv[i]); */
     }
     if (v != NULL || fofv_fcn != identity_fcn){
       fofu_fofv[i] *= fofv_fcn(xyz_quad[0][i],
@@ -812,7 +873,50 @@ void d4est_quadrature_apply_fofufofvlj
                                    fofv_ctx);
     }
   }
- 
+  }
+  else {
+    int volume_nodes_lobatto = d4est_lgl_get_nodes(dim, deg_lobatto);
+    double* fofu_fofv_lobatto = P4EST_ALLOC(double, volume_nodes_lobatto);
+    fofu_fofv = P4EST_ALLOC(double, volume_nodes_quad);
+    
+    for (int i = 0; i < volume_nodes_lobatto; i++){
+      fofu_fofv_lobatto[i] = 1.0;
+      if (u != NULL || fofu_fcn != identity_fcn){
+        fofu_fofv_lobatto[i] *= fofu_fcn(xyz_lobatto[0][i],
+                                 xyz_lobatto[1][i],
+#if (P4EST_DIM)==3
+                                 xyz_lobatto[2][i],
+#endif
+                                 (u != NULL) ? u[i] : 0,
+                                 fofu_ctx);
+      }
+      if (v != NULL || fofv_fcn != identity_fcn){
+        fofu_fofv_lobatto[i] *= fofv_fcn(xyz_lobatto[0][i],
+                                 xyz_lobatto[1][i],
+#if (P4EST_DIM)==3
+                                 xyz_lobatto[2][i],
+#endif
+                                 (v != NULL) ? v[i] : 0,
+                                 fofv_ctx);
+      }
+    }
+
+    d4est_quadrature_interpolate
+      (
+       d4est_ops,
+       d4est_quad,
+       d4est_geom,
+       object,
+       object_type,
+       integrand_type,
+       fofu_fofv_lobatto,
+       deg_lobatto,
+       fofu_fofv,
+       deg_quad
+      );
+    
+    P4EST_FREE(fofu_fofv_lobatto);
+  }
   d4est_quadrature_apply_galerkin_integral
     (
      d4est_ops,
@@ -1345,6 +1449,7 @@ void d4est_quadrature_apply_inverse_mass_matrix
 /*   } */
   
 /* } */
+/* This file was automatically generated.  Do not edit! */
 /* This file was automatically generated.  Do not edit! */
 /* This file was automatically generated.  Do not edit! */
 /* This file was automatically generated.  Do not edit! */

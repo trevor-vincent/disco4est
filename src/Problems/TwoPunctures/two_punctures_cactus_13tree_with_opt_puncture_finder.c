@@ -143,6 +143,7 @@ typedef struct {
   int use_new_multigrid_level_guesser;
   int use_dirichlet;
   int level_puncture_finder_stop;
+  int interpolate_f;
   
 } two_punctures_init_params_t;
 
@@ -240,6 +241,10 @@ int two_punctures_init_params_handler
     D4EST_ASSERT(pconfig->use_new_multigrid_level_guesser == -1);
     pconfig->use_new_multigrid_level_guesser = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"problem",name,"interpolate_f")) {
+    D4EST_ASSERT(pconfig->interpolate_f == -1);
+    pconfig->interpolate_f = atoi(value);
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -257,21 +262,22 @@ two_punctures_init_params_input
   two_punctures_init_params_t input;
   input.do_not_solve = -1;
   input.use_dirichlet = -1;
-  input.use_compactified_size_params = -1;
-  input.use_error_l2_as_estimator = -1;
-  input.use_new_multigrid_level_guesser = -1;
+  /* input.use_compactified_size_params = -1; */
+  /* input.use_error_l2_as_estimator = -1; */
+  /* input.use_new_multigrid_level_guesser = -1; */
   input.level_puncture_finder_stop = -1;
-
+  input.interpolate_f = -1;
   if (ini_parse(input_file, two_punctures_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
   D4EST_CHECK_INPUT("problem", input.do_not_solve, -1);
-  D4EST_CHECK_INPUT("problem", input.use_compactified_size_params, -1);
+  /* D4EST_CHECK_INPUT("problem", input.use_compactified_size_params, -1); */
   /* D4EST_CHECK_INPUT("problem", input.use_error_l2_as_estimator, -1); */
   D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
   /* D4EST_CHECK_INPUT("problem", input.use_new_multigrid_level_guesser, -1); */
   D4EST_CHECK_INPUT("problem", input.level_puncture_finder_stop, -1);
+  D4EST_CHECK_INPUT("problem", input.interpolate_f, -1);
   
   return input;
 }
@@ -331,11 +337,11 @@ problem_init
 )
 { 
   int initial_nodes = initial_extents->initial_nodes;
-  two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file);
-
-  
+  two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file); 
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
+  two_punctures_params.interpolate_f = init_params.interpolate_f;
+  
 
   int level_puncture_finder_stop =  init_params.level_puncture_finder_stop;
 
@@ -570,11 +576,11 @@ problem_init
     ip_norm_data.size_params = NULL;
     sipg_params->size_params = NULL;
 
-    if (init_params.use_compactified_size_params){
-      penalty_data.size_params = &size_params;
-      ip_norm_data.size_params = &size_params;
-      sipg_params->size_params = &size_params;
-    }
+    /* if (init_params.use_compactified_size_params){ */
+      /* penalty_data.size_params = &size_params; */
+      /* ip_norm_data.size_params = &size_params; */
+      /* sipg_params->size_params = &size_params; */
+    /* } */
     
     double* estimator =
       d4est_estimator_bi_compute
@@ -622,9 +628,9 @@ problem_init
        error_l2
       );
 
-    if(init_params.use_error_l2_as_estimator){
-      d4est_util_copy_1st_to_2nd(error_l2, estimator, p4est->local_num_quadrants);
-    }    
+    /* if(init_params.use_error_l2_as_estimator){ */
+      /* d4est_util_copy_1st_to_2nd(error_l2, estimator, p4est->local_num_quadrants); */
+    /* }     */
     
     d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
 
@@ -851,7 +857,9 @@ problem_init
       /*   num_of_mg_levels_last_step = mg_data->num_of_levels; */
       /* }       */
       
-      d4est_solver_multigrid_user_callbacks_t* user_callbacks = d4est_solver_multigrid_matrix_operator_init(p4est, mg_data->num_of_levels);
+      /* two_punctures_params.interpolate_f = 0;       */
+      d4est_solver_multigrid_user_callbacks_t* user_callbacks = d4est_solver_multigrid_matrix_operator_init(p4est, mg_data->num_of_levels,two_punctures_params.interpolate_f);
+
 
       d4est_solver_multigrid_set_user_callbacks(
                             mg_data,

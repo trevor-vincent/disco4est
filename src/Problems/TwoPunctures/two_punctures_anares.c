@@ -174,6 +174,7 @@ typedef struct {
   
   int use_pointwise_estimator;
   int use_dirichlet;
+  int interpolate_f;
   
 } two_punctures_init_params_t;
 
@@ -203,6 +204,10 @@ int two_punctures_init_params_handler
     D4EST_ASSERT(pconfig->use_dirichlet == -1);
     pconfig->use_dirichlet = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"problem",name,"interpolate_f")) {
+    D4EST_ASSERT(pconfig->interpolate_f == -1);
+    pconfig->interpolate_f = atoi(value);
+  }
   else {
     return 0;
   }
@@ -220,14 +225,19 @@ two_punctures_init_params_input
   two_punctures_init_params_t input;
   input.use_dirichlet = -1;
   input.use_pointwise_estimator = -1;
-
-  if (ini_parse(input_file, two_punctures_init_params_handler, &input) < 0) {
+  input.interpolate_f = -1;
+  
+  if
+    (
+      ini_parse(input_file,
+                two_punctures_init_params_handler,
+                &input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
-
+  
   D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
   D4EST_CHECK_INPUT("problem", input.use_pointwise_estimator, -1);
-  
+  D4EST_CHECK_INPUT("problem", input.interpolate_f, -1);
   return input;
 }
 
@@ -289,7 +299,8 @@ problem_init
   two_punctures_init_params_t init_params = two_punctures_init_params_input(input_file); 
   two_punctures_params_t two_punctures_params;
   init_two_punctures_data(&two_punctures_params);
- 
+  two_punctures_params.interpolate_f = init_params.interpolate_f;
+  
   d4est_laplacian_with_opt_dirichlet_bc_t bc_data_for_bi;
   bc_data_for_bi.dirichlet_fcn = zero_fcn;
   bc_data_for_bi.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
@@ -799,7 +810,13 @@ problem_init
                                                       input_file
                                                      );
       
-      d4est_solver_multigrid_user_callbacks_t* user_callbacks = d4est_solver_multigrid_matrix_operator_init(p4est, mg_data->num_of_levels);
+      d4est_solver_multigrid_user_callbacks_t* user_callbacks
+        = d4est_solver_multigrid_matrix_operator_init
+        (
+         p4est,
+         mg_data->num_of_levels,
+         two_punctures_params.interpolate_f
+        );
 
       d4est_solver_multigrid_set_user_callbacks(
                             mg_data,
