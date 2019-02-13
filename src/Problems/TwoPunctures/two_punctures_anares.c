@@ -913,6 +913,12 @@ problem_init
     double R0 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R0;
     double R1 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R1;
     double R2 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R2;
+
+    if (R0 > R1 || R1 > R2){
+      D4EST_ABORT("R0 > R1 || R1 > R2");
+    }
+    
+    
     int compactify_inner_shell = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_inner_shell;
     int compactify_outer_shell = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_outer_shell;
     d4est_geometry_type_t geom_type =  d4est_geom->geom_type;
