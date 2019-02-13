@@ -206,7 +206,7 @@ PetscErrorCode d4est_solver_newton_petsc_monitor(SNES snes,PetscInt it, PetscRea
 {
  krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
   zlog_category_t* c_default = zlog_get_category("d4est_solver_newton_petsc");
-  zlog_category_t* its_output = zlog_get_category("d4est_solver_iteration_info");
+  zlog_category_t* its_output = zlog_get_category("d4est_solver_newton_petsc_iteration_info");
 
   int lit;
   SNESGetLinearSolveIterations(snes,&lit);
@@ -508,6 +508,7 @@ d4est_solver_newton_petsc_solve
   }
 
   SNESMonitorSet(snes, d4est_solver_newton_petsc_monitor, &petsc_ctx, NULL);
+  KSPMonitorSet(ksp, d4est_solver_krylov_petsc_monitor, &petsc_ctx, NULL);
   SNESSolve(snes,NULL,x);
 
   SNESComputeFunction(snes, x, r);

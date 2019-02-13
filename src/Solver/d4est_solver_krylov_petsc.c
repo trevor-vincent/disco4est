@@ -209,7 +209,6 @@ d4est_solver_krylov_petsc_input
   }  
 }
 
-static
 PetscErrorCode d4est_solver_krylov_petsc_monitor(KSP ksp,PetscInt it, PetscReal norm, void *ctx)
 {
 
@@ -217,7 +216,7 @@ PetscErrorCode d4est_solver_krylov_petsc_monitor(KSP ksp,PetscInt it, PetscReal 
   
   krylov_ctx_t* petsc_ctx = (krylov_ctx_t*) ctx;
   zlog_category_t* c_default = zlog_get_category("d4est_solver_krylov_petsc");
-  zlog_category_t* its_output = zlog_get_category("d4est_solver_iteration_info");
+  zlog_category_t* its_output = zlog_get_category("d4est_solver_krylov_petsc_iteration_info");
 
   if (petsc_ctx->p4est->mpirank == 0){
     double duration_seconds = ((double)(clock() - petsc_ctx->time_start)) / CLOCKS_PER_SEC;
