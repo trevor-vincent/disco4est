@@ -9,18 +9,17 @@ cmake_minimum_required(VERSION 3.0)
 #     _message(${MessageType} "${ARGV}")
 #   endif()
 # endfunction()
-
+set(CMAKE_MODULE_PATH
+  ${CMAKE_SOURCE_DIR}/cmake
+  ${CMAKE_MODULE_PATH}
+)
+include(machine)
 
 include(ExternalProject)
 
 project(d4est)
 
 # Directory where customize cmake files reside
-set(CMAKE_MODULE_PATH
-  ${CMAKE_SOURCE_DIR}/cmake
-  ${CMAKE_MODULE_PATH}
-)
-include(machine)
 
 find_package(MPI REQUIRED)
 message("mpi version = ${MPI_VERSION}")

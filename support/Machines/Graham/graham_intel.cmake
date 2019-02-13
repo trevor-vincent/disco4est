@@ -12,4 +12,6 @@ set(ENABLE_BUNDLED_TCMALLOC ON)
 #for intel
 set(BLA_VENDOR Intel10_64lp_seq)
 set(ENABLE_BUNDLED_BLAS OFF)
-set(PETSC_PREFIX "/scinet/niagara/software/2018a/opt/intel-2018.2-intelmpi-2018.2/petsc/3.9.2/")
+set(PETSC_PREFIX "/cvmfs/soft.computecanada.ca/easybuild/software/2017/avx2/MPI/intel2016.4/openmpi2.1/petsc/3.9.0/")
+SET(CMAKE_CXX_COMPILER "icpc")
+SET(CMAKE_C_COMPILER "icc")
