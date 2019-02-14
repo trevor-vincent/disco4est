@@ -170,7 +170,7 @@ amr_set_element_gamma
 
 typedef struct {
   
-  int use_dirichlet;
+  int use_pointwise_estimator;
   
 } stamm_init_params_t;
 
@@ -185,9 +185,9 @@ int stamm_init_params_handler
 )
 {
   stamm_init_params_t* pconfig = (stamm_init_params_t*)user;
-  if (d4est_util_match_couple(section,"problem",name,"use_dirichlet")) {
-    D4EST_ASSERT(pconfig->use_dirichlet == -1);
-    pconfig->use_dirichlet = atoi(value);
+  if (d4est_util_match_couple(section,"problem",name,"use_pointwise_estimator")) {
+    D4EST_ASSERT(pconfig->use_pointwise_estimator == -1);
+    pconfig->use_pointwise_estimator = atoi(value);
   }
   else {
     return 0;  /* unknown section/name, error */
@@ -203,13 +203,13 @@ stamm_init_params_input
 )
 {
   stamm_init_params_t input;
-  input.use_dirichlet = -1;
+  input.use_pointwise_estimator = -1;
 
   if (ini_parse(input_file, stamm_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
   }
 
-  D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
+  D4EST_CHECK_INPUT("problem", input.use_pointwise_estimator, -1);
   
   return input;
 }
@@ -253,7 +253,8 @@ problem_init
   int initial_nodes = initial_extents->initial_nodes;
   
   stamm_params_t stamm_params = stamm_params_input(input_file);
-
+  stamm_init_params_t stamm_init_params = stamm_init_params_input(input_file);
+  
   d4est_laplacian_dirichlet_bc_t bc_data_for_lhs;
   bc_data_for_lhs.dirichlet_fcn = zero_fcn;
   bc_data_for_lhs.eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
@@ -507,8 +508,8 @@ problem_init
                          0,
                          NULL,
                          NULL,
-                         1,
-                         NULL
+                         stamm_init_params.use_pointwise_estimator,
+                         &prob_fcns
                         );
 
 
