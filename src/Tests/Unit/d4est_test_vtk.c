@@ -131,16 +131,16 @@ int main(int argc, char *argv[])
   
   d4est_amr_t* d4est_amr_random = d4est_amr_init_random_hp(p4est, 1);
 
-  d4est_amr_step
-    (
-     p4est,
-     d4est_ops,
-     d4est_amr_random,
-     NULL,
-     NULL,
-     NULL,
-     NULL
-    );
+  /* d4est_amr_step */
+  /*   ( */
+  /*    p4est, */
+  /*    d4est_ops, */
+  /*    d4est_amr_random, */
+  /*    NULL, */
+  /*    NULL, */
+  /*    NULL, */
+  /*    NULL */
+  /*   ); */
 
 
   local_sizes = d4est_mesh_update

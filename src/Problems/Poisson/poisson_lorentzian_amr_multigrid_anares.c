@@ -207,6 +207,7 @@ typedef struct {
   int use_dirichlet;
   int use_pointwise_estimator;
   int analyze_matrix;
+  int do_not_save_checkpoint;
   
 } poisson_lorentzian_init_params_t;
 
@@ -229,6 +230,10 @@ int poisson_lorentzian_init_params_handler
     D4EST_ASSERT(pconfig->use_pointwise_estimator == -1);
     pconfig->use_pointwise_estimator = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"problem",name,"do_not_save_checkpoint")) {
+    D4EST_ASSERT(pconfig->do_not_save_checkpoint == 0);
+    pconfig->do_not_save_checkpoint = atoi(value);
+  }
   else if (d4est_util_match_couple(section,"problem",name,"analyze_matrix")) {
     D4EST_ASSERT(pconfig->analyze_matrix == 0);
     pconfig->analyze_matrix = atoi(value);
@@ -250,6 +255,7 @@ poisson_lorentzian_init_params_input
   input.use_dirichlet = -1;
   input.use_pointwise_estimator = -1;
   input.analyze_matrix = 0;
+  input.do_not_save_checkpoint = 0;
 
   if (ini_parse(input_file, poisson_lorentzian_init_params_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
@@ -1405,7 +1411,7 @@ problem_init
     d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
 
     
-    if (level != d4est_amr->num_of_amr_steps && level != 0){
+    if (level != d4est_amr->num_of_amr_steps && level != 0 && !init_params.do_not_save_checkpoint){
       d4est_checkpoint_save
         (
          level,

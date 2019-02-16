@@ -402,6 +402,7 @@ d4est_geometry_cubed_sphere_X(
   }
 }
 
+
 static void
 d4est_geometry_cubed_sphere_with_sphere_hole_X(
                               d4est_geometry_t * geom,
@@ -2051,7 +2052,6 @@ d4est_geometry_cubed_sphere_outer_shell_input
   D4EST_CHECK_INPUT(input_section, sphere_attrs->R1, -1);
   D4EST_CHECK_INPUT(input_section, sphere_attrs->R2, -1);
   D4EST_CHECK_INPUT(input_section, sphere_attrs->compactify_outer_shell, -1);
-
 
   return sphere_attrs;
 }

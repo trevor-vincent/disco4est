@@ -108,7 +108,9 @@ struct d4est_vtk_context
   int write_rank;
   int wrap_rank;
   int write_deg;
-    
+
+  /* for large parameter studies this stops vtk output, very useful for limiting disk usage */
+  int do_not_write_vtk;
   
 };
 
@@ -180,6 +182,10 @@ int d4est_vtk_input_handler
     D4EST_ASSERT(pconfig->write_level == -1);
     pconfig->write_level = atoi(value);
   }
+  else if (d4est_util_match_couple(section,pconfig->input_section,name,"do_not_write_vtk")) {
+    D4EST_ASSERT(pconfig->do_not_write_vtk == 0);
+    pconfig->do_not_write_vtk = atoi(value);
+  }
   else if (d4est_util_match_couple(section,pconfig->input_section,name,"geometry_section")) {
     D4EST_ASSERT(pconfig->geometry_section == NULL);
     asprintf(&pconfig->geometry_section,"%s",value);
@@ -236,6 +242,7 @@ d4est_vtk_input
   cont->write_deg = -1;
   cont->write_tree = -1;
   cont->wrap_rank = -1;
+  cont->do_not_write_vtk = 0;
   asprintf(&cont->input_section,"%s",input_section);
   
   if (ini_parse(input_file, d4est_vtk_input_handler,cont) < 0) {
@@ -1700,6 +1707,10 @@ d4est_vtk_save_aux
 
   d4est_vtk_context_t* cont = d4est_vtk_dg_context_new(p4est, d4est_ops, input_file, input_section);
 
+  if (cont->do_not_write_vtk){
+    return;
+  }
+  
   cont->folder = d4est_util_add_cwd(folder);
   d4est_util_make_directory(cont->folder,0);
   /* if (sub_folder_number >= 0){ */

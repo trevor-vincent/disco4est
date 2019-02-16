@@ -59,6 +59,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MPI_C_COMPILE_FLAG}")
 SET (
   SRCS_3D_ONLY
   src/Geometry/d4est_geometry_cubed_sphere.c
+  src/Geometry/d4est_geometry_cubed_sphere_vtk.c
   src/Geometry/d4est_connectivity_cubed_sphere.c
   src/Geometry/d4est_geometry_general_wedge.c
   src/Geometry/d4est_geometry_hole_in_a_box.c

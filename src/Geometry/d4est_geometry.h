@@ -34,6 +34,7 @@ typedef struct {
 
 typedef enum {GEOM_CUBED_SPHERE_13TREE,
               GEOM_CUBED_SPHERE_7TREE,
+              GEOM_CUBED_SPHERE_VTK,
               GEOM_CUBED_SPHERE_OUTER_WEDGE,
               GEOM_CUBED_SPHERE_INNER_WEDGE,
               GEOM_CUBED_SPHERE_INNEROUTER_WEDGE,

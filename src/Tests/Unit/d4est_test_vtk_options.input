@@ -32,15 +32,31 @@ write_deg = 1
 ; DX_compute_method = analytic
 ; JAC_compute_method = numerical
 
+; [geometry]
+; name = cubed_sphere
+; R0 = 1
+; R1 = 2
+; R2 = 3
+; compactify_outer_shell = 0
+; compactify_inner_shell = 0
+; DX_compute_method = analytic
+; JAC_compute_method = numerical
+
 [geometry]
-name = cubed_sphere
+name = cubed_sphere_vtk
 R0 = 1
-R1 = 2
-R2 = 3
+R1_a = 2
+R1_b = 3
+R2_a = 4
+R2_b = 6
+inner_angle_multiplier = 1.
+outer_angle_multiplier = .8
+inner_nonz_multiplier = .8
 compactify_outer_shell = 0
 compactify_inner_shell = 0
-DX_compute_method = analytic
+DX_compute_method = numerical
 JAC_compute_method = numerical
+
 
 [quadrature]
 name = legendre
