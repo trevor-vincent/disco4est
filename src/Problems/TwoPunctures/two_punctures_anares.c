@@ -175,6 +175,7 @@ typedef struct {
   int use_pointwise_estimator;
   int use_dirichlet;
   int interpolate_f;
+  int amr_level_for_uniform_p;
   
 } two_punctures_init_params_t;
 
@@ -208,6 +209,10 @@ int two_punctures_init_params_handler
     D4EST_ASSERT(pconfig->interpolate_f == -1);
     pconfig->interpolate_f = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"amr",name,"amr_level_for_uniform_p")) {
+    D4EST_ASSERT(pconfig->amr_level_for_uniform_p == -1);
+    pconfig->amr_level_for_uniform_p = atoi(value);
+  }
   else {
     return 0;
   }
@@ -226,6 +231,7 @@ two_punctures_init_params_input
   input.use_dirichlet = -1;
   input.use_pointwise_estimator = -1;
   input.interpolate_f = -1;
+  input.amr_level_for_uniform_p = 1000;
   
   if
     (
@@ -238,6 +244,8 @@ two_punctures_init_params_input
   D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
   D4EST_CHECK_INPUT("problem", input.use_pointwise_estimator, -1);
   D4EST_CHECK_INPUT("problem", input.interpolate_f, -1);
+  /* D4EST_CHECK_INPUT("amr", input.amr_level_for_uniform_p, -1); */
+  
   return input;
 }
 
@@ -484,6 +492,8 @@ problem_init
   d4est_mesh_data_t* d4est_factors_compactified = d4est_mesh_data_init(p4est);
 
   d4est_norms_linear_fit_t* l2_linear_fit = d4est_norms_linear_fit_init();
+
+  d4est_amr_t* d4est_amr_uniform_p = d4est_amr_init_uniform_p(p4est,d4est_amr->num_of_amr_steps);
   
   for (int level = initial_level; level < d4est_amr->num_of_amr_steps + 1; ++level){
 
@@ -749,7 +759,7 @@ problem_init
         (
          p4est,
          d4est_ops,
-         d4est_amr,
+         (level >= init_params.amr_level_for_uniform_p) ? d4est_amr_uniform_p : d4est_amr,
          &prob_vecs.u,
          estimator,
          stats,
@@ -1050,6 +1060,7 @@ problem_init
   d4est_mesh_data_destroy(d4est_factors_compactified);
   d4est_geometry_destroy(d4est_geom_compactified);
   d4est_amr_destroy(d4est_amr);
+  d4est_amr_destroy(d4est_amr_uniform_p);
   d4est_norms_linear_fit_destroy(l2_linear_fit);
   d4est_laplacian_with_opt_flux_destroy(flux_data_for_jac);
   d4est_laplacian_with_opt_flux_destroy(flux_data_for_res);
