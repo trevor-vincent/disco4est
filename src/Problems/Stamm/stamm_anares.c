@@ -782,7 +782,8 @@ problem_init
        d4est_quad,
        d4est_factors,
        &d4est_solver_krylov_petsc_params,
-       pc,level
+       (mg_data->num_of_levels <= 1) ? NULL : pc,
+       level
       );
 
 
