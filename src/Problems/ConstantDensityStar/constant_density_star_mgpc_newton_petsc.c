@@ -631,7 +631,8 @@ problem_init
         d4est_factors,
         &krylov_params,
         &newton_params,
-        pc,level//NULL//pc
+        (mg_data->num_of_levels <= 1) ? NULL : pc,
+        level//NULL//pc
       );
 
       if (p4est->mpirank == 0)
