@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <d4est_util.h>
@@ -280,6 +281,9 @@ problem_init
     for (int i = 0; i < prob_vecs.local_nodes; i++){
       error[i] = fabs(prob_vecs.u[i] - u_analytic[i]);
     }
+
+    int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
+    d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
     
     d4est_vtk_save
       (
@@ -291,11 +295,13 @@ problem_init
        (double* []){prob_vecs.u, u_analytic, error},
        (const char * []){NULL},
        (double* []){NULL},
-       NULL,
-       NULL,
+       (const char * []){"degrees",NULL},
+       (int* []){deg_array,NULL},
        level
       );
 
+    P4EST_FREE(deg_array);
+    
     double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
 
     d4est_element_data_store_nodal_vec_in_vertex_array
@@ -305,8 +311,44 @@ problem_init
        u_vertex
       );
 
-    char* u_corner_file = P4EST_ALLOC(char, 100);
-    sprintf(u_corner_file, "%s_%d", "u_corner", level);
+
+
+    char* folder = d4est_util_add_cwd("VTK_corner");
+    d4est_util_make_directory(folder,0);
+    /* if (sub_folder_number >= 0){ */
+    asprintf(&folder,"%s%d/", folder, level);
+    /* } */
+    d4est_util_make_directory(folder,0);
+
+    
+    /* double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN)); */
+
+    /* double* u_min_one_vertex */
+      /* = P4EST_ALLOC */
+      /* ( */
+       /* double, */
+       /* p4est->local_num_quadrants*(P4EST_CHILDREN) */
+      /* ); */
+
+ 
+    d4est_element_data_store_nodal_vec_in_vertex_array
+      (
+       p4est,
+       prob_vecs.u,
+       u_vertex
+      );
+
+
+   /* for (int i = 0; i < p4est->local_num_quadrants*(P4EST_CHILDREN); */
+         /* i++){ */
+      /* u_min_one_vertex[i] = u_vertex[i] - 1.0; */
+    /* } */
+    
+    
+   char* u_corner_file;
+    /* sprintf(u_corner_file, "%s%s_%d", folder,  "u_corner"); */
+    asprintf(&u_corner_file, "%s%s", folder,  "u_corner");
+    /* sprintf(u_corner_file, "%s_%d",  "u_corner"); */
     p4est_vtk_ext_write_all
       (p4est,
        NULL,
@@ -317,11 +359,17 @@ problem_init
        1,
        1,
        0,
-       "u_corner",
+       u_corner_file,
        "u",
        u_vertex
       );
 
+    /* P4EST_FREE(u_corner_file); */
+    P4EST_FREE(u_vertex);
+    free(folder);
+
+
+    
     P4EST_FREE(u_corner_file);
     P4EST_FREE(u_analytic);
     P4EST_FREE(u_vertex);

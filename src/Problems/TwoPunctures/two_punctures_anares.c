@@ -103,10 +103,10 @@ double solve_for_c_outer
   double m = (2 - 1)/((1/R2) - (1/R1));
   double n = (1*R1 - 2*R2)/(R1 - R2);
   double R = m/(c - n);
-  double pp = 2 - c;
-  double q = R;
-  double x = q;
-  return x - Rc;  
+  /* double pp = 2 - c; */
+  /* double q = R; */
+  /* double x = R; */
+  return R - Rc;  
 }
 
 
