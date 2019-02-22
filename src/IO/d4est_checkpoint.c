@@ -325,7 +325,8 @@ d4est_checkpoint_load_mesh_from_amr_history
        NULL,
        NULL,
        NULL,
-       input_file
+       NULL
+       /* input_file */
       );
 
     d4est_mesh_update
