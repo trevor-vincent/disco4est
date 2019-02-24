@@ -365,12 +365,12 @@ problem_init
       );
 
     /* P4EST_FREE(u_corner_file); */
-    P4EST_FREE(u_vertex);
+    /* P4EST_FREE(u_vertex); */
     free(folder);
 
 
     
-    P4EST_FREE(u_corner_file);
+    free(u_corner_file);
     P4EST_FREE(u_analytic);
     P4EST_FREE(u_vertex);
     P4EST_FREE(error);
