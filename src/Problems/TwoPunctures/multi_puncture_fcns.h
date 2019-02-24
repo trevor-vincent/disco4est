@@ -820,7 +820,7 @@ multi_puncture_initial_guess
 
 
 static
-void multi_punctured4est_krylov_pc_setup_fcn
+void multi_puncture_d4est_krylov_pc_setup_fcn
 (
  d4est_krylov_pc_t* d4est_krylov_pc
 )

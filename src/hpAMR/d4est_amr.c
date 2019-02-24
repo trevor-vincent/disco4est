@@ -898,7 +898,8 @@ d4est_amr_step
 
    if (input_file == NULL){
     d4est_amr->p_balance_if_diff = -1;
-    zlog_info(c_default, "We will not p-balance");
+    if (p4est->mpirank == 0)
+      zlog_info(c_default, "We will not p-balance");
   }
   else {
     d4est_amr_extra_options_input
