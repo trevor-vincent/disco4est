@@ -1,13 +1,14 @@
-#ifndef MULTI_PUNCTURE_FCNS_CLEAN_H
-#define MULTI_PUNCTURE_FCNS_CLEAN_H 
+#ifndef MULTI_PUNCTURES_FCNS_WITH_OPT_H
+#define MULTI_PUNCTURES_FCNS_WITH_OPT_H 
 
 #include <d4est_util.h>
 #include <d4est_element_data.h>
+#include <d4est_hessian.h>
 #include <d4est_amr_smooth_pred.h>
-#include <d4est_laplacian.h>
-#include <d4est_laplacian_flux.h>
-#include <multigrid.h>
-#include <multigrid_matrix_operator.h>
+#include <d4est_laplacian_with_opt.h>
+#include <d4est_laplacian_with_opt_flux.h>
+#include <d4est_solver_multigrid.h>
+#include <d4est_solver_multigrid_matrix_operator.h>
 
 #define MAX_PUNCTURES 10
 
@@ -25,7 +26,7 @@ typedef struct {
   black_hole_data_t* bh;
   int number_of_punctures;
 
-} multi_puncture_params_t;
+} multi_punctures_params_t;
 
 static
 void
@@ -81,7 +82,7 @@ init_random_puncture_data
  
 
 static
-int multi_puncture_input_parser1
+int multi_punctures_input_parser1
 (
  void* user,
  const char* section,
@@ -89,7 +90,7 @@ int multi_puncture_input_parser1
  const char* value
 )
 {
-  multi_puncture_params_t* pconfig = (multi_puncture_params_t*) user;
+  multi_punctures_params_t* pconfig = (multi_punctures_params_t*) user;
   if (d4est_util_match_couple(section,"problem",name,"number_of_punctures")) {
     D4EST_ASSERT(pconfig->number_of_punctures == -1);
     pconfig->number_of_punctures = atoi(value);
@@ -100,11 +101,8 @@ int multi_puncture_input_parser1
   }
 }
 
-
-
-
 static
-int multi_puncture_input_parser2
+int multi_punctures_input_parser2
 (
  void* user,
  const char* section,
@@ -112,7 +110,7 @@ int multi_puncture_input_parser2
  const char* value
 )
 {
-  multi_puncture_params_t* pconfig = (multi_puncture_params_t*) user;
+  multi_punctures_params_t* pconfig = (multi_punctures_params_t*) user;
   for (int i = 0; i < pconfig->number_of_punctures; i++){
 
     int hit = 0;
@@ -205,28 +203,30 @@ int multi_puncture_input_parser2
   return 0;    
 }
 
+
+
 static
 void
-multi_puncture_params_destroy
+multi_punctures_params_destroy
 (
- multi_puncture_params_t* params
+ multi_punctures_params_t* params
 ){
   P4EST_FREE(params->bh);
   P4EST_FREE(params);
 }
 
 static
-multi_puncture_params_t*
-multi_puncture_params_init
+multi_punctures_params_t*
+multi_punctures_params_init
 (
  p4est_t* p4est,
  const char* input_file
 ){
 
-  multi_puncture_params_t* params = P4EST_ALLOC(multi_puncture_params_t,1);
+  multi_punctures_params_t* params = P4EST_ALLOC(multi_punctures_params_t,1);
   params->number_of_punctures = -1;
   
-  if (ini_parse(input_file, multi_puncture_input_parser1, params) < 0){
+  if (ini_parse(input_file, multi_punctures_input_parser1, params) < 0){
     D4EST_ABORT("Can't load input file");
   }
   D4EST_CHECK_INPUT("problem", params->number_of_punctures, -1);
@@ -246,7 +246,7 @@ multi_puncture_params_init
     params->bh[i].S[2] = -1;
   }
   
-  if (ini_parse(input_file, multi_puncture_input_parser2, params) < 0){
+  if (ini_parse(input_file, multi_punctures_input_parser2, params) < 0){
     D4EST_ABORT("Can't load input file");
   }  
 
@@ -281,9 +281,9 @@ typedef struct {
 
   int use_matrix_operator;
   d4est_solver_multigrid_t* mg_data;
-  multi_puncture_params_t* multi_puncture_params;
-  d4est_laplacian_flux_data_t* flux_data_for_jac;
-  d4est_laplacian_flux_data_t* flux_data_for_res;
+  multi_punctures_params_t* multi_punctures_params;
+  d4est_laplacian_with_opt_flux_data_t* flux_data_for_jac;
+  d4est_laplacian_with_opt_flux_data_t* flux_data_for_res;
   d4est_amr_smooth_pred_params_t* smooth_pred_params;
   
 } problem_ctx_t;
@@ -302,7 +302,7 @@ double Aij_fcn
 )
 {
   problem_ctx_t* ctx = user;
-  multi_puncture_params_t* params = ctx->multi_puncture_params;
+  multi_punctures_params_t* params = ctx->multi_punctures_params;
   
   double dxn = (x - params->bh[i].XYZ[0]);
   double dyn = (y - params->bh[i].XYZ[1]);
@@ -338,7 +338,7 @@ double AijAij_fcn
 )
 {
   problem_ctx_t* ctx = user;
-  multi_puncture_params_t* params = ctx->multi_puncture_params;
+  multi_punctures_params_t* params = ctx->multi_punctures_params;
   
   double AijAij = 0.;
   
@@ -369,7 +369,7 @@ double psi_fcn
 {
 
   problem_ctx_t* ctx = user;
-  multi_puncture_params_t* params = ctx->multi_puncture_params;
+  multi_punctures_params_t* params = ctx->multi_punctures_params;
   double sumn_mn_o_2rn = 0.;
 
   for (int n = 0; n < params->number_of_punctures; n++){
@@ -384,7 +384,7 @@ double psi_fcn
 }
 
 static
-double multi_puncture_neg_1o8_K2_psi_neg7
+double multi_punctures_neg_1o8_K2_psi_neg7
 (
  double x,
  double y,
@@ -394,7 +394,7 @@ double multi_puncture_neg_1o8_K2_psi_neg7
 )
 {
   problem_ctx_t* ctx = user;
-  multi_puncture_params_t* params = ctx->multi_puncture_params;
+  multi_punctures_params_t* params = ctx->multi_punctures_params;
 
   double psi = psi_fcn(x,y,z,u,user);
   double AijAij = AijAij_fcn(x,y,z,user);
@@ -404,7 +404,7 @@ double multi_puncture_neg_1o8_K2_psi_neg7
 
 
 static
-double multi_puncture_plus_7o8_K2_psi_neg8
+double multi_punctures_plus_7o8_K2_psi_neg8
 (
  double x,
  double y,
@@ -414,7 +414,7 @@ double multi_puncture_plus_7o8_K2_psi_neg8
 )
 {
   problem_ctx_t* ctx = user;
-  multi_puncture_params_t* params = ctx->multi_puncture_params;
+  multi_punctures_params_t* params = ctx->multi_punctures_params;
 
   double psi = psi_fcn(x,y,z,u,user);
   double AijAij = AijAij_fcn(x,y,z,user);
@@ -424,11 +424,11 @@ double multi_puncture_plus_7o8_K2_psi_neg8
 
 
 static
-void multi_puncture_apply_jac_add_nonlinear_term_using_matrix
+void multi_punctures_apply_jac_add_nonlinear_term_using_matrix
 (
  p4est_t* p4est,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
+ d4est_ghost_t* ghost,
+ d4est_ghost_data_t* ghost_data,
  d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
@@ -439,7 +439,7 @@ void multi_puncture_apply_jac_add_nonlinear_term_using_matrix
   double* M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, prob_vecs->local_nodes);
   problem_ctx_t* ctx = user;
   d4est_solver_multigrid_t* mg_data = ctx->mg_data;
-  multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
+  d4est_solver_multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
   int matrix_stride = 0;
   for (p4est_topidx_t tt = p4est->first_local_tree;
@@ -468,11 +468,11 @@ void multi_puncture_apply_jac_add_nonlinear_term_using_matrix
 
 
 static
-void multi_puncture_apply_jac_add_nonlinear_term
+void multi_punctures_apply_jac_add_nonlinear_term
 (
  p4est_t* p4est,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
+ d4est_ghost_t* ghost,
+ d4est_ghost_data_t* ghost_data,
  d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
@@ -526,11 +526,13 @@ void multi_puncture_apply_jac_add_nonlinear_term
            J_quad,
            ed->deg_quad,
            &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[ed->nodal_stride],
-           multi_puncture_plus_7o8_K2_psi_neg8,
+           multi_punctures_plus_7o8_K2_psi_neg8,
            user,
            NULL,
            NULL,
-           QUAD_APPLY_MATRIX
+           QUAD_APPLY_MATRIX,
+           0, /* do not interpolate f */
+           md_on_e.xyz
           );
 
       }
@@ -542,11 +544,11 @@ void multi_puncture_apply_jac_add_nonlinear_term
 
 
 static
-void multi_puncture_apply_jac
+void multi_punctures_apply_jac
 (
  p4est_t* p4est,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
+ d4est_ghost_t* d4est_ghost,
+ d4est_ghost_data_t* d4est_ghost_data,
  d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
@@ -556,75 +558,77 @@ void multi_puncture_apply_jac
 )
 {
   problem_ctx_t* ctx = user;
-  multi_puncture_params_t* params = ctx->multi_puncture_params;
-  d4est_laplacian_flux_data_t* flux_data = ctx->flux_data_for_jac;
+  multi_punctures_params_t* params = ctx->multi_punctures_params;
+  d4est_laplacian_with_opt_flux_data_t* flux_data = ctx->flux_data_for_jac;
   D4EST_ASSERT(params->number_of_punctures > 0);
-  d4est_laplacian_apply_aij(p4est,
-                          ghost,
-                          ghost_data,
-                          prob_vecs,
-                          flux_data,
-                          d4est_ops,
-                          d4est_geom,
-                          d4est_quad,
-                          d4est_factors
-                         );
-  
+  d4est_laplacian_with_opt_apply_aij
+    (
+     p4est,
+     d4est_ghost,
+     d4est_ghost_data,
+     prob_vecs,
+     flux_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     0
+    );
 
   if (ctx->use_matrix_operator == 0)
-    multi_puncture_apply_jac_add_nonlinear_term
-      (
-       p4est,
-       ghost,
-       ghost_data,
-       prob_vecs,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       user
-      );
+    multi_punctures_apply_jac_add_nonlinear_term
+     (
+     p4est,
+     d4est_ghost,
+     d4est_ghost_data,
+     prob_vecs,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     user
+    );
   else {
     
     d4est_solver_multigrid_t* mg_data = ctx->mg_data;
-    multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
+    d4est_solver_multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
 
     if (matrix_op->matrix != matrix_op->matrix_at0){
-    multi_puncture_apply_jac_add_nonlinear_term_using_matrix
-      (
-       p4est,
-       ghost,
-       ghost_data,
-       prob_vecs,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       user
-      );
+    multi_punctures_apply_jac_add_nonlinear_term_using_matrix
+    (
+     p4est,
+     d4est_ghost,
+     d4est_ghost_data,
+     prob_vecs,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     user
+    );
     }
     else {
-    multi_puncture_apply_jac_add_nonlinear_term
-      (
-       p4est,
-       ghost,
-       ghost_data,
-       prob_vecs,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       user
-      );
+    multi_punctures_apply_jac_add_nonlinear_term
+    (
+     p4est,
+     d4est_ghost,
+     d4est_ghost_data,
+     prob_vecs,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     user
+    );
     }
   }
 }
 
 static void
-multi_puncture_build_residual_add_nonlinear_term
+multi_punctures_build_residual_add_nonlinear_term
 (
  p4est_t* p4est,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
+ d4est_ghost_t* ghost,
+ d4est_ghost_data_t* ghost_data,
  d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
@@ -679,10 +683,12 @@ multi_puncture_build_residual_add_nonlinear_term
            md_on_e.xyz_quad,
            ed->deg_quad,
            &M_neg_1o8_K2_psi_neg7_vec[ed->nodal_stride],
-           multi_puncture_neg_1o8_K2_psi_neg7,
+           multi_punctures_neg_1o8_K2_psi_neg7,
            user,
            NULL,
-           NULL
+           NULL,
+           0,
+           md_on_e.xyz
           );
       }
     }
@@ -698,11 +704,11 @@ multi_puncture_build_residual_add_nonlinear_term
 
 
 static void
-multi_puncture_build_residual
+multi_punctures_build_residual
 (
  p4est_t* p4est,
- p4est_ghost_t* ghost,
- d4est_element_data_t* ghost_data,
+ d4est_ghost_t* d4est_ghost,
+ d4est_ghost_data_t* d4est_ghost_data,
  d4est_elliptic_data_t* prob_vecs,
  d4est_operators_t* d4est_ops,
  d4est_geometry_t* d4est_geom,
@@ -712,25 +718,28 @@ multi_puncture_build_residual
 )
 {
   problem_ctx_t* ctx = user;
-  multi_puncture_params_t* params = ctx->multi_puncture_params;
-  d4est_laplacian_flux_data_t* flux_data = ctx->flux_data_for_res;
+  multi_punctures_params_t* params = ctx->multi_punctures_params;
+  d4est_laplacian_with_opt_flux_data_t* flux_data = ctx->flux_data_for_res;
   
-  d4est_laplacian_apply_aij(p4est,
-                          ghost,
-                          ghost_data,
-                          prob_vecs,
-                          flux_data,
-                          d4est_ops,
-                          d4est_geom,
-                          d4est_quad,
-                          d4est_factors
-                         );
-
-  multi_puncture_build_residual_add_nonlinear_term
+  d4est_laplacian_with_opt_apply_aij
     (
      p4est,
-     ghost,
-     ghost_data,
+     d4est_ghost,
+     d4est_ghost_data,
+     prob_vecs,
+     flux_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     0
+    );
+
+  multi_punctures_build_residual_add_nonlinear_term
+    (
+     p4est,
+     d4est_ghost,
+     d4est_ghost_data,
      prob_vecs,
      d4est_ops,
      d4est_geom,
@@ -741,7 +750,7 @@ multi_puncture_build_residual
 }
 
 double
-multi_puncture_robin_coeff_brick_fcn
+multi_punctures_robin_coeff_brick_fcn
 (
  double x,
  double y,
@@ -749,7 +758,7 @@ multi_puncture_robin_coeff_brick_fcn
  double z,
 #endif
  void* user,
- d4est_laplacian_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_with_opt_flux_boundary_data_t* boundary_data,
  int mortar_node
 )
 {
@@ -769,7 +778,7 @@ multi_puncture_robin_coeff_brick_fcn
 }
 
 double
-multi_puncture_robin_coeff_sphere_fcn
+multi_punctures_robin_coeff_sphere_fcn
 (
  double x,
  double y,
@@ -777,7 +786,7 @@ multi_puncture_robin_coeff_sphere_fcn
  double z,
 #endif
  void* user,
- d4est_laplacian_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_with_opt_flux_boundary_data_t* boundary_data,
  int mortar_node
 )
 {
@@ -788,7 +797,7 @@ multi_puncture_robin_coeff_sphere_fcn
 
 
 double
-multi_puncture_robin_bc_rhs_fcn
+multi_punctures_robin_bc_rhs_fcn
 (
  double x,
  double y,
@@ -796,7 +805,7 @@ multi_puncture_robin_bc_rhs_fcn
  double z,
 #endif
  void* user,
- d4est_laplacian_flux_boundary_data_t* boundary_data,
+ d4est_laplacian_with_opt_flux_boundary_data_t* boundary_data,
  int mortar_node
 )
 {
@@ -804,7 +813,7 @@ multi_puncture_robin_bc_rhs_fcn
 }
 
 static double
-multi_puncture_initial_guess
+multi_punctures_initial_guess
 (
  double x,
  double y,
@@ -823,18 +832,21 @@ multi_puncture_initial_guess
 
 
 static
-void multi_puncture_d4est_krylov_pc_setup_fcn
+void multi_punctures_d4est_krylov_pc_setup_fcn
 (
  d4est_krylov_pc_t* d4est_krylov_pc
 )
 {
-  d4est_solver_multigrid_t* mg_data = d4est_krylov_pc->pc_data;
+  zlog_category_t *c_def = zlog_get_category("d4est_solver_multigrid_matrix_operator");
+  d4est_krylov_pc_multigrid_data_t* d4est_krylov_pcmgdata = d4est_krylov_pc->pc_data;
+  d4est_solver_multigrid_t* mg_data = d4est_krylov_pcmgdata->mg_data;
   krylov_ctx_t* ctx = d4est_krylov_pc->pc_ctx;
 
-  if (ctx->p4est->mpirank == 0)
-    printf("[KRYLOV_PC_MULTIGRID_SETUP_FCN] Initializing Matrix Operator\n");
+  if (ctx->p4est->mpirank == 0){
+    zlog_info(c_def, "Running two_punctures_pc_setup_fcn");
+  }
   
-  multigrid_matrix_setup_fofufofvlilj_operator
+    d4est_solver_multigrid_matrix_setup_fofufofvlilj_operator
       (
        ctx->p4est,
        ctx->d4est_ops,
@@ -843,12 +855,177 @@ void multi_puncture_d4est_krylov_pc_setup_fcn
        ctx->d4est_factors,
        ctx->vecs->u0,
        NULL,
-       multi_puncture_plus_7o8_K2_psi_neg8,
+       multi_punctures_plus_7o8_K2_psi_neg8,
        ctx->fcns->user,
        NULL,
        NULL,
        mg_data->user_callbacks->user
       ); 
+}
+
+
+static void
+multi_punctures_pointwise_residual
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ double* u,
+ double* residual_pointwise_quad,
+ int interpolation_option,
+ void* user
+){
+  //interpolation option = 0 -> interpolate u to quad and compute
+  //f(u) on quad
+
+  //interpolation option = 1 -> interpolate f(u) to quad  
+  d4est_hessian_compute_hessian_trace_of_field_on_quadrature_points
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     HESSIAN_ANALYTICAL,
+     u,
+     residual_pointwise_quad
+    );
+
+  if (interpolation_option == 0){
+    double* u_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt){
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq =  ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
+#if (P4EST_DIM)==3
+        mesh_object.q[2] = ed->q[2];
+#endif
+
+        d4est_mesh_data_on_element_t md_on_e
+          = d4est_mesh_data_on_element
+          (
+           d4est_factors,
+           ed
+          );
+
+
+
+        d4est_quadrature_interpolate
+          (
+           d4est_ops,
+           d4est_quad,
+           d4est_geom,
+           &mesh_object,
+           QUAD_OBJECT_VOLUME,
+           QUAD_INTEGRAND_UNKNOWN,
+           &u[ed->nodal_stride],
+           ed->deg,
+           &u_quad[ed->quad_stride],
+           ed->deg_quad
+          );
+
+        int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
+
+
+        for (int i = 0; i < volume_nodes_quad; i++){
+          double x = md_on_e.xyz_quad[0][i];
+          double y = md_on_e.xyz_quad[1][i];
+          double z = md_on_e.xyz_quad[2][i];
+          double u = u_quad[ed->quad_stride + i];
+
+          residual_pointwise_quad[ed->quad_stride +  i] =
+            multi_punctures_neg_1o8_K2_psi_neg7(x,y,z,u,user)
+            - residual_pointwise_quad[ed->quad_stride +  i];
+        }
+      }
+    }
+    P4EST_FREE(u_quad);
+  }
+  else {
+    double* f_quad = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes_quad);
+    double* f_lob = P4EST_ALLOC(double, d4est_factors->local_sizes.local_nodes);
+    for (p4est_topidx_t tt = p4est->first_local_tree;
+         tt <= p4est->last_local_tree;
+         ++tt){
+      p4est_tree_t* tree = p4est_tree_array_index (p4est->trees, tt);
+      sc_array_t* tquadrants = &tree->quadrants;
+      int QQ = (p4est_locidx_t) tquadrants->elem_count;
+
+      for (int qq = 0; qq < QQ; ++qq) {
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (tquadrants, qq);
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+        
+        d4est_quadrature_volume_t mesh_object;
+        mesh_object.dq =  ed->dq;
+        mesh_object.tree = ed->tree;
+        mesh_object.element_id = ed->id;
+        
+        mesh_object.q[0] = ed->q[0];
+        mesh_object.q[1] = ed->q[1];
+#if (P4EST_DIM)==3
+        mesh_object.q[2] = ed->q[2];
+#endif
+
+        d4est_mesh_data_on_element_t md_on_e
+          = d4est_mesh_data_on_element
+          (
+           d4est_factors,
+           ed
+          );
+        
+        int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
+        int volume_nodes_quad = d4est_lgl_get_nodes((P4EST_DIM), ed->deg_quad);
+
+        for (int i = 0; i < volume_nodes; i++){
+          double x = md_on_e.xyz[0][i];
+          double y = md_on_e.xyz[1][i];
+          double z = md_on_e.xyz[2][i];
+          f_lob[ed->nodal_stride + i] =
+            multi_punctures_neg_1o8_K2_psi_neg7(x,y,z,u[ed->nodal_stride + i],user);
+        }
+
+
+        d4est_quadrature_interpolate
+          (
+           d4est_ops,
+           d4est_quad,
+           d4est_geom,
+           &mesh_object,
+           QUAD_OBJECT_VOLUME,
+           QUAD_INTEGRAND_UNKNOWN,
+           &f_lob[ed->nodal_stride],
+           ed->deg,
+           &f_quad[ed->quad_stride],
+           ed->deg_quad
+          );
+        
+        for (int i = 0; i < volume_nodes_quad; i++){
+          residual_pointwise_quad[ed->quad_stride +  i] =
+            f_quad[ed->quad_stride + i]
+            - residual_pointwise_quad[ed->quad_stride +  i];
+        }
+    
+      }
+    }
+    P4EST_FREE(f_quad);
+    P4EST_FREE(f_lob);
+  }   
 }
 
 

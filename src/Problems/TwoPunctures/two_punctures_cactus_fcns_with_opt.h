@@ -730,17 +730,19 @@ two_punctures_build_residual
   two_punctures_params_t* params = ctx->two_punctures_params;
   d4est_laplacian_with_opt_flux_data_t* flux_data = ctx->flux_data_for_res;
   
-  d4est_laplacian_with_opt_apply_aij(p4est,
-                          d4est_ghost,
-                          d4est_ghost_data,
-                          prob_vecs,
-                          flux_data,
-                          d4est_ops,
-                          d4est_geom,
-                          d4est_quad,
-                          d4est_factors,
-                          0
-                         );
+  d4est_laplacian_with_opt_apply_aij
+    (
+     p4est,
+     d4est_ghost,
+     d4est_ghost_data,
+     prob_vecs,
+     flux_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     0
+    );
 
   two_punctures_build_residual_add_nonlinear_term
     (
