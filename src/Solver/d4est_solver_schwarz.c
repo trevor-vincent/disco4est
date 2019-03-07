@@ -88,17 +88,14 @@ d4est_solver_schwarz_init
                                                        &field_type,
                                                        1
                                                       );
-;
+
   schwarz->correction_ghost_data = NULL;
 
-  /* schwarz->collect_subdomain_solve_info = 1; */
-  /* if (schwarz->collect_subdomain_solve_info){ */
-    schwarz->subdomain_solve_residuals = P4EST_ALLOC_ZERO(double,
-                                                     p4est->local_num_quadrants);
+  schwarz->subdomain_solve_residuals = P4EST_ALLOC_ZERO(double,
+                                                        p4est->local_num_quadrants);
 
-    schwarz->subdomain_solve_iterations = P4EST_ALLOC_ZERO(int,
-                                                      p4est->local_num_quadrants);
-  /* } */
+  schwarz->subdomain_solve_iterations = P4EST_ALLOC_ZERO(int,
+                                                         p4est->local_num_quadrants);
 
 
   

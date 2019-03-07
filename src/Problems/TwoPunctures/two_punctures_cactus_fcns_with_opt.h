@@ -1013,9 +1013,9 @@ two_punctures_cactus_schwarz_apply_lhs
                );
 
       for (int i = 0; i < (P4EST_DIM); i++){
-          xyz_quad[i] = &d4est_factors->rst_xyz_quad
-                               [(i)*d4est_factors->local_sizes.local_nodes_quad
-                                + mesh_ed->quad_stride];
+          xyz_quad[i] = &d4est_factors->xyz_quad
+                        [(i)*d4est_factors->local_sizes.local_nodes_quad
+                         + mesh_ed->quad_stride];
       }
     }
     else {
@@ -1026,6 +1026,7 @@ two_punctures_cactus_schwarz_apply_lhs
          0,
          schwarz_cactus->u0_ghost_data
         );
+      /* printf("u0_ed[0] = %f\n", u0_ed[0]); */
       
       mesh_ed = &d4est_ghost->ghost_elements[schwarz_ed->id];
       int ghost_quad_stride = schwarz_geometric_data->volume_quad_strides_per_ghost[schwarz_ed->id];
@@ -1035,6 +1036,7 @@ two_punctures_cactus_schwarz_apply_lhs
           xyz_quad[i] = &schwarz_geometric_data->xyz_quad_ghost
                         [(i)*total_ghost_size
                          + ghost_quad_stride];
+          /* printf("xyz_quad[i] = %f\n", xyz_quad[i][0]); */
       }     
     }
     int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),
@@ -1061,7 +1063,7 @@ two_punctures_cactus_schwarz_apply_lhs
        QUAD_OBJECT_VOLUME,
        QUAD_INTEGRAND_UNKNOWN,
        &transpose_restricted_u[stride],
-       &u0[stride],
+       u0_ed,
        NULL,
        mesh_ed->deg,
        xyz_quad,
@@ -1076,7 +1078,7 @@ two_punctures_cactus_schwarz_apply_lhs
        0,
        NULL
       );
-
+    
     stride += volume_nodes_lobatto;
   }        
 

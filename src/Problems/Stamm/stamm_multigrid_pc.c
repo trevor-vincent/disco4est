@@ -345,9 +345,8 @@ problem_init
     /* } */
     
     
-   char* u_corner_file;
-    /* sprintf(u_corner_file, "%s%s_%d", folder,  "u_corner"); */
-    asprintf(&u_corner_file, "%s%s", folder,  "u_corner");
+    char* u_corner_file = P4EST_ALLOC(char, 100);
+    sprintf(u_corner_file, "%s_%d", "u_corner", level);
     /* sprintf(u_corner_file, "%s_%d",  "u_corner"); */
     p4est_vtk_ext_write_all
       (p4est,
@@ -364,13 +363,7 @@ problem_init
        u_vertex
       );
 
-    /* P4EST_FREE(u_corner_file); */
-    /* P4EST_FREE(u_vertex); */
-    free(folder);
-
-
-    
-    free(u_corner_file);
+    P4EST_FREE(u_corner_file);    
     P4EST_FREE(u_analytic);
     P4EST_FREE(u_vertex);
     P4EST_FREE(error);
