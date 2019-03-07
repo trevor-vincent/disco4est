@@ -322,6 +322,7 @@ int main(int argc, char *argv[])
     apply_lhs = d4est_solver_schwarz_apply_lhs_init
     (
      d4est_test_schwarz_apply_lhs,
+     NULL,
      flux_data_for_apply_lhs
     );
 
@@ -400,7 +401,7 @@ d4est_solver_schwarz_t* schwarz =
        d4est_factors,
        d4est_ghost,
        schwarz,
-       u,
+       &elliptic_data,
        r
       );
 

@@ -343,6 +343,7 @@ d4est_solver_schwarz_geometric_data_destroy
   P4EST_FREE(schwarz_geometric_data->zero_and_skip_p);
   P4EST_FREE(schwarz_geometric_data->J_quad_ghost);
   P4EST_FREE(schwarz_geometric_data->rst_xyz_quad_ghost);
+  P4EST_FREE(schwarz_geometric_data->xyz_quad_ghost);
   P4EST_FREE(schwarz_geometric_data->volume_quad_strides_per_ghost);
   /* P4EST_FREE(schwarz_geometric_data->skip_p_sum); */
   
@@ -1063,6 +1064,9 @@ d4est_solver_schwarz_geometric_data_input
   
   schwarz_geometric_data->J_quad_ghost = P4EST_ALLOC(double, ghost_volume_quad_size);
   schwarz_geometric_data->rst_xyz_quad_ghost = P4EST_ALLOC(double, (P4EST_DIM)*(P4EST_DIM)*ghost_volume_quad_size);
+
+  schwarz_geometric_data->xyz_quad_ghost = P4EST_ALLOC(double, (P4EST_DIM)*ghost_volume_quad_size);
+  
   schwarz_geometric_data->volume_quad_strides_per_ghost
     = P4EST_ALLOC(
      int,
@@ -1076,8 +1080,8 @@ d4est_solver_schwarz_geometric_data_input
     int volume_nodes = d4est_lgl_get_nodes((P4EST_DIM), ged->deg);
 
 
-    double* xyz_quad_ghost [P4EST_DIM];
-    D4EST_ALLOC_DIM_VEC(xyz_quad_ghost, volume_nodes_quad);
+    /* double* xyz_quad_ghost [P4EST_DIM]; */
+    /* D4EST_ALLOC_DIM_VEC(xyz_quad_ghost, volume_nodes_quad); */
     double* xyz_lobatto_ghost [P4EST_DIM];
     D4EST_ALLOC_DIM_VEC(xyz_lobatto_ghost, volume_nodes);
     double* xyz_rst_quad_ghost [P4EST_DIM][P4EST_DIM];
@@ -1087,6 +1091,7 @@ d4est_solver_schwarz_geometric_data_input
       = &schwarz_geometric_data->J_quad_ghost[volume_ghost_quad_stride];
 
     double* rst_xyz_quad_ghost [(P4EST_DIM)][(P4EST_DIM)];
+    double* xyz_quad_ghost [(P4EST_DIM)];
 
     for (int i = 0; i < (P4EST_DIM); i++){
       for (int j = 0; j < (P4EST_DIM); j++){
@@ -1094,6 +1099,8 @@ d4est_solver_schwarz_geometric_data_input
             &schwarz_geometric_data->rst_xyz_quad_ghost
             [volume_ghost_quad_stride + (i*(P4EST_DIM) + j)*ghost_volume_quad_size];
       }
+      xyz_quad_ghost[i] = &schwarz_geometric_data->xyz_quad_ghost
+            [volume_ghost_quad_stride + (i)*ghost_volume_quad_size];
     }
 
     
@@ -1218,7 +1225,7 @@ d4est_solver_schwarz_geometric_data_input
 
     /* printf("rank %d, gid %d, stride %d, rst[1][0][0] = %.15f\n",  p4est->mpirank, gid, volume_ghost_quad_stride, rst_xyz_quad_ghost[1][0][0]); */
 
-    D4EST_FREE_DIM_VEC(xyz_quad_ghost);
+    /* D4EST_FREE_DIM_VEC(xyz_quad_ghost); */
     D4EST_FREE_DIM_VEC(xyz_lobatto_ghost);
     D4EST_FREE_DBYD_MAT(xyz_rst_quad_ghost);
     schwarz_geometric_data->volume_quad_strides_per_ghost[gid] = volume_ghost_quad_stride;

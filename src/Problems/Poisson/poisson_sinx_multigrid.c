@@ -189,6 +189,7 @@ problem_init
     apply_lhs = d4est_solver_schwarz_apply_lhs_init
     (
      poisson_sinx_schwarz_apply_lhs,
+     NULL,
      flux_data_for_apply_lhs
     );
     

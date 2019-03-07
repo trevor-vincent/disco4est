@@ -64,6 +64,7 @@ typedef struct {
   /* volume geometry data for ghosts */
   double* J_quad_ghost;
   double* rst_xyz_quad_ghost;
+  double* xyz_quad_ghost;
   int* volume_quad_strides_per_ghost;
   int total_ghost_volume_quad_size;
   

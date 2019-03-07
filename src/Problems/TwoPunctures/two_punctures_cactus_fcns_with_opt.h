@@ -10,6 +10,9 @@
 #include <d4est_solver_multigrid_matrix_operator.h>
 #include <d4est_mesh.h>
 #include <d4est_hessian.h>
+#include <d4est_solver_schwarz.h>
+#include <d4est_solver_schwarz_helpers.h>
+#include <d4est_solver_schwarz_laplacian_ext.h>
 
 typedef struct {
 
@@ -87,16 +90,7 @@ BY_Aijofxyz (double x, double y, double z, double Aij[3][3], void* user)
 
   r2_plus = (x - params->par_b) * (x - params->par_b) + y * y + z * z;
   r2_minus = (x + params->par_b) * (x + params->par_b) + y * y + z * z;
-  
-  /* r2_plus = sqrt (pow (r2_plus, 2) + pow (params->TP_epsilon, 4)); */
-  /* r2_minus = sqrt (pow (r2_minus, 2) + pow (params->TP_epsilon, 4)); */
-  /* r2_plus = sqrt(r2_plus*r2_plus + params->TP_epsilon*params->TP_epsilon*params->TP_epsilon*params->TP_epsilon); */
-  /* r2_minus = sqrt(r2_minus*r2_minus + params->TP_epsilon*params->TP_epsilon*params->TP_epsilon*params->TP_epsilon); */  
-  /* if (r2_plus < params->TP_Tiny*params->TP_Tiny) */
-    /* r2_plus = params->TP_Tiny*params->TP_Tiny; */
-  /* if (r2_minus < pow(params->TP_Tiny,2)) */
-    /* r2_minus = pow(params->TP_Tiny,2); */
-  
+    
   r_plus = sqrt (r2_plus);
   r_minus = sqrt (r2_minus);
   r3_plus = r_plus * r2_plus;
@@ -869,4 +863,245 @@ void two_punctures_pc_setup_fcn
       ); 
 }
 
+typedef struct{
+
+  problem_ctx_t* problem_ctx;
+  double* u0;
+  d4est_ghost_data_t* u0_ghost_data;
+  d4est_laplacian_flux_data_t* flux_data_for_jac_nonopt;
+  
+}two_punctures_cactus_schwarz_t;
+
+/** 
+ * Only good for use when schwarz is a pc
+ * do not use with e.g. multigrid
+ * 
+ * @param p4est 
+ * @param d4est_ops 
+ * @param d4est_geom 
+ * @param d4est_quad 
+ * @param d4est_factors 
+ * @param d4est_ghost 
+ * @param schwarz_ops 
+ * @param schwarz_data 
+ * @param schwarz_geometric_data 
+ * @param subdomain 
+ * @param u_restricted_field_over_subdomain 
+ * @param Au_restricted_field_over_subdomain 
+ * @param ctx 
+ */
+void
+two_punctures_cactus_schwarz_apply_lhs_getctx_pconly_fcn
+(
+ p4est_t* p4est,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_ghost_t* d4est_ghost,
+ d4est_solver_schwarz_operators_t* schwarz_ops,
+ d4est_solver_schwarz_metadata_t* schwarz_data,
+ d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data,
+ d4est_elliptic_data_t* vecs,
+ void* ctx
+)
+{
+  two_punctures_cactus_schwarz_t* schwarz_cactus = ctx;
+  schwarz_cactus->u0 = vecs->u0;
+  d4est_ghost_data_exchange
+    (
+     p4est,
+     d4est_ghost,
+     schwarz_cactus->u0_ghost_data,
+     schwarz_cactus->u0
+    );
+}
+
+void
+two_punctures_cactus_schwarz_apply_lhs
+(
+ p4est_t* p4est,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ d4est_ghost_t* d4est_ghost,
+ d4est_solver_schwarz_operators_t* schwarz_ops,
+ d4est_solver_schwarz_metadata_t* schwarz_data,
+ d4est_solver_schwarz_geometric_data_t* schwarz_geometric_data,
+ int subdomain,
+ double* u_restricted_field_over_subdomain,
+ double* Au_restricted_field_over_subdomain,
+ void* ctx
+)
+{
+  two_punctures_cactus_schwarz_t* schwarz_cactus = ctx;
+  problem_ctx_t* problem_ctx = schwarz_cactus->problem_ctx;
+  two_punctures_params_t* two_punctures_params = problem_ctx->two_punctures_params;
+  double* u0 = schwarz_cactus->u0;
+
+    d4est_solver_schwarz_subdomain_metadata_t* sub_data = &schwarz_data->subdomain_metadata[subdomain];
+  /* TODO: save some time by transpose restricted u here and then
+   * sending that into the laplacian function, then we don't need
+   * to recompute it for the Mf(u0)u term
+   *
+   */
+  
+  d4est_solver_schwarz_laplacian_ext_apply_over_subdomain
+    (
+     p4est,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors,
+     d4est_ghost,
+     schwarz_data,
+     schwarz_ops,
+     schwarz_geometric_data,
+     schwarz_cactus->flux_data_for_jac_nonopt,
+     u_restricted_field_over_subdomain,
+     Au_restricted_field_over_subdomain,
+     subdomain
+    );
+
+  double* transpose_restricted_u = P4EST_ALLOC(double, sub_data->nodal_size);
+  double* M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, sub_data->nodal_size);
+  double* restricted_M_plus_7o8_K2_psi_neg8_of_u0_u_vec = P4EST_ALLOC(double, sub_data->restricted_nodal_size);
+  
+  d4est_solver_schwarz_apply_restrict_transpose_to_restricted_field_over_subdomain
+    (
+     schwarz_data,
+     schwarz_ops,
+     u_restricted_field_over_subdomain,
+     transpose_restricted_u,
+     subdomain
+    );        
+    
+  
+  int stride = 0;
+  for (int el = 0; el < sub_data->num_elements; el++){
+    /* printf("\n element %d\n", i); */
+  
+    d4est_solver_schwarz_element_metadata_t* schwarz_ed = &sub_data->element_metadata[el];
+
+    d4est_element_data_t* mesh_ed = NULL;
+    double* J_quad = NULL;
+
+    int is_ghost = schwarz_ed->mpirank != p4est->mpirank;
+    double* xyz_quad [P4EST_DIM];
+    double* u0_ed = NULL;
+    /* d4est_element_data_t* mesh_ed; */
+    if (!is_ghost){
+      mesh_ed = d4est_element_data_get_ptr
+                                      (
+                                       p4est,
+                                       schwarz_ed->tree,
+                                       schwarz_ed->tree_quadid
+                                      );
+      u0_ed = &schwarz_cactus->u0[mesh_ed->nodal_stride];
+      
+      mesh_ed = d4est_element_data_get_ptr
+                (
+                 p4est,
+                 schwarz_ed->tree,
+                 schwarz_ed->tree_quadid
+                );
+
+      J_quad = d4est_mesh_get_jacobian_on_quadrature_points
+               (
+                d4est_factors,
+                mesh_ed
+               );
+
+      for (int i = 0; i < (P4EST_DIM); i++){
+          xyz_quad[i] = &d4est_factors->rst_xyz_quad
+                               [(i)*d4est_factors->local_sizes.local_nodes_quad
+                                + mesh_ed->quad_stride];
+      }
+    }
+    else {
+      u0_ed =
+        d4est_ghost_data_get_field_on_element
+        (
+         &d4est_ghost->ghost_elements[schwarz_ed->id],
+         0,
+         schwarz_cactus->u0_ghost_data
+        );
+      
+      mesh_ed = &d4est_ghost->ghost_elements[schwarz_ed->id];
+      int ghost_quad_stride = schwarz_geometric_data->volume_quad_strides_per_ghost[schwarz_ed->id];
+      int total_ghost_size = schwarz_geometric_data->total_ghost_volume_quad_size;
+      J_quad = &schwarz_geometric_data->J_quad_ghost[ghost_quad_stride];
+      for (int i = 0; i < (P4EST_DIM); i++){
+          xyz_quad[i] = &schwarz_geometric_data->xyz_quad_ghost
+                        [(i)*total_ghost_size
+                         + ghost_quad_stride];
+      }     
+    }
+    int volume_nodes_lobatto = d4est_lgl_get_nodes((P4EST_DIM),
+                                                   schwarz_ed->deg);
+
+
+    d4est_quadrature_volume_t mesh_vol = {.dq = mesh_ed->dq,
+                                          .tree = mesh_ed->tree,
+                                          .q[0] = mesh_ed->q[0],
+                                          .q[1] = mesh_ed->q[1],
+#if (P4EST_DIM)==3                                              
+                                          .q[2] = mesh_ed->q[2],
 #endif
+                                          .element_id = mesh_ed->id
+                                         };
+
+
+    d4est_quadrature_apply_fofufofvlilj
+      (
+       d4est_ops,
+       d4est_geom,
+       d4est_quad,
+       &mesh_vol,
+       QUAD_OBJECT_VOLUME,
+       QUAD_INTEGRAND_UNKNOWN,
+       &transpose_restricted_u[stride],
+       &u0[stride],
+       NULL,
+       mesh_ed->deg,
+       xyz_quad,
+       J_quad,
+       mesh_ed->deg_quad,
+       &M_plus_7o8_K2_psi_neg8_of_u0_u_vec[stride],
+       two_punctures_plus_7o8_K2_psi_neg8, 
+       problem_ctx,
+       NULL,
+       NULL,
+       QUAD_APPLY_MATRIX,
+       0,
+       NULL
+      );
+
+    stride += volume_nodes_lobatto;
+  }        
+
+  d4est_solver_schwarz_convert_field_over_subdomain_to_restricted_field_over_subdomain
+    (
+     schwarz_data,
+     schwarz_ops,
+     M_plus_7o8_K2_psi_neg8_of_u0_u_vec,
+     restricted_M_plus_7o8_K2_psi_neg8_of_u0_u_vec,
+     subdomain
+    );
+  
+  /* TODO restrict M_plus */
+
+  for (int i = 0; i < sub_data->restricted_nodal_size; i++){
+    Au_restricted_field_over_subdomain[i] += restricted_M_plus_7o8_K2_psi_neg8_of_u0_u_vec[i];
+  }
+
+  P4EST_FREE(transpose_restricted_u);
+  P4EST_FREE(M_plus_7o8_K2_psi_neg8_of_u0_u_vec);
+  P4EST_FREE(restricted_M_plus_7o8_K2_psi_neg8_of_u0_u_vec);
+}
+
+
+
+#endif
+
+

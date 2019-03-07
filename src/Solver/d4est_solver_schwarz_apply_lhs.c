@@ -4,6 +4,7 @@ d4est_solver_schwarz_apply_lhs_t*
 d4est_solver_schwarz_apply_lhs_init
 (
  d4est_solver_schwarz_apply_lhs_fcn_t fcn,
+ d4est_solver_schwarz_apply_lhs_getctx_fcn_t get_ctx_fcn,
  void* fcn_ctx
 )
 {
@@ -12,6 +13,7 @@ d4est_solver_schwarz_apply_lhs_init
 
   apply_lhs->apply_lhs_fcn = fcn;
   apply_lhs->apply_lhs_ctx = fcn_ctx;
+  apply_lhs->get_ctx_fcn = get_ctx_fcn;
   return apply_lhs;
 }
 

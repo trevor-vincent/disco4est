@@ -141,7 +141,7 @@ d4est_solver_multigrid_smoother_schwarz
        updater->current_d4est_factors,
        updater->current_d4est_ghost,
        smoother_data->schwarz_on_level[level],
-       vecs->u,
+       vecs,
        r
       );
     

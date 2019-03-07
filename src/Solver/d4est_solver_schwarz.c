@@ -180,10 +180,12 @@ d4est_solver_schwarz_iterate
  d4est_mesh_data_t* d4est_factors,
  d4est_ghost_t* ghost,
  d4est_solver_schwarz_t* schwarz,
- double* u,
+ d4est_elliptic_data_t* vecs,
+ /* double* u, */
  double* r
 )
 {
+  double* u = vecs->u;
   d4est_solver_schwarz_operators_t* schwarz_ops
     = schwarz->operators;
 
@@ -216,6 +218,22 @@ d4est_solver_schwarz_iterate
      restricted_r
     );
 
+  if(schwarz->apply_lhs->get_ctx_fcn != NULL){
+    schwarz->apply_lhs->get_ctx_fcn
+      (
+       p4est,
+       d4est_geom,
+       d4est_quad,
+       d4est_factors,
+       ghost,
+       schwarz_ops,
+       schwarz_metadata,
+       schwarz->geometric_data,
+       vecs,
+       schwarz->apply_lhs->apply_lhs_ctx
+      );
+  }
+  
   for (int i = 0; i < schwarz_metadata->num_subdomains; i++){
     d4est_solver_schwarz_subdomain_metadata_t sub_data = schwarz_metadata->subdomain_metadata[i];
     /* if (i == 1){ */

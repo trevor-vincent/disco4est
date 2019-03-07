@@ -76,6 +76,7 @@ d4est_krylov_pc_schwarz_apply(d4est_krylov_pc_t* kpc, double* xp, double* yp)
   schwarz_prob_vecs.u = yp;
   schwarz_prob_vecs.rhs = xp;
   schwarz_prob_vecs.Au = Au;
+  schwarz_prob_vecs.u0 = kct->vecs->u0;
 
   for (int i = 0; i < kpcschwarz->iterations; i++){
   
@@ -103,7 +104,8 @@ d4est_krylov_pc_schwarz_apply(d4est_krylov_pc_t* kpc, double* xp, double* yp)
        kct->d4est_factors,
        *kct->ghost,
        schwarz,
-       schwarz_prob_vecs.u,
+       /* schwarz_prob_vecs.u, */
+       &schwarz_prob_vecs,
        residual
       );
 

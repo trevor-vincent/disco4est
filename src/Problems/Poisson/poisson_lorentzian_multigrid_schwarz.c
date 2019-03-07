@@ -373,6 +373,7 @@ problem_init
     apply_lhs = d4est_solver_schwarz_apply_lhs_init
     (
      lorentzian_schwarz_apply_lhs,
+     NULL,
      flux_data_for_lhs
     );
 

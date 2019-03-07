@@ -8,6 +8,7 @@
 #include <d4est_solver_schwarz_operators.h>
 #include <d4est_solver_schwarz_apply_lhs.h>
 #include <d4est_solver_schwarz_subdomain_solver.h>
+#include <d4est_elliptic_data.h>
 #include <d4est_operators.h>
 
 typedef struct {
@@ -38,7 +39,7 @@ typedef struct {
 
 /* This file was automatically generated.  Do not edit! */
 void d4est_solver_schwarz_debug_vtk(p4est_t *p4est,d4est_solver_schwarz_t *schwarz,char *input_file,char *input_section,char *save_as,char *folder,int sub_folder_number,const char **dg_field_names,double **dg_fields);
-void d4est_solver_schwarz_iterate(p4est_t *p4est,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_ghost_t *ghost,d4est_solver_schwarz_t *schwarz,double *u,double *r);
+void d4est_solver_schwarz_iterate(p4est_t *p4est,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_mesh_data_t *d4est_factors,d4est_ghost_t *ghost,d4est_solver_schwarz_t *schwarz,d4est_elliptic_data_t *vecs,double *r);
 void d4est_solver_schwarz_destroy(d4est_solver_schwarz_t *schwarz);
 d4est_solver_schwarz_t *d4est_solver_schwarz_init(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_geometry_t *d4est_geom,d4est_quadrature_t *d4est_quad,d4est_ghost_t *d4est_ghost,d4est_mesh_data_t *d4est_factors,d4est_solver_schwarz_operators_t *schwarz_ops,d4est_solver_schwarz_apply_lhs_t *apply_lhs,const char *input_file,const char *input_section);
 

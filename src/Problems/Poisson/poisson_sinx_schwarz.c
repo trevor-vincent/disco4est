@@ -255,6 +255,7 @@ problem_init
     apply_lhs = d4est_solver_schwarz_apply_lhs_init
     (
      poisson_sinx_schwarz_apply_lhs,
+     NULL,
      flux_data_for_apply_lhs
     );
     
@@ -304,11 +305,9 @@ problem_init
        d4est_factors,
        *d4est_ghost,
        schwarz,
-       prob_vecs.u,
+       &prob_vecs,
        residual
       );
-
-
 
     /* char* schwarz_folder; */
     /* asprintf(&schwarz_folder,"Schwarz_%d_%d/", 0, 0); */
