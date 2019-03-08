@@ -248,10 +248,21 @@ double* d4est_operators_2index_fetch
  void (*build_fcn)(d4est_operators_t*, double*, int, int)
 )
 {
+  /* if */
+  /*   ( */
+  /*    deg1 > d4est_ops->max_degree || */
+  /*    deg2 > d4est_ops->max_degree || */
+  /*    deg1 < 0 || */
+  /*    deg2 < 0 */
+  /*   ) */
+  /*   { */
+  /*     printf("deg1, deg2, max_degree = %d %d %d", deg1, deg2, d4est_ops->max_degree); */
+  /*   } */
+
   D4EST_ASSERT(deg1 < d4est_ops->max_degree &&
                deg2 < d4est_ops->max_degree &&
                deg1 > 0 &&
-               deg2 > 0);
+               deg2 > 0);  
   
   if (table[deg1-1][deg2-1] != NULL) {
     return table[deg1-1][deg2-1];

@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <d4est_util.h>
@@ -30,6 +31,7 @@
 #include <d4est_solver_multigrid_element_data_updater.h>
 #include <d4est_hessian.h>
 #include "poisson_lorentzian_fcns_with_opt.h"
+#include <p4est_vtk_ext.h>
 
 int
 keep_region_2_skipper
@@ -360,8 +362,8 @@ problem_init
   prob_fcns.apply_lhs = poisson_lorentzian_apply_lhs;
   prob_fcns.user = &ctx;
   
-  double* error = NULL;
-  double* u_analytic = NULL;
+  /* double* error = NULL; */
+  /* double* u_analytic = NULL; */
   
   d4est_elliptic_data_t prob_vecs;
   prob_vecs.Au = P4EST_ALLOC(double, initial_nodes);
@@ -409,7 +411,6 @@ problem_init
       );
   }
   else {
-
     d4est_checkpoint_read_dataset
       (
        p4est,
@@ -468,78 +469,30 @@ problem_init
   L2_norm_ctx.d4est_quad = d4est_quad;
   L2_norm_ctx.d4est_factors = d4est_factors;
     
-  d4est_norms_fcn_energy_ctx_t energy_norm_ctx;
-  energy_norm_ctx.p4est = p4est;
-  energy_norm_ctx.d4est_ops = d4est_ops;
-  energy_norm_ctx.d4est_geom = d4est_geom;
-  energy_norm_ctx.d4est_quad = d4est_quad;
-  energy_norm_ctx.d4est_factors = d4est_factors;
-  /* energy_norm_ctx.fit = NULL; */
-  // These are updated later
-  energy_norm_ctx.ghost = *d4est_ghost;
-  energy_norm_ctx.ghost_data = d4est_ghost_data;
-  energy_norm_ctx.energy_norm_data = NULL;
-  energy_norm_ctx.energy_estimator_sq_local = -1.;
-  energy_norm_ctx.which_field = 0;
-
-  if (p4est->mpirank == 0)
-    d4est_norms_write_headers(
-                              (const char * []){"u", NULL},
-                              (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
-                              NULL
-    );
-
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry_compactified");
   d4est_geometry_t* d4est_geom_compactified = d4est_geometry_new(p4est->mpirank, input_file,"compactified_geometry", c_geom);
   d4est_mesh_data_t* d4est_factors_compactified = d4est_mesh_data_init(p4est);
 
-  zlog_category_t* zlog_points = zlog_get_category("d4est_points");
-  d4est_norms_linear_fit_t* point_3m_fit = d4est_norms_linear_fit_init(); 
-
-  double point [4][30];
-  double point_diff [4][30];
-  double point_spec_diff [4][30];
-  double point_err [4];
-  double point_dof [30];
-  
-  point[0][0] = 0;
-  point_diff[0][0] = 0;
-  point[1][0] = 0;
-  point_diff[1][0] = 0;
-  point[2][0] = 0;
-  point_diff[2][0] = 0;
-  point[3][0] = 0;
-  point_diff[3][0] = 0;
-  point_dof[0] = 0;
-  point_spec_diff[0][0] = 0;
-  point_spec_diff[1][0] = 0;
-  point_spec_diff[2][0] = 0;
-  point_spec_diff[3][0] = 0;
-
-  int iterations = 1;
+  d4est_mesh_data_realloc
+    (
+     p4est,
+     *d4est_ghost,
+     d4est_factors_compactified,
+     d4est_factors->local_sizes
+    );
     
-  for (int level = initial_level; level < d4est_amr->num_of_amr_steps + 1; ++level){
-    
-    d4est_mesh_data_realloc
-      (
-       p4est,
-       *d4est_ghost,
-       d4est_factors_compactified,
-       d4est_factors->local_sizes
-      );
-    
-    d4est_mesh_data_compute
-      (
-       p4est,
-       *d4est_ghost,
-       /* *ghost_data, */
-       d4est_ops,
-       d4est_geom_compactified,
-       d4est_quad,
-       d4est_factors_compactified,
-       initial_extents->face_h_type,
-       initial_extents->volume_h_type
-      );
+  d4est_mesh_data_compute
+    (
+     p4est,
+     *d4est_ghost,
+     /* *ghost_data, */
+     d4est_ops,
+     d4est_geom_compactified,
+     d4est_quad,
+     d4est_factors_compactified,
+     initial_extents->face_h_type,
+     initial_extents->volume_h_type
+    );
 
     double* estimator_vtk = P4EST_ALLOC(double, 4*p4est->local_num_quadrants);
     double* estimator_vtk_per_face = P4EST_ALLOC(double, 18*p4est->local_num_quadrants);
@@ -643,48 +596,9 @@ problem_init
                          &prob_fcns
                         );
 
-
-    /* double* estimator = */
-    /*   d4est_estimator_bi_compute */
-    /*   ( */
-    /*    p4est, */
-    /*    &prob_vecs, */
-    /*    &prob_fcns, */
-    /*    penalty_data, */
-    /*    poisson_lorentzian_boundary_fcn, */
-    /*    &lorentzian_params, */
-    /*    *d4est_ghost, */
-    /*    d4est_ghost_data, */
-    /*    d4est_ops, */
-    /*    d4est_geom, */
-    /*    d4est_factors, */
-    /*    d4est_geom_compactified, */
-    /*    d4est_factors_compactified, */
-    /*    d4est_quad, */
-    /*    0, */
-    /*    estimator_vtk, */
-    /*    estimator_vtk_per_face */
-    /*   ); */
-
-    
-
-    
     P4EST_FREE(residual_pointwise_quad);
     P4EST_FREE(f_quad);
     P4EST_FREE(f);
-
-    
-    /* for (int i = 0; i < p4est->local_num_quadrants; i++){ */
-    /*   printf("%d %.15f %.15f %.15f %.15f %15f\n", i, */
-    /*          estimator[i], */
-    /*          estimator_vtk[i], */
-    /*          estimator_vtk[i + p4est->local_num_quadrants], */
-    /*          estimator_vtk[i + 2*p4est->local_num_quadrants], */
-    /*          estimator_vtk[i + 3*p4est->local_num_quadrants] */
-    /*         ); */
-
-    /* } */
-    
 
     d4est_amr_smooth_pred_params_t* sp_params = d4est_amr_smooth_pred_params_input
                                                 (
@@ -696,9 +610,6 @@ problem_init
     d4est_estimator_stats_print(stats);
 
     double* error_l2 = P4EST_ALLOC(double, p4est->local_num_quadrants);
-
-    
-    
     double* u_analytic = P4EST_ALLOC(double, prob_vecs.local_nodes);
     double* error = P4EST_ALLOC(double, prob_vecs.local_nodes);
 
@@ -763,7 +674,6 @@ problem_init
        d4est_factors,
        debugger
       );
-
     
     d4est_vtk_save
       (
@@ -771,8 +681,8 @@ problem_init
        d4est_ops,
        input_file,
        "d4est_vtk",
-       (const char * []){"u","u_analytic","error","a","b","c", NULL},
-       (double* []){prob_vecs.u, u_analytic, error,a,b,c},
+       (const char * []){"rhs", "u","u_analytic","error","a","b","c", NULL},
+       (double* []){prob_vecs.rhs, prob_vecs.u, u_analytic, error,a,b,c},
        (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
                            "estimator_Je1_face0",
                            "estimator_Je1_face1",
@@ -821,7 +731,7 @@ problem_init
                       },
        NULL,
        NULL,
-       level
+       0
       );
     
 
@@ -831,8 +741,8 @@ problem_init
        d4est_ops,
        input_file,
        "d4est_vtk_compactified",
-       (const char * []){"u","u_analytic","error","a","b","c", NULL},
-       (double* []){prob_vecs.u, u_analytic, error,a,b,c},
+       (const char * []){"rhs", "u","u_analytic","error","a","b","c", NULL},
+       (double* []){prob_vecs.rhs, prob_vecs.u, u_analytic, error,a,b,c},
        (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
                            "estimator_Je1_face0",
                            "estimator_Je1_face1",
@@ -879,9 +789,9 @@ problem_init
                       debugger->average_max_penalty_vtk,
                       debugger->average_mean_penalty_vtk
                       },
+       NULL, 
        NULL,
-       NULL,
-       level
+       0
       );
 
     d4est_vtk_save
@@ -890,8 +800,8 @@ problem_init
        d4est_ops,
        input_file,
 "d4est_vtk_compactified_corner",
-       (const char * []){"u","u_analytic","error","a","b","c", NULL},
-       (double* []){prob_vecs.u, u_analytic, error,a,b,c},
+       (const char * []){"rhs", "u","u_analytic","error","a","b","c", NULL},
+       (double* []){prob_vecs.rhs, prob_vecs.u, u_analytic, error,a,b,c},
        (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
                            "estimator_Je1_face0",
                            "estimator_Je1_face1",
@@ -943,7 +853,7 @@ problem_init
            },
        NULL,
        NULL,
-       level
+       0
       );
       
     d4est_vtk_save
@@ -952,8 +862,8 @@ problem_init
        d4est_ops,
        input_file,
        "d4est_vtk_corner",
-       (const char * []){"u","u_analytic","error","a","b","c", NULL},
-       (double* []){prob_vecs.u, u_analytic, error,a,b,c},
+       (const char * []){"rhs", "u","u_analytic","error","a","b","c", NULL},
+       (double* []){prob_vecs.rhs, prob_vecs.u, u_analytic, error,a,b,c},
        (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
                            "estimator_Je1_face0",
                            "estimator_Je1_face1",
@@ -1002,7 +912,7 @@ problem_init
                       },
        NULL,
        NULL,
-       level
+       0
       );    
 
     d4est_laplacian_flux_sipg_penalty_debugger_destroy
@@ -1010,432 +920,110 @@ problem_init
        debugger
       );
 
+
+    /* d4est_vtk_save */
+    /*   ( */
+    /*    p4est, */
+    /*    d4est_ops, */
+    /*    input_file, */
+    /*    "d4est_vtk", */
+    /*    (const char * []){"u","u_analytic","error", NULL}, */
+    /*    (double* []){prob_vecs.u, u_analytic, error}, */
+    /*    (const char * []){NULL}, */
+    /*    (double* []){NULL}, */
+    /*    (const char * []){"degrees",NULL}, */
+    /*    (int* []){deg_array,NULL}, */
+    /*    0 */
+    /*   ); */
+
+    /* P4EST_FREE(deg_array); */
     
+    double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
+
+    d4est_element_data_store_nodal_vec_in_vertex_array
+      (
+       p4est,
+       prob_vecs.u,
+       u_vertex
+      );
+
+
+
+    char* folder = d4est_util_add_cwd("VTK_corner");
+    d4est_util_make_directory(folder,0);
+    /* if (sub_folder_number >= 0){ */
+    asprintf(&folder,"%s%d/", folder, 0);
+    /* } */
+    d4est_util_make_directory(folder,0);
+
+    
+    /* double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN)); */
+
+    /* double* u_min_one_vertex */
+      /* = P4EST_ALLOC */
+      /* ( */
+       /* double, */
+       /* p4est->local_num_quadrants*(P4EST_CHILDREN) */
+      /* ); */
+
+ 
+    d4est_element_data_store_nodal_vec_in_vertex_array
+      (
+       p4est,
+       prob_vecs.u,
+       u_vertex
+      );
+
+
+   /* for (int i = 0; i < p4est->local_num_quadrants*(P4EST_CHILDREN); */
+         /* i++){ */
+      /* u_min_one_vertex[i] = u_vertex[i] - 1.0; */
+    /* } */
+    
+    
+    char* u_corner_file = P4EST_ALLOC(char, 100);
+    sprintf(u_corner_file, "%s_%d", "u_corner", 0);
+    /* sprintf(u_corner_file, "%s_%d",  "u_corner"); */
+    p4est_vtk_ext_write_all
+      (p4est,
+       NULL,
+       0.99,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0,
+       u_corner_file,
+       "u",
+       u_vertex
+      );
+
+    P4EST_FREE(u_corner_file);    
     P4EST_FREE(u_analytic);
+    P4EST_FREE(u_vertex);
     P4EST_FREE(error);
+
+
+
+     
+    P4EST_FREE(u_analytic);
     P4EST_FREE(error_l2);
     P4EST_FREE(a);
     P4EST_FREE(b);
     P4EST_FREE(c);
 
-
-    d4est_ip_energy_norm_data_t ip_norm_data;
-    ip_norm_data.u_penalty_fcn = sipg_params->sipg_penalty_fcn;
-    ip_norm_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
-    ip_norm_data.size_params = NULL;
-
-    energy_norm_ctx.energy_norm_data = &ip_norm_data;
-    energy_norm_ctx.energy_estimator_sq_local = stats->estimator_total;
-    energy_norm_ctx.ghost = *d4est_ghost;
-    energy_norm_ctx.ghost_data = d4est_ghost_data;
-    energy_norm_ctx.energy_estimator = estimator;
-    
-    d4est_norms_save(
-                     p4est,
-                     d4est_factors,
-                     (const char * []){ "u", NULL },
-                     (double * []){ prob_vecs.u },
-                     (double * []){ NULL },
-                     (d4est_xyz_fcn_t []){ poisson_lorentzian_analytic_solution },
-                     (void * []){ &ctx },
-                     (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
-                     (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy, &d4est_norms_fcn_energy_estimator },
-                     (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx },
-                     NULL,
-                     NULL,
-                     NULL
-    );
-
-        d4est_norms_save(
-                     p4est,
-                     d4est_factors_compactified,
-                     (const char * []){ "u", NULL },
-                     (double * []){ prob_vecs.u },
-                     (double * []){ NULL },
-                     (d4est_xyz_fcn_t []){ poisson_lorentzian_analytic_solution },
-                     (void * []){ &ctx },
-                     (const char * []){"L_2", "L_infty", "energy_norm", "energy_estimator", NULL},
-                     (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy, &d4est_norms_fcn_energy_estimator },
-                     (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx, &energy_norm_ctx },
-                     NULL,
-                     "compactified",
-                     NULL
-    );
-
-
-
-    d4est_norms_save(
-                     p4est,
-                     d4est_factors,
-                     (const char * []){ "u", NULL },
-                     (double * []){ prob_vecs.u },
-                     (double * []){ NULL },
-                     (d4est_xyz_fcn_t []){ poisson_lorentzian_analytic_solution },
-                     (void * []){ &ctx },
-                     (const char * []){"L_2", "L_infty", "energy_estimator", NULL},
-                     (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy_estimator },
-                     (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx },
-                     NULL,
-                     "region_2",
-                     keep_region_2_skipper
-    );
-
-
-
-    d4est_norms_save(
-                     p4est,
-                     d4est_factors,
-                     (const char * []){ "u", NULL },
-                     (double * []){ prob_vecs.u },
-                     (double * []){ NULL },
-                     (d4est_xyz_fcn_t []){ poisson_lorentzian_analytic_solution },
-                     (void * []){ &ctx },
-                     (const char * []){"L_2", "L_infty", "energy_estimator", NULL},
-                     (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy_estimator },
-                     (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx },
-                     NULL,
-                     "region_1",
-                     keep_region_1_skipper
-    );
-
-
-
-    d4est_norms_save(
-                     p4est,
-                     d4est_factors,
-                     (const char * []){ "u", NULL },
-                     (double * []){ prob_vecs.u },
-                     (double * []){ NULL },
-                     (d4est_xyz_fcn_t []){ poisson_lorentzian_analytic_solution },
-                     (void * []){ &ctx },
-                     (const char * []){"L_2", "L_infty", "energy_estimator", NULL},
-                     (d4est_norm_fcn_t[]){ &d4est_norms_fcn_L2, &d4est_norms_fcn_Linfty, &d4est_norms_fcn_energy_estimator },
-                     (void * []){ &L2_norm_ctx, NULL, &energy_norm_ctx },
-                     NULL,
-                     "region_0",
-                     keep_region_0_skipper
-    );
-    
-    
-    
-    if (level != d4est_amr->num_of_amr_steps && level != 0){
-
-      d4est_amr_step
-        (
-         p4est,
-         d4est_ops,
-         d4est_amr,
-         &prob_vecs.u,
-         estimator,
-         stats,
-         input_file
-        );
-      
-    }
-
-    
-    P4EST_FREE(stats);
-
-
-    d4est_mesh_local_sizes_t local_sizes = d4est_mesh_update
-                                           (
-                                            p4est,
-                                            d4est_ghost,
-                                            /* *ghost_data, */
-                                            d4est_ops,
-                                            d4est_geom,
-                                            d4est_quad,
-                                            d4est_factors,
-                                            initial_extents,
-                                            INITIALIZE_GHOST,
-                                            INITIALIZE_QUADRATURE_DATA,
-                                            INITIALIZE_GEOMETRY_DATA,
-                                            INITIALIZE_GEOMETRY_ALIASES,
-                                            d4est_mesh_set_quadratures_after_amr,
-                                            initial_extents
-                                           );
-
-    prob_vecs.local_nodes = local_sizes.local_nodes;
       
     if (d4est_ghost_data != NULL){
       d4est_ghost_data_destroy(d4est_ghost_data);
       d4est_ghost_data = NULL;
     } 
     
-
-    d4est_ghost_data = d4est_ghost_data_init(p4est,
-                                             *d4est_ghost,
-                                             &field_type,
-                                             1);
-   
-    prob_vecs.Au = P4EST_REALLOC(prob_vecs.Au, double, prob_vecs.local_nodes);
-    prob_vecs.rhs = P4EST_REALLOC(prob_vecs.rhs, double, prob_vecs.local_nodes);
-    
-    
-    d4est_laplacian_with_opt_build_rhs_with_strong_bc
-      (
-       p4est,
-       *d4est_ghost,
-       d4est_ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       &prob_vecs,
-       flux_data_for_rhs,
-       prob_vecs.rhs,
-       poisson_lorentzian_rhs_fcn,
-       INIT_FIELD_ON_LOBATTO,
-       &ctx,
-       0
-      );
-    
-    d4est_solver_multigrid_t* mg_data = d4est_solver_multigrid_data_init(
-                                                                              p4est,
-                                                                              d4est_ops,
-                                                                              d4est_geom,
-                                                                              d4est_quad,
-                                                                              d4est_ghost,
-                                                                              &d4est_ghost_data,
-                                                                              d4est_factors,
-                                                                              initial_extents,
-                                                                              input_file
-    );
-
-    
-    d4est_krylov_pc_t* pc = d4est_krylov_pc_multigrid_create(mg_data, NULL);
-    
-    d4est_solver_krylov_petsc_params_t d4est_solver_krylov_petsc_params;
-    d4est_solver_krylov_petsc_input(p4est, input_file, "d4est_solver_krylov_petsc", &d4est_solver_krylov_petsc_params);
-
-
-    prob_vecs.field_types = &field_type;
-    prob_vecs.num_of_fields = 1;
-
-
-    if(init_params.analyze_matrix){
-  zlog_category_t* matrix_analysis = zlog_get_category("d4est_multigrid_matrix_analysis");
-      zlog_info(matrix_analysis,"ANALYZING THE MATRIX\n");
-      
-      int local_nodes = d4est_factors->local_sizes.local_nodes;
-      
-      D4EST_ASSERT(p4est->mpisize == 1);
-      double* mg_mat = P4EST_ALLOC(double, local_nodes*local_nodes);
-      double* mg_mat_trans = P4EST_ALLOC(double, local_nodes*local_nodes);
-      
-      d4est_solver_multigrid_get_matrix
-        (
-         p4est,
-         &prob_fcns,
-         &prob_vecs,
-         mg_data,
-         mg_mat
-        );
-      
-      d4est_linalg_mat_transpose(mg_mat, mg_mat_trans, local_nodes);
-
-      double biggest_err;
-      int biggest_id;
-      double* eig_vals = P4EST_ALLOC(double, local_nodes);
-      
-      d4est_util_find_biggest_error(mg_mat, mg_mat_trans, local_nodes*local_nodes, &biggest_err, &biggest_id);
-
-      if (biggest_err < 1e-14){
-        d4est_linalg_sym_eigvecs
-          (mg_mat,eig_vals, local_nodes);
-
-        double min = d4est_util_min_dbl_array
-                     (
-                      eig_vals,
-                      local_nodes);
-        zlog_info(matrix_analysis, "Minimum eigenvalue = %f\n", min);
-        zlog_info(matrix_analysis, "Biggest symmetry err = %f\n", biggest_err);
-        if (min <= 0){        
-          DEBUG_PRINT_ARR_DBL(eig_vals, local_nodes);
-          D4EST_ABORT("Not SPD");
-        }
-      }
-      else {
-        printf("biggest_err = %f\n", biggest_err);
-        printf("biggest_id = %d\n", biggest_id);
-        printf("mg_mat[id] = %f\n", mg_mat[biggest_id]);
-        printf("mg_mat_trans[id] = %f\n", mg_mat_trans[biggest_id]);
-        D4EST_ABORT("Mg_mat not symmetric");
-      }
-
-      
-      P4EST_FREE(mg_mat);
-      P4EST_FREE(mg_mat_trans);
-    }
-    
-    
-    d4est_solver_krylov_petsc_solve
-      (
-       p4est,
-       &prob_vecs,
-       &prob_fcns,
-       d4est_ghost,
-       &d4est_ghost_data,
-       d4est_ops,
-       d4est_geom,
-       d4est_quad,
-       d4est_factors,
-       &d4est_solver_krylov_petsc_params,
-       pc,level
-      );
-
-
-    d4est_mesh_interpolate_data_t data;
-
-    double R0 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R0;
-    double R1 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R1;
-    double R2 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R2;
-    int compactify_inner_shell = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_inner_shell;
-    int compactify_outer_shell = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_outer_shell;
-    d4est_geometry_type_t geom_type =  d4est_geom->geom_type;
-    
-    data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){get_inverted_box_point(R0,0),.5,.5}, 12, prob_vecs.u,  1);
-    point[0][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
-    point_err[0] = data.err;
-    printf("1st point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]);
-    
-    data = d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){get_inverted_box_point(R0,3),.5,.5}, 12, prob_vecs.u, 1);
-    point[1][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
-    point_err[1] = data.err;
-    printf("2nd point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]);
-    
-    data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,get_inverted_inner_wedge_point(R0,R1,10,compactify_inner_shell)}, 9, prob_vecs.u, 1);
-    point[2][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
-    point_err[2] = data.err;
-    printf("3rd point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]);
-
-    /* if (geom_type == GEOM_CUBED_SPHERE_7TREE){ */
-    /* data =  d4est_mesh_interpolate_at_tree_coord(p4est, */
-    /*                                              d4est_ops, */
-    /*                                              d4est_geom, */
-    /*                                              (double []){.5,.5,get_inverted_inner_wedge_point(R0, */
-    /*                                                                                               R1, */
-    /*                                                                                               (100 > R1) ? R1 : 100,compactify_inner_shell)}, */
-    /*                                              3, */
-    /*                                              prob_vecs.u, 1); */
-    /* point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0; */
-    /* point_err[3] = data.err; */
-    /* printf("4th point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]); */
-    /* } */
-    /* else if (geom_type == GEOM_CUBED_SPHERE_13TREE){ */
-    data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,get_inverted_outer_wedge_point(R1,R2, (100 > R2) ? R2 : 100, compactify_outer_shell)}, 3, prob_vecs.u, 1);
-    point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
-    point_err[3] = data.err;
-    printf("4th point is at xyz = %.15f,%.15f,%.15f\n",data.xyz[0],data.xyz[1],data.xyz[2]);
-    /* } */
-    /* else { */
-    /*   D4EST_ABORT("not support geom type"); */
-    /* } */
-    double* point0 = &point[0][0];
-    double* point3 = &point[1][0];
-    double* point10 = &point[2][0];
-    double* point100 = &point[3][0];
-    double* point0_diff = &point_diff[0][0];
-    double* point3_diff = &point_diff[1][0];
-    double* point10_diff = &point_diff[2][0];
-    double* point100_diff = &point_diff[3][0];
-    double* point0_spec_diff = &point_spec_diff[0][0];
-    double* point3_spec_diff = &point_spec_diff[1][0];
-    double* point10_spec_diff = &point_spec_diff[2][0];
-    double* point100_spec_diff = &point_spec_diff[3][0];
-    
-    int global_nodes;
-    sc_reduce(
-              &prob_vecs.local_nodes,
-              &global_nodes,
-              1,
-              sc_MPI_INT,
-              sc_MPI_SUM,
-              0,
-              sc_MPI_COMM_WORLD
-    );
-    point_dof[iterations] = global_nodes;
-    double* dof = &point_dof[0];
-    double points_global [4];
-    double points_local [4];
-    points_local[0] = point[0][iterations];
-    points_local[1] = point[1][iterations];
-    points_local[2] = point[2][iterations];
-    points_local[3] = point[3][iterations];
-
-    sc_reduce
-      (
-       &points_local,
-       &points_global,
-       4,
-       sc_MPI_DOUBLE,
-       sc_MPI_MAX,
-       0,
-       sc_MPI_COMM_WORLD
-      );
-
-    
-    if (p4est->mpirank == 0){
-      for (int p = 0; p < 4; p++){
-        point[p][iterations] = points_global[p];
-        point_diff[p][iterations] = fabs(point[p][iterations] - point[p][iterations-1]);
-      }
-      point_spec_diff[0][iterations] = fabs(point[0][iterations] - 1.);
-      point_spec_diff[1][iterations] = fabs(point[1][iterations] - 0.31622776601);
-      point_spec_diff[2][iterations] = fabs(point[2][iterations] - 0.09950371902);
-      point_spec_diff[3][iterations] = fabs(point[3][iterations] - 0.00999950003);
-      
-      DEBUG_PRINT_4ARR_DBL(dof, point0, point0_diff, point0_spec_diff, iterations+1);
-      DEBUG_PRINT_4ARR_DBL(dof, point3, point3_diff, point3_spec_diff,iterations+1);
-      DEBUG_PRINT_4ARR_DBL(dof, point10, point10_diff, point10_spec_diff,iterations+1);
-      DEBUG_PRINT_4ARR_DBL(dof, point100, point100_diff, point100_spec_diff,iterations+1);
-
-      zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point0[iterations], point0_diff[iterations], point0_spec_diff[iterations]);
-      zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point3[iterations], point3_diff[iterations], point3_spec_diff[iterations]);
-      zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point10[iterations], point10_diff[iterations], point10_spec_diff[iterations]);
-      zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point100[iterations], point100_diff[iterations], point100_spec_diff[iterations]);
-    
-      d4est_norms_linear_fit_add_entry_and_fit
-        (
-         p4est,
-         point_3m_fit,
-         point3_spec_diff[iterations],
-         dof[iterations]
-        );
-      
-      
-    }
-    iterations++;
-
-    d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
-
-    
-    if (level != d4est_amr->num_of_amr_steps && level != 0 && !init_params.do_not_save_checkpoint){
-      d4est_checkpoint_save
-        (
-         level,
-         "checkpoint",
-         p4est,
-         d4est_amr,
-         d4est_factors,
-         (const char * []){"u", "predictor", "multigrid_h_levels", NULL},
-         (hid_t []){H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_INT},
-         (int []){prob_vecs.local_nodes, p4est->local_num_quadrants, 1},
-         (void* []){prob_vecs.u, smooth_pred_data->predictor, &mg_data->num_of_levels}
-        );
-    }
-    
-    d4est_krylov_pc_multigrid_destroy(pc);
-    d4est_solver_multigrid_data_destroy(mg_data);
+        
     P4EST_FREE(estimator_vtk);
     P4EST_FREE(estimator_vtk_per_face);
     P4EST_FREE(estimator);
-  }
 
-  if (d4est_ghost_data != NULL){
-    d4est_ghost_data_destroy(d4est_ghost_data);
-    d4est_ghost_data = NULL;
-  }
   
   d4est_mesh_data_destroy(d4est_factors_compactified);
   d4est_geometry_destroy(d4est_geom_compactified);  
@@ -1444,12 +1032,11 @@ problem_init
   d4est_amr_destroy(d4est_amr_uniform);
   d4est_laplacian_with_opt_flux_destroy(flux_data_for_lhs);
   d4est_laplacian_with_opt_flux_destroy(flux_data_for_rhs);
-  d4est_norms_linear_fit_destroy(point_3m_fit);
+  /* d4est_norms_linear_fit_destroy(point_3m_fit); */
 
   P4EST_FREE(error);
   P4EST_FREE(u_analytic);
   P4EST_FREE(prob_vecs.u);
   P4EST_FREE(prob_vecs.Au);
   P4EST_FREE(prob_vecs.rhs);
-
 }

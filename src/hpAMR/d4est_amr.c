@@ -577,11 +577,11 @@ int d4est_amr_extra_options_input_handler
     D4EST_ASSERT(pconfig->load_balance_by_elements == 0);
     pconfig->load_balance_by_elements = atoi(value);
   }
-  /* else if (d4est_util_match_couple(section,"amr",name,"max_degree")) { */
+  else if (d4est_util_match_couple(section,"amr",name,"max_degree")) {
     /* D4EST_ASSERT(pconfig->max_degree == -1); */
-    /* pconfig->max_degree = atoi(value); */
-    /* D4EST_ASSERT(atoi(value) > 0); */
-  /* } */
+    pconfig->max_degree = atoi(value);
+    D4EST_ASSERT(atoi(value) > 0);
+  }
   else {
     return 0;  /* unknown section/name, error */
   }
@@ -633,6 +633,7 @@ void d4est_amr_extra_options_input
 {
   zlog_category_t *c_default = zlog_get_category("d4est_amr");
   d4est_amr->p_balance_if_diff = -1;
+  /* d4est_amr->max_degree = -1; */
   d4est_amr->load_balance_by_nodes = 0;
   d4est_amr->load_balance_by_elements = 0;
   
@@ -896,7 +897,7 @@ d4est_amr_step
 
   d4est_amr_mark_elements(p4est);
 
-   if (input_file == NULL){
+  if (input_file == NULL){
     d4est_amr->p_balance_if_diff = -1;
     if (p4est->mpirank == 0)
       zlog_info(c_default, "We will not p-balance");
@@ -907,6 +908,10 @@ d4est_amr_step
        input_file,
        d4est_amr
       );
+
+    if (d4est_amr->max_degree > d4est_ops->max_degree){
+      D4EST_ABORT("d4est_amr->max_degree > d4est_ops->max_degree");
+    }
   }
 
   if(d4est_amr->p_balance_if_diff > 0){
