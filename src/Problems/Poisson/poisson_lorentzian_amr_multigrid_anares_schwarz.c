@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <d4est_util.h>
@@ -33,7 +34,7 @@
 #include <d4est_solver_multigrid_element_data_updater.h>
 #include <d4est_hessian.h>
 #include "poisson_lorentzian_fcns.h"
-
+#include <p4est_vtk_ext.h>
 
 static void
 lorentzian_schwarz_apply_lhs
@@ -1259,6 +1260,52 @@ problem_init
          (void* []){prob_vecs.u, smooth_pred_data->predictor, &mg_data->num_of_levels}
         );
     }
+
+    
+    double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
+
+    d4est_element_data_store_nodal_vec_in_vertex_array
+      (
+       p4est,
+       prob_vecs.u,
+       u_vertex
+      );
+
+
+
+    char* folder = d4est_util_add_cwd("VTK_corner");
+    d4est_util_make_directory(folder,0);
+    asprintf(&folder,"%s%d/", folder, 0);
+    d4est_util_make_directory(folder,0);
+    d4est_element_data_store_nodal_vec_in_vertex_array
+      (
+       p4est,
+       prob_vecs.u,
+       u_vertex
+      );    
+    
+    char* u_corner_file = P4EST_ALLOC(char, 100);
+    sprintf(u_corner_file, "%s_%d", "u_corner", 0);
+    /* sprintf(u_corner_file, "%s_%d",  "u_corner"); */
+    p4est_vtk_ext_write_all
+      (p4est,
+       NULL,
+       0.99,
+       1,
+       1,
+       1,
+       1,
+       1,
+       0,
+       u_corner_file,
+       "u",
+       u_vertex
+      );
+
+    P4EST_FREE(u_corner_file);    
+    P4EST_FREE(u_vertex);
+
+    
     
     d4est_krylov_pc_multigrid_destroy(pc);
     d4est_solver_multigrid_data_destroy(mg_data);
