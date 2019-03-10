@@ -607,6 +607,13 @@ problem_init
     /* if(init_params.use_error_l2_as_estimator){ */
       /* d4est_util_copy_1st_to_2nd(error_l2, estimator, p4est->local_num_quadrants); */
     /* }     */
+
+    int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
+    d4est_mesh_get_array_of_degrees(
+                                    p4est,
+                                    deg_array,
+                                    D4EST_INT);
+
     
     d4est_amr_smooth_pred_data_t* smooth_pred_data = (d4est_amr_smooth_pred_data_t*) (d4est_amr->scheme->amr_scheme_data);
 
@@ -620,8 +627,8 @@ problem_init
        (double* []){prob_vecs.u, u_prev, error},
        (const char * []){"estimator","error_l2",NULL},
        (double* []){estimator,error_l2},
-       NULL,
-       NULL,
+       (const char * []){"degrees", NULL},
+       (int* []){deg_array},
        level
       );
 
@@ -635,8 +642,8 @@ problem_init
        (double* []){prob_vecs.u, u_prev, error},
        (const char * []){"estimator","error_l2",NULL},
        (double* []){estimator,error_l2},
-       NULL,
-       NULL,
+       (const char * []){"degrees", NULL},
+       (int* []){deg_array},
        level
       );
 
@@ -650,8 +657,8 @@ problem_init
          (double* []){prob_vecs.u, u_prev, error},
          (const char * []){"estimator","error_l2",NULL},
          (double* []){estimator,error_l2},
-         NULL,
-         NULL,
+         (const char * []){"degrees", NULL},
+         (int* []){deg_array},
          level
         );
       
@@ -665,55 +672,69 @@ problem_init
          (double* []){prob_vecs.u, u_prev, error},
          (const char * []){"estimator","error_l2",NULL},
          (double* []){estimator,error_l2},
-         NULL,
-         NULL,
+         (const char * []){"degrees", NULL},
+         (int* []){deg_array},
          level
         );
 
+    P4EST_FREE(deg_array);
+    /* double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN)); */
 
-    double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
+    /* d4est_element_data_store_nodal_vec_in_vertex_array */
+    /*   ( */
+    /*    p4est, */
+    /*    prob_vecs.u, */
+    /*    u_vertex */
+    /*   ); */
 
-    d4est_element_data_store_nodal_vec_in_vertex_array
-      (
-       p4est,
-       prob_vecs.u,
-       u_vertex
-      );
-
-
-      
-
-    char* folder = d4est_util_add_cwd("VTK_corner");
-    d4est_util_make_directory(folder,0);
-    asprintf(&folder,"%s%d/", folder, 0);
-    d4est_util_make_directory(folder,0);
-    d4est_element_data_store_nodal_vec_in_vertex_array
-      (
-       p4est,
-       prob_vecs.u,
-       u_vertex
-      );    
+    /* char* folder = d4est_util_add_cwd("VTK_corner"); */
+    /* d4est_util_make_directory(folder,0); */
+    /* asprintf(&folder,"%s%d/", folder, 0); */
+    /* d4est_util_make_directory(folder,0); */
+    /* d4est_element_data_store_nodal_vec_in_vertex_array */
+    /*   ( */
+    /*    p4est, */
+    /*    prob_vecs.u, */
+    /*    u_vertex */
+    /*   );     */
     
-    char* u_corner_file = P4EST_ALLOC(char, 100);
-    sprintf(u_corner_file, "%s_%d", "u_corner", 0);
-    /* sprintf(u_corner_file, "%s_%d",  "u_corner"); */
-    p4est_vtk_ext_write_all
-      (p4est,
-       NULL,
-       0.99,
-       1,
-       1,
-       1,
-       1,
-       1,
-       0,
-       u_corner_file,
-       "u",
-       u_vertex
-      );
+    /* char* u_corner_file = P4EST_ALLOC(char, 100); */
+    /* char* u_corner_file_2 = P4EST_ALLOC(char, 100); */
+    /* sprintf(u_corner_file, "%s_%d", "u_corner", 0); */
+    /* sprintf(u_corner_file_2, "%s_%d", "u_corner_compact", 0); */
+    /* /\* sprintf(u_corner_file, "%s_%d",  "u_corner"); *\/ */
+    /* p4est_vtk_ext_write_all */
+    /*   (p4est, */
+    /*    d4est_geom->p4est_geometry, */
+    /*    0.99, */
+    /*    1, */
+    /*    1, */
+    /*    1, */
+    /*    1, */
+    /*    1, */
+    /*    0, */
+    /*    u_corner_file, */
+    /*    "u", */
+    /*    u_vertex */
+    /*   ); */
 
-    P4EST_FREE(u_corner_file);    
-    P4EST_FREE(u_vertex);
+    /*     p4est_vtk_ext_write_all */
+    /*   (p4est, */
+    /*    d4est_geom_compactified->p4est_geometry, */
+    /*    0.99, */
+    /*    1, */
+    /*    1, */
+    /*    1, */
+    /*    1, */
+    /*    1, */
+    /*    0, */
+    /*    u_corner_file, */
+    /*    "u", */
+    /*    u_vertex */
+    /*   ); */
+
+    /* P4EST_FREE(u_corner_file);     */
+    /* P4EST_FREE(u_vertex); */
 
       
 

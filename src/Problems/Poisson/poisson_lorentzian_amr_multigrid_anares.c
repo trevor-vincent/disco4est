@@ -766,6 +766,12 @@ problem_init
        debugger
       );
 
+    int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
+    d4est_mesh_get_array_of_degrees(
+                                    p4est,
+                                    deg_array,
+                                    D4EST_INT);
+                                   
     
     d4est_vtk_save
       (
@@ -775,54 +781,64 @@ problem_init
        "d4est_vtk",
        (const char * []){"u","u_analytic","error","a","b","c", NULL},
        (double* []){prob_vecs.u, u_analytic, error,a,b,c},
-       (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
-                           "estimator_Je1_face0",
-                           "estimator_Je1_face1",
-                           "estimator_Je1_face2",
-                           "estimator_Je1_face3",
-                           "estimator_Je1_face4",
-                           "estimator_Je1_face5",
-                           "estimator_Je2_face0",
-                           "estimator_Je2_face1",
-                           "estimator_Je2_face2",
-                           "estimator_Je2_face3",
-                           "estimator_Je2_face4",
-                           "estimator_Je2_face5",
-                           "estimator_Je3_face0",
-                           "estimator_Je3_face1",
-                           "estimator_Je3_face2",
-                           "estimator_Je3_face3",
-                           "estimator_Je3_face4",
-                           "estimator_Je3_face5",
-                           "average_min_penalty",
-                           "average_max_penalty",
-                           "average_mean_penalty",
+       (const char * []){"estimator",
+                           /* "error_l2", */
+                           /* "estimator_R", */
+                           /* "estimator_Je1", */
+                           /* "estimator_Je2", */
+                           /* "estimator_Je3", */
+                           /* "estimator_Je1_face0", */
+                           /* "estimator_Je1_face1", */
+                           /* "estimator_Je1_face2", */
+                           /* "estimator_Je1_face3", */
+                           /* "estimator_Je1_face4", */
+                           /* "estimator_Je1_face5", */
+                           /* "estimator_Je2_face0", */
+                           /* "estimator_Je2_face1", */
+                           /* "estimator_Je2_face2", */
+                           /* "estimator_Je2_face3", */
+                           /* "estimator_Je2_face4", */
+                           /* "estimator_Je2_face5", */
+                           /* "estimator_Je3_face0", */
+                           /* "estimator_Je3_face1", */
+                           /* "estimator_Je3_face2", */
+                           /* "estimator_Je3_face3", */
+                           /* "estimator_Je3_face4", */
+                           /* "estimator_Je3_face5", */
+                           /* "average_min_penalty", */
+                           /* "average_max_penalty", */
+                           /* "average_mean_penalty", */
                            NULL},
-       (double* []){estimator,error_l2,&estimator_vtk[0], &estimator_vtk[1*p4est->local_num_quadrants],&estimator_vtk[2*p4est->local_num_quadrants],&estimator_vtk[3*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[0*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[1*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[2*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[3*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[4*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[5*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[6*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[7*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[8*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[9*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[10*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[11*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[12*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[13*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[14*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[15*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[16*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[17*p4est->local_num_quadrants],
-                      debugger->average_min_penalty_vtk,
-                      debugger->average_max_penalty_vtk,
-                      debugger->average_mean_penalty_vtk
+       (double* []){estimator,
+                      /* error_l2, */
+                      /* &estimator_vtk[0], */
+                      /* &estimator_vtk[1*p4est->local_num_quadrants], */
+                      /* &estimator_vtk[2*p4est->local_num_quadrants], */
+                      /* &estimator_vtk[3*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[0*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[1*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[2*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[3*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[4*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[5*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[6*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[7*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[8*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[9*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[10*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[11*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[12*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[13*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[14*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[15*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[16*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[17*p4est->local_num_quadrants], */
+                      /* debugger->average_min_penalty_vtk, */
+                      /* debugger->average_max_penalty_vtk, */
+                      /* debugger->average_mean_penalty_vtk */
                       },
-       NULL,
-       NULL,
+       (const char * []){"degrees", NULL},
+       (int* []){deg_array},
        level
       );
     
@@ -835,54 +851,64 @@ problem_init
        "d4est_vtk_compactified",
        (const char * []){"u","u_analytic","error","a","b","c", NULL},
        (double* []){prob_vecs.u, u_analytic, error,a,b,c},
-       (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
-                           "estimator_Je1_face0",
-                           "estimator_Je1_face1",
-                           "estimator_Je1_face2",
-                           "estimator_Je1_face3",
-                           "estimator_Je1_face4",
-                           "estimator_Je1_face5",
-                           "estimator_Je2_face0",
-                           "estimator_Je2_face1",
-                           "estimator_Je2_face2",
-                           "estimator_Je2_face3",
-                           "estimator_Je2_face4",
-                           "estimator_Je2_face5",
-                           "estimator_Je3_face0",
-                           "estimator_Je3_face1",
-                           "estimator_Je3_face2",
-                           "estimator_Je3_face3",
-                           "estimator_Je3_face4",
-                           "estimator_Je3_face5",
-                           "average_min_penalty",
-                           "average_max_penalty",
-                           "average_mean_penalty",
+       (const char * []){"estimator",
+                           /* "error_l2", */
+                           /* "estimator_R", */
+                           /* "estimator_Je1", */
+                           /* "estimator_Je2", */
+                           /* "estimator_Je3", */
+                           /* "estimator_Je1_face0", */
+                           /* "estimator_Je1_face1", */
+                           /* "estimator_Je1_face2", */
+                           /* "estimator_Je1_face3", */
+                           /* "estimator_Je1_face4", */
+                           /* "estimator_Je1_face5", */
+                           /* "estimator_Je2_face0", */
+                           /* "estimator_Je2_face1", */
+                           /* "estimator_Je2_face2", */
+                           /* "estimator_Je2_face3", */
+                           /* "estimator_Je2_face4", */
+                           /* "estimator_Je2_face5", */
+                           /* "estimator_Je3_face0", */
+                           /* "estimator_Je3_face1", */
+                           /* "estimator_Je3_face2", */
+                           /* "estimator_Je3_face3", */
+                           /* "estimator_Je3_face4", */
+                           /* "estimator_Je3_face5", */
+                           /* "average_min_penalty", */
+                           /* "average_max_penalty", */
+                           /* "average_mean_penalty", */
                            NULL},
-       (double* []){estimator,error_l2,&estimator_vtk[0], &estimator_vtk[1*p4est->local_num_quadrants],&estimator_vtk[2*p4est->local_num_quadrants],&estimator_vtk[3*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[0*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[1*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[2*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[3*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[4*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[5*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[6*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[7*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[8*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[9*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[10*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[11*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[12*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[13*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[14*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[15*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[16*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[17*p4est->local_num_quadrants],
-                      debugger->average_min_penalty_vtk,
-                      debugger->average_max_penalty_vtk,
-                      debugger->average_mean_penalty_vtk
+       (double* []){estimator,
+                      /* error_l2, */
+                      /* &estimator_vtk[0], */
+                      /* &estimator_vtk[1*p4est->local_num_quadrants], */
+                      /* &estimator_vtk[2*p4est->local_num_quadrants], */
+                      /* &estimator_vtk[3*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[0*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[1*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[2*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[3*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[4*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[5*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[6*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[7*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[8*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[9*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[10*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[11*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[12*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[13*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[14*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[15*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[16*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[17*p4est->local_num_quadrants], */
+                      /* debugger->average_min_penalty_vtk, */
+                      /* debugger->average_max_penalty_vtk, */
+                      /* debugger->average_mean_penalty_vtk */
                       },
-       NULL,
-       NULL,
+       (const char * []){"degrees", NULL},
+       (int* []){deg_array},
        level
       );
 
@@ -894,57 +920,64 @@ problem_init
 "d4est_vtk_compactified_corner",
        (const char * []){"u","u_analytic","error","a","b","c", NULL},
        (double* []){prob_vecs.u, u_analytic, error,a,b,c},
-       (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
-                           "estimator_Je1_face0",
-                           "estimator_Je1_face1",
-                           "estimator_Je1_face2",
-                           "estimator_Je1_face3",
-                           "estimator_Je1_face4",
-                           "estimator_Je1_face5",
-                           "estimator_Je2_face0",
-                           "estimator_Je2_face1",
-                           "estimator_Je2_face2",
-                           "estimator_Je2_face3",
-                           "estimator_Je2_face4",
-                           "estimator_Je2_face5",
-                           "estimator_Je3_face0",
-                           "estimator_Je3_face1",
-                           "estimator_Je3_face2",
-                           "estimator_Je3_face3",
-                           "estimator_Je3_face4",
-                           "estimator_Je3_face5",
-                           "average_min_penalty",
-                           "average_max_penalty",
-                           "average_mean_penalty",
+       (const char * []){"estimator",
+                           /* "error_l2", */
+                           /* "estimator_R", */
+                           /* "estimator_Je1", */
+                           /* "estimator_Je2", */
+                           /* "estimator_Je3", */
+                           /* "estimator_Je1_face0", */
+                           /* "estimator_Je1_face1", */
+                           /* "estimator_Je1_face2", */
+                           /* "estimator_Je1_face3", */
+                           /* "estimator_Je1_face4", */
+                           /* "estimator_Je1_face5", */
+                           /* "estimator_Je2_face0", */
+                           /* "estimator_Je2_face1", */
+                           /* "estimator_Je2_face2", */
+                           /* "estimator_Je2_face3", */
+                           /* "estimator_Je2_face4", */
+                           /* "estimator_Je2_face5", */
+                           /* "estimator_Je3_face0", */
+                           /* "estimator_Je3_face1", */
+                           /* "estimator_Je3_face2", */
+                           /* "estimator_Je3_face3", */
+                           /* "estimator_Je3_face4", */
+                           /* "estimator_Je3_face5", */
+                           /* "average_min_penalty", */
+                           /* "average_max_penalty", */
+                           /* "average_mean_penalty", */
                            NULL},
        (double* []){
-         estimator,error_l2,&estimator_vtk[0],
-           &estimator_vtk[1*p4est->local_num_quadrants],
-           &estimator_vtk[2*p4est->local_num_quadrants],&estimator_vtk[3*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[0*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[1*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[2*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[3*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[4*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[5*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[6*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[7*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[8*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[9*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[10*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[11*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[12*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[13*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[14*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[15*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[16*p4est->local_num_quadrants],
-           &estimator_vtk_per_face[17*p4est->local_num_quadrants],
-           debugger->average_min_penalty_vtk,
-           debugger->average_max_penalty_vtk,
-           debugger->average_mean_penalty_vtk
+         estimator,
+           /* error_l2, */
+           /* &estimator_vtk[0], */
+           /* &estimator_vtk[1*p4est->local_num_quadrants], */
+           /* &estimator_vtk[2*p4est->local_num_quadrants],&estimator_vtk[3*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[0*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[1*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[2*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[3*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[4*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[5*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[6*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[7*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[8*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[9*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[10*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[11*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[12*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[13*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[14*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[15*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[16*p4est->local_num_quadrants], */
+           /* &estimator_vtk_per_face[17*p4est->local_num_quadrants], */
+           /* debugger->average_min_penalty_vtk, */
+           /* debugger->average_max_penalty_vtk, */
+           /* debugger->average_mean_penalty_vtk */
            },
-       NULL,
-       NULL,
+       (const char * []){"degrees", NULL},
+       (int* []){deg_array},
        level
       );
       
@@ -956,107 +989,73 @@ problem_init
        "d4est_vtk_corner",
        (const char * []){"u","u_analytic","error","a","b","c", NULL},
        (double* []){prob_vecs.u, u_analytic, error,a,b,c},
-       (const char * []){"estimator","error_l2","estimator_R", "estimator_Je1", "estimator_Je2", "estimator_Je3",
-                           "estimator_Je1_face0",
-                           "estimator_Je1_face1",
-                           "estimator_Je1_face2",
-                           "estimator_Je1_face3",
-                           "estimator_Je1_face4",
-                           "estimator_Je1_face5",
-                           "estimator_Je2_face0",
-                           "estimator_Je2_face1",
-                           "estimator_Je2_face2",
-                           "estimator_Je2_face3",
-                           "estimator_Je2_face4",
-                           "estimator_Je2_face5",
-                           "estimator_Je3_face0",
-                           "estimator_Je3_face1",
-                           "estimator_Je3_face2",
-                           "estimator_Je3_face3",
-                           "estimator_Je3_face4",
-                           "estimator_Je3_face5",
-                           "average_min_penalty",
-                           "average_max_penalty",
-                           "average_mean_penalty",
+       (const char * []){"estimator",
+                           /* "error_l2", */
+                           /* "estimator_R", */
+                           /* "estimator_Je1", */
+                           /* "estimator_Je2", */
+                           /* "estimator_Je3", */
+                           /* "estimator_Je1_face0", */
+                           /* "estimator_Je1_face1", */
+                           /* "estimator_Je1_face2", */
+                           /* "estimator_Je1_face3", */
+                           /* "estimator_Je1_face4", */
+                           /* "estimator_Je1_face5", */
+                           /* "estimator_Je2_face0", */
+                           /* "estimator_Je2_face1", */
+                           /* "estimator_Je2_face2", */
+                           /* "estimator_Je2_face3", */
+                           /* "estimator_Je2_face4", */
+                           /* "estimator_Je2_face5", */
+                           /* "estimator_Je3_face0", */
+                           /* "estimator_Je3_face1", */
+                           /* "estimator_Je3_face2", */
+                           /* "estimator_Je3_face3", */
+                           /* "estimator_Je3_face4", */
+                           /* "estimator_Je3_face5", */
+                           /* "average_min_penalty", */
+                           /* "average_max_penalty", */
+                           /* "average_mean_penalty", */
                            NULL},
-       (double* []){estimator,error_l2,&estimator_vtk[0], &estimator_vtk[1*p4est->local_num_quadrants],&estimator_vtk[2*p4est->local_num_quadrants],&estimator_vtk[3*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[0*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[1*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[2*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[3*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[4*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[5*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[6*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[7*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[8*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[9*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[10*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[11*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[12*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[13*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[14*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[15*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[16*p4est->local_num_quadrants],
-                      &estimator_vtk_per_face[17*p4est->local_num_quadrants],
-                      debugger->average_min_penalty_vtk,
-                      debugger->average_max_penalty_vtk,
-                      debugger->average_mean_penalty_vtk
+       (double* []){estimator,
+                      /* error_l2, */
+                      /* &estimator_vtk[0], */
+                      /* &estimator_vtk[1*p4est->local_num_quadrants], */
+                      /* &estimator_vtk[2*p4est->local_num_quadrants], */
+                      /* &estimator_vtk[3*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[0*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[1*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[2*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[3*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[4*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[5*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[6*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[7*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[8*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[9*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[10*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[11*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[12*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[13*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[14*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[15*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[16*p4est->local_num_quadrants], */
+                      /* &estimator_vtk_per_face[17*p4est->local_num_quadrants], */
+                      /* debugger->average_min_penalty_vtk, */
+                      /* debugger->average_max_penalty_vtk, */
+                      /* debugger->average_mean_penalty_vtk */
                       },
-       NULL,
-       NULL,
+       (const char * []){"degrees", NULL},
+       (int* []){deg_array},
        level
       );    
-
-
-    double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN));
-
-    d4est_element_data_store_nodal_vec_in_vertex_array
-      (
-       p4est,
-       prob_vecs.u,
-       u_vertex
-      );
-
-
-
-    char* folder = d4est_util_add_cwd("VTK_corner");
-    d4est_util_make_directory(folder,0);
-    asprintf(&folder,"%s%d/", folder, 0);
-    d4est_util_make_directory(folder,0);
-    d4est_element_data_store_nodal_vec_in_vertex_array
-      (
-       p4est,
-       prob_vecs.u,
-       u_vertex
-      );    
-    
-    char* u_corner_file = P4EST_ALLOC(char, 100);
-    sprintf(u_corner_file, "%s_%d", "u_corner", 0);
-    /* sprintf(u_corner_file, "%s_%d",  "u_corner"); */
-    p4est_vtk_ext_write_all
-      (p4est,
-       NULL,
-       0.99,
-       1,
-       1,
-       1,
-       1,
-       1,
-       0,
-       u_corner_file,
-       "u",
-       u_vertex
-      );
-
-    P4EST_FREE(u_corner_file);    
-    P4EST_FREE(u_vertex);
     
     d4est_laplacian_flux_sipg_penalty_debugger_destroy
       (
        debugger
       );
 
-    
+    P4EST_FREE(deg_array);
     P4EST_FREE(u_analytic);
     P4EST_FREE(error);
     P4EST_FREE(error_l2);
