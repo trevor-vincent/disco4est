@@ -1077,7 +1077,7 @@ d4est_vtk_convert_nodal_to_vtk(
       else if (grid_type == D4EST_VTK_CORNER_GRID){
         for (int i = 0; i < (P4EST_CHILDREN); i++){
           vtk_array[vtk_stride + i]
-            = values[d4est_reference_corner_to_node((P4EST_DIM), cont->deg_array[il],i)];
+            = values[nodal_stride + d4est_reference_corner_to_node((P4EST_DIM), cont->deg_array[il],i)];
         }
       }
       vtk_stride += num_points_in_element;
