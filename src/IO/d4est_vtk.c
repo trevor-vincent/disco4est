@@ -1060,7 +1060,13 @@ d4est_vtk_convert_nodal_to_vtk(
     num_quads = quadrants->elem_count;
 
     for (zz = 0; zz < num_quads; ++zz, ++il) {
-      int num_nodes_in_element = d4est_util_int_pow_int(cont->deg_array[il] + 1, (P4EST_DIM));
+
+        p4est_quadrant_t* quad = p4est_quadrant_array_index (quadrants, zz);
+      
+        d4est_element_data_t* ed = (d4est_element_data_t*)(quad->p.user_data);
+      
+      /* int num_nodes_in_element = d4est_util_int_pow_int(cont->deg_array[il] + 1, (P4EST_DIM)); */
+      int num_nodes_in_element = d4est_lgl_get_nodes((P4EST_DIM), ed->deg);
       int num_points_in_element = (grid_type == D4EST_VTK_DG_GRID) ?
                                   d4est_util_int_pow_int(cont->deg_array[il], (P4EST_DIM))*(P4EST_CHILDREN) :
                                   (P4EST_CHILDREN);
