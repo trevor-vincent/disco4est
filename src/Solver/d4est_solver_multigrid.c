@@ -183,12 +183,12 @@ d4est_solver_multigrid_get_h_coarsen_levels
 
   if (mpi_size > num_trees && mpi_size % num_trees != 0){
     if (p4est->mpirank == 0){
-      zlog_error(c_default, "Please set starting conditinos such that mpi_size > num_trees && mpi_size mod num_trees == 0 OR mpi_size < num_trees && (mpi_size == 1 || mpi_size mod P4EST_CHILDREN == 0). This will give a proper multigrid hiearchy");
+      zlog_error(c_default, "****WARNING**** Please set starting conditinos such that mpi_size > num_trees && mpi_size mod num_trees == 0 OR mpi_size < num_trees && (mpi_size == 1 || mpi_size mod P4EST_CHILDREN == 0). This will give a proper multigrid hiearchy");
       zlog_error(c_default, "P4EST_CHILDREN = %d", (P4EST_CHILDREN));
       zlog_error(c_default, "mpi_size = %d", mpi_size);
       zlog_error(c_default, "num_trees = %d", num_trees);
     }
-    D4EST_ABORT("");
+    /* D4EST_ABORT(""); */
   }
 
   int power = (mpi_size > num_trees) ? d4est_util_is_power_of(mpi_size/num_trees, (P4EST_CHILDREN)) : d4est_util_is_power_of(mpi_size, (P4EST_CHILDREN));
@@ -201,8 +201,6 @@ d4est_solver_multigrid_get_h_coarsen_levels
     zlog_info(c_default, "guess for h levels = %d", max_level + 1 - power);
   }
 
-
-  
   return max_level + 1 - power;
 }
 
@@ -214,7 +212,6 @@ d4est_solver_multigrid_update_components
  d4est_elliptic_data_t* data
 )
 {
-
   d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   
   if (mg_data->elem_data_updater != NULL){

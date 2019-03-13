@@ -19,6 +19,15 @@ typedef enum {DISCARD_BOUNDARY, DISCARD_INTERIOR, DISCARD_NOTHING} d4est_mesh_bo
 typedef enum {INIT_FIELD_NOT_SET, INIT_FIELD_ON_LOBATTO, INIT_FIELD_ON_QUAD} d4est_mesh_init_field_option_t;
 typedef enum {PRINT, DO_NOT_PRINT, PRINT_ON_ERROR} d4est_mesh_print_option_t;
 
+
+typedef struct {
+
+  d4est_geometry_t* d4est_geom;
+  int region;
+
+} d4est_mesh_refine_in_region_data_t; 
+
+
 typedef enum
   {
     FACE_H_EQ_J_DIV_SJ_QUAD,
@@ -164,6 +173,9 @@ typedef struct {
   int* deg;
   int* deg_quad_inc;
 
+  int refine_per_region_at_start;
+  int* number_of_refines;
+  
   int load_from_checkpoint;
   int* checkpoint_deg_array;
   char* checkpoint_prefix;
@@ -184,7 +196,6 @@ typedef struct {
   
 } d4est_mesh_initial_extents_t;
  
-/* This file was automatically generated.  Do not edit! */
 /* This file was automatically generated.  Do not edit! */
 void d4est_mesh_apply_invM_on_field(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,double *in,double *out);
 void d4est_mesh_debug_boundary_elements(p4est_t *p4est,d4est_operators_t *d4est_ops,d4est_mesh_data_t *d4est_factors,const char **field_names,double **fields,int local_nodes);
@@ -238,7 +249,7 @@ void d4est_mesh_initial_extents_destroy(d4est_mesh_initial_extents_t *initial_ex
 void d4est_mesh_set_quadratures_after_amr(d4est_element_data_t *elem_data,void *user_ctx);
 void d4est_mesh_set_initial_extents(d4est_element_data_t *elem_data,void *user_ctx);
 void d4est_mesh_set_initial_extents_using_input_file_regions(d4est_element_data_t *elem_data,void *user_ctx);
-
+int d4est_mesh_refine_in_region_callback(p4est_t *p4est,p4est_topidx_t which_tree,p4est_quadrant_t *quadrant);
 #endif
 
 

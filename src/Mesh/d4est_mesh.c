@@ -13,6 +13,34 @@
 #include <d4est_linalg.h>
 #include <d4est_ghost_data.h>
 
+int
+d4est_mesh_refine_in_region_callback
+(
+ p4est_t * p4est,
+ p4est_topidx_t which_tree,
+ p4est_quadrant_t *quad
+)
+{
+  d4est_mesh_refine_in_region_data_t* rird = p4est->user_pointer;
+  d4est_geometry_t* d4est_geometry = rird->d4est_geom;
+
+  p4est_qcoord_t dq = P4EST_QUADRANT_LEN(quad->level);
+  p4est_qcoord_t q [(P4EST_DIM)];
+  q[0] = quad->x;
+  q[1] = quad->y;
+#if (P4EST_DIM)==3
+  q[2] = quad->z;
+#endif
+  
+  int region = d4est_geometry->get_region(d4est_geometry,
+                             q,
+                             dq,
+                             which_tree);
+  
+  return (region == rird->region);
+}
+
+
 static void
 d4est_mesh_data_get_string_from_face_h_type
 (
@@ -183,12 +211,24 @@ int d4est_mesh_initial_extents_handler
       D4EST_ABORT("volume_h_type is not set to a supported value\n");
     }
   }
+ else if (d4est_util_match_couple
+          (section,
+           "initial_mesh",
+           name,
+           "refine_per_region_at_start"
+          )
+         ){
+   D4EST_ASSERT(pconfig->refine_per_region_at_start == 0);
+   pconfig->refine_per_region_at_start =  atoi(value);
+ }
   else {
     for (int i = 0; i < pconfig->number_of_regions; i++){
       char* deg_name;
       char* deg_quad_name;
+      char* refine_name;
       asprintf(&deg_name,"region%d_deg", i);
       asprintf(&deg_quad_name,"region%d_deg_quad_inc", i);
+      asprintf(&refine_name,"region%d_number_of_refines", i);
       int hit = 0;
       if (d4est_util_match_couple(section,"initial_mesh",name,deg_name)) {
         D4EST_ASSERT(pconfig->deg[i] == -1);
@@ -200,7 +240,13 @@ int d4est_mesh_initial_extents_handler
         pconfig->deg_quad_inc[i] = atoi(value);
         hit++;
       }
+      if (d4est_util_match_couple(section,"initial_mesh",name,refine_name)) {
+        D4EST_ASSERT(pconfig->number_of_refines[i] == -1);
+        pconfig->number_of_refines[i] = atoi(value);
+        hit++;
+      }
       free(deg_name);
+      free(refine_name);
       free(deg_quad_name);
       if (hit)
         return 1;
@@ -305,6 +351,10 @@ d4est_mesh_initial_extents_parse
   initial_extents->number_of_regions = d4est_geom->get_number_of_regions(d4est_geom);
   initial_extents->deg = P4EST_ALLOC(int, initial_extents->number_of_regions);
   initial_extents->deg_quad_inc = P4EST_ALLOC(int, initial_extents->number_of_regions);
+  initial_extents->refine_per_region_at_start = 0;
+  initial_extents->number_of_refines
+    = P4EST_ALLOC(int,initial_extents->number_of_regions);
+                                                   
   initial_extents->load_from_checkpoint = 0;
   initial_extents->load_newton_checkpoint = 0;
   initial_extents->load_krylov_checkpoint = 0;
@@ -320,6 +370,7 @@ d4est_mesh_initial_extents_parse
  for (int i = 0; i < initial_extents->number_of_regions; i++){
     initial_extents->deg[i] = -1;
     initial_extents->deg_quad_inc[i] = -1;
+    initial_extents->number_of_refines[i] = -1;
   }
  
   if (ini_parse(input_file, d4est_mesh_initial_extents_handler, initial_extents) < 0) {
@@ -368,6 +419,8 @@ d4est_mesh_initial_extents_parse
   int trees = d4est_geom->p4est_conn->num_trees;
   
   if(
+     initial_extents->refine_per_region_at_start == 0
+     &&
      proc_size != 1
      &&
      trees*d4est_util_int_pow_int((P4EST_CHILDREN), initial_extents->min_level) < proc_size
@@ -3624,4 +3677,3 @@ d4est_mesh_apply_invM_on_field
     }
   
 }
-

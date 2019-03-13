@@ -1413,7 +1413,6 @@ void d4est_geometry_get_face_info(int f, d4est_geometry_face_info_t* face_info) 
   else {
     D4EST_ABORT("face info error: only f > 5 or f < 0 in 3d");
   }
-
 }
 
 double

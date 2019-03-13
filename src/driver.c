@@ -87,6 +87,32 @@ int main(int argc, char *argv[])
      NULL,
      NULL
     );
+
+    if (initial_grid_input->refine_per_region_at_start){
+      for (int i = 0; i < initial_grid_input->number_of_regions;
+           i++){
+
+        int num_of_times = initial_grid_input->number_of_refines[i];
+        D4EST_ASSERT(num_of_times >= 0);
+        
+        for (int j = 0; j < num_of_times; j++){
+          void* tmp = p4est->user_pointer;
+          d4est_mesh_refine_in_region_data_t rird;
+          rird.d4est_geom = d4est_geom;
+          rird.region = i;        
+          p4est->user_pointer = &rird;
+        
+          p4est_refine(p4est,
+                           0,
+                           d4est_mesh_refine_in_region_callback,
+                           NULL
+                          );
+
+          p4est->user_pointer = tmp;
+        }
+        
+      }
+    }
     
     p4est_partition(p4est, 1, NULL);
     p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
@@ -136,6 +162,35 @@ int main(int argc, char *argv[])
              NULL,
              NULL
             );
+
+
+    if (initial_grid_input->refine_per_region_at_start){
+      for (int i = 0; i < initial_grid_input->number_of_regions;
+           i++){
+
+        int num_of_times = initial_grid_input->number_of_refines[i];
+        D4EST_ASSERT(num_of_times >= 0);
+        
+        for (int j = 0; j < num_of_times; j++){
+          void* tmp = p4est->user_pointer;
+          d4est_mesh_refine_in_region_data_t rird;
+          rird.d4est_geom = d4est_geom;
+          rird.region = i;        
+          p4est->user_pointer = &rird;
+        
+          p4est_refine(p4est,
+                           0,
+                           d4est_mesh_refine_in_region_callback,
+                           NULL
+                          );
+
+          p4est->user_pointer = tmp;
+        }
+        
+      }
+    }
+    
+    
     
     p4est_partition(p4est, 1, NULL);
     p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
