@@ -201,6 +201,11 @@ d4est_solver_multigrid_get_h_coarsen_levels
     zlog_info(c_default, "guess for h levels = %d", max_level + 1 - power);
   }
 
+  if (mpi_size >= p4est->global_num_quadrants){
+    zlog_info(c_default, "mpisize >= p4est->global_num_quadrants");
+    return 1;
+  }
+  
   return max_level + 1 - power;
 }
 
