@@ -113,8 +113,13 @@ int main(int argc, char *argv[])
         
       }
     }
-    
-    p4est_partition(p4est, 1, NULL);
+
+    if (initial_grid_input->keep_quad_fams_together){
+      p4est_partition(p4est, 1, NULL);
+    }
+    else {
+      p4est_partition(p4est, 0, NULL);
+    }
     p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
   }
 
@@ -190,9 +195,13 @@ int main(int argc, char *argv[])
       }
     }
     
-    
-    
-    p4est_partition(p4est, 1, NULL);
+
+    if (initial_grid_input->keep_quad_fams_together){
+      p4est_partition(p4est, 1, NULL);
+    }
+    else {
+      p4est_partition(p4est, 0, NULL);
+    }
     p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
 
     printf("initial_checkpoint_number = %d\n",initial_grid_input->initial_checkpoint_number);

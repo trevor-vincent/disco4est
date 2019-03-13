@@ -175,6 +175,7 @@ typedef struct {
 
   int refine_per_region_at_start;
   int* number_of_refines;
+  int keep_quad_fams_together;
   
   int load_from_checkpoint;
   int* checkpoint_deg_array;

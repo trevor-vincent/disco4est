@@ -221,7 +221,17 @@ int d4est_mesh_initial_extents_handler
    D4EST_ASSERT(pconfig->refine_per_region_at_start == 0);
    pconfig->refine_per_region_at_start =  atoi(value);
  }
-  else {
+ else if (d4est_util_match_couple
+          (section,
+           "initial_mesh",
+           name,
+           "keep_quad_fams_together"
+          )
+         ){
+   D4EST_ASSERT(pconfig->keep_quad_fams_together == 1);
+   pconfig->refine_per_region_at_start =  atoi(value);
+ }  
+ else {
     for (int i = 0; i < pconfig->number_of_regions; i++){
       char* deg_name;
       char* deg_quad_name;
@@ -352,6 +362,7 @@ d4est_mesh_initial_extents_parse
   initial_extents->deg = P4EST_ALLOC(int, initial_extents->number_of_regions);
   initial_extents->deg_quad_inc = P4EST_ALLOC(int, initial_extents->number_of_regions);
   initial_extents->refine_per_region_at_start = 0;
+  initial_extents->keep_quad_fams_together = 1;
   initial_extents->number_of_refines
     = P4EST_ALLOC(int,initial_extents->number_of_regions);
                                                    
