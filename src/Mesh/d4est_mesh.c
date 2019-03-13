@@ -229,7 +229,7 @@ int d4est_mesh_initial_extents_handler
           )
          ){
    D4EST_ASSERT(pconfig->keep_quad_fams_together == 1);
-   pconfig->refine_per_region_at_start =  atoi(value);
+   pconfig->keep_quad_fams_together =  atoi(value);
  }  
  else {
     for (int i = 0; i < pconfig->number_of_regions; i++){
