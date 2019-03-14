@@ -153,7 +153,6 @@ int main(int argc, char *argv[])
     }
     p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
   }
-
   else if (initial_grid_input->load_from_checkpoint == 1 &&
            initial_grid_input->checkpoint_type == D4EST_CHKPT_P4EST_H5){
 
@@ -184,6 +183,11 @@ int main(int argc, char *argv[])
                          );
     zlog_info(c_default, "Successfully read checkpoint degrees");
   }
+  else {
+    zlog_error(c_default, "Checkpoint parameters not set or something eles is wrong");
+    D4EST_ABORT("");
+  }
+  
   if (initial_grid_input->load_from_checkpoint == 1 &&
            initial_grid_input->checkpoint_type == D4EST_CHKPT_HISTORY_H5){
     
@@ -221,10 +225,7 @@ int main(int argc, char *argv[])
       );   
     
   }
-  else {
-    zlog_error(c_default, "Checkpoint parameters not set or something eles is wrong");
-    D4EST_ABORT("");
-  }
+
   
   d4est_ghost_t* d4est_ghost = NULL;
 
