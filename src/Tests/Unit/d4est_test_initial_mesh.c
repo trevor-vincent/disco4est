@@ -114,9 +114,13 @@ int main(int argc, char *argv[])
   D4EST_ABORT("D4EST_TEST not defined");
 #endif
   
-  sc_MPI_Comm mpicomm;
-  PetscInitialize(&argc,&argv,(char*)0,NULL);
-  mpicomm = PETSC_COMM_WORLD;
+  /* sc_MPI_Comm mpicomm; */
+  /* PetscInitialize(&argc,&argv,(char*)0,NULL); */
+  /* mpicomm = PETSC_COMM_WORLD; */
+
+  int mpiret = sc_MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+  sc_MPI_Comm mpicomm = sc_MPI_COMM_WORLD;
   
   int proc_size;
   int proc_rank;
@@ -154,8 +158,8 @@ int main(int argc, char *argv[])
 
   d4est_mesh_initial_extents_t* initial_grid_input = d4est_mesh_initial_extents_parse((argc == 2) ? argv[1] :      "d4est_test_initial_mesh.input", d4est_geom);
 
-  p4est_t* p4est;
-  p4est = p4est_new_ext
+     
+  p4est_t* p4est = p4est_new_ext
           (
            mpicomm,
            d4est_geom->p4est_conn,
@@ -167,41 +171,66 @@ int main(int argc, char *argv[])
            NULL
           );
 
-
   if (initial_grid_input->refine_per_region_at_start){
     for (int i = 0; i < initial_grid_input->number_of_regions;
          i++){
 
-      int num_of_times = initial_grid_input->number_of_refines[i];
-      D4EST_ASSERT(num_of_times >= 0);
+      int reg = -1;
+      for (int k = 0; k < initial_grid_input->number_of_regions; k++){
+        if (initial_grid_input->per_region_order[k] == -1){
+          D4EST_ABORT("initial_grid_input->per_region_order[k] == -1");
+        }
+        if (initial_grid_input->per_region_order[k] == i){
+          reg = k;
+        }
+      }
         
+      int num_of_times = initial_grid_input->per_region_number_of_refines[reg];
+      if (num_of_times == -1){
+        D4EST_ABORT("num_of_times == -1");
+      }
+      int partition = initial_grid_input->per_region_partition[reg];
+      if (partition == -1){
+        D4EST_ABORT("partition == -1");
+      }
+                
       for (int j = 0; j < num_of_times; j++){
         void* tmp = p4est->user_pointer;
         d4est_mesh_refine_in_region_data_t rird;
         rird.d4est_geom = d4est_geom;
-        rird.region = i;        
+        rird.region = reg;        
         p4est->user_pointer = &rird;
-        
-        p4est_refine(p4est,
+        p4est_refine(
+                     p4est,
                      0,
                      d4est_mesh_refine_in_region_callback,
                      NULL
-                    );
+        );
 
         p4est->user_pointer = tmp;
+      }
+
+      if (partition){
+        if (initial_grid_input->keep_quad_fams_together){
+          p4est_partition(p4est, 1, NULL);
+        }
+        else {
+          p4est_partition(p4est, 0, NULL);
+        }          
       }
         
     }
   }
-    
-
-  if (initial_grid_input->keep_quad_fams_together){
-    p4est_partition(p4est, 1, NULL);
-  }
   else {
-    p4est_partition(p4est, 0, NULL);
-  }  
+    if (initial_grid_input->keep_quad_fams_together){
+      p4est_partition(p4est, 1, NULL);
+    }
+    else {
+      p4est_partition(p4est, 0, NULL);
+    }
+  }
   p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
+
   
   d4est_ghost_t* d4est_ghost = NULL;
      
@@ -246,13 +275,13 @@ int main(int argc, char *argv[])
                                                                1);
 
     
-  int local_nodes = local_sizes.local_nodes;    
+  int local_nodes = local_sizes.local_nodes;
   dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
   /* / Setup boundary conditions */
   d4est_laplacian_dirichlet_bc_t bc_data_for_lhs;
   bc_data_for_lhs.dirichlet_fcn = poly_vec_fcn;
-  bc_data_for_lhs.eval_method = eval_method;  
+  bc_data_for_lhs.eval_method = eval_method;
 
     
   d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, "d4est_test_initial_mesh.input", BC_DIRICHLET, &bc_data_for_lhs);
@@ -265,8 +294,8 @@ int main(int argc, char *argv[])
 
 
 
-  double* poly_vec = P4EST_ALLOC(double, local_nodes);    
-  double* Apoly_vec = P4EST_ALLOC(double, local_nodes);
+  double* poly_vec = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* Apoly_vec = P4EST_ALLOC_ZERO(double, local_nodes);
 
   d4est_elliptic_data_t elliptic_data;
   elliptic_data.u = poly_vec;
@@ -316,35 +345,25 @@ int main(int argc, char *argv[])
      -1
     );
 
-  /* P4EST_FREE(error); */
-  /* P4EST_FREE(element_id); */
   P4EST_FREE(Apoly_vec);
   P4EST_FREE(poly_vec);
-  /* P4EST_FREE(Abc_poly_vec); */
-  /* P4EST_FREE(Apoly_vec_compare); */
-  /* P4EST_FREE(tmp); */
 
   if (d4est_ghost_data != NULL){
     d4est_ghost_data_destroy(d4est_ghost_data);
     d4est_ghost_data = NULL;
-  } 
+  }
 
   d4est_laplacian_flux_destroy(flux_data_for_apply_lhs);
     
   d4est_ghost_destroy(d4est_ghost);
-
-  
   d4est_mesh_initial_extents_destroy(initial_grid_input);
-
   d4est_quadrature_destroy(p4est, d4est_ops, d4est_geom, d4est_quad);
-  /* d4est_amr_destroy(d4est_amr_random); */
   d4est_ops_destroy(d4est_ops);
   p4est_destroy(p4est);
   d4est_geometry_destroy(d4est_geom);
+
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
   
-  PetscFinalize();
-  /* if (same && same2) */
-    /* return 0; */
-  /* else */
-    /* return 1; */
+  //PetscFinalize();
 }

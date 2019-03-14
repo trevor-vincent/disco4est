@@ -74,7 +74,12 @@ int main(int argc, char *argv[])
   p4est_t* p4est;
   d4est_operators_t* d4est_ops = d4est_ops_init(initial_grid_input->max_degree);
   
-  if (initial_grid_input->load_from_checkpoint == 0){
+  if (initial_grid_input->load_from_checkpoint == 0 ||
+      (
+       initial_grid_input->load_from_checkpoint == 1 &&
+       initial_grid_input->checkpoint_type == D4EST_CHKPT_HISTORY_H5
+      )
+     ){
     
     p4est = p4est_new_ext
     (
@@ -92,33 +97,59 @@ int main(int argc, char *argv[])
       for (int i = 0; i < initial_grid_input->number_of_regions;
            i++){
 
-        int num_of_times = initial_grid_input->number_of_refines[i];
-        D4EST_ASSERT(num_of_times >= 0);
+        int reg = -1;
+        for (int k = 0; k < initial_grid_input->number_of_regions; k++){
+          if (initial_grid_input->per_region_order[k] == -1){
+            D4EST_ABORT("initial_grid_input->per_region_order[k] == -1");
+          }
+          if (initial_grid_input->per_region_order[k] == i){
+            reg = k;
+          }
+        }
         
+        int num_of_times = initial_grid_input->per_region_number_of_refines[reg];
+        if (num_of_times == -1){
+          D4EST_ABORT("num_of_times == -1");
+        }
+        int partition = initial_grid_input->per_region_partition[reg];
+        if (partition == -1){
+          D4EST_ABORT("partition == -1");
+        }
+                
         for (int j = 0; j < num_of_times; j++){
           void* tmp = p4est->user_pointer;
           d4est_mesh_refine_in_region_data_t rird;
           rird.d4est_geom = d4est_geom;
-          rird.region = i;        
+          rird.region = reg;        
           p4est->user_pointer = &rird;
-        
-          p4est_refine(p4est,
-                           0,
-                           d4est_mesh_refine_in_region_callback,
-                           NULL
-                          );
+          p4est_refine(
+                       p4est,
+                       0,
+                       d4est_mesh_refine_in_region_callback,
+                       NULL
+                      );
 
           p4est->user_pointer = tmp;
+        }
+
+        if (partition){
+          if (initial_grid_input->keep_quad_fams_together){
+            p4est_partition(p4est, 1, NULL);
+          }
+          else {
+            p4est_partition(p4est, 0, NULL);
+          }          
         }
         
       }
     }
-
-    if (initial_grid_input->keep_quad_fams_together){
-      p4est_partition(p4est, 1, NULL);
-    }
     else {
-      p4est_partition(p4est, 0, NULL);
+      if (initial_grid_input->keep_quad_fams_together){
+        p4est_partition(p4est, 1, NULL);
+      }
+      else {
+        p4est_partition(p4est, 0, NULL);
+      }
     }
     p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
   }
@@ -153,57 +184,9 @@ int main(int argc, char *argv[])
                          );
     zlog_info(c_default, "Successfully read checkpoint degrees");
   }
-  else if (initial_grid_input->load_from_checkpoint == 1 &&
+  if (initial_grid_input->load_from_checkpoint == 1 &&
            initial_grid_input->checkpoint_type == D4EST_CHKPT_HISTORY_H5){
     
-    p4est = p4est_new_ext
-            (
-             mpicomm,
-             d4est_geom->p4est_conn,
-             initial_grid_input->min_quadrants,
-             initial_grid_input->min_level,
-             initial_grid_input->fill_uniform,
-             sizeof(d4est_element_data_t),
-             NULL,
-             NULL
-            );
-
-
-    if (initial_grid_input->refine_per_region_at_start){
-      for (int i = 0; i < initial_grid_input->number_of_regions;
-           i++){
-
-        int num_of_times = initial_grid_input->number_of_refines[i];
-        D4EST_ASSERT(num_of_times >= 0);
-        
-        for (int j = 0; j < num_of_times; j++){
-          void* tmp = p4est->user_pointer;
-          d4est_mesh_refine_in_region_data_t rird;
-          rird.d4est_geom = d4est_geom;
-          rird.region = i;        
-          p4est->user_pointer = &rird;
-        
-          p4est_refine(p4est,
-                           0,
-                           d4est_mesh_refine_in_region_callback,
-                           NULL
-                          );
-
-          p4est->user_pointer = tmp;
-        }
-        
-      }
-    }
-    
-
-    if (initial_grid_input->keep_quad_fams_together){
-      p4est_partition(p4est, 1, NULL);
-    }
-    else {
-      p4est_partition(p4est, 0, NULL);
-    }
-    p4est_balance (p4est, P4EST_CONNECT_FULL, NULL);
-
     printf("initial_checkpoint_number = %d\n",initial_grid_input->initial_checkpoint_number);
     printf("checkpoint_number = %d\n",initial_grid_input->checkpoint_number);
 

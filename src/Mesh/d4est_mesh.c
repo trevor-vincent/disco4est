@@ -220,7 +220,7 @@ int d4est_mesh_initial_extents_handler
          ){
    D4EST_ASSERT(pconfig->refine_per_region_at_start == 0);
    pconfig->refine_per_region_at_start =  atoi(value);
- }
+ } 
  else if (d4est_util_match_couple
           (section,
            "initial_mesh",
@@ -236,9 +236,13 @@ int d4est_mesh_initial_extents_handler
       char* deg_name;
       char* deg_quad_name;
       char* refine_name;
+      char* refine_order_name;
+      char* refine_part_name;
       asprintf(&deg_name,"region%d_deg", i);
       asprintf(&deg_quad_name,"region%d_deg_quad_inc", i);
       asprintf(&refine_name,"region%d_number_of_refines", i);
+      asprintf(&refine_order_name,"region%d_refine_order", i);
+      asprintf(&refine_part_name,"region%d_partition_after_refine", i);
       int hit = 0;
       if (d4est_util_match_couple(section,"initial_mesh",name,deg_name)) {
         D4EST_ASSERT(pconfig->deg[i] == -1);
@@ -251,12 +255,25 @@ int d4est_mesh_initial_extents_handler
         hit++;
       }
       if (d4est_util_match_couple(section,"initial_mesh",name,refine_name)) {
-        D4EST_ASSERT(pconfig->number_of_refines[i] == -1);
-        pconfig->number_of_refines[i] = atoi(value);
+        D4EST_ASSERT(pconfig->per_region_number_of_refines[i] == -1);
+        pconfig->per_region_number_of_refines[i] = atoi(value);
         hit++;
       }
+      if (d4est_util_match_couple(section,"initial_mesh",name,refine_order_name)) {
+        D4EST_ASSERT(pconfig->per_region_order[i] == -1);
+        pconfig->per_region_order[i] = atoi(value);
+        hit++;
+      }
+      if (d4est_util_match_couple(section,"initial_mesh",name,refine_part_name)) {
+        D4EST_ASSERT(pconfig->per_region_partition[i] == -1);
+        pconfig->per_region_partition[i] = atoi(value);
+        hit++;
+      }
+      
       free(deg_name);
       free(refine_name);
+      free(refine_order_name);
+      free(refine_part_name);
       free(deg_quad_name);
       if (hit)
         return 1;
@@ -333,6 +350,9 @@ d4est_mesh_initial_extents_destroy
 ){
   P4EST_FREE(initial_extents->deg);
   P4EST_FREE(initial_extents->deg_quad_inc);
+  P4EST_FREE(initial_extents->per_region_number_of_refines);
+  P4EST_FREE(initial_extents->per_region_partition);
+  P4EST_FREE(initial_extents->per_region_order);
   free(initial_extents->checkpoint_prefix);
   free(initial_extents->newton_checkpoint_prefix);
   free(initial_extents->krylov_checkpoint_prefix);
@@ -363,9 +383,14 @@ d4est_mesh_initial_extents_parse
   initial_extents->deg_quad_inc = P4EST_ALLOC(int, initial_extents->number_of_regions);
   initial_extents->refine_per_region_at_start = 0;
   initial_extents->keep_quad_fams_together = 1;
-  initial_extents->number_of_refines
+  initial_extents->per_region_number_of_refines
     = P4EST_ALLOC(int,initial_extents->number_of_regions);
-                                                   
+  initial_extents->per_region_order
+    = P4EST_ALLOC(int,initial_extents->number_of_regions);
+  initial_extents->per_region_partition
+    = P4EST_ALLOC(int,initial_extents->number_of_regions);
+
+  
   initial_extents->load_from_checkpoint = 0;
   initial_extents->load_newton_checkpoint = 0;
   initial_extents->load_krylov_checkpoint = 0;
@@ -381,7 +406,9 @@ d4est_mesh_initial_extents_parse
  for (int i = 0; i < initial_extents->number_of_regions; i++){
     initial_extents->deg[i] = -1;
     initial_extents->deg_quad_inc[i] = -1;
-    initial_extents->number_of_refines[i] = -1;
+    initial_extents->per_region_number_of_refines[i] = -1;
+    initial_extents->per_region_order[i] = -1;
+    initial_extents->per_region_partition[i] = -1;
   }
  
   if (ini_parse(input_file, d4est_mesh_initial_extents_handler, initial_extents) < 0) {
@@ -973,15 +1000,16 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
   for (int i = 0; i < (P4EST_DIM); i++){
     n_m_mortar_quad[i] = &d4est_factors->n_m_mortar_quad[vector_stride + i*total_mortar_nodes_quad];
     for (int j = 0; j < (P4EST_DIM); j++){
-      drst_dxyz_m_mortar_quad[i][j] = &d4est_factors->drst_dxyz_m_mortar_quad[matrix_stride + (i + j*(P4EST_DIM))*total_mortar_nodes_quad];
-      drst_dxyz_p_mortar_quad_porder[i][j] = &d4est_factors->drst_dxyz_p_mortar_quad_porder[matrix_stride + (i + j*(P4EST_DIM))*total_mortar_nodes_quad];
+      drst_dxyz_m_mortar_quad[i][j] =
+        &d4est_factors->drst_dxyz_m_mortar_quad[matrix_stride + (i + j*(P4EST_DIM))*total_mortar_nodes_quad];
+      drst_dxyz_p_mortar_quad_porder[i][j] =
+        &d4est_factors->drst_dxyz_p_mortar_quad_porder[matrix_stride + (i + j*(P4EST_DIM))*total_mortar_nodes_quad];
     }
   }
 
   double* j_div_sj_m_mortar_quad = P4EST_ALLOC(double, total_mortar_nodes_quad);
   double* j_div_sj_p_mortar_quad_porder = P4EST_ALLOC(double, total_mortar_nodes_quad); 
   double* j_div_sj_p_mortar_quad = P4EST_ALLOC(double, total_mortar_nodes_quad); 
-
 
   double* hm_mortar_quad = &d4est_factors->hm_mortar_quad[scalar_stride];
   double* hp_mortar_quad = &d4est_factors->hp_mortar_quad[scalar_stride];

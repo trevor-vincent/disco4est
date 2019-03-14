@@ -173,8 +173,11 @@ typedef struct {
   int* deg;
   int* deg_quad_inc;
 
+  /* extra power-user options */
   int refine_per_region_at_start;
-  int* number_of_refines;
+  int* per_region_number_of_refines;
+  int* per_region_partition;
+  int* per_region_order;
   int keep_quad_fams_together;
   
   int load_from_checkpoint;
@@ -188,7 +191,6 @@ typedef struct {
 
   int load_krylov_checkpoint;
   char* krylov_checkpoint_prefix;
-
   
   d4est_checkpoint_type_t checkpoint_type;
   

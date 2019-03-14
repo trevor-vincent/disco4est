@@ -10,9 +10,19 @@ region2_deg = 2
 region2_deg_quad_inc = 0
 keep_quad_fams_together = 0;
 refine_per_region_at_start = 1
+
 region0_number_of_refines = 0
-region1_number_of_refines = 0
+region0_partition_after_refine = 0
+region0_refine_order = 2
+
+region1_number_of_refines = 1
+region1_partition_after_refine = 0
+region1_refine_order = 1
+
 region2_number_of_refines = 1
+region2_partition_after_refine = 1
+region2_refine_order = 0
+
 load_from_checkpoint = 0
 checkpoint_type = D4EST_CHKPT_HISTORY_H5
 checkpoint_prefix = checkpoint
@@ -61,6 +71,12 @@ JAC_compute_method = numerical
 ; DX_compute_method = analytic
 ; JAC_compute_method = numerical
 
+; [geometry]
+; name = disk
+; R0 = 1
+; R1 = 2
+; DX_compute_method = numerical
+; JAC_compute_method = numerical
 
 [quadrature]
 name = legendre
