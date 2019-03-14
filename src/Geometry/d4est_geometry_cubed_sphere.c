@@ -26,7 +26,7 @@ int d4est_geometry_cubed_sphere_get_number_of_regions
     return 1;
   }
   else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_INNEROUTER_WEDGE){
-    return 1;
+    return 2;
   }
   else if (d4est_geom->geom_type == GEOM_CUBED_SPHERE_WITH_SPHERE_HOLE){
     return 1;
