@@ -183,10 +183,10 @@ d4est_solver_multigrid_get_h_coarsen_levels
 
   if (mpi_size > num_trees && mpi_size % num_trees != 0){
     if (p4est->mpirank == 0){
-      zlog_error(c_default, "****WARNING**** Please set starting conditinos such that mpi_size > num_trees && mpi_size mod num_trees == 0 OR mpi_size < num_trees && (mpi_size == 1 || mpi_size mod P4EST_CHILDREN == 0). This will give a proper multigrid hiearchy");
-      zlog_error(c_default, "P4EST_CHILDREN = %d", (P4EST_CHILDREN));
-      zlog_error(c_default, "mpi_size = %d", mpi_size);
-      zlog_error(c_default, "num_trees = %d", num_trees);
+      zlog_warn(c_default, "It is best to set starting conditinos such that mpi_size > num_trees && mpi_size mod num_trees == 0 OR mpi_size < num_trees && (mpi_size == 1 || mpi_size mod P4EST_CHILDREN == 0). This will give a proper multigrid hiearchy");
+      zlog_warn(c_default, "P4EST_CHILDREN = %d", (P4EST_CHILDREN));
+      zlog_warn(c_default, "mpi_size = %d", mpi_size);
+      zlog_warn(c_default, "num_trees = %d", num_trees);
     }
     /* D4EST_ABORT(""); */
   }
@@ -202,7 +202,8 @@ d4est_solver_multigrid_get_h_coarsen_levels
   }
 
   if (mpi_size >= p4est->global_num_quadrants){
-    zlog_info(c_default, "mpisize >= p4est->global_num_quadrants");
+    zlog_warn(c_default, "mpisize >= p4est->global_num_quadrants");
+    zlog_warn(c_default, "setting number of multigrid levels to 1");
     return 1;
   }
   

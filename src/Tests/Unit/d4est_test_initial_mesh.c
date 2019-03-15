@@ -265,95 +265,112 @@ int main(int argc, char *argv[])
                                           (void*)initial_grid_input
                                          );
 
-  /* initial_grid_input->initial_nodes = local_sizes.local_nodes; */
+
+  if (p4est->mpisize == 1)
+    d4est_vtk_save
+      (
+       p4est,
+       d4est_ops,
+       "d4est_test_initial_mesh.input",
+       "d4est_vtk",
+       NULL,
+       NULL,
+       NULL,
+       NULL,
+       NULL,
+       NULL,
+       -1
+      );
+  
+  initial_grid_input->initial_nodes = local_sizes.local_nodes;
 
 
-  /* d4est_field_type_t field_type = NODAL; */
-  /* d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est, */
-  /*                                                              d4est_ghost, */
-  /*                                                              &field_type, */
-  /*                                                              1); */
+  d4est_field_type_t field_type = NODAL;
+  d4est_ghost_data_t* d4est_ghost_data = d4est_ghost_data_init(p4est,
+                                                               d4est_ghost,
+                                                               &field_type,
+                                                               1);
 
     
-  /* int local_nodes = local_sizes.local_nodes; */
-  /* dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO; */
+  int local_nodes = local_sizes.local_nodes;
+  dirichlet_bndry_eval_method_t eval_method = EVAL_BNDRY_FCN_ON_LOBATTO;
 
-  /* /\* / Setup boundary conditions *\/ */
-  /* d4est_laplacian_dirichlet_bc_t bc_data_for_lhs; */
-  /* bc_data_for_lhs.dirichlet_fcn = poly_vec_fcn; */
-  /* bc_data_for_lhs.eval_method = eval_method; */
+  /* / Setup boundary conditions */
+  d4est_laplacian_dirichlet_bc_t bc_data_for_lhs;
+  bc_data_for_lhs.dirichlet_fcn = poly_vec_fcn;
+  bc_data_for_lhs.eval_method = eval_method;
 
     
-  /* d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, "d4est_test_initial_mesh.input", BC_DIRICHLET, &bc_data_for_lhs); */
+  d4est_laplacian_flux_data_t* flux_data_for_apply_lhs = d4est_laplacian_flux_new(p4est, "d4est_test_initial_mesh.input", BC_DIRICHLET, &bc_data_for_lhs);
 
 
-  /* d4est_elliptic_eqns_t prob_fcns; */
-  /* prob_fcns.build_residual = NULL; */
-  /* prob_fcns.apply_lhs = d4est_test_apply_lhs; */
-  /* prob_fcns.user = flux_data_for_apply_lhs; */
+  d4est_elliptic_eqns_t prob_fcns;
+  prob_fcns.build_residual = NULL;
+  prob_fcns.apply_lhs = d4est_test_apply_lhs;
+  prob_fcns.user = flux_data_for_apply_lhs;
 
 
 
-  /* double* poly_vec = P4EST_ALLOC_ZERO(double, local_nodes); */
-  /* double* Apoly_vec = P4EST_ALLOC_ZERO(double, local_nodes); */
+  double* poly_vec = P4EST_ALLOC_ZERO(double, local_nodes);
+  double* Apoly_vec = P4EST_ALLOC_ZERO(double, local_nodes);
 
-  /* d4est_elliptic_data_t elliptic_data; */
-  /* elliptic_data.u = poly_vec; */
-  /* elliptic_data.Au = Apoly_vec; */
-  /* elliptic_data.local_nodes = local_nodes; */
+  d4est_elliptic_data_t elliptic_data;
+  elliptic_data.u = poly_vec;
+  elliptic_data.Au = Apoly_vec;
+  elliptic_data.local_nodes = local_nodes;
 
-  /* elliptic_data.field_types = &field_type; */
-  /* elliptic_data.num_of_fields = 1; */
+  elliptic_data.field_types = &field_type;
+  elliptic_data.num_of_fields = 1;
 
-  /* d4est_mesh_init_field */
-  /*   ( */
-  /*    p4est, */
-  /*    poly_vec, */
-  /*    poly_vec_fcn, */
-  /*    d4est_ops, // unnecessary? */
-  /*    d4est_geom, // unnecessary? */
-  /*    d4est_factors, */
-  /*    INIT_FIELD_ON_LOBATTO, */
-  /*    NULL */
-  /*   ); */
+  d4est_mesh_init_field
+    (
+     p4est,
+     poly_vec,
+     poly_vec_fcn,
+     d4est_ops, // unnecessary?
+     d4est_geom, // unnecessary?
+     d4est_factors,
+     INIT_FIELD_ON_LOBATTO,
+     NULL
+    );
 
-  /* d4est_elliptic_eqns_apply_lhs */
-  /*   ( */
-  /*    p4est, */
-  /*    d4est_ghost, */
-  /*    d4est_ghost_data, */
-  /*    &prob_fcns, */
-  /*    &elliptic_data, */
-  /*    d4est_ops, */
-  /*    d4est_geom, */
-  /*    d4est_quad, */
-  /*    d4est_factors */
-  /*   ); */
+  d4est_elliptic_eqns_apply_lhs
+    (
+     p4est,
+     d4est_ghost,
+     d4est_ghost_data,
+     &prob_fcns,
+     &elliptic_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors
+    );
 
-  /* d4est_vtk_save */
-  /*   ( */
-  /*    p4est, */
-  /*    d4est_ops, */
-  /*    "d4est_test_initial_mesh.input", */
-  /*    "d4est_vtk", */
-  /*    (const char*[]){"prob_vecs.u", "prob_vecs.Au", NULL}, */
-  /*    (double**)((const double*[]){elliptic_data.u, elliptic_data.Au, NULL}), */
-  /*    NULL, */
-  /*    NULL, */
-  /*    NULL, */
-  /*    NULL, */
-  /*    -1 */
-  /*   ); */
+  d4est_vtk_save
+    (
+     p4est,
+     d4est_ops,
+     "d4est_test_initial_mesh.input",
+     "d4est_vtk",
+     (const char*[]){"prob_vecs.u", "prob_vecs.Au", NULL},
+     (double**)((const double*[]){elliptic_data.u, elliptic_data.Au, NULL}),
+     NULL,
+     NULL,
+     NULL,
+     NULL,
+     -1
+    );
 
-  /* P4EST_FREE(Apoly_vec); */
-  /* P4EST_FREE(poly_vec); */
+  P4EST_FREE(Apoly_vec);
+  P4EST_FREE(poly_vec);
 
-  /* if (d4est_ghost_data != NULL){ */
-    /* d4est_ghost_data_destroy(d4est_ghost_data); */
-    /* d4est_ghost_data = NULL; */
-  /* } */
+  if (d4est_ghost_data != NULL){
+    d4est_ghost_data_destroy(d4est_ghost_data);
+    d4est_ghost_data = NULL;
+  }
 
-  /* d4est_laplacian_flux_destroy(flux_data_for_apply_lhs); */
+  d4est_laplacian_flux_destroy(flux_data_for_apply_lhs);
     
   d4est_ghost_destroy(d4est_ghost);
   d4est_mesh_initial_extents_destroy(initial_grid_input);

@@ -699,14 +699,14 @@ void d4est_mortars_with_opt_compute_flux_on_local_elements_aux(p4est_iter_face_i
         }
         int sum_ghost_array = d4est_util_sum_array_int(e_m_is_ghost, (P4EST_HALF));
 
-        if (sum_ghost_array != 0 && sum_ghost_array != 4) {
-          int dd;
-          printf("sum_ghost_array != 0 || sum_ghost_array != 4, it = %d\n",
-                 sum_ghost_array);
-          for (dd = 0; dd < (P4EST_HALF); dd++) {
-            printf(" ghost_id = %d\n", side[s_m]->is.hanging.quadid[dd]);
-          }
-        }
+        /* if (sum_ghost_array != 0 && sum_ghost_array != 4) { */
+        /*   int dd; */
+        /*   printf("sum_ghost_array != 0 || sum_ghost_array != 4, it = %d\n", */
+        /*          sum_ghost_array); */
+        /*   for (dd = 0; dd < (P4EST_HALF); dd++) { */
+        /*     printf(" ghost_id = %d\n", side[s_m]->is.hanging.quadid[dd]); */
+        /*   } */
+        /* } */
 
         /* unless every hanging face is a ghost, we calculate the flux */
         if (sum_ghost_array < (P4EST_HALF)) {

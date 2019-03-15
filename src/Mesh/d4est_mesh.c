@@ -954,43 +954,22 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
     deg_mortar_lobatto_porder[inew] = deg_mortar_lobatto[i];
     mortar_nodes_quad_porder[inew] = mortar_nodes_quad[i];
   }
+
   
-  /* int scalar_stride = e_m[0]->mortar_quad_scalar_stride[f_m]; */
-  /* int vector_stride = e_m[0]->mortar_quad_vector_stride[f_m]; */
-  /* int matrix_stride = e_m[0]->mortar_quad_matrix_stride[f_m]; */
-
-
-  /* d4est_mesh_local_sizes_t* sizes = params; */
-  /* d4est_element_data_t* e_p_oriented [(P4EST_HALF)]; */
-  /* d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented); */
-
-  /* calculate degs and nodes of the mortar faces */
-  /* int total_mortar_nodes_quad = 0; */
-  /* for (int i = 0; i < faces_m; i++) */
-    /* for (int j = 0; j < faces_p; j++){ */
-      /* int deg_mortar_quad = d4est_util_max_int */
-                            /* ( */
-                             /* e_m[i]->deg_quad, */
-                             /* e_p_oriented[j]->deg_quad */
-                            /* ); */
-      /* total_mortar_nodes_quad += d4est_lgl_get_nodes( (P4EST_DIM) - 1, deg_mortar_quad ); */
-    /* } */
-
-  /* e_m[0]->mortar_quad_scalar_stride[f_m] = sizes->local_mortar_nodes_quad; */
-  /* e_m[0]->mortar_quad_vector_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM); */
-  /* e_m[0]->mortar_quad_matrix_stride[f_m] = sizes->local_mortar_nodes_quad*(P4EST_DIM)*(P4EST_DIM); */
-
   for (int f = 0; f < faces_m; f++){
-    d4est_factors->local_strides[e_m[f]->id].mortar_quad_stride[f_m] = d4est_factors->aux_mortar_quad_stride;
-    d4est_factors->local_strides[e_m[f]->id].boundary_quad_stride[f_m] = -1;
+    /* printf("e_m[%d]->id = %d\n",f,e_m[f]->id); */
+    if (e_m[f]->mpirank == p4est->mpirank){
+      d4est_factors->local_strides[e_m[f]->id].mortar_quad_stride[f_m] = d4est_factors->aux_mortar_quad_stride;
+      d4est_factors->local_strides[e_m[f]->id].boundary_quad_stride[f_m] = -1;
+    }
   }
+
+  int scalar_stride = d4est_factors->aux_mortar_quad_stride;
+  int vector_stride = (P4EST_DIM)*d4est_factors->aux_mortar_quad_stride;
+  int matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->aux_mortar_quad_stride;
+  int boundary_vector_stride = -1;
+
   d4est_factors->aux_mortar_quad_stride += total_mortar_nodes_quad;
-  
-  
-  int scalar_stride = d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
-  int vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
-  int matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
-  int boundary_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].boundary_quad_stride[f_m];
   
   double* n_m_mortar_quad [(P4EST_DIM)];
   double* drst_dxyz_m_mortar_quad [(P4EST_DIM)][(P4EST_DIM)];
@@ -1008,8 +987,8 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
   }
 
   double* j_div_sj_m_mortar_quad = P4EST_ALLOC(double, total_mortar_nodes_quad);
-  double* j_div_sj_p_mortar_quad_porder = P4EST_ALLOC(double, total_mortar_nodes_quad); 
-  double* j_div_sj_p_mortar_quad = P4EST_ALLOC(double, total_mortar_nodes_quad); 
+  double* j_div_sj_p_mortar_quad_porder = P4EST_ALLOC(double, total_mortar_nodes_quad);
+  double* j_div_sj_p_mortar_quad = P4EST_ALLOC(double, total_mortar_nodes_quad);
 
   double* hm_mortar_quad = &d4est_factors->hm_mortar_quad[scalar_stride];
   double* hp_mortar_quad = &d4est_factors->hp_mortar_quad[scalar_stride];
@@ -1106,9 +1085,6 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
      d4est_mesh_get_size_parameters(d4est_factors)
     );
 
-  /* d4est_element_data_t* e_p_oriented [(P4EST_HALF)]; */
-  /* d4est_element_data_reorient_f_p_elements_to_f_m_order(e_p, (P4EST_DIM)-1, f_m, f_p, orientation, faces_p, e_p_oriented); */
-  
   d4est_mesh_calculate_mortar_h
     (
      p4est,
@@ -1129,50 +1105,6 @@ d4est_mesh_compute_mortar_quadrature_quantities_interface_callback
   P4EST_FREE(j_div_sj_p_mortar_quad);
   P4EST_FREE(j_div_sj_m_mortar_quad);
   P4EST_FREE(j_div_sj_p_mortar_quad_porder);
-
-
-/*     d4est_mortar_side_data_t* mortar_side_data = &d4est_factors->mortar_side_data[mortar_side_id_m]; */
-
-/*   mortar_side_data->boundary_quad_vector_stride = -1; */
-/*   mortar_side_data->mortar_quad_scalar_stride = e_m[0]->mortar_quad_scalar_stride[f_m]; */
-/*   mortar_side_data->mortar_quad_vector_stride = e_m[0]->mortar_quad_vector_stride[f_m]; */
-/*   mortar_side_data->mortar_quad_matrix_stride = e_m[0]->mortar_quad_matrix_stride[f_m]; */
-  
-/*   mortar_side_data->faces_m = faces_m; */
-/*   mortar_side_data->faces_p = faces_p; */
-/*   mortar_side_data->f_p = f_p; */
-/*   mortar_side_data->f_m = f_m; */
-/*   mortar_side_data->tree_p = e_p[0]->tree; */
-/*   mortar_side_data->tree_m = e_m[0]->tree; */
-/*   mortar_side_data->orientation = orientation; */
-
-/*   for (int f = 0; f < faces_m; f++){ */
-/*     mortar_side_data->q_m[f][0] = e_m[f]->q[0]; */
-/*     mortar_side_data->q_m[f][1] = e_m[f]->q[1]; */
-/* #if (P4EST_DIM)==3 */
-/*     mortar_side_data->q_m[f][2] = e_m[f]->q[2]; */
-/* #endif */
-/*     mortar_side_data->dq_m[f] = e_m[f]->dq; */
-/*     mortar_side_data->tree_quadid_m[f] = e_m[f]->tree_quadid; */
-/*     mortar_side_data->deg_m[f] = e_m[f]->deg; */
-/*     mortar_side_data->deg_quad_m[f] = e_m[f]->deg_quad; */
-/*   } */
-
-/*   for (int f = 0; f < faces_p; f++){ */
-/*     mortar_side_data->q_p[f][0] = e_p[f]->q[0]; */
-/*     mortar_side_data->q_p[f][1] = e_p[f]->q[1]; */
-/* #if (P4EST_DIM)==3 */
-/*     mortar_side_data->q_p[f][2] = e_p[f]->q[2]; */
-/* #endif */
-/*     mortar_side_data->dq_p[f] = e_p[f]->dq; */
-/*     mortar_side_data->tree_quadid_p[f] = e_p[f]->tree_quadid; */
-/*     mortar_side_data->deg_p[f] = e_p[f]->deg; */
-/*     mortar_side_data->deg_quad_p[f] = e_p[f]->deg_quad; */
-/*   } */
-
-/*   mortar_side_data->mortar_side_id = mortar_side_id_m; */
-
-
   
 }
 
@@ -2783,7 +2715,7 @@ d4est_mesh_data_compute
      d4est_quad,
      d4est_factors,
      face_h_type
-    ); 
+    );
   
 }
 
@@ -2896,10 +2828,9 @@ d4est_mesh_update
        sc_MPI_SUM,
        p4est->mpicomm
       );
-
-
     d4est_factors->global_nodes = global_nodes;
   }
+  
   if (ghost_init_option == INITIALIZE_GHOST){
     if (d4est_ghost != NULL && *d4est_ghost != NULL) {
       d4est_ghost_destroy(*d4est_ghost);

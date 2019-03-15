@@ -15,7 +15,7 @@ region0_number_of_refines = 0
 region0_partition_after_refine = 0
 region0_refine_order = 2
 
-region1_number_of_refines = 1
+region1_number_of_refines = 0
 region1_partition_after_refine = 0
 region1_refine_order = 1
 

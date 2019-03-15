@@ -414,10 +414,18 @@ static void
     
   if (!laplacian_flux_params->using_provided_mesh_data){
 
-    int mortar_quad_scalar_stride = d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
-    int mortar_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
-    int mortar_quad_matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
-    int boundary_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].boundary_quad_stride[f_m];
+    int use_id = -1;
+    for (int fi = 0; fi < faces_m; fi++){
+      if (e_m[fi]->mpirank == p4est->mpirank){
+        use_id = e_m[fi]->id;
+        break;
+      }
+    }
+    
+    int mortar_quad_scalar_stride = d4est_factors->local_strides[use_id].mortar_quad_stride[f_m];
+    int mortar_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[use_id].mortar_quad_stride[f_m];
+    int mortar_quad_matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->local_strides[use_id].mortar_quad_stride[f_m];
+    int boundary_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[use_id].boundary_quad_stride[f_m];
     
     sj_on_f_m_mortar_quad = &d4est_factors->sj_m_mortar_quad[mortar_quad_scalar_stride];
 
