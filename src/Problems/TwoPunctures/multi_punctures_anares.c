@@ -174,6 +174,7 @@ typedef struct {
   int use_dirichlet;
   int interpolate_f;
   int amr_level_for_uniform_p;
+  int load_u_prev_from_checkpoint;
   
 } multi_punctures_init_params_t;
 
@@ -203,6 +204,10 @@ int multi_punctures_init_params_handler
     D4EST_ASSERT(pconfig->use_dirichlet == -1);
     pconfig->use_dirichlet = atoi(value);
   }
+    else if (d4est_util_match_couple(section,"problem",name,"load_u_prev_from_checkpoint")) {
+    D4EST_ASSERT(pconfig->load_u_prev_from_checkpoint == -1);
+    pconfig->load_u_prev_from_checkpoint = atoi(value);
+  }
   else if (d4est_util_match_couple(section,"problem",name,"interpolate_f")) {
     D4EST_ASSERT(pconfig->interpolate_f == -1);
     pconfig->interpolate_f = atoi(value);
@@ -230,7 +235,7 @@ multi_punctures_init_params_input
   input.use_pointwise_estimator = -1;
   input.interpolate_f = -1;
   input.amr_level_for_uniform_p = 1000;
-  
+  input.load_u_prev_from_checkpoint = -1;
   if
     (
       ini_parse(input_file,
@@ -240,6 +245,7 @@ multi_punctures_init_params_input
   }
   
   D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
+    D4EST_CHECK_INPUT("problem", input.load_u_prev_from_checkpoint, -1);
   D4EST_CHECK_INPUT("problem", input.use_pointwise_estimator, -1);
   D4EST_CHECK_INPUT("problem", input.interpolate_f, -1);
   /* D4EST_CHECK_INPUT("amr", input.amr_level_for_uniform_p, -1); */
@@ -398,6 +404,8 @@ problem_init
        INIT_FIELD_ON_LOBATTO,
        NULL
       );
+    
+    d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
   }
   else {
 
@@ -423,6 +431,34 @@ problem_init
                            initial_extents->checkpoint_number
                           );
 
+   if(!init_params.load_u_prev_from_checkpoint){
+      d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
+    }
+    else {
+      d4est_checkpoint_read_dataset
+        (
+         p4est,
+         initial_extents->checkpoint_prefix,
+         "u_prev",
+         H5T_NATIVE_DOUBLE,
+         u_prev,
+         initial_extents->checkpoint_number
+        );
+
+
+      double sum = d4est_util_sum_array_dbl(u_prev, prob_vecs.local_nodes);
+
+      d4est_checkpoint_check_dataset(p4est,
+                                     initial_extents->checkpoint_prefix,
+                                     "u_prev",
+                                     H5T_NATIVE_DOUBLE,
+                                     (void*)&sum,
+                                     initial_extents->checkpoint_number
+                                    );
+
+    }
+
+    
     initial_level = initial_extents->checkpoint_number + 1;
 /* d4est_h5_read_dataset(p4est->mpirank,initial_extents->checkpoint_prefix,"u",H5T_NATIVE_DOUBLE, prob_vecs.u); */
   }
@@ -450,7 +486,6 @@ problem_init
   energy_norm_ctx.energy_norm_data = NULL;
   energy_norm_ctx.energy_estimator_sq_local = -1.;
   
-  d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
   int iterations = 1;
 
   zlog_category_t *c_geom = zlog_get_category("d4est_geometry_compactified");

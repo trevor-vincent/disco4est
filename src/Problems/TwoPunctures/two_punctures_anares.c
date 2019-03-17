@@ -178,6 +178,7 @@ typedef struct {
   int use_dirichlet;
   int interpolate_f;
   int amr_level_for_uniform_p;
+  int load_u_prev_from_checkpoint;
   
 } two_punctures_init_params_t;
 
@@ -207,6 +208,10 @@ int two_punctures_init_params_handler
     D4EST_ASSERT(pconfig->use_dirichlet == -1);
     pconfig->use_dirichlet = atoi(value);
   }
+    else if (d4est_util_match_couple(section,"problem",name,"load_u_prev_from_checkpoint")) {
+    D4EST_ASSERT(pconfig->load_u_prev_from_checkpoint == -1);
+    pconfig->load_u_prev_from_checkpoint = atoi(value);
+  }
   else if (d4est_util_match_couple(section,"problem",name,"interpolate_f")) {
     D4EST_ASSERT(pconfig->interpolate_f == -1);
     pconfig->interpolate_f = atoi(value);
@@ -234,6 +239,7 @@ two_punctures_init_params_input
   input.use_pointwise_estimator = -1;
   input.interpolate_f = -1;
   input.amr_level_for_uniform_p = 1000;
+  input.load_u_prev_from_checkpoint = -1;
   
   if
     (
@@ -244,6 +250,7 @@ two_punctures_init_params_input
   }
   
   D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
+  D4EST_CHECK_INPUT("problem", input.load_u_prev_from_checkpoint, -1);
   D4EST_CHECK_INPUT("problem", input.use_pointwise_estimator, -1);
   D4EST_CHECK_INPUT("problem", input.interpolate_f, -1);
   /* D4EST_CHECK_INPUT("amr", input.amr_level_for_uniform_p, -1); */
@@ -403,9 +410,12 @@ problem_init
        INIT_FIELD_ON_LOBATTO,
        NULL
       );
+
+    d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
   }
   else {
 
+ 
 
     d4est_checkpoint_read_dataset
       (
@@ -428,8 +438,35 @@ problem_init
                            initial_extents->checkpoint_number
                           );
 
+    if(!init_params.load_u_prev_from_checkpoint){
+      d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
+    }
+    else {
+      d4est_checkpoint_read_dataset
+        (
+         p4est,
+         initial_extents->checkpoint_prefix,
+         "u_prev",
+         H5T_NATIVE_DOUBLE,
+         u_prev,
+         initial_extents->checkpoint_number
+        );
+
+
+      double sum = d4est_util_sum_array_dbl(u_prev, prob_vecs.local_nodes);
+
+      d4est_checkpoint_check_dataset(p4est,
+                                     initial_extents->checkpoint_prefix,
+                                     "u_prev",
+                                     H5T_NATIVE_DOUBLE,
+                                     (void*)&sum,
+                                     initial_extents->checkpoint_number
+                                    );
+
+    }
+
+    
     initial_level = initial_extents->checkpoint_number + 1;
-/* d4est_h5_read_dataset(p4est->mpirank,initial_extents->checkpoint_prefix,"u",H5T_NATIVE_DOUBLE, prob_vecs.u); */
   }
   /* keep track of mg_levels on the previous amr step 
    * to calculate the mg_levels on the next amr step */
@@ -463,8 +500,6 @@ problem_init
 
   zlog_category_t* zlog_points = zlog_get_category("d4est_points");
   d4est_norms_linear_fit_t* point_3m_fit = d4est_norms_linear_fit_init(); 
-  
-  d4est_util_copy_1st_to_2nd(prob_vecs.u, u_prev, prob_vecs.local_nodes);
 
   double point [4][30];
   double point_diff [4][30];
@@ -678,48 +713,6 @@ problem_init
         );
 
     P4EST_FREE(deg_array);
-    /* double* u_vertex = P4EST_ALLOC(double, p4est->local_num_quadrants*(P4EST_CHILDREN)); */
-
-    /* d4est_element_data_store_nodal_vec_in_vertex_array */
-    /*   ( */
-    /*    p4est, */
-    /*    prob_vecs.u, */
-    /*    u_vertex */
-    /*   ); */
-
-    /* char* folder = d4est_util_add_cwd("VTK_corner"); */
-    /* d4est_util_make_directory(folder,0); */
-    /* asprintf(&folder,"%s%d/", folder, 0); */
-    /* d4est_util_make_directory(folder,0); */
-    /* d4est_element_data_store_nodal_vec_in_vertex_array */
-    /*   ( */
-    /*    p4est, */
-    /*    prob_vecs.u, */
-    /*    u_vertex */
-    /*   );     */
-    
-    /* char* u_corner_file = P4EST_ALLOC(char, 100); */
-    /* char* u_corner_file_2 = P4EST_ALLOC(char, 100); */
-    /* sprintf(u_corner_file, "%s_%d", "u_corner", 0); */
-    /* sprintf(u_corner_file_2, "%s_%d", "u_corner_compact", 0); */
-    /* /\* sprintf(u_corner_file, "%s_%d",  "u_corner"); *\/ */
-    /* p4est_vtk_ext_write_all */
-    /*   (p4est, */
-    /*    d4est_geom->p4est_geometry, */
-    /*    0.99, */
-    /*    1, */
-    /*    1, */
-    /*    1, */
-    /*    1, */
-    /*    1, */
-    /*    0, */
-    /*    u_corner_file, */
-    /*    "u", */
-    /*    u_vertex */
-    /*   ); */
-
-    /*     p4est_vtk_ext_write_all */
-    /*   (p4est, */
     /*    d4est_geom_compactified->p4est_geometry, */
     /*    0.99, */
     /*    1, */
@@ -1105,10 +1098,10 @@ problem_init
          p4est,
          d4est_amr,
          d4est_factors,
-         (const char * []){"u", "predictor", "multigrid_h_levels", NULL},
-         (hid_t []){H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_INT},
-         (int []){prob_vecs.local_nodes, p4est->local_num_quadrants, 1},
-         (void* []){prob_vecs.u, smooth_pred_data->predictor, &mg_data->num_of_levels}
+         (const char * []){"u", "u_prev", "predictor", "multigrid_h_levels", NULL},
+         (hid_t []){H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_INT},
+         (int []){prob_vecs.local_nodes, prob_vecs.local_nodes, p4est->local_num_quadrants, 1},
+         (void* []){prob_vecs.u, u_prev, smooth_pred_data->predictor, &mg_data->num_of_levels}
         );
     }
 
