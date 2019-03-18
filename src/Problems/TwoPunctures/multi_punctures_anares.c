@@ -308,6 +308,7 @@ problem_init
 )
 { 
   int initial_nodes = initial_extents->initial_nodes;
+
   multi_punctures_init_params_t init_params = multi_punctures_init_params_input(input_file); 
   multi_punctures_params_t* multi_punctures_params = multi_punctures_params_init(p4est, input_file);
   /* multi_punctures_params.interpolate_f = init_params.interpolate_f; */
@@ -485,6 +486,28 @@ problem_init
   energy_norm_ctx.which_field = 0;
   energy_norm_ctx.energy_norm_data = NULL;
   energy_norm_ctx.energy_estimator_sq_local = -1.;
+
+  zlog_category_t* zlog_points = zlog_get_category("d4est_points");
+
+  double point [4][30];
+  double point_diff [4][30];
+  double point_spec_diff [4][30];
+  double point_err [4];
+  double point_dof [30];
+  
+  point[0][0] = 0;
+  point_diff[0][0] = 0;
+  point[1][0] = 0;
+  point_diff[1][0] = 0;
+  point[2][0] = 0;
+  point_diff[2][0] = 0;
+  point[3][0] = 0;
+  point_diff[3][0] = 0;
+  point_dof[0] = 0;
+  point_spec_diff[0][0] = 0;
+  point_spec_diff[1][0] = 0;
+  point_spec_diff[2][0] = 0;
+  point_spec_diff[3][0] = 0;
   
   int iterations = 1;
 
@@ -919,6 +942,7 @@ problem_init
         );
     /* } */
 
+      
     d4est_mesh_interpolate_data_t data;
 
     double R0 = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->R0;
@@ -934,6 +958,70 @@ problem_init
     int compactify_outer_shell = ((d4est_geometry_cubed_sphere_attr_t*)d4est_geom->user)->compactify_outer_shell;
     d4est_geometry_type_t geom_type =  d4est_geom->geom_type;
     
+
+    double bh0_x = multi_punctures_params->bh[0].XYZ[0];
+    double bh0_y = multi_punctures_params->bh[0].XYZ[1];
+    double bh1_x = multi_punctures_params->bh[1].XYZ[0];
+    double bh1_y = multi_punctures_params->bh[1].XYZ[1];
+    double bh2_x = multi_punctures_params->bh[2].XYZ[0];
+    double bh2_y = multi_punctures_params->bh[2].XYZ[1];
+        
+    data = d4est_mesh_interpolate_at_tree_coord(
+                                                p4est,
+                                                d4est_ops,
+                                                d4est_geom,
+                                                (double []){
+                                                  get_inverted_box_point(R0,bh0_x),get_inverted_box_point(R0,bh0_y),.5},
+                                                12,
+                                                prob_vecs.u,
+                                                1
+                                               );
+    point[0][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+    point_err[0] = data.err;
+
+    data = d4est_mesh_interpolate_at_tree_coord(
+                                                p4est,
+                                                d4est_ops,
+                                                d4est_geom,
+                                                (double []){
+                                                  get_inverted_box_point(R0,bh1_x),get_inverted_box_point(R0,bh1_y),.5},
+                                                12,
+                                                prob_vecs.u,
+                                                1
+                                               );    
+    point[1][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+    point_err[1] = data.err;
+
+
+    data = d4est_mesh_interpolate_at_tree_coord(
+                                                p4est,
+                                                d4est_ops,
+                                                d4est_geom,
+                                                (double []){
+                                                  get_inverted_box_point(R0,bh2_x),get_inverted_box_point(R0,bh2_y),.5},
+                                                12,
+                                                prob_vecs.u,
+                                                1
+                                               );    
+    point[2][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+    point_err[2] = data.err;
+
+    data =  d4est_mesh_interpolate_at_tree_coord(p4est, d4est_ops, d4est_geom, (double []){.5,.5,get_inverted_outer_wedge_point(R1,R2, (100 > R2) ? R2 : 100, compactify_outer_shell)}, 3, prob_vecs.u, 1);
+    point[3][iterations] = (data.err == 0) ? data.f_at_xyz : 0;
+    point_err[3] = data.err;
+
+    double* point0 = &point[0][0];
+    double* point3 = &point[1][0];
+    double* point10 = &point[2][0];
+    double* point100 = &point[3][0];
+    double* point0_diff = &point_diff[0][0];
+    double* point3_diff = &point_diff[1][0];
+    double* point10_diff = &point_diff[2][0];
+    double* point100_diff = &point_diff[3][0];
+    double* point0_spec_diff = &point_spec_diff[0][0];
+    double* point3_spec_diff = &point_spec_diff[1][0];
+    double* point10_spec_diff = &point_spec_diff[2][0];
+    double* point100_spec_diff = &point_spec_diff[3][0];
     
     int global_nodes;
     sc_reduce(
@@ -945,6 +1033,51 @@ problem_init
               0,
               sc_MPI_COMM_WORLD
     );
+    point_dof[iterations] = global_nodes;
+    double* dof = &point_dof[0];
+    double points_global [4];
+    double points_local [4];
+    points_local[0] = point[0][iterations];
+    points_local[1] = point[1][iterations];
+    points_local[2] = point[2][iterations];
+    points_local[3] = point[3][iterations];
+
+    sc_reduce
+      (
+       &points_local,
+       &points_global,
+       4,
+       sc_MPI_DOUBLE,
+       sc_MPI_MAX,
+       0,
+       sc_MPI_COMM_WORLD
+      );
+
+     
+    if (p4est->mpirank == 0){
+      for (int p = 0; p < 4; p++){
+        point[p][iterations] = points_global[p];
+        point_diff[p][iterations] = fabs(point[p][iterations] - point[p][iterations-1]);
+      }
+      point_spec_diff[0][iterations] = fabs(point[0][iterations] - 9.1491800832898661e-03);
+      point_spec_diff[1][iterations] = fabs(point[1][iterations] - 1.7465903974328671e-02);
+      point_spec_diff[2][iterations] = fabs(point[2][iterations] - 3.2454599160906218e-03);
+      point_spec_diff[3][iterations] = fabs(point[3][iterations] - 3.0137193015666880e-04);
+      
+      DEBUG_PRINT_4ARR_DBL(dof, point0, point0_diff, point0_spec_diff, iterations+1);
+      DEBUG_PRINT_4ARR_DBL(dof, point3, point3_diff, point3_spec_diff,iterations+1);
+      DEBUG_PRINT_4ARR_DBL(dof, point10, point10_diff, point10_spec_diff,iterations+1);
+      DEBUG_PRINT_4ARR_DBL(dof, point100, point100_diff, point100_spec_diff,iterations+1);
+
+    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point0[iterations], point0_diff[iterations], point0_spec_diff[iterations]);
+    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point3[iterations], point3_diff[iterations], point3_spec_diff[iterations]);
+    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point10[iterations], point10_diff[iterations], point10_spec_diff[iterations]);
+    zlog_info(zlog_points, "%f %.25f %.25f %.25f", dof[iterations], point100[iterations], point100_diff[iterations], point100_spec_diff[iterations]);
+   
+      
+    }
+    iterations++;
+    
     
     if (level != d4est_amr->num_of_amr_steps && level != 0){
       d4est_checkpoint_save
@@ -983,8 +1116,6 @@ problem_init
   d4est_laplacian_with_opt_flux_destroy(flux_data_for_jac);
   d4est_laplacian_with_opt_flux_destroy(flux_data_for_res);
   P4EST_FREE(error);
-
-  /* d4est_norms_linear_fit_destroy(point_3m_fit); */
 
   P4EST_FREE(multi_punctures_params);
   P4EST_FREE(u_prev);
