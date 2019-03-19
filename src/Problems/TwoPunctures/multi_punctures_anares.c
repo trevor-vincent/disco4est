@@ -1087,10 +1087,10 @@ problem_init
          p4est,
          d4est_amr,
          d4est_factors,
-         (const char * []){"u", "predictor", "multigrid_h_levels", NULL},
-         (hid_t []){H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_INT},
-         (int []){prob_vecs.local_nodes, p4est->local_num_quadrants, 1},
-         (void* []){prob_vecs.u, smooth_pred_data->predictor, &mg_data->num_of_levels}
+         (const char * []){"u", "u_prev", "predictor", "multigrid_h_levels", NULL},
+         (hid_t []){H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_INT},
+         (int []){prob_vecs.local_nodes, prob_vecs.local_nodes,  p4est->local_num_quadrants, 1},
+         (void* []){prob_vecs.u, u_prev, smooth_pred_data->predictor, &mg_data->num_of_levels}
         );
     }
 
