@@ -1236,14 +1236,20 @@ d4est_solver_multigrid_vcycle
 
   mg_data->mg_state = POST_V; d4est_solver_multigrid_update_components(p4est, toplevel, NULL);
 
-  if (p4est->mpirank == 0 || mg_data->debug_print_level_info){
+  if (mg_data->debug_print_level_info){
+    char* category_name;
+    asprintf(&category_name, "d4est_solver_multigrid_proc_%d", p4est->mpirank);
+    
+    zlog_category_t *c_default_proc = zlog_get_category(category_name);
     for (level = toplevel; level >= bottomlevel; --level){
-      zlog_debug(c_default, "For each processor, we have Level %d, Number of elements %d, Number of nodes %d",
+      zlog_debug(c_default, "For this process, we have Level %d, Number of elements %d, Number of nodes %d",
              level,
              elements_on_level_of_multigrid[level],
              nodes_on_level_of_multigrid[level]
             );
     }
+    
+    free(category_name);
   }
 
   
