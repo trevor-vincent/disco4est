@@ -57,14 +57,6 @@ d4est_solver_multigrid_matrix_operator_update_callback
 {
   d4est_solver_multigrid_t* mg_data = p4est->user_pointer;
   d4est_solver_multigrid_matrix_op_t* matrix_op = mg_data->user_callbacks->user;
-  /* int vcycle = mg_data->vcycle_num_finished; */
-
-  if(p4est->mpirank == 0){
-    zlog_category_t* c_def = zlog_get_category("d4est_solver_multigrid_matrix_operator");
-      /* zlog_info(c_def, "level = %d", level); */
-      /* zlog_info(c_def, "mg_data->linear_operator_updates = %d\n",mg_data->linear_operator_updates); */
-      /* zlog_info(c_def, "matrix_op->linear_operator_updates = %d\n",matrix_op->linear_operator_updates); */
-  }
   
   if(mg_data->mg_state == PRE_V){
     if (matrix_op->completed_alloc == 0){
@@ -117,14 +109,14 @@ d4est_solver_multigrid_matrix_operator_update_callback
   else if(mg_data->mg_state == POST_V){
     matrix_op->completed_alloc = 1;
     
-    if (mg_data->using_newton && mg_data->newton_iteration != matrix_op->newton_iteration){
-      zlog_category_t *c_def = zlog_get_category("d4est_solver_multigrid_matrix_operator");
-      zlog_info(c_def, "mg_data->using_newton = %d",mg_data->using_newton);
-      zlog_info(c_def, "mg_data->newton_iteration = %d",mg_data->newton_iteration);
-      zlog_info(c_def, "matrix_op->newton_iteration = %d",matrix_op->newton_iteration);
-      zlog_info(c_def, "Updating newton iteration in matrix operator");
-      matrix_op->newton_iteration = mg_data->newton_iteration;
-    }
+    /* if (p4est->mpirank == 0 && mg_data->using_newton && mg_data->newton_iteration != matrix_op->newton_iteration){ */
+      /* zlog_category_t *c_def = zlog_get_category("d4est_solver_multigrid_matrix_operator"); */
+      /* zlog_info(c_def, "mg_data->using_newton = %d",mg_data->using_newton); */
+      /* zlog_info(c_def, "mg_data->newton_iteration = %d",mg_data->newton_iteration); */
+      /* zlog_info(c_def, "matrix_op->newton_iteration = %d",matrix_op->newton_iteration); */
+      /* zlog_info(c_def, "Updating newton iteration in matrix operator"); */
+      /* matrix_op->newton_iteration = mg_data->newton_iteration; */
+    /* } */
 
   }
   else {
