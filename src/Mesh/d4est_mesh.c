@@ -1433,10 +1433,9 @@ d4est_mesh_data_realloc
 {
   d4est_factors->local_sizes = local_sizes;
 
-  if (p4est->mpirank == 0){
-    printf("[D4EST_INFO]: Reallocing storage for geometry data\n");
-  }
-
+  /* if (p4est->mpirank == 0){ */
+  /*   printf("[D4EST_INFO]: Reallocing storage for geometry data\n"); */
+  /* } */
   
   int local_nodes = local_sizes.local_nodes;
   int local_nodes_quad = local_sizes.local_nodes_quad;

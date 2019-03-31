@@ -114,6 +114,71 @@ d4est_solver_multigrid_get_p_coarsen_levels
 /*   return min_level - power + 1; */
 /* } */
 
+int
+d4est_solver_multigrid_dummy_coarsen_fcn
+(
+ p4est_t * p4est,
+ p4est_topidx_t which_tree,
+ p4est_quadrant_t * children[]
+)
+{
+  return 1;
+}
+
+
+int
+d4est_solver_multigrid_get_h_coarsen_levels_precise
+(
+ p4est_t* p4est
+)
+{
+  p4est_t* p4est_dummy = p4est_copy(p4est, 1);
+  unsigned int last_sum = p4est_checksum(p4est_dummy);
+  unsigned int next_sum = -1;
+  
+  zlog_category_t* c_default = zlog_get_category
+                               (
+                                "d4est_solver_multigrid"
+                               );
+  int mg_levels = 1;
+  for (int i = 0; i < (P4EST_MAXLEVEL); i++){
+    
+    p4est_coarsen_ext (p4est_dummy,
+                       0,
+                       1,
+                       d4est_solver_multigrid_dummy_coarsen_fcn,
+                       NULL,
+                       NULL
+                      );
+    
+    p4est_balance_ext (p4est_dummy, P4EST_CONNECT_FACE, NULL, NULL);
+    next_sum = p4est_checksum(p4est_dummy);
+
+    if (p4est->mpirank == 0)
+      zlog_debug(c_default,
+                 "h_level_guesser: mg_levels, last_sum, next_sum = %d\n",
+                 mg_levels,
+                 last_sum,
+                 next_sum);
+    
+    if (next_sum == last_sum){
+      break;
+    }
+
+    mg_levels++;        
+    last_sum = next_sum;
+  }
+
+  if (p4est->mpirank == 0)
+    zlog_debug(c_default,
+               "h_level_guesser: total mg_levels = %d\n",
+               mg_levels
+              );
+  
+  p4est_destroy(p4est_dummy);
+  return mg_levels;
+}
+
 /** 
  * Calculates the min level and max level of the d4est_solver_multigrid
  * hiearchy across cores. I would not trust the minimum except
@@ -337,6 +402,10 @@ int d4est_solver_multigrid_input_handler
     D4EST_ASSERT(mg_data->vcycle_atol == -1);
     mg_data->vcycle_atol = atof(value);
   }
+  else if (d4est_util_match_couple(section,"multigrid",name,"use_precise_h_levels")) {
+    D4EST_ASSERT(mg_data->use_precise_h_levels == 0);
+    mg_data->use_precise_h_levels = atoi(value);
+  }  
   else if (d4est_util_match_couple(section,"multigrid",name,"num_of_levels")) {
     D4EST_ASSERT(mg_data->num_of_levels == -1);
     mg_data->num_of_levels = atof(value);
@@ -533,15 +602,11 @@ d4est_solver_multigrid_data_init
   d4est_solver_multigrid_t* mg_data = P4EST_ALLOC( d4est_solver_multigrid_t, 1);
 
   int d4est_solver_multigrid_min_level, d4est_solver_multigrid_max_level;
-  int num_of_h_coarsen_levels = d4est_solver_multigrid_get_h_coarsen_levels(p4est);  
-
-  D4EST_ASSERT(num_of_h_coarsen_levels >= 1);
-
+  
   mg_data->amr_level = -1;
   mg_data->d4est_ops = d4est_ops;
   mg_data->d4est_geom = d4est_geom;
   mg_data->d4est_quad = d4est_quad;
-  mg_data->num_of_levels = num_of_h_coarsen_levels;
   mg_data->vcycle_atol = -1;
   mg_data->vcycle_rtol = -1;
   mg_data->vcycle_imax = -1;
@@ -569,11 +634,19 @@ d4est_solver_multigrid_data_init
   mg_data->elements_on_level_of_surrogate_multigrid = NULL;
   mg_data->nodes_on_level_of_multigrid = NULL;
   mg_data->nodes_on_level_of_surrogate_multigrid = NULL;
+  mg_data->use_precise_h_levels = 0;
   
   if (ini_parse(input_file, d4est_solver_multigrid_input_handler, mg_data) < 0) {
     D4EST_ABORT("Can't load input file");
   }
- 
+
+  if (!mg_data->use_precise_h_levels){
+    mg_data->num_of_levels = d4est_solver_multigrid_get_h_coarsen_levels(p4est);
+  }
+  else {
+    mg_data->num_of_levels = d4est_solver_multigrid_get_h_coarsen_levels_precise(p4est);
+  }
+  
   if (mg_data->use_p_coarsen == 1){
     mg_data->num_of_p_coarsen_levels = d4est_solver_multigrid_get_p_coarsen_levels(p4est);
     mg_data->num_of_levels += mg_data->num_of_p_coarsen_levels;

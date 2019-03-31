@@ -175,6 +175,7 @@ typedef struct {
   int interpolate_f;
   int amr_level_for_uniform_p;
   int load_u_prev_from_checkpoint;
+  double use_different_penalty_for_estimator;
   
 } multi_punctures_init_params_t;
 
@@ -216,6 +217,10 @@ int multi_punctures_init_params_handler
     D4EST_ASSERT(pconfig->amr_level_for_uniform_p == 1000);
     pconfig->amr_level_for_uniform_p = atoi(value);
   }
+  else if (d4est_util_match_couple(section,"amr",name,"use_different_penalty_for_estimator")) {
+    D4EST_ASSERT(pconfig->use_different_penalty_for_estimator == -1);
+    pconfig->use_different_penalty_for_estimator = atof(value);
+  }
   else {
     return 0;
   }
@@ -236,6 +241,8 @@ multi_punctures_init_params_input
   input.interpolate_f = -1;
   input.amr_level_for_uniform_p = 1000;
   input.load_u_prev_from_checkpoint = -1;
+  input.use_different_penalty_for_estimator = -1;
+
   if
     (
       ini_parse(input_file,
@@ -245,7 +252,7 @@ multi_punctures_init_params_input
   }
   
   D4EST_CHECK_INPUT("problem", input.use_dirichlet, -1);
-    D4EST_CHECK_INPUT("problem", input.load_u_prev_from_checkpoint, -1);
+  D4EST_CHECK_INPUT("problem", input.load_u_prev_from_checkpoint, -1);
   D4EST_CHECK_INPUT("problem", input.use_pointwise_estimator, -1);
   D4EST_CHECK_INPUT("problem", input.interpolate_f, -1);
   /* D4EST_CHECK_INPUT("amr", input.amr_level_for_uniform_p, -1); */
@@ -377,8 +384,10 @@ problem_init
   penalty_data.size_params = NULL;
   penalty_data.u_dirichlet_penalty_fcn = houston_u_dirichlet_prefactor_maxp_minh;
   penalty_data.gradu_penalty_fcn = houston_gradu_prefactor_maxp_minh;
-  penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
-  
+
+  if (init_params.use_different_penalty_for_estimator >= 0.){
+    penalty_data.penalty_prefactor = init_params.use_different_penalty_for_estimator;
+  }
   d4est_amr_smooth_pred_marker_t amr_marker;
   amr_marker.user = (void*)&ctx;
   amr_marker.mark_element_fcn = amr_mark_element;
@@ -921,7 +930,8 @@ problem_init
 
 
 
-        zlog_info(c_tp, "Loading u from a newton checkpoint %s at level %d", initial_extents->newton_checkpoint_prefix, level);
+        if (p4est->mpirank == 0)
+          zlog_info(c_tp, "Loading u from a newton checkpoint %s at level %d", initial_extents->newton_checkpoint_prefix, level);
       }
       
       d4est_solver_newton_petsc_solve

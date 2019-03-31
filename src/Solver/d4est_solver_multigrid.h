@@ -192,7 +192,11 @@ struct  d4est_solver_multigrid_data {
   char bottom_solver_name [50]; /* REQUIRED */
   double vcycle_rtol; /* REQUIRED */
   double vcycle_atol; /* REQUIRED */
-
+  /* If set to 1, try to precisely determinely multigrid hiearchy by coarsening a dummy p4est. 
+   * otherwise we try to guess the number of levels based on the minimum and maximum refinement
+   * level of an element on the current mesh, this guess is the default since precise h levels
+   * is a new edition to the code, but this guess could be suboptimal sometimes. */
+  int use_precise_h_levels; 
     
   /* ******* INTERNAL PARAMETERS ******* */
   int num_of_levels;

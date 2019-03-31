@@ -285,20 +285,36 @@ problem_init
     int* deg_array = P4EST_ALLOC(int, p4est->local_num_quadrants);
     d4est_mesh_get_array_of_degrees(p4est, (void*)deg_array, D4EST_INT);
     
+    /* d4est_vtk_save
+      /* ( */
+      /*  p4est, */
+      /*  d4est_ops, */
+      /*  input_file, */
+      /*  "d4est_vtk", */
+      /*  (const char * []){"u","u_analytic","error", NULL}, */
+      /*  (double* []){prob_vecs.u, u_analytic, error}, */
+      /*  (const char * []){NULL}, */
+      /*  (double* []){NULL}, */
+      /*  (const char * []){"degrees",NULL}, */
+      /*  (int* []){deg_array,NULL}, */
+      /*  level */
+      /* ); */
+
     d4est_vtk_save
       (
        p4est,
        d4est_ops,
        input_file,
        "d4est_vtk",
-       (const char * []){"u","u_analytic","error", NULL},
-       (double* []){prob_vecs.u, u_analytic, error},
-       (const char * []){NULL},
-       (double* []){NULL},
-       (const char * []){"degrees",NULL},
-       (int* []){deg_array,NULL},
+       (const char * []){"u", NULL},
+       (double* []){prob_vecs.u},
+       NULL,
+       NULL,
+       NULL,
+       NULL,
        level
       );
+    
 
     P4EST_FREE(deg_array);
     

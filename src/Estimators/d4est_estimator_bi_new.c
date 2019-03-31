@@ -190,10 +190,18 @@ d4est_estimator_bi_new_interface
   /* double* sj_on_f_m_mortar_quad = interface_data->sj_on_f_m_mortar_quad;
  */
 
-  int mortar_quad_scalar_stride = d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
-  int mortar_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
-  int mortar_quad_matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].mortar_quad_stride[f_m];
-  int boundary_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[e_m[0]->id].boundary_quad_stride[f_m];
+  int use_id = -1;
+  for (int fi = 0; fi < faces_m; fi++){
+    if (e_m[fi]->mpirank == p4est->mpirank){
+      use_id = e_m[fi]->id;
+      break;
+    }
+  }
+
+  int mortar_quad_scalar_stride = d4est_factors->local_strides[use_id].mortar_quad_stride[f_m];
+  int mortar_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[use_id].mortar_quad_stride[f_m];
+  int mortar_quad_matrix_stride = (P4EST_DIM)*(P4EST_DIM)*d4est_factors->local_strides[use_id].mortar_quad_stride[f_m];
+  int boundary_quad_vector_stride = (P4EST_DIM)*d4est_factors->local_strides[use_id].boundary_quad_stride[f_m];
   
   double * restrict  sj_on_f_m_mortar_quad = &d4est_factors_compactified->sj_m_mortar_quad[mortar_quad_scalar_stride];
   double* u_p_on_f_p_mortar_quad = interface_data->u_p_on_f_p_mortar_quad;
@@ -286,6 +294,7 @@ d4est_estimator_bi_new_interface
   /* the contribution in every direction must be added up due to it being a vector norm */
   stride = 0;
   for (f = 0; f < faces_mortar; f++){
+
     for (int d = 0; d < (P4EST_DIM); d++){
 
       double Je2MJe2 = d4est_quadrature_innerproduct
@@ -305,10 +314,13 @@ d4est_estimator_bi_new_interface
       
       /* even if it's a ghost we can still add it to the ghosts estimator because we will not send it back! */
       if(faces_m == (P4EST_HALF)){
-        estimator[e_m[f]->id] += Je2MJe2;
-      if (penalty_data->estimator_vtk != NULL){
-          penalty_data->estimator_vtk[2*p4est->local_num_quadrants + e_m[f]->id] += Je2MJe2;
-          penalty_data->estimator_vtk_per_face[(f_m + (P4EST_FACES))*(p4est->local_num_quadrants) + e_m[f]->id] += Je2MJe2;
+        if (e_m[f]->mpirank == p4est->mpirank){
+          estimator[e_m[f]->id] += Je2MJe2;
+          if (penalty_data->estimator_vtk != NULL){
+        
+            penalty_data->estimator_vtk[2*p4est->local_num_quadrants + e_m[f]->id] += Je2MJe2;
+            penalty_data->estimator_vtk_per_face[(f_m + (P4EST_FACES))*(p4est->local_num_quadrants) + e_m[f]->id] += Je2MJe2;
+          }
         }
       }
       else{
@@ -327,7 +339,7 @@ d4est_estimator_bi_new_interface
     
   stride = 0;
   for (f = 0; f < faces_mortar; f++){  
-
+    
     double Je1MJe1 = d4est_quadrature_innerproduct
                      (
                       d4est_ops,
@@ -345,12 +357,13 @@ d4est_estimator_bi_new_interface
    
     /* even if it's a ghost we can still add it to the ghosts estimator because we will not send it back! */
     if(faces_m == (P4EST_HALF)){
-      estimator[e_m[f]->id] += Je1MJe1;
-      if (penalty_data->estimator_vtk != NULL){
+      if (e_m[f]->mpirank == p4est->mpirank){
+        estimator[e_m[f]->id] += Je1MJe1;
+        if (penalty_data->estimator_vtk != NULL){
           penalty_data->estimator_vtk[1*(p4est->local_num_quadrants) + e_m[f]->id] += Je1MJe1;
           penalty_data->estimator_vtk_per_face[(f_m)*(p4est->local_num_quadrants) + e_m[f]->id] += Je1MJe1;
+        }
       }
-      
     }
     else{
       estimator[e_m[0]->id] += Je1MJe1;
