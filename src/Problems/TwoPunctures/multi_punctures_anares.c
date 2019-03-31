@@ -388,6 +388,10 @@ problem_init
   if (init_params.use_different_penalty_for_estimator >= 0.){
     penalty_data.penalty_prefactor = init_params.use_different_penalty_for_estimator;
   }
+  else {
+    penalty_data.penalty_prefactor = sipg_params->sipg_penalty_prefactor;
+  }
+     
   d4est_amr_smooth_pred_marker_t amr_marker;
   amr_marker.user = (void*)&ctx;
   amr_marker.mark_element_fcn = amr_mark_element;
