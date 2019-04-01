@@ -217,7 +217,7 @@ int multi_punctures_init_params_handler
     D4EST_ASSERT(pconfig->amr_level_for_uniform_p == 1000);
     pconfig->amr_level_for_uniform_p = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"amr",name,"use_different_penalty_for_estimator")) {
+  else if (d4est_util_match_couple(section,"problem",name,"use_different_penalty_for_estimator")) {
     D4EST_ASSERT(pconfig->use_different_penalty_for_estimator == -1);
     pconfig->use_different_penalty_for_estimator = atof(value);
   }
