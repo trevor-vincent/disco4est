@@ -276,8 +276,6 @@ void d4est_quadrature_apply_stiffness_matrix
  double* out
 ){
   D4EST_ASSERT (object_type == QUAD_OBJECT_VOLUME);
-  /* for now assert this, can get rid of by p-prolonging then p-restricting */
-
 
   double* quad_weights [(P4EST_DIM)];
   double* interp_lobatto_to_quad_trans [(P4EST_DIM)];
@@ -316,7 +314,6 @@ void d4est_quadrature_apply_stiffness_matrix
                                         deg_quad,
                                         dir
                                        );
-
 
    quad_weights[dir] = d4est_quadrature->get_weights
                                        (

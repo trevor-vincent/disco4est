@@ -9,6 +9,7 @@
 #include <zlog.h>
 #include <d4est_solver_krylov.h>
 
+
 static
 int d4est_solver_newton_input_handler
 (
@@ -84,6 +85,38 @@ d4est_solver_newton_input
   return input;
 }
 
+void
+d4est_solver_newton_solve_ksp
+(
+ p4est_t* p4est,
+ d4est_elliptic_data_t* vecs,
+ d4est_elliptic_eqns_t* fcns,
+ d4est_ghost_t** ghost,
+ d4est_ghost_data_t** ghost_data,
+ d4est_operators_t* d4est_ops,
+ d4est_geometry_t* d4est_geom,
+ d4est_quadrature_t* d4est_quad,
+ d4est_mesh_data_t* d4est_factors,
+ void* params,
+ d4est_krylov_pc_t* d4est_krylov_pc,
+ int amr_level
+){
+
+  d4est_solver_krylov_petsc_solve
+    (
+     p4est,
+     vecs,
+     fcns,
+     ghost,
+     ghost_data,
+     d4est_ops,
+     d4est_geom,
+     d4est_quad,
+     d4est_factors, (d4est_solver_krylov_petsc_params_t*)params,
+     d4est_krylov_pc,
+     amr_level
+    );
+}
 
 /**
  * Make sure Jacobian has zeroed boundary conditions and build residual has normal
@@ -112,15 +145,25 @@ d4est_solver_newton_solve
  d4est_geometry_t* d4est_geom,
  d4est_quadrature_t* d4est_quad,
  d4est_mesh_data_t* d4est_factors,
- d4est_solver_newton_params_t* nr_params,
- d4est_solver_krylov_fcn_t krylov_fcn,
+ char* input_file,
+ d4est_solver_newton_krylov_fcn_t krylov_fcn,
  void* krylov_fcn_params,
- d4est_krylov_pc_t* d4est_krylov_pc
+ d4est_krylov_pc_t* d4est_krylov_pc,
+ int amr_level
 )
 {
-  zlog_category_t *c_default = zlog_get_category("solver_newton");
-  if(p4est->mpirank == 0)
-    zlog_info(c_default, "Performing Newton solve...");
+
+
+  d4est_solver_newton_params_t nr_params =
+    d4est_solver_newton_input
+    (
+     p4est,
+     input_file
+    );
+  
+  zlog_category_t *c_default = zlog_get_category("d4est_solver_newton_iteration_info");
+  /* if(p4est->mpirank == 0) */
+    /* zlog_info(c_default, "Performing Newton solve..."); */
 
   int ierr = 0;
   int local_nodes = vecs->local_nodes;
@@ -139,10 +182,10 @@ d4est_solver_newton_solve
   d4est_elliptic_data_copy_ptrs(vecs, &vecs_for_linsolve);
   d4est_elliptic_data_copy_ptrs(vecs, &vecs_for_res_build);
     
-  double atol = nr_params->atol;
-  double rtol = nr_params->rtol;
-  int maxit = nr_params->imax;
-  int minit = nr_params->imin;
+  double atol = nr_params.atol;
+  double rtol = nr_params.rtol;
+  int maxit = nr_params.imax;
+  int minit = nr_params.imin;
   
   vecs_for_res_build.rhs = vecs->rhs;
   vecs_for_res_build.Au = f0;
@@ -182,9 +225,9 @@ d4est_solver_newton_solve
   int itc = 0;
 
 
-  if (p4est->mpirank == 0 && nr_params->monitor){
-    zlog_debug(c_default, "ITER %03d INITIAL FNRM  %.30f", itc, fnrm);
-  }
+  /* if (p4est->mpirank == 0 && nr_params.monitor){ */
+  /*   zlog_debug(c_default, "ITER %03d INITIAL FNRM  %.30f", itc, fnrm); */
+  /* } */
   
   while((fnrm > stop_tol || itc < minit) && (itc < maxit)){
 
@@ -213,7 +256,8 @@ d4est_solver_newton_solve
        d4est_quad,
        d4est_factors,
        krylov_fcn_params,
-       d4est_krylov_pc
+       d4est_krylov_pc,
+       amr_level
       );
 
 
@@ -259,8 +303,9 @@ d4est_solver_newton_solve
 
     fnrm = sqrt(fnrm_global);
 
-    if (p4est->mpirank == 0 && nr_params->monitor){
-      zlog_debug(c_default, "ITER %03d PRE-FNRM %.15e POST-FNRM  %.15e" ,itc, fnrmo,  fnrm);
+    if (p4est->mpirank == 0 && nr_params.monitor){
+      /* zlog_debug(c_default, "ITER %03d PRE-FNRM %.15e POST-FNRM  %.15e" ,itc, fnrmo,  fnrm); */
+      zlog_info(c_default,"AMR_IT NEWTON_IT PRE_NORM NORM: %d %d %.25f %.25f", amr_level ,itc, fnrmo,  fnrm);      
     }
     
   }

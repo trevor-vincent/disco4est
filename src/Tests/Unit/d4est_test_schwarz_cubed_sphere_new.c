@@ -360,7 +360,7 @@ d4est_solver_schwarz_t* schwarz =
      "d4est_solver_schwarz"
     );
 
- int iter = 1;
+ int iter = 10;
   for (int i = 0; i < iter; i++){
     
     elliptic_data.u = u;

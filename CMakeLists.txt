@@ -125,7 +125,7 @@ SET (
   src/IO/d4est_norms.c
   src/Solver/d4est_solver_cg.c
   src/Solver/d4est_solver_fcg.c
-  # src/Solver/d4est_solver_newton.c
+  src/Solver/d4est_solver_newton.c
   src/Solver/d4est_solver_krylov_petsc.c
   src/Solver/d4est_solver_newton_petsc.c
   src/Solver/d4est_krylov_pc_multigrid.c
@@ -503,6 +503,8 @@ add_d4est_problem_3d(poisson_lorentzian_amr_anares_schwarz_pc_driver poisson_lor
 add_d4est_problem_3d(poisson_lorentzian_amr_anares_cheby_pc_driver poisson_lorentzian_amr_anares_cheby_pc.c Poisson)
 add_d4est_problem_3d(lorentzian_anares_schwarz_hptest_driver lorentzian_anares_schwarz_hptest.c Poisson)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
+
+add_d4est_problem_3d(constant_density_star_inhouse_driver constant_density_star_mgpc_newton_petsc_inhouse.c ConstantDensityStar)
 add_d4est_problem_3d(constant_density_star_anares_driver cds_anares.c ConstantDensityStar)
 add_d4est_problem_3d(two_punctures_robin_diff_geom_estimator_global_driver two_punctures_cactus_diff_geom_estimator_global.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_robin_diff_geom_estimator_global_13tree_driver two_punctures_cactus_diff_geom_estimator_global_13tree.c TwoPunctures)
