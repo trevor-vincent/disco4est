@@ -64,7 +64,6 @@ d4est_solver_fcg_input
  p4est_t* p4est,
  const char* input_file,
  const char* input_section,
- const char* printf_prefix,
  d4est_solver_fcg_params_t* input
 )
 {
@@ -91,12 +90,12 @@ d4est_solver_fcg_input
     
   if(p4est->mpirank == 0){
     zlog_category_t *c_default = zlog_get_category("d4est_solver_fcg");
-    zlog_debug(c_default,"%s: iter = %d\n",printf_prefix, input->iter);
-    zlog_debug(c_default,"%s: atol = %.15f\n",printf_prefix, input->atol);
-    zlog_debug(c_default,"%s: rtol = %.15f\n",printf_prefix, input->rtol);
-    zlog_debug(c_default,"%s: vi = %d\n",printf_prefix, input->vi);
-    zlog_debug(c_default,"%s: monitor = %d\n",printf_prefix, input->monitor);
-    zlog_debug(c_default,"%s: use preconditioner = %d\n",printf_prefix, input->precond_flag);
+    zlog_debug(c_default,"iter = %d\n", input->iter);
+    zlog_debug(c_default,"atol = %.15f\n", input->atol);
+    zlog_debug(c_default,"rtol = %.15f\n", input->rtol);
+    zlog_debug(c_default,"vi = %d\n", input->vi);
+    zlog_debug(c_default,"monitor = %d\n", input->monitor);
+    zlog_debug(c_default,"use preconditioner = %d\n", input->precond_flag);
   }
 }
 

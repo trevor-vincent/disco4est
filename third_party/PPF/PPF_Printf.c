@@ -16,6 +16,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <string.h>
+#include <ptools_ppf.h>
 
 /* This is were all the Fortran to C poratbility problems live.
  * Three issues:  what do Fortran external names look like?

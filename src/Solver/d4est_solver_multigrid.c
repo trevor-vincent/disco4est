@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <sc_reduce.h>
 #include <pXest.h>
 #include <d4est_linalg.h>

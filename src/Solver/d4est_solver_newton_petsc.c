@@ -471,7 +471,7 @@ d4est_solver_newton_petsc_solve
   
   KSPSetFromOptions(ksp);
   KSPSetResidualHistory(ksp,
-                        PETSC_NULL,   // pointer to the array which holds the history
+                        PETSC_NULL,
                         PETSC_DECIDE, // size of the array holding the history
                         PETSC_TRUE);  // Whether or not to reset the history for each solve.
   

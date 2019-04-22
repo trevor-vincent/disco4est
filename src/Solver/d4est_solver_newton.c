@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <pXest.h>
 #include <d4est_linalg.h>
 #include <d4est_solver_newton.h>
@@ -8,7 +9,7 @@
 #include <sc_reduce.h>
 #include <zlog.h>
 #include <d4est_solver_krylov.h>
-
+#include <d4est_checkpoint.h>
 
 static
 int d4est_solver_newton_input_handler
@@ -33,9 +34,9 @@ int d4est_solver_newton_input_handler
     D4EST_ASSERT(pconfig->imax == -1);
     pconfig->imax = atoi(value);
   }
-  else if (d4est_util_match_couple(section,"d4est_solver_newton",name,"monitor")) {
-    D4EST_ASSERT(pconfig->monitor == -1);
-    pconfig->monitor = atoi(value);
+  else if (d4est_util_match_couple(section,"d4est_solver_newton",name,"checkpoint_every_n_newton_its")) {
+    D4EST_ASSERT(pconfig->checkpoint_every_n_newton_its == 0);
+    pconfig->checkpoint_every_n_newton_its = atoi(value);
   }
   else if (d4est_util_match_couple(section,"d4est_solver_newton",name,"imin")) {
     D4EST_ASSERT(pconfig->imin == -1);
@@ -59,7 +60,7 @@ d4est_solver_newton_input
   input.rtol = -1;
   input.imin = -1;
   input.imax = -1;
-  input.monitor = -1;
+  input.checkpoint_every_n_newton_its = 0;
   
   if (ini_parse(input_file, d4est_solver_newton_input_handler, &input) < 0) {
     D4EST_ABORT("Can't load input file");
@@ -69,17 +70,14 @@ d4est_solver_newton_input
   D4EST_CHECK_INPUT("d4est_solver_newton", input.rtol, -1);
   D4EST_CHECK_INPUT("d4est_solver_newton", input.imin, -1);
   D4EST_CHECK_INPUT("d4est_solver_newton", input.imax, -1);
-  D4EST_CHECK_INPUT("d4est_solver_newton", input.monitor, -1);
 
-
-   
   if(p4est->mpirank == 0){
-    zlog_category_t *c_default = zlog_get_category("solver_newton");
+    zlog_category_t *c_default = zlog_get_category("d4est_solver_newton");
     zlog_debug(c_default, "atol = %f", input.atol);
     zlog_debug(c_default, "rtol = %f", input.rtol);
     zlog_debug(c_default, "imin = %d", input.imin);
     zlog_debug(c_default, "imax = %d", input.imax);
-    zlog_debug(c_default, "monitor = %d", input.monitor);
+    zlog_debug(c_default, "checkpoint_every_n_newton_its = %d", input.checkpoint_every_n_newton_its);
   }
   
   return input;
@@ -99,7 +97,8 @@ d4est_solver_newton_solve_ksp
  d4est_mesh_data_t* d4est_factors,
  void* params,
  d4est_krylov_pc_t* d4est_krylov_pc,
- int amr_level
+ int amr_level,
+ int newton_it
 ){
 
   d4est_solver_krylov_petsc_solve
@@ -154,12 +153,15 @@ d4est_solver_newton_solve
 {
 
 
+  clock_t time_start = clock();
   d4est_solver_newton_params_t nr_params =
     d4est_solver_newton_input
     (
      p4est,
      input_file
     );
+
+  nr_params.last_newton_checkpoint_it = 0;
   
   zlog_category_t *c_default = zlog_get_category("d4est_solver_newton_iteration_info");
   /* if(p4est->mpirank == 0) */
@@ -233,7 +235,6 @@ d4est_solver_newton_solve
 
     /* double ratio = fnrm/fnrmo; */
     fnrmo = fnrm;
-    itc++;
     d4est_linalg_vec_scale(-1., f0, n);
     
     vecs_for_linsolve.u0 = x;
@@ -257,9 +258,9 @@ d4est_solver_newton_solve
        d4est_factors,
        krylov_fcn_params,
        d4est_krylov_pc,
-       amr_level
+       amr_level,
+       itc
       );
-
 
     /* xt = x + lambda*step */
     d4est_linalg_vec_axpyeqz(1.0, step, x, xt, n);
@@ -303,11 +304,43 @@ d4est_solver_newton_solve
 
     fnrm = sqrt(fnrm_global);
 
-    if (p4est->mpirank == 0 && nr_params.monitor){
-      /* zlog_debug(c_default, "ITER %03d PRE-FNRM %.15e POST-FNRM  %.15e" ,itc, fnrmo,  fnrm); */
-      zlog_info(c_default,"AMR_IT NEWTON_IT PRE_NORM NORM: %d %d %.25f %.25f", amr_level ,itc, fnrmo,  fnrm);      
+    /* BEGIN OUTPUT AND CHECKPOINTING */
+    
+    zlog_category_t* c_default = zlog_get_category("d4est_solver_newton");
+    zlog_category_t* its_output = zlog_get_category("d4est_solver_newton_iteration_info");
+
+    if (p4est->mpirank == 0){
+      double duration_seconds = ((double)(clock() - time_start)) / CLOCKS_PER_SEC;
+      zlog_info(its_output,"AMR_IT SNES_IT SNES_NORM TIME: %d %d %.25f %f", amr_level, itc, fnrm, duration_seconds);
+    }
+
+    if (nr_params.checkpoint_every_n_newton_its > 0){
+      if ( (itc - nr_params.last_newton_checkpoint_it) >= nr_params.checkpoint_every_n_newton_its ){
+        if (p4est->mpirank == 0){
+          zlog_info(c_default, "Saving checkpoint at newton iteration %d", itc);
+        }
+        char* output = NULL;
+        asprintf(&output,"checkpoint_newton_%d", itc);
+
+        d4est_checkpoint_save
+          (
+           amr_level,
+           output,
+           p4est,
+           NULL,
+           NULL,
+           (const char * []){"u", NULL},
+           (hid_t []){H5T_NATIVE_DOUBLE},
+           (int []){vecs->local_nodes},
+           (void* []){(void*)xt}
+          );
+
+        nr_params.last_newton_checkpoint_it = itc;
+        free(output);
+      }
     }
     
+    itc++;
   }
   
   if (fnrm > stop_tol && ierr == 0){
