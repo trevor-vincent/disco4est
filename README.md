@@ -76,10 +76,6 @@ Configuration options are loaded from an `options.input` file residing in the sa
   - `num_of_amr_steps`
   - `max_degree`
 
-## Examples
-
-Very cool examples coming soon once the paper is out.
-
 ## Licenses
 
 This project is licensed under the GPLv2 License - see the [LICENSE.md](LICENSE.md) file for details
