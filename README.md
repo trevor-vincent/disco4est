@@ -7,7 +7,7 @@
 
 
 
-disco4est (d4est) is a scalable hp-adaptive discontinuous Galerkin solver for coupled non-linear elliptic partial differential equations on curved multi-block meshes.
+disco4est (abbrev. d4est) is a scalable hp-adaptive discontinuous Galerkin solver for coupled non-linear elliptic partial differential equations on curved multi-block meshes.
 
 ## Solver Details
 
