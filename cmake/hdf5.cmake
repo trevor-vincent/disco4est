@@ -4,7 +4,7 @@ include (ExternalProject)
 # Bundled hdf5 paths.
 #
 set(HDF5_BUNDLED_PREFIX "${PROJECT_BINARY_DIR}/third_party/hdf5/install")
-set(HDF5_BUNDLED_LIB    "${HDF5_BUNDLED_PREFIX}/lib/libhdf5-static.a")
+set(HDF5_BUNDLED_LIB    "${HDF5_BUNDLED_PREFIX}/lib/libhdf5.a")
 
 macro(hdf5_use_bundled)
   set(HDF5_PREFIX "${HDF5_BUNDLED_PREFIX}")
@@ -20,7 +20,7 @@ endmacro()
 
 macro(hdf5_try_prefix)
   find_path(HDF5_INCLUDE_DIRS hdf5.h ${HDF5_PREFIX}/include NO_DEFAULT_PATH)
-  find_library(HDF5_LIB libhdf5-static.a ${HDF5_PREFIX}/lib NO_DEFAULT_PATH)
+  find_library(HDF5_LIB libhdf5.a ${HDF5_PREFIX}/lib NO_DEFAULT_PATH)
 
   if(HDF5_INCLUDE_DIRS AND HDF5_LIB)
     set(HDF5_LIBRARIES ${HDF5_LIB})
@@ -44,7 +44,7 @@ message(STATUS "Use hdf5 library: ${HDF5_LIBRARIES}")
 
 macro(hdf5_build)
   ExternalProject_Add(hdf5
-    URL                 https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/hdf5-1.10.1.tar.gz
+    URL                 ${CMAKE_SOURCE_DIR}/third_party/hdf5-hdf5-1_10_9.tar.gz
     PREFIX              ${CMAKE_BINARY_DIR}/third_party/hdf5
     CMAKE_ARGS
     -DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_BINARY_DIR}/third_party/hdf5/install

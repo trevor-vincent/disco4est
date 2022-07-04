@@ -193,8 +193,8 @@ subdirs(third_party)
 
 SET (
   LIBS
-  ${MPI_C_LIBRARIES}
   ${P4EST_LIBRARIES}
+  ${MPI_C_LIBRARIES}			
   ${PETSC_LIBRARIES}
   m
   dl
@@ -204,7 +204,7 @@ SET (
   pthread
   gfortran
   ${HDF5_LIBRARIES}
-  ${ZLOG_LIBRARIES}
+  ${ZLOG_LIBRARIES}  
   )
 
 if(USE_TCMALLOC)
@@ -503,7 +503,6 @@ add_d4est_problem_3d(poisson_lorentzian_amr_anares_schwarz_pc_driver poisson_lor
 add_d4est_problem_3d(poisson_lorentzian_amr_anares_cheby_pc_driver poisson_lorentzian_amr_anares_cheby_pc.c Poisson)
 add_d4est_problem_3d(lorentzian_anares_schwarz_hptest_driver lorentzian_anares_schwarz_hptest.c Poisson)
 add_d4est_problem_3d(constant_density_star_driver constant_density_star_mgpc_newton_petsc.c ConstantDensityStar)
-
 add_d4est_problem_3d(constant_density_star_inhouse_driver constant_density_star_mgpc_newton_petsc_inhouse.c ConstantDensityStar)
 add_d4est_problem_3d(constant_density_star_inhouse_2_driver constant_density_star_mgpc_newton_petsc_inhouse_2.c ConstantDensityStar)
 add_d4est_problem_3d(constant_density_star_anares_driver cds_anares.c ConstantDensityStar)
@@ -514,5 +513,4 @@ add_d4est_problem_3d(two_punctures_anares_schwarz_driver two_punctures_anares_sc
 add_d4est_problem_3d(multi_punctures_anares_driver multi_punctures_anares.c TwoPunctures)
 add_d4est_problem_3d(multi_punctures_anares_inhouse_driver multi_punctures_anares_inhouse.c TwoPunctures)
 add_d4est_problem_3d(two_punctures_cactus_13tree_with_opt_puncture_finder_driver two_punctures_cactus_13tree_with_opt_puncture_finder.c TwoPunctures)
-
 add_d4est_problem_3d(two_punctures_anares_debug_driver two_punctures_anares_debug.c TwoPunctures)

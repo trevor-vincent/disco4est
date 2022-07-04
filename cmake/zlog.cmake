@@ -45,10 +45,10 @@ message(STATUS "Use zlog library: ${ZLOG_LIBRARIES}")
 macro(zlog_build)
   ExternalProject_Add(zlog
     PREFIX              ${CMAKE_BINARY_DIR}/third_party/zlog
-    SOURCE_DIR          ${CMAKE_SOURCE_DIR}/third_party/zlog
+    URL       ${CMAKE_SOURCE_DIR}/third_party/zlog-1.2.15.tar.gz
     CONFIGURE_COMMAND   ""
-    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/third_party/zlog && make PREFIX=${ZLOG_BUNDLED_PREFIX}
-    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/third_party/zlog && make PREFIX=${ZLOG_BUNDLED_PREFIX} install
+    BUILD_COMMAND       cd ${CMAKE_BINARY_DIR}/third_party/zlog/src/zlog && make PREFIX=${ZLOG_BUNDLED_PREFIX}
+    INSTALL_COMMAND     cd ${CMAKE_BINARY_DIR}/third_party/zlog/src/zlog && make PREFIX=${ZLOG_BUNDLED_PREFIX} install
   )
   set_target_properties(zlog PROPERTIES EXCLUDE_FROM_ALL ON)
   add_dependencies(build_bundled_libs zlog)

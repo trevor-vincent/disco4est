@@ -55,9 +55,15 @@ message(STATUS "Use petsc library: ${PETSC_LIBRARIES}")
 macro(petsc_build)
   if("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
     set(petsc_config_args "--with-debugging=1")
+    set(petsc_coptflags "-g")
+    set(petsc_cxxoptflags "-g")
+    set(petsc_fortoptflags "-g")
     MESSAGE ("*******PETSC DEBUGGING TURNED ON*******")
   else()
     set(petsc_config_args "--with-debugging=0")
+    set(petsc_coptflags "-O2")
+    set(petsc_cxxoptflags "-O2")
+    set(petsc_fortoptflags "-O2")
     MESSAGE ("*******PETSC DEBUGGING TURNED OFF*******")
   endif("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
 
@@ -69,20 +75,25 @@ macro(petsc_build)
     )    
   ExternalProject_Add(petsc
     PREFIX    ${CMAKE_BINARY_DIR}/third_party/petsc
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/petsc/
-    CONFIGURE_COMMAND cd ${CMAKE_SOURCE_DIR}/third_party/petsc &&
-    python2 configure
+    URL       ${CMAKE_SOURCE_DIR}/third_party/petsc-v3.17.3.tar.gz
+    CONFIGURE_COMMAND cd ${CMAKE_BINARY_DIR}/third_party/petsc/src/petsc &&  
+    python configure
     ${petsc_config_args}
     ${blas_config_args}
     ${lapack_config_args}
+    --COPTFLAGS=${petsc_coptflags}
+    --CXXOPTFLAGS=${petsc_cxxoptflags}
+    --FORTFLAGS=${petsc_fortoptflags}
     --with-x=0
     --with-ssl=0
-    --with-make-np=1
+    --with-make-np=8
     --with-shared-libraries=0
     --with-silent-rules=1
+    --with-mpi=1
+    --with-fortran-bindings=0
     --prefix=${PETSC_BUNDLED_PREFIX}
-    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/third_party/petsc && make -j1 --silent V=0
-    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/third_party/petsc && make install --silent
+    BUILD_COMMAND       cd ${CMAKE_BINARY_DIR}/third_party/petsc/src/petsc && make -j8 --silent V=0
+    INSTALL_COMMAND     cd ${CMAKE_BINARY_DIR}/third_party/petsc/src/petsc && make install --silent
     )
   if(ENABLE_BUNDLED_BLAS)
     add_dependencies(petsc openblas)

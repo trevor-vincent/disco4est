@@ -345,7 +345,8 @@ d4est_geometry_5treedisk_new
 {
   D4EST_ASSERT((P4EST_DIM)==2);
   d4est_geometry_disk_attr_t* input = d4est_geometry_5treedisk_input(input_file, input_section);
-  p4est_connectivity_t* conn = p4est_connectivity_new_disk();
+  int periodicity = 0;
+  p4est_connectivity_t* conn = p4est_connectivity_new_disk(periodicity,periodicity);
   
   d4est_geom->user = input;
   d4est_geom->p4est_conn = conn;

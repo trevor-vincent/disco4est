@@ -45,7 +45,7 @@ message(STATUS "Use tcmalloc library: ${TCMALLOC_LIBRARIES}")
 macro(tcmalloc_build)
   ExternalProject_Add(tcmalloc
     PREFIX              ${CMAKE_BINARY_DIR}/third_party/gperftools
-    SOURCE_DIR          ${CMAKE_SOURCE_DIR}/third_party/gperftools
+    URL          ${CMAKE_SOURCE_DIR}/third_party/gperftools-gperftools-2.10.tar.gz
     CONFIGURE_COMMAND   cd ${CMAKE_SOURCE_DIR}/third_party/gperftools && libtoolize --force && aclocal && autoheader && automake --add-missing && autoconf && ./configure --prefix=${TCMALLOC_BUNDLED_PREFIX}
     BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/third_party/gperftools && make PREFIX=${TCMALLOC_BUNDLED_PREFIX}
     INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/third_party/gperftools && make PREFIX=${TCMALLOC_BUNDLED_PREFIX} install

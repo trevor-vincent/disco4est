@@ -33,14 +33,13 @@ macro(openblas_try_prefix)
   endif()
 endmacro()
 
-
 macro(openblas_build)
   ExternalProject_Add(openblas
     PREFIX              ${CMAKE_BINARY_DIR}/third_party/OpenBLAS
-    SOURCE_DIR          ${CMAKE_SOURCE_DIR}/third_party/OpenBLAS
+    URL                 ${CMAKE_SOURCE_DIR}/third_party/OpenBLAS-0.3.20.tar.gz
     CONFIGURE_COMMAND   ""
-    BUILD_COMMAND       cd ${CMAKE_SOURCE_DIR}/third_party/OpenBLAS && make PREFIX=${BLAS_BUNDLED_PREFIX}
-    INSTALL_COMMAND     cd ${CMAKE_SOURCE_DIR}/third_party/OpenBLAS && make PREFIX=${BLAS_BUNDLED_PREFIX} install
+    BUILD_COMMAND       cd ${CMAKE_BINARY_DIR}/third_party/OpenBLAS/src/openblas && make PREFIX=${BLAS_BUNDLED_PREFIX}
+    INSTALL_COMMAND     cd ${CMAKE_BINARY_DIR}/third_party/OpenBLAS/src/openblas && make PREFIX=${BLAS_BUNDLED_PREFIX} install
     CMAKE_ARGS
     -DCMAKE_CXX_FLAGS:STRING=-Wunused-but-set-variable -Wunused-variable -Wincompatible-pointer-types -Wformat-nonliteral -Wstrict-overflow -Wconversion -Wunused-but-set-variable -Wunsafe-loop-optimizations -Wunused-parameter -Wlarger-than= -Wdiscarded-qualifiers -Wfloat-equal -Wmaybe-uninitialized -Wcomment
     -DCMAKE_C_FLAGS:STRING=-Wunused-but-set-variable -Wunused-variable -Wincompatible-pointer-types -Wformat-nonliteral -Wstrict-overflow -Wconversion -Wunused-but-set-variable -Wunsafe-loop-optimizations -Wunused-parameter -Wlarger-than= -Wdiscarded-qualifiers -Wfloat-equal -Wmaybe-uninitialized -Wcomment
