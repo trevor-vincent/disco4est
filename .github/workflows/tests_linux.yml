@@ -32,7 +32,7 @@ jobs:
       - name: Build 
         run: |
             cp ./support/Machines/Bundled/bundled_Debug.cmake ./cmake/machine.cmake
-            cmake . -BBuild ../ -DCMAKE_BUILD_TYPE=Debug
+            cmake . -BBuild -DCMAKE_BUILD_TYPE=Debug
             cmake --build ./Build
 
       - name: Build and run unit tests for code Coverage
@@ -60,7 +60,7 @@ jobs:
       - name: Build 
         run: |
             cp ./support/Machines/Bundled/bundled_Release.cmake ./cmake/machine.cmake
-            cmake . -BBuild ../ -DCMAKE_BUILD_TYPE=Release
+            cmake . -BBuild -DCMAKE_BUILD_TYPE=Release
             cmake --build ./Build
 
       - name: Build and run unit tests for code Coverage
