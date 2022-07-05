@@ -86,13 +86,13 @@ macro(petsc_build)
     --FORTFLAGS=${petsc_fortoptflags}
     --with-x=0
     --with-ssl=0
-    --with-make-np=8
+    --with-make-np=1
     --with-shared-libraries=0
     --with-silent-rules=1
     --with-mpi=1
     --with-fortran-bindings=0
     --prefix=${PETSC_BUNDLED_PREFIX}
-    BUILD_COMMAND       cd ${CMAKE_BINARY_DIR}/third_party/petsc/src/petsc && make -j8 --silent V=0
+    BUILD_COMMAND       cd ${CMAKE_BINARY_DIR}/third_party/petsc/src/petsc && make -j1 --silent V=0
     INSTALL_COMMAND     cd ${CMAKE_BINARY_DIR}/third_party/petsc/src/petsc && make install --silent
     )
   if(ENABLE_BUNDLED_BLAS)
