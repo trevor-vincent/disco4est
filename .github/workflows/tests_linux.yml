@@ -31,6 +31,7 @@ jobs:
 
       - name: Build 
         run: |
+            ln -s ./support/Machines/Bundled/bundled_Debug.cmake ./cmake/machine.cmake
             cmake . -BBuild ../ -DCMAKE_BUILD_TYPE=Debug
             cmake --build ./Build
 
@@ -58,7 +59,8 @@ jobs:
         
       - name: Build 
         run: |
-            cmake . -BBuild ../ -DCMAKE_BUILD_TYPE=Debug
+            ln -s ./support/Machines/Bundled/bundled_Release.cmake ./cmake/machine.cmake
+            cmake . -BBuild ../ -DCMAKE_BUILD_TYPE=Release
             cmake --build ./Build
 
       - name: Build and run unit tests for code Coverage
