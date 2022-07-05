@@ -27,7 +27,7 @@ jobs:
 
       - name: Build 
         run: |
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Debug
+            cmake -BBuild -DCMAKE_BUILD_TYPE=Debug
             cmake --build ./Build
 
       - name: Build and run unit tests for code Coverage
@@ -50,7 +50,7 @@ jobs:
 
       - name: Build 
         run: |
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release
+            cmake -BBuild -DCMAKE_BUILD_TYPE=Release
             cmake --build ./Build
 
       - name: Build and run unit tests for code Coverage
