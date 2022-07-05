@@ -16,23 +16,27 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04]
-    steps:
+    steps:    
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.4.1
         with:
           access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2 # for codecov
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 mpich
 
       - name: Build 
         run: |
-            cd disco4est && mkdir build && cd build && cmake ../ -DCMAKE_BUILD_TYPE=Debug
-            make
+            cmake . -BBuild ../ -DCMAKE_BUILD_TYPE=Debug
+            cmake --build ./Build
 
       - name: Build and run unit tests for code Coverage
         run: |
-            cd build && ctest -V    
+            cd Build && ctest -V    
   cpptests_release:
     name: C Release tests (Linux)
     runs-on: ${{ matrix.os }}
@@ -45,14 +49,18 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2 # for codecov
+
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 mpich
-
+        
       - name: Build 
         run: |
-            cd ../ && cmake -BBuild -DCMAKE_BUILD_TYPE=Release
+            cmake . -BBuild ../ -DCMAKE_BUILD_TYPE=Debug
             cmake --build ./Build
 
       - name: Build and run unit tests for code Coverage
         run: |
-            cd Build && ctest -V
+            cd Build && ctest -V    
