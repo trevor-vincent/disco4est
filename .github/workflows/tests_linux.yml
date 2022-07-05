@@ -11,7 +11,7 @@ env:
 
 jobs:
   cpptests_debug:
-    name: C++ tests (Linux)
+    name: C Debug tests (Linux)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -32,10 +32,9 @@ jobs:
 
       - name: Build and run unit tests for code Coverage
         run: |
-            cd Build && ctest -V
-	    
+            cd Build && ctest -V    
   cpptests_release:
-    name: C++ tests (Linux)
+    name: C Release tests (Linux)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
