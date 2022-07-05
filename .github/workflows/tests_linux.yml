@@ -27,12 +27,14 @@ jobs:
 
       - name: Build 
         run: |
-            cd ../ && cmake -BBuild -DCMAKE_BUILD_TYPE=Debug
-            cmake --build ./Build
+            ls
+            ls ../
+            mkdir build && cd build && cmake ../ -DCMAKE_BUILD_TYPE=Debug
+            make
 
       - name: Build and run unit tests for code Coverage
         run: |
-            cd Build && ctest -V    
+            cd build && ctest -V    
   cpptests_release:
     name: C Release tests (Linux)
     runs-on: ${{ matrix.os }}
