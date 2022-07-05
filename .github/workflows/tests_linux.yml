@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 2 # for codecov
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 mpich
+        run: sudo apt-get update && sudo apt-get -y -q install cmake mpich
 
       - name: Build 
         run: |
@@ -55,7 +55,7 @@ jobs:
           fetch-depth: 2 # for codecov
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 mpich
+        run: sudo apt-get update && sudo apt-get -y -q install cmake mpich
         
       - name: Build 
         run: |
