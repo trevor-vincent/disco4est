@@ -27,9 +27,7 @@ jobs:
 
       - name: Build 
         run: |
-            ls
-            ls ../
-            mkdir build && cd build && cmake ../ -DCMAKE_BUILD_TYPE=Debug
+            cd disco4est && mkdir build && cd build && cmake ../ -DCMAKE_BUILD_TYPE=Debug
             make
 
       - name: Build and run unit tests for code Coverage
