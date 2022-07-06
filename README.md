@@ -7,9 +7,11 @@
 
 
 
-disco4est (abbrev. d4est) is a scalable hp-adaptive discontinuous Galerkin solver for coupled non-linear elliptic partial differential equations on curved multi-block meshes.
+disco4est (abbrev. d4est) is a scalable hp-adaptive discontinuous Galerkin solver for non-linear elliptic partial differential equations on curved multi-block meshes.
 
 ## Solver Details
+
+<img src="https://github.com/XanaduAI/pennylane-benchmark-dashboard/blob/a1b87132ebf00fb8839049b5f31b3560000c6b53/screenshot.png" width="400px" align="right">
 
 We use an in-house multigrid algorithm to precondition PETSc solvers. This multigrid algorithm can handle different smoothers (Chebyshev, Additive Schwarz... ) and different bottom solvers (p-multigrid, Krylov, ...). We handle different topologies using the multi-block tree code p4est. We use the discontinuous Galerkin method to discretize the non-linear or linear elliptic PDEs.
 
