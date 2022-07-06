@@ -1,5 +1,5 @@
 [![license](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://github.com/trevor-vincent/d4est/blob/master/LICENSE.md)
-[![Build Status](https://travis-ci.org/trevor-vincent/d4est.svg?branch=master)](https://travis-ci.org/trevor-vincent/d4est)
+[![Testing (Linux)](https://github.com/trevor-vincent/disco4est/actions/workflows/tests_linux.yml/badge.svg)](https://github.com/trevor-vincent/disco4est/actions/workflows/tests_linux.yml)
 [![arXiv](https://img.shields.io/badge/arXiv-1907.01572-green.svg?style=flat)](https://arxiv.org/abs/1907.01572)
 <p align="center">
 <img src="https://github.com/trevor-vincent/d4est/blob/master/support/Logo/logo.png" width="250">
