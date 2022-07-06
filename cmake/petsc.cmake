@@ -75,9 +75,9 @@ macro(petsc_build)
     )    
   ExternalProject_Add(petsc
     PREFIX    ${CMAKE_BINARY_DIR}/third_party/petsc
-    URL       ${CMAKE_SOURCE_DIR}/third_party/petsc-v3.17.3.tar.gz
+    URL       ${CMAKE_SOURCE_DIR}/third_party/petsc-v3.12.4.tar.gz
     CONFIGURE_COMMAND cd ${CMAKE_BINARY_DIR}/third_party/petsc/src/petsc &&  
-    python configure
+    python2 configure
     ${petsc_config_args}
     ${blas_config_args}
     ${lapack_config_args}
