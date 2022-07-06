@@ -11,9 +11,19 @@ disco4est (abbrev. d4est) is a scalable hp-adaptive discontinuous Galerkin solve
 
 ## Solver Details
 
-<img src="https://github.com/XanaduAI/pennylane-benchmark-dashboard/blob/a1b87132ebf00fb8839049b5f31b3560000c6b53/screenshot.png" width="400px" align="right">
+<img src="https://github.com/trevor-vincent/disco4est/blob/master/2pun.png" width="400px" align="right">
 
-We use an in-house multigrid algorithm to precondition PETSc solvers. This multigrid algorithm can handle different smoothers (Chebyshev, Additive Schwarz... ) and different bottom solvers (p-multigrid, Krylov, ...). We handle different topologies using the multi-block tree code p4est. We use the discontinuous Galerkin method to discretize the non-linear or linear elliptic PDEs.
+- The **disco**ntinuous Galerkin method to discretize the non-linear or linear elliptic PDEs.
+
+- We use an in-house multigrid algorithm to precondition PETSc solvers. 
+
+- The multigrid algorithm can handle different smoothers (Chebyshev, Additive Schwarz... ) and different bottom solvers (p-multigrid, Krylov, ...). 
+
+- The multigrid algorithm uses surrogate intermediary meshes to keep the cells 2:1 balanced.
+
+- Different topologies and parallel mesh refinement is handled using the multi-block tree code p4est. 
+
+- Scaling of the multigrid solver has been tested up to O(10,000) cores.
 
 ## Prerequisites
 
