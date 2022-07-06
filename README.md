@@ -13,7 +13,7 @@ disco4est (abbrev. d4est) is a scalable hp-adaptive discontinuous Galerkin solve
 
 <img src="https://github.com/trevor-vincent/disco4est/blob/master/2pun.png" width="400px" align="right">
 
-- The **disco**ntinuous Galerkin method to discretize the non-linear or linear elliptic PDEs.
+- The **disco**ntinuous Galerkin method is used to discretize the non-linear or linear elliptic PDEs.
 
 - We use an in-house multigrid algorithm to precondition PETSc solvers. 
 
