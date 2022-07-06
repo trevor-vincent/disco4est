@@ -94,3 +94,23 @@ This project is licensed under the GPLv2 License - see the [LICENSE.md](LICENSE.
 </a><br />The logo is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/3.0/">Creative Commons  License</a>.
 
 The disco-ball in the logo is a modified version of a design by Daouna Jeong from the Noun Project and the tree in the logo is a modified version of a design created by Musket from the Noun Project.
+
+## Authors
+If you are doing research using disco4est, please cite our paper:
+
+```
+@article{PhysRevD.100.084052,
+  title = {hp-adaptive discontinuous Galerkin solver for elliptic equations in numerical relativity},
+  author = {Vincent, Trevor and Pfeiffer, Harald P. and Fischer, Nils L.},
+  journal = {Phys. Rev. D},
+  volume = {100},
+  issue = {8},
+  pages = {084052},
+  numpages = {22},
+  year = {2019},
+  month = {Oct},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevD.100.084052},
+  url = {https://link.aps.org/doi/10.1103/PhysRevD.100.084052}
+}
+```
