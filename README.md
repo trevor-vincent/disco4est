@@ -15,11 +15,11 @@ disco4est (abbrev. d4est) is a scalable hp-adaptive discontinuous Galerkin solve
 
 - The **disco**ntinuous Galerkin method is used to discretize the non-linear or linear elliptic PDEs.
 
-- We use an in-house multigrid algorithm to precondition PETSc solvers. 
+- We use an in-house hp-multigrid algorithm to precondition PETSc solvers. It uses surrogate levels to keep meshes 2:1 balanced.
 
 - The multigrid algorithm can handle different smoothers (Chebyshev, Additive Schwarz... ) and different bottom solvers (p-multigrid, Krylov, ...). 
 
-- The multigrid algorithm uses surrogate intermediary meshes to keep the cells 2:1 balanced.
+- hp-adaptive mesh-refinement is used to efficiently converge on a solution.
 
 - Different topologies and parallel mesh refinement is handled using the multi-block tree code p4est. 
 
